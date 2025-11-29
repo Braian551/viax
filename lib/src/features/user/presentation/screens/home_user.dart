@@ -191,88 +191,132 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   }
 
   PreferredSizeWidget _buildAppBar(bool isDark) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      ),
-      title: Row(
-        children: [
-          // Logo con efecto Glass
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.8),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(90),
+      child: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        ),
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                // Contenedor principal con efecto glass (más ancho)
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: (isDark 
+                            ? Colors.white.withOpacity(0.1) 
+                            : Colors.white.withOpacity(0.3)),
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: (isDark 
+                              ? Colors.white.withOpacity(0.2) 
+                              : Colors.white.withOpacity(0.4)),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Logo
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: (isDark 
+                                  ? Colors.white.withOpacity(0.15) 
+                                  : Colors.white.withOpacity(0.4)),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                width: 32,
+                                height: 32,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Saludo
+                            if (!_loadingUser)
+                              Expanded(
+                                child: FadeTransition(
+                                  opacity: _fadeAnimation,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Hola,',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.black54,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        _userName ?? 'Usuario',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Botón de Notificaciones con efecto glass
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: (isDark 
+                          ? Colors.white.withOpacity(0.1) 
+                          : Colors.white.withOpacity(0.3)),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: (isDark 
+                            ? Colors.white.withOpacity(0.2) 
+                            : Colors.white.withOpacity(0.4)),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          color: isDark ? Colors.white : Colors.grey[800],
+                          size: 26,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: Image.asset(
-              'assets/images/logo.png',
-              width: 28,
-              height: 28,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Saludo
-          if (!_loadingUser)
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hola,',
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    _userName ?? 'Usuario',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-      actions: [
-        // Botón de Notificaciones
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(
-            color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.8),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: isDark ? Colors.white : Colors.grey[800],
-            ),
-            onPressed: () {},
           ),
         ),
-      ],
+      ),
     );
   }
 
