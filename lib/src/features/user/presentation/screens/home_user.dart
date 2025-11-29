@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:shimmer/shimmer.dart';
+// Shimmer import removed because it's unused here
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/user/presentation/widgets/quick_action.dart';
@@ -26,6 +26,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   final MapController _mapController = MapController();
   geo.Position? _currentPosition;
   bool _isLoadingLocation = true;
+  // ignore: unused_field
   bool _isMapReady = false;
 
   // Usuario

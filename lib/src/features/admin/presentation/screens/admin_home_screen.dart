@@ -44,7 +44,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final adminName = widget.adminUser['nombre']?.toString() ?? 'Administrador';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // final isDark = Theme.of(context).brightness == Brightness.dark; // unused local variable removed
     
     // Debug: verificar admin_user en HomeScreen
     print('AdminHomeScreen: adminUser recibido: ${widget.adminUser}');

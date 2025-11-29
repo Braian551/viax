@@ -13,6 +13,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   Map<String, dynamic>? _userData;
+  // ignore: unused_field
   Map<String, dynamic>? _locationData;
   bool _loading = true;
 

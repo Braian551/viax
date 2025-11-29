@@ -7,7 +7,6 @@ import '../../providers/conductor_profile_provider.dart';
 import '../../models/conductor_profile_model.dart';
 import 'license_registration_screen.dart';
 import 'vehicle_only_registration_screen.dart';
-import 'verification_status_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 
 class ConductorProfileScreen extends StatefulWidget {

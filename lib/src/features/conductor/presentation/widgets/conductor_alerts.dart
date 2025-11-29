@@ -1054,6 +1054,7 @@ class _TripRequestModalState extends State<TripRequestModal> with SingleTickerPr
     );
   }
 
+  // ignore: unused_element
   static Future<void> show(
     BuildContext context, {
     required Map<String, dynamic> tripData,

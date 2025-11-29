@@ -65,18 +65,24 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 8),
-            _buildInputs(),
-            const SizedBox(height: 16),
-            _buildActionButtons(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _buildSuggestionsList(),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader()),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            SliverToBoxAdapter(child: _buildInputs()),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(child: _buildActionButtons()),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildSuggestionsList(),
+                  _buildBottomButton(),
+                ],
+              ),
             ),
-            _buildBottomButton(),
           ],
         ),
       ),
@@ -151,36 +157,46 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
   Widget _buildInputs() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      child: Hero(
+        tag: 'search_destination_box',
+        child: Material(
+          type: MaterialType.transparency,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _buildInputField(
-              controller: _originController,
-              hint: 'Tu ubicación actual',
-              icon: Icons.my_location_outlined,
-              iconColor: const Color(0xFF2196F3),
-              isOrigin: true,
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildInputField(
+                    controller: _originController,
+                    hint: 'Tu ubicación actual',
+                    icon: Icons.my_location_outlined,
+                    iconColor: const Color(0xFF2196F3),
+                    isOrigin: true,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200], indent: 56),
+                  _buildInputField(
+                    controller: _destinationController,
+                    hint: '¿A dónde quieres ir?',
+                    icon: Icons.location_on_outlined,
+                    iconColor: const Color(0xFF2196F3),
+                    isOrigin: false,
+                  ),
+                ],
+              ),
             ),
-            Divider(height: 1, color: Colors.grey[200], indent: 56),
-            _buildInputField(
-              controller: _destinationController,
-              hint: '¿A dónde quieres ir?',
-              icon: Icons.location_on_outlined,
-              iconColor: const Color(0xFF2196F3),
-              isOrigin: false,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -403,6 +419,8 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
           ],
         ),
         child: ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemBuilder: (context, index) {
             final suggestion = _suggestions[index];

@@ -8,7 +8,10 @@ class ConductorEarningsProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   EarningsPeriod _selectedPeriod = EarningsPeriod.today;
+  // These fields are intentionally kept to remember the custom range and may be read by UI later.
+  // ignore: unused_field
   DateTime? _customStart;
+  // ignore: unused_field
   DateTime? _customEnd;
 
   EarningsModel? get earnings => _earnings;
