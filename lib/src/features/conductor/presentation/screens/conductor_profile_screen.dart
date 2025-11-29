@@ -766,23 +766,23 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                 final result = await provider.submitForVerification(
                   widget.conductorId,
                 );
-                if (mounted) {
-                  if (result) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('¡Perfil enviado para verificación!'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                    await provider.loadProfile(widget.conductorId);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(provider.errorMessage ?? 'Error'),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  }
+                if (!mounted) return;
+                
+                if (result) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('¡Perfil enviado para verificación!'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  await provider.loadProfile(widget.conductorId);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(provider.errorMessage ?? 'Error'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
                 }
               },
         style: ElevatedButton.styleFrom(
@@ -925,6 +925,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
   }
 
   void _editLicense(license) async {
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -934,12 +935,14 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         ),
       ),
     );
-    if (result == true && mounted) {
+    if (!mounted) return;
+    if (result == true) {
       Provider.of<ConductorProfileProvider>(context, listen: false).loadProfile(widget.conductorId);
     }
   }
 
   void _editVehicle(vehicle) async {
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -949,12 +952,14 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         ),
       ),
     );
-    if (result == true && mounted) {
+    if (!mounted) return;
+    if (result == true) {
       Provider.of<ConductorProfileProvider>(context, listen: false).loadProfile(widget.conductorId);
     }
   }
 
   void _showComingSoon(String feature) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$feature próximamente'),
