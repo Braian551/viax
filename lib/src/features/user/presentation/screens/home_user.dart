@@ -13,6 +13,7 @@ import 'package:viax/src/features/user/presentation/widgets/location_input.dart'
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
 import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -444,7 +445,13 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   // Quick actions replaced by QuickAction widget (widgets/quick_action.dart)
 
+
+
   Widget _buildTabContent(bool isDark) {
+    if (_selectedIndex == 3) {
+      return const UserProfileScreen();
+    }
+    
     // Fondo sólido para otras pestañas
     return Container(
       color: isDark ? AppColors.darkBackground : AppColors.lightBackground,

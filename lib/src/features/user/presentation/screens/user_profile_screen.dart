@@ -1,9 +1,8 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 
-/// Pantalla completa de perfil del usuario
-/// Incluye informaciÃ³n personal, foto, ajustes y opciones
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
 
@@ -11,393 +10,390 @@ class UserProfileScreen extends StatefulWidget {
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
-  Map<String, dynamic>? _userData;
-  // ignore: unused_field
-  Map<String, dynamic>? _locationData;
-  bool _loading = true;
+class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
+  String? _userName;
+  String? _userEmail;
+  bool _isLoading = true;
+  
+  // Animaciones
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _loadUserProfile();
+    _setupAnimations();
+    _loadUserData();
   }
 
-  Future<void> _loadUserProfile() async {
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+  }
+
+  Future<void> _loadUserData() async {
     try {
-      final session = await UserService.getSavedSession();
-      if (session != null) {
-        final userId = session['id'] as int?;
-        final email = session['email'] as String?;
-        
-        final profile = await UserService.getProfile(userId: userId, email: email);
-        if (profile != null && profile['success'] == true) {
+      final sess = await UserService.getSavedSession();
+      if (sess != null) {
+        if (mounted) {
           setState(() {
-            _userData = profile['user'] as Map<String, dynamic>?;
-            _locationData = profile['location'] as Map<String, dynamic>?;
-            _loading = false;
+            _userName = sess['nombre'] ?? 'Usuario';
+            _userEmail = sess['email'] ?? 'usuario@viax.com';
+            _isLoading = false;
           });
+          _animationController.forward();
+        }
+      } else {
+         if (mounted) {
+          setState(() {
+            _userName = 'Invitado';
+            _userEmail = 'Inicia sesión';
+            _isLoading = false;
+          });
+          _animationController.forward();
         }
       }
     } catch (e) {
-      print('Error cargando perfil: $e');
-      setState(() => _loading = false);
-    }
-  }
-
-  void _logout() async {
-    await UserService.clearSession();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _animationController.forward();
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
-          ),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildProfileCard(),
-              const SizedBox(height: 20),
-              _buildStatsRow(),
-              const SizedBox(height: 24),
-              _buildMenuSection(),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: Stack(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const Expanded(
-            child: Text(
-              'Mi Perfil',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+          // Fondo decorativo (opcional, similar a HomeUser)
+          Positioned(
+            top: -100,
+            right: -100,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withOpacity(0.1),
+                ),
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Color(0xFFFFFF00)),
-            onPressed: () {
-              Navigator.pushNamed(context, '/edit_profile');
-            },
+
+          SafeArea(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Título
+                            Text(
+                              'Mi Perfil',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Tarjeta de Usuario
+                            _buildUserCard(isDark),
+                            
+                            const SizedBox(height: 24),
+
+                            // Calificación (Mocked)
+                            _buildRatingSection(isDark),
+
+                            const SizedBox(height: 32),
+
+                            // Opciones
+                            Text(
+                              'Configuración',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildOptionTile(
+                              icon: Icons.person_outline_rounded,
+                              title: 'Editar Perfil',
+                              subtitle: 'Nombre, teléfono, foto',
+                              isDark: isDark,
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              icon: Icons.location_on_outlined,
+                              title: 'Mis Direcciones',
+                              subtitle: 'Casa, trabajo y favoritos',
+                              isDark: isDark,
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              icon: Icons.credit_card_rounded,
+                              title: 'Métodos de Pago',
+                              subtitle: 'Tarjetas, efectivo',
+                              isDark: isDark,
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              icon: Icons.notifications_none_rounded,
+                              title: 'Notificaciones',
+                              subtitle: 'Promociones, estado del viaje',
+                              isDark: isDark,
+                              onTap: () {},
+                            ),
+                             _buildOptionTile(
+                              icon: Icons.help_outline_rounded,
+                              title: 'Ayuda y Soporte',
+                              subtitle: 'Centro de ayuda, contactar',
+                              isDark: isDark,
+                              onTap: () {},
+                            ),
+                            
+                            const SizedBox(height: 24),
+                            
+                            // Botón Cerrar Sesión
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 20),
+                              child: TextButton(
+                                onPressed: () {
+                                  // Lógica de logout
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  backgroundColor: AppColors.error.withOpacity(0.1),
+                                ),
+                                child: Text(
+                                  'Cerrar Sesión',
+                                  style: TextStyle(
+                                    color: AppColors.error,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Espacio extra para el bottom nav
+                            const SizedBox(height: 80),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileCard() {
-    final nombre = _userData?['nombre'] as String? ?? 'Usuario';
-    final apellido = _userData?['apellido'] as String? ?? '';
-    final email = _userData?['email'] as String? ?? '';
-    final telefono = _userData?['telefono'] as String? ?? 'No especificado';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ClipRRect(
+  Widget _buildUserCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
-              borderRadius: BorderRadius.circular(24),
+              shape: BoxShape.circle,
+              color: AppColors.primary.withOpacity(0.1),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1.5,
+                color: AppColors.primary.withOpacity(0.2),
+                width: 2,
               ),
             ),
+            child: Icon(
+              Icons.person_rounded,
+              size: 40,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Info
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            const Color(0xFFFFFF00).withOpacity(0.3),
-                            const Color(0xFFFFFF00).withOpacity(0.1),
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          nombre.isNotEmpty ? nombre[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                            color: Color(0xFFFFFF00),
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFFF00),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.camera_alt, color: Colors.black, size: 16),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
                 Text(
-                  '$nombre $apellido',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
+                  _userName ?? 'Usuario',
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.email_outlined, color: Colors.white54, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      email,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.phone_outlined, color: Colors.white54, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      telefono,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+                Text(
+                  _userEmail ?? '',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildStatCard(
-              icon: Icons.route,
-              title: 'Viajes',
-              value: '24',
-              color: const Color(0xFFFFFF00),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              icon: Icons.credit_card,
-              title: 'Pagos',
-              value: '3',
-              color: Colors.green,
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1.5,
-            ),
-          ),
-          child: Column(
+  Widget _buildRatingSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard.withOpacity(0.5) : AppColors.lightCard.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(height: 12),
               Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                'Tu Calificación',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : Colors.black54,
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
-                  fontSize: 12,
-                ),
+              Row(
+                children: [
+                  Text(
+                    '4.95',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                ],
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          _buildMenuItem(
-            icon: Icons.history,
-            title: 'Historial de viajes',
-            subtitle: 'Ver todos tus viajes',
-            onTap: () => Navigator.pushNamed(context, '/trip_history'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Excelente',
+              style: TextStyle(
+                color: AppColors.success,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.credit_card,
-            title: 'MÃ©todos de pago',
-            subtitle: 'Administrar tus pagos',
-            onTap: () => Navigator.pushNamed(context, '/payment_methods'),
-          ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.favorite_border,
-            title: 'Lugares favoritos',
-            subtitle: 'Guarda tus direcciones frecuentes',
-            onTap: () => Navigator.pushNamed(context, '/favorite_places'),
-          ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.percent,
-            title: 'Promociones',
-            subtitle: 'Cupones y descuentos disponibles',
-            onTap: () => Navigator.pushNamed(context, '/promotions'),
-          ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.settings,
-            title: 'ConfiguraciÃ³n',
-            subtitle: 'Ajustes y preferencias',
-            onTap: () => Navigator.pushNamed(context, '/settings'),
-          ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.help_outline,
-            title: 'Ayuda y soporte',
-            subtitle: 'ContÃ¡ctanos o consulta FAQ',
-            onTap: () => Navigator.pushNamed(context, '/help'),
-          ),
-          const SizedBox(height: 12),
-          _buildMenuItem(
-            icon: Icons.info_outline,
-            title: 'Acerca de',
-            subtitle: 'VersiÃ³n y tÃ©rminos legales',
-            onTap: () => Navigator.pushNamed(context, '/about'),
-          ),
-          const SizedBox(height: 20),
-          _buildLogoutButton(),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildOptionTile({
     required IconData icon,
     required String title,
     required String subtitle,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1.5,
-              ),
-            ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFF00).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: const Color(0xFFFFFF00), size: 24),
+                  child: Icon(
+                    icon,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -406,60 +402,30 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 13,
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black45,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.3), size: 18),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: isDark ? Colors.white30 : Colors.black26,
+                ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return GestureDetector(
-      onTap: _logout,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.red.withOpacity(0.3),
-            width: 1.5,
-          ),
-        ),
-        child: const Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.logout, color: Colors.red, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Cerrar sesiÃ³n',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
           ),
         ),
       ),

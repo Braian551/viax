@@ -39,8 +39,8 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
   void initState() {
     super.initState();
     
-    // Auto-fetch current location for origin
-    _setCurrentLocation(isOrigin: true);
+    // Auto-fetch current location for origin (non-blocking)
+    Future.microtask(() => _setCurrentLocation(isOrigin: true));
 
     _originController.addListener(() => _onTextChanged(isOrigin: true));
     _destinationController.addListener(() => _onTextChanged(isOrigin: false));
@@ -131,12 +131,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     );
   }
 
-  void _onInputTap({required bool isOrigin}) {
+  Future<void> _onInputTap({required bool isOrigin}) async {
     setState(() {
       _suggestions = [];
     });
     final query = isOrigin ? _originController.text.trim() : _destinationController.text.trim();
-    if (query.isNotEmpty) _searchLocation(query);
+    if (query.isNotEmpty) {
+      // Don't await here - let it run asynchronously to avoid blocking UI
+      _searchLocation(query);
+    }
   }
 
   void _onTextChanged({required bool isOrigin}) {
