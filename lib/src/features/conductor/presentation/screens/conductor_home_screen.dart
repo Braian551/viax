@@ -11,6 +11,7 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../providers/conductor_provider.dart';
 import '../../services/trip_request_search_service.dart';
 import 'conductor_searching_passengers_screen.dart';
+import '../widgets/conductor_drawer.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -28,6 +29,7 @@ class ConductorHomeScreen extends StatefulWidget {
 
 class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController _mapController = MapController();
   geo.Position? _currentPosition;
   bool _isLoadingLocation = true;
@@ -374,8 +376,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
+      drawer: ConductorDrawer(conductorUser: widget.conductorUser),
       body: Stack(
         children: [
           // Mapa de fondo
@@ -393,6 +397,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
       elevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
@@ -453,7 +458,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               color: isDark ? Colors.white : Colors.grey[800],
             ),
             onPressed: () {
-              // TODO: Abrir drawer o menú
+              _scaffoldKey.currentState?.openDrawer();
             },
           ),
         ),
