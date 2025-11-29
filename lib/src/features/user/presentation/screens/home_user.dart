@@ -416,23 +416,31 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : AppColors.lightCard,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.1),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: (isDark 
+                    ? Colors.black.withOpacity(0.4) 
+                    : Colors.white.withOpacity(0.7)),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: (isDark 
+                      ? Colors.white.withOpacity(0.1) 
+                      : Colors.white.withOpacity(0.4)),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ],
-            ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -484,7 +492,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               ),
             ),
           ),
-      );
+        ),
+      ),
+    );
   }
 
   // Quick actions replaced by QuickAction widget (widgets/quick_action.dart)
