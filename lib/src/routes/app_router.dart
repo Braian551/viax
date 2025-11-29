@@ -103,7 +103,15 @@ class AppRouter {
       
       // Rutas de usuario
       case RouteNames.requestTrip:
-        return MaterialPageRoute(builder: (_) => const RequestTripScreen());
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return FadeSlidePageRoute(
+            page: RequestTripScreen(
+              initialSelection: args?['selecting'],
+            ),
+            settings: settings,
+          );
+        }
       case RouteNames.confirmTrip:
         return MaterialPageRoute(
           builder: (_) => const ConfirmTripScreen(),

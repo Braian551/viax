@@ -34,14 +34,17 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _loadSession() async {
     final sess = await UserService.getSavedSession();
-    setState(() {
-      _session = sess;
-    });
+    if (mounted) {
+      setState(() {
+        _session = sess;
+      });
+    }
 
     if (sess != null) {
       final id = sess['id'] as int?;
       final email = sess['email'] as String?;
       final profile = await UserService.getProfile(userId: id, email: email);
+      if (!mounted) return;
       if (profile != null && profile['success'] == true) {
         setState(() {
             _profileData = profile['user'] as Map<String, dynamic>?;

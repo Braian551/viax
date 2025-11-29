@@ -10,6 +10,7 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
+import 'package:viax/src/routes/route_names.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -398,35 +399,45 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 16),
                     // Input simulado
-                    GestureDetector(
-                      onTap: () {
-                        // TODO: Navegar a búsqueda
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.06),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.search_rounded,
-                              color: isDark ? Colors.white70 : AppColors.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Buscar destino',
-                              style: TextStyle(
-                                color: isDark ? Colors.white54 : Colors.grey[500],
-                                fontSize: 16,
+                    Hero(
+                      tag: 'search_destination_box',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context, 
+                              RouteNames.requestTrip,
+                              arguments: {'selecting': 'destination'},
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.primary.withOpacity(0.06),
+                                width: 1,
                               ),
                             ),
-                          ],
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.search_rounded,
+                                  color: isDark ? Colors.white70 : AppColors.primary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Buscar destino',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white54 : Colors.grey[500],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),

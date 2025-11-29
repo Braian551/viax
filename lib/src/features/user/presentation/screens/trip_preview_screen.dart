@@ -3,9 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/models/simple_location.dart';
 import '../../../../global/services/auth/user_service.dart';
 import '../../services/trip_request_service.dart';
-import 'select_destination_screen.dart';
 import 'searching_driver_screen.dart';
 
 /// Modelo para cotizaciÃ³n del viaje
@@ -144,7 +144,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     ).animate(CurvedAnimation(
       parent: _routeAnimationController,
       curve: Curves.easeInOutCubic, // Curva mÃ¡s suave
-    ))..addListener(() {
+    ));
+    _routeAnimation = _routeAnimation..addListener(() {
+      if (!mounted) return; // Avoid setState on unmounted widget
       if (_route != null) {
         final totalPoints = _route!.geometry.length;
         final animatedCount = (totalPoints * _routeAnimation.value).round();
@@ -234,6 +236,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         throw Exception('No se pudo calcular la ruta');
       }
       
+      if (!mounted) return;
       setState(() {
         _route = route;
         _isLoadingRoute = false;
@@ -241,21 +244,26 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       
       // Ajustar el mapa para mostrar la ruta completa con animaciÃ³n suave
       await _fitMapToRouteAnimated();
+      if (!mounted) return;
       
       // Animar el panel superior
       _topPanelAnimationController.forward();
+      if (!mounted) return;
       
       // Animar los marcadores
       await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
       _markerAnimationController.forward();
       
       // Animar la lÃ­nea de ruta
       await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
       _routeAnimationController.forward();
       
       // Calcular cotizaciÃ³n (por ahora localmente, luego serÃ¡ desde el backend)
       final quote = _calculateQuote(route);
       
+      if (!mounted) return;
       setState(() {
         _quote = quote;
         _isLoadingQuote = false;
@@ -263,9 +271,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       
       // Animar la apariciÃ³n del panel de detalles
       await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
       _slideAnimationController.forward();
       
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoadingRoute = false;
