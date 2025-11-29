@@ -8,6 +8,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/features/user/presentation/widgets/quick_action.dart';
+import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
 import 'package:viax/src/routes/route_names.dart';
@@ -371,7 +373,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.95),
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: AppColors.primary.withOpacity(0.1),
@@ -403,41 +405,22 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                       tag: 'search_destination_box',
                       child: Material(
                         color: Colors.transparent,
-                        child: GestureDetector(
+                        child: LocationInput(
+                          icon: Icons.search_rounded,
+                          iconColor: AppColors.primary,
+                          label: 'Destino',
+                          value: null,
+                          placeholder: 'Buscar destino',
+                          isDark: isDark,
+                          isDestination: true,
                           onTap: () {
                             Navigator.pushNamed(
-                              context, 
+                              context,
                               RouteNames.requestTrip,
                               arguments: {'selecting': 'destination'},
                             );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: AppColors.primary.withOpacity(0.06),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.search_rounded,
-                                  color: isDark ? Colors.white70 : AppColors.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Buscar destino',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white54 : Colors.grey[500],
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          onClear: null,
                         ),
                       ),
                     ),
@@ -445,17 +428,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     // Accesos rápidos (Casa, Trabajo)
                     Row(
                       children: [
-                        _buildQuickAction(
-                          icon: Icons.home_rounded,
-                          label: 'Casa',
-                          isDark: isDark,
-                        ),
-                        const SizedBox(width: 16),
-                        _buildQuickAction(
-                          icon: Icons.work_rounded,
-                          label: 'Trabajo',
-                          isDark: isDark,
-                        ),
+                        QuickAction(icon: Icons.home_rounded, label: 'Casa', isDark: isDark),
+                        const SizedBox(width: 12),
+                        QuickAction(icon: Icons.work_rounded, label: 'Trabajo', isDark: isDark),
                       ],
                     ),
                   ],
@@ -466,45 +441,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       );
   }
 
-  Widget _buildQuickAction({
-    required IconData icon,
-    required String label,
-    required bool isDark,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.03) : Colors.blue.withOpacity(0.02),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? Colors.white10 : AppColors.primary.withOpacity(0.08),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.02),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.grey[700],
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Quick actions replaced by QuickAction widget (widgets/quick_action.dart)
 
   Widget _buildTabContent(bool isDark) {
     // Fondo sólido para otras pestañas
