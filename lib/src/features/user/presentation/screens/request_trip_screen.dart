@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +22,7 @@ class RequestTripScreen extends StatefulWidget {
   State<RequestTripScreen> createState() => _RequestTripScreenState();
 }
 
-class _RequestTripScreenState extends State<RequestTripScreen> {
+class _RequestTripScreenState extends State<RequestTripScreen> with TickerProviderStateMixin {
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _originFocusNode = FocusNode();
@@ -34,10 +35,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
   List<SimpleLocation> _suggestions = [];
   bool _isLoadingSuggestions = false;
   bool _isGettingLocation = false;
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    _setupAnimations();
     
     // Auto-fetch current location for origin (non-blocking)
     Future.microtask(() => _setCurrentLocation(isOrigin: true));
@@ -47,9 +54,28 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     _originFocusNode.addListener(() => setState(() {}));
     _destinationFocusNode.addListener(() => setState(() {}));
   }
+  
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _originController.dispose();
     _destinationController.dispose();
     _originFocusNode.dispose();
@@ -62,67 +88,105 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader()),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            SliverToBoxAdapter(child: _buildInputs()),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(child: _buildActionButtons()),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildSuggestionsList(),
-                  _buildBottomButton(),
-                ],
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Background gradient or map placeholder if needed, for now just color
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDark 
+                  ? [const Color(0xFF1A1A1A), const Color(0xFF121212)]
+                  : [const Color(0xFFF5F5F5), const Color(0xFFFAFAFA)],
               ),
             ),
-          ],
-        ),
+          ),
+          
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(isDark),
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          _buildInputs(isDark),
+                          const SizedBox(height: 16),
+                          _buildActionButtons(isDark),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: _buildSuggestionsList(isDark),
+                          ),
+                          _buildBottomButton(isDark),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => Navigator.pop(context),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
+                  borderRadius: BorderRadius.circular(50),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.white.withOpacity(0.7)),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: (isDark 
+                          ? Colors.white.withOpacity(0.2) 
+                          : Colors.white.withOpacity(0.4)),
+                        width: 1,
+                      ),
                     ),
-                  ],
+                    child: Icon(
+                      Icons.arrow_back_rounded, 
+                      color: isDark ? Colors.white : Colors.black87, 
+                      size: 24,
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.arrow_back, color: Colors.black87, size: 22),
               ),
             ),
           ),
           const SizedBox(width: 16),
-          const Text(
+          Text(
             '¿A dónde vas?',
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
               letterSpacing: -0.5,
             ),
           ),
@@ -157,46 +221,55 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     });
   }
 
-  Widget _buildInputs() {
+  Widget _buildInputs(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Hero(
         tag: 'search_destination_box',
         child: Material(
           type: MaterialType.transparency,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildInputField(
-                    controller: _originController,
-                    hint: 'Tu ubicación actual',
-                    icon: Icons.my_location_outlined,
-                    iconColor: const Color(0xFF2196F3),
-                    isOrigin: true,
-                  ),
-                  Divider(height: 1, color: Colors.grey[200], indent: 56),
-                  _buildInputField(
-                    controller: _destinationController,
-                    hint: '¿A dónde quieres ir?',
-                    icon: Icons.location_on_outlined,
-                    iconColor: const Color(0xFF2196F3),
-                    isOrigin: false,
-                  ),
-                ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildInputField(
+                      controller: _originController,
+                      hint: 'Tu ubicación actual',
+                      icon: Icons.my_location_rounded,
+                      iconColor: const Color(0xFF2196F3),
+                      isOrigin: true,
+                      isDark: isDark,
+                    ),
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.only(left: 60),
+                      color: Colors.grey[200],
+                    ),
+                    _buildInputField(
+                      controller: _destinationController,
+                      hint: '¿A dónde quieres ir?',
+                      icon: Icons.location_on_rounded,
+                      iconColor: const Color(0xFFE91E63),
+                      isOrigin: false,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -211,124 +284,91 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     required IconData icon,
     required Color iconColor,
     required bool isOrigin,
+    required bool isDark,
   }) {
     final hasFocus = isOrigin ? _originFocusNode.hasFocus : _destinationFocusNode.hasFocus;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          // Left icon moved inside TextFormField prefixIcon to allow the input to use more width
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: iconColor,
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: TextFormField(
               focusNode: isOrigin ? _originFocusNode : _destinationFocusNode,
               controller: controller,
-              decoration: InputDecoration(
-                hintText: hint,
-                border: InputBorder.none,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.transparent),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: iconColor, width: 1.6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                // Move the icon inside the input via prefixIcon; keep same style as before
-                prefixIcon: Container(
-                  padding: const EdgeInsets.all(6),
-                  margin: const EdgeInsets.only(left: 6, right: 6),
-                  decoration: BoxDecoration(
-                    color: hasFocus ? iconColor.withOpacity(0.1) : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 18,
-                    color: hasFocus ? iconColor : Colors.grey[500],
-                  ),
-                ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                hintStyle: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.2,
-                ),
-                // Suffix icon inside the input: small circular X that appears only on focus or when there is content,
-                // and a small spinner that appears only when loading & focused (or getting location for origin).
-                suffixIcon: (hasFocus || controller.text.isNotEmpty)
-                    ? (controller.text.isNotEmpty
-                        ? Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(14),
-                              onTap: () => setState(() {
-                                controller.clear();
-                                _suggestions = [];
-                                if (isOrigin) {
-                                  _selectedOrigin = null;
-                                } else {
-                                  _selectedDestination = null;
-                                }
-                              }),
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.close, size: 14, color: Colors.grey),
-                              ),
-                            ),
-                          )
-                        : // Field has focus but no text: show a subtle, disabled small circle to match UI
-                          Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.06),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ))
-                    : (((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
-                        ? Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(6),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : null),
-                suffixIconConstraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-              ),
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
-                letterSpacing: -0.2,
+                letterSpacing: -0.3,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                suffixIcon: controller.text.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () => setState(() {
+                        controller.clear();
+                        _suggestions = [];
+                        if (isOrigin) {
+                          _selectedOrigin = null;
+                        } else {
+                          _selectedDestination = null;
+                        }
+                      }),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        margin: const EdgeInsets.only(right: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    )
+                  : ((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                          ),
+                        ),
+                      )
+                    : null,
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 24,
+                  minHeight: 24,
+                ),
               ),
               onTap: () => _onInputTap(isOrigin: isOrigin),
             ),
@@ -338,24 +378,25 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
           Expanded(
             child: _buildActionButton(
-              icon: Icons.my_location,
-              label: 'Usar mi ubicación',
+              icon: Icons.my_location_rounded,
+              label: 'Mi ubicación',
               onTap: () => _setCurrentLocation(isOrigin: true),
               isLoading: _isGettingLocation,
+              isDark: isDark,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _buildActionButton(
-              icon: Icons.map_outlined,
-              label: 'Seleccionar en mapa',
+              icon: Icons.map_rounded,
+              label: 'Mapa',
               onTap: () async {
                 LatLng? initialPos;
                 if (_selectedOrigin != null) {
@@ -389,6 +430,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                   });
                 }
               },
+              isDark: isDark,
             ),
           ),
         ],
@@ -401,23 +443,27 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     required String label,
     required VoidCallback onTap,
     bool isLoading = false,
+    required bool isDark,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: isLoading ? null : onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.15)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF2196F3).withOpacity(0.2),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF2196F3).withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF2196F3).withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -428,7 +474,10 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                 const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
+                  ),
                 )
               else
                 Icon(
@@ -440,7 +489,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF2196F3),
                   letterSpacing: -0.2,
@@ -453,29 +502,21 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
     );
   }
 
-  Widget _buildSuggestionsList() {
-    if ((_originFocusNode.hasFocus || _destinationFocusNode.hasFocus) && _suggestions.isNotEmpty) {
-      return Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemBuilder: (context, index) {
-            final suggestion = _suggestions[index];
-            return Material(
-              color: Colors.transparent,
+  Widget _buildSuggestionsList(bool isDark) {
+    if (_suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 100),
+        itemCount: _suggestions.length,
+        itemBuilder: (context, index) {
+          final suggestion = _suggestions[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 onTap: () {
                   final isOrigin = _originFocusNode.hasFocus;
@@ -491,20 +532,29 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                     FocusScope.of(context).unfocus();
                   });
                 },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2196F3).withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFF2196F3).withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.location_on,
+                          Icons.location_on_rounded,
                           color: Color(0xFF2196F3),
-                          size: 18,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -515,7 +565,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                             Text(
                               suggestion.address.split(',').first,
                               style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                                 letterSpacing: -0.2,
@@ -523,15 +573,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               suggestion.address,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 color: Colors.grey[600],
                                 letterSpacing: -0.1,
                               ),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -541,64 +591,67 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                   ),
                 ),
               ),
-            );
-          },
-          separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200], indent: 50),
-          itemCount: _suggestions.length,
-        ),
-      );
-    }
-
-    return Container();
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  Widget _buildBottomButton() {
+  Widget _buildBottomButton(bool isDark) {
+    if (!_isValid) return const SizedBox.shrink();
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: ElevatedButton(
-          onPressed: _isValid
-              ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TripPreviewScreen(
-                        origin: _selectedOrigin!,
-                        destination: _selectedDestination!,
-                        vehicleType: 'carro',
-                      ),
-                    ),
-                  );
-                }
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2196F3),
-            disabledBackgroundColor: Colors.grey[300],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2196F3).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            elevation: 0,
-            shadowColor: Colors.transparent,
-          ),
-          child: Text(
-            'Confirmar ubicaciones',
-            style: TextStyle(
-              color: _isValid ? Colors.white : Colors.grey[500],
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TripPreviewScreen(
+                      origin: _selectedOrigin!,
+                      destination: _selectedDestination!,
+                      vehicleType: 'carro',
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Confirmar ubicaciones',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
+                ),
+              ),
             ),
           ),
         ),
