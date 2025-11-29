@@ -215,21 +215,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: hasFocus 
-                ? iconColor.withOpacity(0.1) 
-                : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon, 
-              size: 18, 
-              color: hasFocus ? iconColor : Colors.grey[500],
-            ),
-          ),
-          const SizedBox(width: 14),
+          // Left icon moved inside TextFormField prefixIcon to allow the input to use more width
           Expanded(
             child: TextFormField(
               focusNode: isOrigin ? _originFocusNode : _destinationFocusNode,
@@ -246,49 +232,78 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                // Move the icon inside the input via prefixIcon; keep same style as before
+                prefixIcon: Container(
+                  padding: const EdgeInsets.all(6),
+                  margin: const EdgeInsets.only(left: 6, right: 6),
+                  decoration: BoxDecoration(
+                    color: hasFocus ? iconColor.withOpacity(0.1) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: hasFocus ? iconColor : Colors.grey[500],
+                  ),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 hintStyle: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.2,
                 ),
-                // Suffix icon inside the input, either clear button or loader
-                suffixIcon: controller.text.isNotEmpty
-                    ? Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () => setState(() {
-                            controller.clear();
-                            _suggestions = [];
-                            if (isOrigin) {
-                              _selectedOrigin = null;
-                            } else {
-                              _selectedDestination = null;
-                            }
-                          }),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 6),
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close, size: 16, color: Colors.grey),
-                          ),
-                        ),
-                      )
-                    : ((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
-                        ? Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: SizedBox(
-                              width: 28,
-                              height: 28,
+                // Suffix icon inside the input: small circular X that appears only on focus or when there is content,
+                // and a small spinner that appears only when loading & focused (or getting location for origin).
+                suffixIcon: (hasFocus || controller.text.isNotEmpty)
+                    ? (controller.text.isNotEmpty
+                        ? Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () => setState(() {
+                                controller.clear();
+                                _suggestions = [];
+                                if (isOrigin) {
+                                  _selectedOrigin = null;
+                                } else {
+                                  _selectedDestination = null;
+                                }
+                              }),
                               child: Container(
-                                width: 28,
-                                height: 28,
+                                margin: const EdgeInsets.only(right: 6),
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, size: 14, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        : // Field has focus but no text: show a subtle, disabled small circle to match UI
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.06),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ))
+                    : (((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
+                        ? Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Container(
+                                width: 24,
+                                height: 24,
                                 decoration: BoxDecoration(
                                   color: Colors.grey[100],
                                   shape: BoxShape.circle,
@@ -303,7 +318,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
                               ),
                             ),
                           )
-                        : null,
+                        : null),
                 suffixIconConstraints: const BoxConstraints(minWidth: 30, minHeight: 30),
               ),
               style: const TextStyle(
