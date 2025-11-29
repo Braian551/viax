@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../../theme/app_colors.dart';
 import '../../providers/conductor_profile_provider.dart';
 import '../../models/conductor_profile_model.dart';
 import 'license_registration_screen.dart';
@@ -37,90 +38,38 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(isDark),
       body: Consumer<ConductorProfileProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return _buildShimmerLoading();
+            return _buildShimmerLoading(isDark);
           }
 
           final profile = provider.profile;
           if (profile == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 64),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No se pudo cargar el perfil',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => provider.loadProfile(widget.conductorId),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFFF00),
-                    ),
-                    child: const Text(
-                      'Reintentar',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorView(provider, isDark);
           }
 
-          // Si el conductor estÃ¡ aprobado, mostrar vista de perfil aprobado
+          // Si el conductor está aprobado, mostrar vista de perfil aprobado
           if (profile.aprobado &&
               profile.estadoVerificacion == VerificationStatus.aprobado) {
-            return _buildApprovedProfileView(profile);
+            return _buildApprovedProfileView(profile, isDark);
           }
 
-          // Si no estÃ¡ aprobado, mostrar vista de verificaciÃ³n
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildCompletionProgress(profile),
-                  const SizedBox(height: 32),
-                  _buildVerificationStatus(profile),
-                  const SizedBox(height: 24),
-                  _buildLicenseSection(profile),
-                  const SizedBox(height: 24),
-                  _buildVehicleSection(profile),
-                  const SizedBox(height: 24),
-                  _buildPendingTasks(profile),
-                  const SizedBox(height: 24),
-                  if (profile.isProfileComplete &&
-                      !profile.aprobado &&
-                      profile.estadoVerificacion !=
-                          VerificationStatus.enRevision)
-                    _buildSubmitButton(provider, profile),
-                  const SizedBox(height: 24),
-                  if (profile.estadoVerificacion ==
-                      VerificationStatus.enRevision)
-                    _buildInReviewMessage(),
-                  const SizedBox(height: 24),
-                  _buildLogoutButton(),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          );
+          // Si no está aprobado, mostrar vista de verificación
+          return _buildVerificationView(profile, provider, isDark);
         },
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -128,21 +77,26 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            decoration: BoxDecoration(color: Colors.black.withOpacity(0.8)),
+            decoration: BoxDecoration(
+              color: (isDark ? AppColors.darkBackground : Colors.white).withOpacity(0.8),
+            ),
           ),
         ),
       ),
       leading: widget.showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon: Icon(
+                Icons.arrow_back_rounded, 
+                color: isDark ? Colors.white : Colors.black87
+              ),
               onPressed: () => Navigator.pop(context),
             )
           : null,
       automaticallyImplyLeading: widget.showBackButton,
-      title: const Text(
+      title: Text(
         'Mi Perfil',
         style: TextStyle(
-          color: Colors.white,
+          color: isDark ? Colors.white : Colors.black87,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
@@ -150,100 +104,150 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     );
   }
 
-  Widget _buildCompletionProgress(ConductorProfileModel profile) {
-    final percentage = profile.completionPercentage;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFF00).withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFFFFF00).withOpacity(0.3),
-              width: 1.5,
+  Widget _buildErrorView(ConductorProfileProvider provider, bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, color: AppColors.error, size: 64),
+          const SizedBox(height: 16),
+          Text(
+            'No se pudo cargar el perfil',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87, 
+              fontSize: 18
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Completitud del Perfil',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${(percentage * 100).toInt()}%',
-                    style: const TextStyle(
-                      color: Color(0xFFFFFF00),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: percentage,
-                  minHeight: 12,
-                  backgroundColor: Colors.white.withOpacity(0.1),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFFFFFF00),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                profile.isProfileComplete
-                    ? 'Â¡Perfil completo!'
-                    : 'Completa tu perfil para recibir viajes',
-                style: TextStyle(
-                  color: profile.isProfileComplete
-                      ? Colors.green
-                      : Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => provider.loadProfile(widget.conductorId),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reintentar'),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationView(
+    ConductorProfileModel profile, 
+    ConductorProfileProvider provider,
+    bool isDark
+  ) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _buildCompletionProgress(profile, isDark),
+            const SizedBox(height: 32),
+            _buildVerificationStatus(profile, isDark),
+            const SizedBox(height: 24),
+            _buildLicenseSection(profile, isDark),
+            const SizedBox(height: 24),
+            _buildVehicleSection(profile, isDark),
+            const SizedBox(height: 24),
+            _buildPendingTasks(profile, isDark),
+            const SizedBox(height: 24),
+            if (profile.isProfileComplete &&
+                !profile.aprobado &&
+                profile.estadoVerificacion != VerificationStatus.enRevision)
+              _buildSubmitButton(provider, profile, isDark),
+            const SizedBox(height: 24),
+            if (profile.estadoVerificacion == VerificationStatus.enRevision)
+              _buildInReviewMessage(isDark),
+            const SizedBox(height: 24),
+            _buildLogoutButton(isDark),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildVerificationStatus(ConductorProfileModel profile) {
+  Widget _buildCompletionProgress(ConductorProfileModel profile, bool isDark) {
+    final percentage = profile.completionPercentage;
+    return _buildGlassCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Completitud del Perfil',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${(percentage * 100).toInt()}%',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: percentage,
+              minHeight: 12,
+              backgroundColor: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200],
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            profile.isProfileComplete
+                ? '¡Perfil completo!'
+                : 'Completa tu perfil para recibir viajes',
+            style: TextStyle(
+              color: profile.isProfileComplete
+                  ? AppColors.success
+                  : (isDark ? Colors.white70 : Colors.grey[600]),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationStatus(ConductorProfileModel profile, bool isDark) {
     Color statusColor;
     IconData statusIcon;
     String statusMessage;
 
     switch (profile.estadoVerificacion) {
       case VerificationStatus.pendiente:
-        statusColor = Colors.orange;
+        statusColor = AppColors.warning;
         statusIcon = Icons.hourglass_empty_rounded;
-        statusMessage = 'Pendiente de verificaciÃ³n';
+        statusMessage = 'Pendiente de verificación';
         break;
       case VerificationStatus.enRevision:
-        statusColor = Colors.blue;
+        statusColor = AppColors.info;
         statusIcon = Icons.search_rounded;
-        statusMessage = 'En revisiÃ³n por el equipo';
+        statusMessage = 'En revisión por el equipo';
         break;
       case VerificationStatus.aprobado:
-        statusColor = Colors.green;
+        statusColor = AppColors.success;
         statusIcon = Icons.check_circle_rounded;
-        statusMessage = 'Â¡Perfil aprobado!';
+        statusMessage = '¡Perfil aprobado!';
         break;
       case VerificationStatus.rechazado:
-        statusColor = Colors.red;
+        statusColor = AppColors.error;
         statusIcon = Icons.cancel_rounded;
         statusMessage = 'Documentos rechazados';
         break;
@@ -254,80 +258,68 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                VerificationStatusScreen(conductorId: widget.conductorId),
+            builder: (context) => VerificationStatusScreen(conductorId: widget.conductorId),
           ),
         );
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: statusColor.withOpacity(0.3),
-                width: 1.5,
+      child: _buildGlassCard(
+        isDark: isDark,
+        borderColor: statusColor.withOpacity(0.3),
+        backgroundColor: statusColor.withOpacity(0.05),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(statusIcon, color: statusColor, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    profile.estadoVerificacion.label,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    statusMessage,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(statusIcon, color: statusColor, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.estadoVerificacion.label,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        statusMessage,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: statusColor,
-                  size: 20,
-                ),
-              ],
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: statusColor,
+              size: 20,
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLicenseSection(ConductorProfileModel profile) {
+  Widget _buildLicenseSection(ConductorProfileModel profile, bool isDark) {
     final license = profile.licencia;
     final hasLicense = license != null && license.isComplete;
 
     return _buildSection(
-      title: 'Licencia de ConducciÃ³n',
+      title: 'Licencia de Conducción',
       icon: Icons.badge_rounded,
       isComplete: hasLicense,
+      isDark: isDark,
       onTap: () async {
         final result = await Navigator.push(
           context,
@@ -348,29 +340,30 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
       child: hasLicense
           ? Column(
               children: [
-                _buildDetailRow('NÃºmero', license.numero),
-                _buildDetailRow('CategorÃ­a', license.categoria.label),
+                _buildDetailRow('Número', license.numero, isDark),
+                _buildDetailRow('Categoría', license.categoria.label, isDark),
                 _buildDetailRow(
                   'Vencimiento',
                   '${license.fechaVencimiento.day}/${license.fechaVencimiento.month}/${license.fechaVencimiento.year}',
+                  isDark,
                 ),
                 if (!license.isValid)
                   Container(
                     margin: const EdgeInsets.only(top: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.2),
+                      color: AppColors.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.error, color: Colors.red, size: 20),
-                        SizedBox(width: 8),
+                        const Icon(Icons.error, color: AppColors.error, size: 20),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Licencia vencida - Renovar urgente',
-                            style: TextStyle(
-                              color: Colors.red,
+                            style: const TextStyle(
+                              color: AppColors.error,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -381,24 +374,28 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                   ),
               ],
             )
-          : const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 'No has registrado tu licencia',
-                style: TextStyle(color: Colors.white54, fontSize: 14),
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.grey[500], 
+                  fontSize: 14
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildVehicleSection(ConductorProfileModel profile) {
+  Widget _buildVehicleSection(ConductorProfileModel profile, bool isDark) {
     final vehicle = profile.vehiculo;
     final hasVehicle = vehicle != null && vehicle.isBasicComplete;
 
     return _buildSection(
-      title: 'InformaciÃ³n del VehÃ­culo',
+      title: 'Información del Vehículo',
       icon: Icons.directions_car_rounded,
       isComplete: hasVehicle,
+      isDark: isDark,
       onTap: () async {
         final result = await Navigator.push(
           context,
@@ -419,53 +416,62 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
       child: hasVehicle
           ? Column(
               children: [
-                _buildDetailRow('Placa', vehicle.placa.toUpperCase()),
-                _buildDetailRow('Tipo', vehicle.tipo.label),
-                _buildDetailRow('Marca', vehicle.marca ?? 'N/A'),
-                _buildDetailRow('Modelo', vehicle.modelo ?? 'N/A'),
-                _buildDetailRow('AÃ±o', vehicle.anio?.toString() ?? 'N/A'),
-                _buildDetailRow('Color', vehicle.color ?? 'N/A'),
+                _buildDetailRow('Placa', vehicle.placa.toUpperCase(), isDark),
+                _buildDetailRow('Tipo', vehicle.tipo.label, isDark),
+                _buildDetailRow('Marca', vehicle.marca ?? 'N/A', isDark),
+                _buildDetailRow('Modelo', vehicle.modelo ?? 'N/A', isDark),
+                _buildDetailRow('Año', vehicle.anio?.toString() ?? 'N/A', isDark),
+                _buildDetailRow('Color', vehicle.color ?? 'N/A', isDark),
               ],
             )
-          : const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'No has registrado tu vehÃ­culo',
-                style: TextStyle(color: Colors.white54, fontSize: 14),
+                'No has registrado tu vehículo',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.grey[500], 
+                  fontSize: 14
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildPendingTasks(ConductorProfileModel profile) {
+  Widget _buildPendingTasks(ConductorProfileModel profile, bool isDark) {
     final tasks = profile.pendingTasks;
     if (tasks.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tareas Pendientes',
           style: TextStyle(
-            color: Colors.white,
+            color: isDark ? Colors.white : Colors.black87,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 16),
-        ...tasks.map((task) => _buildTaskItem(task)),
+        ...tasks.map((task) => _buildTaskItem(task, isDark)),
       ],
     );
   }
 
-  Widget _buildTaskItem(String task) {
+  Widget _buildTaskItem(String task, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A).withOpacity(0.6),
+        color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -473,7 +479,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFFFFF00), width: 2),
+              border: Border.all(color: AppColors.primary, width: 2),
               borderRadius: BorderRadius.circular(6),
             ),
           ),
@@ -481,12 +487,15 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           Expanded(
             child: Text(
               task,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87, 
+                fontSize: 15
+              ),
             ),
           ),
           const Icon(
             Icons.arrow_forward_ios_rounded,
-            color: Color(0xFFFFFF00),
+            color: AppColors.primary,
             size: 16,
           ),
         ],
@@ -500,100 +509,86 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     required bool isComplete,
     required VoidCallback onTap,
     required Widget child,
+    required bool isDark,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isComplete
-                  ? Colors.green.withOpacity(0.3)
-                  : Colors.white.withOpacity(0.1),
-              width: 1.5,
+    return _buildGlassCard(
+      isDark: isDark,
+      borderColor: isComplete
+          ? AppColors.success.withOpacity(0.3)
+          : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (isComplete ? AppColors.success : AppColors.primary).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isComplete ? AppColors.success : AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (isComplete)
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.success,
+                      size: 24,
+                    )
+                  else
+                    const Icon(
+                      Icons.edit_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                ],
+              ),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InkWell(
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color:
-                              (isComplete
-                                      ? Colors.green
-                                      : const Color(0xFFFFFF00))
-                                  .withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          icon,
-                          color: isComplete
-                              ? Colors.green
-                              : const Color(0xFFFFFF00),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (isComplete)
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: Colors.green,
-                          size: 24,
-                        )
-                      else
-                        const Icon(
-                          Icons.edit_rounded,
-                          color: Color(0xFFFFFF00),
-                          size: 20,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: child,
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: child,
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: TextStyle(
+              color: isDark ? Colors.white54 : Colors.grey[600], 
+              fontSize: 14
+            ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -606,6 +601,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
   Widget _buildSubmitButton(
     ConductorProfileProvider provider,
     ConductorProfileModel profile,
+    bool isDark,
   ) {
     return SizedBox(
       width: double.infinity,
@@ -621,13 +617,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                          'Â¡Perfil enviado para verificaciÃ³n exitosamente!',
+                          '¡Perfil enviado para verificación exitosamente!',
                         ),
-                        backgroundColor: Colors.green,
+                        backgroundColor: AppColors.success,
                         duration: Duration(seconds: 3),
                       ),
                     );
-                    // Recargar perfil para actualizar estado
                     await provider.loadProfile(widget.conductorId);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -635,7 +630,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                         content: Text(
                           provider.errorMessage ?? 'Error al enviar perfil',
                         ),
-                        backgroundColor: Colors.red,
+                        backgroundColor: AppColors.error,
                       ),
                     );
                   }
@@ -643,11 +638,13 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
               },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
-          backgroundColor: const Color(0xFFFFFF00),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 0,
+          elevation: 4,
+          shadowColor: AppColors.primary.withOpacity(0.4),
         ),
         child: provider.isLoading
             ? const SizedBox(
@@ -655,13 +652,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : const Text(
-                'Enviar para VerificaciÃ³n',
+                'Enviar para Verificación',
                 style: TextStyle(
-                  color: Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -670,144 +666,85 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     );
   }
 
-  Widget _buildInReviewMessage() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1.5),
+  Widget _buildInReviewMessage(bool isDark) {
+    return _buildGlassCard(
+      isDark: isDark,
+      backgroundColor: AppColors.info.withOpacity(0.1),
+      borderColor: AppColors.info.withOpacity(0.3),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.info.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.hourglass_empty_rounded,
+              color: AppColors.info,
+              size: 48,
+            ),
           ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.hourglass_empty_rounded,
-                  color: Colors.blue,
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'VerificaciÃ³n en RevisiÃ³n',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Tu perfil ha sido enviado y estÃ¡ siendo revisado por nuestro equipo. Te notificaremos cuando el proceso haya finalizado.',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Color(0xFFFFFF00),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Tiempo estimado: 24-48 horas',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(height: 20),
+          const Text(
+            'Verificación en Revisión',
+            style: TextStyle(
+              color: AppColors.info,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Completion progress shimmer
-            _buildShimmerBox(height: 120, width: double.infinity),
-            const SizedBox(height: 32),
-            // Verification status shimmer
-            _buildShimmerBox(height: 90, width: double.infinity),
-            const SizedBox(height: 24),
-            // License section shimmer
-            _buildShimmerBox(height: 200, width: double.infinity),
-            const SizedBox(height: 24),
-            // Vehicle section shimmer
-            _buildShimmerBox(height: 250, width: double.infinity),
-            const SizedBox(height: 24),
-            // Pending tasks title shimmer
-            _buildShimmerBox(height: 24, width: 180),
-            const SizedBox(height: 16),
-            // Pending task items shimmer
-            _buildShimmerBox(height: 60, width: double.infinity),
-            const SizedBox(height: 12),
-            _buildShimmerBox(height: 60, width: double.infinity),
-            const SizedBox(height: 12),
-            _buildShimmerBox(height: 60, width: double.infinity),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerBox({required double height, double? width}) {
-    return Shimmer.fromColors(
-      baseColor: const Color(0xFF1A1A1A),
-      highlightColor: const Color(0xFF2A2A2A),
-      child: Container(
-        height: height,
-        width: width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            'Tu perfil ha sido enviado y está siendo revisado por nuestro equipo. Te notificaremos cuando el proceso haya finalizado.',
+            style: TextStyle(
+              color: isDark ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+              fontSize: 15,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AppColors.info,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Tiempo estimado: 24-48 horas',
+                    style: TextStyle(
+                      color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // ========== VISTA DE PERFIL APROBADO ==========
 
-  Widget _buildApprovedProfileView(ConductorProfileModel profile) {
+  Widget _buildApprovedProfileView(ConductorProfileModel profile, bool isDark) {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -815,21 +752,21 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            _buildApprovedBadge(),
+            _buildApprovedBadge(isDark),
             const SizedBox(height: 24),
-            _buildApprovedPersonalInfoSection(profile),
+            _buildApprovedPersonalInfoSection(profile, isDark),
             const SizedBox(height: 24),
-            _buildApprovedLicenseSection(profile),
+            _buildApprovedLicenseSection(profile, isDark),
             const SizedBox(height: 24),
-            _buildApprovedVehicleSection(profile),
+            _buildApprovedVehicleSection(profile, isDark),
             const SizedBox(height: 24),
-            _buildApprovedDocumentsSection(profile),
+            _buildApprovedDocumentsSection(profile, isDark),
             const SizedBox(height: 24),
-            _buildApprovedSettingsSection(),
+            _buildApprovedSettingsSection(isDark),
             const SizedBox(height: 24),
-            _buildApprovedAccountSection(),
+            _buildApprovedAccountSection(isDark),
             const SizedBox(height: 24),
-            _buildLogoutButton(),
+            _buildLogoutButton(isDark),
             const SizedBox(height: 40),
           ],
         ),
@@ -837,101 +774,97 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     );
   }
 
-  Widget _buildApprovedBadge() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.green.withOpacity(0.3),
-              width: 1.5,
+  Widget _buildApprovedBadge(bool isDark) {
+    return _buildGlassCard(
+      isDark: isDark,
+      backgroundColor: AppColors.success.withOpacity(0.1),
+      borderColor: AppColors.success.withOpacity(0.3),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.verified_rounded,
+              color: AppColors.success,
+              size: 32,
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
-                  shape: BoxShape.circle,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '¡Conductor Verificado!',
+                  style: TextStyle(
+                    color: AppColors.success,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.verified_rounded,
-                  color: Colors.green,
-                  size: 32,
+                const SizedBox(height: 4),
+                Text(
+                  'Tu perfil ha sido aprobado y verificado',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.grey[600], 
+                    fontSize: 14
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Â¡Conductor Verificado!',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Tu perfil ha sido aprobado y verificado',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildApprovedPersonalInfoSection(ConductorProfileModel profile) {
+  Widget _buildApprovedPersonalInfoSection(ConductorProfileModel profile, bool isDark) {
     return _buildApprovedSection(
-      title: 'InformaciÃ³n Personal',
+      title: 'Información Personal',
       icon: Icons.person_rounded,
+      isDark: isDark,
       children: [
         _buildApprovedInfoTile(
           icon: Icons.badge_rounded,
           label: 'Estado',
           value: 'Conductor Activo',
-          valueColor: Colors.green,
+          valueColor: AppColors.success,
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildApprovedInfoTile(
           icon: Icons.calendar_today_rounded,
           label: 'Verificado desde',
           value: _formatDate(profile.fechaUltimaVerificacion),
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildApprovedInfoTile(
           icon: Icons.security_rounded,
           label: 'Estado de Documentos',
           value: 'Todos verificados',
-          valueColor: Colors.green,
+          valueColor: AppColors.success,
+          isDark: isDark,
         ),
       ],
     );
   }
 
-  Widget _buildApprovedLicenseSection(ConductorProfileModel profile) {
+  Widget _buildApprovedLicenseSection(ConductorProfileModel profile, bool isDark) {
     final license = profile.licencia;
     final hasLicense = license != null && license.isComplete;
 
     return _buildApprovedSection(
-      title: 'Licencia de ConducciÃ³n',
+      title: 'Licencia de Conducción',
       icon: Icons.credit_card_rounded,
+      isDark: isDark,
       trailing: hasLicense
           ? IconButton(
-              icon: const Icon(Icons.edit_rounded, color: Color(0xFFFFFF00)),
+              icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
               onPressed: () => _editLicense(license),
             )
           : null,
@@ -939,39 +872,42 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           ? [
               _buildApprovedInfoTile(
                 icon: Icons.numbers_rounded,
-                label: 'NÃºmero',
+                label: 'Número',
                 value: license.numero,
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.category_rounded,
-                label: 'CategorÃ­a',
+                label: 'Categoría',
                 value: license.categoria.label,
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.event_rounded,
                 label: 'Fecha de Vencimiento',
                 value:
                     '${license.fechaVencimiento.day}/${license.fechaVencimiento.month}/${license.fechaVencimiento.year}',
                 valueColor: license.isValid
-                    ? (license.isExpiringSoon ? Colors.orange : Colors.white)
-                    : Colors.red,
+                    ? (license.isExpiringSoon ? AppColors.warning : (isDark ? Colors.white : Colors.black87))
+                    : AppColors.error,
+                isDark: isDark,
               ),
               if (license.isExpiringSoon || !license.isValid) ...[
-                const Divider(color: Colors.white12),
+                Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: (license.isValid ? Colors.orange : Colors.red)
-                        .withOpacity(0.2),
+                    color: (license.isValid ? AppColors.warning : AppColors.error)
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.warning_rounded,
-                        color: license.isValid ? Colors.orange : Colors.red,
+                        color: license.isValid ? AppColors.warning : AppColors.error,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -979,9 +915,9 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                         child: Text(
                           license.isValid
                               ? 'Tu licencia vence pronto. Considera renovarla.'
-                              : 'Tu licencia estÃ¡ vencida. RenuÃ©vala urgentemente.',
+                              : 'Tu licencia está vencida. Renuévala urgentemente.',
                           style: TextStyle(
-                            color: license.isValid ? Colors.orange : Colors.red,
+                            color: license.isValid ? AppColors.warning : AppColors.error,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -993,27 +929,28 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
               ],
             ]
           : [
-              const Padding(
-                padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Text(
                   'No has registrado tu licencia',
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[500]),
                 ),
               ),
             ],
     );
   }
 
-  Widget _buildApprovedVehicleSection(ConductorProfileModel profile) {
+  Widget _buildApprovedVehicleSection(ConductorProfileModel profile, bool isDark) {
     final vehicle = profile.vehiculo;
     final hasVehicle = vehicle != null && vehicle.isBasicComplete;
 
     return _buildApprovedSection(
-      title: 'InformaciÃ³n del VehÃ­culo',
+      title: 'Información del Vehículo',
       icon: Icons.directions_car_rounded,
+      isDark: isDark,
       trailing: hasVehicle
           ? IconButton(
-              icon: const Icon(Icons.edit_rounded, color: Color(0xFFFFFF00)),
+              icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
               onPressed: () => _editVehicle(vehicle),
             )
           : null,
@@ -1023,77 +960,88 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                 icon: Icons.pin_rounded,
                 label: 'Placa',
                 value: vehicle.placa.toUpperCase(),
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.car_rental_rounded,
                 label: 'Tipo',
                 value: vehicle.tipo.label,
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.business_rounded,
                 label: 'Marca',
                 value: vehicle.marca ?? 'N/A',
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.inventory_rounded,
                 label: 'Modelo',
                 value: vehicle.modelo ?? 'N/A',
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.calendar_today_rounded,
-                label: 'AÃ±o',
+                label: 'Año',
                 value: vehicle.anio?.toString() ?? 'N/A',
+                isDark: isDark,
               ),
-              const Divider(color: Colors.white12),
+              Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
               _buildApprovedInfoTile(
                 icon: Icons.palette_rounded,
                 label: 'Color',
                 value: vehicle.color ?? 'N/A',
+                isDark: isDark,
               ),
             ]
           : [
-              const Padding(
-                padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  'No has registrado tu vehÃ­culo',
-                  style: TextStyle(color: Colors.white54),
+                  'No has registrado tu vehículo',
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[500]),
                 ),
               ),
             ],
     );
   }
 
-  Widget _buildApprovedDocumentsSection(ConductorProfileModel profile) {
+  Widget _buildApprovedDocumentsSection(ConductorProfileModel profile, bool isDark) {
     return _buildApprovedSection(
       title: 'Documentos',
       icon: Icons.folder_rounded,
+      isDark: isDark,
       children: [
         _buildDocumentItem(
-          'Licencia de ConducciÃ³n',
+          'Licencia de Conducción',
           Icons.badge_rounded,
           verified: profile.licencia != null,
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildDocumentItem(
           'SOAT',
           Icons.description_rounded,
           verified: profile.vehiculo?.fotoSoat != null,
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildDocumentItem(
           'Tarjeta de Propiedad',
           Icons.description_rounded,
           verified: profile.vehiculo?.fotoTarjetaPropiedad != null,
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildDocumentItem(
-          'TecnomecÃ¡nica',
+          'Tecnomecánica',
           Icons.build_rounded,
           verified: profile.vehiculo?.fotoTecnomecanica != null,
+          isDark: isDark,
         ),
       ],
     );
@@ -1103,6 +1051,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     String title,
     IconData icon, {
     required bool verified,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1111,12 +1060,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (verified ? Colors.green : Colors.orange).withOpacity(0.2),
+              color: (verified ? AppColors.success : AppColors.warning).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: verified ? Colors.green : Colors.orange,
+              color: verified ? AppColors.success : AppColors.warning,
               size: 24,
             ),
           ),
@@ -1124,8 +1073,8 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -1133,7 +1082,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           ),
           Icon(
             verified ? Icons.check_circle_rounded : Icons.warning_rounded,
-            color: verified ? Colors.green : Colors.orange,
+            color: verified ? AppColors.success : AppColors.warning,
             size: 24,
           ),
         ],
@@ -1141,55 +1090,63 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     );
   }
 
-  Widget _buildApprovedSettingsSection() {
+  Widget _buildApprovedSettingsSection(bool isDark) {
     return _buildApprovedSection(
-      title: 'ConfiguraciÃ³n',
+      title: 'Configuración',
       icon: Icons.settings_rounded,
+      isDark: isDark,
       children: [
         _buildSettingItem(
           'Notificaciones',
           Icons.notifications_rounded,
           onTap: () => _showComingSoon('Notificaciones'),
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildSettingItem(
           'Privacidad',
           Icons.privacy_tip_rounded,
           onTap: () => _showComingSoon('Privacidad'),
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildSettingItem(
           'Idioma',
           Icons.language_rounded,
-          trailing: 'EspaÃ±ol',
+          trailing: 'Español',
           onTap: () => _showComingSoon('Idioma'),
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildSettingItem(
           'Modo Oscuro',
           Icons.dark_mode_rounded,
-          trailing: 'Activado',
+          trailing: isDark ? 'Activado' : 'Desactivado',
           onTap: () => _showComingSoon('Modo Oscuro'),
+          isDark: isDark,
         ),
       ],
     );
   }
 
-  Widget _buildApprovedAccountSection() {
+  Widget _buildApprovedAccountSection(bool isDark) {
     return _buildApprovedSection(
       title: 'Cuenta',
       icon: Icons.account_circle_rounded,
+      isDark: isDark,
       children: [
         _buildSettingItem(
           'Ayuda y Soporte',
           Icons.help_rounded,
           onTap: () => _showComingSoon('Ayuda y Soporte'),
+          isDark: isDark,
         ),
-        const Divider(color: Colors.white12),
+        Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
         _buildSettingItem(
-          'TÃ©rminos y Condiciones',
+          'Términos y Condiciones',
           Icons.article_rounded,
-          onTap: () => _showComingSoon('TÃ©rminos y Condiciones'),
+          onTap: () => _showComingSoon('Términos y Condiciones'),
+          isDark: isDark,
         ),
       ],
     );
@@ -1200,61 +1157,49 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     required IconData icon,
     Widget? trailing,
     required List<Widget> children,
+    required bool isDark,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1.5,
+    return _buildGlassCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing,
+              ],
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFF00).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: const Color(0xFFFFFF00),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    if (trailing != null) trailing,
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Column(children: children),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(children: children),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1264,23 +1209,27 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     required String label,
     required String value,
     Color? valueColor,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white54, size: 20),
+          Icon(icon, color: isDark ? Colors.white54 : Colors.grey[500], size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey[600], 
+                fontSize: 14
+              ),
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              color: valueColor ?? Colors.white,
+              color: valueColor ?? (isDark ? Colors.white : Colors.black87),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -1297,6 +1246,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     Color? textColor,
     Color? iconColor,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return InkWell(
       onTap: onTap,
@@ -1305,13 +1255,17 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? Colors.white70, size: 24),
+            Icon(
+              icon, 
+              color: iconColor ?? (isDark ? Colors.white70 : Colors.grey[600]), 
+              size: 24
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
-                  color: textColor ?? Colors.white,
+                  color: textColor ?? (isDark ? Colors.white : Colors.black87),
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1320,15 +1274,51 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
             if (trailing != null)
               Text(
                 trailing,
-                style: const TextStyle(color: Colors.white54, fontSize: 14),
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.grey[500], 
+                  fontSize: 14
+                ),
               ),
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white54,
+              color: isDark ? Colors.white54 : Colors.grey[400],
               size: 16,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassCard({
+    required Widget child,
+    required bool isDark,
+    Color? backgroundColor,
+    Color? borderColor,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: backgroundColor ?? (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor ?? (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2)),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: child,
         ),
       ),
     );
@@ -1378,8 +1368,8 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$feature estarÃ¡ disponible prÃ³ximamente'),
-        backgroundColor: Colors.blue,
+        content: Text('$feature estará disponible próximamente'),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1387,12 +1377,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(bool isDark) {
     return GestureDetector(
       onTap: () async {
         final shouldLogout = await showDialog<bool>(
           context: context,
-          builder: (context) => _buildLogoutDialog(),
+          builder: (context) => _buildLogoutDialog(isDark),
         );
 
         if (shouldLogout == true && mounted) {
@@ -1405,42 +1395,30 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           ).pushNamedAndRemoveUntil('/welcome', (route) => false);
         }
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFf5576c).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFf5576c).withOpacity(0.3),
-                width: 1.5,
+      child: _buildGlassCard(
+        isDark: isDark,
+        backgroundColor: AppColors.error.withOpacity(0.1),
+        borderColor: AppColors.error.withOpacity(0.3),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.error, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Cerrar sesión',
+              style: TextStyle(
+                color: AppColors.error,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.logout_rounded, color: Color(0xFFf5576c), size: 24),
-                SizedBox(width: 12),
-                Text(
-                  'Cerrar sesiÃ³n',
-                  style: TextStyle(
-                    color: Color(0xFFf5576c),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLogoutDialog() {
+  Widget _buildLogoutDialog(bool isDark) {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: ClipRRect(
@@ -1450,10 +1428,10 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2),
                 width: 1.5,
               ),
             ),
@@ -1463,29 +1441,29 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFf5576c).withOpacity(0.15),
+                    color: AppColors.error.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.logout_rounded,
-                    color: Color(0xFFf5576c),
+                    color: AppColors.error,
                     size: 40,
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Â¿Cerrar sesiÃ³n?',
+                Text(
+                  '¿Cerrar sesión?',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.black87,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Â¿EstÃ¡s seguro de que deseas cerrar sesiÃ³n?',
+                  '¿Estás seguro de que deseas cerrar sesión?',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: isDark ? Colors.white.withOpacity(0.6) : Colors.grey[600],
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -1498,15 +1476,15 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                         onPressed: () => Navigator.pop(context, false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : Colors.black87,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1519,13 +1497,13 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
                         onPressed: () => Navigator.pop(context, true),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: const Color(0xFFf5576c),
+                          backgroundColor: AppColors.error,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: const Text(
-                          'Cerrar sesiÃ³n',
+                          'Cerrar sesión',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -1539,6 +1517,42 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading(bool isDark) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _buildShimmerBox(height: 120, width: double.infinity, isDark: isDark),
+            const SizedBox(height: 32),
+            _buildShimmerBox(height: 90, width: double.infinity, isDark: isDark),
+            const SizedBox(height: 24),
+            _buildShimmerBox(height: 200, width: double.infinity, isDark: isDark),
+            const SizedBox(height: 24),
+            _buildShimmerBox(height: 250, width: double.infinity, isDark: isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerBox({required double height, double? width, required bool isDark}) {
+    return Shimmer.fromColors(
+      baseColor: isDark ? const Color(0xFF1A1A1A) : Colors.grey[300]!,
+      highlightColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]!,
+      child: Container(
+        height: height,
+        width: width,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );

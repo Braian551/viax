@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/auth/user_service.dart';
+import '../../../../routes/route_names.dart';
 
 /// Menú hamburguesa del conductor con diseño moderno
 class ConductorDrawer extends StatelessWidget {
@@ -59,7 +60,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pop(context);
                             Navigator.pushNamed(
                               context, 
-                              '/conductor/profile',
+                              RouteNames.conductorProfile,
                               arguments: conductorUser,
                             );
                           },
@@ -74,7 +75,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pop(context);
                             Navigator.pushNamed(
                               context, 
-                              '/conductor/trips',
+                              RouteNames.conductorTrips,
                               arguments: conductorUser,
                             );
                           },
@@ -89,7 +90,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pop(context);
                             Navigator.pushNamed(
                               context, 
-                              '/conductor/earnings',
+                              RouteNames.conductorEarnings,
                               arguments: conductorUser,
                             );
                           },

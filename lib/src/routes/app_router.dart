@@ -25,6 +25,9 @@ import 'package:viax/src/features/admin/presentation/screens/audit_logs_screen.d
 import 'package:viax/src/features/admin/presentation/screens/conductores_documentos_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/pricing_management_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_home_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_profile_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_trips_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_earnings_screen.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/routes/animated_routes.dart';
 import 'package:viax/src/widgets/auth_wrapper.dart';
@@ -221,6 +224,43 @@ class AppRouter {
             builder: (_) => ConductorHomeScreen(
               conductorUser: args?['conductor_user'] ?? {},
             ),
+          );
+        }
+      case RouteNames.conductorProfile:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorProfileScreen(
+              conductorId: conductorId,
+              showBackButton: true,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.conductorTrips:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorTripsScreen(
+              conductorId: conductorId,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.conductorEarnings:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorEarningsScreen(
+              conductorId: conductorId,
+            ),
+            settings: settings,
           );
         }
       
