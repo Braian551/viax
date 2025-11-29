@@ -234,6 +234,7 @@ class AppRouter {
           return FadeSlidePageRoute(
             page: ConductorProfileScreen(
               conductorId: conductorId,
+              conductorUser: conductorUser, // Pass the full map
               showBackButton: true,
             ),
             settings: settings,
