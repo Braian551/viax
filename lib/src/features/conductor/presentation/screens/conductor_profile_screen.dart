@@ -140,31 +140,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                 ),
               ),
             ),
-            // Decorative Circles
-            Positioned(
-              top: -50,
-              right: -50,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 50,
-              left: -30,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
             
             // Profile Info
             SafeArea(
