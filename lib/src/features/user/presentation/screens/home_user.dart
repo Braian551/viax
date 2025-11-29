@@ -9,6 +9,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
+import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -170,7 +171,17 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
             _buildTabContent(isDark),
         ],
       ),
-      bottomNavigationBar: _buildModernBottomNav(isDark),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onIndexChanged: (index) => setState(() => _selectedIndex = index),
+        isDark: isDark,
+        items: [
+          CustomNavBarItem(icon: Icons.home_rounded, label: 'Inicio'),
+          CustomNavBarItem(icon: Icons.history_rounded, label: 'Viajes'),
+          CustomNavBarItem(icon: Icons.payment_rounded, label: 'Pagos'),
+          CustomNavBarItem(icon: Icons.person_rounded, label: 'Perfil'),
+        ],
+      ),
     );
   }
 
@@ -499,74 +510,5 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     );
   }
 
-  Widget _buildModernBottomNav(bool isDark) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.9),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_rounded, 'Inicio', isDark),
-                _buildNavItem(1, Icons.history_rounded, 'Viajes', isDark),
-                _buildNavItem(2, Icons.payment_rounded, 'Pagos', isDark),
-                _buildNavItem(3, Icons.person_rounded, 'Perfil', isDark),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildNavItem(int index, IconData icon, String label, bool isDark) {
-    final isSelected = _selectedIndex == index;
-    final color = isSelected ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey[400]);
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: isSelected
-            ? BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              )
-            : null,
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }
