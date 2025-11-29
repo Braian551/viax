@@ -237,13 +237,74 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
               decoration: InputDecoration(
                 hintText: hint,
                 border: InputBorder.none,
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.transparent),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: iconColor, width: 1.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 hintStyle: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.2,
                 ),
-                contentPadding: EdgeInsets.zero,
+                // Suffix icon inside the input, either clear button or loader
+                suffixIcon: controller.text.isNotEmpty
+                    ? Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () => setState(() {
+                            controller.clear();
+                            _suggestions = [];
+                            if (isOrigin) {
+                              _selectedOrigin = null;
+                            } else {
+                              _selectedDestination = null;
+                            }
+                          }),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    : ((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
+                        ? Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : null,
+                suffixIconConstraints: const BoxConstraints(minWidth: 30, minHeight: 30),
               ),
               style: const TextStyle(
                 fontSize: 15,
@@ -254,35 +315,6 @@ class _RequestTripScreenState extends State<RequestTripScreen> {
               onTap: () => _onInputTap(isOrigin: isOrigin),
             ),
           ),
-          if (controller.text.isNotEmpty)
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => setState(() {
-                  controller.clear();
-                  _suggestions = [];
-                  if (isOrigin) {
-                    _selectedOrigin = null;
-                  } else {
-                    _selectedDestination = null;
-                  }
-                }),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(Icons.close, size: 18, color: Colors.grey[400]),
-                ),
-              ),
-            )
-          else if ((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-              ),
-            ),
         ],
       ),
     );
