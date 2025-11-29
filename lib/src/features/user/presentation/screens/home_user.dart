@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -348,29 +348,31 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   }
 
   Widget _buildHomeOverlay(bool isDark) {
-    return SafeArea(
-      child: Column(
-        children: [
-          const Spacer(),
-          // Caja de búsqueda flotante
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 100), // Margen inferior para el nav
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.95),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+    return Positioned(
+      left: 20,
+      right: 20,
+      bottom: 110, // Posición fija para asegurar que esté abajo
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
+              ],
+            ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -392,14 +394,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[100],
+                          color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.06),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.search_rounded,
-                              color: isDark ? Colors.white70 : Colors.grey[600],
+                              color: isDark ? Colors.white70 : AppColors.primary,
                             ),
                             const SizedBox(width: 12),
                             Text(
@@ -435,9 +441,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               ),
             ),
           ),
-        ],
-      ),
-    );
+      );
   }
 
   Widget _buildQuickAction({
@@ -449,11 +453,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
+          color: isDark ? Colors.white.withOpacity(0.03) : Colors.blue.withOpacity(0.02),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? Colors.white10 : Colors.grey[200]!,
+            color: isDark ? Colors.white10 : AppColors.primary.withOpacity(0.08),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
