@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:viax/src/features/user/presentation/screens/home_user.dart';
 import 'package:viax/src/features/user/presentation/screens/confirm_trip_screen.dart';
-import 'package:viax/src/features/user/presentation/screens/request_trip_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/enhanced_destination_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/payment_methods_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
@@ -106,7 +106,7 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return FadeSlidePageRoute(
-            page: RequestTripScreen(
+            page: EnhancedDestinationScreen(
               initialSelection: args?['selecting'],
             ),
             settings: settings,

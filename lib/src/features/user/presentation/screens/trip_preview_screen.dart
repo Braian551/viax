@@ -5,6 +5,7 @@ import 'dart:async';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../global/services/auth/user_service.dart';
+import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import 'searching_driver_screen.dart';
 
@@ -502,19 +503,19 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ],
           ),
         
-        // Línea de ruta principal con tema amarillo/dorado
+        // Línea de ruta principal con tema azul
         if (_animatedRoutePoints.length > 1)
           PolylineLayer(
             polylines: [
               Polyline(
                 points: _animatedRoutePoints,
                 strokeWidth: 8,
-                color: const Color(0xFFFFD700),
+                color: AppColors.primary,
                 borderStrokeWidth: 0,
                 gradientColors: [
-                  const Color(0xFFFFD700).withOpacity(0.9),
-                  const Color(0xFFFFA500),
-                  const Color(0xFFFF8C00),
+                  AppColors.primaryLight,
+                  AppColors.primary,
+                  AppColors.primaryDark,
                 ],
               ),
             ],
@@ -548,7 +549,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           height: 60 * _pulseAnimation.value,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFFFFD700).withOpacity(
+                            color: AppColors.primaryLight.withOpacity(
                               0.3 / _pulseAnimation.value,
                             ),
                           ),
@@ -560,15 +561,15 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFFFD700),
+                          color: AppColors.primary,
                           width: 3,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFD700).withOpacity(0.5),
+                            color: AppColors.primary.withOpacity(0.4),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -579,8 +580,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     Container(
                       width: 16,
                       height: 16,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFD700),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -660,26 +661,26 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         Container(
                           width: 50,
                           height: 50,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF1A1A1A),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryDark,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        // Círculo amarillo interior
+                        // Círculo azul claro interior
                         Container(
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700),
+                            color: Colors.white,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: const Color(0xFF1A1A1A),
+                              color: AppColors.primaryDark,
                               width: 3,
                             ),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.location_on,
-                            color: Color(0xFF1A1A1A),
+                            color: AppColors.primaryDark,
                             size: 24,
                           ),
                         ),
@@ -718,10 +719,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             child: Container(
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                color: AppColors.darkSurface.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withOpacity(0.3),
+                  color: AppColors.primary.withOpacity(0.2),
                   width: 1,
                 ),
                 boxShadow: [
@@ -745,7 +746,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700).withOpacity(0.15),
+                            color: AppColors.primary.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Material(
@@ -753,10 +754,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10),
                               onTap: () => Navigator.pop(context),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.arrow_back_ios_new,
                                 size: 16,
-                                color: Color(0xFFFFD700),
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -771,10 +772,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFD700).withOpacity(0.15),
+                                color: AppColors.primary.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFFFFD700).withOpacity(0.3),
+                                  color: AppColors.primary.withOpacity(0.3),
                                   width: 1,
                                 ),
                               ),
@@ -784,15 +785,15 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                   Icon(
                                     Icons.access_time_rounded,
                                     size: 14,
-                                    color: const Color(0xFFFFD700),
+                                    color: AppColors.primary,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     _quote!.formattedDuration,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFFFFD700),
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                   Padding(
@@ -800,21 +801,21 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                     child: Container(
                                       width: 2,
                                       height: 12,
-                                      color: const Color(0xFFFFD700).withOpacity(0.3),
+                                      color: AppColors.primary.withOpacity(0.3),
                                     ),
                                   ),
                                   Icon(
                                     Icons.straighten,
                                     size: 14,
-                                    color: const Color(0xFFFFD700),
+                                    color: AppColors.primary,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     _quote!.formattedDistance,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFFFFD700),
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ],
@@ -843,7 +844,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         _buildCompactLocationInfo(
                           icon: Icons.circle,
                           iconSize: 8,
-                          color: const Color(0xFFFFD700),
+                          color: AppColors.primaryLight,
                           text: widget.origin.address,
                           isOrigin: true,
                         ),
@@ -858,7 +859,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                 Container(
                                   width: 2,
                                   height: 10,
-                                  color: const Color(0xFFFFD700).withOpacity(0.4),
+                                  color: AppColors.primary.withOpacity(0.4),
                                 ),
                               ],
                             ),
@@ -866,7 +867,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           _buildCompactLocationInfo(
                             icon: Icons.stop_circle_outlined,
                             iconSize: 10,
-                            color: Colors.orange,
+                            color: AppColors.accent,
                             text: widget.stops[i].address,
                             isOrigin: false,
                           ),
@@ -888,7 +889,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                       width: 2,
                                       height: 3,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFFD700).withOpacity(0.4),
+                                        color: AppColors.primary.withOpacity(0.4),
                                         borderRadius: BorderRadius.circular(1),
                                       ),
                                     ),
@@ -903,7 +904,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         _buildCompactLocationInfo(
                           icon: Icons.location_on,
                           iconSize: 12,
-                          color: const Color(0xFFFFD700),
+                          color: AppColors.primaryDark,
                           text: widget.destination.address,
                           isOrigin: false,
                         ),
@@ -987,7 +988,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           position: _slideAnimation,
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
+              color: AppColors.darkSurface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
@@ -1047,10 +1048,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
+                        color: AppColors.darkCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.yellow.shade700,
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -1060,13 +1061,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.yellow.shade700.withOpacity(0.2),
+                              color: AppColors.primary.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               _getVehicleIcon(widget.vehicleType),
                               size: 32,
-                              color: Colors.yellow.shade700,
+                              color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1111,7 +1112,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.yellow.shade700,
+                                  color: AppColors.primary,
                                 ),
                               );
                             },
@@ -1136,7 +1137,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2A2A2A),
+                          color: AppColors.darkCard,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1193,10 +1194,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
+                        color: AppColors.darkCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.yellow.shade700.withOpacity(0.3),
+                          color: AppColors.primary.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -1204,7 +1205,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Colors.yellow.shade700,
+                            color: AppColors.primary,
                             size: 40,
                           ),
                           const SizedBox(height: 12),
@@ -1241,8 +1242,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: ElevatedButton(
                       onPressed: _confirmTrip,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 171, 122, 1),
-                        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -1380,10 +1381,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: AppColors.darkSurface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFFFD700).withOpacity(0.3),
+              color: AppColors.primary.withOpacity(0.3),
               width: 1,
             ),
             boxShadow: [
@@ -1403,7 +1404,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 child: CircularProgressIndicator(
                   strokeWidth: 3,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    const Color(0xFFFFD700),
+                    AppColors.primary,
                   ),
                 ),
               ),
@@ -1497,9 +1498,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (context) => Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
       );
