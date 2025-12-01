@@ -8,7 +8,7 @@ import '../../../../global/services/auth/user_service.dart';
 import '../../services/trip_request_service.dart';
 import 'searching_driver_screen.dart';
 
-/// Modelo para cotizaciÃ³n del viaje
+/// Modelo para cotización del viaje
 class TripQuote {
   final double distanceKm;
   final int durationMinutes;
@@ -37,17 +37,19 @@ class TripQuote {
   String get formattedDuration => '$durationMinutes min';
 }
 
-/// Segunda pantalla - Preview del viaje con mapa y cotizaciÃ³n
-/// Muestra el mapa con la ruta, informaciÃ³n del viaje y precio calculado
+/// Segunda pantalla - Preview del viaje con mapa y cotización
+/// Muestra el mapa con la ruta, información del viaje y precio calculado
 class TripPreviewScreen extends StatefulWidget {
   final SimpleLocation origin;
   final SimpleLocation destination;
+  final List<SimpleLocation> stops;
   final String vehicleType;
   
   const TripPreviewScreen({
     super.key,
     required this.origin,
     required this.destination,
+    this.stops = const [],
     required this.vehicleType,
   });
 
@@ -118,7 +120,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   }
 
   void _setupAnimations() {
-    // AnimaciÃ³n del panel inferior
+    // Animación del panel inferior
     _slideAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -132,9 +134,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       curve: Curves.easeOutCubic,
     ));
     
-    // AnimaciÃ³n de la lÃ­nea de ruta (mÃ¡s suave y prolongada)
+    // Animación de la línea de ruta (más suave y prolongada)
     _routeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 2500), // MÃ¡s lento para efecto suave
+      duration: const Duration(milliseconds: 2500), // Más lento para efecto suave
       vsync: this,
     );
     
@@ -143,7 +145,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _routeAnimationController,
-      curve: Curves.easeInOutCubic, // Curva mÃ¡s suave
+      curve: Curves.easeInOutCubic, // Curva más suave
     ));
     _routeAnimation = _routeAnimation..addListener(() {
       if (!mounted) return; // Avoid setState on unmounted widget
@@ -157,7 +159,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       }
     });
     
-    // AnimaciÃ³n del panel superior
+    // Animación del panel superior
     _topPanelAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -179,7 +181,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       curve: Curves.easeOut,
     ));
     
-    // AnimaciÃ³n de marcadores
+    // Animación de marcadores
     _markerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -201,7 +203,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       curve: Curves.bounceOut,
     ));
     
-    // AnimaciÃ³n de pulso para marcadores
+    // Animación de pulso para marcadores
     _pulseAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -224,12 +226,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     });
     
     try {
+      // Prepare waypoints: Origin -> Stops -> Destination
+      final waypoints = [
+        widget.origin.toLatLng(),
+        ...widget.stops.map((s) => s.toLatLng()),
+        widget.destination.toLatLng(),
+      ];
+
       // Obtener ruta de Mapbox
       final route = await MapboxService.getRoute(
-        waypoints: [
-          widget.origin.toLatLng(),
-          widget.destination.toLatLng(),
-        ],
+        waypoints: waypoints,
       );
       
       if (route == null) {
@@ -242,7 +248,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         _isLoadingRoute = false;
       });
       
-      // Ajustar el mapa para mostrar la ruta completa con animaciÃ³n suave
+      // Ajustar el mapa para mostrar la ruta completa con animación suave
       await _fitMapToRouteAnimated();
       if (!mounted) return;
       
@@ -255,12 +261,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       if (!mounted) return;
       _markerAnimationController.forward();
       
-      // Animar la lÃ­nea de ruta
+      // Animar la línea de ruta
       await Future.delayed(const Duration(milliseconds: 300));
       if (!mounted) return;
       _routeAnimationController.forward();
       
-      // Calcular cotizaciÃ³n (por ahora localmente, luego serÃ¡ desde el backend)
+      // Calcular cotización (por ahora localmente, luego será desde el backend)
       final quote = _calculateQuote(route);
       
       if (!mounted) return;
@@ -269,7 +275,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         _isLoadingQuote = false;
       });
       
-      // Animar la apariciÃ³n del panel de detalles
+      // Animar la aparición del panel de detalles
       await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
       _slideAnimationController.forward();
@@ -287,7 +293,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   Future<void> _fitMapToRouteAnimated() async {
     if (_route == null) return;
     
-    // Encontrar los lÃ­mites de la ruta
+    // Encontrar los límites de la ruta
     double minLat = double.infinity;
     double maxLat = double.negativeInfinity;
     double minLng = double.infinity;
@@ -316,21 +322,21 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       ),
     );
     
-    // Usar animaciÃ³n de cÃ¡mara suave
+    // Usar animación de cámara suave
     _mapController.fitCamera(camera);
     
-    // Pausa para que la cÃ¡mara se ajuste antes de animar elementos
+    // Pausa para que la cámara se ajuste antes de animar elementos
     await Future.delayed(const Duration(milliseconds: 400));
   }
 
-  /// Calcular cotizaciÃ³n localmente (temporal)
-  /// TODO: Mover esta lÃ³gica al backend
+  /// Calcular cotización localmente (temporal)
+  /// TODO: Mover esta lógica al backend
   TripQuote _calculateQuote(MapboxRoute route) {
     final hour = DateTime.now().hour;
     final distanceKm = route.distanceKm;
     final durationMinutes = route.durationMinutes.ceil();
     
-    // ConfiguraciÃ³n segÃºn tipo de vehÃ­culo (estos valores vendrÃ¡n del backend)
+    // Configuración según tipo de vehículo (estos valores vendrán del backend)
     final config = _getVehicleConfig(widget.vehicleType);
     
     // Precios base
@@ -338,7 +344,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     final distancePrice = distanceKm * config['costo_por_km']!;
     final timePrice = durationMinutes * config['costo_por_minuto']!;
     
-    // Determinar perÃ­odo y recargo
+    // Determinar período y recargo
     String periodType = 'normal';
     double surchargePercentage = 0.0;
     
@@ -354,7 +360,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     final surchargePrice = subtotal * (surchargePercentage / 100);
     final total = subtotal + surchargePrice;
     
-    // Aplicar tarifa mÃ­nima
+    // Aplicar tarifa mínima
     final finalTotal = total < config['tarifa_minima']! ? config['tarifa_minima']! : total;
     
     return TripQuote(
@@ -371,7 +377,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   }
 
   Map<String, double> _getVehicleConfig(String vehicleType) {
-    // Valores de ejemplo - estos vendrÃ¡n de la tabla configuracion_precios
+    // Valores de ejemplo - estos vendrán de la tabla configuracion_precios
     switch (vehicleType) {
       case 'moto':
         return {
@@ -427,7 +433,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       case 'carro': return 'Carro';
       case 'moto_carga': return 'Moto Carga';
       case 'carro_carga': return 'Carro Carga';
-      default: return 'VehÃ­culo';
+      default: return 'Vehículo';
     }
   }
 
@@ -450,7 +456,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           // Mapa
           _buildMap(),
           
-          // Overlay superior con informaciÃ³n compacta
+          // Overlay superior con información compacta
           _buildTopOverlay(),
           
           // Panel inferior con detalles y precio
@@ -496,7 +502,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ],
           ),
         
-        // LÃ­nea de ruta principal con tema amarillo/dorado
+        // Línea de ruta principal con tema amarillo/dorado
         if (_animatedRoutePoints.length > 1)
           PolylineLayer(
             polylines: [
@@ -514,10 +520,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ],
           ),
         
-        // Marcadores de origen y destino con animaciÃ³n
+        // Marcadores de origen, destino y paradas
         MarkerLayer(
           markers: [
-            // Origen con efecto de pulso
+            // Origen
             Marker(
               point: widget.origin.toLatLng(),
               width: 80,
@@ -549,7 +555,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         );
                       },
                     ),
-                    // CÃ­rculo exterior
+                    // Círculo exterior
                     Container(
                       width: 40,
                       height: 40,
@@ -583,6 +589,30 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               ),
             ),
             
+            // Paradas intermedias
+            ...widget.stops.asMap().entries.map((entry) {
+              final index = entry.key;
+              final stop = entry.value;
+              return Marker(
+                point: stop.toLatLng(),
+                width: 40,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                ),
+              );
+            }),
+
             // Destino con pin moderno
             Marker(
               point: widget.destination.toLatLng(),
@@ -626,7 +656,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             ],
                           ),
                         ),
-                        // CÃ­rculo exterior
+                        // Círculo exterior
                         Container(
                           width: 50,
                           height: 50,
@@ -635,7 +665,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             shape: BoxShape.circle,
                           ),
                         ),
-                        // CÃ­rculo amarillo interior
+                        // Círculo amarillo interior
                         Container(
                           width: 40,
                           height: 40,
@@ -671,215 +701,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ),
           ],
         ),
-        
-        // Cuadros informativos sobre los marcadores
-        if (_markerScaleAnimation.value > 0.5)
-          MarkerLayer(
-            markers: [
-              // Cuadro de informaciÃ³n del origen (posicionado arriba del marcador)
-              Marker(
-                point: widget.origin.toLatLng(),
-                width: 220,
-                height: 80,
-                alignment: Alignment.bottomCenter,
-                child: Transform.translate(
-                  offset: const Offset(0, -120),
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeOutBack,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A).withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFFFD700).withOpacity(0.5),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFFD700),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Origen',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFFFD700),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getShortAddress(widget.origin.address),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Cuadro de informaciÃ³n del destino (posicionado abajo)
-              Marker(
-                point: widget.destination.toLatLng(),
-                width: 200,
-                height: 80,
-                alignment: Alignment.topCenter,
-                child: Transform.translate(
-                  offset: const Offset(0, 80),
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutBack,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A).withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFFFD700).withOpacity(0.5),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFFD700),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Destino',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFFFD700),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getShortAddress(widget.destination.address),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        
-        // Indicador de progreso de animaciÃ³n de ruta
-        if (_currentRouteProgress > 0 && _currentRouteProgress < 1 && _animatedRoutePoints.isNotEmpty)
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: _animatedRoutePoints.last,
-                width: 20,
-                height: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFFFD700),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFFD700).withOpacity(0.6),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
       ],
     );
   }
@@ -919,7 +740,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                     child: Row(
                       children: [
-                        // BotÃ³n de regresar
+                        // Botón de regresar
                         Container(
                           width: 32,
                           height: 32,
@@ -1013,7 +834,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                   
-                  // InformaciÃ³n de ubicaciones compacta
+                  // Información de ubicaciones compacta
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
@@ -1027,7 +848,31 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           isOrigin: true,
                         ),
                         
-                        // LÃ­nea conectora
+                        // Paradas intermedias
+                        for (var i = 0; i < widget.stops.length; i++) ...[
+                           Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 14),
+                                Container(
+                                  width: 2,
+                                  height: 10,
+                                  color: const Color(0xFFFFD700).withOpacity(0.4),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildCompactLocationInfo(
+                            icon: Icons.stop_circle_outlined,
+                            iconSize: 10,
+                            color: Colors.orange,
+                            text: widget.stops[i].address,
+                            isOrigin: false,
+                          ),
+                        ],
+
+                        // Línea conectora
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Row(
@@ -1122,12 +967,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // Icono de editar
-              Icon(
-                Icons.edit_outlined,
-                size: 16,
-                color: color.withOpacity(0.6),
-              ),
             ],
           ),
         ),
@@ -1162,7 +1001,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               controller: scrollController,
               padding: EdgeInsets.zero,
               children: [
-                // Drag handle - lÃ­nea blanca
+                // Drag handle - línea blanca
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   alignment: Alignment.center,
@@ -1176,11 +1015,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   ),
                 ),
                 
-                // TÃ­tulo de secciÃ³n
+                // Título de sección
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                   child: Text(
-                    'Selecciona tu vehÃ­culo',
+                    'Selecciona tu vehículo',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1189,7 +1028,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   ),
                 ),
                 
-                // Tarjeta de vehÃ­culo seleccionado con precio
+                // Tarjeta de vehículo seleccionado con precio
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: TweenAnimationBuilder<double>(
@@ -1217,7 +1056,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       ),
                       child: Row(
                         children: [
-                          // Icono del vehÃ­culo
+                          // Icono del vehículo
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -1231,7 +1070,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // InformaciÃ³n del vehÃ­culo
+                          // Información del vehículo
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1283,7 +1122,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   ),
                 ),
                 
-                // BotÃ³n de efectivo (opcional) - mÃ¡s compacto
+                // Botón de efectivo (opcional) - más compacto
                 if (_quote!.surchargePercentage > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -1339,14 +1178,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                 
-                // Desglose de precios con animaciÃ³n (mÃ¡s compacto)
+                // Desglose de precios con animación (más compacto)
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   child: _showDetails ? _buildPriceBreakdown() : const SizedBox.shrink(),
                 ),
                 
-                // Mensaje cuando estÃ¡ expandido
+                // Mensaje cuando está expandido
                 if (_isPanelExpanded) ...[
                   const SizedBox(height: 24),
                   Padding(
@@ -1370,7 +1209,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Pronto habrÃ¡ mÃ¡s servicios',
+                            'Pronto habrá más servicios',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1380,7 +1219,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Estamos trabajando para ofrecerte mÃ¡s opciones de vehÃ­culos y servicios',
+                            'Estamos trabajando para ofrecerte más opciones de vehículos y servicios',
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[400],
@@ -1393,7 +1232,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   ),
                 ],
                 
-                // BotÃ³n de solicitar viaje - mÃ¡s arriba y visible
+                // Botón de solicitar viaje - más arriba y visible
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                   child: SizedBox(
@@ -1431,18 +1270,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   
   String _getVehicleDescription(String type) {
     switch (type) {
-      case 'moto': return 'RÃ¡pido y econÃ³mico';
-      case 'carro': return 'CÃ³modo y espacioso';
-      case 'moto_carga': return 'Para paquetes pequeÃ±os';
+      case 'moto': return 'Rápido y económico';
+      case 'carro': return 'Cómodo y espacioso';
+      case 'moto_carga': return 'Para paquetes pequeños';
       case 'carro_carga': return 'Para mudanzas';
-      default: return 'VehÃ­culo disponible';
+      default: return 'Vehículo disponible';
     }
   }
 
   String _getShortAddress(String address) {
-    // Si la direcciÃ³n es muy larga, mostrar solo las primeras partes
+    // Si la dirección es muy larga, mostrar solo las primeras partes
     if (address.isEmpty) {
-      return 'UbicaciÃ³n seleccionada';
+      return 'Ubicación seleccionada';
     }
     
     // Dividir por comas y tomar las primeras 2 partes
@@ -1610,76 +1449,40 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 48,
-                ),
-              ),
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
               const SizedBox(height: 16),
-              const Text(
-                'Error',
-                style: TextStyle(
-                  fontSize: 20,
+              Text(
+                'Error al calcular ruta',
+                style: const TextStyle(
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                _errorMessage!,
+                _errorMessage ?? 'Ocurrió un error inesperado',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.grey[400],
                   fontSize: 14,
                 ),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Volver'),
-                    ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.2),
+                  foregroundColor: Colors.red,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.red.withOpacity(0.5)),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _loadRouteAndQuote,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFD700),
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Reintentar',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+                child: const Text('Volver'),
               ),
             ],
           ),
@@ -1688,40 +1491,34 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     );
   }
 
-  void _confirmTrip() async {
-    if (_quote == null || _route == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: No se pudo calcular el viaje'),
-          backgroundColor: Colors.red,
+  Future<void> _confirmTrip() async {
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+          ),
         ),
       );
-      return;
-    }
 
-    // Mostrar diÃ¡logo de carga
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFFD700)),
-      ),
-    );
+      final user = await UserService.getSavedSession();
+      
+      if (user == null) {
+        if (mounted) {
+          Navigator.pop(context); // Cerrar loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error: Usuario no autenticado')),
+          );
+        }
+        return;
+      }
 
-    try {
-      // Obtener usuario de la sesiÃ³n
-      final session = await UserService.getSavedSession();
-      if (session == null) {
-        throw Exception('No hay sesiÃ³n activa. Por favor inicia sesiÃ³n.');
-      }
-      
-      final userId = session['id'] as int?;
-      if (userId == null) {
-        throw Exception('Usuario no vÃ¡lido. Por favor inicia sesiÃ³n nuevamente.');
-      }
-      
-      // Crear solicitud de viaje
-      final response = await TripRequestService.createTripRequest(
+      // Crear solicitud en backend
+      final userId = user['id'] is int ? (user['id'] as int) : int.tryParse(user['id'].toString()) ?? 0;
+      final result = await TripRequestService.createTripRequest(
         userId: userId,
         latitudOrigen: widget.origin.latitude,
         longitudOrigen: widget.origin.longitude,
@@ -1734,62 +1531,41 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         distanciaKm: _quote!.distanceKm,
         duracionMinutos: _quote!.durationMinutes,
         precioEstimado: _quote!.totalPrice,
+        stops: widget.stops, // Pasar paradas
       );
 
-      // Cerrar diÃ¡logo de carga
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.pop(context); // Cerrar loading
 
-      if (response['success'] == true) {
-        final solicitudId = response['solicitud_id'];
-        final conductoresEncontrados = response['conductores_encontrados'] ?? 0;
+      if (result['success'] == true) {
+        final solicitudId = result['solicitud_id'];
         
-        // Convertir solicitudId a int (viene como String del backend)
-        final solicitudIdInt = solicitudId is int ? solicitudId : int.parse(solicitudId.toString());
-
-        // Navegar a la pantalla de bÃºsqueda de conductor
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => SearchingDriverScreen(
-                solicitudId: solicitudIdInt,
-                latitudOrigen: widget.origin.latitude,
-                longitudOrigen: widget.origin.longitude,
-                direccionOrigen: widget.origin.address,
-                latitudDestino: widget.destination.latitude,
-                longitudDestino: widget.destination.longitude,
-                direccionDestino: widget.destination.address,
-                tipoVehiculo: widget.vehicleType,
-              ),
+        // Navegar a pantalla de búsqueda de conductor
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SearchingDriverScreen(
+              solicitudId: solicitudId,
+              latitudOrigen: widget.origin.latitude,
+              longitudOrigen: widget.origin.longitude,
+              direccionOrigen: widget.origin.address,
+              latitudDestino: widget.destination.latitude,
+              longitudDestino: widget.destination.longitude,
+              direccionDestino: widget.destination.address,
+              tipoVehiculo: widget.vehicleType,
             ),
-          );
-        }
-
-        // Mostrar mensaje informativo
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                conductoresEncontrados > 0
-                    ? 'Buscando entre $conductoresEncontrados ${conductoresEncontrados == 1 ? "conductor disponible" : "conductores disponibles"}'
-                    : 'Buscando conductores disponibles...',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
+          ),
+        );
+      } else {
+        throw Exception(result['message'] ?? 'Error al crear solicitud');
       }
     } catch (e) {
-      // Cerrar diÃ¡logo de carga si estÃ¡ abierto
-      if (mounted) Navigator.of(context).pop();
-
-      // Mostrar error
       if (mounted) {
+        Navigator.pop(context); // Cerrar loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al solicitar viaje: ${e.toString()}'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
           ),
         );
       }

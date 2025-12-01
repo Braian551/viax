@@ -27,6 +27,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _originFocusNode = FocusNode();
   final FocusNode _destinationFocusNode = FocusNode();
+  
+  // Multiple stops state
+  final List<SimpleLocation> _stops = [];
+  final List<TextEditingController> _stopControllers = [];
+  final List<FocusNode> _stopFocusNodes = [];
+  
   Timer? _debounce;
   
   SimpleLocation? _selectedOrigin;
@@ -47,10 +53,10 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     _setupAnimations();
     
     // Auto-fetch current location for origin (non-blocking)
-    Future.microtask(() => _setCurrentLocation(isOrigin: true));
+    Future.microtask(() => _setCurrentLocation(targetField: 'origin'));
 
-    _originController.addListener(() => _onTextChanged(isOrigin: true));
-    _destinationController.addListener(() => _onTextChanged(isOrigin: false));
+    _originController.addListener(() => _onTextChanged(targetField: 'origin'));
+    _destinationController.addListener(() => _onTextChanged(targetField: 'destination'));
     _originFocusNode.addListener(() => setState(() {}));
     _destinationFocusNode.addListener(() => setState(() {}));
   }
@@ -80,11 +86,42 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     _destinationController.dispose();
     _originFocusNode.dispose();
     _destinationFocusNode.dispose();
+    
+    for (var controller in _stopControllers) controller.dispose();
+    for (var node in _stopFocusNodes) node.dispose();
+    
     _debounce?.cancel();
     super.dispose();
   }
 
-  bool get _isValid => _selectedOrigin != null && _selectedDestination != null;
+  bool get _isValid => _selectedOrigin != null && _selectedDestination != null && 
+      (_stops.length == _stopControllers.length); // Basic validation
+
+  void _addStop() {
+    if (_stops.length >= 3) return; // Max 3 stops
+    
+    setState(() {
+      _stops.add(SimpleLocation(latitude: 0, longitude: 0, address: '')); // Placeholder
+      final controller = TextEditingController();
+      final focusNode = FocusNode();
+      
+      controller.addListener(() => _onTextChanged(targetField: 'stop_${_stops.length - 1}'));
+      focusNode.addListener(() => setState(() {}));
+      
+      _stopControllers.add(controller);
+      _stopFocusNodes.add(focusNode);
+    });
+  }
+
+  void _removeStop(int index) {
+    setState(() {
+      _stops.removeAt(index);
+      _stopControllers[index].dispose();
+      _stopControllers.removeAt(index);
+      _stopFocusNodes[index].dispose();
+      _stopFocusNodes.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,26 +227,51 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               letterSpacing: -0.5,
             ),
           ),
+          const Spacer(),
+          if (_stops.length < 3)
+            IconButton(
+              onPressed: _addStop,
+              icon: Icon(Icons.add_circle_outline_rounded, color: isDark ? Colors.white : Colors.black87),
+              tooltip: 'Agregar parada',
+            ),
         ],
       ),
     );
   }
 
-  Future<void> _onInputTap({required bool isOrigin}) async {
+  Future<void> _onInputTap({required String targetField}) async {
     setState(() {
       _suggestions = [];
     });
-    final query = isOrigin ? _originController.text.trim() : _destinationController.text.trim();
+    
+    String query = '';
+    if (targetField == 'origin') {
+      query = _originController.text.trim();
+    } else if (targetField == 'destination') {
+      query = _destinationController.text.trim();
+    } else if (targetField.startsWith('stop_')) {
+      final index = int.parse(targetField.split('_')[1]);
+      query = _stopControllers[index].text.trim();
+    }
+
     if (query.isNotEmpty) {
       // Don't await here - let it run asynchronously to avoid blocking UI
       _searchLocation(query);
     }
   }
 
-  void _onTextChanged({required bool isOrigin}) {
+  void _onTextChanged({required String targetField}) {
     setState(() {}); // Rebuild to show/hide clear button
     
-    final query = isOrigin ? _originController.text.trim() : _destinationController.text.trim();
+    String query = '';
+    if (targetField == 'origin') {
+      query = _originController.text.trim();
+    } else if (targetField == 'destination') {
+      query = _destinationController.text.trim();
+    } else if (targetField.startsWith('stop_')) {
+      final index = int.parse(targetField.split('_')[1]);
+      query = _stopControllers[index].text.trim();
+    }
     
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 450), () {
@@ -249,23 +311,45 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   children: [
                     _buildInputField(
                       controller: _originController,
+                      focusNode: _originFocusNode,
                       hint: 'Tu ubicación actual',
                       icon: Icons.my_location_rounded,
                       iconColor: const Color(0xFF2196F3),
-                      isOrigin: true,
+                      targetField: 'origin',
                       isDark: isDark,
                     ),
+                    
+                    // Render stops
+                    for (int i = 0; i < _stopControllers.length; i++) ...[
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.only(left: 70),
+                        color: Colors.grey[200],
+                      ),
+                      _buildInputField(
+                        controller: _stopControllers[i],
+                        focusNode: _stopFocusNodes[i],
+                        hint: 'Parada ${i + 1}',
+                        icon: Icons.stop_circle_outlined,
+                        iconColor: Colors.orange,
+                        targetField: 'stop_$i',
+                        isDark: isDark,
+                        onRemove: () => _removeStop(i),
+                      ),
+                    ],
+
                     Container(
                       height: 1,
-                      margin: const EdgeInsets.only(left: 60),
+                      margin: const EdgeInsets.only(left: 70),
                       color: Colors.grey[200],
                     ),
                     _buildInputField(
                       controller: _destinationController,
+                      focusNode: _destinationFocusNode,
                       hint: '¿A dónde quieres ir?',
                       icon: Icons.location_on_rounded,
                       iconColor: const Color(0xFFE91E63),
-                      isOrigin: false,
+                      targetField: 'destination',
                       isDark: isDark,
                     ),
                   ],
@@ -280,16 +364,18 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
   Widget _buildInputField({
     required TextEditingController controller,
+    required FocusNode focusNode,
     required String hint,
     required IconData icon,
     required Color iconColor,
-    required bool isOrigin,
+    required String targetField,
     required bool isDark,
+    VoidCallback? onRemove,
   }) {
-    final hasFocus = isOrigin ? _originFocusNode.hasFocus : _destinationFocusNode.hasFocus;
+    final hasFocus = focusNode.hasFocus;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Row(
         children: [
           Container(
@@ -308,7 +394,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
           const SizedBox(width: 14),
           Expanded(
             child: TextFormField(
-              focusNode: isOrigin ? _originFocusNode : _destinationFocusNode,
+              focusNode: focusNode,
               controller: controller,
               style: const TextStyle(
                 fontSize: 16,
@@ -324,37 +410,58 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                suffixIcon: controller.text.isNotEmpty
-                  ? GestureDetector(
-                      onTap: () => setState(() {
-                        controller.clear();
-                        _suggestions = [];
-                        if (isOrigin) {
-                          _selectedOrigin = null;
-                        } else {
-                          _selectedDestination = null;
-                        }
-                      }),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        margin: const EdgeInsets.only(right: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: Colors.grey[600],
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (controller.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          controller.clear();
+                          _suggestions = [];
+                          if (targetField == 'origin') {
+                            _selectedOrigin = null;
+                          } else if (targetField == 'destination') {
+                            _selectedDestination = null;
+                          } else if (targetField.startsWith('stop_')) {
+                             // Keep the stop in list but clear data
+                             final index = int.parse(targetField.split('_')[1]);
+                             _stops[index] = SimpleLocation(latitude: 0, longitude: 0, address: '');
+                          }
+                        }),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          margin: const EdgeInsets.only(right: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ),
-                    )
-                  : ((_isLoadingSuggestions && hasFocus) || (isOrigin && _isGettingLocation))
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                    
+                    if (onRemove != null)
+                       GestureDetector(
+                        onTap: onRemove,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          margin: const EdgeInsets.only(left: 8),
+                          child: Icon(
+                            Icons.remove_circle_outline,
+                            size: 20,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ),
+
+                    if ((_isLoadingSuggestions && hasFocus) || (targetField == 'origin' && _isGettingLocation))
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, right: 8),
                         child: SizedBox(
                           width: 20,
                           height: 20,
@@ -363,14 +470,11 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                             valueColor: AlwaysStoppedAnimation<Color>(iconColor),
                           ),
                         ),
-                      )
-                    : null,
-                suffixIconConstraints: const BoxConstraints(
-                  minWidth: 24,
-                  minHeight: 24,
+                      ),
+                  ],
                 ),
               ),
-              onTap: () => _onInputTap(isOrigin: isOrigin),
+              onTap: () => _onInputTap(targetField: targetField),
             ),
           ),
         ],
@@ -387,7 +491,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             child: _buildActionButton(
               icon: Icons.my_location_rounded,
               label: 'Mi ubicación',
-              onTap: () => _setCurrentLocation(isOrigin: true),
+              onTap: () {
+                // Determine which field to set
+                String target = 'origin';
+                if (_destinationFocusNode.hasFocus) target = 'destination';
+                for (int i = 0; i < _stopFocusNodes.length; i++) {
+                  if (_stopFocusNodes[i].hasFocus) target = 'stop_$i';
+                }
+                _setCurrentLocation(targetField: target);
+              },
               isLoading: _isGettingLocation,
               isDark: isDark,
             ),
@@ -399,10 +511,9 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               label: 'Mapa',
               onTap: () async {
                 LatLng? initialPos;
+                // Try to get position from currently selected field or origin
                 if (_selectedOrigin != null) {
                   initialPos = LatLng(_selectedOrigin!.latitude, _selectedOrigin!.longitude);
-                } else if (_selectedDestination != null) {
-                  initialPos = LatLng(_selectedDestination!.latitude, _selectedDestination!.longitude);
                 }
                 
                 final result = await Navigator.push<SimpleLocation>(
@@ -415,16 +526,22 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                 );
 
                 if (result != null && mounted) {
-                  final isOriginFocused = _originFocusNode.hasFocus;
-                  final targetIsOrigin = isOriginFocused || (!_destinationFocusNode.hasFocus && _selectedOrigin == null);
-
                   setState(() {
-                    if (targetIsOrigin) {
+                    if (_originFocusNode.hasFocus || (!_destinationFocusNode.hasFocus && _stopFocusNodes.every((n) => !n.hasFocus) && _selectedOrigin == null)) {
                       _selectedOrigin = result;
                       _originController.text = result.address;
-                    } else {
+                    } else if (_destinationFocusNode.hasFocus) {
                       _selectedDestination = result;
                       _destinationController.text = result.address;
+                    } else {
+                      // Check stops
+                      for (int i = 0; i < _stopFocusNodes.length; i++) {
+                        if (_stopFocusNodes[i].hasFocus) {
+                          _stops[i] = result;
+                          _stopControllers[i].text = result.address;
+                          break;
+                        }
+                      }
                     }
                     _suggestions = [];
                   });
@@ -519,14 +636,21 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 onTap: () {
-                  final isOrigin = _originFocusNode.hasFocus;
                   setState(() {
-                    if (isOrigin) {
+                    if (_originFocusNode.hasFocus) {
                       _selectedOrigin = suggestion;
                       _originController.text = suggestion.address;
-                    } else {
+                    } else if (_destinationFocusNode.hasFocus) {
                       _selectedDestination = suggestion;
                       _destinationController.text = suggestion.address;
+                    } else {
+                       for (int i = 0; i < _stopFocusNodes.length; i++) {
+                        if (_stopFocusNodes[i].hasFocus) {
+                          _stops[i] = suggestion;
+                          _stopControllers[i].text = suggestion.address;
+                          break;
+                        }
+                      }
                     }
                     _suggestions = [];
                     FocusScope.of(context).unfocus();
@@ -625,12 +749,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             ),
             child: ElevatedButton(
               onPressed: () {
+                // Filter out empty stops just in case
+                final validStops = _stops.where((s) => s.latitude != 0 && s.longitude != 0).toList();
+                
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TripPreviewScreen(
                       origin: _selectedOrigin!,
                       destination: _selectedDestination!,
+                      stops: validStops, // Pass stops
                       vehicleType: 'carro',
                     ),
                   ),
@@ -659,7 +787,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     );
   }
 
-  Future<void> _setCurrentLocation({required bool isOrigin}) async {
+  Future<void> _setCurrentLocation({required String targetField}) async {
     if (_isGettingLocation) return;
 
     setState(() {
@@ -715,12 +843,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       
       if (mounted) {
         setState(() {
-          if (isOrigin) {
+          if (targetField == 'origin') {
             _selectedOrigin = location;
             _originController.text = location.address;
-          } else {
+          } else if (targetField == 'destination') {
             _selectedDestination = location;
             _destinationController.text = location.address;
+          } else if (targetField.startsWith('stop_')) {
+             final index = int.parse(targetField.split('_')[1]);
+             _stops[index] = location;
+             _stopControllers[index].text = location.address;
           }
         });
       }

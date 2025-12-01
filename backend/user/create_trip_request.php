@@ -4,21 +4,36 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+// Handle CLI environment
+if (php_sapi_name() === 'cli') {
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+}
+
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 try {
-    $data = json_decode(file_get_contents('php://input'), true);
+    // Read input
+    $input = file_get_contents('php://input');
+    if (empty($input) && php_sapi_name() === 'cli') {
+        $input = file_get_contents('php://stdin');
+    }
+    
+    $data = json_decode($input, true);
     
     // Validar datos requeridos
     $required = ['usuario_id', 'latitud_origen', 'longitud_origen', 'direccion_origen', 
                  'latitud_destino', 'longitud_destino', 'direccion_destino', 
                  'tipo_servicio', 'distancia_km', 'duracion_minutos'];
     
+    if (!$data) {
+        throw new Exception("No se recibieron datos JSON válidos");
+    }
+
     foreach ($required as $field) {
         if (!isset($data[$field])) {
             throw new Exception("Campo requerido faltante: $field");
@@ -28,6 +43,9 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     
+    // Iniciar transacción
+    $db->beginTransaction();
+
     // Verificar que el usuario existe
     $stmt = $db->prepare("SELECT id, nombre FROM usuarios WHERE id = ? AND tipo_usuario = 'cliente'");
     $stmt->execute([$data['usuario_id']]);
@@ -90,6 +108,39 @@ try {
     ]);
     
     $solicitudId = $db->lastInsertId();
+
+    // Insertar paradas intermedias si existen
+    if (isset($data['paradas']) && is_array($data['paradas']) && count($data['paradas']) > 0) {
+        $stmtParada = $db->prepare("
+            INSERT INTO paradas_solicitud (
+                solicitud_id,
+                latitud,
+                longitud,
+                direccion,
+                orden,
+                estado,
+                creado_en
+            ) VALUES (?, ?, ?, ?, ?, 'pendiente', NOW())
+        ");
+
+        foreach ($data['paradas'] as $index => $parada) {
+            // Validar datos de la parada
+            if (!isset($parada['latitud']) || !isset($parada['longitud']) || !isset($parada['direccion'])) {
+                throw new Exception("Datos incompletos en la parada #" . ($index + 1));
+            }
+
+            $stmtParada->execute([
+                $solicitudId,
+                $parada['latitud'],
+                $parada['longitud'],
+                $parada['direccion'],
+                $index + 1 // Orden basado en el índice (1-based)
+            ]);
+        }
+    }
+    
+    // Confirmar transacción
+    $db->commit();
     
     // Buscar conductores cercanos disponibles (si se proporciona tipo_vehiculo)
     $conductoresCercanos = [];
@@ -159,7 +210,14 @@ try {
     ]);
     
 } catch (Exception $e) {
-    http_response_code(400);
+    // Revertir transacción en caso de error
+    if (isset($db) && $db->inTransaction()) {
+        $db->rollBack();
+    }
+    
+    if (php_sapi_name() !== 'cli') {
+        http_response_code(400);
+    }
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../global/models/simple_location.dart';
 
 class TripRequestService {
   static String get baseUrl => AppConfig.baseUrl;
@@ -19,10 +20,11 @@ class TripRequestService {
     required double distanciaKm,
     required int duracionMinutos,
     required double precioEstimado,
+    List<SimpleLocation>? stops, // Paradas intermedias
   }) async {
     try {
       final url = '$baseUrl/user/create_trip_request.php';
-      print('ðŸ“ Enviando solicitud a: $url');
+      print('📍 Enviando solicitud a: $url');
       
       final requestBody = {
         'usuario_id': userId,
@@ -38,8 +40,17 @@ class TripRequestService {
         'duracion_minutos': duracionMinutos,
         'precio_estimado': precioEstimado,
       };
+
+      // Agregar paradas si existen
+      if (stops != null && stops.isNotEmpty) {
+        requestBody['paradas'] = stops.map((stop) => {
+          'latitud': stop.latitude,
+          'longitud': stop.longitude,
+          'direccion': stop.address,
+        }).toList();
+      }
       
-      print('ðŸ“¦ Datos enviados: $requestBody');
+      print('📦 Datos enviados: $requestBody');
       
       final response = await http.post(
         Uri.parse(url),
@@ -48,32 +59,32 @@ class TripRequestService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          throw Exception('Tiempo de espera agotado. Verifica tu conexiÃ³n.');
+          throw Exception('Tiempo de espera agotado. Verifica tu conexión.');
         },
       );
 
-      print('ðŸ“¥ Respuesta recibida - Status: ${response.statusCode}');
-      print('ðŸ“„ Body: ${response.body}');
+      print('📥 Respuesta recibida - Status: ${response.statusCode}');
+      print('📄 Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
-          print('âœ… Solicitud creada exitosamente');
+          print('✅ Solicitud creada exitosamente');
           return data;
         } else {
           final errorMsg = data['message'] ?? 'Error al crear solicitud';
-          print('âŒ Error del servidor: $errorMsg');
+          print('❌ Error del servidor: $errorMsg');
           throw Exception(errorMsg);
         }
       } else {
         final errorMsg = 'Error del servidor: ${response.statusCode} - ${response.body}';
-        print('âŒ $errorMsg');
+        print('❌ $errorMsg');
         throw Exception(errorMsg);
       }
     } catch (e) {
-      print('âŒ Error en createTripRequest: $e');
+      print('❌ Error en createTripRequest: $e');
       if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        throw Exception('No se pudo conectar al servidor. Verifica tu conexiÃ³n.');
+        throw Exception('No se pudo conectar al servidor. Verifica tu conexión.');
       }
       throw Exception('Error al crear solicitud de viaje: $e');
     }
@@ -117,7 +128,7 @@ class TripRequestService {
   /// Cancelar solicitud de viaje
   static Future<bool> cancelTripRequest(int solicitudId) async {
     try {
-      print('ðŸš« Cancelando solicitud ID: $solicitudId');
+      print('🚫 Cancelando solicitud ID: $solicitudId');
       
       final url = '$baseUrl/user/cancel_trip_request.php';
       final response = await http.post(
@@ -133,24 +144,24 @@ class TripRequestService {
         },
       );
 
-      print('ðŸ“¥ Respuesta de cancelaciÃ³n - Status: ${response.statusCode}');
-      print('ðŸ“„ Body: ${response.body}');
+      print('📥 Respuesta de cancelación - Status: ${response.statusCode}');
+      print('📄 Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
-          print('âœ… Solicitud cancelada exitosamente');
+          print('✅ Solicitud cancelada exitosamente');
           return true;
         } else {
-          print('âŒ Error al cancelar: ${data['message']}');
+          print('❌ Error al cancelar: ${data['message']}');
           throw Exception(data['message'] ?? 'Error al cancelar la solicitud');
         }
       } else {
-        print('âŒ Error del servidor: ${response.statusCode}');
+        print('❌ Error del servidor: ${response.statusCode}');
         throw Exception('Error del servidor: ${response.statusCode}');
       }
     } catch (e) {
-      print('âŒ Error cancelando solicitud: $e');
+      print('❌ Error cancelando solicitud: $e');
       rethrow;
     }
   }
@@ -194,19 +205,19 @@ class TripRequestService {
         };
       }
     } catch (e) {
-      print('âŒ Error obteniendo estado: $e');
+      print('❌ Error obteniendo estado: $e');
       return {
         'success': false,
-        'message': 'Error de conexiÃ³n: $e',
+        'message': 'Error de conexión: $e',
       };
     }
   }
 
-  /// Cancelar solicitud con parÃ¡metros completos
+  /// Cancelar solicitud con parámetros completos
   static Future<Map<String, dynamic>> cancelTripRequestWithReason({
     required int solicitudId,
     required int clienteId,
-    String motivo = 'Cliente cancelÃ³',
+    String motivo = 'Cliente canceló',
   }) async {
     try {
       final response = await http.post(
@@ -228,10 +239,10 @@ class TripRequestService {
         };
       }
     } catch (e) {
-      print('âŒ Error cancelando solicitud: $e');
+      print('❌ Error cancelando solicitud: $e');
       return {
         'success': false,
-        'message': 'Error de conexiÃ³n: $e',
+        'message': 'Error de conexión: $e',
       };
     }
   }
