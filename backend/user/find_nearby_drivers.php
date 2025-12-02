@@ -37,6 +37,7 @@ try {
     $vehiculoTipoBD = $vehiculoTipoMap[$tipoVehiculo] ?? 'motocicleta';
     
     // Buscar conductores cercanos disponibles usando la fórmula de Haversine
+    // Nota: Compatible con PostgreSQL - usa WHERE en lugar de HAVING
     $stmt = $db->prepare("
         SELECT 
             u.id,
@@ -67,7 +68,11 @@ try {
         AND dc.vehiculo_tipo = ?
         AND dc.latitud_actual IS NOT NULL
         AND dc.longitud_actual IS NOT NULL
-        HAVING distancia_km <= ?
+        AND (6371 * acos(
+            cos(radians(?)) * cos(radians(dc.latitud_actual)) *
+            cos(radians(dc.longitud_actual) - radians(?)) +
+            sin(radians(?)) * sin(radians(dc.latitud_actual))
+        )) <= ?
         ORDER BY distancia_km ASC
         LIMIT 20
     ");
@@ -77,6 +82,9 @@ try {
         $longitud,
         $latitud,
         $vehiculoTipoBD,
+        $latitud,
+        $longitud,
+        $latitud,
         $radioKm
     ]);
     

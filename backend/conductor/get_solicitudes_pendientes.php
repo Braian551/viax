@@ -64,6 +64,7 @@ try {
     
     // Buscar solicitudes pendientes cercanas al conductor
     // Usa la fórmula de Haversine para calcular distancia
+    // Nota: Compatible con PostgreSQL - usa WHERE en lugar de HAVING y sintaxis de intervalo PostgreSQL
     $stmt = $db->prepare("
         SELECT 
             s.id,
@@ -91,13 +92,20 @@ try {
         INNER JOIN usuarios u ON s.cliente_id = u.id
         WHERE s.estado = 'pendiente'
         AND s.tipo_servicio = 'transporte'
-        AND COALESCE(s.solicitado_en, s.fecha_creacion) >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)
-        HAVING distancia_conductor_origen <= ?
+        AND COALESCE(s.solicitado_en, s.fecha_creacion) >= NOW() - INTERVAL '15 minutes'
+        AND (6371 * acos(
+            cos(radians(?)) * cos(radians(s.latitud_recogida)) *
+            cos(radians(s.longitud_recogida) - radians(?)) +
+            sin(radians(?)) * sin(radians(s.latitud_recogida))
+        )) <= ?
         ORDER BY distancia_conductor_origen ASC, COALESCE(s.solicitado_en, s.fecha_creacion) ASC
         LIMIT 10
     ");
     
     $stmt->execute([
+        $latitudActual,
+        $longitudActual,
+        $latitudActual,
         $latitudActual,
         $longitudActual,
         $latitudActual,

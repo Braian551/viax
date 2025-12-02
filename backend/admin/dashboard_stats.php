@@ -131,7 +131,7 @@ try {
         DATE(fecha_registro) as fecha,
         COUNT(*) as cantidad
     FROM usuarios
-    WHERE fecha_registro >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    WHERE fecha_registro >= CURRENT_DATE - INTERVAL '7 days'
     GROUP BY DATE(fecha_registro)
     ORDER BY fecha ASC";
     

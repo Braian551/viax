@@ -32,10 +32,10 @@ try {
         SELECT 
             u.id,
             u.nombre,
-            u.disponibilidad,
-            IFNULL(u.latitud_actual, 'Sin ubicación') as latitud,
-            IFNULL(u.longitud_actual, 'Sin ubicación') as longitud,
-            dc.tipo_vehiculo,
+            dc.disponible,
+            COALESCE(CAST(dc.latitud_actual AS TEXT), 'Sin ubicación') as latitud,
+            COALESCE(CAST(dc.longitud_actual AS TEXT), 'Sin ubicación') as longitud,
+            dc.vehiculo_tipo as tipo_vehiculo,
             dc.estado_verificacion
         FROM usuarios u
         INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
@@ -46,7 +46,7 @@ try {
     
     if (count($conductores) > 0) {
         foreach ($conductores as $conductor) {
-            $disponible = $conductor['disponibilidad'] ? '✓ Disponible' : '✗ No disponible';
+            $disponible = $conductor['disponible'] ? '✓ Disponible' : '✗ No disponible';
             $ubicacion = $conductor['latitud'] === 'Sin ubicación' ? '⚠ Sin ubicación' : '✓ Con ubicación';
             echo "   ID: {$conductor['id']} | {$conductor['nombre']}\n";
             echo "      Vehículo: {$conductor['tipo_vehiculo']}\n";
@@ -63,15 +63,15 @@ try {
     $stmt = $db->query("
         SELECT 
             s.id,
-            s.tipo_vehiculo,
+            s.tipo_servicio,
             s.estado,
-            s.precio_estimado,
+            s.distancia_estimada,
             u.nombre as usuario,
-            s.fecha_solicitud
+            COALESCE(s.solicitado_en, s.fecha_creacion) as fecha_solicitud
         FROM solicitudes_servicio s
-        INNER JOIN usuarios u ON s.usuario_id = u.id
+        INNER JOIN usuarios u ON s.cliente_id = u.id
         WHERE s.estado = 'pendiente'
-        ORDER BY s.fecha_solicitud DESC
+        ORDER BY COALESCE(s.solicitado_en, s.fecha_creacion) DESC
         LIMIT 5
     ");
     $solicitudes = $stmt->fetchAll();
@@ -79,7 +79,7 @@ try {
     if (count($solicitudes) > 0) {
         foreach ($solicitudes as $sol) {
             echo "   ID: {$sol['id']} | Usuario: {$sol['usuario']}\n";
-            echo "      Vehículo: {$sol['tipo_vehiculo']} | Precio: \${$sol['precio_estimado']}\n";
+            echo "      Tipo: {$sol['tipo_servicio']} | Distancia: {$sol['distancia_estimada']} km\n";
             echo "      Fecha: {$sol['fecha_solicitud']}\n\n";
         }
     } else {
@@ -97,8 +97,8 @@ try {
     ];
     
     foreach ($tablas as $tabla) {
-        $stmt = $db->query("SHOW TABLES LIKE '$tabla'");
-        $existe = $stmt->fetch();
+        $stmt = $db->query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '$tabla')");
+        $existe = $stmt->fetchColumn();
         if ($existe) {
             $stmt = $db->query("SELECT COUNT(*) as total FROM $tabla");
             $count = $stmt->fetch();
@@ -109,16 +109,15 @@ try {
     }
     echo "\n";
     
-    // 5. Verificar campos necesarios en usuarios
-    echo "5. CAMPOS EN TABLA USUARIOS\n";
+    // 5. Verificar campos necesarios en detalles_conductor
+    echo "5. CAMPOS EN TABLA DETALLES_CONDUCTOR\n";
     echo "───────────────────────────────────────────────\n";
-    $campos = ['latitud_actual', 'longitud_actual', 'disponibilidad'];
-    $stmt = $db->query("DESCRIBE usuarios");
-    $columns = $stmt->fetchAll();
-    $columnNames = array_column($columns, 'Field');
+    $campos = ['latitud_actual', 'longitud_actual', 'disponible'];
+    $stmt = $db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'detalles_conductor'");
+    $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     foreach ($campos as $campo) {
-        if (in_array($campo, $columnNames)) {
+        if (in_array($campo, $columns)) {
             echo "   ✓ $campo\n";
         } else {
             echo "   ✗ $campo FALTA\n";
@@ -132,12 +131,11 @@ try {
     
     $problemas = [];
     
-    // Verificar conductores sin ubicación
+    // Verificar conductores sin ubicación (la ubicación está en detalles_conductor)
     $stmt = $db->query("
         SELECT COUNT(*) as total 
-        FROM usuarios 
-        WHERE tipo_usuario = 'conductor' 
-        AND (latitud_actual IS NULL OR longitud_actual IS NULL)
+        FROM detalles_conductor 
+        WHERE latitud_actual IS NULL OR longitud_actual IS NULL
     ");
     $sinUbicacion = $stmt->fetch();
     if ($sinUbicacion['total'] > 0) {
@@ -161,10 +159,10 @@ try {
         FROM usuarios u
         INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
         WHERE u.tipo_usuario = 'conductor'
-        AND u.disponibilidad = 1
+        AND dc.disponible = 1
         AND dc.estado_verificacion = 'aprobado'
-        AND u.latitud_actual IS NOT NULL
-        AND u.longitud_actual IS NOT NULL
+        AND dc.latitud_actual IS NOT NULL
+        AND dc.longitud_actual IS NOT NULL
     ");
     $disponibles = $stmt->fetch();
     
@@ -191,15 +189,15 @@ try {
     echo "COMANDOS ÚTILES:\n";
     echo "───────────────────────────────────────────────\n";
     echo "Actualizar ubicación de conductor:\n";
-    echo "UPDATE usuarios SET \n";
+    echo "UPDATE detalles_conductor SET \n";
     echo "  latitud_actual = 6.2476,\n";
     echo "  longitud_actual = -75.5658,\n";
-    echo "  disponibilidad = 1\n";
-    echo "WHERE id = [ID_CONDUCTOR];\n\n";
+    echo "  disponible = 1\n";
+    echo "WHERE usuario_id = [ID_CONDUCTOR];\n\n";
     
     echo "Ver solicitudes recientes:\n";
     echo "SELECT * FROM solicitudes_servicio \n";
-    echo "ORDER BY fecha_solicitud DESC LIMIT 5;\n\n";
+    echo "ORDER BY COALESCE(solicitado_en, fecha_creacion) DESC LIMIT 5;\n\n";
     
 } catch (Exception $e) {
     echo "✗ Error: " . $e->getMessage() . "\n";

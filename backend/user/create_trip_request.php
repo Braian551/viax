@@ -185,7 +185,11 @@ try {
             AND dc.vehiculo_tipo = ?
             AND dc.latitud_actual IS NOT NULL
             AND dc.longitud_actual IS NOT NULL
-            HAVING distancia <= ?
+            AND (6371 * acos(
+                cos(radians(?)) * cos(radians(dc.latitud_actual)) *
+                cos(radians(dc.longitud_actual) - radians(?)) +
+                sin(radians(?)) * sin(radians(dc.latitud_actual))
+            )) <= ?
             ORDER BY distancia ASC
             LIMIT 10
         ");
@@ -195,6 +199,9 @@ try {
             $data['longitud_origen'],
             $data['latitud_origen'],
             $vehiculoTipo,
+            $data['latitud_origen'],
+            $data['longitud_origen'],
+            $data['latitud_origen'],
             $radiusKm
         ]);
         

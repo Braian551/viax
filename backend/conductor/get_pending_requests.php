@@ -24,7 +24,7 @@ try {
     
     // Verificar que sea un conductor válido y disponible
     $stmt = $db->prepare("
-        SELECT u.id, u.disponibilidad, u.latitud_actual, u.longitud_actual, dc.tipo_vehiculo
+        SELECT u.id, dc.disponible, dc.latitud_actual, dc.longitud_actual, dc.vehiculo_tipo as tipo_vehiculo
         FROM usuarios u
         INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
         WHERE u.id = ? 
@@ -38,7 +38,7 @@ try {
         throw new Exception('Conductor no encontrado o no verificado');
     }
     
-    if (!$conductor['disponibilidad']) {
+    if (!$conductor['disponible']) {
         echo json_encode([
             'success' => true,
             'message' => 'Conductor no disponible',
@@ -50,38 +50,41 @@ try {
     // Buscar solicitudes pendientes cercanas al conductor
     $radioKm = 5.0; // Radio de búsqueda
     
+    // Nota: Compatible con PostgreSQL - usa WHERE en lugar de HAVING
+    // y nombres de columnas correctos según la estructura de la tabla
     $stmt = $db->prepare("
         SELECT 
             s.id,
-            s.usuario_id,
-            s.latitud_origen,
-            s.longitud_origen,
-            s.direccion_origen,
+            s.cliente_id as usuario_id,
+            s.latitud_recogida as latitud_origen,
+            s.longitud_recogida as longitud_origen,
+            s.direccion_recogida as direccion_origen,
             s.latitud_destino,
             s.longitud_destino,
             s.direccion_destino,
             s.tipo_servicio,
-            s.tipo_vehiculo,
-            s.distancia_km,
-            s.duracion_minutos,
-            s.precio_estimado,
+            s.distancia_estimada as distancia_km,
+            s.tiempo_estimado as duracion_minutos,
             s.estado,
-            s.fecha_solicitud,
+            COALESCE(s.solicitado_en, s.fecha_creacion) as fecha_solicitud,
             u.nombre as nombre_usuario,
             u.telefono as telefono_usuario,
             u.foto_perfil as foto_usuario,
             (6371 * acos(
-                cos(radians(?)) * cos(radians(s.latitud_origen)) *
-                cos(radians(s.longitud_origen) - radians(?)) +
-                sin(radians(?)) * sin(radians(s.latitud_origen))
+                cos(radians(?)) * cos(radians(s.latitud_recogida)) *
+                cos(radians(s.longitud_recogida) - radians(?)) +
+                sin(radians(?)) * sin(radians(s.latitud_recogida))
             )) AS distancia_conductor_origen
         FROM solicitudes_servicio s
-        INNER JOIN usuarios u ON s.usuario_id = u.id
+        INNER JOIN usuarios u ON s.cliente_id = u.id
         WHERE s.estado = 'pendiente'
-        AND s.tipo_vehiculo = ?
-        AND s.fecha_solicitud >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)
-        HAVING distancia_conductor_origen <= ?
-        ORDER BY s.fecha_solicitud DESC
+        AND COALESCE(s.solicitado_en, s.fecha_creacion) >= NOW() - INTERVAL '10 minutes'
+        AND (6371 * acos(
+            cos(radians(?)) * cos(radians(s.latitud_recogida)) *
+            cos(radians(s.longitud_recogida) - radians(?)) +
+            sin(radians(?)) * sin(radians(s.latitud_recogida))
+        )) <= ?
+        ORDER BY COALESCE(s.solicitado_en, s.fecha_creacion) DESC
         LIMIT 10
     ");
     
@@ -89,7 +92,9 @@ try {
         $conductor['latitud_actual'],
         $conductor['longitud_actual'],
         $conductor['latitud_actual'],
-        $conductor['tipo_vehiculo'],
+        $conductor['latitud_actual'],
+        $conductor['longitud_actual'],
+        $conductor['latitud_actual'],
         $radioKm
     ]);
     

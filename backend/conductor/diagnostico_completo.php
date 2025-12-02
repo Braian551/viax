@@ -107,7 +107,7 @@ try {
     $stmt = $db->prepare("
         DELETE FROM solicitudes_servicio
         WHERE estado = 'pendiente'
-        AND fecha_creacion < DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        AND fecha_creacion < NOW() - INTERVAL '1 hour'
     ");
     $stmt->execute();
     $eliminadas = $stmt->rowCount();
@@ -257,12 +257,19 @@ try {
         INNER JOIN usuarios u ON s.cliente_id = u.id
         WHERE s.estado = 'pendiente'
         AND s.tipo_servicio = 'transporte'
-        AND COALESCE(s.solicitado_en, s.fecha_creacion) >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)
-        HAVING distancia_conductor_origen <= ?
+        AND COALESCE(s.solicitado_en, s.fecha_creacion) >= NOW() - INTERVAL '15 minutes'
+        AND (6371 * acos(
+            cos(radians(?)) * cos(radians(s.latitud_recogida)) *
+            cos(radians(s.longitud_recogida) - radians(?)) +
+            sin(radians(?)) * sin(radians(s.latitud_recogida))
+        )) <= ?
         ORDER BY distancia_conductor_origen ASC
     ");
     
     $stmt->execute([
+        $latConductor,
+        $lngConductor,
+        $latConductor,
         $latConductor,
         $lngConductor,
         $latConductor,

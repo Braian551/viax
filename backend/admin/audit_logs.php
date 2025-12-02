@@ -109,7 +109,7 @@ try {
         accion,
         COUNT(*) as cantidad
     FROM logs_auditoria
-    WHERE fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    WHERE fecha_creacion >= NOW() - INTERVAL '30 days'
     GROUP BY accion
     ORDER BY cantidad DESC
     LIMIT 10";
