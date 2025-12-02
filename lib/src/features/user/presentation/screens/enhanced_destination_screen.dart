@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,15 +15,17 @@ import '../widgets/destination/destination_widgets.dart';
 import '../widgets/map_location_picker_sheet.dart';
 import 'trip_preview_screen.dart';
 
-/// Pantalla de selección de destino
+/// Pantalla de selección de destino - Diseño moderno y minimalista
 /// - Origen y destino: sugerencias inline debajo del input
 /// - Paradas: bottom sheet con drag
 class EnhancedDestinationScreen extends StatefulWidget {
   final String? initialSelection;
+  final Position? preloadedPosition; // Posición precargada desde home
 
   const EnhancedDestinationScreen({
     super.key,
     this.initialSelection,
+    this.preloadedPosition,
   });
 
   @override
@@ -122,10 +125,52 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
   Future<void> _initializeLocation() async {
+    // Si ya tenemos una posición precargada, usarla directamente
+    if (widget.preloadedPosition != null) {
+      _userLocation = LatLng(
+        widget.preloadedPosition!.latitude,
+        widget.preloadedPosition!.longitude,
+      );
+      _suggestionService.setUserContext(location: _userLocation);
+      
+      // Obtener dirección en paralelo
+      _reverseGeocodeOrigin();
+      
+      setState(() => _showMap = true);
+      _mapRevealController.forward();
+      return;
+    }
+    
+    // Si no hay posición precargada, obtenerla
     await _getCurrentLocation();
     if (_userLocation != null) {
       setState(() => _showMap = true);
       _mapRevealController.forward();
+    }
+  }
+
+  /// Obtiene la dirección del origen en segundo plano
+  Future<void> _reverseGeocodeOrigin() async {
+    if (_userLocation == null) return;
+    
+    try {
+      final address = await _suggestionService.reverseGeocode(
+        _userLocation!.latitude,
+        _userLocation!.longitude,
+      );
+
+      if (mounted) {
+        setState(() {
+          _selectedOrigin = SimpleLocation(
+            latitude: _userLocation!.latitude,
+            longitude: _userLocation!.longitude,
+            address: address ?? 'Mi ubicación',
+          );
+          _originController.text = _selectedOrigin!.address;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error reverse geocoding origin: $e');
     }
   }
 
@@ -567,78 +612,101 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
   Widget _buildHeader(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
+          // Botón atrás con efecto glass
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
               Navigator.pop(context);
             },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: isDark ? null : [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
-                ],
-              ),
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: isDark ? Colors.white : Colors.grey[800],
-                size: 22,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.1) 
+                          : Colors.black.withOpacity(0.05),
+                    ),
+                    boxShadow: isDark ? null : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: isDark ? Colors.white : Colors.grey[800],
+                    size: 20,
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
+          // Título
           Expanded(
             child: Text(
               '¿A dónde vamos?',
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : Colors.grey[900],
+                letterSpacing: -0.5,
               ),
             ),
           ),
-          // Botón + parada
-          GestureDetector(
-            onTap: _stops.length < 3 ? _addStop : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: _stops.length < 3
-                    ? AppColors.primary.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _stops.length < 3
-                      ? AppColors.primary.withOpacity(0.3)
-                      : Colors.grey.withOpacity(0.2),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.add_rounded,
-                    color: _stops.length < 3 ? AppColors.primary : Colors.grey,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Parada',
-                    style: TextStyle(
-                      color: _stops.length < 3 ? AppColors.primary : Colors.grey,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+          // Botón agregar parada con efecto glass
+          if (_stops.length < 3)
+            GestureDetector(
+              onTap: _addStop,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_rounded,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Parada',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -654,7 +722,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     final maxSuggestionsHeight = screenHeight * 0.5; // Máximo 50% de la pantalla
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
         child: SingleChildScrollView(
@@ -663,22 +731,35 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Card principal con origen/destino
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900]!.withOpacity(0.95) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+              // Card principal con efecto glass
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark 
+                          ? Colors.black.withOpacity(0.5) 
+                          : Colors.white.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark 
+                            ? Colors.white.withOpacity(0.1) 
+                            : Colors.black.withOpacity(0.05),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: useDragMode 
+                        ? _buildDragModeContent(isDark)
+                        : _buildInlineModeContent(isDark),
+                  ),
                 ),
-                child: useDragMode 
-                    ? _buildDragModeContent(isDark)
-                    : _buildInlineModeContent(isDark),
               ),
 
               const SizedBox(height: 16),
@@ -843,29 +924,48 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
               child: Row(
                 children: [
-                  // Drag handle
+                  // Drag handle con contenedor glass sutil
                   ReorderableDragStartListener(
                     index: index,
                     child: Container(
                       padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark 
+                            ? Colors.white.withOpacity(0.05) 
+                            : Colors.grey.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Icon(
                         Icons.drag_indicator_rounded,
-                        color: isDark ? Colors.white24 : Colors.grey[400],
-                        size: 20,
+                        color: isDark ? Colors.white30 : Colors.grey[400],
+                        size: 18,
                       ),
                     ),
                   ),
-                  // Icono
+                  const SizedBox(width: 8),
+                  // Icono con gradiente
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          iconColor.withOpacity(0.18),
+                          iconColor.withOpacity(0.08),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: iconColor.withOpacity(0.2),
+                        width: 0.5,
+                      ),
                     ),
                     child: isLoading
                         ? Padding(
@@ -877,7 +977,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                           )
                         : Icon(icon, color: iconColor, size: 20),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   // Contenido
                   Expanded(
                     child: Column(
@@ -887,40 +987,54 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                           label,
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white38 : Colors.grey[500],
+                            fontWeight: FontWeight.w600,
+                            color: iconColor.withOpacity(0.8),
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
                           hasValue ? info!.name : placeholder,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
+                            fontSize: 15,
+                            fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
                             color: hasValue
                                 ? (isDark ? Colors.white : Colors.grey[900])
                                 : (isDark ? Colors.white30 : Colors.grey[400]),
+                            letterSpacing: -0.2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (hasValue && info!.subtitle.isNotEmpty)
-                          Text(
-                            info.subtitle,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : Colors.grey[500],
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              info.subtitle,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white38 : Colors.grey[500],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: isDark ? Colors.white24 : Colors.grey[400],
-                    size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.05) 
+                          : Colors.grey.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: isDark ? Colors.white30 : Colors.grey[400],
+                      size: 18,
+                    ),
                   ),
                 ],
               ),
@@ -955,89 +1069,117 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
               child: Row(
                 children: [
-                  // Drag handle
+                  // Drag handle con contenedor glass sutil
                   ReorderableDragStartListener(
                     index: index,
                     child: Container(
                       padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark 
+                            ? Colors.white.withOpacity(0.05) 
+                            : Colors.grey.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Icon(
                         Icons.drag_indicator_rounded,
-                        color: isDark ? Colors.white24 : Colors.grey[400],
-                        size: 20,
+                        color: isDark ? Colors.white30 : Colors.grey[400],
+                        size: 18,
                       ),
                     ),
                   ),
-                  // Número
+                  const SizedBox(width: 8),
+                  // Número con gradiente
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.accent.withOpacity(0.18),
+                          AppColors.accent.withOpacity(0.08),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.accent.withOpacity(0.2),
+                        width: 0.5,
+                      ),
                     ),
                     child: Center(
                       child: Text(
                         '${stopIndex + 1}',
                         style: const TextStyle(
                           color: AppColors.accent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   // Contenido
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Parada ${stopIndex + 1}',
+                          'PARADA ${stopIndex + 1}',
                           style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white38 : Colors.grey[500],
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accent.withOpacity(0.8),
+                            letterSpacing: 0.8,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
                           hasValue ? info!.name : 'Toca para seleccionar',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
+                            fontSize: 15,
+                            fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
                             color: hasValue
                                 ? (isDark ? Colors.white : Colors.grey[900])
                                 : (isDark ? Colors.white30 : Colors.grey[400]),
+                            letterSpacing: -0.2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (hasValue && info!.subtitle.isNotEmpty)
-                          Text(
-                            info.subtitle,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : Colors.grey[500],
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              info.subtitle,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white38 : Colors.grey[500],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                       ],
                     ),
                   ),
-                  // Eliminar
+                  // Eliminar con estilo mejorado
                   GestureDetector(
                     onTap: onRemove,
-                    child: Padding(
+                    child: Container(
                       padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Icon(
                         Icons.close_rounded,
-                        size: 20,
+                        size: 18,
                         color: Colors.red[400],
                       ),
                     ),
@@ -1055,8 +1197,15 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   Widget _buildDivider(bool isDark) {
     return Container(
       height: 1,
-      margin: const EdgeInsets.only(left: 20),
-      color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.1),
+      margin: const EdgeInsets.only(left: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15),
+            Colors.transparent,
+          ],
+        ),
+      ),
     );
   }
 
@@ -1095,26 +1244,39 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           HapticFeedback.lightImpact();
           // TODO: Cargar ubicación guardada
         },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: isDark ? Colors.white54 : Colors.grey[600]),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white70 : Colors.grey[700],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: isDark 
+                    ? Colors.white.withOpacity(0.08) 
+                    : Colors.white.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark 
+                      ? Colors.white.withOpacity(0.1) 
+                      : Colors.black.withOpacity(0.05),
                 ),
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 18, color: isDark ? Colors.white60 : Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -1133,29 +1295,53 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         );
       },
       child: GestureDetector(
-        onTap: _goToTripPreview,
-        child: Container(
-          height: 54,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryDark],
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.4),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          _goToTripPreview();
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primaryDark,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Center(
-            child: Text(
-              'Continuar',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Continuar',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

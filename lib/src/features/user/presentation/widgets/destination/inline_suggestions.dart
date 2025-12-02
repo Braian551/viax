@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
@@ -106,15 +107,45 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Campo de búsqueda
-        Container(
+        // Campo de búsqueda con diseño glass
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: widget.isDark 
-                ? Colors.white.withOpacity(0.06) 
-                : Colors.grey[100],
-            borderRadius: BorderRadius.circular(14),
-            border: widget.focusNode.hasFocus
-                ? Border.all(color: widget.accentColor.withOpacity(0.4), width: 1.5)
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.focusNode.hasFocus
+                  ? [
+                      widget.accentColor.withOpacity(0.08),
+                      widget.accentColor.withOpacity(0.04),
+                    ]
+                  : [
+                      widget.isDark 
+                          ? Colors.white.withOpacity(0.08) 
+                          : Colors.grey.withOpacity(0.08),
+                      widget.isDark 
+                          ? Colors.white.withOpacity(0.04) 
+                          : Colors.grey.withOpacity(0.04),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.focusNode.hasFocus
+                  ? widget.accentColor.withOpacity(0.4)
+                  : widget.isDark 
+                      ? Colors.white.withOpacity(0.08) 
+                      : Colors.black.withOpacity(0.05),
+              width: widget.focusNode.hasFocus ? 1.5 : 1,
+            ),
+            boxShadow: widget.focusNode.hasFocus
+                ? [
+                    BoxShadow(
+                      color: widget.accentColor.withOpacity(0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
                 : null,
           ),
           child: TextField(
@@ -122,35 +153,61 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             focusNode: widget.focusNode,
             style: TextStyle(
               fontSize: 15,
+              fontWeight: FontWeight.w500,
               color: widget.isDark ? Colors.white : Colors.grey[900],
+              letterSpacing: -0.2,
             ),
             decoration: InputDecoration(
               hintText: widget.placeholder,
               hintStyle: TextStyle(
-                color: widget.isDark ? Colors.white38 : Colors.grey[500],
+                color: widget.isDark ? Colors.white38 : Colors.grey[400],
+                fontWeight: FontWeight.w400,
               ),
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                color: widget.accentColor.withOpacity(0.7),
-                size: 20,
+              prefixIcon: Container(
+                padding: const EdgeInsets.all(12),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    widget.isOrigin ? Icons.circle_outlined : Icons.search_rounded,
+                    color: widget.accentColor,
+                    size: 16,
+                  ),
+                ),
               ),
               suffixIcon: widget.controller.text.isNotEmpty
                   ? GestureDetector(
                       onTap: () {
+                        HapticFeedback.lightImpact();
                         widget.controller.clear();
                         setState(() => _suggestions = []);
                       },
-                      child: Icon(
-                        Icons.close_rounded,
-                        color: widget.isDark ? Colors.white38 : Colors.grey[500],
-                        size: 20,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: widget.isDark 
+                                ? Colors.white.withOpacity(0.1) 
+                                : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: widget.isDark ? Colors.white54 : Colors.grey[600],
+                            size: 16,
+                          ),
+                        ),
                       ),
                     )
                   : null,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16, 
-                vertical: 14,
+                vertical: 16,
               ),
             ),
           ),
@@ -159,7 +216,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
         // Lugares guardados (siempre visibles cuando hay focus)
         if (widget.focusNode.hasFocus)
           Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 14),
             child: Row(
               children: [
                 Expanded(
@@ -219,49 +276,64 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
         
         // Sugerencias (después de lugares guardados)
         if (_suggestions.isNotEmpty && !_isLoading)
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            decoration: BoxDecoration(
-              color: widget.isDark 
-                  ? Colors.grey[850] 
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(widget.isDark ? 0.3 : 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(
+                margin: const EdgeInsets.only(top: 10),
+                decoration: BoxDecoration(
+                  color: widget.isDark 
+                      ? Colors.black.withOpacity(0.5) 
+                      : Colors.white.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: widget.isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.black.withOpacity(0.05),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(widget.isDark ? 0.3 : 0.1),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: _suggestions.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final location = entry.value;
-                  final isLast = index == _suggestions.length - 1;
-                  
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _SuggestionTile(
-                        location: location,
-                        isDark: widget.isDark,
-                        onTap: () => _selectLocation(location),
-                      ),
-                      if (!isLast)
-                        Divider(
-                          height: 1,
-                          indent: 52,
-                          color: widget.isDark 
-                              ? Colors.white.withOpacity(0.06) 
-                              : Colors.grey.withOpacity(0.1),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _suggestions.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final location = entry.value;
+                    final isLast = index == _suggestions.length - 1;
+                    
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _SuggestionTile(
+                          location: location,
+                          isDark: widget.isDark,
+                          onTap: () => _selectLocation(location),
                         ),
-                    ],
-                  );
-                }).toList(),
+                        if (!isLast)
+                          Container(
+                            height: 1,
+                            margin: const EdgeInsets.only(left: 68),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  widget.isDark 
+                                      ? Colors.white.withOpacity(0.08) 
+                                      : Colors.grey.withOpacity(0.15),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),
@@ -316,31 +388,61 @@ class _SavedPlaceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: isDark ? Colors.white54 : Colors.grey[600]),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white70 : Colors.grey[700],
-                ),
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              color: isDark 
+                  ? Colors.white.withOpacity(0.08) 
+                  : Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark 
+                    ? Colors.white.withOpacity(0.1) 
+                    : Colors.black.withOpacity(0.05),
               ),
-            ],
+              boxShadow: isDark ? null : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    icon, 
+                    size: 14, 
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.grey[800],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -368,25 +470,34 @@ class _SuggestionTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: isDark 
-                      ? Colors.white.withOpacity(0.06) 
-                      : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withOpacity(0.15),
+                      AppColors.primary.withOpacity(0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.2),
+                    width: 0.5,
+                  ),
                 ),
                 child: Icon(
-                  Icons.location_on_outlined,
-                  color: isDark ? Colors.white54 : Colors.grey[600],
+                  Icons.location_on_rounded,
+                  color: AppColors.primary,
                   size: 18,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,8 +506,9 @@ class _SuggestionTile extends StatelessWidget {
                       info.name,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : Colors.grey[900],
+                        letterSpacing: -0.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -444,34 +556,67 @@ class _QuickOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.15)),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.grey[800],
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(0.12),
+                  color.withOpacity(0.06),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: color.withOpacity(0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.grey[800],
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: color, size: 20),
-            ],
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.arrow_forward_rounded, color: color, size: 16),
+                ),
+              ],
+            ),
           ),
         ),
       ),

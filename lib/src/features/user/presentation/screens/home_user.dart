@@ -471,7 +471,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                             Navigator.pushNamed(
                               context,
                               RouteNames.requestTrip,
-                              arguments: {'selecting': 'destination'},
+                              arguments: {
+                                'selecting': 'destination',
+                                'currentPosition': _currentPosition,
+                              },
                             );
                           },
                           onClear: null,

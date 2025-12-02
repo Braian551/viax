@@ -108,6 +108,7 @@ class AppRouter {
           return FadeSlidePageRoute(
             page: EnhancedDestinationScreen(
               initialSelection: args?['selecting'],
+              preloadedPosition: args?['currentPosition'],
             ),
             settings: settings,
           );
