@@ -363,16 +363,32 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
   Future<void> _updateRoute() async {
-    if (_selectedOrigin == null || _selectedDestination == null) {
+    // Construir lista de waypoints disponibles
+    final waypoints = <LatLng>[];
+    
+    if (_selectedOrigin != null) {
+      waypoints.add(_selectedOrigin!.toLatLng());
+    }
+    
+    for (final stop in _stops) {
+      if (stop != null) {
+        waypoints.add(stop.toLatLng());
+      }
+    }
+    
+    if (_selectedDestination != null) {
+      waypoints.add(_selectedDestination!.toLatLng());
+    }
+    
+    // Necesitamos al menos 2 puntos para una ruta
+    if (waypoints.length < 2) {
+      // Si hay al menos un punto, centrar el mapa en él
+      if (waypoints.isNotEmpty) {
+        _mapController.move(waypoints.first, 15);
+      }
       setState(() => _routePoints = []);
       return;
     }
-
-    final waypoints = <LatLng>[
-      _selectedOrigin!.toLatLng(),
-      ..._stops.where((s) => s != null).map((s) => s!.toLatLng()),
-      _selectedDestination!.toLatLng(),
-    ];
 
     try {
       final routeData = await MapboxService.getRoute(
@@ -466,57 +482,69 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // Mapa de fondo
-          if (_showMap)
-            FadeTransition(
-              opacity: _mapRevealAnimation,
-              child: RouteMap(
-                mapController: _mapController,
-                userLocation: _userLocation,
-                origin: _selectedOrigin,
-                destination: _selectedDestination,
-                stops: _stops,
-                routePoints: _routePoints,
-                isDark: isDark,
+      body: GestureDetector(
+        onTap: () {
+          // Quitar foco al tocar fuera
+          FocusScope.of(context).unfocus();
+        },
+        behavior: HitTestBehavior.translucent,
+        child: Stack(
+          children: [
+            // Mapa de fondo (interactivo)
+            if (_showMap)
+              Positioned.fill(
+                child: FadeTransition(
+                  opacity: _mapRevealAnimation,
+                  child: RouteMap(
+                    mapController: _mapController,
+                    userLocation: _userLocation,
+                    origin: _selectedOrigin,
+                    destination: _selectedDestination,
+                    stops: _stops,
+                    routePoints: _routePoints,
+                    isDark: isDark,
+                  ),
+                ),
               ),
-            ),
 
-          // Gradiente superior
+          // Gradiente superior (no bloquea gestos)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              height: 200,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    isDark ? Colors.black : Colors.white,
-                    isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.7),
-                    Colors.transparent,
-                  ],
+            child: IgnorePointer(
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      isDark ? Colors.black : Colors.white,
+                      isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.7),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
 
-          // Contenido
-          SafeArea(
+          // Contenido superior (no ocupa todo el stack)
+          Positioned(
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(isDark),
                 const SizedBox(height: 12),
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: _buildMainContent(isDark),
-                    ),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: _buildMainContent(isDark),
                   ),
                 ),
               ],
@@ -532,6 +560,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
               child: _buildConfirmButton(isDark),
             ),
         ],
+      ),
       ),
     );
   }
@@ -620,37 +649,45 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     // Si NO hay paradas → origen y destino usan sugerencias inline
     final bool useDragMode = _stops.isNotEmpty;
 
-    return SingleChildScrollView(
+    // Calcular altura máxima disponible para sugerencias
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxSuggestionsHeight = screenHeight * 0.5; // Máximo 50% de la pantalla
+
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Card principal con origen/destino
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[900]!.withOpacity(0.95) : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Card principal con origen/destino
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900]!.withOpacity(0.95) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: useDragMode 
-                ? _buildDragModeContent(isDark)
-                : _buildInlineModeContent(isDark),
+                child: useDragMode 
+                    ? _buildDragModeContent(isDark)
+                    : _buildInlineModeContent(isDark),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Lugares guardados (solo en modo inline)
+              if (!useDragMode) _buildSavedLocationsRow(isDark),
+            ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Lugares guardados (solo en modo inline)
-          if (!useDragMode) _buildSavedLocationsRow(isDark),
-
-          // Espacio para el botón si hay paradas
-          if (_stops.isNotEmpty) const SizedBox(height: 100),
-        ],
+        ),
       ),
     );
   }
