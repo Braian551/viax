@@ -483,13 +483,6 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 20),
                     // Accesos rápidos (Casa, Trabajo)
-                    Row(
-                      children: [
-                        QuickAction(icon: Icons.home_rounded, label: 'Casa', isDark: isDark),
-                        const SizedBox(width: 12),
-                        QuickAction(icon: Icons.work_rounded, label: 'Trabajo', isDark: isDark),
-                      ],
-                    ),
                   ],
                 ),
               ),

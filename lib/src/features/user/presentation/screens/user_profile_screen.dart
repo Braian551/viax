@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -14,6 +16,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   String? _userName;
   String? _userEmail;
   bool _isLoading = true;
+  bool _isLoggingOut = false;
   
   // Animaciones
   late AnimationController _animationController;
@@ -77,6 +80,34 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _performLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+    try {
+      await UserService.clearSession();
+      if (!mounted) return;
+      CustomSnackbar.showSuccess(context, message: 'Sesión cerrada correctamente');
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    } catch (e) {
+      if (!mounted) return;
+      CustomSnackbar.showError(context, message: 'No se pudo cerrar la sesión');
+      setState(() => _isLoggingOut = false);
+    }
+  }
+
+  Future<void> _confirmLogout() async {
+    if (_isLoggingOut) return;
+    final confirmed = await DialogHelper.showConfirmation(
+      context,
+      title: 'Cerrar sesión',
+      message: '¿Estás seguro de que deseas cerrar sesión?',
+      confirmText: 'Sí, cerrar',
+      cancelText: 'Cancelar',
+    );
+
+    if (confirmed == true) await _performLogout();
   }
 
   @override
@@ -192,9 +223,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               width: double.infinity,
                               margin: const EdgeInsets.only(bottom: 20),
                               child: TextButton(
-                                onPressed: () {
-                                  // Lógica de logout
-                                },
+                                onPressed: _confirmLogout,
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
@@ -202,14 +231,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                                   ),
                                   backgroundColor: AppColors.error.withOpacity(0.1),
                                 ),
-                                child: Text(
-                                  'Cerrar Sesión',
-                                  style: TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                child: _isLoggingOut
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2))
+                                    : Text(
+                                        'Cerrar Sesión',
+                                        style: TextStyle(
+                                          color: AppColors.error,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                               ),
                             ),
                             // Espacio extra para el bottom nav
