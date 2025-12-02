@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../global/models/simple_location.dart';
+import '../../../../theme/app_colors.dart';
 import 'trip_preview_screen.dart';
 import 'location_picker_screen.dart';
 
@@ -129,7 +130,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -140,8 +141,8 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: isDark 
-                  ? [const Color(0xFF1A1A1A), const Color(0xFF121212)]
-                  : [const Color(0xFFF5F5F5), const Color(0xFFFAFAFA)],
+                  ? [AppColors.darkSurface, AppColors.darkBackground]
+                  : [AppColors.lightSurface, AppColors.lightBackground],
               ),
             ),
           ),
@@ -296,11 +297,11 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -314,7 +315,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                       focusNode: _originFocusNode,
                       hint: 'Tu ubicación actual',
                       icon: Icons.my_location_rounded,
-                      iconColor: const Color(0xFF2196F3),
+                      iconColor: AppColors.primary,
                       targetField: 'origin',
                       isDark: isDark,
                     ),
@@ -324,14 +325,14 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                       Container(
                         height: 1,
                         margin: const EdgeInsets.only(left: 70),
-                        color: Colors.grey[200],
+                        color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                       ),
                       _buildInputField(
                         controller: _stopControllers[i],
                         focusNode: _stopFocusNodes[i],
                         hint: 'Parada ${i + 1}',
                         icon: Icons.stop_circle_outlined,
-                        iconColor: Colors.orange,
+                        iconColor: AppColors.warning,
                         targetField: 'stop_$i',
                         isDark: isDark,
                         onRemove: () => _removeStop(i),
@@ -341,14 +342,14 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                     Container(
                       height: 1,
                       margin: const EdgeInsets.only(left: 70),
-                      color: Colors.grey[200],
+                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                     ),
                     _buildInputField(
                       controller: _destinationController,
                       focusNode: _destinationFocusNode,
                       hint: '¿A dónde quieres ir?',
                       icon: Icons.location_on_rounded,
-                      iconColor: const Color(0xFFE91E63),
+                      iconColor: AppColors.error,
                       targetField: 'destination',
                       isDark: isDark,
                     ),
@@ -396,16 +397,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             child: TextFormField(
               focusNode: focusNode,
               controller: controller,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                 letterSpacing: -0.3,
               ),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                  color: Colors.grey[400],
+                  color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),
@@ -433,13 +434,13 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                           height: 24,
                           margin: const EdgeInsets.only(right: 4),
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: isDark ? AppColors.darkDivider : Colors.grey[300],
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.close,
                             size: 14,
-                            color: Colors.grey[600],
+                            color: isDark ? AppColors.darkTextSecondary : Colors.grey[600],
                           ),
                         ),
                       ),
@@ -454,7 +455,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                           child: Icon(
                             Icons.remove_circle_outline,
                             size: 20,
-                            color: Colors.grey[400],
+                            color: isDark ? AppColors.darkTextHint : Colors.grey[400],
                           ),
                         ),
                       ),
@@ -570,15 +571,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF2196F3).withOpacity(0.2),
+              color: AppColors.primary.withOpacity(0.2),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF2196F3).withOpacity(0.08),
+                color: AppColors.primary.withOpacity(isDark ? 0.1 : 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -593,13 +594,13 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 )
               else
                 Icon(
                   icon,
-                  color: const Color(0xFF2196F3),
+                  color: AppColors.primary,
                   size: 20,
                 ),
               const SizedBox(width: 8),
@@ -608,7 +609,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF2196F3),
+                  color: AppColors.primary,
                   letterSpacing: -0.2,
                 ),
               ),
@@ -632,7 +633,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             child: Material(
-              color: Colors.white,
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 onTap: () {
@@ -662,7 +663,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       width: 1,
                     ),
                   ),
@@ -672,12 +673,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2196F3).withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.location_on_rounded,
-                          color: Color(0xFF2196F3),
+                          color: AppColors.primary,
                           size: 20,
                         ),
                       ),
@@ -688,10 +689,10 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                           children: [
                             Text(
                               suggestion.address.split(',').first,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                                 letterSpacing: -0.2,
                               ),
                               maxLines: 1,
@@ -702,7 +703,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                               suggestion.address,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey[600],
+                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                                 letterSpacing: -0.1,
                               ),
                               maxLines: 1,
@@ -736,12 +737,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             height: 56,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                colors: [AppColors.primary, AppColors.primaryDark],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.3),
+                  color: AppColors.primary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

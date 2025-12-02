@@ -450,30 +450,33 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Stack(
         children: [
           // Mapa
-          _buildMap(),
+          _buildMap(isDark),
           
           // Overlay superior con información compacta
-          _buildTopOverlay(),
+          _buildTopOverlay(isDark),
           
           // Panel inferior con detalles y precio
-          if (_quote != null) _buildBottomPanel(),
+          if (_quote != null) _buildBottomPanel(isDark),
           
           // Indicador de carga
-          if (_isLoadingRoute || _isLoadingQuote) _buildLoadingOverlay(),
+          if (_isLoadingRoute || _isLoadingQuote) _buildLoadingOverlay(isDark),
           
           // Mensaje de error
-          if (_errorMessage != null) _buildErrorOverlay(),
+          if (_errorMessage != null) _buildErrorOverlay(isDark),
         ],
       ),
     );
   }
 
-  Widget _buildMap() {
+  Widget _buildMap(bool isDark) {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
@@ -484,9 +487,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         ),
       ),
       children: [
-        // Tiles de Mapbox con estilo oscuro
+        // Tiles de Mapbox con estilo según el tema
         TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: true),
+          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
           userAgentPackageName: 'com.example.ping_go',
         ),
         
@@ -661,7 +664,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         Container(
                           width: 50,
                           height: 50,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.primaryDark,
                             shape: BoxShape.circle,
                           ),
@@ -678,7 +681,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                               width: 3,
                             ),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.location_on,
                             color: AppColors.primaryDark,
                             size: 24,
@@ -706,7 +709,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     );
   }
 
-  Widget _buildTopOverlay() {
+  Widget _buildTopOverlay(bool isDark) {
     return Positioned(
       top: 0,
       left: 0,
@@ -719,7 +722,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             child: Container(
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.darkSurface.withOpacity(0.95),
+                color: isDark 
+                    ? AppColors.darkSurface.withOpacity(0.95) 
+                    : AppColors.lightSurface.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: AppColors.primary.withOpacity(0.2),
@@ -727,7 +732,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: isDark 
+                        ? Colors.black.withOpacity(0.3) 
+                        : Colors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -831,7 +838,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
                       height: 1,
-                      color: Colors.white.withOpacity(0.1),
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.1) 
+                          : Colors.black.withOpacity(0.1),
                     ),
                   ),
                   
@@ -847,6 +856,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           color: AppColors.primaryLight,
                           text: widget.origin.address,
                           isOrigin: true,
+                          isDark: isDark,
                         ),
                         
                         // Paradas intermedias
@@ -870,6 +880,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             color: AppColors.accent,
                             text: widget.stops[i].address,
                             isOrigin: false,
+                            isDark: isDark,
                           ),
                         ],
 
@@ -907,6 +918,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           color: AppColors.primaryDark,
                           text: widget.destination.address,
                           isOrigin: false,
+                          isDark: isDark,
                         ),
                       ],
                     ),
@@ -926,6 +938,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     required Color color,
     required String text,
     required bool isOrigin,
+    required bool isDark,
   }) {
     return Material(
       color: Colors.transparent,
@@ -961,7 +974,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.9),
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.9) 
+                        : AppColors.lightTextPrimary,
                     height: 1.3,
                   ),
                   maxLines: 1,
@@ -975,7 +990,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     );
   }
 
-  Widget _buildBottomPanel() {
+  Widget _buildBottomPanel(bool isDark) {
     return DraggableScrollableSheet(
       controller: _draggableController,
       initialChildSize: 0.42,
@@ -988,11 +1003,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           position: _slideAnimation,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.darkSurface,
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: isDark 
+                      ? Colors.black.withOpacity(0.3) 
+                      : Colors.black.withOpacity(0.1),
                   blurRadius: 30,
                   offset: const Offset(0, -5),
                 ),
@@ -1002,7 +1019,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               controller: scrollController,
               padding: EdgeInsets.zero,
               children: [
-                // Drag handle - línea blanca
+                // Drag handle
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   alignment: Alignment.center,
@@ -1010,7 +1027,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.3) 
+                          : Colors.black.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1024,7 +1043,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : AppColors.lightTextPrimary,
                     ),
                   ),
                 ),
@@ -1048,7 +1067,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.darkCard,
+                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: AppColors.primary,
@@ -1078,24 +1097,24 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                               children: [
                                 Text(
                                   _getVehicleName(widget.vehicleType),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
                                   ),
                                 ),
                                 Text(
                                   'Llegada: ${_quote!.formattedDuration}',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.grey[400],
+                                    color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
                                   ),
                                 ),
                                 Text(
                                   _getVehicleDescription(widget.vehicleType),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[500],
+                                    color: isDark ? Colors.grey[500] : AppColors.lightTextHint,
                                   ),
                                 ),
                               ],
@@ -1123,7 +1142,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   ),
                 ),
                 
-                // Botón de efectivo (opcional) - más compacto
+                // Botón de recargo (opcional) - más compacto
                 if (_quote!.surchargePercentage > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -1137,7 +1156,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.darkCard,
+                          color: isDark ? AppColors.darkCard : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1164,14 +1183,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                     : 'Hora pico (+${_quote!.surchargePercentage.toInt()}%)',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey[300],
+                                  color: isDark ? Colors.grey[300] : AppColors.lightTextSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                             Icon(
                               _showDetails ? Icons.expand_less : Icons.expand_more,
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.grey[400] : AppColors.lightTextHint,
                             ),
                           ],
                         ),
@@ -1183,7 +1202,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  child: _showDetails ? _buildPriceBreakdown() : const SizedBox.shrink(),
+                  child: _showDetails ? _buildPriceBreakdown(isDark) : const SizedBox.shrink(),
                 ),
                 
                 // Mensaje cuando está expandido
@@ -1194,7 +1213,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.darkCard,
+                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: AppColors.primary.withOpacity(0.3),
@@ -1203,7 +1222,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       ),
                       child: Column(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.info_outline,
                             color: AppColors.primary,
                             size: 40,
@@ -1214,7 +1233,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: isDark ? Colors.white : AppColors.lightTextPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1223,7 +1242,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             'Estamos trabajando para ofrecerte más opciones de vehículos y servicios',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1300,7 +1319,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     return '${address.substring(0, 37)}...';
   }
 
-  Widget _buildPriceBreakdown() {
+  Widget _buildPriceBreakdown(bool isDark) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 400),
@@ -1315,39 +1334,39 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(top: 12, bottom: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2A2A2A),
+          color: isDark ? const Color(0xFF2A2A2A) : AppColors.lightCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.grey[800]!,
+            color: isDark ? Colors.grey[800]! : AppColors.lightDivider,
             width: 1,
           ),
         ),
         child: Column(
           children: [
-            _buildPriceRow('Tarifa base', _quote!.basePrice),
+            _buildPriceRow('Tarifa base', _quote!.basePrice, isDark: isDark),
             const SizedBox(height: 8),
-            _buildPriceRow('Distancia (${_quote!.formattedDistance})', _quote!.distancePrice),
+            _buildPriceRow('Distancia (${_quote!.formattedDistance})', _quote!.distancePrice, isDark: isDark),
             const SizedBox(height: 8),
-            _buildPriceRow('Tiempo (${_quote!.formattedDuration})', _quote!.timePrice),
+            _buildPriceRow('Tiempo (${_quote!.formattedDuration})', _quote!.timePrice, isDark: isDark),
             if (_quote!.surchargePrice > 0) ...[
               const SizedBox(height: 8),
-              _buildPriceRow('Recargo', _quote!.surchargePrice, isHighlight: true),
+              _buildPriceRow('Recargo', _quote!.surchargePrice, isHighlight: true, isDark: isDark),
             ],
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1, color: Colors.grey[700], thickness: 1),
+              child: Divider(height: 1, color: isDark ? Colors.grey[700] : AppColors.lightDivider, thickness: 1),
             ),
-            _buildPriceRow('Total', _quote!.totalPrice, isBold: true),
+            _buildPriceRow('Total', _quote!.totalPrice, isBold: true, isDark: isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPriceRow(String label, double amount, {bool isBold = false, bool isHighlight = false}) {
+  Widget _buildPriceRow(String label, double amount, {bool isBold = false, bool isHighlight = false, required bool isDark}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -1358,7 +1377,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             style: TextStyle(
               fontSize: isBold ? 15 : 13,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-              color: isHighlight ? Colors.orange : Colors.grey[300],
+              color: isHighlight 
+                  ? Colors.orange 
+                  : (isDark ? Colors.grey[300] : AppColors.lightTextSecondary),
             ),
           ),
           Text(
@@ -1366,7 +1387,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             style: TextStyle(
               fontSize: isBold ? 15 : 13,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-              color: isHighlight ? Colors.orange : (isBold ? Colors.yellow.shade700 : Colors.white),
+              color: isHighlight 
+                  ? Colors.orange 
+                  : (isBold ? AppColors.primary : (isDark ? Colors.white : AppColors.lightTextPrimary)),
             ),
           ),
         ],
@@ -1374,14 +1397,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     );
   }
 
-  Widget _buildLoadingOverlay() {
+  Widget _buildLoadingOverlay(bool isDark) {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: isDark 
+          ? Colors.black.withOpacity(0.7) 
+          : Colors.black.withOpacity(0.4),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: AppColors.darkSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: AppColors.primary.withOpacity(0.3),
@@ -1389,7 +1414,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withOpacity(isDark ? 0.5 : 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -1403,18 +1428,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 height: 40,
                 child: CircularProgressIndicator(
                   strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(
+                  valueColor: const AlwaysStoppedAnimation<Color>(
                     AppColors.primary,
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Calculando ruta...',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -1425,15 +1450,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     );
   }
 
-  Widget _buildErrorOverlay() {
+  Widget _buildErrorOverlay(bool isDark) {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: isDark 
+          ? Colors.black.withOpacity(0.7) 
+          : Colors.black.withOpacity(0.4),
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: isDark ? const Color(0xFF1A1A1A) : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: Colors.red.withOpacity(0.5),
@@ -1441,7 +1468,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withOpacity(isDark ? 0.5 : 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -1454,10 +1481,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               const SizedBox(height: 16),
               Text(
                 'Error al calcular ruta',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1465,7 +1492,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 _errorMessage ?? 'Ocurrió un error inesperado',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey[400],
+                  color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
                   fontSize: 14,
                 ),
               ),

@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../services/trip_request_service.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../theme/app_colors.dart';
 import 'dart:ui';
 
 class SearchingDriverScreen extends StatefulWidget {
@@ -94,18 +95,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
   }
 
   void _showNoDriversDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.7),
       builder: (context) => _CustomAlertDialog(
         icon: Icons.search_off_rounded,
-        iconColor: const Color(0xFFFFA726),
+        iconColor: AppColors.warning,
         title: 'No hay conductores disponibles',
-        titleColor: const Color(0xFFFFA726),
-        message: 'Lo sentimos, no hay conductores disponibles en este momento. Â¿Deseas seguir esperando?',
+        titleColor: AppColors.warning,
+        message: 'Lo sentimos, no hay conductores disponibles en este momento. ¿Deseas seguir esperando?',
         primaryButtonText: 'Seguir esperando',
-        primaryButtonColor: const Color(0xFFFFD700),
+        primaryButtonColor: AppColors.primary,
         secondaryButtonText: 'Cancelar viaje',
+        isDark: isDark,
         onPrimaryPressed: () => Navigator.of(context).pop(),
         onSecondaryPressed: () {
           Navigator.of(context).pop();
@@ -182,8 +185,11 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Stack(
         children: [
           // Mapa de fondo
@@ -194,7 +200,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
             ),
             children: [
               TileLayer(
-                urlTemplate: MapboxService.getTileUrl(isDarkMode: true),
+                urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
                 userAgentPackageName: 'com.example.ping_go',
               ),
               // Marcador de origen
@@ -206,7 +212,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                     height: 50,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD700),
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
                       ),
@@ -218,7 +224,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
             ],
           ),
 
-          // Overlay con informaciÃ³n
+          // Overlay con información
           SafeArea(
             child: Column(
               children: [
@@ -229,13 +235,18 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A).withOpacity(0.9),
+                          color: isDark 
+                              ? AppColors.darkSurface.withOpacity(0.9) 
+                              : AppColors.lightSurface.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
+                          icon: Icon(
+                            Icons.close, 
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                          ),
                           onPressed: () {
-                            _showCancelDialog();
+                            _showCancelDialog(isDark);
                           },
                         ),
                       ),
@@ -245,19 +256,21 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
 
                 const Spacer(),
 
-                // Panel de bÃºsqueda
+                // Panel de búsqueda
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                    color: isDark 
+                        ? AppColors.darkSurface.withOpacity(0.95) 
+                        : AppColors.lightSurface.withOpacity(0.95),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                     border: Border.all(
-                      color: const Color(0xFFFFD700).withOpacity(0.2),
+                      color: AppColors.primary.withOpacity(0.2),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFD700).withOpacity(0.1),
+                        color: AppColors.primary.withOpacity(0.1),
                         blurRadius: 30,
                         spreadRadius: 0,
                       ),
@@ -288,7 +301,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: const Color(0xFFFFD700).withOpacity(0.4 * (1 - progress)),
+                                        color: AppColors.primary.withOpacity(0.4 * (1 - progress)),
                                         width: 2,
                                       ),
                                     ),
@@ -296,7 +309,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                 },
                               );
                             }),
-                            // CÃ­rculo central con pulso
+                            // Círculo central con pulso
                             AnimatedBuilder(
                               animation: _pulseController,
                               builder: (context, child) {
@@ -305,7 +318,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                   height: 80 + (_pulseController.value * 10),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: const Color(0xFFFFD700).withOpacity(0.2),
+                                    color: AppColors.primary.withOpacity(0.2),
                                   ),
                                   child: Center(
                                     child: Container(
@@ -313,12 +326,12 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                       height: 60,
                                       decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFFFFD700),
+                                        color: AppColors.primary,
                                       ),
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.person_search_rounded,
                                         size: 32,
-                                        color: Color(0xFF1A1A1A),
+                                        color: isDark ? AppColors.darkBackground : Colors.white,
                                       ),
                                     ),
                                   ),
@@ -330,12 +343,12 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                       ),
                       const SizedBox(height: 24),
                       
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Text(
                           'Buscando conductor',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.3,
@@ -352,7 +365,9 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                               ? 'Buscando conductores disponibles cerca de ti...'
                               : '${_nearbyDrivers.length} ${_nearbyDrivers.length == 1 ? "conductor encontrado" : "conductores encontrados"}',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: isDark 
+                                ? Colors.white.withOpacity(0.7) 
+                                : AppColors.lightTextSecondary,
                             fontSize: 14,
                             height: 1.4,
                           ),
@@ -361,16 +376,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                       ),
                       const SizedBox(height: 24),
 
-                      // InformaciÃ³n del viaje
+                      // Información del viaje
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: isDark 
+                                ? Colors.white.withOpacity(0.05) 
+                                : Colors.black.withOpacity(0.03),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
+                              color: isDark 
+                                  ? Colors.white.withOpacity(0.1) 
+                                  : Colors.black.withOpacity(0.05),
                               width: 1,
                             ),
                           ),
@@ -380,12 +399,14 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                 Icons.radio_button_checked,
                                 'Origen',
                                 widget.direccionOrigen,
+                                isDark,
                               ),
                               const SizedBox(height: 12),
                               _buildInfoRow(
                                 Icons.location_on,
                                 'Destino',
                                 widget.direccionDestino,
+                                isDark,
                               ),
                             ],
                           ),
@@ -393,20 +414,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                       ),
                       const SizedBox(height: 24),
 
-                      // BotÃ³n cancelar
+                      // Botón cancelar
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: SizedBox(
                           width: double.infinity,
                           height: 52,
                           child: OutlinedButton(
-                            onPressed: _isCancelling ? null : _showCancelDialog,
+                            onPressed: _isCancelling ? null : () => _showCancelDialog(isDark),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFFF5252),
+                              foregroundColor: AppColors.error,
                               side: BorderSide(
                                 color: _isCancelling 
                                     ? Colors.grey.withOpacity(0.3)
-                                    : const Color(0xFFFF5252).withOpacity(0.5),
+                                    : AppColors.error.withOpacity(0.5),
                                 width: 1.5,
                               ),
                               shape: RoundedRectangleBorder(
@@ -424,7 +445,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                                     ),
                                   )
                                 : const Text(
-                                    'Cancelar bÃºsqueda',
+                                    'Cancelar búsqueda',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -446,11 +467,11 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, bool isDark) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFFFFD700), size: 20),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -459,15 +480,17 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: isDark 
+                      ? Colors.white.withOpacity(0.5) 
+                      : AppColors.lightTextHint,
                   fontSize: 12,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
                   fontSize: 14,
                 ),
                 maxLines: 2,
@@ -480,7 +503,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
     );
   }
 
-  void _showCancelDialog() {
+  void _showCancelDialog(bool isDark) {
     if (_isCancelling) return;
     
     showDialog(
@@ -488,13 +511,14 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
       barrierColor: Colors.black.withOpacity(0.7),
       builder: (context) => _CustomAlertDialog(
         icon: Icons.cancel_outlined,
-        iconColor: const Color(0xFFFF5252),
-        title: 'Â¿Cancelar bÃºsqueda?',
-        titleColor: const Color(0xFFFF5252),
-        message: 'Â¿EstÃ¡s seguro de que deseas cancelar la bÃºsqueda de conductor? Esta acciÃ³n no se puede deshacer.',
-        primaryButtonText: 'SÃ­, cancelar',
-        primaryButtonColor: const Color(0xFFFF5252),
+        iconColor: AppColors.error,
+        title: '¿Cancelar búsqueda?',
+        titleColor: AppColors.error,
+        message: '¿Estás seguro de que deseas cancelar la búsqueda de conductor? Esta acción no se puede deshacer.',
+        primaryButtonText: 'Sí, cancelar',
+        primaryButtonColor: AppColors.error,
         secondaryButtonText: 'Seguir buscando',
+        isDark: isDark,
         onPrimaryPressed: () {
           Navigator.of(context).pop();
           _cancelTrip();
@@ -517,6 +541,7 @@ class _CustomAlertDialog extends StatelessWidget {
   final String secondaryButtonText;
   final VoidCallback onPrimaryPressed;
   final VoidCallback onSecondaryPressed;
+  final bool isDark;
 
   const _CustomAlertDialog({
     required this.icon,
@@ -529,6 +554,7 @@ class _CustomAlertDialog extends StatelessWidget {
     required this.secondaryButtonText,
     required this.onPrimaryPressed,
     required this.onSecondaryPressed,
+    required this.isDark,
   });
 
   @override
@@ -539,7 +565,7 @@ class _CustomAlertDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 360),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: iconColor.withOpacity(0.3),
@@ -575,7 +601,7 @@ class _CustomAlertDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   
-                  // TÃ­tulo
+                  // Título
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
@@ -599,17 +625,23 @@ class _CustomAlertDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: isDark 
+                      ? Colors.white.withOpacity(0.05) 
+                      : Colors.black.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.black.withOpacity(0.05),
                     width: 1,
                   ),
                 ),
                 child: Text(
                   message,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.85) 
+                        : AppColors.lightTextPrimary,
                     fontSize: 15,
                     height: 1.5,
                     letterSpacing: 0.2,
@@ -626,7 +658,7 @@ class _CustomAlertDialog extends StatelessWidget {
               padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
               child: Column(
                 children: [
-                  // BotÃ³n primario
+                  // Botón primario
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -653,16 +685,18 @@ class _CustomAlertDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   
-                  // BotÃ³n secundario
+                  // Botón secundario
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: OutlinedButton(
                       onPressed: onSecondaryPressed,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
+                        foregroundColor: isDark ? Colors.white70 : AppColors.lightTextSecondary,
                         side: BorderSide(
-                          color: Colors.white.withOpacity(0.2),
+                          color: isDark 
+                              ? Colors.white.withOpacity(0.2) 
+                              : Colors.black.withOpacity(0.1),
                           width: 1.5,
                         ),
                         elevation: 0,
