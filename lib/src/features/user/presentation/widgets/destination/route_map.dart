@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../../global/models/simple_location.dart';
+import '../../../../../global/services/mapbox_service.dart';
 import '../../../../../theme/app_colors.dart';
 
-/// Mapa con la ruta y marcadores
+/// Mapa con la ruta y marcadores - usa MapboxService como en home
 class RouteMap extends StatelessWidget {
   final MapController mapController;
   final LatLng? userLocation;
@@ -31,20 +32,19 @@ class RouteMap extends StatelessWidget {
       mapController: mapController,
       options: MapOptions(
         initialCenter: userLocation ?? const LatLng(6.2442, -75.5812),
-        initialZoom: 14,
+        initialZoom: 15,
+        minZoom: 3.0,
+        maxZoom: 18.0,
         interactionOptions: const InteractionOptions(
           enableMultiFingerGestureRace: true,
           flags: InteractiveFlag.all,
         ),
       ),
       children: [
-        // Tiles
+        // Tiles - usa MapboxService como en home
         TileLayer(
-          urlTemplate: isDark
-              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-          subdomains: const ['a', 'b', 'c', 'd'],
-          userAgentPackageName: 'com.example.viax',
+          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+          userAgentPackageName: 'com.viax.app',
         ),
         // Ruta
         if (routePoints.length >= 2)
@@ -75,18 +75,42 @@ class RouteMap extends StatelessWidget {
   List<Marker> _buildMarkers() {
     final markers = <Marker>[];
 
-    // Ubicación del usuario (si no hay origen)
+    // Ubicación del usuario con halo (como en home)
     if (userLocation != null && origin == null) {
       markers.add(Marker(
         point: userLocation!,
-        width: 24,
-        height: 24,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
-          ),
+        width: 60,
+        height: 60,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Halo
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+            ),
+            // Punto central
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ));
     }

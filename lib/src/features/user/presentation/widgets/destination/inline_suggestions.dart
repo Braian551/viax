@@ -155,6 +155,51 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
         ),
+
+        // Lugares guardados (siempre visibles cuando hay focus)
+        if (widget.focusNode.hasFocus)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _SavedPlaceChip(
+                    icon: Icons.home_rounded,
+                    label: 'Casa',
+                    isDark: widget.isDark,
+                    onTap: () {
+                      // TODO: Cargar ubicación casa
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SavedPlaceChip(
+                    icon: Icons.work_rounded,
+                    label: 'Trabajo',
+                    isDark: widget.isDark,
+                    onTap: () {
+                      // TODO: Cargar ubicación trabajo
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SavedPlaceChip(
+                    icon: Icons.star_rounded,
+                    label: 'Favoritos',
+                    isDark: widget.isDark,
+                    onTap: () {
+                      // TODO: Mostrar favoritos
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         
         // Loading
         if (_isLoading)
@@ -172,7 +217,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
         
-        // Sugerencias
+        // Sugerencias (después de lugares guardados)
         if (_suggestions.isNotEmpty && !_isLoading)
           Container(
             margin: const EdgeInsets.only(top: 8),
@@ -221,7 +266,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
         
-        // Opciones rápidas cuando no hay texto
+        // Opciones rápidas cuando no hay texto ni sugerencias
         if (_suggestions.isEmpty && 
             !_isLoading && 
             widget.controller.text.isEmpty &&
@@ -252,6 +297,53 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ],
           ),
       ],
+    );
+  }
+}
+
+class _SavedPlaceChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _SavedPlaceChip({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: isDark ? Colors.white54 : Colors.grey[600]),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
