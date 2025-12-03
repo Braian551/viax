@@ -4,10 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/models/simple_location.dart';
-import '../../../../global/services/auth/user_service.dart';
 import '../../../../theme/app_colors.dart';
-import '../../services/trip_request_service.dart';
-import 'searching_driver_screen.dart';
+import 'pickup_selection_screen.dart';
 
 /// Modelo para cotización del viaje
 class TripQuote {
@@ -20,7 +18,7 @@ class TripQuote {
   final double totalPrice;
   final String periodType; // 'normal', 'hora_pico', 'nocturno'
   final double surchargePercentage;
-  
+
   TripQuote({
     required this.distanceKm,
     required this.durationMinutes,
@@ -32,7 +30,7 @@ class TripQuote {
     required this.periodType,
     required this.surchargePercentage,
   });
-  
+
   String get formattedTotal => '\$${totalPrice.toStringAsFixed(0)}';
   String get formattedDistance => '${distanceKm.toStringAsFixed(1)} km';
   String get formattedDuration => '$durationMinutes min';
@@ -45,7 +43,7 @@ class TripPreviewScreen extends StatefulWidget {
   final SimpleLocation destination;
   final List<SimpleLocation> stops;
   final String vehicleType;
-  
+
   const TripPreviewScreen({
     super.key,
     required this.origin,
@@ -58,35 +56,37 @@ class TripPreviewScreen extends StatefulWidget {
   State<TripPreviewScreen> createState() => _TripPreviewScreenState();
 }
 
-class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProviderStateMixin {
+class _TripPreviewScreenState extends State<TripPreviewScreen>
+    with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  
+
   MapboxRoute? _route;
   TripQuote? _quote;
   bool _isLoadingRoute = true;
   bool _isLoadingQuote = true;
   String? _errorMessage;
-  
+
   late AnimationController _slideAnimationController;
   late Animation<Offset> _slideAnimation;
-  
+
   late AnimationController _routeAnimationController;
   late Animation<double> _routeAnimation;
-  
+
   late AnimationController _topPanelAnimationController;
   late Animation<Offset> _topPanelSlideAnimation;
   late Animation<double> _topPanelFadeAnimation;
-  
+
   late AnimationController _markerAnimationController;
   late Animation<double> _markerScaleAnimation;
   late Animation<double> _markerBounceAnimation;
-  
+
   late AnimationController _pulseAnimationController;
   late Animation<double> _pulseAnimation;
-  
-  final DraggableScrollableController _draggableController = DraggableScrollableController();
+
+  final DraggableScrollableController _draggableController =
+      DraggableScrollableController();
   bool _isPanelExpanded = false;
-  
+
   bool _showDetails = false;
   List<LatLng> _animatedRoutePoints = [];
   // Note: _currentRouteProgress was unused and removed to satisfy analyzer.
@@ -126,96 +126,94 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _slideAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
     // Animación de la línea de ruta (más suave y prolongada)
     _routeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 2500), // Más lento para efecto suave
+      duration: const Duration(
+        milliseconds: 2500,
+      ), // Más lento para efecto suave
       vsync: this,
     );
-    
-    _routeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _routeAnimationController,
-      curve: Curves.easeInOutCubic, // Curva más suave
-    ));
-    _routeAnimation = _routeAnimation..addListener(() {
-      if (!mounted) return; // Avoid setState on unmounted widget
-      if (_route != null) {
-        final totalPoints = _route!.geometry.length;
-        final animatedCount = (totalPoints * _routeAnimation.value).round();
-        setState(() {
-          _animatedRoutePoints = _route!.geometry.sublist(0, animatedCount);
-        });
-      }
-    });
-    
+
+    _routeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _routeAnimationController,
+        curve: Curves.easeInOutCubic, // Curva más suave
+      ),
+    );
+    _routeAnimation = _routeAnimation
+      ..addListener(() {
+        if (!mounted) return; // Avoid setState on unmounted widget
+        if (_route != null) {
+          final totalPoints = _route!.geometry.length;
+          final animatedCount = (totalPoints * _routeAnimation.value).round();
+          setState(() {
+            _animatedRoutePoints = _route!.geometry.sublist(0, animatedCount);
+          });
+        }
+      });
+
     // Animación del panel superior
     _topPanelAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
-    _topPanelSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _topPanelAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
-    _topPanelFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _topPanelAnimationController,
-      curve: Curves.easeOut,
-    ));
-    
+
+    _topPanelSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _topPanelAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _topPanelFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _topPanelAnimationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
     // Animación de marcadores
     _markerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _markerScaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _markerAnimationController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _markerBounceAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _markerAnimationController,
-      curve: Curves.bounceOut,
-    ));
-    
+
+    _markerScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _markerAnimationController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    _markerBounceAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _markerAnimationController,
+        curve: Curves.bounceOut,
+      ),
+    );
+
     // Animación de pulso para marcadores
     _pulseAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseAnimationController,
-      curve: Curves.easeInOut,
-    ));
+
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _pulseAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   Future<void> _loadRouteAndQuote() async {
@@ -224,7 +222,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       _isLoadingQuote = true;
       _errorMessage = null;
     });
-    
+
     try {
       // Prepare waypoints: Origin -> Stops -> Destination
       final waypoints = [
@@ -234,52 +232,49 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       ];
 
       // Obtener ruta de Mapbox
-      final route = await MapboxService.getRoute(
-        waypoints: waypoints,
-      );
-      
+      final route = await MapboxService.getRoute(waypoints: waypoints);
+
       if (route == null) {
         throw Exception('No se pudo calcular la ruta');
       }
-      
+
       if (!mounted) return;
       setState(() {
         _route = route;
         _isLoadingRoute = false;
       });
-      
+
       // Ajustar el mapa para mostrar la ruta completa con animación suave
       await _fitMapToRouteAnimated();
       if (!mounted) return;
-      
+
       // Animar el panel superior
       _topPanelAnimationController.forward();
       if (!mounted) return;
-      
+
       // Animar los marcadores
       await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       _markerAnimationController.forward();
-      
+
       // Animar la línea de ruta
       await Future.delayed(const Duration(milliseconds: 300));
       if (!mounted) return;
       _routeAnimationController.forward();
-      
+
       // Calcular cotización (por ahora localmente, luego será desde el backend)
       final quote = _calculateQuote(route);
-      
+
       if (!mounted) return;
       setState(() {
         _quote = quote;
         _isLoadingQuote = false;
       });
-      
+
       // Animar la aparición del panel de detalles
       await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
       _slideAnimationController.forward();
-      
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -292,39 +287,36 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
 
   Future<void> _fitMapToRouteAnimated() async {
     if (_route == null) return;
-    
+
     // Encontrar los límites de la ruta
     double minLat = double.infinity;
     double maxLat = double.negativeInfinity;
     double minLng = double.infinity;
     double maxLng = double.negativeInfinity;
-    
+
     for (var point in _route!.geometry) {
       if (point.latitude < minLat) minLat = point.latitude;
       if (point.latitude > maxLat) maxLat = point.latitude;
       if (point.longitude < minLng) minLng = point.longitude;
       if (point.longitude > maxLng) maxLng = point.longitude;
     }
-    
-    final bounds = LatLngBounds(
-      LatLng(minLat, minLng),
-      LatLng(maxLat, maxLng),
-    );
-    
+
+    final bounds = LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng));
+
     // Ajustar el mapa con padding generoso para mostrar toda la ruta
     final camera = CameraFit.bounds(
       bounds: bounds,
       padding: const EdgeInsets.only(
-        top: 220,  // Espacio para el panel superior
+        top: 220, // Espacio para el panel superior
         bottom: 380, // Espacio para el panel inferior
         left: 70,
         right: 70,
       ),
     );
-    
+
     // Usar animación de cámara suave
     _mapController.fitCamera(camera);
-    
+
     // Pausa para que la cámara se ajuste antes de animar elementos
     await Future.delayed(const Duration(milliseconds: 400));
   }
@@ -335,19 +327,19 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     final hour = DateTime.now().hour;
     final distanceKm = route.distanceKm;
     final durationMinutes = route.durationMinutes.ceil();
-    
+
     // Configuración según tipo de vehículo (estos valores vendrán del backend)
     final config = _getVehicleConfig(widget.vehicleType);
-    
+
     // Precios base
     final basePrice = config['tarifa_base']!;
     final distancePrice = distanceKm * config['costo_por_km']!;
     final timePrice = durationMinutes * config['costo_por_minuto']!;
-    
+
     // Determinar período y recargo
     String periodType = 'normal';
     double surchargePercentage = 0.0;
-    
+
     if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
       periodType = 'hora_pico';
       surchargePercentage = config['recargo_hora_pico']!;
@@ -355,14 +347,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       periodType = 'nocturno';
       surchargePercentage = config['recargo_nocturno']!;
     }
-    
+
     final subtotal = basePrice + distancePrice + timePrice;
     final surchargePrice = subtotal * (surchargePercentage / 100);
     final total = subtotal + surchargePrice;
-    
+
     // Aplicar tarifa mínima
-    final finalTotal = total < config['tarifa_minima']! ? config['tarifa_minima']! : total;
-    
+    final finalTotal = total < config['tarifa_minima']!
+        ? config['tarifa_minima']!
+        : total;
+
     return TripQuote(
       distanceKm: distanceKm,
       durationMinutes: durationMinutes,
@@ -429,21 +423,31 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
 
   String _getVehicleName(String type) {
     switch (type) {
-      case 'moto': return 'Moto';
-      case 'carro': return 'Carro';
-      case 'moto_carga': return 'Moto Carga';
-      case 'carro_carga': return 'Carro Carga';
-      default: return 'Vehículo';
+      case 'moto':
+        return 'Moto';
+      case 'carro':
+        return 'Carro';
+      case 'moto_carga':
+        return 'Moto Carga';
+      case 'carro_carga':
+        return 'Carro Carga';
+      default:
+        return 'Vehículo';
     }
   }
 
   IconData _getVehicleIcon(String type) {
     switch (type) {
-      case 'moto': return Icons.two_wheeler;
-      case 'carro': return Icons.directions_car;
-      case 'moto_carga': return Icons.delivery_dining;
-      case 'carro_carga': return Icons.local_shipping;
-      default: return Icons.two_wheeler;
+      case 'moto':
+        return Icons.two_wheeler;
+      case 'carro':
+        return Icons.directions_car;
+      case 'moto_carga':
+        return Icons.delivery_dining;
+      case 'carro_carga':
+        return Icons.local_shipping;
+      default:
+        return Icons.two_wheeler;
     }
   }
 
@@ -451,23 +455,25 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: Stack(
         children: [
           // Mapa
           _buildMap(isDark),
-          
+
           // Overlay superior con información compacta
           _buildTopOverlay(isDark),
-          
+
           // Panel inferior con detalles y precio
           if (_quote != null) _buildBottomPanel(isDark),
-          
+
           // Indicador de carga
           if (_isLoadingRoute || _isLoadingQuote) _buildLoadingOverlay(isDark),
-          
+
           // Mensaje de error
           if (_errorMessage != null) _buildErrorOverlay(isDark),
         ],
@@ -491,7 +497,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
           userAgentPackageName: 'com.example.ping_go',
         ),
-        
+
         // Sombra de la ruta (efecto de profundidad)
         if (_animatedRoutePoints.length > 1)
           PolylineLayer(
@@ -504,7 +510,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               ),
             ],
           ),
-        
+
         // Línea de ruta principal con tema azul
         if (_animatedRoutePoints.length > 1)
           PolylineLayer(
@@ -522,7 +528,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
               ),
             ],
           ),
-        
+
         // Marcadores de origen, destino y paradas
         MarkerLayer(
           markers: [
@@ -565,10 +571,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 3,
-                        ),
+                        border: Border.all(color: AppColors.primary, width: 3),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withOpacity(0.4),
@@ -591,7 +594,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 ),
               ),
             ),
-            
+
             // Paradas intermedias
             ...widget.stops.asMap().entries.map((entry) {
               final index = entry.key;
@@ -609,7 +612,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   child: Center(
                     child: Text(
                       '${index + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -626,10 +632,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 animation: _markerBounceAnimation,
                 builder: (context, child) {
                   return Transform.translate(
-                    offset: Offset(
-                      0,
-                      -15 * (1 - _markerBounceAnimation.value),
-                    ),
+                    offset: Offset(0, -15 * (1 - _markerBounceAnimation.value)),
                     child: Transform.scale(
                       scale: 0.3 + (_markerBounceAnimation.value * 0.7),
                       child: child,
@@ -721,8 +724,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             child: Container(
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark 
-                    ? AppColors.darkSurface.withOpacity(0.95) 
+                color: isDark
+                    ? AppColors.darkSurface.withOpacity(0.95)
                     : AppColors.lightSurface.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
@@ -731,8 +734,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isDark 
-                        ? Colors.black.withOpacity(0.3) 
+                    color: isDark
+                        ? Colors.black.withOpacity(0.3)
                         : Colors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
@@ -803,7 +806,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
                                     child: Container(
                                       width: 2,
                                       height: 12,
@@ -831,18 +836,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       ],
                     ),
                   ),
-                  
+
                   // Divider sutil
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
                       height: 1,
-                      color: isDark 
-                          ? Colors.white.withOpacity(0.1) 
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
                           : Colors.black.withOpacity(0.1),
                     ),
                   ),
-                  
+
                   // Información de ubicaciones compacta
                   Padding(
                     padding: const EdgeInsets.all(12),
@@ -857,10 +862,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                           isOrigin: true,
                           isDark: isDark,
                         ),
-                        
+
                         // Paradas intermedias
                         for (var i = 0; i < widget.stops.length; i++) ...[
-                           Padding(
+                          Padding(
                             padding: const EdgeInsets.symmetric(vertical: 2),
                             child: Row(
                               children: [
@@ -892,14 +897,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                               SizedBox(
                                 height: 20,
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: List.generate(
                                     3,
                                     (index) => Container(
                                       width: 2,
                                       height: 3,
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withOpacity(0.4),
+                                        color: AppColors.primary.withOpacity(
+                                          0.4,
+                                        ),
                                         borderRadius: BorderRadius.circular(1),
                                       ),
                                     ),
@@ -909,7 +917,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             ],
                           ),
                         ),
-                        
+
                         // Destino
                         _buildCompactLocationInfo(
                           icon: Icons.location_on,
@@ -958,11 +966,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: Icon(
-                    icon,
-                    size: iconSize,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: iconSize, color: color),
                 ),
               ),
               const SizedBox(width: 10),
@@ -973,8 +977,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark 
-                        ? Colors.white.withOpacity(0.9) 
+                    color: isDark
+                        ? Colors.white.withOpacity(0.9)
                         : AppColors.lightTextPrimary,
                     height: 1.3,
                   ),
@@ -1003,11 +1007,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           child: Container(
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: isDark 
-                      ? Colors.black.withOpacity(0.3) 
+                  color: isDark
+                      ? Colors.black.withOpacity(0.3)
                       : Colors.black.withOpacity(0.1),
                   blurRadius: 30,
                   offset: const Offset(0, -5),
@@ -1026,14 +1032,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark 
-                          ? Colors.white.withOpacity(0.3) 
+                      color: isDark
+                          ? Colors.white.withOpacity(0.3)
                           : Colors.black.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                
+
                 // Título de sección
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
@@ -1046,7 +1052,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                 ),
-                
+
                 // Tarjeta de vehículo seleccionado con precio
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1066,12 +1072,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                        color: isDark
+                            ? AppColors.darkCard
+                            : AppColors.lightCard,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 2,
-                        ),
+                        border: Border.all(color: AppColors.primary, width: 2),
                       ),
                       child: Row(
                         children: [
@@ -1099,21 +1104,27 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.lightTextPrimary,
                                   ),
                                 ),
                                 Text(
                                   'Llegada: ${_quote!.formattedDuration}',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : AppColors.lightTextSecondary,
                                   ),
                                 ),
                                 Text(
                                   _getVehicleDescription(widget.vehicleType),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.grey[500] : AppColors.lightTextHint,
+                                    color: isDark
+                                        ? Colors.grey[500]
+                                        : AppColors.lightTextHint,
                                   ),
                                 ),
                               ],
@@ -1140,11 +1151,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                 ),
-                
+
                 // Botón de recargo (opcional) - más compacto
                 if (_quote!.surchargePercentage > 0)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     child: InkWell(
                       onTap: () {
                         setState(() {
@@ -1155,7 +1169,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1182,28 +1198,36 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                                     : 'Hora pico (+${_quote!.surchargePercentage.toInt()}%)',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: isDark ? Colors.grey[300] : AppColors.lightTextSecondary,
+                                  color: isDark
+                                      ? Colors.grey[300]
+                                      : AppColors.lightTextSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                             Icon(
-                              _showDetails ? Icons.expand_less : Icons.expand_more,
-                              color: isDark ? Colors.grey[400] : AppColors.lightTextHint,
+                              _showDetails
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppColors.lightTextHint,
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                
+
                 // Desglose de precios con animación (más compacto)
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  child: _showDetails ? _buildPriceBreakdown(isDark) : const SizedBox.shrink(),
+                  child: _showDetails
+                      ? _buildPriceBreakdown(isDark)
+                      : const SizedBox.shrink(),
                 ),
-                
+
                 // Mensaje cuando está expandido
                 if (_isPanelExpanded) ...[
                   const SizedBox(height: 24),
@@ -1212,7 +1236,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                        color: isDark
+                            ? AppColors.darkCard
+                            : AppColors.lightCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: AppColors.primary.withOpacity(0.3),
@@ -1232,7 +1258,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.lightTextPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1241,7 +1269,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                             'Estamos trabajando para ofrecerte más opciones de vehículos y servicios',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppColors.lightTextSecondary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1250,8 +1280,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                 ],
-                
-                // Botón de solicitar viaje - más arriba y visible
+
+                // Botón de confirmar viaje - navega a selección de punto de encuentro
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                   child: SizedBox(
@@ -1268,7 +1298,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                         elevation: 0,
                       ),
                       child: const Text(
-                        'Solicitar viaje',
+                        'Confirmar',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1277,7 +1307,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
               ],
             ),
@@ -1286,14 +1316,19 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       },
     );
   }
-  
+
   String _getVehicleDescription(String type) {
     switch (type) {
-      case 'moto': return 'Rápido y económico';
-      case 'carro': return 'Cómodo y espacioso';
-      case 'moto_carga': return 'Para paquetes pequeños';
-      case 'carro_carga': return 'Para mudanzas';
-      default: return 'Vehículo disponible';
+      case 'moto':
+        return 'Rápido y económico';
+      case 'carro':
+        return 'Cómodo y espacioso';
+      case 'moto_carga':
+        return 'Para paquetes pequeños';
+      case 'carro_carga':
+        return 'Para mudanzas';
+      default:
+        return 'Vehículo disponible';
     }
   }
 
@@ -1307,10 +1342,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
       builder: (context, value, child) {
         return Opacity(
           opacity: value.clamp(0.0, 1.0),
-          child: Transform.scale(
-            scale: 0.95 + (0.05 * value),
-            child: child,
-          ),
+          child: Transform.scale(scale: 0.95 + (0.05 * value), child: child),
         );
       },
       child: Container(
@@ -1328,25 +1360,53 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           children: [
             _buildPriceRow('Tarifa base', _quote!.basePrice, isDark: isDark),
             const SizedBox(height: 8),
-            _buildPriceRow('Distancia (${_quote!.formattedDistance})', _quote!.distancePrice, isDark: isDark),
+            _buildPriceRow(
+              'Distancia (${_quote!.formattedDistance})',
+              _quote!.distancePrice,
+              isDark: isDark,
+            ),
             const SizedBox(height: 8),
-            _buildPriceRow('Tiempo (${_quote!.formattedDuration})', _quote!.timePrice, isDark: isDark),
+            _buildPriceRow(
+              'Tiempo (${_quote!.formattedDuration})',
+              _quote!.timePrice,
+              isDark: isDark,
+            ),
             if (_quote!.surchargePrice > 0) ...[
               const SizedBox(height: 8),
-              _buildPriceRow('Recargo', _quote!.surchargePrice, isHighlight: true, isDark: isDark),
+              _buildPriceRow(
+                'Recargo',
+                _quote!.surchargePrice,
+                isHighlight: true,
+                isDark: isDark,
+              ),
             ],
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1, color: isDark ? Colors.grey[700] : AppColors.lightDivider, thickness: 1),
+              child: Divider(
+                height: 1,
+                color: isDark ? Colors.grey[700] : AppColors.lightDivider,
+                thickness: 1,
+              ),
             ),
-            _buildPriceRow('Total', _quote!.totalPrice, isBold: true, isDark: isDark),
+            _buildPriceRow(
+              'Total',
+              _quote!.totalPrice,
+              isBold: true,
+              isDark: isDark,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPriceRow(String label, double amount, {bool isBold = false, bool isHighlight = false, required bool isDark}) {
+  Widget _buildPriceRow(
+    String label,
+    double amount, {
+    bool isBold = false,
+    bool isHighlight = false,
+    required bool isDark,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -1357,8 +1417,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             style: TextStyle(
               fontSize: isBold ? 15 : 13,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-              color: isHighlight 
-                  ? Colors.orange 
+              color: isHighlight
+                  ? Colors.orange
                   : (isDark ? Colors.grey[300] : AppColors.lightTextSecondary),
             ),
           ),
@@ -1367,9 +1427,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
             style: TextStyle(
               fontSize: isBold ? 15 : 13,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-              color: isHighlight 
-                  ? Colors.orange 
-                  : (isBold ? AppColors.primary : (isDark ? Colors.white : AppColors.lightTextPrimary)),
+              color: isHighlight
+                  ? Colors.orange
+                  : (isBold
+                        ? AppColors.primary
+                        : (isDark ? Colors.white : AppColors.lightTextPrimary)),
             ),
           ),
         ],
@@ -1379,8 +1441,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
 
   Widget _buildLoadingOverlay(bool isDark) {
     return Container(
-      color: isDark 
-          ? Colors.black.withOpacity(0.7) 
+      color: isDark
+          ? Colors.black.withOpacity(0.7)
           : Colors.black.withOpacity(0.4),
       child: Center(
         child: Container(
@@ -1432,8 +1494,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
 
   Widget _buildErrorOverlay(bool isDark) {
     return Container(
-      color: isDark 
-          ? Colors.black.withOpacity(0.7) 
+      color: isDark
+          ? Colors.black.withOpacity(0.7)
           : Colors.black.withOpacity(0.4),
       child: Center(
         child: Container(
@@ -1442,10 +1504,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1A1A1A) : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.red.withOpacity(0.5),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.red.withOpacity(0.5), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(isDark ? 0.5 : 0.2),
@@ -1472,7 +1531,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
                 _errorMessage ?? 'Ocurrió un error inesperado',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark ? Colors.grey[400] : AppColors.lightTextSecondary,
+                  color: isDark
+                      ? Colors.grey[400]
+                      : AppColors.lightTextSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -1500,83 +1561,20 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   }
 
   Future<void> _confirmTrip() async {
-    try {
-      // Mostrar indicador de carga
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
+    if (_quote == null) return;
+
+    // Navegar a pantalla de selección de punto de encuentro
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PickupSelectionScreen(
+          origin: widget.origin,
+          destination: widget.destination,
+          stops: widget.stops,
+          vehicleType: widget.vehicleType,
+          quote: _quote!,
         ),
-      );
-
-      final user = await UserService.getSavedSession();
-      
-      if (user == null) {
-        if (mounted) {
-          Navigator.pop(context); // Cerrar loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error: Usuario no autenticado')),
-          );
-        }
-        return;
-      }
-
-      // Crear solicitud en backend
-      final userId = user['id'] is int ? (user['id'] as int) : int.tryParse(user['id'].toString()) ?? 0;
-      final result = await TripRequestService.createTripRequest(
-        userId: userId,
-        latitudOrigen: widget.origin.latitude,
-        longitudOrigen: widget.origin.longitude,
-        direccionOrigen: widget.origin.address,
-        latitudDestino: widget.destination.latitude,
-        longitudDestino: widget.destination.longitude,
-        direccionDestino: widget.destination.address,
-        tipoServicio: 'viaje',
-        tipoVehiculo: widget.vehicleType,
-        distanciaKm: _quote!.distanceKm,
-        duracionMinutos: _quote!.durationMinutes,
-        precioEstimado: _quote!.totalPrice,
-        stops: widget.stops, // Pasar paradas
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context); // Cerrar loading
-
-      if (result['success'] == true) {
-        final solicitudId = result['solicitud_id'];
-        
-        // Navegar a pantalla de búsqueda de conductor
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SearchingDriverScreen(
-              solicitudId: solicitudId,
-              latitudOrigen: widget.origin.latitude,
-              longitudOrigen: widget.origin.longitude,
-              direccionOrigen: widget.origin.address,
-              latitudDestino: widget.destination.latitude,
-              longitudDestino: widget.destination.longitude,
-              direccionDestino: widget.destination.address,
-              tipoVehiculo: widget.vehicleType,
-            ),
-          ),
-        );
-      } else {
-        throw Exception(result['message'] ?? 'Error al crear solicitud');
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Cerrar loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+      ),
+    );
   }
 }

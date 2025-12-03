@@ -48,34 +48,34 @@ class UserTripAcceptedScreen extends StatefulWidget {
 class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  
+
   // Ubicación del cliente
   LatLng? _clientLocation;
   double _clientHeading = 0.0; // Orientación del dispositivo (brújula)
   StreamSubscription<geo.Position>? _positionStream;
-  
+
   // Info del conductor (actualizada con polling)
   Map<String, dynamic>? _conductor;
   LatLng? _conductorLocation;
   LatLng? _lastConductorLocation; // Para detectar movimiento
   double? _conductorEtaMinutes;
   double? _conductorDistanceKm;
-  
+
   // Ruta del conductor al punto de encuentro
   List<LatLng> _conductorRoute = [];
   List<LatLng> _animatedRoute = []; // Para animación de la ruta
   bool _isLoadingRoute = false;
-  
+
   // Polling para actualizar estado
   Timer? _statusTimer;
-  
+
   // Animaciones
   late AnimationController _pulseController;
   late AnimationController _waveController;
   late AnimationController _panelController;
   late AnimationController _routeAnimationController;
   late AnimationController _cameraAnimationController;
-  
+
   // Estado de la UI
   bool _isLoading = true;
   String _tripState = 'aceptada';
@@ -102,33 +102,36 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat();
-    
+
     _panelController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    
+
     // Animación para dibujar la ruta progresivamente
     _routeAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
     _routeAnimationController.addListener(_updateAnimatedRoute);
-    
+
     // Animación para movimientos de cámara suaves
     _cameraAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
   }
-  
+
   void _updateAnimatedRoute() {
     if (_conductorRoute.isEmpty) return;
     final progress = _routeAnimationController.value;
     final pointCount = (_conductorRoute.length * progress).round();
     if (mounted) {
       setState(() {
-        _animatedRoute = _conductorRoute.sublist(0, pointCount.clamp(0, _conductorRoute.length));
+        _animatedRoute = _conductorRoute.sublist(
+          0,
+          pointCount.clamp(0, _conductorRoute.length),
+        );
       });
     }
   }
@@ -149,18 +152,18 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           accuracy: geo.LocationAccuracy.high,
         ),
       );
-      
+
       if (mounted) {
         setState(() {
           _clientLocation = LatLng(pos.latitude, pos.longitude);
           _clientHeading = pos.heading;
           _isLoading = false;
         });
-        
+
         // Centrar mapa entre cliente y punto de encuentro
         _fitMapToBounds();
       }
-      
+
       // Iniciar stream de posición con heading
       _positionStream = geo.Geolocator.getPositionStream(
         locationSettings: const geo.LocationSettings(
@@ -168,7 +171,6 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           distanceFilter: 5, // Actualizar cada 5 metros
         ),
       ).listen(_onPositionUpdate);
-      
     } catch (e) {
       debugPrint('Error getting location: $e');
       if (mounted) {
@@ -179,7 +181,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   void _onPositionUpdate(geo.Position pos) {
     if (!mounted) return;
-    
+
     setState(() {
       _clientLocation = LatLng(pos.latitude, pos.longitude);
       _clientHeading = pos.heading;
@@ -188,23 +190,20 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   void _fitMapToBounds() {
     if (_clientLocation == null) return;
-    
+
     try {
       final points = <LatLng>[
         _clientLocation!,
         LatLng(widget.latitudOrigen, widget.longitudOrigen),
       ];
-      
+
       if (_conductorLocation != null) {
         points.add(_conductorLocation!);
       }
-      
+
       final bounds = LatLngBounds.fromPoints(points);
       _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(80),
-        ),
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(80)),
       );
     } catch (e) {
       debugPrint('Error fitting bounds: $e');
@@ -212,13 +211,21 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 
   /// Calcular distancia entre dos puntos en km (Haversine)
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const R = 6371.0; // Radio de la Tierra en km
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) *
-        math.sin(dLon / 2) * math.sin(dLon / 2);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return R * c;
   }
@@ -228,30 +235,30 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   /// Obtener ruta del conductor al punto de encuentro
   Future<void> _updateConductorRoute(LatLng conductorPos) async {
     if (_isLoadingRoute) return;
-    
+
     _isLoadingRoute = true;
-    
+
     try {
       final pickupPoint = LatLng(widget.latitudOrigen, widget.longitudOrigen);
-      
+
       // Usar MapboxService para obtener la ruta
       final route = await MapboxService.getRoute(
         waypoints: [conductorPos, pickupPoint],
         profile: 'driving-traffic',
       );
-      
+
       if (mounted && route != null && route.geometry.isNotEmpty) {
         final isFirstRoute = _conductorRoute.isEmpty;
-        
+
         setState(() {
           _conductorRoute = route.geometry;
         });
-        
+
         // Si es la primera vez que obtenemos la ruta, animar
         if (isFirstRoute && !_initialAnimationDone) {
           _initialAnimationDone = true;
           _routeAnimationController.forward(from: 0);
-          
+
           // Animación inicial: mostrar todo, luego enfocar cliente
           await _animateToShowAll();
           await Future.delayed(const Duration(milliseconds: 2500));
@@ -275,52 +282,105 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   /// Animar cámara para mostrar toda la ruta, conductor y punto de encuentro
   Future<void> _animateToShowAll() async {
     if (!mounted) return;
-    
+
     try {
       final points = <LatLng>[
-        LatLng(widget.latitudOrigen, widget.longitudOrigen), // Punto de encuentro
+        LatLng(
+          widget.latitudOrigen,
+          widget.longitudOrigen,
+        ), // Punto de encuentro
       ];
-      
+
       if (_conductorLocation != null) {
         points.add(_conductorLocation!);
       }
       if (_clientLocation != null) {
         points.add(_clientLocation!);
       }
-      
+
       // Agregar puntos de la ruta para mejor ajuste
       if (_conductorRoute.isNotEmpty) {
         points.addAll(_conductorRoute);
       }
-      
+
       if (points.length < 2) return;
-      
+
       final bounds = LatLngBounds.fromPoints(points);
-      _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.only(
-            top: 150,
-            bottom: 280,
-            left: 50,
-            right: 50,
-          ),
-        ),
+
+      // Animación suave usando moveAndRotate con easing
+      final targetCenter = LatLng(
+        (bounds.north + bounds.south) / 2,
+        (bounds.east + bounds.west) / 2,
       );
+
+      // Calcular zoom apropiado basado en la distancia
+      final latDiff = (bounds.north - bounds.south).abs();
+      final lngDiff = (bounds.east - bounds.west).abs();
+      final maxDiff = math.max(latDiff, lngDiff);
+
+      // Zoom dinámico basado en la extensión
+      double targetZoom = 14.0;
+      if (maxDiff < 0.01)
+        targetZoom = 16.0;
+      else if (maxDiff < 0.02)
+        targetZoom = 15.0;
+      else if (maxDiff < 0.05)
+        targetZoom = 14.0;
+      else
+        targetZoom = 13.0;
+
+      _smoothCameraMove(targetCenter, targetZoom);
     } catch (e) {
       debugPrint('Error animating to show all: $e');
     }
   }
 
-  /// Animar cámara para enfocar al cliente
+  /// Animar cámara para enfocar al cliente con zoom cercano
   Future<void> _animateToClient() async {
     if (!mounted || _clientLocation == null) return;
-    
+
     try {
-      _mapController.move(_clientLocation!, 17.0);
+      // Zoom muy cercano (18.5) para ver bien al cliente
+      _smoothCameraMove(_clientLocation!, 18.5);
     } catch (e) {
       debugPrint('Error animating to client: $e');
     }
+  }
+
+  /// Movimiento suave de cámara con interpolación
+  void _smoothCameraMove(LatLng target, double targetZoom) {
+    final startLat = _mapController.camera.center.latitude;
+    final startLng = _mapController.camera.center.longitude;
+    final startZoom = _mapController.camera.zoom;
+
+    const duration = Duration(milliseconds: 800);
+    const steps = 30;
+    final stepDuration = duration ~/ steps;
+
+    int currentStep = 0;
+
+    Timer.periodic(Duration(milliseconds: stepDuration.inMilliseconds), (
+      timer,
+    ) {
+      if (!mounted || currentStep >= steps) {
+        timer.cancel();
+        return;
+      }
+
+      currentStep++;
+      final t = _easeInOutCubic(currentStep / steps);
+
+      final lat = startLat + (target.latitude - startLat) * t;
+      final lng = startLng + (target.longitude - startLng) * t;
+      final zoom = startZoom + (targetZoom - startZoom) * t;
+
+      _mapController.move(LatLng(lat, lng), zoom);
+    });
+  }
+
+  /// Función de easing para animación suave
+  double _easeInOutCubic(double t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - math.pow(-2 * t + 2, 3) / 2;
   }
 
   /// Toggle entre vista completa y vista del cliente
@@ -328,7 +388,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     setState(() {
       _isFocusedOnClient = !_isFocusedOnClient;
     });
-    
+
     if (_isFocusedOnClient) {
       _animateToClient();
     } else {
@@ -341,28 +401,28 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _statusTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _checkTripStatus();
     });
-    
+
     // Primera consulta inmediata
     _checkTripStatus();
   }
 
   Future<void> _checkTripStatus() async {
     if (!mounted) return;
-    
+
     try {
       final result = await TripRequestService.getTripStatus(
         solicitudId: widget.solicitudId,
       );
-      
+
       if (!mounted) return;
-      
+
       if (result['success'] == true) {
         final trip = result['trip'];
         final estado = trip['estado'] as String?;
         final conductor = trip['conductor'] as Map<String, dynamic>?;
-        
+
         LatLng? newConductorLocation;
-        
+
         if (conductor != null) {
           // Actualizar ubicación del conductor
           final ubicacion = conductor['ubicacion'] as Map<String, dynamic>?;
@@ -374,7 +434,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             }
           }
         }
-        
+
         // Verificar si la ubicación del conductor cambió significativamente (más de 50m)
         bool shouldUpdateRoute = false;
         if (newConductorLocation != null) {
@@ -387,29 +447,32 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               newConductorLocation.latitude,
               newConductorLocation.longitude,
             );
-            if (distance > 0.05) { // Más de 50 metros
+            if (distance > 0.05) {
+              // Más de 50 metros
               shouldUpdateRoute = true;
             }
           }
         }
-        
+
         setState(() {
           _tripState = estado ?? 'aceptada';
-          
+
           if (conductor != null) {
             _conductor = conductor;
             _conductorLocation = newConductorLocation;
-            _conductorDistanceKm = (conductor['distancia_km'] as num?)?.toDouble();
-            _conductorEtaMinutes = (conductor['eta_minutos'] as num?)?.toDouble();
+            _conductorDistanceKm = (conductor['distancia_km'] as num?)
+                ?.toDouble();
+            _conductorEtaMinutes = (conductor['eta_minutos'] as num?)
+                ?.toDouble();
           }
         });
-        
+
         // Actualizar ruta si la ubicación cambió
         if (shouldUpdateRoute && newConductorLocation != null) {
           _lastConductorLocation = newConductorLocation;
           _updateConductorRoute(newConductorLocation);
         }
-        
+
         // Verificar cambios de estado importantes
         if (estado == 'conductor_llego') {
           _showDriverArrivedDialog();
@@ -443,7 +506,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 color: AppColors.success.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle, color: AppColors.success, size: 28),
+              child: const Icon(
+                Icons.check_circle,
+                color: AppColors.success,
+                size: 28,
+              ),
             ),
             const SizedBox(width: 12),
             const Expanded(child: Text('¡Tu conductor llegó!')),
@@ -460,9 +527,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Entendido', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Entendido',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -504,7 +576,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             Expanded(child: Text('Viaje cancelado')),
           ],
         ),
-        content: const Text('El viaje ha sido cancelado. Por favor intenta solicitar otro.'),
+        content: const Text(
+          'El viaje ha sido cancelado. Por favor intenta solicitar otro.',
+        ),
         actions: [
           ElevatedButton(
             onPressed: () {
@@ -530,7 +604,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       );
       return;
     }
-    
+
     // Usar intent para llamar sin depender de url_launcher
     try {
       final channel = const MethodChannel('viax/phone');
@@ -560,7 +634,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.warning,
+              size: 28,
+            ),
             SizedBox(width: 12),
             Text('¿Cancelar viaje?'),
           ],
@@ -584,9 +662,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         ],
       ),
     );
-    
+
     if (confirm == true) {
-      final success = await TripRequestService.cancelTripRequest(widget.solicitudId);
+      final success = await TripRequestService.cancelTripRequest(
+        widget.solicitudId,
+      );
       if (mounted && success) {
         Navigator.pop(context);
       }
@@ -610,24 +690,17 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final pickupPoint = LatLng(widget.latitudOrigen, widget.longitudOrigen);
-    
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
           // MAPA
           _buildMap(isDark, pickupPoint),
-          
+
           // HEADER
           _buildHeader(isDark),
-          
-          // BOTÓN DE ENFOQUE (toggle)
-          Positioned(
-            right: 16,
-            top: MediaQuery.of(context).padding.top + 70,
-            child: _buildFocusButton(isDark),
-          ),
-          
+
           // PANEL DE INFO DEL CONDUCTOR
           Positioned(
             bottom: bottomPadding + 16,
@@ -635,7 +708,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             right: 16,
             child: _buildDriverPanel(isDark),
           ),
-          
+
+          // BOTÓN DE ENFOQUE (toggle) - arriba del panel
+          Positioned(
+            right: 16,
+            bottom: bottomPadding + 220,
+            child: _buildFocusButton(isDark),
+          ),
+
           // LOADING
           if (_isLoading)
             Container(
@@ -693,7 +773,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
           userAgentPackageName: 'com.viax.app',
         ),
-        
+
         // Sombra de la ruta (efecto de profundidad) - como en trip_preview
         if (_animatedRoute.length > 1)
           PolylineLayer(
@@ -705,7 +785,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               ),
             ],
           ),
-        
+
         // Ruta del conductor al punto de encuentro (animada)
         if (_animatedRoute.length > 1)
           PolylineLayer(
@@ -719,7 +799,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               ),
             ],
           ),
-        
+
         // Marcadores
         MarkerLayer(
           markers: [
@@ -731,7 +811,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 height: 56,
                 child: _buildDriverMarker(),
               ),
-            
+
             // Punto de encuentro
             Marker(
               point: pickupPoint,
@@ -739,7 +819,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               height: 90,
               child: _buildPickupMarker(),
             ),
-            
+
             // Marcador del cliente con orientación (brújula) - encima de todo
             if (_clientLocation != null)
               Marker(
@@ -754,84 +834,75 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     );
   }
 
-  /// Marcador del cliente con orientación (flecha que indica dirección)
+  /// Marcador del cliente estilo Google Maps (punto azul con cono de luz/linterna)
   Widget _buildClientMarker() {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, _) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Halo animado exterior
-            Container(
-              width: 55 + (_pulseController.value * 15),
-              height: 55 + (_pulseController.value * 15),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.12 * (1 - _pulseController.value)),
-              ),
-            ),
-            
-            // Círculo de precisión GPS
-            Container(
-              width: 45,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.15),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
-                  width: 1.5,
+        return SizedBox(
+          width: 70,
+          height: 70,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Cono de luz/linterna (hacia donde mira el usuario)
+              Positioned(
+                top: 0,
+                child: Transform.rotate(
+                  angle: (_clientHeading) * (math.pi / 180),
+                  alignment: Alignment.bottomCenter,
+                  child: ClipPath(
+                    clipper: _BeamClipper(),
+                    child: Container(
+                      width: 50,
+                      height: 35,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            AppColors.primary.withOpacity(0.5),
+                            AppColors.primary.withOpacity(0.15),
+                            AppColors.primary.withOpacity(0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            
-            // Cono de dirección (hacia donde mira el usuario)
-            Transform.rotate(
-              angle: (_clientHeading - 90) * (math.pi / 180),
-              child: CustomPaint(
-                size: const Size(60, 60),
-                painter: _DirectionConePainter(
-                  color: AppColors.primary.withOpacity(0.25),
+
+              // Círculo de precisión GPS (halo exterior)
+              Container(
+                width: 28 + (_pulseController.value * 6),
+                height: 28 + (_pulseController.value * 6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withOpacity(
+                    0.15 * (1 - _pulseController.value),
+                  ),
                 ),
               ),
-            ),
-            
-            // Punto central con flecha de orientación
-            Transform.rotate(
-              angle: _clientHeading * (math.pi / 180),
-              child: Container(
-                width: 32,
-                height: 32,
+
+              // Punto central azul
+              Container(
+                width: 18,
+                height: 18,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.5),
-                      blurRadius: 8,
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 6,
                       spreadRadius: 1,
                     ),
                   ],
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Flecha indicando la dirección
-                    Positioned(
-                      top: 0,
-                      child: Icon(
-                        Icons.navigation,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -842,73 +913,93 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     return AnimatedBuilder(
       animation: _waveController,
       builder: (context, _) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Ondas expansivas (más sutiles)
-            ...List.generate(2, (i) {
-              final delay = i / 2;
-              final progress = (_waveController.value + delay) % 1.0;
-              final size = 35 + (40 * progress);
-              final opacity = 0.4 * (1 - progress);
-              return Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.success.withOpacity(opacity),
-                    width: 2 * (1 - progress),
+        return SizedBox(
+          width: 140,
+          height: 130,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Ondas expansivas animadas
+              ...List.generate(3, (i) {
+                final delay = i / 3;
+                final progress = (_waveController.value + delay) % 1.0;
+                final size = 45 + (55 * progress);
+                final opacity = 0.5 * (1 - progress);
+                return Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.success.withOpacity(opacity),
+                      width: 2.5 * (1 - progress),
+                    ),
                   ),
-                ),
-              );
-            }),
-            
-            // Marcador central (más pequeño)
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.success,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.success.withOpacity(0.4),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.location_on, color: Colors.white, size: 18),
-            ),
-            
-            // Etiqueta "Punto de encuentro" (arriba del marcador)
-            Positioned(
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                );
+              }),
+
+              // Marcador central grande y visible
+              Container(
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.success,
-                  borderRadius: BorderRadius.circular(6),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
                   boxShadow: [
                     BoxShadow(
+                      color: AppColors.success.withOpacity(0.5),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
                       color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Punto de encuentro',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                child: const Icon(Icons.place, color: Colors.white, size: 26),
+              ),
+
+              // Etiqueta "Punto de encuentro" (arriba del marcador)
+              Positioned(
+                top: 5,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.location_on, color: Colors.white, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Punto de encuentro',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -917,10 +1008,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   /// Marcador del conductor
   Widget _buildDriverMarker() {
     final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'carro';
-    final iconData = vehiculoTipo.contains('moto') 
-        ? Icons.two_wheeler 
+    final iconData = vehiculoTipo.contains('moto')
+        ? Icons.two_wheeler
         : Icons.local_taxi;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.accent,
@@ -983,13 +1074,16 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(width: 12),
-                    
+
                     // Título
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.success.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(25),
@@ -997,7 +1091,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               _getStatusText(),
@@ -1011,33 +1109,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         ),
                       ),
                     ),
-                    
-                    const SizedBox(width: 12),
-                    
-                    // Botón centrar mapa
-                    Material(
-                      color: isDark ? Colors.white12 : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      elevation: isDark ? 0 : 2,
-                      child: InkWell(
-                        onTap: _fitMapToBounds,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.my_location_rounded,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Card de instrucción
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -1060,7 +1136,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.directions_walk, color: AppColors.primary, size: 24),
+                        child: const Icon(
+                          Icons.directions_walk,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -1114,16 +1194,17 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     if (_conductor == null) {
       return const SizedBox.shrink();
     }
-    
+
     final nombre = _conductor!['nombre'] as String? ?? 'Conductor';
     final foto = _conductor!['foto'] as String?;
-    final calificacion = (_conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
+    final calificacion =
+        (_conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
     final vehiculo = _conductor!['vehiculo'] as Map<String, dynamic>?;
     final placa = vehiculo?['placa'] as String? ?? '---';
     final marca = vehiculo?['marca'] as String? ?? '';
     final modelo = vehiculo?['modelo'] as String? ?? '';
     final color = vehiculo?['color'] as String? ?? '';
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1150,7 +1231,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Info del conductor
           Row(
             children: [
@@ -1161,10 +1242,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.primary.withOpacity(0.1),
-                  border: Border.all(
-                    color: AppColors.primary,
-                    width: 2,
-                  ),
+                  border: Border.all(color: AppColors.primary, width: 2),
                 ),
                 child: ClipOval(
                   child: foto != null && foto.isNotEmpty
@@ -1184,9 +1262,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         ),
                 ),
               ),
-              
+
               const SizedBox(width: 14),
-              
+
               // Nombre y calificación
               Expanded(
                 child: Column(
@@ -1203,7 +1281,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.star, color: AppColors.accent, size: 16),
+                        const Icon(
+                          Icons.star,
+                          color: AppColors.accent,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           calificacion.toStringAsFixed(1),
@@ -1218,7 +1300,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                   ],
                 ),
               ),
-              
+
               // Botones de acción
               Row(
                 children: [
@@ -1233,7 +1315,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         width: 48,
                         height: 48,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.call, color: AppColors.success, size: 22),
+                        child: const Icon(
+                          Icons.call,
+                          color: AppColors.success,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -1251,7 +1337,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         width: 48,
                         height: 48,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.message, color: AppColors.primary, size: 22),
+                        child: const Icon(
+                          Icons.message,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -1259,14 +1349,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Divider
           Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
-          
+
           const SizedBox(height: 12),
-          
+
           // Info del vehículo
           Row(
             children: [
@@ -1285,9 +1375,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                   size: 24,
                 ),
               ),
-              
+
               const SizedBox(width: 14),
-              
+
               // Marca, modelo, color
               Expanded(
                 child: Column(
@@ -1312,15 +1402,20 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                   ],
                 ),
               ),
-              
+
               // Placa
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white10 : Colors.grey[100],
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.2) : Colors.grey[300]!,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.grey[300]!,
                   ),
                 ),
                 child: Text(
@@ -1335,9 +1430,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // ETA del conductor
           if (_conductorEtaMinutes != null || _conductorDistanceKm != null)
             Container(
@@ -1356,7 +1451,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                       label: 'Llegada aprox.',
                       isDark: isDark,
                     ),
-                  if (_conductorEtaMinutes != null && _conductorDistanceKm != null)
+                  if (_conductorEtaMinutes != null &&
+                      _conductorDistanceKm != null)
                     Container(
                       width: 1,
                       height: 40,
@@ -1413,30 +1509,19 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 }
 
-/// CustomPainter para el cono de dirección del cliente (giroscopio)
-class _DirectionConePainter extends CustomPainter {
-  final Color color;
-  
-  _DirectionConePainter({required this.color});
-  
+/// CustomClipper para el cono de luz estilo linterna de Google Maps
+class _BeamClipper extends CustomClipper<ui.Path> {
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    
-    final center = Offset(size.width / 2, size.height / 2);
+  ui.Path getClip(Size size) {
     final path = ui.Path();
-    
-    // Dibujar un cono/triángulo que apunta hacia arriba
-    path.moveTo(center.dx, center.dy - size.height * 0.4); // Punta
-    path.lineTo(center.dx - size.width * 0.25, center.dy); // Esquina izquierda
-    path.lineTo(center.dx + size.width * 0.25, center.dy); // Esquina derecha
+    // Crear un cono/triángulo con la punta abajo (hacia el centro del punto azul)
+    path.moveTo(size.width / 2, size.height); // Punta inferior (centro)
+    path.lineTo(0, 0); // Esquina superior izquierda
+    path.lineTo(size.width, 0); // Esquina superior derecha
     path.close();
-    
-    canvas.drawPath(path, paint);
+    return path;
   }
-  
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldReclip(covariant CustomClipper<ui.Path> oldClipper) => false;
 }

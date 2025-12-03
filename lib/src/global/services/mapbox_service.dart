@@ -1,4 +1,4 @@
-﻿// lib/src/global/services/mapbox_service.dart
+// lib/src/global/services/mapbox_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -9,18 +9,18 @@ import 'quota_monitor_service.dart';
 /// Maneja mapas, rutas, geocoding y optimizaciÃ³n de rutas
 class MapboxService {
   static const String _baseUrl = 'https://api.mapbox.com';
-  
+
   // ============================================
   // DIRECTIONS API (Rutas y NavegaciÃ³n)
   // ============================================
-  
+
   /// Obtener ruta entre dos o mÃ¡s puntos usando Mapbox Directions API
-  /// 
+  ///
   /// [waypoints] - Lista de coordenadas (mÃ­nimo 2)
   /// [profile] - Tipo de transporte: driving, walking, cycling
   /// [alternatives] - Si es true, devuelve rutas alternativas
   /// [steps] - Si es true, incluye instrucciones paso a paso
-  /// 
+  ///
   /// Retorna [MapboxRoute] con la informaciÃ³n de la ruta
   static Future<MapboxRoute?> getRoute({
     required List<LatLng> waypoints,
@@ -31,7 +31,9 @@ class MapboxService {
   }) async {
     try {
       if (waypoints.length < 2) {
-        throw Exception('Se necesitan al menos 2 puntos para calcular una ruta');
+        throw Exception(
+          'Se necesitan al menos 2 puntos para calcular una ruta',
+        );
       }
 
       // Construir string de coordenadas: "lng,lat;lng,lat;..."
@@ -46,7 +48,7 @@ class MapboxService {
         '&steps=$steps'
         '&geometries=geojson'
         '&overview=full'
-        '&access_token=${EnvConfig.mapboxPublicToken}'
+        '&access_token=${EnvConfig.mapboxPublicToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
@@ -54,16 +56,18 @@ class MapboxService {
       if (response.statusCode == 200) {
         // Incrementar contador de uso
         await QuotaMonitorService.incrementMapboxRouting();
-        
+
         final data = json.decode(response.body);
-        
+
         if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
           return MapboxRoute.fromJson(data['routes'][0]);
         }
       } else {
-        print('Error en Mapbox Directions: ${response.statusCode} - ${response.body}');
+        print(
+          'Error en Mapbox Directions: ${response.statusCode} - ${response.body}',
+        );
       }
-      
+
       return null;
     } catch (e) {
       print('Error obteniendo ruta de Mapbox: $e');
@@ -82,7 +86,7 @@ class MapboxService {
     try {
       // Construir lista completa: origin, waypoints, destination
       final allPoints = [origin, ...waypoints, destination];
-      
+
       // Construir string de coordenadas
       final coordinates = allPoints
           .map((point) => '${point.longitude},${point.latitude}')
@@ -91,27 +95,27 @@ class MapboxService {
       // El endpoint de optimizaciÃ³n requiere indicar quÃ© puntos son fijos
       final url = Uri.parse(
         '$_baseUrl/optimized-trips/v1/mapbox/$profile/$coordinates'
-        '?source=first'      // Origen es el primer punto
-        '&destination=last'  // Destino es el Ãºltimo punto
-        '&roundtrip=false'   // No es un viaje circular
+        '?source=first' // Origen es el primer punto
+        '&destination=last' // Destino es el Ãºltimo punto
+        '&roundtrip=false' // No es un viaje circular
         '&steps=true'
         '&geometries=geojson'
         '&overview=full'
-        '&access_token=${EnvConfig.mapboxPublicToken}'
+        '&access_token=${EnvConfig.mapboxPublicToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         await QuotaMonitorService.incrementMapboxRouting();
-        
+
         final data = json.decode(response.body);
-        
+
         if (data['trips'] != null && (data['trips'] as List).isNotEmpty) {
           return MapboxRoute.fromJson(data['trips'][0]);
         }
       }
-      
+
       return null;
     } catch (e) {
       print('Error en ruta optimizada: $e');
@@ -122,7 +126,7 @@ class MapboxService {
   // ============================================
   // STATIC IMAGES API
   // ============================================
-  
+
   /// Obtener URL de imagen estÃ¡tica del mapa
   /// Ãštil para previsualizaciones o miniaturas
   static String getStaticMapUrl({
@@ -135,27 +139,28 @@ class MapboxService {
   }) {
     final lng = center.longitude;
     final lat = center.latitude;
-    
+
     String overlays = '';
-    
+
     // AÃ±adir marcadores si existen
     if (markers != null && markers.isNotEmpty) {
       for (var marker in markers) {
-        overlays += 'pin-s-${marker.label}+${marker.color}(${marker.position.longitude},${marker.position.latitude}),';
+        overlays +=
+            'pin-s-${marker.label}+${marker.color}(${marker.position.longitude},${marker.position.latitude}),';
       }
       // Remover Ãºltima coma
       if (overlays.isNotEmpty) {
         overlays = overlays.substring(0, overlays.length - 1);
       }
     }
-    
+
     return '$_baseUrl/styles/v1/mapbox/$style/static/$overlays/$lng,$lat,$zoom,0/${width}x$height@2x?access_token=${EnvConfig.mapboxPublicToken}';
   }
 
   // ============================================
   // GEOCODING API (BÃºsqueda de lugares)
   // ============================================
-  
+
   /// Buscar lugares por texto
   /// [query] - Texto de bÃºsqueda (direcciÃ³n, nombre de lugar, etc.)
   /// [proximity] - Coordenadas para priorizar resultados cercanos
@@ -177,7 +182,8 @@ class MapboxService {
       };
 
       if (proximity != null) {
-        queryParams['proximity'] = '${proximity.longitude},${proximity.latitude}';
+        queryParams['proximity'] =
+            '${proximity.longitude},${proximity.latitude}';
       }
 
       if (types != null && types.isNotEmpty) {
@@ -186,22 +192,24 @@ class MapboxService {
 
       final encodedQuery = Uri.encodeComponent(query);
       final url = Uri.parse(
-        '$_baseUrl/geocoding/v5/mapbox.places/$encodedQuery.json'
+        '$_baseUrl/geocoding/v5/mapbox.places/$encodedQuery.json',
       ).replace(queryParameters: queryParams);
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['features'] != null) {
           final features = data['features'] as List;
           return features.map((f) => MapboxPlace.fromJson(f)).toList();
         }
       } else {
-        print('Error en Mapbox Geocoding: ${response.statusCode} - ${response.body}');
+        print(
+          'Error en Mapbox Geocoding: ${response.statusCode} - ${response.body}',
+        );
       }
-      
+
       return [];
     } catch (e) {
       print('Error buscando lugares: $e');
@@ -210,27 +218,25 @@ class MapboxService {
   }
 
   /// GeocodificaciÃ³n inversa: obtener direcciÃ³n desde coordenadas
-  static Future<MapboxPlace?> reverseGeocode({
-    required LatLng position,
-  }) async {
+  static Future<MapboxPlace?> reverseGeocode({required LatLng position}) async {
     try {
       final url = Uri.parse(
         '$_baseUrl/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json'
         '?access_token=${EnvConfig.mapboxPublicToken}'
         '&language=es'
-        '&types=address,poi,place'
+        '&types=address,poi,place',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['features'] != null && (data['features'] as List).isNotEmpty) {
           return MapboxPlace.fromJson(data['features'][0]);
         }
       }
-      
+
       return null;
     } catch (e) {
       print('Error en geocodificaciÃ³n inversa: $e');
@@ -238,10 +244,53 @@ class MapboxService {
     }
   }
 
+  /// GeocodificaciÃ³n inversa solo para calles/direcciones
+  /// Útil para snap-to-road que solo quiere calles, no casas
+  static Future<MapboxPlace?> reverseGeocodeStreetOnly({
+    required LatLng position,
+  }) async {
+    try {
+      // Primero intentar solo con 'address' que es direcciÃ³n de calle
+      final url = Uri.parse(
+        '$_baseUrl/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json'
+        '?access_token=${EnvConfig.mapboxPublicToken}'
+        '&language=es'
+        '&types=address',
+      );
+
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['features'] != null && (data['features'] as List).isNotEmpty) {
+          final features = data['features'] as List;
+
+          // Filtrar solo resultados que sean de tipo "address"
+          for (var feature in features) {
+            final place = MapboxPlace.fromJson(feature);
+            // address type son direcciones en calles/avenidas
+            if (place.placeType == 'address') {
+              return place;
+            }
+          }
+
+          // Si no hay address, devolver el primero
+          return MapboxPlace.fromJson(features[0]);
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error en geocodificaciÃ³n inversa (calle): $e');
+      return null;
+    }
+  }
+
   // ============================================
   // TILES API
   // ============================================
-  
+
   /// Obtener URL para tiles de Mapbox (para flutter_map)
   /// [isDarkMode] - Si es true, usa estilo oscuro, si es false usa estilo claro
   static String getTileUrl({bool isDarkMode = false}) {
@@ -257,7 +306,7 @@ class MapboxService {
   // ============================================
   // MATRIX API (Distances y Tiempos)
   // ============================================
-  
+
   /// Calcular matriz de distancias y tiempos entre mÃºltiples puntos
   /// Ãštil para encontrar el punto mÃ¡s cercano o comparar mÃºltiples destinos
   static Future<MapboxMatrix?> getMatrix({
@@ -268,7 +317,7 @@ class MapboxService {
     try {
       // Combinar todos los puntos
       final allPoints = [...origins, ...destinations];
-      
+
       final coordinates = allPoints
           .map((point) => '${point.longitude},${point.latitude}')
           .join(';');
@@ -276,26 +325,26 @@ class MapboxService {
       // Indicar cuÃ¡les son orÃ­genes y cuÃ¡les destinos
       final sources = List.generate(origins.length, (i) => i).join(';');
       final destinationsIdx = List.generate(
-        destinations.length, 
-        (i) => i + origins.length
+        destinations.length,
+        (i) => i + origins.length,
       ).join(';');
 
       final url = Uri.parse(
         '$_baseUrl/directions-matrix/v1/mapbox/$profile/$coordinates'
         '?sources=$sources'
         '&destinations=$destinationsIdx'
-        '&access_token=${EnvConfig.mapboxPublicToken}'
+        '&access_token=${EnvConfig.mapboxPublicToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         await QuotaMonitorService.incrementMapboxRouting();
-        
+
         final data = json.decode(response.body);
         return MapboxMatrix.fromJson(data);
       }
-      
+
       return null;
     } catch (e) {
       print('Error en Mapbox Matrix: $e');
@@ -326,7 +375,7 @@ class MapboxRoute {
 
   factory MapboxRoute.fromJson(Map<String, dynamic> json) {
     List<LatLng> geometry = [];
-    
+
     // Parsear geometrÃ­a GeoJSON
     if (json['geometry'] != null && json['geometry']['coordinates'] != null) {
       final coords = json['geometry']['coordinates'] as List;
@@ -411,19 +460,20 @@ class MapboxMatrix {
   final List<List<double?>> durations; // en segundos
   final List<List<double?>> distances; // en metros
 
-  MapboxMatrix({
-    required this.durations,
-    required this.distances,
-  });
+  MapboxMatrix({required this.durations, required this.distances});
 
   factory MapboxMatrix.fromJson(Map<String, dynamic> json) {
     return MapboxMatrix(
-      durations: (json['durations'] as List?)
-          ?.map((row) => (row as List).map((d) => d as double?).toList())
-          .toList() ?? [],
-      distances: (json['distances'] as List?)
-          ?.map((row) => (row as List).map((d) => d as double?).toList())
-          .toList() ?? [],
+      durations:
+          (json['durations'] as List?)
+              ?.map((row) => (row as List).map((d) => d as double?).toList())
+              .toList() ??
+          [],
+      distances:
+          (json['distances'] as List?)
+              ?.map((row) => (row as List).map((d) => d as double?).toList())
+              .toList() ??
+          [],
     );
   }
 }
@@ -434,11 +484,7 @@ class MapMarker {
   final String label; // 'a', 'b', 'c', etc. o 'star', 'circle'
   final String color; // hexadecimal sin #, ej: 'ff0000'
 
-  MapMarker({
-    required this.position,
-    this.label = 'a',
-    this.color = 'ff0000',
-  });
+  MapMarker({required this.position, this.label = 'a', this.color = 'ff0000'});
 }
 
 /// Lugar encontrado por Geocoding API
@@ -449,7 +495,8 @@ class MapboxPlace {
   final LatLng coordinates;
   final String? address;
   final String? placeType; // poi, address, place, etc.
-  final Map<String, dynamic>? context; // InformaciÃ³n de contexto (ciudad, paÃ­s, etc.)
+  final Map<String, dynamic>?
+  context; // InformaciÃ³n de contexto (ciudad, paÃ­s, etc.)
 
   MapboxPlace({
     required this.id,
@@ -463,7 +510,7 @@ class MapboxPlace {
 
   factory MapboxPlace.fromJson(Map<String, dynamic> json) {
     final coords = json['geometry']['coordinates'] as List;
-    
+
     return MapboxPlace(
       id: json['id'] ?? '',
       placeName: json['place_name'] ?? '',
@@ -478,10 +525,10 @@ class MapboxPlace {
   /// Obtener informaciÃ³n del contexto (ciudad, regiÃ³n, paÃ­s)
   String get contextInfo {
     if (context == null) return '';
-    
+
     final parts = <String>[];
     final contextList = context!['context'] as List?;
-    
+
     if (contextList != null) {
       for (var item in contextList) {
         if (item['id'].toString().startsWith('place.') ||
@@ -490,7 +537,7 @@ class MapboxPlace {
         }
       }
     }
-    
+
     return parts.join(', ');
   }
 }
