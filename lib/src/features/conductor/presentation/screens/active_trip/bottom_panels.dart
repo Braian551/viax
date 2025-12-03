@@ -48,26 +48,26 @@ class GoToClientPanel extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: isDark
                     ? [
-                        AppColors.darkCard.withOpacity(0.85),
-                        AppColors.darkCard.withOpacity(0.95),
+                        AppColors.darkCard.withValues(alpha: 0.85),
+                        AppColors.darkCard.withValues(alpha: 0.95),
                       ]
                     : [
-                        Colors.white.withOpacity(0.9),
-                        Colors.white.withOpacity(0.98),
+                        Colors.white.withValues(alpha: 0.9),
+                        Colors.white.withValues(alpha: 0.98),
                       ],
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(
                 top: BorderSide(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : AppColors.primary.withOpacity(0.2),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : AppColors.primary.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -85,7 +85,7 @@ class GoToClientPanel extends StatelessWidget {
                     height: 4,
                     decoration: BoxDecoration(
                       color: (isDark ? Colors.white : Colors.grey)
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -99,7 +99,7 @@ class GoToClientPanel extends StatelessWidget {
                     child: Divider(
                       height: 1,
                       color: (isDark ? Colors.white : Colors.grey)
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                     ),
                   ),
                   
@@ -141,7 +141,7 @@ class GoToClientPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -179,10 +179,10 @@ class GoToClientPanel extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.15),
+                        color: AppColors.warning.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppColors.warning.withOpacity(0.3),
+                          color: AppColors.warning.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -301,10 +301,10 @@ class GoToClientPanel extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: (isDark ? Colors.white : Colors.grey).withOpacity(0.05),
+          color: (isDark ? Colors.white : Colors.grey).withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.grey).withOpacity(0.1),
+            color: (isDark ? Colors.white : Colors.grey).withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -312,7 +312,7 @@ class GoToClientPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.15),
+                color: AppColors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -355,7 +355,7 @@ class GoToClientPanel extends StatelessWidget {
                     value: 0.7, // Progreso hacia el destino
                     strokeWidth: 4,
                     backgroundColor: (isDark ? Colors.white : Colors.grey)
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
                   ),
                   Icon(
@@ -386,12 +386,12 @@ class GoToClientPanel extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             elevation: 8,
-            shadowColor: AppColors.primary.withOpacity(0.5),
+            shadowColor: AppColors.primary.withValues(alpha: 0.5),
           ),
           child: loadingRoute
               ? SizedBox(
@@ -408,7 +408,7 @@ class GoToClientPanel extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.person_pin_circle_rounded, size: 20),
@@ -464,26 +464,26 @@ class GoToDestinationPanel extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: isDark
                     ? [
-                        AppColors.darkCard.withOpacity(0.85),
-                        AppColors.darkCard.withOpacity(0.95),
+                        AppColors.darkCard.withValues(alpha: 0.85),
+                        AppColors.darkCard.withValues(alpha: 0.95),
                       ]
                     : [
-                        Colors.white.withOpacity(0.9),
-                        Colors.white.withOpacity(0.98),
+                        Colors.white.withValues(alpha: 0.9),
+                        Colors.white.withValues(alpha: 0.98),
                       ],
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(
                 top: BorderSide(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : AppColors.success.withOpacity(0.3),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : AppColors.success.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -502,7 +502,7 @@ class GoToDestinationPanel extends StatelessWidget {
                       height: 4,
                       decoration: BoxDecoration(
                         color: (isDark ? Colors.white : Colors.grey)
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -567,13 +567,13 @@ class GoToDestinationPanel extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.success.withOpacity(0.15),
-            AppColors.success.withOpacity(0.05),
+            AppColors.success.withValues(alpha: 0.15),
+            AppColors.success.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.success.withOpacity(0.2),
+          color: AppColors.success.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -582,7 +582,7 @@ class GoToDestinationPanel extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.2),
+              color: AppColors.success.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
@@ -633,10 +633,10 @@ class GoToDestinationPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.grey).withOpacity(0.05),
+        color: (isDark ? Colors.white : Colors.grey).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.grey).withOpacity(0.1),
+          color: (isDark ? Colors.white : Colors.grey).withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -646,8 +646,8 @@ class GoToDestinationPanel extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.error.withOpacity(0.2),
-                  AppColors.error.withOpacity(0.1),
+                  AppColors.error.withValues(alpha: 0.2),
+                  AppColors.error.withValues(alpha: 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
@@ -707,7 +707,7 @@ class GoToDestinationPanel extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 8,
-          shadowColor: AppColors.success.withOpacity(0.5),
+          shadowColor: AppColors.success.withValues(alpha: 0.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -715,7 +715,7 @@ class GoToDestinationPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.check_circle_rounded, size: 20),
@@ -765,10 +765,10 @@ class _QuickActionButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
             ),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -805,13 +805,13 @@ class _StatCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.05),
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -819,7 +819,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 22),

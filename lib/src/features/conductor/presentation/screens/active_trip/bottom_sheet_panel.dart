@@ -84,7 +84,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -179,7 +179,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -269,7 +269,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.15),
+        color: AppColors.warning.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -390,8 +390,8 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: widget.isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.grey.withOpacity(0.08),
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -399,7 +399,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.15),
+              color: AppColors.success.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -455,8 +455,8 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: widget.isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.grey.withOpacity(0.08),
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -524,7 +524,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: buttonColor.withOpacity(0.5),
+            disabledBackgroundColor: buttonColor.withValues(alpha: 0.5),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -543,7 +543,7 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Chevron animado estilo DiDi
-                    _AnimatedChevrons(color: Colors.white.withOpacity(0.7)),
+                    _AnimatedChevrons(color: Colors.white.withValues(alpha: 0.7)),
                     const SizedBox(width: 8),
                     Text(
                       buttonText,
@@ -588,7 +588,7 @@ class _QuickActionBtn extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 20),

@@ -12,7 +12,7 @@ import '../../../../../core/config/env_config.dart';
 class ActiveTripController {
   // Estado de inicialización de Mapbox
   static bool _mapboxInitialized = false;
-  
+
   // Estado del viaje
   bool isDisposed = false;
   bool mapReady = false;
@@ -48,6 +48,15 @@ class ActiveTripController {
   static const String routeLayerId = 'route-layer';
   static const String routeOutlineLayerId = 'route-outline-layer';
 
+  // IDs de marcadores
+  static const String pickupMarkerId = 'pickup-marker';
+  static const String dropoffMarkerId = 'dropoff-marker';
+
+  // Point annotation manager para marcadores
+  PointAnnotationManager? _pointAnnotationManager;
+  PointAnnotation? _pickupAnnotation;
+  PointAnnotation? _dropoffAnnotation;
+
   // Callbacks
   final VoidCallback onStateChanged;
 
@@ -73,6 +82,16 @@ class ActiveTripController {
       positionStream = null;
     }
 
+    // Limpiar annotation manager
+    try {
+      if (_pointAnnotationManager != null) {
+        _pointAnnotationManager!.deleteAll();
+        _pointAnnotationManager = null;
+      }
+      _pickupAnnotation = null;
+      _dropoffAnnotation = null;
+    } catch (_) {}
+
     // Deshabilitar location component antes de destruir
     try {
       mapboxMap?.location.updateSettings(
@@ -86,17 +105,17 @@ class ActiveTripController {
   /// Maneja la creación del mapa
   void onMapCreated(MapboxMap map) async {
     if (isDisposed) return;
-    
+
     // Verificar y configurar Mapbox si no está inicializado
     await _ensureMapboxInitialized();
-    
+
     mapboxMap = map;
   }
 
   /// Asegura que Mapbox esté inicializado con el token correcto
   Future<void> _ensureMapboxInitialized() async {
     if (_mapboxInitialized) return;
-    
+
     try {
       // Configurar token programáticamente como respaldo
       MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
@@ -115,60 +134,101 @@ class ActiveTripController {
     if (isDisposed) return;
     mapReady = true;
 
-    // Dividir en operaciones más pequeñas con delays
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (isDisposed) return;
+    // Enfocar inmediatamente en la ubicación del conductor
+    is3DMode = true;
+    onStateChanged();
 
-    try {
-      await _enableLocationPuck();
-    } catch (e) {
+    // Mover cámara INMEDIATAMENTE sin esperar
+    _quickFocusOnDriver();
+
+    // Habilitar location puck en paralelo
+    _enableLocationPuck().catchError((e) {
       debugPrint('Error habilitando location puck: $e');
-      mapError = true;
-      onStateChanged();
-    }
+    });
 
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isDisposed) return;
+    // Agregar marcadores de pickup y destino
+    _addMarkers();
 
+    // Iniciar tracking de ubicación
     if (!locationTrackingStarted) {
       locationTrackingStarted = true;
-      await startLocationTracking();
-    }
-    
-    // Activar modo 3D por defecto para navegación estilo DiDi
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!isDisposed && !is3DMode) {
-      is3DMode = true;
-      onStateChanged();
-      await _focusOnDriverNavigation();
+      startLocationTracking();
     }
   }
 
-  /// Enfoca la cámara en el conductor con vista de navegación
-  Future<void> _focusOnDriverNavigation() async {
+  /// Agrega los marcadores de punto de recogida y destino
+  Future<void> _addMarkers() async {
     if (mapboxMap == null || isDisposed || !mapReady) return;
-    
-    final centerPoint = driverLocation ?? pickup;
-    
+
     try {
-      await mapboxMap!.easeTo(
+      // Crear el annotation manager si no existe
+      _pointAnnotationManager ??= await mapboxMap!.annotations
+          .createPointAnnotationManager();
+
+      if (_pointAnnotationManager == null || isDisposed) return;
+
+      // Crear marcador de pickup (cliente) - punto azul estilo Uber
+      final pickupOptions = PointAnnotationOptions(
+        geometry: pickup,
+        iconSize: 1.3,
+        iconAnchor: IconAnchor.CENTER,
+        textField: '●', // Círculo sólido para pickup
+        textSize: 32.0,
+        textColor: 0xFF2196F3, // Azul
+        textHaloColor: 0xFFFFFFFF, // Borde blanco
+        textHaloWidth: 2.0,
+      );
+
+      _pickupAnnotation = await _pointAnnotationManager!.create(pickupOptions);
+
+      // Crear marcador de destino - punto rojo
+      final dropoffOptions = PointAnnotationOptions(
+        geometry: dropoff,
+        iconSize: 1.3,
+        iconAnchor: IconAnchor.CENTER,
+        textField: '◆', // Diamante para destino
+        textSize: 28.0,
+        textColor: 0xFFF44336, // Rojo
+        textHaloColor: 0xFFFFFFFF, // Borde blanco
+        textHaloWidth: 2.0,
+      );
+
+      _dropoffAnnotation = await _pointAnnotationManager!.create(
+        dropoffOptions,
+      );
+
+      debugPrint('✅ Marcadores agregados correctamente');
+    } catch (e) {
+      debugPrint('⚠️ Error agregando marcadores: $e');
+    }
+  }
+
+  /// Enfoque rápido inicial en el conductor
+  Future<void> _quickFocusOnDriver() async {
+    if (mapboxMap == null || isDisposed) return;
+
+    final center = driverLocation ?? pickup;
+
+    try {
+      await mapboxMap!.setCamera(
         CameraOptions(
-          center: centerPoint,
-          zoom: 17.0,
-          pitch: 55, // Inclinación para vista de navegación
+          center: center,
+          zoom: 18.0, // Zoom más cercano para mejor visualización
+          pitch: 60,
           bearing: currentBearing,
         ),
-        MapAnimationOptions(duration: 1500, startDelay: 0),
       );
     } catch (e) {
-      debugPrint('Error enfocando en conductor: $e');
+      debugPrint('Error en enfoque rápido: $e');
     }
   }
 
   /// Maneja errores de carga del mapa
   void onMapLoadError(MapLoadingErrorEventData eventData) {
     if (isDisposed) return;
-    debugPrint('Error cargando mapa: ${eventData.type} -> ${eventData.message}');
+    debugPrint(
+      'Error cargando mapa: ${eventData.type} -> ${eventData.message}',
+    );
     mapError = true;
     error = 'Error al cargar el mapa';
     onStateChanged();
@@ -207,7 +267,8 @@ class ActiveTripController {
         return;
       }
 
-      geo.LocationPermission permission = await geo.Geolocator.checkPermission();
+      geo.LocationPermission permission =
+          await geo.Geolocator.checkPermission();
       if (isDisposed) return;
 
       if (permission == geo.LocationPermission.denied) {
@@ -232,7 +293,9 @@ class ActiveTripController {
       );
 
       if (isDisposed) return;
-      driverLocation = Point(coordinates: Position(pos.longitude, pos.latitude));
+      driverLocation = Point(
+        coordinates: Position(pos.longitude, pos.latitude),
+      );
       currentBearing = pos.heading;
       onStateChanged();
 
@@ -242,16 +305,17 @@ class ActiveTripController {
       if (isDisposed) return;
 
       // Stream de posición con configuración más liviana
-      positionStream = geo.Geolocator.getPositionStream(
-        locationSettings: const geo.LocationSettings(
-          accuracy: geo.LocationAccuracy.bestForNavigation,
-          distanceFilter: 15, // Cada 15 metros
-        ),
-      ).listen(
-        _onPositionUpdate,
-        onError: (e) => debugPrint('Error en stream de posición: $e'),
-        cancelOnError: true,
-      );
+      positionStream =
+          geo.Geolocator.getPositionStream(
+            locationSettings: const geo.LocationSettings(
+              accuracy: geo.LocationAccuracy.bestForNavigation,
+              distanceFilter: 15, // Cada 15 metros
+            ),
+          ).listen(
+            _onPositionUpdate,
+            onError: (e) => debugPrint('Error en stream de posición: $e'),
+            cancelOnError: true,
+          );
     } catch (e) {
       if (isDisposed) return;
       driverLocation = Point(coordinates: Position(-74.0817, 4.6097));
@@ -290,14 +354,18 @@ class ActiveTripController {
   }
 
   /// Actualiza la cámara en modo 3D con protección contra errores
-  Future<void> updateCamera3DSafe(double lat, double lng, double bearing) async {
+  Future<void> updateCamera3DSafe(
+    double lat,
+    double lng,
+    double bearing,
+  ) async {
     if (mapboxMap == null || isDisposed || !mapReady) return;
 
     try {
       await mapboxMap!.easeTo(
         CameraOptions(
           center: Point(coordinates: Position(lng, lat)),
-          zoom: 17.0, // Zoom más cercano para navegación
+          zoom: 17.5, // Zoom más cercano para navegación
           pitch: 55, // Pitch más inclinado estilo DiDi/Uber
           bearing: bearing,
         ),
@@ -311,7 +379,10 @@ class ActiveTripController {
   }
 
   Future<void> moveCameraToDriver() async {
-    if (mapboxMap == null || driverLocation == null || isDisposed || !mapReady) {
+    if (mapboxMap == null ||
+        driverLocation == null ||
+        isDisposed ||
+        !mapReady) {
       return;
     }
 
@@ -321,7 +392,7 @@ class ActiveTripController {
         await mapboxMap!.easeTo(
           CameraOptions(
             center: driverLocation,
-            zoom: 17.0,
+            zoom: 17.5, // Zoom aumentado
             pitch: 55,
             bearing: currentBearing,
           ),
@@ -332,7 +403,7 @@ class ActiveTripController {
         await mapboxMap!.easeTo(
           CameraOptions(
             center: driverLocation,
-            zoom: 16,
+            zoom: 16.5, // Zoom aumentado
             pitch: 0,
             bearing: 0,
           ),
@@ -345,7 +416,10 @@ class ActiveTripController {
   }
 
   Future<void> fitRouteInView() async {
-    if (mapboxMap == null || driverLocation == null || isDisposed || !mapReady) {
+    if (mapboxMap == null ||
+        driverLocation == null ||
+        isDisposed ||
+        !mapReady) {
       return;
     }
 
@@ -517,14 +591,20 @@ class ActiveTripController {
     const r = 6371000.0;
     final lat1 = p1.coordinates.lat.toDouble() * math.pi / 180;
     final lat2 = p2.coordinates.lat.toDouble() * math.pi / 180;
-    final dLat = (p2.coordinates.lat.toDouble() - p1.coordinates.lat.toDouble()) *
+    final dLat =
+        (p2.coordinates.lat.toDouble() - p1.coordinates.lat.toDouble()) *
         math.pi /
         180;
-    final dLng = (p2.coordinates.lng.toDouble() - p1.coordinates.lng.toDouble()) *
+    final dLng =
+        (p2.coordinates.lng.toDouble() - p1.coordinates.lng.toDouble()) *
         math.pi /
         180;
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) * math.sin(dLng / 2) * math.sin(dLng / 2);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
@@ -555,7 +635,7 @@ class ActiveTripController {
           await mapboxMap!.easeTo(
             CameraOptions(
               center: centerPoint,
-              zoom: 17.0,
+              zoom: 17.5, // Zoom aumentado
               pitch: 55,
               bearing: currentBearing,
             ),
@@ -579,7 +659,7 @@ class ActiveTripController {
         await mapboxMap!.easeTo(
           CameraOptions(
             center: driverLocation,
-            zoom: 17.0,
+            zoom: 17.5, // Zoom aumentado
             pitch: 55,
             bearing: currentBearing,
           ),
@@ -590,7 +670,7 @@ class ActiveTripController {
         await mapboxMap!.easeTo(
           CameraOptions(
             center: driverLocation,
-            zoom: 16,
+            zoom: 16.5, // Zoom aumentado
             pitch: 0,
             bearing: 0,
           ),

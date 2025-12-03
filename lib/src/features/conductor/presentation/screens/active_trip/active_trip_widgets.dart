@@ -43,25 +43,25 @@ class GlassContainer extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: isDark
                       ? [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
+                          Colors.white.withValues(alpha: 0.1),
+                          Colors.white.withValues(alpha: 0.05),
                         ]
                       : [
-                          Colors.white.withOpacity(0.9),
-                          Colors.white.withOpacity(0.7),
+                          Colors.white.withValues(alpha: 0.9),
+                          Colors.white.withValues(alpha: 0.7),
                         ],
                 ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: borderColor ??
                   (isDark
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.white.withOpacity(0.8)),
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.8)),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -113,8 +113,8 @@ class GlassButton extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          (activeColor ?? AppColors.primary).withOpacity(0.3),
-                          (activeColor ?? AppColors.primary).withOpacity(0.15),
+                          (activeColor ?? AppColors.primary).withValues(alpha: 0.3),
+                          (activeColor ?? AppColors.primary).withValues(alpha: 0.15),
                         ],
                       )
                     : LinearGradient(
@@ -122,32 +122,32 @@ class GlassButton extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: isDark
                             ? [
-                                Colors.white.withOpacity(0.12),
-                                Colors.white.withOpacity(0.06),
+                                Colors.white.withValues(alpha: 0.12),
+                                Colors.white.withValues(alpha: 0.06),
                               ]
                             : [
-                                Colors.white.withOpacity(0.95),
-                                Colors.white.withOpacity(0.8),
+                                Colors.white.withValues(alpha: 0.95),
+                                Colors.white.withValues(alpha: 0.8),
                               ],
                       ),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: isActive
-                      ? (activeColor ?? AppColors.primary).withOpacity(0.5)
+                      ? (activeColor ?? AppColors.primary).withValues(alpha: 0.5)
                       : (isDark
-                          ? Colors.white.withOpacity(0.15)
-                          : Colors.white.withOpacity(0.8)),
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.white.withValues(alpha: 0.8)),
                   width: isActive ? 1.5 : 1,
                 ),
                 boxShadow: [
                   if (isActive)
                     BoxShadow(
-                      color: (activeColor ?? AppColors.primary).withOpacity(0.3),
+                      color: (activeColor ?? AppColors.primary).withValues(alpha: 0.3),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.08),
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -187,24 +187,24 @@ class GlassPill extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      Colors.white.withOpacity(0.12),
-                      Colors.white.withOpacity(0.06),
+                      Colors.white.withValues(alpha: 0.12),
+                      Colors.white.withValues(alpha: 0.06),
                     ]
                   : [
-                      Colors.white.withOpacity(0.95),
-                      Colors.white.withOpacity(0.8),
+                      Colors.white.withValues(alpha: 0.95),
+                      Colors.white.withValues(alpha: 0.8),
                     ],
             ),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.15)
-                  : Colors.white.withOpacity(0.8),
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.white.withValues(alpha: 0.8),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.25 : 0.1),
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.1),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -268,7 +268,7 @@ class _PulsingDotState extends State<PulsingDot>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: widget.color.withOpacity(_animation.value * 0.6),
+                color: widget.color.withValues(alpha: _animation.value * 0.6),
                 blurRadius: 8 * _animation.value,
                 spreadRadius: 2 * _animation.value,
               ),
@@ -440,7 +440,7 @@ class ActiveTripWidgets {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.4),
+            color: AppColors.primary.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -452,7 +452,7 @@ class ActiveTripWidgets {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
@@ -483,7 +483,7 @@ class ActiveTripWidgets {
                       ? 'hacia el punto de recogida'
                       : 'hacia el destino final',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -495,10 +495,10 @@ class ActiveTripWidgets {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -531,7 +531,7 @@ class ActiveTripWidgets {
   static Widget buildLoadingIndicator(bool isDark) {
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         child: Center(
           child: GlassContainer(
             isDark: isDark,
@@ -579,13 +579,13 @@ class ActiveTripWidgets {
               gradient: LinearGradient(
                 colors: [
                   AppColors.error,
-                  AppColors.error.withOpacity(0.8),
+                  AppColors.error.withValues(alpha: 0.8),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.error.withOpacity(0.3),
+                  color: AppColors.error.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -596,7 +596,7 @@ class ActiveTripWidgets {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -646,17 +646,17 @@ class ActiveTripWidgets {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppColors.primary.withOpacity(0.15),
-          AppColors.blue700.withOpacity(0.08),
+          AppColors.primary.withValues(alpha: 0.15),
+          AppColors.blue700.withValues(alpha: 0.08),
         ],
       ),
-      borderColor: AppColors.primary.withOpacity(0.3),
+      borderColor: AppColors.primary.withValues(alpha: 0.3),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (iconColor ?? AppColors.primary).withOpacity(0.15),
+              color: (iconColor ?? AppColors.primary).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

@@ -283,7 +283,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -300,7 +300,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
               color: color,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: color.withOpacity(0.5), blurRadius: 4),
+                BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
               ],
             ),
           ),
@@ -342,7 +342,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.4),
+            color: AppColors.primary.withValues(alpha: 0.4),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -354,7 +354,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -385,7 +385,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
                       ? 'hacia el punto de recogida'
                       : 'hacia el destino',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -398,7 +398,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -465,7 +465,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -586,7 +586,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.error.withOpacity(0.3),
+            color: AppColors.error.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -754,18 +754,18 @@ class _FloatingButton extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.primary.withOpacity(0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : (isDark ? Colors.black54 : Colors.white),
             borderRadius: BorderRadius.circular(14),
             border: isActive
                 ? Border.all(
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     width: 1.5,
                   )
                 : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -812,8 +812,8 @@ class _OptionItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.08),
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
