@@ -5,7 +5,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../services/trip_request_service.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/sound_service.dart';
 import '../../../../theme/app_colors.dart';
+import 'user_trip_accepted_screen.dart';
 
 class SearchingDriverScreen extends StatefulWidget {
   final dynamic solicitudId;
@@ -44,10 +46,12 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   final MapController _mapController = MapController();
   
   Timer? _searchTimer;
+  Timer? _statusTimer; // Polling para detectar aceptación
   List<Map<String, dynamic>> _nearbyDrivers = [];
   bool _isCancelling = false;
   int _searchSeconds = 0;
   double _currentRadiusKm = 2.0;
+  bool _tripAccepted = false; // Flag para evitar múltiples navegaciones
   
   late AnimationController _pulseController;
   late AnimationController _waveController;
@@ -57,6 +61,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     super.initState();
     _initAnimations();
     _startSearching();
+    _startStatusPolling(); // Iniciar polling de estado
   }
 
   void _initAnimations() {
@@ -129,6 +134,120 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     }
   }
 
+  /// Inicia el polling para detectar cuando un conductor acepta la solicitud
+  void _startStatusPolling() {
+    print('🚀 [SearchingDriverScreen] INICIANDO POLLING para solicitud ${widget.solicitudIdAsInt}');
+    // Consultar estado cada 3 segundos
+    _statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _checkTripStatus();
+    });
+    // También verificar inmediatamente
+    _checkTripStatus();
+  }
+
+  /// Verifica el estado de la solicitud para detectar cuando es aceptada
+  Future<void> _checkTripStatus() async {
+    if (!mounted || _tripAccepted) return;
+    
+    print('🔍 [SearchingDriverScreen] Checking status for solicitud: ${widget.solicitudIdAsInt}');
+    
+    try {
+      final result = await TripRequestService.getTripStatus(
+        solicitudId: widget.solicitudIdAsInt,
+      );
+      
+      print('📩 [SearchingDriverScreen] Response: ${result}');
+      
+      if (!mounted || _tripAccepted) return;
+      
+      if (result['success'] == true) {
+        final trip = result['trip'];
+        final estado = trip['estado'] as String?;
+        
+        print('📊 [SearchingDriverScreen] Estado actual: $estado');
+        
+        // Si el conductor aceptó la solicitud
+        if (estado == 'aceptada' || estado == 'conductor_asignado') {
+          print('✅ [SearchingDriverScreen] ¡CONDUCTOR ACEPTÓ! Navegando a UserTripAcceptedScreen...');
+          _tripAccepted = true; // Evitar múltiples navegaciones
+          _searchTimer?.cancel();
+          _statusTimer?.cancel();
+          
+          // Reproducir sonido de notificación
+          try {
+            await SoundService.playRequestNotification();
+          } catch (_) {}
+          
+          // Vibración de feedback
+          HapticFeedback.heavyImpact();
+          
+          // Obtener info del conductor
+          final conductor = trip['conductor'] as Map<String, dynamic>?;
+          
+          // Navegar a la pantalla de viaje aceptado
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserTripAcceptedScreen(
+                  solicitudId: widget.solicitudIdAsInt,
+                  latitudOrigen: widget.latitudOrigen,
+                  longitudOrigen: widget.longitudOrigen,
+                  direccionOrigen: widget.direccionOrigen,
+                  latitudDestino: widget.latitudDestino,
+                  longitudDestino: widget.longitudDestino,
+                  direccionDestino: widget.direccionDestino,
+                  conductorInfo: conductor,
+                ),
+              ),
+            );
+          }
+        } else if (estado == 'cancelada') {
+          // La solicitud fue cancelada
+          _statusTimer?.cancel();
+          _searchTimer?.cancel();
+          if (mounted) {
+            _showCancelledDialog();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking trip status: $e');
+    }
+  }
+
+  /// Muestra diálogo cuando la solicitud fue cancelada
+  void _showCancelledDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.cancel, color: AppColors.error, size: 28),
+            SizedBox(width: 12),
+            Expanded(child: Text('Solicitud cancelada')),
+          ],
+        ),
+        content: const Text('No se encontraron conductores disponibles. Por favor intenta de nuevo.'),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _cancelTrip() async {
     setState(() => _isCancelling = true);
     try {
@@ -187,6 +306,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   @override
   void dispose() {
     _searchTimer?.cancel();
+    _statusTimer?.cancel();
     _pulseController.dispose();
     _waveController.dispose();
     super.dispose();

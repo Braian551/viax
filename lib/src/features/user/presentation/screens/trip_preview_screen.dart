@@ -89,7 +89,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
   
   bool _showDetails = false;
   List<LatLng> _animatedRoutePoints = [];
-  double _currentRouteProgress = 0.0;
+  // Note: _currentRouteProgress was unused and removed to satisfy analyzer.
 
   @override
   void initState() {
@@ -155,7 +155,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
         final animatedCount = (totalPoints * _routeAnimation.value).round();
         setState(() {
           _animatedRoutePoints = _route!.geometry.sublist(0, animatedCount);
-          _currentRouteProgress = _routeAnimation.value;
         });
       }
     });
@@ -1298,26 +1297,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen> with TickerProvid
     }
   }
 
-  String _getShortAddress(String address) {
-    // Si la dirección es muy larga, mostrar solo las primeras partes
-    if (address.isEmpty) {
-      return 'Ubicación seleccionada';
-    }
-    
-    // Dividir por comas y tomar las primeras 2 partes
-    final parts = address.split(',');
-    if (parts.length > 2) {
-      return '${parts[0].trim()}, ${parts[1].trim()}';
-    }
-    
-    // Si es corta, devolver tal cual
-    if (address.length <= 40) {
-      return address;
-    }
-    
-    // Si es muy larga, truncar
-    return '${address.substring(0, 37)}...';
-  }
+  // Removed _getShortAddress: unused helper causing analyzer error
 
   Widget _buildPriceBreakdown(bool isDark) {
     return TweenAnimationBuilder<double>(

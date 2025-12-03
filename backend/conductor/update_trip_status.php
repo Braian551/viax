@@ -23,7 +23,7 @@ try {
     }
     
     // Validar estados permitidos
-    $estadosPermitidos = ['aceptada', 'conductor_asignado', 'recogido', 'en_transito', 'entregado', 'completada', 'cancelada'];
+    $estadosPermitidos = ['aceptada', 'conductor_asignado', 'conductor_llego', 'recogido', 'en_transito', 'en_curso', 'entregado', 'completada', 'cancelada'];
     if (!in_array($nuevoEstado, $estadosPermitidos)) {
         throw new Exception('Estado no válido');
     }
@@ -58,8 +58,12 @@ try {
         case 'conductor_asignado':
             $updates[] = 'aceptado_en = NOW()';
             break;
+        case 'conductor_llego':
+            $updates[] = 'conductor_llego_en = NOW()';
+            break;
         case 'recogido':
         case 'en_transito':
+        case 'en_curso':
             $updates[] = 'recogido_en = NOW()';
             break;
         case 'entregado':

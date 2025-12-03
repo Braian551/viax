@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../services/conductor_service.dart';
 import 'active_trip_controller.dart';
 import 'bottom_sheet_panel.dart';
 
@@ -79,6 +80,18 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   }
 
   void _onArrivedPickup() async {
+    // Notificar al backend que el conductor llegó al punto de recogida
+    if (widget.solicitudId != null) {
+      try {
+        await ConductorService.notificarLlegadaRecogida(
+          conductorId: widget.conductorId,
+          solicitudId: widget.solicitudId!,
+        );
+      } catch (e) {
+        debugPrint('Error notificando llegada: $e');
+      }
+    }
+    
     await _controller.onArrivedPickup();
     if (!mounted || _controller.isDisposed) return;
     ScaffoldMessenger.of(context).showSnackBar(

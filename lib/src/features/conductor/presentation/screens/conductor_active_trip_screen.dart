@@ -1,12 +1,11 @@
-/// ARCHIVO REFACTORIZADO - Re-exporta la nueva versión modular
+/// ARCHIVO REFACTORIZADO - Re-exporta la nueva versiï¿½n modular
 /// Para evitar congelamientos de Mapbox 3D en Android
 ///
-/// La implementación completa está en:
+/// La implementaciï¿½n completa estï¿½ en:
 ///   active_trip/conductor_active_trip_screen.dart
 ///   active_trip/active_trip_controller.dart
 ///   active_trip/active_trip_widgets.dart
 ///   active_trip/bottom_panels.dart
 ///
-library;
-
+// Re-export the modular implementation
 export 'active_trip/conductor_active_trip_screen.dart';

@@ -191,10 +191,16 @@ class TripRequestService {
     required int solicitudId,
   }) async {
     try {
+      final url = '$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId';
+      print('🌐 [TripRequestService] GET: $url');
+      
       final response = await http.get(
-        Uri.parse('$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(url),
+        headers: {'Accept': 'application/json'},
       );
+      
+      print('📡 [TripRequestService] Status: ${response.statusCode}');
+      print('📄 [TripRequestService] Body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

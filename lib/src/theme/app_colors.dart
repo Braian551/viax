@@ -129,3 +129,19 @@ class AppColors {
     );
   }
 }
+
+// --------------------------------------------------
+// Helper Color extensions (compatibility fixes)
+// --------------------------------------------------
+// We provide `withValues({alpha: double})` to match the
+// usage across the codebase that expects this helper.
+// This simply maps to `withOpacity` but clamps the alpha
+// value to the valid 0.0 - 1.0 range.
+extension AppColorExtensions on Color {
+  Color withValues({required double alpha}) {
+    double clamped = alpha;
+    if (clamped < 0.0) clamped = 0.0;
+    if (clamped > 1.0) clamped = 1.0;
+    return withOpacity(clamped);
+  }
+}

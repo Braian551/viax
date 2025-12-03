@@ -8,7 +8,6 @@ import 'package:latlong2/latlong.dart';
 // Shimmer import removed because it's unused here
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:viax/src/features/user/presentation/widgets/quick_action.dart';
 import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';

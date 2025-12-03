@@ -15,19 +15,32 @@ try {
     $solicitudId = $_GET['solicitud_id'] ?? null;
     
     if (!$solicitudId) {
-        throw new Exception('solicitud_id es requerido');
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'solicitud_id es requerido']);
+        exit();
     }
     
     $database = new Database();
     $db = $database->getConnection();
     
-    // Obtener información de la solicitud con datos del conductor asignado
+    // Query simplificada primero para verificar que la solicitud existe
+    $stmtCheck = $db->prepare("SELECT id, estado FROM solicitudes_servicio WHERE id = ?");
+    $stmtCheck->execute([$solicitudId]);
+    $check = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$check) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Solicitud no encontrada']);
+        exit();
+    }
+    
+    // Obtener información completa de la solicitud con datos del conductor asignado
     $stmt = $db->prepare("
         SELECT 
             s.*,
             ac.conductor_id,
             ac.estado as estado_asignacion,
-            ac.fecha_asignacion,
+            ac.asignado_en as fecha_asignacion,
             u.nombre as conductor_nombre,
             u.apellido as conductor_apellido,
             u.telefono as conductor_telefono,
@@ -39,12 +52,7 @@ try {
             dc.vehiculo_color,
             dc.calificacion_promedio as conductor_calificacion,
             dc.latitud_actual as conductor_latitud,
-            dc.longitud_actual as conductor_longitud,
-            (6371 * acos(
-                cos(radians(s.latitud_recogida)) * cos(radians(dc.latitud_actual)) *
-                cos(radians(dc.longitud_actual) - radians(s.longitud_recogida)) +
-                sin(radians(s.latitud_recogida)) * sin(radians(dc.latitud_actual))
-            )) AS distancia_conductor_km
+            dc.longitud_actual as conductor_longitud
         FROM solicitudes_servicio s
         LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado = 'asignado'
         LEFT JOIN usuarios u ON ac.conductor_id = u.id
@@ -55,16 +63,26 @@ try {
     $stmt->execute([$solicitudId]);
     $trip = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$trip) {
-        throw new Exception('Solicitud no encontrada');
-    }
-    
-    // Calcular ETA si hay conductor asignado
+    // Calcular distancia si hay conductor con ubicación
+    $distancia_conductor_km = null;
     $eta_minutos = null;
+    
     if ($trip['conductor_id'] && $trip['conductor_latitud'] && $trip['conductor_longitud']) {
+        // Calcular distancia usando fórmula Haversine
+        $lat1 = deg2rad($trip['latitud_recogida']);
+        $lon1 = deg2rad($trip['longitud_recogida']);
+        $lat2 = deg2rad($trip['conductor_latitud']);
+        $lon2 = deg2rad($trip['conductor_longitud']);
+        
+        $dlat = $lat2 - $lat1;
+        $dlon = $lon2 - $lon1;
+        
+        $a = sin($dlat/2) * sin($dlat/2) + cos($lat1) * cos($lat2) * sin($dlon/2) * sin($dlon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        $distancia_conductor_km = 6371 * $c;
+        
         // Estimación simple: 30 km/h promedio en ciudad
-        $distanciaKm = floatval($trip['distancia_conductor_km']);
-        $eta_minutos = round(($distanciaKm / 30) * 60);
+        $eta_minutos = round(($distancia_conductor_km / 30) * 60);
     }
     
     echo json_encode([
@@ -84,15 +102,15 @@ try {
                 'longitud' => (float)$trip['longitud_destino'],
                 'direccion' => $trip['direccion_destino']
             ],
-            'distancia_km' => (float)$trip['distancia_estimada'],
-            'tiempo_estimado_min' => (int)$trip['tiempo_estimado'],
+            'distancia_km' => (float)($trip['distancia_estimada'] ?? 0),
+            'tiempo_estimado_min' => (int)($trip['tiempo_estimado'] ?? 0),
             'fecha_creacion' => $trip['fecha_creacion'],
             'conductor' => $trip['conductor_id'] ? [
                 'id' => (int)$trip['conductor_id'],
-                'nombre' => $trip['conductor_nombre'] . ' ' . $trip['conductor_apellido'],
+                'nombre' => trim($trip['conductor_nombre'] . ' ' . $trip['conductor_apellido']),
                 'telefono' => $trip['conductor_telefono'],
                 'foto' => $trip['conductor_foto'],
-                'calificacion' => (float)$trip['conductor_calificacion'],
+                'calificacion' => (float)($trip['conductor_calificacion'] ?? 0),
                 'vehiculo' => [
                     'tipo' => $trip['vehiculo_tipo'],
                     'marca' => $trip['vehiculo_marca'],
@@ -104,14 +122,22 @@ try {
                     'latitud' => (float)$trip['conductor_latitud'],
                     'longitud' => (float)$trip['conductor_longitud']
                 ],
-                'distancia_km' => round((float)$trip['distancia_conductor_km'], 2),
+                'distancia_km' => $distancia_conductor_km ? round($distancia_conductor_km, 2) : null,
                 'eta_minutos' => $eta_minutos
             ] : null
         ]
     ]);
     
+} catch (PDOException $e) {
+    error_log("get_trip_status.php PDO Error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error de base de datos'
+    ]);
 } catch (Exception $e) {
-    http_response_code(400);
+    error_log("get_trip_status.php Error: " . $e->getMessage());
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

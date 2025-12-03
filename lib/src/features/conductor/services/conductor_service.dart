@@ -229,4 +229,80 @@ class ConductorService {
       return {'success': false, 'ganancias': {}};
     }
   }
+
+  /// Actualizar el estado de un viaje/solicitud
+  /// Estados válidos: 'conductor_llego', 'recogido', 'en_curso', 'completada', 'cancelada'
+  static Future<Map<String, dynamic>> actualizarEstadoViaje({
+    required int conductorId,
+    required int solicitudId,
+    required String nuevoEstado,
+    String? motivoCancelacion,
+  }) async {
+    try {
+      final body = {
+        'conductor_id': conductorId,
+        'solicitud_id': solicitudId,
+        'nuevo_estado': nuevoEstado,
+        if (motivoCancelacion != null) 'motivo_cancelacion': motivoCancelacion,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/update_trip_status.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      print('Update trip status response (${response.statusCode}): ${response.body}');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {'success': false, 'message': 'Error del servidor: ${response.statusCode}'};
+    } catch (e) {
+      print('Error actualizando estado del viaje: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  /// Notificar que el conductor llegó al punto de recogida
+  static Future<bool> notificarLlegadaRecogida({
+    required int conductorId,
+    required int solicitudId,
+  }) async {
+    final result = await actualizarEstadoViaje(
+      conductorId: conductorId,
+      solicitudId: solicitudId,
+      nuevoEstado: 'conductor_llego',
+    );
+    return result['success'] == true;
+  }
+
+  /// Notificar que el cliente fue recogido e inicia el viaje
+  static Future<bool> iniciarViaje({
+    required int conductorId,
+    required int solicitudId,
+  }) async {
+    final result = await actualizarEstadoViaje(
+      conductorId: conductorId,
+      solicitudId: solicitudId,
+      nuevoEstado: 'en_curso',
+    );
+    return result['success'] == true;
+  }
+
+  /// Notificar que el viaje fue completado
+  static Future<bool> completarViaje({
+    required int conductorId,
+    required int solicitudId,
+  }) async {
+    final result = await actualizarEstadoViaje(
+      conductorId: conductorId,
+      solicitudId: solicitudId,
+      nuevoEstado: 'completada',
+    );
+    return result['success'] == true;
+  }
 }

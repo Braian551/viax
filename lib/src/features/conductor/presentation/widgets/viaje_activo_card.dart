@@ -16,7 +16,7 @@ class ViajeActivoCard extends StatelessWidget {
     final destino = viaje['destino'] ?? 'Destino desconocido';
     final estado = viaje['estado'] ?? 'pendiente';
     final precio = viaje['precio_estimado']?.toString() ?? '0';
-    final clienteNombre = viaje['cliente_nombre'] ?? 'Cliente';
+    final clienteNombre = viaje['cliente_nombre']?.toString() ?? 'Cliente';
 
     Color estadoColor;
     IconData estadoIcon;
@@ -102,8 +102,8 @@ class ViajeActivoCard extends StatelessWidget {
                   CircleAvatar(
                     backgroundColor: const Color(0xFFFFFF00),
                     radius: 20,
-                    child: Text(
-                      clienteNombre[0].toUpperCase(),
+                      child: Text(
+                        (clienteNombre.isNotEmpty ? clienteNombre[0].toUpperCase() : '?'),
                       style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
