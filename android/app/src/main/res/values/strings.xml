@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Viax</string>
+    <string name="mapbox_access_token" translatable="false">pk.eyJ1IjoiYnJhaWFuNzI3IiwiYSI6ImNtZ3lqaDJ2ZjBnNngya3BvZDV4N3NlbDIifQ.9LQJV3DL1qzDIUXNLOkHqA</string>
+</resources>

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui' as ui;
 import 'package:provider/provider.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/routes/app_router.dart';
 import 'package:viax/src/providers/database_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
@@ -10,6 +11,7 @@ import 'package:viax/src/features/conductor/providers/conductor_profile_provider
 import 'package:viax/src/features/conductor/providers/conductor_trips_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_earnings_provider.dart';
 import 'package:viax/src/core/di/service_locator.dart';
+import 'package:viax/src/core/config/env_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 
@@ -77,6 +79,16 @@ void main() async {
   };
 
   await initializeDateFormatting('es_ES', null);
+
+  // ============================================
+  // INICIALIZAR MAPBOX CON ACCESS TOKEN
+  // ============================================
+  try {
+    MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
+    debugPrint('✅ Mapbox inicializado correctamente');
+  } catch (e) {
+    debugPrint('⚠️ Error inicializando Mapbox: $e');
+  }
 
   // Inicializar Service Locator (Inyección de Dependencias)
   // Esto configura todos los datasources, repositories y use cases
