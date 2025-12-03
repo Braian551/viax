@@ -11,6 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/database.php';
 
+// Cargar servicio de confianza si existe
+$confianzaServicePath = __DIR__ . '/../confianza/ConfianzaService.php';
+$useConfianza = file_exists($confianzaServicePath);
+if ($useConfianza) {
+    require_once $confianzaServicePath;
+}
+
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     
@@ -91,6 +98,22 @@ try {
         WHERE usuario_id = ?
     ");
     $stmt->execute([$trip['conductor_id'], $trip['conductor_id']]);
+    
+    // NUEVO: Actualizar historial de confianza si el servicio existe
+    if ($useConfianza) {
+        try {
+            $confianzaService = new ConfianzaService();
+            $confianzaService->actualizarHistorialDespuesDeCalificacion(
+                $solicitudId,
+                $usuarioId,
+                $trip['conductor_id'],
+                $calificacion
+            );
+        } catch (Exception $e) {
+            // Fallar silenciosamente - la calificación ya se guardó
+            error_log("Error actualizando historial de confianza: " . $e->getMessage());
+        }
+    }
     
     echo json_encode([
         'success' => true,

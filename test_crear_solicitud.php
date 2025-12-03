@@ -98,7 +98,7 @@ try {
     $stmt = $db->prepare("
         DELETE FROM solicitudes_servicio 
         WHERE estado IN ('pendiente', 'en_busqueda')
-        AND fecha_creacion < DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+        AND fecha_creacion < NOW() - INTERVAL '30 minutes'
     ");
     $stmt->execute();
     $eliminadas = $stmt->rowCount();
@@ -213,14 +213,21 @@ try {
         WHERE s.estado = 'pendiente'
         AND s.tipo_servicio = 'transporte'
         AND s.id = ?
-        HAVING distancia_conductor_origen <= ?
+        AND (6371 * acos(
+                cos(radians(?)) * cos(radians(s.latitud_recogida)) *
+                cos(radians(s.longitud_recogida) - radians(?)) +
+                sin(radians(?)) * sin(radians(s.latitud_recogida))
+            )) <= ?
     ");
     
     $stmt->execute([
-        $conductor['latitud_actual'],
-        $conductor['longitud_actual'],
-        $conductor['latitud_actual'],
+        $conductor['latitud_actual'], // lat for SELECT expr
+        $conductor['longitud_actual'], // lon for SELECT expr
+        $conductor['latitud_actual'], // lat for SELECT expr (sin)
         $solicitudId,
+        $conductor['latitud_actual'], // lat for WHERE distance
+        $conductor['longitud_actual'], // lon for WHERE distance
+        $conductor['latitud_actual'], // lat for WHERE distance (sin)
         $radioKm
     ]);
     

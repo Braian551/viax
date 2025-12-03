@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../../theme/app_colors.dart';
 
-/// Contenedor con efecto glass/frosted moderno
+/// Contenedor con efecto glass/frosted moderno - Diseño Viax
+/// Usa los colores de la app para consistencia visual
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double blur;
@@ -13,25 +15,38 @@ class GlassContainer extends StatelessWidget {
   final Border? border;
   final double? width;
   final double? height;
+  final bool usePrimaryAccent;
 
   const GlassContainer({
     super.key,
     required this.child,
-    this.blur = 20,
+    this.blur = 25,
     this.backgroundColor,
-    this.borderRadius = 20,
+    this.borderRadius = 24,
     this.padding,
     this.margin,
     this.boxShadow,
     this.border,
     this.width,
     this.height,
+    this.usePrimaryAccent = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
+    // Colores base con tinte azul de la app
+    final baseColor = backgroundColor ?? (isDark 
+        ? AppColors.darkCard.withOpacity(0.85)
+        : Colors.white.withOpacity(0.9));
+    
+    final borderColor = usePrimaryAccent
+        ? AppColors.primary.withOpacity(0.3)
+        : (isDark 
+            ? Colors.white.withOpacity(0.08)
+            : Colors.white.withOpacity(0.6));
+
     return Container(
       width: width,
       height: height,
@@ -43,22 +58,30 @@ class GlassContainer extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: backgroundColor ?? 
-                (isDark 
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.white.withOpacity(0.85)),
+              gradient: usePrimaryAccent
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        baseColor,
+                        baseColor.withOpacity(0.7),
+                      ],
+                    )
+                  : null,
+              color: usePrimaryAccent ? null : baseColor,
               borderRadius: BorderRadius.circular(borderRadius),
               border: border ?? Border.all(
-                color: isDark 
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.5),
+                color: borderColor,
                 width: 1.5,
               ),
               boxShadow: boxShadow ?? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                  blurRadius: 20,
+                  color: usePrimaryAccent
+                      ? AppColors.primary.withOpacity(0.15)
+                      : Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                  blurRadius: 24,
                   offset: const Offset(0, 8),
+                  spreadRadius: usePrimaryAccent ? 2 : 0,
                 ),
               ],
             ),

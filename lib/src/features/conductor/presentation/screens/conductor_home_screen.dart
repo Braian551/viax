@@ -11,8 +11,11 @@ import '../../../../theme/app_colors.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../providers/conductor_provider.dart';
 import '../../services/trip_request_search_service.dart';
+import '../../services/demand_zone_service.dart';
+import '../../models/demand_zone_model.dart';
 import 'conductor_searching_passengers_screen.dart';
 import '../widgets/conductor_drawer.dart';
+import '../widgets/demand_zones_overlay.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -32,6 +35,16 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController _mapController = MapController();
+  
+  // Flag para prevenir setState después de dispose
+  bool _isDisposed = false;
+  
+  /// Safe setState that checks if widget is still mounted
+  void _safeSetState(VoidCallback fn) {
+    if (!_isDisposed && mounted) {
+      setState(fn);
+    }
+  }
   geo.Position? _currentPosition;
   bool _isLoadingLocation = true;
   bool _isMapReady = false;
@@ -41,6 +54,12 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   // Variables para búsqueda de solicitudes
   bool _isSearchingRequests = false;
   String _searchStatus = 'Buscando solicitudes cercanas...';
+  
+  // Variables para zonas de demanda (surge pricing)
+  List<DemandZone> _demandZones = [];
+  bool _showDemandZones = true;
+  bool _showDemandLegend = false;
+  DemandZone? _selectedZone;
   
   late AnimationController _pulseController;
   late AnimationController _connectionController;
@@ -61,8 +80,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     
     // Marcar mapa como listo
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() {
+      if (!_isDisposed && mounted) {
+        _safeSetState(() {
           _isMapReady = true;
         });
         debugPrint('✅ Mapa listo');
@@ -168,7 +187,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
       if (permission == geo.LocationPermission.deniedForever) {
         _showPermissionDeniedDialog();
-        setState(() => _isLoadingLocation = false);
+        _safeSetState(() => _isLoadingLocation = false);
         return;
       }
 
@@ -178,7 +197,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       }
     } catch (e) {
       debugPrint('Error al solicitar permisos de ubicación: $e');
-      setState(() => _isLoadingLocation = false);
+      _safeSetState(() => _isLoadingLocation = false);
     }
   }
 
@@ -187,8 +206,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       final position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high,
       );
+      
+      if (_isDisposed) return;
 
-      setState(() {
+      _safeSetState(() {
         _currentPosition = position;
         _isLoadingLocation = false;
       });
@@ -198,9 +219,12 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
       // Iniciar seguimiento de ubicación en tiempo real
       _startLocationTracking();
+
+      // Cargar zonas de demanda inmediatamente (para mostrar antes de conectarse)
+      _startDemandZonesUpdates();
     } catch (e) {
       debugPrint('Error al obtener ubicación: $e');
-      setState(() => _isLoadingLocation = false);
+      _safeSetState(() => _isLoadingLocation = false);
     }
   }
 
@@ -223,12 +247,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
     _positionStream = geo.Geolocator.getPositionStream(
       locationSettings: locationSettings,
-    ).listen((geo.Position position) {
-      setState(() => _currentPosition = position);
-      
-      // Actualizar mapa con debounce
-      _debouncedUpdateMapLocation(position);
-    });
+    ).listen(
+      (geo.Position position) {
+        _safeSetState(() => _currentPosition = position);
+        
+        // Actualizar mapa con debounce
+        _debouncedUpdateMapLocation(position);
+      },
+      onError: (error) {
+        debugPrint('❌ Error en stream de ubicación: $error');
+      },
+    );
   }
 
   void _debouncedUpdateMapLocation(geo.Position position) {
@@ -239,12 +268,12 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   }
 
   void _startSearchingRequests() {
-    if (_currentPosition == null) {
+    if (_currentPosition == null || _isDisposed) {
       debugPrint('❌ No hay ubicación actual para buscar solicitudes');
       return;
     }
 
-    setState(() {
+    _safeSetState(() {
       _isSearchingRequests = true;
       _searchStatus = 'Buscando solicitudes cercanas...';
     });
@@ -261,14 +290,14 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   void _stopSearchingRequests() {
     TripRequestSearchService.stopSearching();
     
-    setState(() {
+    _safeSetState(() {
       _isSearchingRequests = false;
       _searchStatus = 'Buscando solicitudes cercanas...';
     });
   }
 
   void _onRequestsFound(List<Map<String, dynamic>> requests) {
-    if (!mounted || !_isOnline) return;
+    if (_isDisposed || !mounted || !_isOnline) return;
 
     if (requests.isNotEmpty) {
       // Hay solicitudes disponibles - mostrar LA PRIMERA solicitud
@@ -292,7 +321,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       ).then((result) {
         // Cuando regresa de la pantalla de solicitud
         // SIEMPRE vuelve al home después de aceptar/rechazar
-        if (mounted && _isOnline) {
+        if (!_isDisposed && mounted && _isOnline) {
           // Reiniciar búsqueda para encontrar la siguiente solicitud
           debugPrint('🔄 Reiniciando búsqueda de solicitudes...');
           _startSearchingRequests();
@@ -300,18 +329,89 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       });
     } else {
       // No hay solicitudes, continuar buscando
-      setState(() {
+      _safeSetState(() {
         _searchStatus = 'Buscando solicitudes cercanas...';
       });
     }
   }
 
   void _onSearchError(String error) {
-    if (!mounted) return;
+    if (_isDisposed || !mounted) return;
     
     debugPrint('❌ Error en búsqueda: $error');
-    setState(() {
+    _safeSetState(() {
       _searchStatus = 'Error de conexión. Reintentando...';
+    });
+  }
+
+  // ========== MÉTODOS DE ZONAS DE DEMANDA ==========
+
+  /// Iniciar actualizaciones de zonas de demanda
+  void _startDemandZonesUpdates() {
+    if (_currentPosition == null) {
+      debugPrint('❌ No hay ubicación para cargar zonas de demanda');
+      return;
+    }
+
+    debugPrint('🔥 Iniciando carga de zonas de demanda...');
+    
+    DemandZoneService.startAutoRefresh(
+      latitude: _currentPosition!.latitude,
+      longitude: _currentPosition!.longitude,
+      onZonesUpdated: (zones) {
+        if (!_isDisposed && mounted) {
+          _safeSetState(() {
+            _demandZones = zones;
+          });
+          debugPrint('🔥 ${zones.length} zonas de demanda actualizadas');
+        }
+      },
+      onError: (error) {
+        debugPrint('❌ Error al obtener zonas de demanda: $error');
+      },
+    );
+  }
+
+  /// Manejar tap en zona de demanda
+  void _onDemandZoneTap(DemandZone zone) {
+    _safeSetState(() {
+      _selectedZone = zone;
+    });
+    
+    // Mostrar información de la zona
+    HapticFeedback.selectionClick();
+    debugPrint('📍 Zona seleccionada: ${zone.demandLabel} - ${zone.surgeText}');
+  }
+
+  /// Cerrar información de zona seleccionada
+  void _closeZoneInfo() {
+    _safeSetState(() {
+      _selectedZone = null;
+    });
+  }
+
+  /// Navegar a una zona de demanda
+  void _navigateToZone(DemandZone zone) {
+    _mapController.move(
+      LatLng(zone.centerLat, zone.centerLng),
+      16.0,
+    );
+    _closeZoneInfo();
+    HapticFeedback.mediumImpact();
+  }
+
+  /// Toggle de visualización de zonas de demanda
+  void _toggleDemandZonesVisibility() {
+    _safeSetState(() {
+      _showDemandZones = !_showDemandZones;
+    });
+    HapticFeedback.lightImpact();
+  }
+
+  /// Toggle de leyenda de zonas de demanda
+  void _toggleDemandLegend() {
+    _safeSetState(() {
+      _showDemandLegend = !_showDemandLegend;
     });
   }
 
@@ -344,7 +444,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   void _toggleOnlineStatus() {
     if (!_isOnline) {
       // Conectarse: Iniciar búsqueda de solicitudes
-      setState(() => _isOnline = true);
+      _safeSetState(() => _isOnline = true);
       _connectionController.forward();
       HapticFeedback.mediumImpact();
       
@@ -354,15 +454,21 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       // Iniciar búsqueda continua de solicitudes
       _startSearchingRequests();
       
+      // Refrescar zonas de demanda al conectarse
+      _startDemandZonesUpdates();
+      
       _showStatusSnackbar('¡Conectado! Buscando pasajeros...', AppColors.success);
     } else {
       // Desconectarse: Detener búsqueda
-      setState(() => _isOnline = false);
+      _safeSetState(() => _isOnline = false);
       _connectionController.reverse();
       HapticFeedback.lightImpact();
       
       // Detener búsqueda de solicitudes
       _stopSearchingRequests();
+      
+      // Las zonas de demanda siguen visibles cuando está offline para consistencia
+      // No detenemos DemandZoneService.stopAutoRefresh() aquí
       
       // Limpiar caché de solicitudes procesadas
       TripRequestSearchService.clearProcessedRequests();
@@ -404,6 +510,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   @override
   void dispose() {
+    _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     _connectionController.dispose();
@@ -414,6 +521,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     
     // Detener búsqueda si está activa
     _stopSearchingRequests();
+    
+    // Detener actualización de zonas de demanda
+    DemandZoneService.stopAutoRefresh();
     
     super.dispose();
   }
@@ -703,6 +813,16 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           userAgentPackageName: 'com.viax.app',
         ),
         
+        // ========== ZONAS DE DEMANDA (SURGE PRICING) ==========
+        // Mostrar siempre que haya zonas (también cuando está offline para planificación)
+        if (_showDemandZones && _demandZones.isNotEmpty)
+          DemandZonesOverlay(
+            zones: _demandZones,
+            showLabels: true,
+            animate: true,
+            onZoneTap: _onDemandZoneTap,
+          ),
+        
         // Marcador de ubicación actual con animación - MÁS GRANDE
         MarkerLayer(
           markers: [
@@ -796,17 +916,59 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return SafeArea(
-      child: Column(
+      child: Stack(
         children: [
-          const Spacer(),
+          // Contenido principal (botones y panel)
+          Column(
+            children: [
+              const Spacer(),
+              
+              // Botón de centrar ubicación (FAB style con glass)
+              _buildCenterLocationButton(isDark),
+              
+              const SizedBox(height: 16),
+              
+              // Panel inferior con controles
+              _buildBottomPanel(),
+            ],
+          ),
           
-          // Botón de centrar ubicación (FAB style con glass)
-          _buildCenterLocationButton(isDark),
+          // ========== CONTROLES DE ZONAS DE DEMANDA ==========
+          // Mostrar siempre que haya zonas (también cuando está offline para consistencia)
+          if (_demandZones.isNotEmpty) ...[
+            // Botón para toggle de zonas y leyenda (esquina superior derecha)
+            Positioned(
+              top: 8,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Botón de toggle zonas
+                  _buildDemandZonesToggleButton(isDark),
+                  const SizedBox(height: 8),
+                  // Leyenda de zonas (esquina superior derecha)
+                  if (_showDemandZones)
+                    DemandZoneLegend(
+                      isExpanded: _showDemandLegend,
+                      onToggle: _toggleDemandLegend,
+                    ),
+                ],
+              ),
+            ),
+          ],
           
-          const SizedBox(height: 16),
-          
-          // Panel inferior con controles
-          _buildBottomPanel(),
+          // Tarjeta de información de zona seleccionada
+          if (_selectedZone != null)
+            Positioned(
+              bottom: 200,
+              left: 0,
+              right: 0,
+              child: DemandZoneInfoCard(
+                zone: _selectedZone!,
+                onClose: _closeZoneInfo,
+                onNavigate: () => _navigateToZone(_selectedZone!),
+              ),
+            ),
         ],
       ),
     );
@@ -862,6 +1024,68 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                     ),
                   ),
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Botón para toggle de visualización de zonas de demanda
+  Widget _buildDemandZonesToggleButton(bool isDark) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _toggleDemandZonesVisibility,
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _showDemandZones
+                    ? Colors.orange.withOpacity(isDark ? 0.3 : 0.2)
+                    : (isDark 
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.white.withOpacity(0.8)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _showDemandZones
+                      ? Colors.orange.withOpacity(0.5)
+                      : (isDark
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.white.withOpacity(0.5)),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showDemandZones 
+                        ? Icons.local_fire_department
+                        : Icons.local_fire_department_outlined,
+                    color: _showDemandZones 
+                        ? Colors.orange
+                        : (isDark ? Colors.white70 : Colors.grey[700]),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Zonas',
+                    style: TextStyle(
+                      color: _showDemandZones 
+                          ? Colors.orange
+                          : (isDark ? Colors.white70 : Colors.grey[700]),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

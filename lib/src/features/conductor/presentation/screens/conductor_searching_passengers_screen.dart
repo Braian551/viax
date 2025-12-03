@@ -11,6 +11,7 @@ import '../../../../global/services/sound_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_search_service.dart';
 import '../../services/conductor_service.dart';
+import '../widgets/route_3d_overlay.dart';
 import 'conductor_active_trip_screen.dart';
 
 /// Pantalla para mostrar y gestionar UNA solicitud de viaje a la vez
@@ -49,6 +50,10 @@ class _ConductorSearchingPassengersScreenState
   
   Map<String, dynamic>? _selectedRequest;
   
+  // Variables para la ruta al cliente
+  MapboxRoute? _routeToClient;
+  List<LatLng> _animatedRoutePoints = [];
+  
   late AnimationController _pulseAnimationController;
   late Animation<double> _pulseAnimation;
   
@@ -61,6 +66,10 @@ class _ConductorSearchingPassengersScreenState
   
   late AnimationController _timerController;
   late Animation<double> _timerAnimation;
+  
+  // Animación de la ruta
+  late AnimationController _routeAnimationController;
+  late Animation<double> _routeAnimation;
   
   Timer? _autoRejectTimer;
   bool _panelExpanded = false;
@@ -77,6 +86,9 @@ class _ConductorSearchingPassengersScreenState
     // Asignar la solicitud única
     _selectedRequest = widget.solicitud;
     
+    // Reproducir sonido de notificación al cargar la pantalla
+    _playNotificationSound();
+    
     // Mostrar panel de solicitud después de que se construya el widget
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -92,8 +104,21 @@ class _ConductorSearchingPassengersScreenState
             _rejectRequest();
           }
         });
+        
+        // Obtener y mostrar la ruta al cliente
+        _fetchRouteToClient();
       }
     });
+  }
+  
+  /// Reproducir sonido de notificación de nueva solicitud
+  Future<void> _playNotificationSound() async {
+    try {
+      print('🔊 Reproduciendo sonido de solicitud...');
+      await SoundService.playRequestNotification();
+    } catch (e) {
+      print('❌ Error reproduciendo sonido: $e');
+    }
   }
 
   @override
@@ -103,6 +128,7 @@ class _ConductorSearchingPassengersScreenState
     _requestPanelController.dispose();
     _acceptButtonController.dispose();
     _timerController.dispose();
+    _routeAnimationController.dispose();
     _autoRejectTimer?.cancel();
     
     // Desactivar disponibilidad al salir sin aceptar viaje
@@ -186,6 +212,31 @@ class _ConductorSearchingPassengersScreenState
       parent: _timerController,
       curve: Curves.linear,
     ));
+
+    // Animación de la ruta hacia el cliente
+    _routeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    
+    _routeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _routeAnimationController,
+      curve: Curves.easeInOutCubic,
+    ));
+    
+    _routeAnimation.addListener(() {
+      if (!mounted || _routeToClient == null) return;
+      final totalPoints = _routeToClient!.geometry.length;
+      final animatedCount = (totalPoints * _routeAnimation.value).round().clamp(0, totalPoints);
+      if (animatedCount > 0) {
+        setState(() {
+          _animatedRoutePoints = _routeToClient!.geometry.sublist(0, animatedCount);
+        });
+      }
+    });
   }
 
   Future<void> _startLocationTracking() async {
@@ -277,6 +328,8 @@ class _ConductorSearchingPassengersScreenState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _mapController.move(_currentLocation!, 15);
+          // Obtener ruta hacia el cliente
+          _fetchRouteToClient();
         }
       });
 
@@ -326,6 +379,59 @@ class _ConductorSearchingPassengersScreenState
   }
 
 
+
+  /// Obtener la ruta desde el conductor hasta el cliente
+  Future<void> _fetchRouteToClient() async {
+    if (_currentLocation == null || _selectedRequest == null) return;
+    
+    try {
+      final clienteLat = double.parse(_selectedRequest!['latitud_origen'].toString());
+      final clienteLng = double.parse(_selectedRequest!['longitud_origen'].toString());
+      
+      final route = await MapboxService.getRoute(
+        waypoints: [
+          _currentLocation!,
+          LatLng(clienteLat, clienteLng),
+        ],
+      );
+      
+      if (route != null && mounted) {
+        setState(() {
+          _routeToClient = route;
+        });
+        
+        // Ajustar mapa para mostrar toda la ruta
+        _fitMapToRoute();
+        
+        // Iniciar animación de la ruta
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (mounted) {
+          _routeAnimationController.forward();
+        }
+      }
+    } catch (e) {
+      print('❌ Error obteniendo ruta al cliente: $e');
+    }
+  }
+
+  /// Ajustar el mapa para mostrar toda la ruta
+  void _fitMapToRoute() {
+    if (_routeToClient == null || _routeToClient!.geometry.isEmpty) return;
+    
+    try {
+      final bounds = LatLngBounds.fromPoints(_routeToClient!.geometry);
+      
+      // Añadir padding para que los marcadores sean visibles
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.fromLTRB(60, 120, 60, 350),
+        ),
+      );
+    } catch (e) {
+      print('❌ Error ajustando mapa: $e');
+    }
+  }
 
   void _showError(String message) {
     if (!mounted) return;
@@ -468,6 +574,19 @@ class _ConductorSearchingPassengersScreenState
     Navigator.pop(context);
   }
 
+  /// Obtener color del temporizador según segundos restantes
+  Color _getTimerColor(int seconds) {
+    if (seconds <= 5) {
+      return const Color(0xFFF44336); // Rojo - urgente
+    } else if (seconds <= 10) {
+      return const Color(0xFFFF9800); // Naranja - advertencia
+    } else if (seconds <= 20) {
+      return AppColors.primary; // Azul - normal
+    } else {
+      return const Color(0xFF4CAF50); // Verde - tiempo suficiente
+    }
+  }
+
   String _formatPrice(double price) {
     final formatter = NumberFormat('#,###', 'es_CO');
     return formatter.format(price.round());
@@ -595,6 +714,22 @@ class _ConductorSearchingPassengersScreenState
           userAgentPackageName: 'com.example.ping_go',
         ),
         
+        // ========== RUTA 3D ESTILO UBER/DIDI CONDUCTOR -> CLIENTE ==========
+        // Usando Route3DOverlay para capas de ruta 3D
+        if (_animatedRoutePoints.length > 1)
+          ...Route3DOverlay(
+            routePoints: _animatedRoutePoints,
+            isDark: isDark,
+            strokeWidth: 6.0,
+          ).buildLayers(),
+        
+        // Indicador de dirección (flecha animada al inicio de la ruta)
+        if (_animatedRoutePoints.length > 2)
+          Route3DOverlay(
+            routePoints: _animatedRoutePoints,
+            isDark: isDark,
+          ).buildDirectionArrow() ?? const SizedBox.shrink(),
+        
         // Marcador del conductor con pulso mejorado
         MarkerLayer(
           markers: [
@@ -650,7 +785,7 @@ class _ConductorSearchingPassengersScreenState
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.darkCard,
+                          color: isDark ? AppColors.darkCard : Colors.white,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: AppColors.primary,
@@ -788,6 +923,8 @@ class _ConductorSearchingPassengersScreenState
 
     // Calcular distancia del conductor al punto de recogida del cliente
     double distanciaConductorCliente = 0;
+    int etaMinutos = 0; // Tiempo estimado de llegada al cliente
+    
     if (_currentLocation != null) {
       final clienteLat = double.parse(_selectedRequest!['latitud_origen'].toString());
       final clienteLng = double.parse(_selectedRequest!['longitud_origen'].toString());
@@ -798,6 +935,14 @@ class _ConductorSearchingPassengersScreenState
         LatLng(_currentLocation!.latitude, _currentLocation!.longitude),
         LatLng(clienteLat, clienteLng),
       );
+      
+      // Usar el tiempo de la ruta si está disponible, sino estimar
+      if (_routeToClient != null) {
+        etaMinutos = _routeToClient!.durationMinutes.ceil();
+      } else {
+        // Estimar: ~2 min por km en ciudad
+        etaMinutos = (distanciaConductorCliente * 2).ceil();
+      }
     }
 
     return Positioned(
@@ -809,9 +954,9 @@ class _ConductorSearchingPassengersScreenState
         child: FadeTransition(
           opacity: _requestPanelFadeAnimation,
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
               child: GestureDetector(
                 onVerticalDragStart: (details) {
                   if (!mounted) return;
@@ -858,22 +1003,38 @@ class _ConductorSearchingPassengersScreenState
                   }
                 },
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
                   decoration: BoxDecoration(
-                    color: isDark 
-                      ? AppColors.darkCard.withValues(alpha: 0.95)
-                      : Colors.white.withValues(alpha: 0.95),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: isDark 
+                        ? [
+                            AppColors.darkCard.withValues(alpha: 0.85),
+                            AppColors.darkCard.withValues(alpha: 0.98),
+                          ]
+                        : [
+                            Colors.white.withValues(alpha: 0.85),
+                            Colors.white.withValues(alpha: 0.98),
+                          ],
+                    ),
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(32),
+                      top: Radius.circular(36),
                     ),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2),
+                      color: AppColors.primary.withValues(alpha: 0.25),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        blurRadius: 40,
+                        offset: const Offset(0, -15),
+                        spreadRadius: 5,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.2),
                         blurRadius: 30,
                         offset: const Offset(0, -10),
                       ),
@@ -882,23 +1043,182 @@ class _ConductorSearchingPassengersScreenState
                 child: SafeArea(
                   top: false, // No aplicar SafeArea arriba para evitar espacio extra
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Drag handle
-                        Center(
-                          child: Container(
-                            width: 50,
-                            height: 5,
-                            margin: const EdgeInsets.only(top: 8, bottom: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(3),
+                        // Header con drag handle y temporizador mejorado
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Temporizador circular animado mejorado
+                            AnimatedBuilder(
+                              animation: _timerAnimation,
+                              builder: (context, child) {
+                                final seconds = (_timerAnimation.value * 30).ceil();
+                                final timerColor = _getTimerColor(seconds);
+                                return Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        timerColor.withValues(alpha: 0.15),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                    border: Border.all(
+                                      color: timerColor.withValues(alpha: 0.4),
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: timerColor.withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        spreadRadius: 0,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Círculo de progreso
+                                      SizedBox(
+                                        width: 46,
+                                        height: 46,
+                                        child: CircularProgressIndicator(
+                                          value: _timerAnimation.value,
+                                          strokeWidth: 3.5,
+                                          backgroundColor: Colors.white.withValues(alpha: 0.08),
+                                          valueColor: AlwaysStoppedAnimation<Color>(timerColor),
+                                          strokeCap: StrokeCap.round,
+                                        ),
+                                      ),
+                                      // Texto del temporizador con animación de escala cuando es urgente
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween(begin: 1.0, end: seconds <= 5 ? 1.15 : 1.0),
+                                        duration: const Duration(milliseconds: 200),
+                                        builder: (context, scale, child) {
+                                          return Transform.scale(
+                                            scale: scale,
+                                            child: Text(
+                                              '$seconds',
+                                              style: TextStyle(
+                                                color: timerColor,
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                          ),
+                            // Drag handle con efecto glass
+                            Column(
+                              children: [
+                                Container(
+                                  width: 45,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isDark 
+                                        ? [
+                                            Colors.white.withValues(alpha: 0.2),
+                                            Colors.white.withValues(alpha: 0.4),
+                                            Colors.white.withValues(alpha: 0.2),
+                                          ]
+                                        : [
+                                            Colors.grey.withValues(alpha: 0.3),
+                                            Colors.grey.withValues(alpha: 0.5),
+                                            Colors.grey.withValues(alpha: 0.3),
+                                          ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                AnimatedDefaultTextStyle(
+                                  duration: const Duration(milliseconds: 200),
+                                  style: TextStyle(
+                                    color: isDark 
+                                      ? Colors.white.withValues(alpha: 0.5)
+                                      : Colors.grey[600],
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  child: Text(_panelExpanded ? 'Desliza abajo' : 'Desliza arriba'),
+                                ),
+                              ],
+                            ),
+                            // Badge de nueva solicitud con efecto glow
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.primary.withValues(alpha: 0.25),
+                                    AppColors.primary.withValues(alpha: 0.15),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Indicador pulsante
+                                  AnimatedBuilder(
+                                    animation: _pulseAnimation,
+                                    builder: (context, child) {
+                                      return Container(
+                                        width: 9,
+                                        height: 9,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary.withValues(alpha: 0.6 * (2 - _pulseAnimation.value)),
+                                              blurRadius: 6 * _pulseAnimation.value,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    '¡Nuevo viaje!',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 18),
                         
                         // Contenido contraído (SIEMPRE VISIBLE)
                         AnimatedOpacity(
@@ -906,136 +1226,192 @@ class _ConductorSearchingPassengersScreenState
                           opacity: 1.0,
                           child: Column(
                             children: [
-                              // Precio destacado estilo compacto
+                              // Tarjeta de precio premium con efecto glass
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.primary.withValues(alpha: 0.2),
-                                      AppColors.primary.withValues(alpha: 0.1),
-                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
+                                    colors: [
+                                      AppColors.primary.withValues(alpha: 0.18),
+                                      AppColors.blue700.withValues(alpha: 0.12),
+                                      AppColors.primary.withValues(alpha: 0.08),
+                                    ],
+                                    stops: const [0.0, 0.5, 1.0],
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: AppColors.primary.withValues(alpha: 0.3),
+                                    color: AppColors.primary.withValues(alpha: 0.35),
                                     width: 1.5,
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.15),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Column(
                                   children: [
-                                    // Precio
+                                    // Fila de precio
                                     Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Text(
                                           '\$',
                                           style: TextStyle(
-                                            color: AppColors.primary.withValues(alpha: 0.8),
-                                            fontSize: 24,
+                                            color: AppColors.primary.withValues(alpha: 0.85),
+                                            fontSize: 26,
                                             fontWeight: FontWeight.w600,
+                                            height: 1.2,
                                           ),
                                         ),
-                                        Text(
-                                          _formatPrice(precioEstimado),
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 36,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: -1,
-                                          ),
+                                        const SizedBox(width: 2),
+                                        TweenAnimationBuilder<double>(
+                                          tween: Tween(begin: 0, end: precioEstimado),
+                                          duration: const Duration(milliseconds: 800),
+                                          curve: Curves.easeOutCubic,
+                                          builder: (context, value, child) {
+                                            return Text(
+                                              _formatPrice(value),
+                                              style: const TextStyle(
+                                                color: AppColors.primary,
+                                                fontSize: 44,
+                                                fontWeight: FontWeight.w900,
+                                                letterSpacing: -2,
+                                                height: 1,
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'COP',
-                                          style: TextStyle(
-                                            color: AppColors.primary.withValues(alpha: 0.7),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
+                                        const SizedBox(width: 8),
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 6),
+                                          child: Text(
+                                            'COP',
+                                            style: TextStyle(
+                                              color: AppColors.primary.withValues(alpha: 0.65),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                    // Info rápida: distancia y tiempo
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.straighten,
-                                              color: AppColors.primary,
-                                              size: 14,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${distanciaKm.toStringAsFixed(1)} km',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
+                                    const SizedBox(height: 16),
+                                    // Divider con gradiente
+                                    Container(
+                                      height: 1,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.transparent,
+                                            AppColors.primary.withValues(alpha: 0.3),
+                                            Colors.transparent,
                                           ],
                                         ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.schedule,
-                                              color: AppColors.primary,
-                                              size: 14,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '$duracionMinutos min',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    // Info chips
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        _buildInfoChip(
+                                          icon: Icons.route_rounded,
+                                          value: '${distanciaKm.toStringAsFixed(1)} km',
+                                          color: AppColors.primary,
+                                          isDark: isDark,
+                                        ),
+                                        Container(
+                                          width: 1,
+                                          height: 20,
+                                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.3),
+                                        ),
+                                        _buildInfoChip(
+                                          icon: Icons.schedule_rounded,
+                                          value: '$duracionMinutos min',
+                                          color: AppColors.primary,
+                                          isDark: isDark,
+                                        ),
+                                        Container(
+                                          width: 1,
+                                          height: 20,
+                                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.3),
+                                        ),
+                                        _buildInfoChip(
+                                          icon: Icons.navigation_rounded,
+                                          value: etaMinutos > 0 ? '$etaMinutos min' : '${distanciaConductorCliente.toStringAsFixed(1)} km',
+                                          color: const Color(0xFF4CAF50),
+                                          label: etaMinutos > 0 ? 'hasta cliente' : 'distancia',
+                                          isDark: isDark,
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 18),
                               
-                              // Botones de acción (siempre visibles)
+                              // Botones de acción mejorados
                               Row(
                                 children: [
-                                  // Botón de rechazar compacto
+                                  // Botón de rechazar con efecto glass
                                   Container(
-                                    width: 56,
-                                    height: 56,
+                                    width: 60,
+                                    height: 60,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF2A2A2A),
-                                      borderRadius: BorderRadius.circular(16),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: isDark 
+                                          ? [
+                                              const Color(0xFF3A3A3A),
+                                              const Color(0xFF2A2A2A),
+                                            ]
+                                          : [
+                                              Colors.grey[200]!,
+                                              Colors.grey[300]!,
+                                            ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(18),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.2),
+                                        color: isDark 
+                                          ? Colors.white.withValues(alpha: 0.15)
+                                          : Colors.grey.withValues(alpha: 0.3),
                                         width: 1.5,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                                     ),
                                     child: Material(
                                       color: Colors.transparent,
                                       child: InkWell(
-                                        borderRadius: BorderRadius.circular(16),
-                                        onTap: _rejectRequest,
-                                        child: const Icon(
+                                        borderRadius: BorderRadius.circular(18),
+                                        onTap: () {
+                                          HapticFeedback.mediumImpact();
+                                          _rejectRequest();
+                                        },
+                                        child: Icon(
                                           Icons.close_rounded,
-                                          color: Colors.white,
-                                          size: 28,
+                                          color: isDark ? Colors.white : Colors.grey[700],
+                                          size: 30,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Botón de aceptar expandido con animación
+                                  const SizedBox(width: 14),
+                                  // Botón de aceptar premium con gradiente y animación
                                   Expanded(
                                     child: AnimatedBuilder(
                                       animation: _acceptButtonScaleAnimation,
@@ -1046,45 +1422,67 @@ class _ConductorSearchingPassengersScreenState
                                         );
                                       },
                                       child: Container(
-                                        height: 56,
+                                        height: 60,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(16),
+                                          gradient: const LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              AppColors.primary,
+                                              AppColors.blue700,
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(18),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: AppColors.primary.withValues(alpha: 0.4),
-                                              blurRadius: 20,
-                                              spreadRadius: 2,
+                                              color: AppColors.primary.withValues(alpha: 0.5),
+                                              blurRadius: 25,
+                                              spreadRadius: 0,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                            BoxShadow(
+                                              color: AppColors.primary.withValues(alpha: 0.3),
+                                              blurRadius: 50,
+                                              spreadRadius: 5,
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         ),
-                                        child: ElevatedButton(
-                                          onPressed: _acceptRequest,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.primary,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(16),
-                                            ),
-                                            padding: EdgeInsets.zero,
-                                            elevation: 0,
-                                          ),
-                                          child: const Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.check_circle,
-                                                size: 24,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'Aceptar viaje',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.3,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(18),
+                                            onTap: () {
+                                              HapticFeedback.heavyImpact();
+                                              _acceptRequest();
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white.withValues(alpha: 0.2),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.check_rounded,
+                                                    color: Colors.white,
+                                                    size: 22,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                                const SizedBox(width: 12),
+                                                const Text(
+                                                  'Aceptar viaje',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w800,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1111,10 +1509,14 @@ class _ConductorSearchingPassengersScreenState
                               Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF2A2A2A).withValues(alpha: 0.6),
+                                  color: isDark 
+                                    ? const Color(0xFF2A2A2A).withValues(alpha: 0.6)
+                                    : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.1),
+                                    color: isDark 
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : Colors.grey.withValues(alpha: 0.2),
                                     width: 1,
                                   ),
                                 ),
@@ -1144,7 +1546,9 @@ class _ConductorSearchingPassengersScreenState
                                                 Text(
                                                   'Tu ubicación',
                                                   style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.6),
+                                                    color: isDark 
+                                                      ? Colors.white.withValues(alpha: 0.6)
+                                                      : Colors.grey[600],
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w600,
                                                   ),
@@ -1153,7 +1557,9 @@ class _ConductorSearchingPassengersScreenState
                                                 Text(
                                                   'Conductor',
                                                   style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.9),
+                                                    color: isDark 
+                                                      ? Colors.white.withValues(alpha: 0.9)
+                                                      : Colors.grey[800],
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w600,
                                                   ),
@@ -1231,7 +1637,9 @@ class _ConductorSearchingPassengersScreenState
                                                 Text(
                                                   'Cliente',
                                                   style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.6),
+                                                    color: isDark 
+                                                      ? Colors.white.withValues(alpha: 0.6)
+                                                      : Colors.grey[600],
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w600,
                                                   ),
@@ -1240,7 +1648,9 @@ class _ConductorSearchingPassengersScreenState
                                                 Text(
                                                   'Recoger aquí',
                                                   style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.9),
+                                                    color: isDark 
+                                                      ? Colors.white.withValues(alpha: 0.9)
+                                                      : Colors.grey[800],
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w600,
                                                   ),
@@ -1271,12 +1681,16 @@ class _ConductorSearchingPassengersScreenState
                                     decoration: BoxDecoration(
                                       color: secondsLeft <= 10
                                           ? Colors.red.withValues(alpha: 0.15)
-                                          : const Color(0xFF2A2A2A).withValues(alpha: 0.5),
+                                          : isDark 
+                                            ? const Color(0xFF2A2A2A).withValues(alpha: 0.5)
+                                            : Colors.grey[100],
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
                                         color: secondsLeft <= 10
                                             ? Colors.red.withValues(alpha: 0.3)
-                                            : Colors.white.withValues(alpha: 0.1),
+                                            : isDark 
+                                              ? Colors.white.withValues(alpha: 0.1)
+                                              : Colors.grey.withValues(alpha: 0.2),
                                         width: 1,
                                       ),
                                     ),
@@ -1301,7 +1715,9 @@ class _ConductorSearchingPassengersScreenState
                                                 style: TextStyle(
                                                   color: secondsLeft <= 10
                                                       ? Colors.red
-                                                      : Colors.white.withValues(alpha: 0.7),
+                                                      : isDark 
+                                                        ? Colors.white.withValues(alpha: 0.7)
+                                                        : Colors.grey[600],
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -1311,7 +1727,9 @@ class _ConductorSearchingPassengersScreenState
                                                 borderRadius: BorderRadius.circular(10),
                                                 child: LinearProgressIndicator(
                                                   value: _timerAnimation.value,
-                                                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                                  backgroundColor: isDark 
+                                                    ? Colors.white.withValues(alpha: 0.1)
+                                                    : Colors.grey.withValues(alpha: 0.2),
                                                   valueColor: AlwaysStoppedAnimation<Color>(
                                                     secondsLeft <= 10
                                                         ? Colors.red
@@ -1357,10 +1775,14 @@ class _ConductorSearchingPassengersScreenState
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF2A2A2A).withValues(alpha: 0.6),
+                                  color: isDark 
+                                    ? const Color(0xFF2A2A2A).withValues(alpha: 0.6)
+                                    : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.1),
+                                    color: isDark 
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : Colors.grey.withValues(alpha: 0.2),
                                     width: 1,
                                   ),
                                 ),
@@ -1371,6 +1793,7 @@ class _ConductorSearchingPassengersScreenState
                                       iconColor: const Color(0xFF4CAF50),
                                       label: 'Recoger en',
                                       value: _selectedRequest!['direccion_origen'] ?? 'Sin dirección',
+                                      isDark: isDark,
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1385,7 +1808,9 @@ class _ConductorSearchingPassengersScreenState
                                                 width: 3,
                                                 height: 3,
                                                 decoration: BoxDecoration(
-                                                  color: Colors.white.withValues(alpha: 0.3),
+                                                  color: isDark 
+                                                    ? Colors.white.withValues(alpha: 0.3)
+                                                    : Colors.grey.withValues(alpha: 0.4),
                                                   shape: BoxShape.circle,
                                                 ),
                                               ),
@@ -1399,6 +1824,7 @@ class _ConductorSearchingPassengersScreenState
                                       iconColor: AppColors.primary,
                                       label: 'Dejar en',
                                       value: _selectedRequest!['direccion_destino'] ?? 'Sin dirección',
+                                      isDark: isDark,
                                     ),
                                   ],
                                 ),
@@ -1418,12 +1844,58 @@ class _ConductorSearchingPassengersScreenState
       ),
     );
   }
+
+  /// Widget para mostrar info chips (distancia, tiempo, etc)
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String value,
+    required Color color,
+    String? label,
+    bool isDark = true,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 16,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: TextStyle(
+                color: isDark ? Colors.white.withValues(alpha: 0.95) : Colors.grey[800],
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        if (label != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.7),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
   
   Widget _buildLocationInfo({
     required IconData icon,
     required Color iconColor,
     required String label,
     required String value,
+    bool isDark = true,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1445,7 +1917,9 @@ class _ConductorSearchingPassengersScreenState
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: isDark 
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : Colors.grey[600],
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -1454,8 +1928,8 @@ class _ConductorSearchingPassengersScreenState
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.grey[800],
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.3,

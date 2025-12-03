@@ -1,4 +1,13 @@
 <?php
+/**
+ * Endpoint: Obtener Solicitudes Pendientes para Conductor
+ * 
+ * MODIFICADO: Ahora incluye priorización por Sistema de Confianza
+ * - Prioriza solicitudes de usuarios que marcaron al conductor como favorito
+ * - Prioriza usuarios con alto score de confianza con este conductor
+ * - Mantiene fallback por distancia si no hay historial de confianza
+ */
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -10,6 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once '../config/database.php';
+
+// Cargar servicio de confianza si existe
+$confianzaServicePath = __DIR__ . '/../confianza/ConfianzaService.php';
+$useConfianza = file_exists($confianzaServicePath);
+if ($useConfianza) {
+    require_once $confianzaServicePath;
+}
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -63,9 +79,12 @@ try {
     }
     
     // Buscar solicitudes pendientes cercanas al conductor
+    // MODIFICADO: Incluye información de confianza para priorización
     // Usa la fórmula de Haversine para calcular distancia
     // Nota: Compatible con PostgreSQL - usa WHERE en lugar de HAVING y sintaxis de intervalo PostgreSQL
-    $stmt = $db->prepare("
+    
+    // Query con LEFT JOIN a tablas de confianza (graceful degradation si no existen)
+    $queryBase = "
         SELECT 
             s.id,
             s.cliente_id,
@@ -87,9 +106,36 @@ try {
                 cos(radians(?)) * cos(radians(s.latitud_recogida)) *
                 cos(radians(s.longitud_recogida) - radians(?)) +
                 sin(radians(?)) * sin(radians(s.latitud_recogida))
-            )) AS distancia_conductor_origen
+            )) AS distancia_conductor_origen";
+    
+    // Intentar incluir campos de confianza si las tablas existen
+    $includeConfianza = false;
+    try {
+        $checkTable = $db->query("SELECT 1 FROM historial_confianza LIMIT 1");
+        $includeConfianza = true;
+    } catch (Exception $e) {
+        // Tabla no existe, continuar sin confianza
+    }
+    
+    if ($includeConfianza) {
+        $queryBase .= ",
+            COALESCE(hc.score_confianza, 0) as score_confianza,
+            COALESCE(hc.viajes_completados, 0) as viajes_con_conductor,
+            CASE WHEN cf.es_favorito = true THEN 1 ELSE 0 END as es_favorito,
+            (COALESCE(hc.score_confianza, 0) + CASE WHEN cf.es_favorito = true THEN 100 ELSE 0 END) as score_total";
+    }
+    
+    $queryBase .= "
         FROM solicitudes_servicio s
-        INNER JOIN usuarios u ON s.cliente_id = u.id
+        INNER JOIN usuarios u ON s.cliente_id = u.id";
+    
+    if ($includeConfianza) {
+        $queryBase .= "
+        LEFT JOIN historial_confianza hc ON hc.usuario_id = s.cliente_id AND hc.conductor_id = ?
+        LEFT JOIN conductores_favoritos cf ON cf.usuario_id = s.cliente_id AND cf.conductor_id = ? AND cf.es_favorito = true";
+    }
+    
+    $queryBase .= "
         WHERE s.estado = 'pendiente'
         AND s.tipo_servicio = 'transporte'
         AND COALESCE(s.solicitado_en, s.fecha_creacion) >= NOW() - INTERVAL '15 minutes'
@@ -97,29 +143,57 @@ try {
             cos(radians(?)) * cos(radians(s.latitud_recogida)) *
             cos(radians(s.longitud_recogida) - radians(?)) +
             sin(radians(?)) * sin(radians(s.latitud_recogida))
-        )) <= ?
-        ORDER BY distancia_conductor_origen ASC, COALESCE(s.solicitado_en, s.fecha_creacion) ASC
-        LIMIT 10
-    ");
+        )) <= ?";
     
-    $stmt->execute([
-        $latitudActual,
-        $longitudActual,
-        $latitudActual,
-        $latitudActual,
-        $longitudActual,
-        $latitudActual,
-        $radioKm
-    ]);
+    // Orden: Primero favoritos, luego por score de confianza, finalmente por distancia
+    if ($includeConfianza) {
+        $queryBase .= "
+        ORDER BY 
+            es_favorito DESC,
+            score_total DESC,
+            distancia_conductor_origen ASC,
+            COALESCE(s.solicitado_en, s.fecha_creacion) ASC
+        LIMIT 10";
+    } else {
+        $queryBase .= "
+        ORDER BY distancia_conductor_origen ASC, COALESCE(s.solicitado_en, s.fecha_creacion) ASC
+        LIMIT 10";
+    }
+    
+    $stmt = $db->prepare($queryBase);
+    
+    if ($includeConfianza) {
+        $stmt->execute([
+            $latitudActual,
+            $longitudActual,
+            $latitudActual,
+            $conductorId,  // Para historial_confianza
+            $conductorId,  // Para conductores_favoritos
+            $latitudActual,
+            $longitudActual,
+            $latitudActual,
+            $radioKm
+        ]);
+    } else {
+        $stmt->execute([
+            $latitudActual,
+            $longitudActual,
+            $latitudActual,
+            $latitudActual,
+            $longitudActual,
+            $latitudActual,
+            $radioKm
+        ]);
+    }
     
     $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Formatear las solicitudes
-    $solicitudesFormateadas = array_map(function($solicitud) {
-        // Calcular precio estimado (provisional - debería venir del sistema de precios)
+    $solicitudesFormateadas = array_map(function($solicitud) use ($includeConfianza) {
+        // Calcular precio estimado (provisional - deberia venir del sistema de precios)
         $precioEstimado = 5000 + ($solicitud['distancia_estimada'] * 2000);
         
-        return [
+        $resultado = [
             'id' => (int)$solicitud['id'],
             'usuario_id' => (int)$solicitud['cliente_id'],
             'nombre_usuario' => $solicitud['nombre_usuario'],
@@ -139,6 +213,18 @@ try {
             'distancia_conductor_origen' => round((float)$solicitud['distancia_conductor_origen'], 2),
             'fecha_solicitud' => $solicitud['fecha_solicitud'],
         ];
+        
+        // Agregar info de confianza si esta disponible
+        if ($includeConfianza) {
+            $resultado['confianza'] = [
+                'score' => (float)($solicitud['score_confianza'] ?? 0),
+                'score_total' => (float)($solicitud['score_total'] ?? 0),
+                'viajes_previos' => (int)($solicitud['viajes_con_conductor'] ?? 0),
+                'es_favorito' => (bool)($solicitud['es_favorito'] ?? false),
+            ];
+        }
+        
+        return $resultado;
     }, $solicitudes);
     
     echo json_encode([

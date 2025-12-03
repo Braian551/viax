@@ -32,7 +32,13 @@ class AppConfig {
         // Para navegador web o depuraciÃ³n desde VS Code: localhost
         // Para emulador Android: 10.0.2.2 (IMPORTANTE: usar esta para emulador)
         // Para dispositivo fÃ­sico: usar IP de tu mÃ¡quina (ej: 192.168.1.X)
-  return 'http://10.0.2.2/viax/backend'; // Laragon local desde emulador
+        
+        // DISPOSITIVO FÍSICO - usa tu IP local:
+        return 'http://192.168.18.68/viax/backend';
+        
+        // EMULADOR ANDROID - descomentar esta línea:
+        // return 'http://10.0.2.2/viax/backend';
+        
       case Environment.staging:
         return 'https://staging-api.pingo.com';
       case Environment.production:
