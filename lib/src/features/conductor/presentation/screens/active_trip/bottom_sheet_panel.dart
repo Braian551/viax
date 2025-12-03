@@ -541,15 +541,25 @@ class _DraggableBottomPanelState extends State<DraggableBottomPanel>
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Chevron animado estilo DiDi
-                    _AnimatedChevrons(color: Colors.white.withValues(alpha: 0.7)),
-                    const SizedBox(width: 8),
-                    Text(
-                      buttonText,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                    // Icono de acción
+                    Icon(
+                      isToPickup
+                          ? Icons.person_pin_circle_rounded
+                          : Icons.flag_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        buttonText,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

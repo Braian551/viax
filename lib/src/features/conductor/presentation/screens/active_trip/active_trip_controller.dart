@@ -49,13 +49,15 @@ class ActiveTripController {
   static const String routeOutlineLayerId = 'route-outline-layer';
 
   // IDs de marcadores
-  static const String pickupMarkerId = 'pickup-marker';
-  static const String dropoffMarkerId = 'dropoff-marker';
+  static const String pickupSourceId = 'pickup-source';
+  static const String pickupLayerId = 'pickup-layer';
+  static const String pickupOutlineLayerId = 'pickup-outline-layer';
+  static const String dropoffSourceId = 'dropoff-source';
+  static const String dropoffLayerId = 'dropoff-layer';
+  static const String dropoffOutlineLayerId = 'dropoff-outline-layer';
 
-  // Point annotation manager para marcadores
-  PointAnnotationManager? _pointAnnotationManager;
-  PointAnnotation? _pickupAnnotation;
-  PointAnnotation? _dropoffAnnotation;
+  // Circle annotation manager para marcadores
+  CircleAnnotationManager? _circleAnnotationManager;
 
   // Callbacks
   final VoidCallback onStateChanged;
@@ -84,12 +86,10 @@ class ActiveTripController {
 
     // Limpiar annotation manager
     try {
-      if (_pointAnnotationManager != null) {
-        _pointAnnotationManager!.deleteAll();
-        _pointAnnotationManager = null;
+      if (_circleAnnotationManager != null) {
+        _circleAnnotationManager!.deleteAll();
+        _circleAnnotationManager = null;
       }
-      _pickupAnnotation = null;
-      _dropoffAnnotation = null;
     } catch (_) {}
 
     // Deshabilitar location component antes de destruir
@@ -110,6 +110,38 @@ class ActiveTripController {
     await _ensureMapboxInitialized();
 
     mapboxMap = map;
+
+    // Ocultar ornamentos del mapa (compass, scale bar, logo, attribution)
+    await _hideMapOrnaments();
+  }
+
+  /// Oculta los ornamentos/controles visuales del mapa
+  Future<void> _hideMapOrnaments() async {
+    if (mapboxMap == null || isDisposed) return;
+
+    try {
+      // Ocultar brújula
+      await mapboxMap!.compass.updateSettings(CompassSettings(enabled: false));
+
+      // Ocultar barra de escala
+      await mapboxMap!.scaleBar.updateSettings(
+        ScaleBarSettings(enabled: false),
+      );
+
+      // Ocultar logo de Mapbox (mover fuera de la vista)
+      await mapboxMap!.logo.updateSettings(
+        LogoSettings(marginLeft: -100, marginBottom: -100),
+      );
+
+      // Ocultar atribución (mover fuera de la vista)
+      await mapboxMap!.attribution.updateSettings(
+        AttributionSettings(marginLeft: -100, marginBottom: -100),
+      );
+
+      debugPrint('✅ Ornamentos del mapa ocultados');
+    } catch (e) {
+      debugPrint('⚠️ Error ocultando ornamentos: $e');
+    }
   }
 
   /// Asegura que Mapbox esté inicializado con el token correcto
@@ -156,48 +188,44 @@ class ActiveTripController {
     }
   }
 
-  /// Agrega los marcadores de punto de recogida y destino
+  /// Agrega los marcadores de punto de recogida y destino usando CircleAnnotation
   Future<void> _addMarkers() async {
     if (mapboxMap == null || isDisposed || !mapReady) return;
 
     try {
-      // Crear el annotation manager si no existe
-      _pointAnnotationManager ??= await mapboxMap!.annotations
-          .createPointAnnotationManager();
+      // Crear el circle annotation manager si no existe
+      _circleAnnotationManager ??= await mapboxMap!.annotations
+          .createCircleAnnotationManager();
 
-      if (_pointAnnotationManager == null || isDisposed) return;
+      if (_circleAnnotationManager == null || isDisposed) return;
 
-      // Crear marcador de pickup (cliente) - punto azul estilo Uber
-      final pickupOptions = PointAnnotationOptions(
+      // Crear marcador de pickup (cliente) - círculo azul con borde blanco
+      final pickupOptions = CircleAnnotationOptions(
         geometry: pickup,
-        iconSize: 1.3,
-        iconAnchor: IconAnchor.CENTER,
-        textField: '●', // Círculo sólido para pickup
-        textSize: 32.0,
-        textColor: 0xFF2196F3, // Azul
-        textHaloColor: 0xFFFFFFFF, // Borde blanco
-        textHaloWidth: 2.0,
+        circleRadius: 14.0, // Radio del círculo
+        circleColor: 0xFF2196F3, // Azul primario
+        circleStrokeColor: 0xFFFFFFFF, // Borde blanco
+        circleStrokeWidth: 3.0,
+        circleOpacity: 1.0,
+        circleStrokeOpacity: 1.0,
       );
 
-      _pickupAnnotation = await _pointAnnotationManager!.create(pickupOptions);
+      await _circleAnnotationManager!.create(pickupOptions);
 
-      // Crear marcador de destino - punto rojo
-      final dropoffOptions = PointAnnotationOptions(
+      // Crear marcador de destino - círculo rojo con borde blanco
+      final dropoffOptions = CircleAnnotationOptions(
         geometry: dropoff,
-        iconSize: 1.3,
-        iconAnchor: IconAnchor.CENTER,
-        textField: '◆', // Diamante para destino
-        textSize: 28.0,
-        textColor: 0xFFF44336, // Rojo
-        textHaloColor: 0xFFFFFFFF, // Borde blanco
-        textHaloWidth: 2.0,
+        circleRadius: 12.0, // Radio ligeramente menor
+        circleColor: 0xFFF44336, // Rojo
+        circleStrokeColor: 0xFFFFFFFF, // Borde blanco
+        circleStrokeWidth: 3.0,
+        circleOpacity: 1.0,
+        circleStrokeOpacity: 1.0,
       );
 
-      _dropoffAnnotation = await _pointAnnotationManager!.create(
-        dropoffOptions,
-      );
+      await _circleAnnotationManager!.create(dropoffOptions);
 
-      debugPrint('✅ Marcadores agregados correctamente');
+      debugPrint('✅ Marcadores de círculo agregados correctamente');
     } catch (e) {
       debugPrint('⚠️ Error agregando marcadores: $e');
     }
