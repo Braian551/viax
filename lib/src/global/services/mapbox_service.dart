@@ -351,6 +351,106 @@ class MapboxService {
       return null;
     }
   }
+
+  // ============================================
+  // MAP MATCHING API (Snap to Road)
+  // ============================================
+
+  /// Proyectar un punto a la carretera/calle más cercana usando Map Matching API
+  /// Esta API es específica para ajustar puntos GPS a carreteras reales
+  /// [point] - Coordenadas a proyectar
+  /// [radius] - Radio de búsqueda en metros (máximo 50)
+  /// Retorna las coordenadas del punto en la carretera más cercana
+  static Future<LatLng?> snapToRoad({
+    required LatLng point,
+    int radius = 25,
+    String profile = 'driving',
+  }) async {
+    try {
+      // Map Matching requiere al menos 2 puntos, usamos el mismo punto duplicado
+      // con un pequeño offset para simular una "trayectoria" de un punto
+      final offsetLat = 0.00005; // ~5 metros
+      final point2 = LatLng(point.latitude + offsetLat, point.longitude);
+
+      final coordinates =
+          '${point.longitude},${point.latitude};${point2.longitude},${point2.latitude}';
+
+      final url = Uri.parse(
+        '$_baseUrl/matching/v5/mapbox/$profile/$coordinates'
+        '?access_token=${EnvConfig.mapboxPublicToken}'
+        '&geometries=geojson'
+        '&radiuses=$radius;$radius'
+        '&steps=false'
+        '&overview=full',
+      );
+
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['matchings'] != null &&
+            (data['matchings'] as List).isNotEmpty) {
+          final matching = data['matchings'][0];
+
+          // Obtener el primer punto de la geometría que es el más cercano al input
+          if (matching['geometry'] != null &&
+              matching['geometry']['coordinates'] != null) {
+            final coords = matching['geometry']['coordinates'] as List;
+            if (coords.isNotEmpty) {
+              // El primer punto de la geometría es el snap del primer punto input
+              final firstCoord = coords[0];
+              return LatLng(firstCoord[1] as double, firstCoord[0] as double);
+            }
+          }
+
+          // Alternativa: usar tracepoints para obtener la posición exacta
+          if (data['tracepoints'] != null) {
+            final tracepoints = data['tracepoints'] as List;
+            if (tracepoints.isNotEmpty && tracepoints[0] != null) {
+              final tracepoint = tracepoints[0];
+              if (tracepoint['location'] != null) {
+                final loc = tracepoint['location'] as List;
+                return LatLng(loc[1] as double, loc[0] as double);
+              }
+            }
+          }
+        }
+
+        // Si no hay matchings, puede que el punto esté muy lejos de cualquier carretera
+        // Intentar con un radio mayor
+        if (radius < 50) {
+          return await snapToRoad(point: point, radius: 50, profile: profile);
+        }
+      }
+
+      print('No se pudo hacer snap to road: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      print('Error en Map Matching: $e');
+      return null;
+    }
+  }
+
+  /// Proyectar un punto a la calle más cercana (solo para calles accesibles en carro)
+  /// Esta es la función principal para snap-to-road en UI de selección de pickup
+  static Future<LatLng?> snapToStreet({required LatLng point}) async {
+    // Primero intentar Map Matching que es más preciso
+    final snapped = await snapToRoad(point: point, radius: 30);
+
+    if (snapped != null) {
+      return snapped;
+    }
+
+    // Si falla, usar geocodificación inversa como fallback
+    final place = await reverseGeocodeStreetOnly(position: point);
+    if (place != null) {
+      return place.coordinates;
+    }
+
+    // Si todo falla, devolver null
+    return null;
+  }
 }
 
 // ============================================

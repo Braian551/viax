@@ -54,8 +54,8 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
   bool _isLoadingAddress = false;
   bool _isSnappingToRoad = false;
 
-  // Key para el mapa
-  final GlobalKey _mapKey = GlobalKey();
+  // Para arrastre del pin con long press
+  Offset? _dragOffset; // Posición del dedo mientras arrastra
 
   // Animaciones
   late AnimationController _pulseController;
@@ -183,30 +183,23 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
     }
   }
 
-  /// Ajustar coordenadas a la vía/calle más cercana usando Mapbox
+  /// Ajustar coordenadas a la vía/calle más cercana usando Mapbox Map Matching
   Future<LatLng?> _snapToNearestRoad(LatLng point) async {
     try {
-      // Usar geocodificación inversa solo para calles/direcciones
-      final place = await MapboxService.reverseGeocodeStreetOnly(
-        position: point,
-      );
+      // Usar el nuevo método snapToStreet que usa Map Matching API
+      // Este método proyecta el punto directamente a una calle/carretera
+      final snappedPoint = await MapboxService.snapToStreet(point: point);
 
-      if (place != null && place.placeType == 'address') {
-        // Tenemos una dirección de calle, usar sus coordenadas
-        return place.coordinates;
+      if (snappedPoint != null) {
+        return snappedPoint;
       }
 
-      // Si no encontramos una calle cercana, buscar en un radio mayor
-      // intentando diferentes puntos alrededor
+      // Si el Map Matching falla, intentar con puntos cercanos
       final offsets = [
-        const LatLng(0.0002, 0.0), // Norte
-        const LatLng(-0.0002, 0.0), // Sur
-        const LatLng(0.0, 0.0002), // Este
-        const LatLng(0.0, -0.0002), // Oeste
-        const LatLng(0.00015, 0.00015), // Noreste
-        const LatLng(-0.00015, 0.00015), // Sureste
-        const LatLng(0.00015, -0.00015), // Noroeste
-        const LatLng(-0.00015, -0.00015), // Suroeste
+        const LatLng(0.0003, 0.0), // Norte (~30m)
+        const LatLng(-0.0003, 0.0), // Sur
+        const LatLng(0.0, 0.0003), // Este
+        const LatLng(0.0, -0.0003), // Oeste
       ];
 
       for (final offset in offsets) {
@@ -215,21 +208,16 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           point.longitude + offset.longitude,
         );
 
-        final nearbyPlace = await MapboxService.reverseGeocodeStreetOnly(
-          position: nearbyPoint,
+        final nearbySnapped = await MapboxService.snapToStreet(
+          point: nearbyPoint,
         );
 
-        if (nearbyPlace != null && nearbyPlace.placeType == 'address') {
-          return nearbyPlace.coordinates;
+        if (nearbySnapped != null) {
+          return nearbySnapped;
         }
       }
 
-      // Si no encontramos nada, devolver el punto original
-      // pero intentar obtener al menos una dirección
-      if (place != null) {
-        return place.coordinates;
-      }
-
+      // Si todo falla, devolver null para indicar que no se pudo ajustar
       return null;
     } catch (e) {
       debugPrint('Error in snap to road: $e');
@@ -244,47 +232,58 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
     setState(() => _isLoadingAddress = true);
 
     try {
-      final place = await MapboxService.reverseGeocode(
+      // Usar reverseGeocodeStreetOnly para solo obtener direcciones de calles, NO casas
+      final place = await MapboxService.reverseGeocodeStreetOnly(
         position: _pickupLocation!,
       );
 
       if (mounted) {
         setState(() {
-          _pickupAddress = place?.placeName ?? 'Ubicación seleccionada';
+          _pickupAddress = place?.placeName ?? 'Punto de encuentro en la vía';
           _isLoadingAddress = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _pickupAddress = 'Ubicación seleccionada';
+          _pickupAddress = 'Punto de encuentro en la vía';
           _isLoadingAddress = false;
         });
       }
     }
   }
 
-  /// Manejar cuando el usuario mueve el mapa (arrastra el pin virtualmente)
-  void _onMapMove(MapCamera camera, bool hasGesture) {
-    if (hasGesture && !_isDraggingPin) {
-      setState(() => _isDraggingPin = true);
-    }
-  }
+  /// Convertir posición de pantalla a coordenadas geográficas
+  LatLng _screenToLatLng(Offset screenPosition) {
+    final camera = _mapController.camera;
+    final screenSize = MediaQuery.of(context).size;
 
-  /// Manejar cuando el usuario suelta el mapa
-  Future<void> _onMapMoveEnd(MapCamera camera) async {
-    if (!_isDraggingPin) return;
+    // Centro de la pantalla
+    final centerX = screenSize.width / 2;
+    final centerY = screenSize.height / 2;
 
-    setState(() {
-      _isDraggingPin = false;
-      _pickupLocation = camera.center;
-    });
+    // Offset desde el centro
+    final offsetX = screenPosition.dx - centerX;
+    final offsetY = screenPosition.dy - centerY;
 
-    // Animar rebote del pin
-    _pinBounceController.forward(from: 0);
+    // Convertir píxeles a coordenadas basado en el zoom
+    final zoom = camera.zoom;
+    final metersPerPixel =
+        156543.03392 *
+        math.cos(camera.center.latitude * math.pi / 180) /
+        math.pow(2, zoom);
 
-    // Ajustar a la calle más cercana
-    await _snapAndUpdateAddress();
+    // Calcular delta en grados
+    final deltaLat = -offsetY * metersPerPixel / 111320;
+    final deltaLng =
+        offsetX *
+        metersPerPixel /
+        (111320 * math.cos(camera.center.latitude * math.pi / 180));
+
+    return LatLng(
+      camera.center.latitude + deltaLat,
+      camera.center.longitude + deltaLng,
+    );
   }
 
   /// Ajustar el punto a la calle y actualizar dirección
@@ -297,14 +296,37 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
       final snappedPoint = await _snapToNearestRoad(_pickupLocation!);
 
       if (mounted && snappedPoint != null) {
-        // Mover el mapa para que el pin quede centrado en la nueva posición
-        _mapController.move(snappedPoint, _mapController.camera.zoom);
+        // Calcular si hubo movimiento significativo
+        final distance = const Distance().as(
+          LengthUnit.Meter,
+          _pickupLocation!,
+          snappedPoint,
+        );
+
+        // Solo mover si hay diferencia significativa (más de 3 metros)
+        if (distance > 3) {
+          // Mover el mapa para que el pin quede en la calle
+          _mapController.move(snappedPoint, _mapController.camera.zoom);
+
+          // Feedback de vibración
+          HapticFeedback.lightImpact();
+        }
 
         setState(() {
           _pickupLocation = snappedPoint;
           _isSnappingToRoad = false;
         });
       } else {
+        // No se pudo ajustar a una calle - mostrar mensaje
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Intenta colocar el punto más cerca de una calle'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         setState(() => _isSnappingToRoad = false);
       }
 
@@ -419,11 +441,16 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           : AppColors.lightBackground,
       body: Stack(
         children: [
-          // Mapa
+          // Mapa con el pin como marcador
           _buildMap(isDark),
 
-          // Pin CENTRADO en la pantalla (estilo Uber/Didi)
-          _buildCenteredPin(isDark),
+          // Pin flotante mientras arrastra (sigue el dedo)
+          if (_isDraggingPin && _dragOffset != null)
+            Positioned(
+              left: _dragOffset!.dx - 80,
+              top: _dragOffset!.dy - 130,
+              child: IgnorePointer(child: _buildDraggingPin()),
+            ),
 
           // Indicador de ajustando a calle
           if (_isSnappingToRoad) _buildSnappingIndicator(isDark),
@@ -446,7 +473,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
 
   Widget _buildMap(bool isDark) {
     return FlutterMap(
-      key: _mapKey,
       mapController: _mapController,
       options: MapOptions(
         initialCenter:
@@ -455,12 +481,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
         initialZoom: 17.0,
         minZoom: 10,
         maxZoom: 19,
-        onPositionChanged: _onMapMove,
-        onMapEvent: (event) {
-          if (event is MapEventMoveEnd) {
-            _onMapMoveEnd(_mapController.camera);
-          }
-        },
       ),
       children: [
         // Tiles de Mapbox
@@ -481,175 +501,309 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
               ),
             ],
           ),
+
+        // Marcador del punto de encuentro (solo visible cuando NO está arrastrando)
+        if (_pickupLocation != null && !_isDraggingPin)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _pickupLocation!,
+                width: 180,
+                height: 130,
+                child: _buildPickupMarker(isDark),
+              ),
+            ],
+          ),
+
+        // Sombra en el suelo mientras arrastra
+        if (_pickupLocation != null && _isDraggingPin)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _pickupLocation!,
+                width: 50,
+                height: 20,
+                child: Container(
+                  width: 40,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
 
-  /// Pin CENTRADO en la pantalla (estilo Uber/Didi)
-  /// El usuario mueve el mapa, el pin siempre está en el centro
-  Widget _buildCenteredPin(bool isDark) {
-    return Center(
-      child: Padding(
-        // Offset para que el pin quede un poco arriba del centro (por el panel)
-        padding: const EdgeInsets.only(bottom: 180),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Etiqueta con dirección
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _isDraggingPin ? 0.0 : 1.0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
+  /// Pin del punto de encuentro con soporte para long press
+  Widget _buildPickupMarker(bool isDark) {
+    return GestureDetector(
+      onLongPressStart: (details) {
+        setState(() {
+          _isDraggingPin = true;
+          _dragOffset = details.globalPosition;
+        });
+        HapticFeedback.mediumImpact();
+      },
+      onLongPressMoveUpdate: (details) {
+        if (_isDraggingPin) {
+          setState(() {
+            _dragOffset = details.globalPosition;
+          });
+        }
+      },
+      onLongPressEnd: (details) async {
+        if (_isDraggingPin) {
+          // Convertir posición del dedo a coordenadas
+          final newLocation = _screenToLatLng(_dragOffset!);
+
+          setState(() {
+            _pickupLocation = newLocation;
+            _isDraggingPin = false;
+            _dragOffset = null;
+          });
+
+          HapticFeedback.lightImpact();
+          _pinBounceController.forward(from: 0);
+
+          // Ajustar a la calle más cercana
+          await _snapAndUpdateAddress();
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Etiqueta con dirección
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00C853),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00C853),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_isLoadingAddress)
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white70,
-                          ),
-                        ),
-                      )
-                    else
-                      const Icon(Icons.place, color: Colors.white, size: 16),
-                    const SizedBox(width: 6),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 200),
-                      child: Text(
-                        _getShortAddress(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ),
-
-            // Triángulo
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _isDraggingPin ? 0.0 : 1.0,
-              child: CustomPaint(
-                size: const Size(16, 8),
-                painter: _TrianglePainter(color: const Color(0xFF00C853)),
-              ),
-            ),
-
-            const SizedBox(height: 2),
-
-            // Pin con animación de rebote y elevación al arrastrar
-            AnimatedBuilder(
-              animation: _pinBounceController,
-              builder: (context, child) {
-                final bounce =
-                    math.sin(_pinBounceController.value * math.pi) * 8;
-                return Transform.translate(
-                  // Elevar el pin cuando está arrastrando
-                  offset: Offset(0, _isDraggingPin ? -20 : -bounce),
-                  child: Transform.scale(
-                    scale: _isDraggingPin ? 1.1 : 1.0,
-                    child: child,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.touch_app, color: Colors.white70, size: 14),
+                const SizedBox(width: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 140),
+                  child: Text(
+                    _getShortAddress(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                );
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Cabeza del pin
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xFF00E676), Color(0xFF00C853)],
+                ),
+              ],
+            ),
+          ),
+
+          // Triángulo
+          CustomPaint(
+            size: const Size(14, 7),
+            painter: _TrianglePainter(color: const Color(0xFF00C853)),
+          ),
+
+          const SizedBox(height: 2),
+
+          // Pin con animación de rebote
+          AnimatedBuilder(
+            animation: _pinBounceController,
+            builder: (context, child) {
+              final bounce = math.sin(_pinBounceController.value * math.pi) * 6;
+              return Transform.translate(
+                offset: Offset(0, -bounce),
+                child: child,
+              );
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Cabeza del pin
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF00E676), Color(0xFF00C853)],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00C853).withOpacity(0.4),
+                        blurRadius: 10,
+                        spreadRadius: 1,
                       ),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF00C853,
-                          ).withOpacity(_isDraggingPin ? 0.6 : 0.4),
-                          blurRadius: _isDraggingPin ? 20 : 12,
-                          spreadRadius: _isDraggingPin ? 4 : 2,
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+
+                // Aguja del pin
+                Container(
+                  width: 4,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF00C853),
+                        const Color(0xFF00C853).withOpacity(0.3),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.white,
-                      size: 26,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(2),
+                      bottomRight: Radius.circular(2),
                     ),
                   ),
+                ),
 
-                  // Aguja del pin
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF00C853),
-                          const Color(0xFF00C853).withOpacity(0.3),
-                        ],
+                // Sombra
+                Container(
+                  width: 12,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pin flotante mientras se arrastra
+  Widget _buildDraggingPin() {
+    return SizedBox(
+      width: 160,
+      height: 130,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Instrucción
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.place, color: Colors.white, size: 14),
+                SizedBox(width: 6),
+                Text(
+                  'Suelta en la calle',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          CustomPaint(
+            size: const Size(14, 7),
+            painter: _TrianglePainter(color: AppColors.primary),
+          ),
+
+          const SizedBox(height: 4),
+
+          // Pin elevado
+          Transform.scale(
+            scale: 1.15,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.primary.withOpacity(0.9),
+                        AppColors.primary,
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.5),
+                        blurRadius: 16,
+                        spreadRadius: 3,
                       ),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(2),
-                        bottomRight: Radius.circular(2),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                Container(
+                  width: 5,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.2),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(3),
+                      bottomRight: Radius.circular(3),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-            // Sombra en el suelo
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: _isDraggingPin ? 30 : 16,
-              height: _isDraggingPin ? 12 : 8,
-              margin: const EdgeInsets.only(top: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(_isDraggingPin ? 0.15 : 0.3),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
