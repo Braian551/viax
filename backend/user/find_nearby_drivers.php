@@ -29,12 +29,11 @@ try {
     
     // Mapear tipo de vehículo de la app a la BD
     $vehiculoTipoMap = [
-        'moto' => 'motocicleta',
-        'carro' => 'carro',
-        'moto_carga' => 'motocicleta',
-        'carro_carga' => 'furgoneta'
+        'moto' => 'moto',
+        'auto' => 'auto',
+        'motocarro' => 'motocarro'
     ];
-    $vehiculoTipoBD = $vehiculoTipoMap[$tipoVehiculo] ?? 'motocicleta';
+    $vehiculoTipoBD = $vehiculoTipoMap[$tipoVehiculo] ?? 'moto';
     
     // Buscar conductores cercanos disponibles usando la fórmula de Haversine
     // Nota: Compatible con PostgreSQL - usa WHERE en lugar de HAVING

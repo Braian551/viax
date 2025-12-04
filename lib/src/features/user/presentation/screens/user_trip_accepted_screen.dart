@@ -921,7 +921,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   /// Marcador del conductor
   Widget _buildDriverMarker() {
-    final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'carro';
+    final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'auto';
 
     return DriverMarker(vehicleType: vehiculoTipo);
   }

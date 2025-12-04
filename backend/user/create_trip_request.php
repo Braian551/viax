@@ -149,12 +149,11 @@ try {
         
         // Mapear tipo de vehículo de la app a la BD
         $vehiculoTipoMap = [
-            'moto' => 'motocicleta',
-            'carro' => 'carro',
-            'moto_carga' => 'motocicleta', // Asumiendo que moto_carga también usa motocicleta
-            'carro_carga' => 'furgoneta'
+            'moto' => 'moto',
+            'auto' => 'auto',
+            'motocarro' => 'motocarro'
         ];
-        $vehiculoTipo = $vehiculoTipoMap[$data['tipo_vehiculo']] ?? 'motocicleta';
+        $vehiculoTipo = $vehiculoTipoMap[$data['tipo_vehiculo']] ?? 'moto';
         
         $stmt = $db->prepare("
             SELECT 

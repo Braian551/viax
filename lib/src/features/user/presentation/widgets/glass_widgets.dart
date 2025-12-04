@@ -97,7 +97,7 @@ class DriverInfoCard extends StatelessWidget {
     final marca = vehiculo?['marca'] as String? ?? '';
     final modelo = vehiculo?['modelo'] as String? ?? '';
     final color = vehiculo?['color'] as String? ?? '';
-    final tipo = vehiculo?['tipo'] as String? ?? 'carro';
+    final tipo = vehiculo?['tipo'] as String? ?? 'auto';
     final isMoto = tipo.toLowerCase().contains('moto');
 
     return GlassPanel(

@@ -16,7 +16,7 @@ class TripRequestService {
     required double longitudDestino,
     required String direccionDestino,
     required String tipoServicio, // 'viaje' o 'paquete'
-    required String tipoVehiculo, // 'moto', 'carro', 'moto_carga', 'carro_carga'
+    required String tipoVehiculo, // 'moto', 'auto', 'motocarro'
     required double distanciaKm,
     required int duracionMinutos,
     required double precioEstimado,

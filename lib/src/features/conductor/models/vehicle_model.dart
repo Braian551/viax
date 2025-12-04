@@ -177,12 +177,11 @@ class VehicleModel {
   }
 }
 
-/// Tipo de vehÃ­culo
+/// Tipo de vehículo
 enum VehicleType {
-  motocicleta('motocicleta', 'Motocicleta', FontAwesomeIcons.motorcycle),
-  carro('carro', 'Carro', FontAwesomeIcons.car),
-  furgoneta('furgoneta', 'Furgoneta', FontAwesomeIcons.vanShuttle),
-  camion('camion', 'CamiÃ³n', FontAwesomeIcons.truck);
+  moto('moto', 'Moto', FontAwesomeIcons.motorcycle),
+  auto('auto', 'Auto', FontAwesomeIcons.car),
+  motocarro('motocarro', 'Motocarro', FontAwesomeIcons.vanShuttle);
 
   final String value;
   final String label;
@@ -193,7 +192,7 @@ enum VehicleType {
   static VehicleType fromString(String value) {
     return VehicleType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => VehicleType.motocicleta,
+      orElse: () => VehicleType.moto,
     );
   }
 }

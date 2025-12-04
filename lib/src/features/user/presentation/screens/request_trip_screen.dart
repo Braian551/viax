@@ -760,7 +760,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                       origin: _selectedOrigin!,
                       destination: _selectedDestination!,
                       stops: validStops, // Pass stops
-                      vehicleType: 'carro',
+                      vehicleType: 'auto',
                     ),
                   ),
                 );

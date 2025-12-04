@@ -260,22 +260,47 @@ class PickupPointMarker extends StatelessWidget {
   }
 }
 
-/// Marcador del conductor
+/// Marcador del conductor con imagen 3D del vehículo
 class DriverMarker extends StatelessWidget {
   final String? vehicleType;
   final Color? color;
 
   const DriverMarker({super.key, this.vehicleType, this.color});
 
+  /// Obtiene la ruta de la imagen 3D del vehículo
+  String _getVehicleImagePath(String type) {
+    switch (type) {
+      case 'moto':
+        return 'assets/images/vehicles/moto3d.png';
+      case 'auto':
+        return 'assets/images/vehicles/auto3d.png';
+      case 'motocarro':
+        return 'assets/images/vehicles/motocarro3d.png';
+      default:
+        // Si contiene 'moto' usa moto, si no usa auto
+        if (type.toLowerCase().contains('moto')) {
+          return 'assets/images/vehicles/moto3d.png';
+        }
+        return 'assets/images/vehicles/auto3d.png';
+    }
+  }
+
+  /// Icono de fallback
+  IconData _getVehicleIcon(String type) {
+    if (type.toLowerCase().contains('moto')) {
+      return Icons.two_wheeler;
+    }
+    return Icons.local_taxi;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isMoto = vehicleType?.toLowerCase().contains('moto') ?? false;
-    final iconData = isMoto ? Icons.two_wheeler : Icons.local_taxi;
+    final type = vehicleType ?? 'auto';
     final bgColor = color ?? AppColors.accent;
 
     return Container(
-      width: 48,
-      height: 48,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
         color: bgColor,
         shape: BoxShape.circle,
@@ -293,7 +318,25 @@ class DriverMarker extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(iconData, color: Colors.white, size: 24),
+      child: ClipOval(
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Image.asset(
+            _getVehicleImagePath(type),
+            width: 36,
+            height: 36,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback al icono si la imagen no carga
+              return Icon(
+                _getVehicleIcon(type),
+                color: Colors.white,
+                size: 24,
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }

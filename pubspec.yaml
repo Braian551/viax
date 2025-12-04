@@ -51,6 +51,7 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/images/vehicles/
     - assets/sounds/
 
 flutter_launcher_icons:

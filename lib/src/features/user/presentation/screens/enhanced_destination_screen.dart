@@ -487,7 +487,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           origin: _selectedOrigin!,
           destination: _selectedDestination!,
           stops: validStops,
-          vehicleType: 'carro',
+          vehicleType: 'auto',
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(

@@ -21,7 +21,7 @@ try {
     $tipo_vehiculo = isset($_GET['tipo_vehiculo']) ? $_GET['tipo_vehiculo'] : 'moto';
     
     // Validar tipo de vehículo
-    $tipos_validos = ['moto', 'carro', 'moto_carga', 'carro_carga'];
+    $tipos_validos = ['moto', 'auto', 'motocarro'];
     if (!in_array($tipo_vehiculo, $tipos_validos)) {
         http_response_code(400);
         echo json_encode([

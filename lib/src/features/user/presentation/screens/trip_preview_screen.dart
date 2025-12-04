@@ -382,7 +382,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           'recargo_hora_pico': 15.0,
           'recargo_nocturno': 20.0,
         };
-      case 'carro':
+      case 'auto':
         return {
           'tarifa_base': 6000.0,
           'costo_por_km': 3000.0,
@@ -391,23 +391,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           'recargo_hora_pico': 20.0,
           'recargo_nocturno': 25.0,
         };
-      case 'moto_carga':
+      case 'motocarro':
         return {
-          'tarifa_base': 5000.0,
+          'tarifa_base': 5500.0,
           'costo_por_km': 2500.0,
-          'costo_por_minuto': 300.0,
-          'tarifa_minima': 7500.0,
-          'recargo_hora_pico': 15.0,
-          'recargo_nocturno': 20.0,
-        };
-      case 'carro_carga':
-        return {
-          'tarifa_base': 8000.0,
-          'costo_por_km': 3500.0,
-          'costo_por_minuto': 450.0,
-          'tarifa_minima': 12000.0,
-          'recargo_hora_pico': 20.0,
-          'recargo_nocturno': 25.0,
+          'costo_por_minuto': 350.0,
+          'tarifa_minima': 8000.0,
+          'recargo_hora_pico': 18.0,
+          'recargo_nocturno': 22.0,
         };
       default:
         return {
@@ -425,12 +416,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     switch (type) {
       case 'moto':
         return 'Moto';
-      case 'carro':
-        return 'Carro';
-      case 'moto_carga':
-        return 'Moto Carga';
-      case 'carro_carga':
-        return 'Carro Carga';
+      case 'auto':
+        return 'Auto';
+      case 'motocarro':
+        return 'Motocarro';
       default:
         return 'Vehículo';
     }
@@ -440,15 +429,45 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     switch (type) {
       case 'moto':
         return Icons.two_wheeler;
-      case 'carro':
+      case 'auto':
         return Icons.directions_car;
-      case 'moto_carga':
-        return Icons.delivery_dining;
-      case 'carro_carga':
-        return Icons.local_shipping;
+      case 'motocarro':
+        return Icons.electric_moped;
       default:
         return Icons.two_wheeler;
     }
+  }
+
+  /// Obtiene la ruta de la imagen 3D del vehículo
+  String _getVehicleImagePath(String type) {
+    switch (type) {
+      case 'moto':
+        return 'assets/images/vehicles/moto3d.png';
+      case 'auto':
+        return 'assets/images/vehicles/auto3d.png';
+      case 'motocarro':
+        return 'assets/images/vehicles/motocarro3d.png';
+      default:
+        return 'assets/images/vehicles/moto3d.png';
+    }
+  }
+
+  /// Widget que muestra la imagen 3D del vehículo
+  Widget _buildVehicleImage(String type, {double size = 60}) {
+    return Image.asset(
+      _getVehicleImagePath(type),
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        // Fallback al icono si la imagen no carga
+        return Icon(
+          _getVehicleIcon(type),
+          size: size * 0.6,
+          color: AppColors.primary,
+        );
+      },
+    );
   }
 
   @override
@@ -1080,18 +1099,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                       ),
                       child: Row(
                         children: [
-                          // Icono del vehículo
+                          // Imagen 3D del vehículo
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.primary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Icon(
-                              _getVehicleIcon(widget.vehicleType),
-                              size: 32,
-                              color: AppColors.primary,
-                            ),
+                            child: _buildVehicleImage(widget.vehicleType, size: 56),
                           ),
                           const SizedBox(width: 12),
                           // Información del vehículo
@@ -1321,12 +1336,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     switch (type) {
       case 'moto':
         return 'Rápido y económico';
-      case 'carro':
+      case 'auto':
         return 'Cómodo y espacioso';
-      case 'moto_carga':
-        return 'Para paquetes pequeños';
-      case 'carro_carga':
-        return 'Para mudanzas';
+      case 'motocarro':
+        return 'Ideal para encargos y cargas';
       default:
         return 'Vehículo disponible';
     }
