@@ -10,6 +10,8 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
+import '../widgets/map_markers.dart';
+import '../widgets/glass_widgets.dart';
 
 /// Pantalla que muestra cuando el conductor aceptó el viaje
 /// El cliente debe dirigirse al punto de encuentro
@@ -910,123 +912,18 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   /// Marcador del punto de encuentro con animación de ondas
   Widget _buildPickupMarker() {
-    return AnimatedBuilder(
-      animation: _waveController,
-      builder: (context, _) {
-        return SizedBox(
-          width: 140,
-          height: 130,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Ondas expansivas animadas
-              ...List.generate(3, (i) {
-                final delay = i / 3;
-                final progress = (_waveController.value + delay) % 1.0;
-                final size = 45 + (55 * progress);
-                final opacity = 0.5 * (1 - progress);
-                return Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.success.withOpacity(opacity),
-                      width: 2.5 * (1 - progress),
-                    ),
-                  ),
-                );
-              }),
-
-              // Marcador central grande y visible
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.success.withOpacity(0.5),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.place, color: Colors.white, size: 26),
-              ),
-
-              // Etiqueta "Punto de encuentro" (arriba del marcador)
-              Positioned(
-                top: 5,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.location_on, color: Colors.white, size: 12),
-                      SizedBox(width: 4),
-                      Text(
-                        'Punto de encuentro',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    return PickupPointMarker(
+      waveAnimation: _waveController,
+      label: 'Punto de encuentro',
+      showLabel: true,
     );
   }
 
   /// Marcador del conductor
   Widget _buildDriverMarker() {
     final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'carro';
-    final iconData = vehiculoTipo.contains('moto')
-        ? Icons.two_wheeler
-        : Icons.local_taxi;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.accent,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Icon(iconData, color: Colors.white, size: 26),
-    );
+    return DriverMarker(vehicleType: vehiculoTipo);
   }
 
   Widget _buildHeader(bool isDark) {
@@ -1034,32 +931,21 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       top: 0,
       left: 0,
       right: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              (isDark ? Colors.black : Colors.white),
-              (isDark ? Colors.black : Colors.white).withOpacity(0.8),
-              (isDark ? Colors.black : Colors.white).withOpacity(0),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-            child: Column(
-              children: [
-                // Barra superior
-                Row(
-                  children: [
-                    // Botón atrás
-                    Material(
-                      color: isDark ? Colors.white12 : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      elevation: isDark ? 0 : 2,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            children: [
+              // Barra superior con glass effect
+              Row(
+                children: [
+                  // Botón cerrar con glass
+                  GlassPanel(
+                    borderRadius: 14,
+                    padding: EdgeInsets.zero,
+                    child: Material(
+                      color: Colors.transparent,
                       child: InkWell(
                         onTap: _cancelTrip,
                         borderRadius: BorderRadius.circular(14),
@@ -1074,105 +960,99 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                         ),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                    // Título
+                  // Status badge con glass
+                  Expanded(
+                    child: GlassPanel(
+                      borderRadius: 25,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _tripState == 'conductor_llego'
+                                ? Icons.pin_drop_rounded
+                                : _tripState == 'en_curso'
+                                ? Icons.navigation_rounded
+                                : Icons.check_circle,
+                            color: _tripState == 'conductor_llego'
+                                ? AppColors.accent
+                                : AppColors.success,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getStatusText(),
+                            style: TextStyle(
+                              color: _tripState == 'conductor_llego'
+                                  ? AppColors.accent
+                                  : AppColors.success,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Card de instrucción con glass effect
+              GlassPanel(
+                borderRadius: 16,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.directions_walk,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.success,
-                              size: 18,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dirígete al punto de encuentro',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _getStatusText(),
-                              style: const TextStyle(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.direccionOrigen,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white60 : Colors.black54,
                             ),
-                          ],
-                        ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 16),
-
-                // Card de instrucción
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.directions_walk,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Dirígete al punto de encuentro',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.direccionOrigen,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isDark ? Colors.white60 : Colors.black54,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1200,311 +1080,19 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     final calificacion =
         (_conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
     final vehiculo = _conductor!['vehiculo'] as Map<String, dynamic>?;
-    final placa = vehiculo?['placa'] as String? ?? '---';
-    final marca = vehiculo?['marca'] as String? ?? '';
-    final modelo = vehiculo?['modelo'] as String? ?? '';
-    final color = vehiculo?['color'] as String? ?? '';
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle para arrastrar
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Info del conductor
-          Row(
-            children: [
-              // Foto del conductor
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.1),
-                  border: Border.all(color: AppColors.primary, width: 2),
-                ),
-                child: ClipOval(
-                  child: foto != null && foto.isNotEmpty
-                      ? Image.network(
-                          foto,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.person,
-                            color: AppColors.primary,
-                            size: 30,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 30,
-                        ),
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Nombre y calificación
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nombre,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: AppColors.accent,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          calificacion.toStringAsFixed(1),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Botones de acción
-              Row(
-                children: [
-                  // Botón llamar
-                  Material(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      onTap: _callDriver,
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.call,
-                          color: AppColors.success,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Botón mensaje
-                  Material(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      onTap: () {
-                        // TODO: Implementar chat
-                      },
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.message,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Divider
-          Divider(color: isDark ? Colors.white12 : Colors.grey[200]),
-
-          const SizedBox(height: 12),
-
-          // Info del vehículo
-          Row(
-            children: [
-              // Icono del vehículo
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  vehiculo?['tipo']?.toString().contains('moto') == true
-                      ? Icons.two_wheeler
-                      : Icons.directions_car,
-                  color: AppColors.accent,
-                  size: 24,
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Marca, modelo, color
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$marca $modelo',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    if (color.isNotEmpty)
-                      Text(
-                        color,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-              // Placa
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.grey[300]!,
-                  ),
-                ),
-                child: Text(
-                  placa,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // ETA del conductor
-          if (_conductorEtaMinutes != null || _conductorDistanceKm != null)
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  if (_conductorEtaMinutes != null)
-                    _buildEtaItem(
-                      icon: Icons.access_time,
-                      value: '${_conductorEtaMinutes!.round()} min',
-                      label: 'Llegada aprox.',
-                      isDark: isDark,
-                    ),
-                  if (_conductorEtaMinutes != null &&
-                      _conductorDistanceKm != null)
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: isDark ? Colors.white12 : Colors.grey[300],
-                    ),
-                  if (_conductorDistanceKm != null)
-                    _buildEtaItem(
-                      icon: Icons.route,
-                      value: '${_conductorDistanceKm!.toStringAsFixed(1)} km',
-                      label: 'Distancia',
-                      isDark: isDark,
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEtaItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required bool isDark,
-  }) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? Colors.white60 : Colors.black54,
-          ),
-        ),
-      ],
+    return DriverInfoCard(
+      nombre: nombre,
+      foto: foto,
+      calificacion: calificacion,
+      vehiculo: vehiculo,
+      etaMinutes: _conductorEtaMinutes,
+      distanceKm: _conductorDistanceKm,
+      onCall: _callDriver,
+      onMessage: () {
+        // TODO: Implementar chat
+      },
+      isDark: isDark,
     );
   }
 }
