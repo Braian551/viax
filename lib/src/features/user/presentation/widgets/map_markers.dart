@@ -260,33 +260,42 @@ class PickupPointMarker extends StatelessWidget {
   }
 }
 
-/// Marcador del conductor con imagen 3D del vehículo
+/// Marcador del conductor con icono de vehículo que rota según la dirección
 class DriverMarker extends StatelessWidget {
   final String? vehicleType;
-  final Color? color;
+  final double heading; // Dirección en grados (0-360, 0 = Norte)
+  final double size;
 
-  const DriverMarker({super.key, this.vehicleType, this.color});
+  const DriverMarker({
+    super.key,
+    this.vehicleType,
+    this.heading = 0.0,
+    this.size = 48.0,
+  });
 
-  /// Obtiene la ruta de la imagen 3D del vehículo
-  String _getVehicleImagePath(String type) {
+  /// Obtiene la ruta del icono del vehículo (mirando hacia arriba)
+  String _getVehicleIconPath(String type) {
     switch (type) {
       case 'moto':
-        return 'assets/images/vehicles/moto3d.png';
+        return 'assets/images/vehicles/iconvehicles/motoicon.png';
       case 'auto':
-        return 'assets/images/vehicles/auto3d.png';
+        return 'assets/images/vehicles/iconvehicles/autoicon.png';
       case 'motocarro':
-        return 'assets/images/vehicles/motocarro3d.png';
+        return 'assets/images/vehicles/iconvehicles/motocarroicon.png';
       default:
         // Si contiene 'moto' usa moto, si no usa auto
-        if (type.toLowerCase().contains('moto')) {
-          return 'assets/images/vehicles/moto3d.png';
+        if (type.toLowerCase().contains('motocarro')) {
+          return 'assets/images/vehicles/iconvehicles/motocarroicon.png';
         }
-        return 'assets/images/vehicles/auto3d.png';
+        if (type.toLowerCase().contains('moto')) {
+          return 'assets/images/vehicles/iconvehicles/motoicon.png';
+        }
+        return 'assets/images/vehicles/iconvehicles/autoicon.png';
     }
   }
 
   /// Icono de fallback
-  IconData _getVehicleIcon(String type) {
+  IconData _getVehicleFallbackIcon(String type) {
     if (type.toLowerCase().contains('moto')) {
       return Icons.two_wheeler;
     }
@@ -296,46 +305,71 @@ class DriverMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = vehicleType ?? 'auto';
-    final bgColor = color ?? AppColors.accent;
+    // Convertir heading a radianes para la rotación
+    // Los iconos miran hacia arriba (Norte = 0°), así que rotamos según el heading
+    final rotationAngle = heading * (math.pi / 180);
 
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(
-        color: bgColor,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: bgColor.withOpacity(0.4),
-            blurRadius: 10,
-            spreadRadius: 2,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Sombra sutil debajo del vehículo
+          Positioned(
+            bottom: 2,
+            child: Container(
+              width: size * 0.5,
+              height: size * 0.15,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(size * 0.1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 6,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
           ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+          // Icono del vehículo rotado
+          Transform.rotate(
+            angle: rotationAngle,
+            child: Image.asset(
+              _getVehicleIconPath(type),
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback al icono si la imagen no carga
+                return Transform.rotate(
+                  angle: rotationAngle,
+                  child: Container(
+                    width: size * 0.8,
+                    height: size * 0.8,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _getVehicleFallbackIcon(type),
+                      color: Colors.white,
+                      size: size * 0.5,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
-      ),
-      child: ClipOval(
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Image.asset(
-            _getVehicleImagePath(type),
-            width: 36,
-            height: 36,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback al icono si la imagen no carga
-              return Icon(
-                _getVehicleIcon(type),
-                color: Colors.white,
-                size: 24,
-              );
-            },
-          ),
-        ),
       ),
     );
   }

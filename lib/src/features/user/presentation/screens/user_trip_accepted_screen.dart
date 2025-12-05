@@ -60,6 +60,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   Map<String, dynamic>? _conductor;
   LatLng? _conductorLocation;
   LatLng? _lastConductorLocation; // Para detectar movimiento
+  double _conductorHeading = 0.0; // Dirección del conductor calculada
   double? _conductorEtaMinutes;
   double? _conductorDistanceKm;
 
@@ -233,6 +234,20 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 
   double _toRadians(double degree) => degree * (math.pi / 180);
+
+  /// Calcular el bearing (ángulo de dirección) entre dos puntos
+  double _calculateBearing(LatLng from, LatLng to) {
+    final lat1 = _toRadians(from.latitude);
+    final lat2 = _toRadians(to.latitude);
+    final dLon = _toRadians(to.longitude - from.longitude);
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x);
+    return (bearing * 180 / math.pi + 360) % 360; // Convertir a grados (0-360)
+  }
 
   /// Obtener ruta del conductor al punto de encuentro
   Future<void> _updateConductorRoute(LatLng conductorPos) async {
@@ -439,6 +454,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         // Verificar si la ubicación del conductor cambió significativamente (más de 50m)
         bool shouldUpdateRoute = false;
+        double newHeading = _conductorHeading;
         if (newConductorLocation != null) {
           if (_lastConductorLocation == null) {
             shouldUpdateRoute = true;
@@ -449,6 +465,13 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               newConductorLocation.latitude,
               newConductorLocation.longitude,
             );
+            // Calcular heading basado en el movimiento (si se movió más de 10m)
+            if (distance > 0.01) {
+              newHeading = _calculateBearing(
+                _lastConductorLocation!,
+                newConductorLocation,
+              );
+            }
             if (distance > 0.05) {
               // Más de 50 metros
               shouldUpdateRoute = true;
@@ -458,6 +481,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         setState(() {
           _tripState = estado ?? 'aceptada';
+          _conductorHeading = newHeading;
 
           if (conductor != null) {
             _conductor = conductor;
@@ -923,7 +947,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   Widget _buildDriverMarker() {
     final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'auto';
 
-    return DriverMarker(vehicleType: vehiculoTipo);
+    return DriverMarker(
+      vehicleType: vehiculoTipo,
+      heading: _conductorHeading,
+      size: 56,
+    );
   }
 
   Widget _buildHeader(bool isDark) {
