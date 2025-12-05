@@ -70,7 +70,7 @@ try {
         // Para envío de paquetes, verificar tipo de vehículo si es necesario
         if ($solicitud['tipo_servicio'] === 'envio_paquete') {
             // Para paquetes, preferir furgonetas o carros, pero permitir motocicletas para paquetes pequeños
-            $vehiculosPermitidos = ['carro', 'furgoneta', 'motocicleta'];
+            $vehiculosPermitidos = ['auto', 'furgoneta', 'moto'];
             if (!in_array($conductor['vehiculo_tipo'], $vehiculosPermitidos)) {
                 throw new Exception('Tipo de vehículo no compatible con el servicio de envío');
             }

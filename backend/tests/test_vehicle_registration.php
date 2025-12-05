@@ -46,7 +46,7 @@ if ($licenseResult && $licenseResult['success']) {
 echo "Test 2: Updating vehicle...\n";
 $vehicleData = json_encode([
     'conductor_id' => $conductorId,
-    'vehiculo_tipo' => 'motocicleta',
+    'vehiculo_tipo' => 'moto',
     'vehiculo_marca' => 'Honda',
     'vehiculo_modelo' => 'CB300R',
     'vehiculo_anio' => 2023,

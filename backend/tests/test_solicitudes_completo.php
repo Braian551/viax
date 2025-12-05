@@ -116,7 +116,7 @@ try {
         ");
         $stmt->execute([
             $conductorId,
-            'motocicleta',
+            'moto',
             'Honda',
             'CBR 250',
             'ABC123',

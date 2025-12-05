@@ -77,7 +77,7 @@ try {
             licencia_foto_url = NULL,
 
             -- Vehículo (NOT NULL fields necesitan valores por defecto)
-            vehiculo_tipo = 'motocicleta',
+            vehiculo_tipo = 'moto',
             vehiculo_marca = '',
             vehiculo_modelo = '',
             vehiculo_anio = NULL,

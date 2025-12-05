@@ -101,7 +101,7 @@ try {
             :licencia_expedicion,
             :licencia_vencimiento,
             :licencia_categoria,
-            'motocicleta',
+            'moto',
             '',
             NOW(),
             NOW()

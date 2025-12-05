@@ -206,7 +206,7 @@ try {
             'longitud_destino' => (float)$solicitud['longitud_destino'],
             'direccion_destino' => $solicitud['direccion_destino'],
             'tipo_servicio' => $solicitud['tipo_servicio'],
-            'tipo_vehiculo' => 'motocicleta', // Por ahora fijo
+            'tipo_vehiculo' => 'moto', // Por ahora fijo
             'distancia_km' => (float)$solicitud['distancia_estimada'],
             'duracion_minutos' => (int)$solicitud['tiempo_estimado'],
             'precio_estimado' => (float)$precioEstimado,

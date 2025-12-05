@@ -127,7 +127,7 @@ class VehiculoInfo {
 
   factory VehiculoInfo.fromJson(Map<String, dynamic> json) {
     return VehiculoInfo(
-      tipo: json['tipo'] ?? 'motocicleta',
+      tipo: json['tipo'] ?? 'moto',
       marca: json['marca'],
       modelo: json['modelo'],
       placa: json['placa'],

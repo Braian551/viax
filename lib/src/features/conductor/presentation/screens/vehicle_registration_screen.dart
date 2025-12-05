@@ -37,7 +37,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final _modeloController = TextEditingController();
   final _anioController = TextEditingController();
   final _colorController = TextEditingController();
-  VehicleType _selectedType = VehicleType.motocicleta;
+  VehicleType _selectedType = VehicleType.moto;
 
   // Document data
   final _soatNumberController = TextEditingController();

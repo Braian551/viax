@@ -45,7 +45,7 @@ try {
     }
 
     // Extract vehicle data
-    $vehiculo_tipo = isset($input['vehiculo_tipo']) ? $input['vehiculo_tipo'] : 'motocicleta';
+    $vehiculo_tipo = isset($input['vehiculo_tipo']) ? $input['vehiculo_tipo'] : 'moto';
     $vehiculo_marca = isset($input['vehiculo_marca']) ? $input['vehiculo_marca'] : null;
     $vehiculo_modelo = isset($input['vehiculo_modelo']) ? $input['vehiculo_modelo'] : null;
     $vehiculo_anio = isset($input['vehiculo_anio']) ? intval($input['vehiculo_anio']) : null;

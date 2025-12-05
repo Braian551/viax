@@ -50,7 +50,7 @@ class VehicleModel {
       anio: int.tryParse(json['vehiculo_anio']?.toString() ?? ''),
       color: json['vehiculo_color']?.toString(),
       placa: json['vehiculo_placa']?.toString() ?? '',
-      tipo: VehicleType.fromString(json['vehiculo_tipo']?.toString() ?? 'motocicleta'),
+      tipo: VehicleType.fromString(json['vehiculo_tipo']?.toString() ?? 'moto'),
       aseguradora: json['aseguradora']?.toString(),
       numeroPoliza: json['numero_poliza_seguro']?.toString(),
       vencimientoSeguro: json['vencimiento_seguro'] != null

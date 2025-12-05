@@ -614,7 +614,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    _conductorInfo!['vehiculo']['tipo'] == 'motocicleta'
+                    _conductorInfo!['vehiculo']['tipo'] == 'moto'
                         ? Icons.motorcycle
                         : Icons.directions_car,
                     color: const Color(0xFFFFFF00),

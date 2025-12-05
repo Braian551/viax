@@ -128,7 +128,7 @@ try {
         $requiredFields = [
             'licencia_conduccion' => '',
             'licencia_vencimiento' => date('Y-m-d', strtotime('+1 year')),
-            'vehiculo_tipo' => 'motocicleta',
+            'vehiculo_tipo' => 'moto',
             'vehiculo_placa' => ''
         ];
 
