@@ -161,9 +161,10 @@ class PickupPointMarker extends StatelessWidget {
     final size = isCompact ? 40.0 : 48.0;
     final iconSize = isCompact ? 22.0 : 26.0;
 
+    // Aumentamos el ancho para que la etiqueta quepa completa y aplicamos glass effect
     return SizedBox(
-      width: isCompact ? 100 : 140,
-      height: isCompact ? 80 : 130,
+      width: isCompact ? 130 : 220,
+      height: isCompact ? 90 : 140,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -213,8 +214,7 @@ class PickupPointMarker extends StatelessWidget {
           ),
 
           // Etiqueta
-          if (showLabel)
-            Positioned(top: isCompact ? 0 : 5, child: _buildLabel()),
+          if (showLabel) Positioned(top: isCompact ? 0 : 8, child: _buildLabel()),
         ],
       ),
     );
@@ -265,12 +265,14 @@ class DriverMarker extends StatelessWidget {
   final String? vehicleType;
   final double heading; // Dirección en grados (0-360, 0 = Norte)
   final double size;
+  final bool showShadow;
 
   const DriverMarker({
     super.key,
     this.vehicleType,
     this.heading = 0.0,
     this.size = 48.0,
+    this.showShadow = true,
   });
 
   /// Obtiene la ruta del icono del vehículo (mirando hacia arriba)
@@ -316,23 +318,24 @@ class DriverMarker extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // Sombra sutil debajo del vehículo
-          Positioned(
-            bottom: 2,
-            child: Container(
-              width: size * 0.5,
-              height: size * 0.15,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(size * 0.1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ],
+          if (showShadow)
+            Positioned(
+              bottom: 2,
+              child: Container(
+                width: size * 0.5,
+                height: size * 0.15,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(size * 0.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           // Icono del vehículo rotado
           Transform.rotate(
             angle: rotationAngle,
@@ -351,13 +354,15 @@ class DriverMarker extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.accent,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      boxShadow: showShadow
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Icon(
                       _getVehicleFallbackIcon(type),

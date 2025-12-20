@@ -85,6 +85,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   bool _isFocusedOnClient = false; // Toggle para el botón de enfoque
   bool _initialAnimationDone = false;
 
+  // Evitar repetir alertas
+  bool _driverArrivedDialogShown = false;
+  bool _driverArrivedDialogShowing = false;
+
   @override
   void initState() {
     super.initState();
@@ -501,7 +505,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         // Verificar cambios de estado importantes
         if (estado == 'conductor_llego') {
-          _showDriverArrivedDialog();
+          unawaited(_showDriverArrivedDialog());
         } else if (estado == 'en_curso') {
           // Navegar a pantalla de viaje en curso
           _navigateToActiveTrip();
@@ -514,12 +518,18 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     }
   }
 
-  void _showDriverArrivedDialog() {
+  Future<void> _showDriverArrivedDialog() async {
+    if (!mounted) return;
+    if (_driverArrivedDialogShown || _driverArrivedDialogShowing) return;
+
+    _driverArrivedDialogShowing = true;
     HapticFeedback.heavyImpact();
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xFF1E1E1E)
@@ -564,7 +574,13 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           ),
         ],
       ),
-    );
+      );
+    } catch (e) {
+      debugPrint('Error showing driver arrived dialog: $e');
+    } finally {
+      _driverArrivedDialogShown = true;
+      _driverArrivedDialogShowing = false;
+    }
   }
 
   void _navigateToActiveTrip() {
@@ -951,6 +967,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       vehicleType: vehiculoTipo,
       heading: _conductorHeading,
       size: 56,
+      showShadow: false,
     );
   }
 
