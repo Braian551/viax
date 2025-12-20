@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -10,8 +9,10 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
-import '../widgets/map_markers.dart';
-import '../widgets/glass_widgets.dart';
+import '../widgets/user_trip_accepted/user_trip_accepted_driver_panel.dart';
+import '../widgets/user_trip_accepted/user_trip_accepted_focus_button.dart';
+import '../widgets/user_trip_accepted/user_trip_accepted_header.dart';
+import '../widgets/user_trip_accepted/user_trip_accepted_map.dart';
 
 /// Pantalla que muestra cuando el conductor aceptó el viaje
 /// El cliente debe dirigirse al punto de encuentro
@@ -738,24 +739,61 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         fit: StackFit.expand,
         children: [
           // MAPA
-          _buildMap(isDark, pickupPoint),
+          UserTripAcceptedMap(
+            mapController: _mapController,
+            isDark: isDark,
+            pickupPoint: pickupPoint,
+            animatedRoute: _animatedRoute,
+            conductorLocation: _conductorLocation,
+            conductorHeading: _conductorHeading,
+            conductorVehicleType: _conductor?['vehiculo']?['tipo'] as String?,
+            clientLocation: _clientLocation,
+            clientHeading: _clientHeading,
+            pulseAnimation: _pulseController,
+            waveAnimation: _waveController,
+            pickupLabel: 'Punto de encuentro',
+          ),
 
           // HEADER
-          _buildHeader(isDark),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: UserTripAcceptedHeader(
+              isDark: isDark,
+              tripState: _tripState,
+              statusText: _getStatusText(),
+              direccionOrigen: widget.direccionOrigen,
+              onClose: _cancelTrip,
+            ),
+          ),
 
           // PANEL DE INFO DEL CONDUCTOR
           Positioned(
             bottom: bottomPadding + 16,
             left: 16,
             right: 16,
-            child: _buildDriverPanel(isDark),
+            child: UserTripAcceptedDriverPanel(
+              conductor: _conductor,
+              conductorEtaMinutes: _conductorEtaMinutes,
+              conductorDistanceKm: _conductorDistanceKm,
+              onCall: _callDriver,
+              onCancelChat: () {
+                // TODO: Implementar chat
+              },
+              isDark: isDark,
+            ),
           ),
 
           // BOTÓN DE ENFOQUE (toggle) - arriba del panel
           Positioned(
             right: 16,
             bottom: bottomPadding + 220,
-            child: _buildFocusButton(isDark),
+            child: UserTripAcceptedFocusButton(
+              isDark: isDark,
+              isFocusedOnClient: _isFocusedOnClient,
+              onTap: _toggleFocus,
+            ),
           ),
 
           // LOADING
@@ -771,340 +809,6 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     );
   }
 
-  /// Botón para alternar entre vista completa y vista del cliente
-  Widget _buildFocusButton(bool isDark) {
-    return Material(
-      color: isDark ? Colors.grey[900] : Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      child: InkWell(
-        onTap: _toggleFocus,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 48,
-          height: 48,
-          alignment: Alignment.center,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: Icon(
-              _isFocusedOnClient ? Icons.zoom_out_map : Icons.my_location,
-              key: ValueKey(_isFocusedOnClient),
-              color: AppColors.primary,
-              size: 24,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMap(bool isDark, LatLng pickupPoint) {
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: pickupPoint,
-        initialZoom: 16.0,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.all,
-        ),
-      ),
-      children: [
-        // Capa de tiles
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
-        ),
-
-        // Sombra de la ruta (efecto de profundidad) - como en trip_preview
-        if (_animatedRoute.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: _animatedRoute,
-                strokeWidth: 8.0,
-                color: Colors.black.withOpacity(0.15),
-              ),
-            ],
-          ),
-
-        // Ruta del conductor al punto de encuentro (animada)
-        if (_animatedRoute.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: _animatedRoute,
-                strokeWidth: 5.0,
-                color: AppColors.primary,
-                borderStrokeWidth: 1.5,
-                borderColor: Colors.white,
-              ),
-            ],
-          ),
-
-        // Marcadores
-        MarkerLayer(
-          markers: [
-            // Marcador del conductor (primero, para que quede debajo)
-            if (_conductorLocation != null)
-              Marker(
-                point: _conductorLocation!,
-                width: 56,
-                height: 56,
-                child: _buildDriverMarker(),
-              ),
-
-            // Punto de encuentro (aumentado para que la etiqueta no se recorte)
-            Marker(
-              point: pickupPoint,
-              // Debe coincidir con el tamaño interno de PickupPointMarker (no-compact)
-              width: 220,
-              height: 140,
-              child: _buildPickupMarker(),
-            ),
-
-            // Marcador del cliente con orientación (brújula) - encima de todo
-            if (_clientLocation != null)
-              Marker(
-                point: _clientLocation!,
-                width: 70,
-                height: 70,
-                child: _buildClientMarker(),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Marcador del cliente estilo Google Maps (punto azul con cono de luz/linterna)
-  Widget _buildClientMarker() {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, _) {
-        return SizedBox(
-          width: 70,
-          height: 70,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Cono de luz/linterna (hacia donde mira el usuario)
-              Positioned(
-                top: 0,
-                child: Transform.rotate(
-                  angle: (_clientHeading) * (math.pi / 180),
-                  alignment: Alignment.bottomCenter,
-                  child: ClipPath(
-                    clipper: _BeamClipper(),
-                    child: Container(
-                      width: 50,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            AppColors.primary.withOpacity(0.5),
-                            AppColors.primary.withOpacity(0.15),
-                            AppColors.primary.withOpacity(0.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Círculo de precisión GPS (halo exterior)
-              Container(
-                width: 28 + (_pulseController.value * 6),
-                height: 28 + (_pulseController.value * 6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(
-                    0.15 * (1 - _pulseController.value),
-                  ),
-                ),
-              ),
-
-              // Punto central azul
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Marcador del punto de encuentro con animación de ondas
-  Widget _buildPickupMarker() {
-    return PickupPointMarker(
-      waveAnimation: _waveController,
-      label: 'Punto de encuentro',
-      showLabel: true,
-    );
-  }
-
-  /// Marcador del conductor
-  Widget _buildDriverMarker() {
-    final vehiculoTipo = _conductor?['vehiculo']?['tipo'] as String? ?? 'auto';
-
-    return DriverMarker(
-      vehicleType: vehiculoTipo,
-      heading: _conductorHeading,
-      size: 56,
-      showShadow: false,
-    );
-  }
-
-  Widget _buildHeader(bool isDark) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            children: [
-              // Barra superior con glass effect
-              Row(
-                children: [
-                  // Botón cerrar con glass
-                  GlassPanel(
-                    borderRadius: 14,
-                    padding: EdgeInsets.zero,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _cancelTrip,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.close_rounded,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // Status badge con glass
-                  Expanded(
-                    child: GlassPanel(
-                      borderRadius: 25,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _tripState == 'conductor_llego'
-                                ? Icons.pin_drop_rounded
-                                : _tripState == 'en_curso'
-                                ? Icons.navigation_rounded
-                                : Icons.check_circle,
-                            color: _tripState == 'conductor_llego'
-                                ? AppColors.accent
-                                : AppColors.success,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _getStatusText(),
-                            style: TextStyle(
-                              color: _tripState == 'conductor_llego'
-                                  ? AppColors.accent
-                                  : AppColors.success,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Card de instrucción con glass effect
-              GlassPanel(
-                borderRadius: 16,
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.directions_walk,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Dirígete al punto de encuentro',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.direccionOrigen,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   String _getStatusText() {
     switch (_tripState) {
       case 'conductor_llego':
@@ -1116,46 +820,4 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     }
   }
 
-  Widget _buildDriverPanel(bool isDark) {
-    if (_conductor == null) {
-      return const SizedBox.shrink();
-    }
-
-    final nombre = _conductor!['nombre'] as String? ?? 'Conductor';
-    final foto = _conductor!['foto'] as String?;
-    final calificacion =
-        (_conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
-    final vehiculo = _conductor!['vehiculo'] as Map<String, dynamic>?;
-
-    return DriverInfoCard(
-      nombre: nombre,
-      foto: foto,
-      calificacion: calificacion,
-      vehiculo: vehiculo,
-      etaMinutes: _conductorEtaMinutes,
-      distanceKm: _conductorDistanceKm,
-      onCall: _callDriver,
-      onMessage: () {
-        // TODO: Implementar chat
-      },
-      isDark: isDark,
-    );
-  }
-}
-
-/// CustomClipper para el cono de luz estilo linterna de Google Maps
-class _BeamClipper extends CustomClipper<ui.Path> {
-  @override
-  ui.Path getClip(Size size) {
-    final path = ui.Path();
-    // Crear un cono/triángulo con la punta abajo (hacia el centro del punto azul)
-    path.moveTo(size.width / 2, size.height); // Punta inferior (centro)
-    path.lineTo(0, 0); // Esquina superior izquierda
-    path.lineTo(size.width, 0); // Esquina superior derecha
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<ui.Path> oldClipper) => false;
 }
