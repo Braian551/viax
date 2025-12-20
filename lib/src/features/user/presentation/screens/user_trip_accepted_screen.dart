@@ -90,6 +90,31 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   bool _driverArrivedDialogShown = false;
   bool _driverArrivedDialogShowing = false;
 
+  // Key y altura del panel para posicionar botones flotantes
+  final GlobalKey _driverPanelKey = GlobalKey();
+  double? _driverPanelHeight;
+  // Offset extra para separar el botón de enfoque del panel (aumenta para subirlo más)
+  double _focusButtonExtraOffset = 40.0;
+
+  void _measureDriverPanel() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final ctx = _driverPanelKey.currentContext;
+        if (ctx == null) return;
+        final box = ctx.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        final h = box.size.height;
+        if (mounted && (_driverPanelHeight == null || (_driverPanelHeight! - h).abs() > 1)) {
+          setState(() {
+            _driverPanelHeight = h;
+          });
+        }
+      } catch (e) {
+        // no-op
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +123,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _startLocationTracking();
     _startStatusPolling();
     _playAcceptedSound();
+
+    // Medir panel después del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureDriverPanel());
   }
 
   void _initAnimations() {
@@ -498,6 +526,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           }
         });
 
+        // Re-medir panel en caso de que su tamaño haya cambiado al actualizar datos
+        _measureDriverPanel();
+
         // Actualizar ruta si la ubicación cambió
         if (shouldUpdateRoute && newConductorLocation != null) {
           _lastConductorLocation = newConductorLocation;
@@ -773,22 +804,25 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             bottom: bottomPadding + 16,
             left: 16,
             right: 16,
-            child: UserTripAcceptedDriverPanel(
-              conductor: _conductor,
-              conductorEtaMinutes: _conductorEtaMinutes,
-              conductorDistanceKm: _conductorDistanceKm,
-              onCall: _callDriver,
-              onCancelChat: () {
-                // TODO: Implementar chat
-              },
-              isDark: isDark,
+            child: Container(
+              key: _driverPanelKey,
+              child: UserTripAcceptedDriverPanel(
+                conductor: _conductor,
+                conductorEtaMinutes: _conductorEtaMinutes,
+                conductorDistanceKm: _conductorDistanceKm,
+                onCall: _callDriver,
+                onCancelChat: () {
+                  // TODO: Implementar chat
+                },
+                isDark: isDark,
+              ),
             ),
           ),
 
-          // BOTÓN DE ENFOQUE (toggle) - arriba del panel
+          // BOTÓN DE ENFOQUE (toggle) - arriba del panel (posicionado dinámicamente según altura del panel)
           Positioned(
             right: 16,
-            bottom: bottomPadding + 220,
+            bottom: bottomPadding + (_driverPanelHeight ?? 220) + _focusButtonExtraOffset,
             child: UserTripAcceptedFocusButton(
               isDark: isDark,
               isFocusedOnClient: _isFocusedOnClient,
