@@ -854,11 +854,12 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 child: _buildDriverMarker(),
               ),
 
-            // Punto de encuentro
+            // Punto de encuentro (aumentado para que la etiqueta no se recorte)
             Marker(
               point: pickupPoint,
-              width: 90,
-              height: 90,
+              // Debe coincidir con el tamaño interno de PickupPointMarker (no-compact)
+              width: 220,
+              height: 140,
               child: _buildPickupMarker(),
             ),
 

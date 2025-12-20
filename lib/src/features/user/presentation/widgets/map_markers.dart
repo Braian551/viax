@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
+import 'glass_widgets.dart';
 
 /// Marcador del cliente estilo Google Maps (punto azul con cono de luz/linterna)
 class ClientLocationMarker extends StatelessWidget {
@@ -221,40 +222,41 @@ class PickupPointMarker extends StatelessWidget {
   }
 
   Widget _buildLabel() {
-    return Container(
+    // Usar GlassPanel para efecto de cristal, con borderRadius y mayor ancho
+    return GlassPanel(
       padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 8 : 10,
-        vertical: isCompact ? 4 : 5,
+        horizontal: isCompact ? 8 : 12,
+        vertical: isCompact ? 6 : 8,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.success,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.location_on,
-            color: Colors.white,
-            size: isCompact ? 10 : 12,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label ?? 'Punto de encuentro',
-            style: TextStyle(
+      borderRadius: 12,
+      blur: 8,
+      backgroundColor: AppColors.success.withOpacity(0.9),
+      showBorder: true,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: isCompact ? 100 : 160),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.location_on,
               color: Colors.white,
-              fontSize: isCompact ? 9 : 11,
-              fontWeight: FontWeight.bold,
+              size: isCompact ? 12 : 14,
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label ?? 'Punto de encuentro',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isCompact ? 11 : 13,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
