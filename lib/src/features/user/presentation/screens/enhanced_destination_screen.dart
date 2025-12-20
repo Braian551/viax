@@ -764,8 +764,11 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
               const SizedBox(height: 16),
 
-              // Lugares guardados (solo en modo inline)
-              if (!useDragMode) _buildSavedLocationsRow(isDark),
+              // Lugares guardados (solo en modo inline y SOLO si no venimos desde el overlay del home)
+              // Cuando `initialSelection` está presente (p. ej. 'destination') significa que
+              // abrimos esta pantalla desde el home y los chips ya se muestran allí, así
+              // que evitamos duplicarlos aquí.
+              if (!useDragMode && widget.initialSelection == null) _buildSavedLocationsRow(isDark),
             ],
           ),
         ),

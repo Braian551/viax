@@ -466,8 +466,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                           placeholder: 'Buscar destino',
                           isDark: isDark,
                           isDestination: true,
-                          onTap: () {
-                            Navigator.pushNamed(
+                          onTap: () async {
+                            // Animación: ocultar el overlay para que no se vean duplicados
+                            await _animationController.reverse();
+                            await Navigator.pushNamed(
                               context,
                               RouteNames.requestTrip,
                               arguments: {
@@ -475,6 +477,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                 'currentPosition': _currentPosition,
                               },
                             );
+                            // Restaurar overlay al volver
+                            if (mounted) _animationController.forward();
                           },
                           onClear: null,
                         ),
