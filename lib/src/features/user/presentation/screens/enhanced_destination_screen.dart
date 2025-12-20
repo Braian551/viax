@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +11,12 @@ import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';
+import '../widgets/destination/enhanced/confirm_button.dart';
+import '../widgets/destination/enhanced/destination_header.dart';
+import '../widgets/destination/enhanced/inline_waypoints.dart';
+import '../widgets/destination/enhanced/saved_locations_row.dart';
+import '../widgets/destination/enhanced/waypoints_list.dart';
+import '../widgets/destination/enhanced/waypoints_panel.dart';
 import '../widgets/map_location_picker_sheet.dart';
 import 'trip_preview_screen.dart';
 
@@ -52,7 +57,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   bool _isGettingLocation = false;
   bool _showMap = false;
   List<LatLng> _routePoints = [];
-  String? _activeField; // 'origin', 'destination', null
 
   // Suggestion service
   late LocationSuggestionService _suggestionService;
@@ -69,7 +73,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     super.initState();
     _suggestionService = LocationSuggestionService();
     _setupAnimations();
-    _setupFocusListeners();
     _initializeLocation();
   }
 
@@ -102,26 +105,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     );
 
     _mainAnimationController.forward();
-  }
-
-  void _setupFocusListeners() {
-    _originFocusNode.addListener(() {
-      setState(() {
-        _activeField = _originFocusNode.hasFocus ? 'origin' : _activeField;
-        if (!_originFocusNode.hasFocus && _activeField == 'origin') {
-          _activeField = null;
-        }
-      });
-    });
-
-    _destinationFocusNode.addListener(() {
-      setState(() {
-        _activeField = _destinationFocusNode.hasFocus ? 'destination' : _activeField;
-        if (!_destinationFocusNode.hasFocus && _activeField == 'destination') {
-          _activeField = null;
-        }
-      });
-    });
   }
 
   Future<void> _initializeLocation() async {
@@ -245,7 +228,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     setState(() {
       _selectedOrigin = location;
       _originController.text = location.address;
-      _activeField = null;
     });
     _originFocusNode.unfocus();
     _updateRoute();
@@ -256,7 +238,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     setState(() {
       _selectedDestination = location;
       _destinationController.text = location.address;
-      _activeField = null;
     });
     _destinationFocusNode.unfocus();
     _updateRoute();
@@ -519,19 +500,83 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
   bool get _isValid => _selectedOrigin != null && _selectedDestination != null;
 
+  Widget _buildWaypointsSection({
+    required bool isDark,
+    required bool useDragMode,
+    required double maxSuggestionsHeight,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              WaypointsPanel(
+                isDark: isDark,
+                child: useDragMode ? _buildDragWaypoints(isDark) : _buildInlineWaypoints(isDark),
+              ),
+              const SizedBox(height: 16),
+              if (!useDragMode && widget.initialSelection == null)
+                SavedLocationsRow(isDark: isDark),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlineWaypoints(bool isDark) {
+    return InlineWaypoints(
+      originController: _originController,
+      destinationController: _destinationController,
+      originFocusNode: _originFocusNode,
+      destinationFocusNode: _destinationFocusNode,
+      suggestionService: _suggestionService,
+      userLocation: _userLocation,
+      isDark: isDark,
+      onOriginSelected: _onOriginSelected,
+      onDestinationSelected: _onDestinationSelected,
+      reverseGeocode: (point) => _suggestionService.reverseGeocode(
+        point.latitude,
+        point.longitude,
+      ),
+      openOriginMap: _openMapForOrigin,
+      openDestinationMap: _openMapForDestination,
+    );
+  }
+
+  Widget _buildDragWaypoints(bool isDark) {
+    return WaypointsList(
+      origin: _selectedOrigin,
+      destination: _selectedDestination,
+      stops: _stops,
+      isDark: isDark,
+      isGettingLocation: _isGettingLocation,
+      onReorder: _onReorderAllWaypoints,
+      onOriginTap: _openOriginSheet,
+      onDestinationTap: _openDestinationSheet,
+      onStopTap: _openStopSheet,
+      onRemoveStop: _removeStop,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final useDragMode = _stops.isNotEmpty;
+    final maxSuggestionsHeight = screenHeight * 0.5;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       resizeToAvoidBottomInset: true,
       body: GestureDetector(
-        onTap: () {
-          // Quitar foco al tocar fuera
-          FocusScope.of(context).unfocus();
-        },
+        onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
         child: Stack(
           children: [
@@ -552,802 +597,77 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                 ),
               ),
 
-          // Gradiente superior (no bloquea gestos)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      isDark ? Colors.black : Colors.white,
-                      isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.7),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Contenido superior (no ocupa todo el stack)
-          Positioned(
-            top: MediaQuery.of(context).padding.top,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHeader(isDark),
-                const SizedBox(height: 12),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildMainContent(isDark),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Botón confirmar (solo si hay paradas)
-          if (_isValid && _stops.isNotEmpty)
+            // Gradiente superior (no bloquea gestos)
             Positioned(
-              bottom: bottomPadding + 24,
-              left: 24,
-              right: 24,
-              child: _buildConfirmButton(isDark),
-            ),
-        ],
-      ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
-        children: [
-          // Botón atrás con efecto glass
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(context);
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              top: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  height: 200,
                   decoration: BoxDecoration(
-                    color: isDark 
-                        ? Colors.white.withOpacity(0.1) 
-                        : Colors.white.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark 
-                          ? Colors.white.withOpacity(0.1) 
-                          : Colors.black.withOpacity(0.05),
-                    ),
-                    boxShadow: isDark ? null : [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: isDark ? Colors.white : Colors.grey[800],
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Título
-          Expanded(
-            child: Text(
-              '¿A dónde vamos?',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : Colors.grey[900],
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-          // Botón agregar parada con efecto glass
-          if (_stops.length < 3)
-            GestureDetector(
-              onTap: _addStop,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add_rounded,
-                          color: AppColors.primary,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Parada',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        isDark ? Colors.black : Colors.white,
+                        isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.7),
+                        Colors.transparent,
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildMainContent(bool isDark) {
-    // Si hay paradas → todos usan bottom sheet con drag (reordenable)
-    // Si NO hay paradas → origen y destino usan sugerencias inline
-    final bool useDragMode = _stops.isNotEmpty;
-
-    // Calcular altura máxima disponible para sugerencias
-    final screenHeight = MediaQuery.of(context).size.height;
-    final maxSuggestionsHeight = screenHeight * 0.5; // Máximo 50% de la pantalla
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Card principal con efecto glass
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark 
-                          ? Colors.black.withOpacity(0.5) 
-                          : Colors.white.withOpacity(0.85),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.1) 
-                            : Colors.black.withOpacity(0.05),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: useDragMode 
-                        ? _buildDragModeContent(isDark)
-                        : _buildInlineModeContent(isDark),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Lugares guardados (solo en modo inline y SOLO si no venimos desde el overlay del home)
-              // Cuando `initialSelection` está presente (p. ej. 'destination') significa que
-              // abrimos esta pantalla desde el home y los chips ya se muestran allí, así
-              // que evitamos duplicarlos aquí.
-              if (!useDragMode && widget.initialSelection == null) _buildSavedLocationsRow(isDark),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Modo inline: origen y destino con sugerencias debajo
-  Widget _buildInlineModeContent(bool isDark) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ORIGEN
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: InlineSuggestions(
-            controller: _originController,
-            focusNode: _originFocusNode,
-            suggestionService: _suggestionService,
-            userLocation: _userLocation,
-            isOrigin: true,
-            isDark: isDark,
-            accentColor: AppColors.primary,
-            placeholder: 'Origen - ¿Desde dónde?',
-            onLocationSelected: _onOriginSelected,
-            onUseCurrentLocation: () async {
-              if (_userLocation != null) {
-                final address = await _suggestionService.reverseGeocode(
-                  _userLocation!.latitude,
-                  _userLocation!.longitude,
-                );
-                _onOriginSelected(SimpleLocation(
-                  latitude: _userLocation!.latitude,
-                  longitude: _userLocation!.longitude,
-                  address: address ?? 'Mi ubicación',
-                ));
-              }
-            },
-            onOpenMap: _openMapForOrigin,
-          ),
-        ),
-        _buildDivider(isDark),
-        // DESTINO
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: InlineSuggestions(
-            controller: _destinationController,
-            focusNode: _destinationFocusNode,
-            suggestionService: _suggestionService,
-            userLocation: _userLocation,
-            isOrigin: false,
-            isDark: isDark,
-            accentColor: AppColors.primaryDark,
-            placeholder: 'Destino - ¿A dónde?',
-            onLocationSelected: _onDestinationSelected,
-            onOpenMap: _openMapForDestination,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Modo drag: todos reordenables (origen, paradas, destino)
-  Widget _buildDragModeContent(bool isDark) {
-    // Total de items: origen (1) + paradas + destino (1)
-    final totalItems = 1 + _stops.length + 1;
-
-    return ReorderableListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: totalItems,
-      onReorder: _onReorderAllWaypoints,
-      proxyDecorator: (child, index, animation) {
-        return Material(
-          elevation: 6,
-          borderRadius: BorderRadius.circular(14),
-          shadowColor: AppColors.primary.withOpacity(0.3),
-          child: child,
-        );
-      },
-      itemBuilder: (context, index) {
-        // index 0 = origen
-        // index 1 hasta _stops.length = paradas
-        // index último = destino
-        
-        if (index == 0) {
-          // ORIGEN
-          return _buildDraggableWaypointTile(
-            key: const ValueKey('origin'),
-            index: index,
-            label: 'Origen',
-            value: _selectedOrigin,
-            placeholder: '¿Desde dónde?',
-            icon: Icons.my_location_rounded,
-            iconColor: AppColors.primary,
-            isDark: isDark,
-            isLoading: _isGettingLocation,
-            onTap: _openOriginSheet,
-            showDivider: true,
-          );
-        } else if (index == totalItems - 1) {
-          // DESTINO
-          return _buildDraggableWaypointTile(
-            key: const ValueKey('destination'),
-            index: index,
-            label: 'Destino',
-            value: _selectedDestination,
-            placeholder: '¿A dónde vamos?',
-            icon: Icons.flag_rounded,
-            iconColor: AppColors.primaryDark,
-            isDark: isDark,
-            onTap: _openDestinationSheet,
-            showDivider: false,
-          );
-        } else {
-          // PARADA
-          final stopIndex = index - 1;
-          return _buildDraggableStopTile(
-            key: ValueKey('stop_$stopIndex'),
-            index: index,
-            stopIndex: stopIndex,
-            stop: _stops[stopIndex],
-            isDark: isDark,
-            onTap: () => _openStopSheet(stopIndex),
-            onRemove: () => _removeStop(stopIndex),
-            showDivider: true,
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildDraggableWaypointTile({
-    required Key key,
-    required int index,
-    required String label,
-    required SimpleLocation? value,
-    required String placeholder,
-    required IconData icon,
-    required Color iconColor,
-    required bool isDark,
-    bool isLoading = false,
-    required VoidCallback onTap,
-    required bool showDivider,
-  }) {
-    final hasValue = value != null;
-    final info = hasValue 
-        ? LocationSuggestionService.parseAddress(value.address) 
-        : null;
-
-    return Column(
-      key: key,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-              child: Row(
+            // Contenido superior (no ocupa todo el stack)
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Drag handle con contenedor glass sutil
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.05) 
-                            : Colors.grey.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.drag_indicator_rounded,
-                        color: isDark ? Colors.white30 : Colors.grey[400],
-                        size: 18,
-                      ),
-                    ),
+                  DestinationHeader(
+                    isDark: isDark,
+                    stopsCount: _stops.length,
+                    onBack: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.pop(context);
+                    },
+                    onAddStop: _addStop,
                   ),
-                  const SizedBox(width: 8),
-                  // Icono con gradiente
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          iconColor.withOpacity(0.18),
-                          iconColor.withOpacity(0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: iconColor.withOpacity(0.2),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: isLoading
-                        ? Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                            ),
-                          )
-                        : Icon(icon, color: iconColor, size: 20),
-                  ),
-                  const SizedBox(width: 14),
-                  // Contenido
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: iconColor.withOpacity(0.8),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          hasValue ? info!.name : placeholder,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
-                            color: hasValue
-                                ? (isDark ? Colors.white : Colors.grey[900])
-                                : (isDark ? Colors.white30 : Colors.grey[400]),
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (hasValue && info!.subtitle.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              info.subtitle,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? Colors.white38 : Colors.grey[500],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: isDark 
-                          ? Colors.white.withOpacity(0.05) 
-                          : Colors.grey.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      color: isDark ? Colors.white30 : Colors.grey[400],
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (showDivider) _buildDivider(isDark),
-      ],
-    );
-  }
-
-  Widget _buildDraggableStopTile({
-    required Key key,
-    required int index,
-    required int stopIndex,
-    required SimpleLocation? stop,
-    required bool isDark,
-    required VoidCallback onTap,
-    required VoidCallback onRemove,
-    required bool showDivider,
-  }) {
-    final hasValue = stop != null;
-    final info = hasValue 
-        ? LocationSuggestionService.parseAddress(stop.address) 
-        : null;
-
-    return Column(
-      key: key,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-              child: Row(
-                children: [
-                  // Drag handle con contenedor glass sutil
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.05) 
-                            : Colors.grey.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.drag_indicator_rounded,
-                        color: isDark ? Colors.white30 : Colors.grey[400],
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Número con gradiente
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.accent.withOpacity(0.18),
-                          AppColors.accent.withOpacity(0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.accent.withOpacity(0.2),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${stopIndex + 1}',
-                        style: const TextStyle(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  // Contenido
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PARADA ${stopIndex + 1}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.accent.withOpacity(0.8),
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          hasValue ? info!.name : 'Toca para seleccionar',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
-                            color: hasValue
-                                ? (isDark ? Colors.white : Colors.grey[900])
-                                : (isDark ? Colors.white30 : Colors.grey[400]),
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (hasValue && info!.subtitle.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              info.subtitle,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? Colors.white38 : Colors.grey[500],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  // Eliminar con estilo mejorado
-                  GestureDetector(
-                    onTap: onRemove,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: Colors.red[400],
+                  const SizedBox(height: 12),
+                  FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: _buildWaypointsSection(
+                        isDark: isDark,
+                        useDragMode: useDragMode,
+                        maxSuggestionsHeight: maxSuggestionsHeight,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        if (showDivider) _buildDivider(isDark),
-      ],
-    );
-  }
 
-  Widget _buildDivider(bool isDark) {
-    return Container(
-      height: 1,
-      margin: const EdgeInsets.only(left: 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15),
-            Colors.transparent,
+            // Botón confirmar (solo si hay paradas)
+            if (_isValid && _stops.isNotEmpty)
+              Positioned(
+                bottom: bottomPadding + 24,
+                left: 24,
+                right: 24,
+                child: ConfirmButton(
+                  isDark: isDark,
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    _goToTripPreview();
+                  },
+                ),
+              ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSavedLocationsRow(bool isDark) {
-    return Row(
-      children: [
-        _buildSavedLocationChip(
-          icon: Icons.home_rounded,
-          label: 'Casa',
-          isDark: isDark,
-        ),
-        const SizedBox(width: 10),
-        _buildSavedLocationChip(
-          icon: Icons.work_rounded,
-          label: 'Trabajo',
-          isDark: isDark,
-        ),
-        const SizedBox(width: 10),
-        _buildSavedLocationChip(
-          icon: Icons.star_rounded,
-          label: 'Favoritos',
-          isDark: isDark,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSavedLocationChip({
-    required IconData icon,
-    required String label,
-    required bool isDark,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          // TODO: Cargar ubicación guardada
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark 
-                    ? Colors.white.withOpacity(0.08) 
-                    : Colors.white.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDark 
-                      ? Colors.white.withOpacity(0.1) 
-                      : Colors.black.withOpacity(0.05),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 18, color: isDark ? Colors.white60 : Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConfirmButton(bool isDark) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          _goToTripPreview();
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primaryDark,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Continuar',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );
