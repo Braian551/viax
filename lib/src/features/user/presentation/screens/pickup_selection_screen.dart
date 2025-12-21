@@ -1,18 +1,24 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/auth/user_service.dart';
+import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import 'trip_preview_screen.dart';
 import 'searching_driver_screen.dart';
+import '../widgets/pickup/pickup_bottom_panel.dart';
+import '../widgets/pickup/pickup_center_button.dart';
+import '../widgets/pickup/pickup_center_pin.dart';
+import '../widgets/pickup/pickup_header.dart';
+import '../widgets/pickup/pickup_loading_overlay.dart';
+import '../widgets/pickup/pickup_map.dart';
+import '../widgets/pickup/pickup_snapping_indicator.dart';
 
 /// Pantalla para seleccionar el punto de encuentro
 /// Similar a Didi: muestra un pin arrastrable sobre el mapa
@@ -58,7 +64,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
   Timer? _addressUpdateTimer;
 
   // Animaciones
-  late AnimationController _pulseController;
   late AnimationController _pinBounceController;
   late AnimationController _panelController;
   late Animation<Offset> _panelSlideAnimation;
@@ -75,12 +80,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
   }
 
   void _initAnimations() {
-    // Animación de pulso para el punto del cliente
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
     // Animación de rebote del pin al soltar
     _pinBounceController = AnimationController(
       vsync: this,
@@ -425,7 +424,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
   void dispose() {
     _positionStream?.cancel();
     _addressUpdateTimer?.cancel();
-    _pulseController.dispose();
     _pinBounceController.dispose();
     _panelController.dispose();
     super.dispose();
@@ -471,723 +469,87 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
       body: Stack(
         children: [
           // Mapa interactivo
-          _buildMap(isDark),
+          PickupMap(
+            mapController: _mapController,
+            initialCenter: _pickupLocation ?? LatLng(widget.origin.latitude, widget.origin.longitude),
+            clientLocation: _clientLocation,
+            clientHeading: _clientHeading,
+            isDark: isDark,
+            onMapMoveStart: _onMapMoveStart,
+            onMapMoveEnd: _onMapMoveEnd,
+          ),
 
           // Pin fijo en el centro de la pantalla (no se mueve, el mapa se mueve debajo)
-          _buildCenterPin(),
+          PickupCenterPin(
+            isMapMoving: _isMapMoving,
+            pinBounceController: _pinBounceController,
+            label: _isMapMoving ? 'Suelta en la calle' : _getShortAddress(),
+          ),
 
           // Indicador de ajustando a calle
-          if (_isSnappingToRoad) _buildSnappingIndicator(isDark),
+          if (_isSnappingToRoad) PickupSnappingIndicator(isDark: isDark),
 
           // Header con botón de volver
-          _buildHeader(isDark),
+          PickupHeader(
+            isDark: isDark,
+            onBack: () => Navigator.pop(context),
+          ),
 
           // Botón para centrar en cliente
-          _buildCenterButton(isDark),
+          PickupCenterButton(
+            isDark: isDark,
+            onTap: _centerOnClient,
+          ),
 
           // Panel inferior con dirección y botón solicitar
-          _buildBottomPanel(isDark, bottomPadding),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SlideTransition(
+              position: _panelSlideAnimation,
+              child: PickupBottomPanel(
+                isDark: isDark,
+                bottomPadding: bottomPadding,
+                isLoadingAddress: _isLoadingAddress,
+                isRequestingTrip: _isRequestingTrip,
+                pickupAddress: _pickupAddress,
+                onChangeHint: _showChangeHint,
+                onRequestTrip: _requestTrip,
+              ),
+            ),
+          ),
 
           // Loading overlay
-          if (_isLoading) _buildLoadingOverlay(isDark),
+          if (_isLoading) PickupLoadingOverlay(isDark: isDark),
         ],
       ),
     );
   }
 
-  /// Pin fijo en el centro de la pantalla
-  Widget _buildCenterPin() {
-    return Center(
-      child: Padding(
-        // Offset para que el pin apunte al centro exacto
-        padding: const EdgeInsets.only(bottom: 60),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          transform: Matrix4.translationValues(0, _isMapMoving ? -20 : 0, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Etiqueta
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
-                opacity: _isMapMoving ? 1.0 : 0.8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _isMapMoving
-                        ? AppColors.primary
-                        : const Color(0xFF00C853),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (_isMapMoving
-                                    ? AppColors.primary
-                                    : const Color(0xFF00C853))
-                                .withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isMapMoving ? Icons.place : Icons.touch_app,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isMapMoving
-                            ? 'Suelta en la calle'
-                            : _getShortAddress(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Triángulo
-              CustomPaint(
-                size: const Size(14, 7),
-                painter: _TrianglePainter(
-                  color: _isMapMoving
-                      ? AppColors.primary
-                      : const Color(0xFF00C853),
-                ),
-              ),
-
-              const SizedBox(height: 2),
-
-              // Pin con animación
-              AnimatedBuilder(
-                animation: _pinBounceController,
-                builder: (context, child) {
-                  final bounce =
-                      math.sin(_pinBounceController.value * math.pi) * 6;
-                  return Transform.translate(
-                    offset: Offset(0, -bounce),
-                    child: child,
-                  );
-                },
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 150),
-                  scale: _isMapMoving ? 1.15 : 1.0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Cabeza del pin
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: _isMapMoving
-                                ? [
-                                    AppColors.primary.withOpacity(0.9),
-                                    AppColors.primary,
-                                  ]
-                                : [
-                                    const Color(0xFF00E676),
-                                    const Color(0xFF00C853),
-                                  ],
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  (_isMapMoving
-                                          ? AppColors.primary
-                                          : const Color(0xFF00C853))
-                                      .withOpacity(0.5),
-                              blurRadius: 16,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-
-                      // Aguja del pin
-                      Container(
-                        width: 5,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: _isMapMoving
-                                ? [
-                                    AppColors.primary,
-                                    AppColors.primary.withOpacity(0.2),
-                                  ]
-                                : [
-                                    const Color(0xFF00C853),
-                                    const Color(0xFF00C853).withOpacity(0.2),
-                                  ],
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(3),
-                            bottomRight: Radius.circular(3),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Sombra del pin
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: _isMapMoving ? 20 : 12,
-                height: _isMapMoving ? 8 : 5,
-                margin: EdgeInsets.only(top: _isMapMoving ? 15 : 0),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(_isMapMoving ? 0.3 : 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMap(bool isDark) {
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter:
-            _pickupLocation ??
-            LatLng(widget.origin.latitude, widget.origin.longitude),
-        initialZoom: 17.0,
-        minZoom: 10,
-        maxZoom: 19,
-        onPositionChanged: (position, hasGesture) {
-          if (hasGesture) {
-            _onMapMoveStart();
-          }
-        },
-        onMapEvent: (event) {
-          // Detectar cuando el mapa deja de moverse
-          if (event is MapEventMoveEnd || event is MapEventFlingAnimationEnd) {
-            _onMapMoveEnd();
-          }
-        },
-      ),
-      children: [
-        // Tiles de Mapbox
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
-        ),
-
-        // Marcador del cliente (punto azul con linterna)
-        if (_clientLocation != null)
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: _clientLocation!,
-                width: 70,
-                height: 70,
-                child: _buildClientMarker(),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  /// Obtener dirección corta para el label
   String _getShortAddress() {
     if (_pickupAddress.isEmpty || _pickupAddress == 'Cargando dirección...') {
       return 'Punto de encuentro';
     }
-    // Tomar solo la primera parte de la dirección
+
     final parts = _pickupAddress.split(',');
     if (parts.isNotEmpty) {
       final firstPart = parts[0].trim();
-      if (firstPart.length > 25) {
-        return '${firstPart.substring(0, 22)}...';
-      }
+      if (firstPart.length > 25) return '${firstPart.substring(0, 22)}...';
       return firstPart;
     }
+
     return 'Punto de encuentro';
   }
 
-  /// Indicador de ajustando a calle
-  Widget _buildSnappingIndicator(bool isDark) {
-    return Positioned(
-      top: MediaQuery.of(context).padding.top + 80,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[850] : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Ajustando a la calle más cercana...',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
+  void _showChangeHint() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mueve el mapa para cambiar el punto'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+        backgroundColor: AppColors.primary,
       ),
     );
   }
-
-  /// Marcador del cliente (punto azul con linterna)
-  Widget _buildClientMarker() {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, _) {
-        return SizedBox(
-          width: 70,
-          height: 70,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Cono de luz/linterna
-              Positioned(
-                top: 0,
-                child: Transform.rotate(
-                  angle: (_clientHeading) * (math.pi / 180),
-                  alignment: Alignment.bottomCenter,
-                  child: ClipPath(
-                    clipper: _BeamClipper(),
-                    child: Container(
-                      width: 50,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            AppColors.primary.withOpacity(0.5),
-                            AppColors.primary.withOpacity(0.15),
-                            AppColors.primary.withOpacity(0.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Círculo de precisión GPS
-              Container(
-                width: 28 + (_pulseController.value * 6),
-                height: 28 + (_pulseController.value * 6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(
-                    0.15 * (1 - _pulseController.value),
-                  ),
-                ),
-              ),
-
-              // Punto central azul
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeader(bool isDark) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Botón volver
-              Material(
-                color: isDark ? Colors.grey[800] : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 2,
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Título
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    'Selecciona punto de encuentro',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCenterButton(bool isDark) {
-    return Positioned(
-      right: 16,
-      bottom: 220,
-      child: Material(
-        color: isDark ? Colors.grey[800] : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        elevation: 3,
-        child: InkWell(
-          onTap: _centerOnClient,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            child: Icon(Icons.my_location, color: AppColors.primary, size: 24),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomPanel(bool isDark, double bottomPadding) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: SlideTransition(
-        position: _panelSlideAnimation,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding + 20),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[600] : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Título
-              Text(
-                'Punto de encuentro sugerido',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Otros pasajeros han usado este punto de encuentro',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Dirección con botón cambiar
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[800] : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_isLoadingAddress)
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      isDark ? Colors.white54 : Colors.black54,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Obteniendo dirección...',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Text(
-                              _pickupAddress,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // El usuario puede mover el mapa para cambiar
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text(
-                              'Mueve el mapa para cambiar el punto',
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 2),
-                            backgroundColor: AppColors.primary,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Cambiar',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Botón Solicitar
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isRequestingTrip || _isLoadingAddress
-                      ? null
-                      : _requestTrip,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isRequestingTrip
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : const Text(
-                          'Solicitar',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingOverlay(bool isDark) {
-    return Container(
-      color: isDark ? Colors.black54 : Colors.white70,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Obteniendo ubicación...',
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// CustomClipper para el cono de luz estilo linterna
-class _BeamClipper extends CustomClipper<ui.Path> {
-  @override
-  ui.Path getClip(Size size) {
-    final path = ui.Path();
-    path.moveTo(size.width / 2, size.height);
-    path.lineTo(0, 0);
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<ui.Path> oldClipper) => false;
-}
-
-/// CustomPainter para dibujar un triángulo (flecha del tooltip)
-class _TrianglePainter extends CustomPainter {
-  final Color color;
-
-  _TrianglePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = ui.Path();
-    path.moveTo(0, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width / 2, size.height);
-    path.close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

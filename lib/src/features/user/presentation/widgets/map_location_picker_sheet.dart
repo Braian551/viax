@@ -1,16 +1,20 @@
-import 'dart:async';
-import 'dart:convert';
+﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart' hide Path;
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart' hide Path;
+
 import '../../../../global/models/simple_location.dart';
-import '../../../../theme/app_colors.dart';
+import '../../../../global/services/mapbox_service.dart';
+import 'pickup/pickup_center_button.dart';
+import 'pickup/pickup_center_pin.dart';
+import 'pickup/pickup_map.dart';
+import 'pickup/pickup_snapping_indicator.dart';
 
 /// Widget de mapa con selector de ubicación estilo DiDi/Uber
-/// Se muestra como un DraggableScrollableSheet expandible
+/// Reutiliza los mismos componentes del selector de punto de encuentro
 class MapLocationPickerSheet extends StatefulWidget {
   final SimpleLocation? initialLocation;
   final LatLng? userLocation;
@@ -24,7 +28,7 @@ class MapLocationPickerSheet extends StatefulWidget {
     this.initialLocation,
     this.userLocation,
     this.title = 'Seleccionar ubicación',
-    this.accentColor = const Color(0xFF2196F3), // AppColors.primary
+    this.accentColor = const Color(0xFF2196F3),
     required this.onLocationSelected,
     this.onClose,
   });
@@ -36,150 +40,232 @@ class MapLocationPickerSheet extends StatefulWidget {
 class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  late LatLng _currentCenter;
+  late LatLng _initialCenter;
+  LatLng? _clientLocation;
+  LatLng? _selectedPoint;
+  double _clientHeading = 0.0;
+
   String _address = 'Cargando dirección...';
   bool _isLoadingAddress = false;
-  bool _isMoving = false;
-  bool _isMapReady = false;
-  
-  late AnimationController _pinAnimationController;
-  late Animation<double> _pinBounceAnimation;
-  late Animation<double> _pinShadowAnimation;
-  
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  bool _isSnappingToRoad = false;
+  bool _isMapMoving = false;
 
-  Timer? _debounce;
+  Timer? _addressUpdateTimer;
+  late AnimationController _pinBounceController;
 
   @override
   void initState() {
     super.initState();
-    
-    // Inicializar posición
+
     if (widget.initialLocation != null) {
-      _currentCenter = widget.initialLocation!.toLatLng();
+      _initialCenter = widget.initialLocation!.toLatLng();
       _address = widget.initialLocation!.address;
     } else if (widget.userLocation != null) {
-      _currentCenter = widget.userLocation!;
+      _initialCenter = widget.userLocation!;
     } else {
-      _currentCenter = const LatLng(6.2442, -75.5812); // Default Medellín
+      _initialCenter = const LatLng(6.2442, -75.5812);
     }
-    
-    _setupAnimations();
-  }
 
-  void _setupAnimations() {
-    // Animación del pin cuando se mueve
-    _pinAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+    _clientLocation = widget.userLocation;
+    _selectedPoint = _initialCenter;
+
+    _pinBounceController = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 400),
     );
-    
-    _pinBounceAnimation = Tween<double>(begin: 0, end: -20).animate(
-      CurvedAnimation(
-        parent: _pinAnimationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-    
-    _pinShadowAnimation = Tween<double>(begin: 1.0, end: 0.6).animate(
-      CurvedAnimation(
-        parent: _pinAnimationController,
-        curve: Curves.easeOut,
-      ),
-    );
-    
-    // Pulso del marcador del usuario
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-    
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeOut,
-      ),
-    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapController.move(_initialCenter, 17);
+      _snapAndUpdateAddress();
+    });
   }
 
   @override
   void dispose() {
-    _pinAnimationController.dispose();
-    _pulseController.dispose();
-    _debounce?.cancel();
+    _pinBounceController.dispose();
+    _addressUpdateTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _getAddress(LatLng point) async {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
-      if (!mounted) return;
-      
-      setState(() => _isLoadingAddress = true);
-      
-      try {
-        final url = Uri.parse(
-          'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${point.latitude}&lon=${point.longitude}',
-        );
-        final resp = await http.get(url, headers: {
-          'User-Agent': 'ViaxApp/1.0 (student_project_demo)',
-        });
-        
-        if (resp.statusCode == 200 && mounted) {
-          final data = json.decode(resp.body);
-          setState(() {
-            _address = data['display_name'] ?? 'Dirección desconocida';
-          });
-        }
-      } catch (e) {
-        debugPrint('Error fetching address: $e');
-        if (mounted) {
-          setState(() => _address = 'Error obteniendo dirección');
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoadingAddress = false);
-        }
-      }
-    });
-  }
-
-  void _centerOnUserLocation() async {
-    HapticFeedback.mediumImpact();
-    
-    try {
-      final position = await Geolocator.getCurrentPosition();
-      final latLng = LatLng(position.latitude, position.longitude);
-      
-      setState(() {
-        _currentCenter = latLng;
-      });
-      
-      _mapController.move(latLng, 17);
-      _getAddress(latLng);
-    } catch (e) {
-      debugPrint('Error getting location: $e');
+  void _onMapMoveStart() {
+    if (!_isMapMoving) {
+      setState(() => _isMapMoving = true);
     }
   }
 
-  void _confirmLocation() {
+  void _onMapMoveEnd() {
+    _addressUpdateTimer?.cancel();
+    _addressUpdateTimer = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      final center = _mapController.camera.center;
+      setState(() {
+        _selectedPoint = center;
+        _isMapMoving = false;
+      });
+      _pinBounceController.forward(from: 0);
+      HapticFeedback.lightImpact();
+      await _snapAndUpdateAddress();
+    });
+  }
+
+  Future<void> _snapAndUpdateAddress() async {
+    if (_selectedPoint == null) return;
+
+    setState(() => _isSnappingToRoad = true);
+
+    try {
+      final snappedPoint = await _snapToNearestRoad(_selectedPoint!);
+
+      if (mounted && snappedPoint != null) {
+        final distance = const Distance().as(
+          LengthUnit.Meter,
+          _selectedPoint!,
+          snappedPoint,
+        );
+
+        if (distance > 3) {
+          _mapController.move(snappedPoint, _mapController.camera.zoom);
+        }
+
+        _selectedPoint = snappedPoint;
+      }
+    } catch (e) {
+      debugPrint('Error snapping to road: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isSnappingToRoad = false);
+      }
+    }
+
+    await _updateAddress();
+  }
+
+  Future<LatLng?> _snapToNearestRoad(LatLng point) async {
+    try {
+      final snappedPoint = await MapboxService.snapToStreet(point: point);
+
+      if (snappedPoint != null) {
+        return snappedPoint;
+      }
+
+      final offsets = [
+        const LatLng(0.0003, 0.0),
+        const LatLng(-0.0003, 0.0),
+        const LatLng(0.0, 0.0003),
+        const LatLng(0.0, -0.0003),
+      ];
+
+      for (final offset in offsets) {
+        final candidate = LatLng(
+          point.latitude + offset.latitude,
+          point.longitude + offset.longitude,
+        );
+
+        final nearbySnapped = await MapboxService.snapToStreet(point: candidate);
+        if (nearbySnapped != null) {
+          return nearbySnapped;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('Error in snapToNearestRoad: $e');
+      return null;
+    }
+  }
+
+  Future<void> _updateAddress() async {
+    if (_selectedPoint == null) return;
+
+    setState(() => _isLoadingAddress = true);
+
+    try {
+      final place = await MapboxService.reverseGeocodeStreetOnly(
+        position: _selectedPoint!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _address = place?.placeName ?? 'Punto en la vía';
+          _isLoadingAddress = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _address = 'Punto en la vía';
+          _isLoadingAddress = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _centerOnUserLocation() async {
     HapticFeedback.mediumImpact();
-    
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      final latLng = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        _clientLocation = latLng;
+        _clientHeading = position.heading;
+        _selectedPoint = latLng;
+      });
+
+      _mapController.move(latLng, 17);
+      _pinBounceController.forward(from: 0);
+      await _snapAndUpdateAddress();
+    } catch (e) {
+      debugPrint('Error getting user location: $e');
+    }
+  }
+
+  bool get _canConfirm =>
+      !_isMapMoving &&
+      !_isLoadingAddress &&
+      !_isSnappingToRoad &&
+      _selectedPoint != null;
+
+  void _confirmLocation() {
+    if (!_canConfirm || _selectedPoint == null) return;
+
+    HapticFeedback.mediumImpact();
+
     final location = SimpleLocation(
-      latitude: _currentCenter.latitude,
-      longitude: _currentCenter.longitude,
-      address: _address,
+      latitude: _selectedPoint!.latitude,
+      longitude: _selectedPoint!.longitude,
+      address: _address.isEmpty ? 'Punto en la vía' : _address,
     );
-    
+
     widget.onLocationSelected(location);
+  }
+
+  String _getShortAddress() {
+    if (_address.isEmpty || _address == 'Cargando dirección...') {
+      return 'Punto de encuentro';
+    }
+
+    final parts = _address.split(',');
+    if (parts.isNotEmpty) {
+      final first = parts.first.trim();
+      if (first.length > 25) return '${first.substring(0, 22)}...';
+      return first;
+    }
+
+    return 'Punto de encuentro';
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Container(
       height: screenHeight * 0.85,
       decoration: BoxDecoration(
@@ -197,16 +283,42 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
         children: [
           _buildHandle(isDark),
           _buildHeader(isDark),
-          Expanded(
-            child: Stack(
-              children: [
-                _buildMap(isDark),
-                _buildCenterPin(),
-                _buildMyLocationButton(isDark),
-              ],
+          Expanded(child: _buildMapContent(isDark)),
+          _buildBottomPanel(isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapContent(bool isDark) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: PickupMap(
+              mapController: _mapController,
+              initialCenter: _initialCenter,
+              clientLocation: _clientLocation,
+              clientHeading: _clientHeading,
+              isDark: isDark,
+              onMapMoveStart: _onMapMoveStart,
+              onMapMoveEnd: _onMapMoveEnd,
             ),
           ),
-          _buildBottomPanel(isDark),
+          if (_isSnappingToRoad) PickupSnappingIndicator(isDark: isDark),
+          IgnorePointer(
+            child: PickupCenterPin(
+              isMapMoving: _isMapMoving,
+              pinBounceController: _pinBounceController,
+              label: _isMapMoving ? 'Suelta en la calle' : _getShortAddress(),
+            ),
+          ),
+          PickupCenterButton(
+            isDark: isDark,
+            onTap: _centerOnUserLocation,
+            bottomOffset: 24,
+          ),
         ],
       ),
     );
@@ -265,196 +377,11 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
     );
   }
 
-  Widget _buildMap(bool isDark) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      child: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: _currentCenter,
-          initialZoom: 16.0,
-          onMapReady: () {
-            setState(() => _isMapReady = true);
-            _getAddress(_currentCenter);
-          },
-          onPositionChanged: (position, hasGesture) {
-            if (hasGesture && _isMapReady) {
-              if (!_isMoving) {
-                _pinAnimationController.forward();
-              }
-              setState(() {
-                _isMoving = true;
-                _currentCenter = position.center;
-              });
-            }
-          },
-          onMapEvent: (event) {
-            if (event is MapEventMoveEnd && _isMapReady) {
-              _pinAnimationController.reverse();
-              setState(() => _isMoving = false);
-              _getAddress(_currentCenter);
-            }
-          },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: isDark
-                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-                : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-            subdomains: const ['a', 'b', 'c', 'd'],
-            userAgentPackageName: 'com.example.viax',
-          ),
-          // Marcador de ubicación del usuario si existe
-          if (widget.userLocation != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: widget.userLocation!,
-                  width: 60,
-                  height: 60,
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) {
-                      return Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Pulso exterior
-                          Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.primary.withOpacity(
-                                  0.3 * (1.5 - _pulseAnimation.value),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Punto central
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.4),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCenterPin() {
-    return Center(
-      child: AnimatedBuilder(
-        animation: _pinAnimationController,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, _pinBounceAnimation.value),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: widget.accentColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.accentColor.withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                // Flecha hacia abajo
-                CustomPaint(
-                  size: const Size(20, 12),
-                  painter: _TrianglePainter(color: widget.accentColor),
-                ),
-                const SizedBox(height: 4),
-                // Sombra del pin
-                Transform.scale(
-                  scale: _pinShadowAnimation.value,
-                  child: Container(
-                    width: 12,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                // Offset para centrar visualmente
-                const SizedBox(height: 40),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildMyLocationButton(bool isDark) {
-    return Positioned(
-      right: 16,
-      bottom: 16,
-      child: GestureDetector(
-        onTap: _centerOnUserLocation,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.my_location_rounded,
-            color: widget.accentColor,
-            size: 24,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBottomPanel(bool isDark) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        20,
-        20,
-        20 + MediaQuery.of(context).padding.bottom,
-      ),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPadding),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -475,7 +402,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.1),
+                  color: widget.accentColor.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -500,8 +427,9 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
                     const SizedBox(height: 4),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      child: _isMoving || _isLoadingAddress
+                      child: (_isMapMoving || _isLoadingAddress || _isSnappingToRoad)
                           ? Row(
+                              key: const ValueKey('loading'),
                               children: [
                                 SizedBox(
                                   width: 14,
@@ -515,7 +443,9 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  _isMoving ? 'Moviendo...' : 'Buscando...',
+                                  _isSnappingToRoad
+                                      ? 'Ajustando a la calle...'
+                                      : 'Buscando dirección...',
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: isDark ? Colors.white70 : Colors.grey[600],
@@ -525,7 +455,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
                             )
                           : Text(
                               _address,
-                              key: ValueKey(_address),
+                              key: const ValueKey('address'),
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -545,7 +475,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _isMoving || _isLoadingAddress ? null : _confirmLocation,
+              onPressed: _canConfirm ? _confirmLocation : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: widget.accentColor,
                 disabledBackgroundColor: widget.accentColor.withOpacity(0.5),
@@ -571,41 +501,15 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
   }
 }
 
-/// Painter para el triángulo del pin
-class _TrianglePainter extends CustomPainter {
-  final Color color;
-  
-  _TrianglePainter({required this.color});
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    
-    final path = Path()
-      ..moveTo(size.width / 2, size.height)
-      ..lineTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..close();
-    
-    canvas.drawPath(path, paint);
-  }
-  
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// Mostrar el sheet de selección de ubicación en mapa
 Future<SimpleLocation?> showMapLocationPicker({
   required BuildContext context,
   SimpleLocation? initialLocation,
   LatLng? userLocation,
   String title = 'Seleccionar ubicación',
-  Color accentColor = const Color(0xFF2196F3), // AppColors.primary
+  Color accentColor = const Color(0xFF2196F3),
 }) async {
   SimpleLocation? result;
-  
+
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -622,6 +526,6 @@ Future<SimpleLocation?> showMapLocationPicker({
       },
     ),
   );
-  
+
   return result;
 }
