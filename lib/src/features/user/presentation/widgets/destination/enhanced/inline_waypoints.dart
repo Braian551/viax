@@ -14,8 +14,12 @@ class InlineWaypoints extends StatelessWidget {
   final LocationSuggestionService suggestionService;
   final LatLng? userLocation;
   final bool isDark;
+  final bool hasOriginSelected;
+  final bool hasDestinationSelected;
   final ValueChanged<SimpleLocation> onOriginSelected;
   final ValueChanged<SimpleLocation> onDestinationSelected;
+  final VoidCallback onOriginChanged;
+  final VoidCallback onDestinationChanged;
   final Future<String?> Function(LatLng point) reverseGeocode;
   final VoidCallback openOriginMap;
   final VoidCallback openDestinationMap;
@@ -29,8 +33,12 @@ class InlineWaypoints extends StatelessWidget {
     required this.suggestionService,
     required this.userLocation,
     required this.isDark,
+    required this.hasOriginSelected,
+    required this.hasDestinationSelected,
     required this.onOriginSelected,
     required this.onDestinationSelected,
+    required this.onOriginChanged,
+    required this.onDestinationChanged,
     required this.reverseGeocode,
     required this.openOriginMap,
     required this.openDestinationMap,
@@ -52,7 +60,9 @@ class InlineWaypoints extends StatelessWidget {
             isDark: isDark,
             accentColor: AppColors.primary,
             placeholder: 'Origen - ¿Desde dónde?',
+            hasLocationSelected: hasOriginSelected,
             onLocationSelected: onOriginSelected,
+            onTextChanged: onOriginChanged,
             onUseCurrentLocation: userLocation == null
                 ? null
                 : () async {
@@ -80,7 +90,9 @@ class InlineWaypoints extends StatelessWidget {
             isDark: isDark,
             accentColor: AppColors.primaryDark,
             placeholder: 'Destino - ¿A dónde?',
+            hasLocationSelected: hasDestinationSelected,
             onLocationSelected: onDestinationSelected,
+            onTextChanged: onDestinationChanged,
             onOpenMap: openDestinationMap,
           ),
         ),
@@ -101,7 +113,9 @@ class _WaypointDivider extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15),
+            isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.grey.withOpacity(0.15),
             Colors.transparent,
           ],
         ),

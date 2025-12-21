@@ -57,6 +57,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   bool _isGettingLocation = false;
   bool _showMap = false;
   List<LatLng> _routePoints = [];
+  bool _hasOriginSelected = false;
+  bool _hasDestinationSelected = false;
 
   // Suggestion service
   late LocationSuggestionService _suggestionService;
@@ -86,13 +88,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       CurvedAnimation(parent: _mainAnimationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.02),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _mainAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _mapRevealController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -115,15 +117,15 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         widget.preloadedPosition!.longitude,
       );
       _suggestionService.setUserContext(location: _userLocation);
-      
+
       // Obtener dirección en paralelo
       _reverseGeocodeOrigin();
-      
+
       setState(() => _showMap = true);
       _mapRevealController.forward();
       return;
     }
-    
+
     // Si no hay posición precargada, obtenerla
     await _getCurrentLocation();
     if (_userLocation != null) {
@@ -135,7 +137,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   /// Obtiene la dirección del origen en segundo plano
   Future<void> _reverseGeocodeOrigin() async {
     if (_userLocation == null) return;
-    
+
     try {
       final address = await _suggestionService.reverseGeocode(
         _userLocation!.latitude,
@@ -150,6 +152,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             address: address ?? 'Mi ubicación',
           );
           _originController.text = _selectedOrigin!.address;
+          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
+          _hasOriginSelected = true;
         });
       }
     } catch (e) {
@@ -183,12 +187,14 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       _userLocation = LatLng(position.latitude, position.longitude);
       _suggestionService.setUserContext(location: _userLocation);
-      
+
       final address = await _suggestionService.reverseGeocode(
         position.latitude,
         position.longitude,
@@ -202,6 +208,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             address: address ?? 'Mi ubicación',
           );
           _originController.text = _selectedOrigin!.address;
+          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
+          _hasOriginSelected = true;
         });
       }
     } catch (e) {
@@ -217,7 +225,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         SnackBar(
           content: Text(message),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       setState(() => _isGettingLocation = false);
@@ -228,6 +238,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     setState(() {
       _selectedOrigin = location;
       _originController.text = location.address;
+      _hasOriginSelected = true;
     });
     _originFocusNode.unfocus();
     _updateRoute();
@@ -238,6 +249,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     setState(() {
       _selectedDestination = location;
       _destinationController.text = location.address;
+      _hasDestinationSelected = true;
     });
     _destinationFocusNode.unfocus();
     _updateRoute();
@@ -246,7 +258,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
   void _checkAutoNavigate() {
     // Si origen y destino están listos y NO hay paradas, ir automáticamente
-    if (_selectedOrigin != null && _selectedDestination != null && _stops.isEmpty) {
+    if (_selectedOrigin != null &&
+        _selectedDestination != null &&
+        _stops.isEmpty) {
       Future.delayed(const Duration(milliseconds: 400), () {
         _goToTripPreview();
       });
@@ -356,21 +370,21 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   /// El último siempre es destino, el primero siempre es origen
   void _onReorderAllWaypoints(int oldIndex, int newIndex) {
     HapticFeedback.mediumImpact();
-    
+
     // Construir lista completa: [origen, ...paradas, destino]
     final allWaypoints = <SimpleLocation?>[
       _selectedOrigin,
       ..._stops,
       _selectedDestination,
     ];
-    
+
     // Ajustar índice si se mueve hacia abajo
     if (newIndex > oldIndex) newIndex--;
-    
+
     // Mover el elemento
     final item = allWaypoints.removeAt(oldIndex);
     allWaypoints.insert(newIndex, item);
-    
+
     // Redistribuir: primero = origen, último = destino, medio = paradas
     setState(() {
       _selectedOrigin = allWaypoints.first;
@@ -379,33 +393,33 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       for (int i = 1; i < allWaypoints.length - 1; i++) {
         _stops.add(allWaypoints[i]);
       }
-      
+
       // Actualizar controllers
       _originController.text = _selectedOrigin?.address ?? '';
       _destinationController.text = _selectedDestination?.address ?? '';
     });
-    
+
     _updateRoute();
   }
 
   Future<void> _updateRoute() async {
     // Construir lista de waypoints disponibles
     final waypoints = <LatLng>[];
-    
+
     if (_selectedOrigin != null) {
       waypoints.add(_selectedOrigin!.toLatLng());
     }
-    
+
     for (final stop in _stops) {
       if (stop != null) {
         waypoints.add(stop.toLatLng());
       }
     }
-    
+
     if (_selectedDestination != null) {
       waypoints.add(_selectedDestination!.toLatLng());
     }
-    
+
     // Necesitamos al menos 2 puntos para una ruta
     if (waypoints.length < 2) {
       // Si hay al menos un punto, centrar el mapa en él
@@ -459,25 +473,35 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     if (_selectedOrigin == null || _selectedDestination == null) return;
 
     HapticFeedback.mediumImpact();
-    final validStops = _stops.where((s) => s != null).cast<SimpleLocation>().toList();
+    final validStops = _stops
+        .where((s) => s != null)
+        .cast<SimpleLocation>()
+        .toList();
 
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => TripPreviewScreen(
-          origin: _selectedOrigin!,
-          destination: _selectedDestination!,
-          stops: validStops,
-          vehicleType: 'auto',
-        ),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            TripPreviewScreen(
+              origin: _selectedOrigin!,
+              destination: _selectedDestination!,
+              stops: validStops,
+              vehicleType: 'auto',
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.05),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.05),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             ),
           );
@@ -517,7 +541,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             children: [
               WaypointsPanel(
                 isDark: isDark,
-                child: useDragMode ? _buildDragWaypoints(isDark) : _buildInlineWaypoints(isDark),
+                child: useDragMode
+                    ? _buildDragWaypoints(isDark)
+                    : _buildInlineWaypoints(isDark),
               ),
               const SizedBox(height: 16),
               if (!useDragMode && widget.initialSelection == null)
@@ -538,12 +564,15 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       suggestionService: _suggestionService,
       userLocation: _userLocation,
       isDark: isDark,
+      hasOriginSelected: _hasOriginSelected,
+      hasDestinationSelected: _hasDestinationSelected,
       onOriginSelected: _onOriginSelected,
       onDestinationSelected: _onDestinationSelected,
-      reverseGeocode: (point) => _suggestionService.reverseGeocode(
-        point.latitude,
-        point.longitude,
-      ),
+      onOriginChanged: () => setState(() => _hasOriginSelected = false),
+      onDestinationChanged: () =>
+          setState(() => _hasDestinationSelected = false),
+      reverseGeocode: (point) =>
+          _suggestionService.reverseGeocode(point.latitude, point.longitude),
       openOriginMap: _openMapForOrigin,
       openDestinationMap: _openMapForDestination,
     );
@@ -573,7 +602,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     final maxSuggestionsHeight = screenHeight * 0.5;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -611,7 +642,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                       end: Alignment.bottomCenter,
                       colors: [
                         isDark ? Colors.black : Colors.white,
-                        isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.7),
+                        isDark
+                            ? Colors.black.withOpacity(0.6)
+                            : Colors.white.withOpacity(0.7),
                         Colors.transparent,
                       ],
                     ),

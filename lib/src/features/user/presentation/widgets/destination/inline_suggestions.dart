@@ -18,7 +18,9 @@ class InlineSuggestions extends StatefulWidget {
   final bool isDark;
   final Color accentColor;
   final String placeholder;
+  final bool hasLocationSelected;
   final Function(SimpleLocation) onLocationSelected;
+  final VoidCallback onTextChanged;
   final VoidCallback? onUseCurrentLocation;
   final VoidCallback? onOpenMap;
 
@@ -32,7 +34,9 @@ class InlineSuggestions extends StatefulWidget {
     required this.isDark,
     required this.accentColor,
     required this.placeholder,
+    required this.hasLocationSelected,
     required this.onLocationSelected,
+    required this.onTextChanged,
     this.onUseCurrentLocation,
     this.onOpenMap,
   });
@@ -60,14 +64,17 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
   }
 
   void _onTextChanged() {
+    // Notificar que el texto cambió (marca como no seleccionado)
+    widget.onTextChanged();
+
     _debounce?.cancel();
-    
+
     final query = widget.controller.text.trim();
     if (query.length < 2) {
       setState(() => _suggestions = []);
       return;
     }
-    
+
     _debounce = Timer(const Duration(milliseconds: 400), () {
       _searchSuggestions(query);
     });
@@ -121,11 +128,11 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                       widget.accentColor.withOpacity(0.04),
                     ]
                   : [
-                      widget.isDark 
-                          ? Colors.white.withOpacity(0.08) 
+                      widget.isDark
+                          ? Colors.white.withOpacity(0.08)
                           : Colors.grey.withOpacity(0.08),
-                      widget.isDark 
-                          ? Colors.white.withOpacity(0.04) 
+                      widget.isDark
+                          ? Colors.white.withOpacity(0.04)
                           : Colors.grey.withOpacity(0.04),
                     ],
             ),
@@ -133,9 +140,9 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             border: Border.all(
               color: widget.focusNode.hasFocus
                   ? widget.accentColor.withOpacity(0.4)
-                  : widget.isDark 
-                      ? Colors.white.withOpacity(0.08) 
-                      : Colors.black.withOpacity(0.05),
+                  : widget.isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.05),
               width: widget.focusNode.hasFocus ? 1.5 : 1,
             ),
             boxShadow: widget.focusNode.hasFocus
@@ -172,7 +179,9 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    widget.isOrigin ? Icons.circle_outlined : Icons.search_rounded,
+                    widget.isOrigin
+                        ? Icons.circle_outlined
+                        : Icons.search_rounded,
                     color: widget.accentColor,
                     size: 16,
                   ),
@@ -182,6 +191,8 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                   ? GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
+                        // Notify parent that the text changed (selection cleared)
+                        widget.onTextChanged();
                         widget.controller.clear();
                         setState(() => _suggestions = []);
                       },
@@ -190,14 +201,16 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: widget.isDark 
-                                ? Colors.white.withOpacity(0.1) 
+                            color: widget.isDark
+                                ? Colors.white.withOpacity(0.1)
                                 : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.close_rounded,
-                            color: widget.isDark ? Colors.white54 : Colors.grey[600],
+                            color: widget.isDark
+                                ? Colors.white54
+                                : Colors.grey[600],
                             size: 16,
                           ),
                         ),
@@ -206,15 +219,17 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                   : null,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16, 
+                horizontal: 16,
                 vertical: 16,
               ),
             ),
           ),
         ),
 
-        // Lugares guardados (siempre visibles cuando hay focus)
-        if (widget.focusNode.hasFocus)
+        // Lugares guardados (solo cuando no hay texto escrito y tiene focus)
+        if (widget.focusNode.hasFocus &&
+            widget.controller.text.isEmpty &&
+            !widget.hasLocationSelected)
           Padding(
             padding: const EdgeInsets.only(top: 14),
             child: Row(
@@ -257,7 +272,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               ],
             ),
           ),
-        
+
         // Loading
         if (_isLoading)
           Padding(
@@ -273,9 +288,12 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               ),
             ),
           ),
-        
-        // Sugerencias (después de lugares guardados)
-        if (_suggestions.isNotEmpty && !_isLoading)
+
+        // Sugerencias de búsqueda (cuando hay texto escrito)
+        if (_suggestions.isNotEmpty &&
+            !_isLoading &&
+            widget.focusNode.hasFocus &&
+            !widget.hasLocationSelected)
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: BackdropFilter(
@@ -283,18 +301,20 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               child: Container(
                 margin: const EdgeInsets.only(top: 10),
                 decoration: BoxDecoration(
-                  color: widget.isDark 
-                      ? Colors.black.withOpacity(0.5) 
+                  color: widget.isDark
+                      ? Colors.black.withOpacity(0.5)
                       : Colors.white.withOpacity(0.85),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: widget.isDark 
-                        ? Colors.white.withOpacity(0.1) 
+                    color: widget.isDark
+                        ? Colors.white.withOpacity(0.1)
                         : Colors.black.withOpacity(0.05),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(widget.isDark ? 0.3 : 0.1),
+                      color: Colors.black.withOpacity(
+                        widget.isDark ? 0.3 : 0.1,
+                      ),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -306,7 +326,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                     final index = entry.key;
                     final location = entry.value;
                     final isLast = index == _suggestions.length - 1;
-                    
+
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -322,8 +342,8 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  widget.isDark 
-                                      ? Colors.white.withOpacity(0.08) 
+                                  widget.isDark
+                                      ? Colors.white.withOpacity(0.08)
                                       : Colors.grey.withOpacity(0.15),
                                   Colors.transparent,
                                 ],
@@ -337,36 +357,47 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               ),
             ),
           ),
-        
-        // Opciones rápidas cuando no hay texto ni sugerencias
-        if (_suggestions.isEmpty && 
-            !_isLoading && 
-            widget.controller.text.isEmpty &&
-            widget.focusNode.hasFocus)
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              // Ubicación actual (solo origen)
-              if (widget.isOrigin && widget.onUseCurrentLocation != null)
-                _QuickOptionTile(
-                  icon: Icons.my_location_rounded,
-                  title: 'Usar ubicación actual',
-                  color: AppColors.primary,
-                  isDark: widget.isDark,
-                  onTap: widget.onUseCurrentLocation!,
-                ),
-              if (widget.onOpenMap != null) ...[
-                const SizedBox(height: 8),
-                _QuickOptionTile(
-                  icon: Icons.map_outlined,
-                  title: 'Seleccionar en el mapa',
-                  color: widget.accentColor,
-                  isDark: widget.isDark,
-                  onTap: widget.onOpenMap!,
-                ),
-              ],
-            ],
+
+        // Opción de ubicación actual (solo para origen y cuando tiene focus)
+        if (widget.focusNode.hasFocus &&
+            widget.isOrigin &&
+            widget.onUseCurrentLocation != null &&
+            !widget.hasLocationSelected &&
+            _suggestions.isEmpty &&
+            !_isLoading &&
+            widget.controller.text.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: _QuickOptionTile(
+              icon: Icons.my_location_rounded,
+              title: 'Usar ubicación actual',
+              color: AppColors.primary,
+              isDark: widget.isDark,
+              onTap: widget.onUseCurrentLocation!,
+            ),
+          ),
+
+        // Opción de seleccionar en el mapa (SIEMPRE visible cuando tiene focus)
+        if (widget.focusNode.hasFocus && 
+            widget.onOpenMap != null &&
+            !widget.hasLocationSelected)
+          Padding(
+            padding: EdgeInsets.only(
+              top: widget.isOrigin &&
+                      widget.onUseCurrentLocation != null &&
+                      _suggestions.isEmpty &&
+                      !_isLoading &&
+                      widget.controller.text.isEmpty
+                  ? 8
+                  : 12,
+            ),
+            child: _QuickOptionTile(
+              icon: Icons.map_outlined,
+              title: 'Seleccionar en el mapa',
+              color: widget.accentColor,
+              isDark: widget.isDark,
+              onTap: widget.onOpenMap!,
+            ),
           ),
       ],
     );
@@ -397,22 +428,24 @@ class _SavedPlaceChip extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             decoration: BoxDecoration(
-              color: isDark 
-                  ? Colors.white.withOpacity(0.08) 
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
                   : Colors.white.withOpacity(0.6),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark 
-                    ? Colors.white.withOpacity(0.1) 
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
                     : Colors.black.withOpacity(0.05),
               ),
-              boxShadow: isDark ? null : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: isDark
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -423,11 +456,7 @@ class _SavedPlaceChip extends StatelessWidget {
                     color: AppColors.primary.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(
-                    icon, 
-                    size: 14, 
-                    color: AppColors.primary,
-                  ),
+                  child: Icon(icon, size: 14, color: AppColors.primary),
                 ),
                 const SizedBox(width: 6),
                 Flexible(
@@ -568,15 +597,10 @@ class _QuickOptionTile extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  color.withOpacity(0.12),
-                  color.withOpacity(0.06),
-                ],
+                colors: [color.withOpacity(0.12), color.withOpacity(0.06)],
               ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: color.withOpacity(0.2),
-              ),
+              border: Border.all(color: color.withOpacity(0.2)),
               boxShadow: [
                 BoxShadow(
                   color: color.withOpacity(0.1),
@@ -613,7 +637,11 @@ class _QuickOptionTile extends StatelessWidget {
                     color: color.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.arrow_forward_rounded, color: color, size: 16),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: color,
+                    size: 16,
+                  ),
                 ),
               ],
             ),
