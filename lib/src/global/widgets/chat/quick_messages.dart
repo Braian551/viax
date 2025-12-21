@@ -111,10 +111,7 @@ class QuickMessagesBar extends StatefulWidget {
   State<QuickMessagesBar> createState() => _QuickMessagesBarState();
 }
 
-class _QuickMessagesBarState extends State<QuickMessagesBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _expandAnimation;
+class _QuickMessagesBarState extends State<QuickMessagesBar> {
   bool _isExpanded = false;
 
   List<QuickMessage> get _messages => widget.userType == ChatUserType.conductor
@@ -125,34 +122,12 @@ class _QuickMessagesBarState extends State<QuickMessagesBar>
   void initState() {
     super.initState();
     _isExpanded = widget.isExpanded;
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _expandAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-    if (_isExpanded) {
-      _animationController.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   void _toggleExpand() {
     HapticFeedback.lightImpact();
     setState(() {
       _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
     });
     widget.onToggleExpand?.call();
   }
@@ -160,10 +135,6 @@ class _QuickMessagesBarState extends State<QuickMessagesBar>
   void _selectMessage(QuickMessage message) {
     HapticFeedback.mediumImpact();
     widget.onMessageSelected(message.text);
-    // Cerrar después de seleccionar
-    if (_isExpanded) {
-      _toggleExpand();
-    }
   }
 
   @override
@@ -175,70 +146,90 @@ class _QuickMessagesBarState extends State<QuickMessagesBar>
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.grey.withValues(alpha: 0.2);
 
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border(
+          top: BorderSide(color: borderColor, width: 0.5),
+        ),
+      ),
+      child: _isExpanded ? _buildExpandedView(borderColor) : _buildCompactView(borderColor),
+    );
+  }
+  
+  Widget _buildCompactView(Color borderColor) {
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          _buildExpandButton(borderColor),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return _buildCompactChip(_messages[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildExpandedView(Color borderColor) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Barra colapsada con scroll horizontal
+        // Botón para colapsar
         Container(
-          height: 44,
+          height: 40,
           decoration: BoxDecoration(
-            color: bgColor,
             border: Border(
-              top: BorderSide(color: borderColor, width: 0.5),
+              bottom: BorderSide(color: borderColor, width: 0.5),
             ),
           ),
           child: Row(
             children: [
-              // Botón de expandir
               _buildExpandButton(borderColor),
-              // Mensajes en scroll horizontal
               Expanded(
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    return _buildCompactChip(_messages[index]);
-                  },
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    'Mensajes rápidos',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        // Grid expandido
-        SizeTransition(
-          sizeFactor: _expandAnimation,
-          child: Container(
-            decoration: BoxDecoration(
-              color: bgColor,
-              border: Border(
-                top: BorderSide(color: borderColor, width: 0.5),
-              ),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: _buildExpandedGrid(),
-          ),
+        // Grid de mensajes
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: _buildExpandedGrid(),
         ),
       ],
     );
   }
 
   Widget _buildExpandButton(Color borderColor) {
-    return GestureDetector(
-      onTap: _toggleExpand,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: borderColor, width: 0.5),
-          ),
-        ),
-        child: AnimatedRotation(
-          turns: _isExpanded ? 0.5 : 0,
-          duration: const Duration(milliseconds: 300),
+    return SizedBox(
+      width: 44,
+      height: 40,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _toggleExpand,
           child: Icon(
-            Icons.keyboard_arrow_up_rounded,
+            _isExpanded 
+                ? Icons.keyboard_arrow_down_rounded 
+                : Icons.keyboard_arrow_up_rounded,
             color: widget.isDark ? Colors.white70 : Colors.grey[600],
             size: 24,
           ),
