@@ -36,10 +36,10 @@ class TripVehicleBottomSheet extends StatelessWidget {
     return DraggableScrollableSheet(
       controller: controller,
       initialChildSize: 0.42,
-      minChildSize: 0.42,
+      minChildSize: 0.2,
       maxChildSize: 0.65,
       snap: true,
-      snapSizes: const [0.42, 0.65],
+      snapSizes: const [0.2, 0.42, 0.65],
       builder: (context, scrollController) {
         return SlideTransition(
           position: slideAnimation,
@@ -57,7 +57,7 @@ class TripVehicleBottomSheet extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const _DragHandle(),
+                _DragHandle(controller: controller),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Align(
@@ -109,20 +109,54 @@ class TripVehicleBottomSheet extends StatelessWidget {
 }
 
 class _DragHandle extends StatelessWidget {
-  const _DragHandle();
+  const _DragHandle({required this.controller});
+  final DraggableScrollableController controller;
+
+  static const double _minSnap = 0.2;
+  static const double _closeThreshold = 0.26;
+  static const double _openThreshold = 0.53;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      alignment: Alignment.center,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        // If mostly open -> collapse; otherwise expand fully
+        final target = controller.size > _openThreshold ? _minSnap : 0.65;
+        controller.animateTo(target,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      },
+      onVerticalDragUpdate: (details) {
+        if (details.primaryDelta == null) return;
+        final delta = -details.primaryDelta! / 600; // scale drag to sheet size
+        final newSize = (controller.size + delta).clamp(_minSnap, 0.65);
+        controller.jumpTo(newSize);
+      },
+      onVerticalDragEnd: (details) {
+        // If dragged down past threshold, hide; otherwise snap to closest state
+        double current = controller.size;
+        double target;
+        if (current < _closeThreshold) {
+          target = _minSnap;
+        } else if (current > _openThreshold) {
+          target = 0.65;
+        } else {
+          target = 0.42;
+        }
+        controller.animateTo(target,
+            duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      },
       child: Container(
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(2),
-          color: isDark ? Colors.white24 : Colors.black12,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        alignment: Alignment.center,
+        child: Container(
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            color: isDark ? Colors.white24 : Colors.black12,
+          ),
         ),
       ),
     );

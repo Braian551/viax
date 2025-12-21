@@ -129,7 +129,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     final DraggableScrollableController _draggableController =
       DraggableScrollableController();
 
-  List<LatLng> _animatedRoutePoints = [];
+  bool _isSheetHidden = false;
+
+  List<LatLng> _animatedRoutePoints = []; 
 
   // Valores animados del precio
   double _animatedPrice = 0;
@@ -141,10 +143,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     _selectedVehicleType = widget.vehicleType;
     _setupAnimations();
     _loadRouteAndQuote();
+
+    // Listen to sheet size changes to show a handle when hidden
+    _draggableController.addListener(_handleSheetSizeChange);
   }
 
   @override
   void dispose() {
+    _draggableController.removeListener(_handleSheetSizeChange);
     _draggableController.dispose();
     _slideAnimationController.dispose();
     _routeAnimationController.dispose();
@@ -523,30 +529,43 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
           // Panel inferior con detalles y precio
           if (_quote != null)
-            TripVehicleBottomSheet(
-              controller: _draggableController,
-              slideAnimation: _slideAnimation,
-              isDark: isDark,
-              vehicles: _vehicles,
-              vehicleQuotes: _vehicleQuotes,
-              selectedVehicleType: _selectedVehicleType,
-              selectedQuote: _quote,
-              selectedVehicleName: _getVehicleName(_selectedVehicleType),
-              onVehicleTap: (vehicle, quote, isSelected) {
-                if (!isSelected) {
-                  _selectVehicle(vehicle.type);
-                  return;
-                }
-                if (quote != null) {
-                  showTripVehicleDetailSheet(
-                    context: context,
-                    vehicle: vehicle,
-                    quote: quote,
+            AnimatedSlide(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              offset: _isSheetHidden ? const Offset(0, 0.15) : Offset.zero,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                opacity: _isSheetHidden ? 0.0 : 1.0,
+                child: IgnorePointer(
+                  ignoring: _isSheetHidden,
+                  child: TripVehicleBottomSheet(
+                    controller: _draggableController,
+                    slideAnimation: _slideAnimation,
                     isDark: isDark,
-                  );
-                }
-              },
-              onConfirm: _confirmTrip,
+                    vehicles: _vehicles,
+                    vehicleQuotes: _vehicleQuotes,
+                    selectedVehicleType: _selectedVehicleType,
+                    selectedQuote: _quote,
+                    selectedVehicleName: _getVehicleName(_selectedVehicleType),
+                    onVehicleTap: (vehicle, quote, isSelected) {
+                      if (!isSelected) {
+                        _selectVehicle(vehicle.type);
+                        return;
+                      }
+                      if (quote != null) {
+                        showTripVehicleDetailSheet(
+                          context: context,
+                          vehicle: vehicle,
+                          quote: quote,
+                          isDark: isDark,
+                        );
+                      }
+                    },
+                    onConfirm: _confirmTrip,
+                  ),
+                ),
+              ),
             ),
 
           // Indicador de carga
@@ -554,6 +573,37 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
           // Mensaje de error
           if (_errorMessage != null) _buildErrorOverlay(isDark),
+
+          // Floating handle that appears when sheet is hidden
+          if (_isSheetHidden)
+            Positioned(
+              bottom: 16 + MediaQuery.of(context).padding.bottom,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    final opacity = value.clamp(0.0, 1.0);
+                    final scale = (0.9 + (0.15 * value)).clamp(0.9, 1.15);
+                    return Transform.scale(
+                      scale: scale,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _HiddenSheetHandle(
+                    onTap: () => _openSheet(0.42),
+                    controller: _draggableController,
+                    isDark: isDark,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -990,6 +1040,105 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           return SlideTransition(position: offsetAnimation, child: child);
         },
         transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
+  }
+
+  void _handleSheetSizeChange() {
+    if (!mounted) return;
+    // Only update when crossing the visibility threshold to avoid jittery rebuilds
+    final currentSize = _draggableController.size;
+    final shouldBeHidden = currentSize <= 0.24;
+    if (shouldBeHidden != _isSheetHidden) {
+      setState(() {
+        _isSheetHidden = shouldBeHidden;
+      });
+    }
+  }
+
+  void _openSheet([double size = 0.42]) {
+    if (!mounted || !_draggableController.isAttached) return;
+    if (_isSheetHidden) {
+      setState(() {
+        _isSheetHidden = false;
+      });
+    }
+    _draggableController.animateTo(size,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  }
+}
+
+class _HiddenSheetHandle extends StatelessWidget {
+  const _HiddenSheetHandle({required this.onTap, required this.controller, required this.isDark});
+  final VoidCallback onTap;
+  final DraggableScrollableController controller;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onVerticalDragUpdate: (details) {
+        if (details.primaryDelta == null || !controller.isAttached) return;
+        final delta = -details.primaryDelta! / 600;
+        final newSize = (controller.size + delta).clamp(0.2, 0.65);
+        controller.jumpTo(newSize);
+      },
+      onVerticalDragEnd: (details) {
+        if (!controller.isAttached) return;
+        final current = controller.size;
+        double target;
+        if (current < 0.28) {
+          target = 0.2;
+        } else if (current > 0.53) {
+          target = 0.65;
+        } else {
+          target = 0.42;
+        }
+        controller.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      },
+      child: Container(
+        width: 160,
+        height: 48,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                color: isDark ? Colors.white24 : Colors.black12,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Elige tu viaje',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
