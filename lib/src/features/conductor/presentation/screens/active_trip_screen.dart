@@ -1,0 +1,508 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/features/conductor/services/conductor_service.dart';
+import '../widgets/active_trip/active_trip_widgets.dart';
+import '../widgets/common/floating_button.dart';
+import '../controllers/active_trip_controller.dart';
+
+/// Pantalla de viaje activo para el conductor.
+/// 
+/// Diseño estilo DiDi/Uber con mapa de navegación, panel inferior
+/// deslizable y controles de acceso rápido.
+class ConductorActiveTripScreen extends StatefulWidget {
+  final int conductorId;
+  final int? solicitudId;
+  final int? viajeId;
+  final double origenLat;
+  final double origenLng;
+  final double destinoLat;
+  final double destinoLng;
+  final String direccionOrigen;
+  final String direccionDestino;
+  final String? clienteNombre;
+
+  const ConductorActiveTripScreen({
+    super.key,
+    required this.conductorId,
+    this.solicitudId,
+    this.viajeId,
+    required this.origenLat,
+    required this.origenLng,
+    required this.destinoLat,
+    required this.destinoLng,
+    required this.direccionOrigen,
+    required this.direccionDestino,
+    this.clienteNombre,
+  });
+
+  @override
+  State<ConductorActiveTripScreen> createState() =>
+      _ConductorActiveTripScreenState();
+}
+
+class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
+    with WidgetsBindingObserver {
+  late final ActiveTripController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initController();
+  }
+
+  void _initController() {
+    _controller = ActiveTripController(
+      origenLat: widget.origenLat,
+      origenLng: widget.origenLng,
+      destinoLat: widget.destinoLat,
+      destinoLng: widget.destinoLng,
+      onStateChanged: _onControllerStateChanged,
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _controller.positionStream?.pause();
+    } else if (state == AppLifecycleState.resumed) {
+      _controller.positionStream?.resume();
+    }
+  }
+
+  void _onControllerStateChanged() {
+    if (mounted && !_controller.isDisposed) {
+      setState(() {});
+    }
+  }
+
+  // ===========================================================================
+  // ACCIONES
+  // ===========================================================================
+
+  Future<void> _onArrivedPickup() async {
+    if (widget.solicitudId != null) {
+      try {
+        await ConductorService.notificarLlegadaRecogida(
+          conductorId: widget.conductorId,
+          solicitudId: widget.solicitudId!,
+        );
+      } catch (e) {
+        debugPrint('Error notificando llegada: $e');
+      }
+    }
+
+    await _controller.onArrivedPickup();
+    if (!mounted || _controller.isDisposed) return;
+
+    _showSnackbar('¡Cliente recogido! Navegando al destino', AppColors.success);
+  }
+
+  void _showSnackbar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _showOptionsMenu(bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _OptionsSheet(
+        isDark: isDark,
+        onCancel: () {
+          Navigator.pop(ctx);
+          _showCancelDialog(isDark);
+        },
+        onSupport: () => Navigator.pop(ctx),
+        onReport: () => Navigator.pop(ctx),
+      ),
+    );
+  }
+
+  void _showCancelDialog(bool isDark) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '¿Cancelar viaje?',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.grey[900],
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer y puede afectar tu calificación.',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[600]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Volver',
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[600]),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context, false);
+            },
+            child: Text(
+              'Cancelar viaje',
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0A0A0A) : Colors.grey[100],
+        body: Stack(
+          children: [
+            // Mapa
+            Positioned.fill(child: _buildMap(isDark)),
+
+            // Controles superiores
+            Positioned(
+              top: statusBarHeight + 8,
+              left: 12,
+              right: 12,
+              child: _buildTopControls(isDark),
+            ),
+
+            // Card de navegación
+            Positioned(
+              top: statusBarHeight + 70,
+              left: 16,
+              right: 16,
+              child: _buildNavigationCard(isDark),
+            ),
+
+            // Controles del mapa
+            Positioned(
+              bottom: MediaQuery.of(context).size.height * 0.42,
+              right: 16,
+              child: _buildMapControls(isDark),
+            ),
+
+            // Indicador de velocidad
+            Positioned(
+              bottom: MediaQuery.of(context).size.height * 0.42,
+              left: 16,
+              child: SpeedIndicator(
+                currentSpeed: _controller.currentSpeed,
+                isDark: isDark,
+              ),
+            ),
+
+            // Panel inferior
+            _buildBottomPanel(isDark),
+
+            // Loading overlay
+            if (_controller.loadingRoute)
+              Positioned.fill(child: LoadingOverlay(isDark: isDark)),
+
+            // Error banner
+            if (_controller.error != null)
+              Positioned(
+                top: statusBarHeight + 140,
+                left: 16,
+                right: 16,
+                child: ErrorBanner(
+                  message: _controller.error!,
+                  onDismiss: () => setState(() => _controller.error = null),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMap(bool isDark) {
+    if (_controller.mapError) {
+      return MapFallback(
+        isDark: isDark,
+        onRetry: () {
+          HapticFeedback.lightImpact();
+          setState(() => _controller.mapError = false);
+        },
+      );
+    }
+
+    return MapWidget(
+      key: const ValueKey('conductorTripMap'),
+      cameraOptions: CameraOptions(
+        center: _controller.driverLocation ?? _controller.pickup,
+        zoom: 16,
+        // Comenzar sin pitch para evitar congelamientos en algunos GPUs
+        pitch: 0,
+        bearing: _controller.currentBearing,
+      ),
+      styleUri: isDark
+          ? 'mapbox://styles/mapbox/navigation-night-v1'
+          : 'mapbox://styles/mapbox/navigation-day-v1',
+      onMapCreated: _controller.onMapCreated,
+      textureView: true,
+      androidHostingMode: AndroidPlatformViewHostingMode.TLHC_HC,
+      onStyleLoadedListener: (eventData) => _controller.onStyleLoaded(),
+      onMapLoadErrorListener: _controller.onMapLoadError,
+    );
+  }
+
+  Widget _buildTopControls(bool isDark) {
+    return Row(
+      children: [
+        FloatingButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: () => Navigator.pop(context, true),
+          isDark: isDark,
+          size: 44,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: TripStatusPill(
+            toPickup: _controller.toPickup,
+            isDark: isDark,
+          ),
+        ),
+        const SizedBox(width: 12),
+        FloatingButton(
+          icon: Icons.more_vert_rounded,
+          onTap: () => _showOptionsMenu(isDark),
+          isDark: isDark,
+          size: 44,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavigationCard(bool isDark) {
+    final target = _controller.toPickup
+        ? _controller.pickup
+        : _controller.dropoff;
+    
+    double dist = _controller.driverLocation != null
+        ? _controller.calculateDistance(_controller.driverLocation!, target)
+        : 0;
+    
+    String distText = dist < 1000
+        ? '${dist.toInt()} m'
+        : '${(dist / 1000).toStringAsFixed(1)} km';
+
+    return NavigationCard(
+      distanceText: distText,
+      etaMinutes: _controller.etaMinutes,
+      toPickup: _controller.toPickup,
+      isDark: isDark,
+    );
+  }
+
+  Widget _buildMapControls(bool isDark) {
+    return Column(
+      children: [
+        FloatingButton(
+          icon: Icons.my_location_rounded,
+          onTap: _controller.centerOnDriver,
+          isDark: isDark,
+        ),
+        const SizedBox(height: 10),
+        FloatingButton(
+          icon: _controller.is3DMode ? Icons.view_in_ar : Icons.map_outlined,
+          onTap: _controller.toggle3DMode,
+          isDark: isDark,
+          isActive: _controller.is3DMode,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomPanel(bool isDark) {
+    final fallbackDistance = _controller.driverLocation != null
+        ? _controller.calculateDistance(
+            _controller.driverLocation!,
+            _controller.pickup,
+          ) / 1000
+        : 0.0;
+    
+    final displayDistance = _controller.distanceKm > 0
+        ? _controller.distanceKm
+        : fallbackDistance;
+    
+    final arrivalTime = _controller.etaMinutes > 0
+        ? DateTime.now().add(Duration(minutes: _controller.etaMinutes))
+        : null;
+    
+    final arrivalLabel = arrivalTime != null
+        ? '${arrivalTime.hour.toString().padLeft(2, '0')}:'
+          '${arrivalTime.minute.toString().padLeft(2, '0')}'
+        : '--:--';
+
+    return TripBottomPanel(
+      isDark: isDark,
+      toPickup: _controller.toPickup,
+      passengerName: widget.clienteNombre ?? '',
+      pickupAddress: widget.direccionOrigen,
+      destinationAddress: widget.direccionDestino,
+      etaMinutes: _controller.etaMinutes,
+      distanceKm: displayDistance,
+      arrivalTime: arrivalLabel,
+      isLoading: _controller.loadingRoute,
+      onArrivedPickup: _onArrivedPickup,
+      onFinishTrip: () => Navigator.pop(context, true),
+    );
+  }
+}
+
+// =============================================================================
+// WIDGETS AUXILIARES
+// =============================================================================
+
+class _OptionsSheet extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onCancel;
+  final VoidCallback onSupport;
+  final VoidCallback onReport;
+
+  const _OptionsSheet({
+    required this.isDark,
+    required this.onCancel,
+    required this.onSupport,
+    required this.onReport,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _OptionItem(
+            icon: Icons.cancel_outlined,
+            label: 'Cancelar viaje',
+            color: AppColors.error,
+            isDark: isDark,
+            onTap: onCancel,
+          ),
+          const SizedBox(height: 8),
+          _OptionItem(
+            icon: Icons.support_agent_rounded,
+            label: 'Contactar soporte',
+            isDark: isDark,
+            onTap: onSupport,
+          ),
+          const SizedBox(height: 8),
+          _OptionItem(
+            icon: Icons.report_problem_outlined,
+            label: 'Reportar problema',
+            isDark: isDark,
+            onTap: onReport,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OptionItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _OptionItem({
+    required this.icon,
+    required this.label,
+    this.color,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final itemColor = color ?? (isDark ? Colors.white : Colors.grey[800]);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: itemColor, size: 22),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: TextStyle(
+                  color: itemColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? Colors.white38 : Colors.grey[400],
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
