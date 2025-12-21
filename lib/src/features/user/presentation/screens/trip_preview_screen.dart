@@ -126,10 +126,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnimation;
 
-    final DraggableScrollableController _draggableController =
+  final DraggableScrollableController _draggableController =
       DraggableScrollableController();
 
   bool _isSheetHidden = false;
+  Timer? _sheetSizeDebounceTimer;
+  bool _sheetListenerAttached = false;
 
   List<LatLng> _animatedRoutePoints = []; 
 
@@ -141,16 +143,36 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   void initState() {
     super.initState();
     _selectedVehicleType = widget.vehicleType;
-    _setupAnimations();
-    _loadRouteAndQuote();
+    
+    try {
+      _setupAnimations();
+    } catch (e) {
+      debugPrint('Error setting up animations: $e');
+    }
+    
+    // Defer listener setup and route loading to after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-    // Listen to sheet size changes to show a handle when hidden
-    _draggableController.addListener(_handleSheetSizeChange);
+      try {
+        if (_draggableController.isAttached && !_sheetListenerAttached) {
+          _draggableController.addListener(_handleSheetSizeChange);
+          _sheetListenerAttached = true;
+        }
+      } catch (e) {
+        debugPrint('Error adding sheet listener: $e');
+      }
+
+      _loadRouteAndQuote();
+    });
   }
 
   @override
   void dispose() {
-    _draggableController.removeListener(_handleSheetSizeChange);
+    _sheetSizeDebounceTimer?.cancel();
+    if (_sheetListenerAttached) {
+      _draggableController.removeListener(_handleSheetSizeChange);
+    }
     _draggableController.dispose();
     _slideAnimationController.dispose();
     _routeAnimationController.dispose();
@@ -308,8 +330,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         widget.destination.toLatLng(),
       ];
 
-      // Obtener ruta de Mapbox
-      final route = await MapboxService.getRoute(waypoints: waypoints);
+      // Obtener ruta de Mapbox con timeout para evitar spinner infinito
+      final route = await MapboxService
+          .getRoute(waypoints: waypoints)
+          .timeout(const Duration(seconds: 12), onTimeout: () {
+        debugPrint('Mapbox routing timeout after 12s');
+        return null;
+      });
 
       if (route == null) {
         throw Exception('No se pudo calcular la ruta');
@@ -356,10 +383,21 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
       _slideAnimationController.forward();
-    } catch (e) {
+    } on TimeoutException catch (e, stackTrace) {
+      debugPrint('Timeout loading route/quote: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = 'No se pudo calcular la ruta (timeout). Intenta de nuevo.';
+        _isLoadingRoute = false;
+        _isLoadingQuote = false;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Error loading route and quote: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Error: ${e.toString()}';
         _isLoadingRoute = false;
         _isLoadingQuote = false;
       });
@@ -539,7 +577,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                 opacity: _isSheetHidden ? 0.0 : 1.0,
                 child: IgnorePointer(
                   ignoring: _isSheetHidden,
-                  child: TripVehicleBottomSheet(
+                  child: Builder(builder: (context) {
+                    // Attach listener once the sheet is built and controller is ready
+                    if (_draggableController.isAttached && !_sheetListenerAttached) {
+                      _draggableController.addListener(_handleSheetSizeChange);
+                      _sheetListenerAttached = true;
+                    }
+
+                    return TripVehicleBottomSheet(
                     controller: _draggableController,
                     slideAnimation: _slideAnimation,
                     isDark: isDark,
@@ -563,7 +608,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                       }
                     },
                     onConfirm: _confirmTrip,
-                  ),
+                    );
+                  }),
                 ),
               ),
             ),
@@ -1045,26 +1091,46 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   void _handleSheetSizeChange() {
-    if (!mounted) return;
-    // Only update when crossing the visibility threshold to avoid jittery rebuilds
-    final currentSize = _draggableController.size;
-    final shouldBeHidden = currentSize <= 0.24;
-    if (shouldBeHidden != _isSheetHidden) {
-      setState(() {
-        _isSheetHidden = shouldBeHidden;
-      });
-    }
+    if (!mounted || !_draggableController.isAttached) return;
+    
+    // Debounce to avoid excessive rebuilds during drag
+    _sheetSizeDebounceTimer?.cancel();
+    _sheetSizeDebounceTimer = Timer(const Duration(milliseconds: 50), () {
+      if (!mounted || !_draggableController.isAttached) return;
+      
+      try {
+        final currentSize = _draggableController.size;
+        final shouldBeHidden = currentSize <= 0.24;
+        
+        // Only update when crossing the visibility threshold
+        if (shouldBeHidden != _isSheetHidden) {
+          if (mounted) {
+            setState(() {
+              _isSheetHidden = shouldBeHidden;
+            });
+          }
+        }
+      } catch (e) {
+        // Ignore errors if controller is not ready
+        debugPrint('Sheet size change error: $e');
+      }
+    });
   }
 
   void _openSheet([double size = 0.42]) {
     if (!mounted || !_draggableController.isAttached) return;
-    if (_isSheetHidden) {
-      setState(() {
-        _isSheetHidden = false;
-      });
+    
+    try {
+      if (_isSheetHidden && mounted) {
+        setState(() {
+          _isSheetHidden = false;
+        });
+      }
+      _draggableController.animateTo(size,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    } catch (e) {
+      debugPrint('Error opening sheet: $e');
     }
-    _draggableController.animateTo(size,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 }
 
@@ -1081,22 +1147,30 @@ class _HiddenSheetHandle extends StatelessWidget {
       onTap: onTap,
       onVerticalDragUpdate: (details) {
         if (details.primaryDelta == null || !controller.isAttached) return;
-        final delta = -details.primaryDelta! / 600;
-        final newSize = (controller.size + delta).clamp(0.2, 0.65);
-        controller.jumpTo(newSize);
+        try {
+          final delta = -details.primaryDelta! / 600;
+          final newSize = (controller.size + delta).clamp(0.2, 0.65);
+          controller.jumpTo(newSize);
+        } catch (e) {
+          // Ignore if controller not ready
+        }
       },
       onVerticalDragEnd: (details) {
         if (!controller.isAttached) return;
-        final current = controller.size;
-        double target;
-        if (current < 0.28) {
-          target = 0.2;
-        } else if (current > 0.53) {
-          target = 0.65;
-        } else {
-          target = 0.42;
+        try {
+          final current = controller.size;
+          double target;
+          if (current < 0.28) {
+            target = 0.2;
+          } else if (current > 0.53) {
+            target = 0.65;
+          } else {
+            target = 0.42;
+          }
+          controller.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+        } catch (e) {
+          // Ignore if controller not ready
         }
-        controller.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       },
       child: Container(
         width: 160,
@@ -1120,12 +1194,16 @@ class _HiddenSheetHandle extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                color: isDark ? Colors.white24 : Colors.black12,
+            // Bar centered at the top of the handle
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  color: isDark ? Colors.white24 : Colors.black12,
+                ),
               ),
             ),
             const SizedBox(height: 6),

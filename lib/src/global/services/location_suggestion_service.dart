@@ -142,15 +142,7 @@ class LocationSuggestionService {
     }).timeout(const Duration(seconds: 8));
     
     if (response.statusCode == 200) {
-      final List data = json.decode(response.body) as List;
-      
-      return data.map((item) {
-        return SimpleLocation(
-          latitude: double.tryParse(item['lat']?.toString() ?? '0') ?? 0,
-          longitude: double.tryParse(item['lon']?.toString() ?? '0') ?? 0,
-          address: item['display_name'] ?? '',
-        );
-      }).toList().cast<SimpleLocation>();
+      return await compute(_parseSuggestionsResponse, response.body);
     }
     
     return [];
@@ -217,7 +209,7 @@ class LocationSuggestionService {
       }).timeout(const Duration(seconds: 5));
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
+        final data = await compute(_parseReverseGeocodeResponse, response.body);
         
         // Extraer código de país para futuras búsquedas
         if (data['address'] != null) {
@@ -261,3 +253,22 @@ class LocationInfo {
     required this.fullAddress,
   });
 }
+
+// Helper function for compute
+List<SimpleLocation> _parseSuggestionsResponse(String responseBody) {
+  final List data = json.decode(responseBody) as List;
+  
+  return data.map((item) {
+    return SimpleLocation(
+      latitude: double.tryParse(item['lat']?.toString() ?? '0') ?? 0,
+      longitude: double.tryParse(item['lon']?.toString() ?? '0') ?? 0,
+      address: item['display_name'] ?? '',
+    );
+  }).toList().cast<SimpleLocation>();
+}
+
+Map<String, dynamic> _parseReverseGeocodeResponse(String responseBody) {
+  return json.decode(responseBody) as Map<String, dynamic>;
+}
+
+

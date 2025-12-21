@@ -122,30 +122,44 @@ class _DragHandle extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        // If mostly open -> collapse; otherwise expand fully
-        final target = controller.size > _openThreshold ? _minSnap : 0.65;
-        controller.animateTo(target,
-            duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        if (!controller.isAttached) return;
+        try {
+          // If mostly open -> collapse; otherwise expand fully
+          final target = controller.size > _openThreshold ? _minSnap : 0.65;
+          controller.animateTo(target,
+              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        } catch (e) {
+          // Ignore if controller not ready
+        }
       },
       onVerticalDragUpdate: (details) {
-        if (details.primaryDelta == null) return;
-        final delta = -details.primaryDelta! / 600; // scale drag to sheet size
-        final newSize = (controller.size + delta).clamp(_minSnap, 0.65);
-        controller.jumpTo(newSize);
+        if (details.primaryDelta == null || !controller.isAttached) return;
+        try {
+          final delta = -details.primaryDelta! / 600; // scale drag to sheet size
+          final newSize = (controller.size + delta).clamp(_minSnap, 0.65);
+          controller.jumpTo(newSize);
+        } catch (e) {
+          // Ignore if controller not ready
+        }
       },
       onVerticalDragEnd: (details) {
-        // If dragged down past threshold, hide; otherwise snap to closest state
-        double current = controller.size;
-        double target;
-        if (current < _closeThreshold) {
-          target = _minSnap;
-        } else if (current > _openThreshold) {
-          target = 0.65;
-        } else {
-          target = 0.42;
+        if (!controller.isAttached) return;
+        try {
+          // If dragged down past threshold, hide; otherwise snap to closest state
+          double current = controller.size;
+          double target;
+          if (current < _closeThreshold) {
+            target = _minSnap;
+          } else if (current > _openThreshold) {
+            target = 0.65;
+          } else {
+            target = 0.42;
+          }
+          controller.animateTo(target,
+              duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+        } catch (e) {
+          // Ignore if controller not ready
         }
-        controller.animateTo(target,
-            duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),

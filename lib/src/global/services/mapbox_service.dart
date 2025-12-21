@@ -1,5 +1,6 @@
 // lib/src/global/services/mapbox_service.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../core/config/env_config.dart';
@@ -57,11 +58,7 @@ class MapboxService {
         // Incrementar contador de uso
         await QuotaMonitorService.incrementMapboxRouting();
 
-        final data = json.decode(response.body);
-
-        if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
-          return MapboxRoute.fromJson(data['routes'][0]);
-        }
+        return await compute(_parseDirectionsResponse, response.body);
       } else {
         print(
           'Error en Mapbox Directions: ${response.statusCode} - ${response.body}',
@@ -109,11 +106,7 @@ class MapboxService {
       if (response.statusCode == 200) {
         await QuotaMonitorService.incrementMapboxRouting();
 
-        final data = json.decode(response.body);
-
-        if (data['trips'] != null && (data['trips'] as List).isNotEmpty) {
-          return MapboxRoute.fromJson(data['trips'][0]);
-        }
+        return await compute(_parseOptimizationResponse, response.body);
       }
 
       return null;
@@ -198,12 +191,7 @@ class MapboxService {
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['features'] != null) {
-          final features = data['features'] as List;
-          return features.map((f) => MapboxPlace.fromJson(f)).toList();
-        }
+        return await compute(_parsePlacesResponse, response.body);
       } else {
         print(
           'Error en Mapbox Geocoding: ${response.statusCode} - ${response.body}',
@@ -641,3 +629,31 @@ class MapboxPlace {
     return parts.join(', ');
   }
 }
+
+// Helper functions for compute
+MapboxRoute? _parseDirectionsResponse(String responseBody) {
+  final data = json.decode(responseBody);
+  if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
+    return MapboxRoute.fromJson(data['routes'][0]);
+  }
+  return null;
+}
+
+MapboxRoute? _parseOptimizationResponse(String responseBody) {
+  final data = json.decode(responseBody);
+  if (data['trips'] != null && (data['trips'] as List).isNotEmpty) {
+    return MapboxRoute.fromJson(data['trips'][0]);
+  }
+  return null;
+}
+
+List<MapboxPlace> _parsePlacesResponse(String responseBody) {
+  final data = json.decode(responseBody);
+  if (data['features'] != null) {
+    final features = data['features'] as List;
+    return features.map((f) => MapboxPlace.fromJson(f)).toList();
+  }
+  return [];
+}
+
+

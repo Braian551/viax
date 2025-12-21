@@ -6,7 +6,7 @@ import '../../../../../global/models/simple_location.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/trip_models.dart';
 
-class TripPreviewTopOverlay extends StatelessWidget {
+class TripPreviewTopOverlay extends StatefulWidget {
   const TripPreviewTopOverlay({
     super.key,
     required this.slideAnimation,
@@ -31,6 +31,99 @@ class TripPreviewTopOverlay extends StatelessWidget {
   final VoidCallback onLocationTap;
 
   @override
+  State<TripPreviewTopOverlay> createState() => _TripPreviewTopOverlayState();
+}
+
+class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
+    with TickerProviderStateMixin {
+  late final AnimationController _snapController;
+  late final Animation<double> _snapCurve;
+  double _animationStart = 1.0;
+  double _animationEnd = 1.0;
+  double _expansion = 1.0; // Siempre expandido por defecto
+
+  @override
+  void initState() {
+    super.initState();
+    _snapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _snapCurve =
+        CurvedAnimation(parent: _snapController, curve: Curves.easeOutCubic)
+          ..addListener(() {
+            setState(() {
+              _expansion = lerpDouble(
+                _animationStart,
+                _animationEnd,
+                _snapCurve.value,
+              )!;
+            });
+          });
+  }
+
+  @override
+  void dispose() {
+    _snapController.dispose();
+    super.dispose();
+  }
+
+  double get _locationHeightFactor {
+    // Curva más suave para el clip
+    final curve = Curves.easeOutQuart.transform(_expansion);
+    return lerpDouble(0.0, 1.0, curve)!.clamp(0.0, 1.0);
+  }
+
+  double get _contentOpacity {
+    // Fade out del contenido cuando está colapsando
+    if (_expansion > 0.7) return 1.0;
+    if (_expansion < 0.3) return 0.0;
+    return ((_expansion - 0.3) / 0.4).clamp(0.0, 1.0);
+  }
+
+  bool get _isCollapsed => _expansion < 0.5;
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    final delta = details.delta.dy;
+    setState(() {
+      // Sensibilidad: cada 100px de drag = cambio completo
+      _expansion = (_expansion + (delta / 100)).clamp(0.0, 1.0);
+    });
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0.0;
+    double target;
+
+    // Sensibilidad mejorada de velocidad
+    if (velocity.abs() > 300) {
+      target = velocity > 0 ? 1.0 : 0.0;
+    } else {
+      // Snap point más inteligente
+      target = _expansion >= 0.45 ? 1.0 : 0.0;
+    }
+    _animateTo(target);
+  }
+
+  void _toggleExpansion() {
+    final target = _expansion >= 0.5 ? 0.0 : 1.0;
+    _animateTo(target);
+  }
+
+  void _animateTo(double target) {
+    if ((_expansion - target).abs() < 0.01) {
+      setState(() => _expansion = target);
+      return;
+    }
+    _animationStart = _expansion;
+    _animationEnd = target;
+    _snapController
+      ..stop()
+      ..reset()
+      ..forward();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Positioned(
       top: 0,
@@ -38,9 +131,9 @@ class TripPreviewTopOverlay extends StatelessWidget {
       right: 0,
       child: SafeArea(
         child: SlideTransition(
-          position: slideAnimation,
+          position: widget.slideAnimation,
           child: FadeTransition(
-            opacity: fadeAnimation,
+            opacity: widget.fadeAnimation,
             child: Container(
               margin: const EdgeInsets.all(12),
               child: ClipRRect(
@@ -49,19 +142,19 @@ class TripPreviewTopOverlay extends StatelessWidget {
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDark
+                      color: widget.isDark
                           ? Colors.black.withOpacity(0.6)
                           : Colors.white.withOpacity(0.85),
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(
-                        color: isDark
+                        color: widget.isDark
                             ? Colors.white.withOpacity(0.1)
                             : AppColors.primary.withOpacity(0.15),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: isDark
+                          color: widget.isDark
                               ? Colors.black.withOpacity(0.3)
                               : Colors.black.withOpacity(0.08),
                           blurRadius: 25,
@@ -71,23 +164,27 @@ class TripPreviewTopOverlay extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Header fijo con botón y badges
                         Padding(
                           padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                           child: Row(
                             children: [
-                              _GlassBackButton(onBack: onBack),
+                              _GlassBackButton(onBack: widget.onBack),
                               const SizedBox(width: 12),
-                              if (quote != null)
+                              if (widget.quote != null)
                                 Expanded(
                                   child: _InfoBadge(
-                                    quote: quote!,
-                                    isDark: isDark,
+                                    quote: widget.quote!,
+                                    isDark: widget.isDark,
                                   ),
                                 ),
                             ],
                           ),
                         ),
+
+                        // Divider
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Container(
@@ -96,7 +193,7 @@ class TripPreviewTopOverlay extends StatelessWidget {
                               gradient: LinearGradient(
                                 colors: [
                                   Colors.transparent,
-                                  isDark
+                                  widget.isDark
                                       ? Colors.white.withOpacity(0.15)
                                       : Colors.black.withOpacity(0.1),
                                   Colors.transparent,
@@ -105,42 +202,131 @@ class TripPreviewTopOverlay extends StatelessWidget {
                             ),
                           ),
                         ),
+
+                        // Contenido de ubicaciones colapsable
                         Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                          child: Stack(
                             children: [
-                              _LocationRow(
-                                icon: Icons.my_location,
-                                iconSize: 14,
-                                color: AppColors.primary,
-                                text: origin.address,
-                                isOrigin: true,
-                                isDark: isDark,
-                                onTap: onLocationTap,
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOut,
+                                opacity: _contentOpacity,
+                                child: ClipRect(
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    heightFactor: _locationHeightFactor,
+                                    child: Column(
+                                      children: [
+                                        _LocationRow(
+                                          icon: Icons.my_location,
+                                          iconSize: 14,
+                                          color: AppColors.primary,
+                                          text: widget.origin.address,
+                                          isOrigin: true,
+                                          isDark: widget.isDark,
+                                          onTap: widget.onLocationTap,
+                                        ),
+                                        for (final stop in widget.stops) ...[
+                                          _ConnectorLine(isDark: widget.isDark),
+                                          _LocationRow(
+                                            icon: Icons.stop_circle_outlined,
+                                            iconSize: 12,
+                                            color: AppColors.accent,
+                                            text: stop.address,
+                                            isOrigin: false,
+                                            isDark: widget.isDark,
+                                            onTap: widget.onLocationTap,
+                                          ),
+                                        ],
+                                        _DottedConnector(isDark: widget.isDark),
+                                        _LocationRow(
+                                          icon: Icons.location_on,
+                                          iconSize: 16,
+                                          color: AppColors.primaryDark,
+                                          text: widget.destination.address,
+                                          isOrigin: false,
+                                          isDark: widget.isDark,
+                                          onTap: widget.onLocationTap,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                              for (final stop in stops) ...[
-                                _ConnectorLine(isDark: isDark),
-                                _LocationRow(
-                                  icon: Icons.stop_circle_outlined,
-                                  iconSize: 12,
-                                  color: AppColors.accent,
-                                  text: stop.address,
-                                  isOrigin: false,
-                                  isDark: isDark,
-                                  onTap: onLocationTap,
+                              // Gradiente de fade mejorado
+                              if (_expansion < 0.95)
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: IgnorePointer(
+                                    child: AnimatedOpacity(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      opacity: (1.0 - _expansion).clamp(
+                                        0.0,
+                                        1.0,
+                                      ),
+                                      child: Container(
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              widget.isDark
+                                                  ? Colors.black.withOpacity(
+                                                      0.75,
+                                                    )
+                                                  : Colors.white.withOpacity(
+                                                      0.92,
+                                                    ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+
+                        // Handle de drag en la parte inferior
+                        GestureDetector(
+                          onTap: _toggleExpansion,
+                          onVerticalDragUpdate: _handleDragUpdate,
+                          onVerticalDragEnd: _handleDragEnd,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            child: Column(
+                              // Ensure the handle bar is horizontally centered
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Handle simple y discreto (centered)
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Container(
+                                    width: 44,
+                                    height: 5,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3),
+                                      color: widget.isDark
+                                          ? Colors.white.withOpacity(0.25)
+                                          : Colors.black.withOpacity(0.2),
+                                    ),
+                                  ),
                                 ),
                               ],
-                              _DottedConnector(isDark: isDark),
-                              _LocationRow(
-                                icon: Icons.location_on,
-                                iconSize: 16,
-                                color: AppColors.primaryDark,
-                                text: destination.address,
-                                isOrigin: false,
-                                isDark: isDark,
-                                onTap: onLocationTap,
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -223,7 +409,10 @@ class _InfoBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _InfoChip(icon: Icons.access_time_rounded, value: quote.formattedDuration),
+            _InfoChip(
+              icon: Icons.access_time_rounded,
+              value: quote.formattedDuration,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Container(
