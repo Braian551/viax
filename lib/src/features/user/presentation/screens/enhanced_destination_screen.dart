@@ -531,26 +531,20 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              WaypointsPanel(
-                isDark: isDark,
-                child: useDragMode
-                    ? _buildDragWaypoints(isDark)
-                    : _buildInlineWaypoints(isDark),
-              ),
-              const SizedBox(height: 16),
-              if (!useDragMode && widget.initialSelection == null)
-                SavedLocationsRow(isDark: isDark),
-            ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          WaypointsPanel(
+            isDark: isDark,
+            child: useDragMode
+                ? _buildDragWaypoints(isDark)
+                : _buildInlineWaypoints(isDark),
           ),
-        ),
+          const SizedBox(height: 16),
+          if (!useDragMode && widget.initialSelection == null)
+            SavedLocationsRow(isDark: isDark),
+        ],
       ),
     );
   }

@@ -294,65 +294,66 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             !_isLoading &&
             widget.focusNode.hasFocus &&
             !widget.hasLocationSelected)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                margin: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  color: widget.isDark
-                      ? Colors.black.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: widget.isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.05),
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            constraints: const BoxConstraints(
+              maxHeight: 280, // Altura máxima para scroll
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(
+                    widget.isDark ? 0.3 : 0.1,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(
-                        widget.isDark ? 0.3 : 0.1,
-                      ),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _suggestions.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final location = entry.value;
-                    final isLast = index == _suggestions.length - 1;
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _SuggestionTile(
-                          location: location,
-                          isDark: widget.isDark,
-                          onTap: () => _selectLocation(location),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: widget.isDark
+                        ? Colors.black.withOpacity(0.5)
+                        : Colors.white.withOpacity(0.85),
+                    border: Border.all(
+                      color: widget.isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.black.withOpacity(0.05),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: _suggestions.length,
+                    separatorBuilder: (context, index) => Container(
+                      height: 1,
+                      margin: const EdgeInsets.only(left: 68),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.isDark
+                                ? Colors.white.withOpacity(0.08)
+                                : Colors.grey.withOpacity(0.15),
+                            Colors.transparent,
+                          ],
                         ),
-                        if (!isLast)
-                          Container(
-                            height: 1,
-                            margin: const EdgeInsets.only(left: 68),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  widget.isDark
-                                      ? Colors.white.withOpacity(0.08)
-                                      : Colors.grey.withOpacity(0.15),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  }).toList(),
+                      ),
+                    ),
+                    itemBuilder: (context, index) {
+                      final location = _suggestions[index];
+                      return _SuggestionTile(
+                        location: location,
+                        isDark: widget.isDark,
+                        onTap: () => _selectLocation(location),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
