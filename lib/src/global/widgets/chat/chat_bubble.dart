@@ -39,70 +39,37 @@ class ChatBubble extends StatelessWidget {
             _buildAvatar(isDark),
             const SizedBox(width: 8),
           ],
-          
-          // Contenedor de mensaje
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: esMio
-                    ? AppColors.primary
-                    : (isDark ? AppColors.darkCard : Colors.grey.shade200),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(esMio ? 18 : 4),
-                  bottomRight: Radius.circular(esMio ? 4 : 18),
+
+          // Contenedor de mensaje que se ajusta al contenido (IntrinsicWidth) con un maxWidth
+          Align(
+            alignment: esMio ? Alignment.centerRight : Alignment.centerLeft,
+            child: IntrinsicWidth(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Contenido del mensaje
-                  _buildMessageContent(isDark),
-                  
-                  // Hora y estado de lectura
-                  if (showTime)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _formatTime(message.fechaCreacion),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: esMio
-                                  ? Colors.white.withValues(alpha: 0.7)
-                                  : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary),
-                            ),
-                          ),
-                          if (esMio) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              message.leido ? Icons.done_all : Icons.done,
-                              size: 14,
-                              color: message.leido
-                                  ? Colors.lightBlueAccent
-                                  : Colors.white.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ],
-                      ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: esMio
+                        ? AppColors.primary
+                        : (isDark ? AppColors.darkCard : Colors.grey.shade200),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(esMio ? 18 : 4),
+                      bottomRight: Radius.circular(esMio ? 4 : 18),
                     ),
-                ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _buildMessageContent(isDark),
+                ),
               ),
             ),
           ),
@@ -136,52 +103,121 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
+  Widget _buildInlineMeta(bool isDark) {
+    // Inline metadata row: time (and optional check) shown inside bubble
+    final timeColor = esMio
+        ? Colors.white.withOpacity(0.95) // más visible sobre burbuja azul
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
+
+    final iconColor = esMio
+        ? (message.leido ? Colors.white : Colors.white70) // check más blanco para mensajes propios
+        : (message.leido ? Colors.lightBlueAccent : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary));
+
+    final timeStyle = TextStyle(fontSize: 11, color: timeColor, fontWeight: FontWeight.w500);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_formatTime(message.fechaCreacion), style: timeStyle),
+          if (esMio) ...[
+            const SizedBox(width: 6),
+            Icon(
+              message.leido ? Icons.done_all : Icons.done,
+              size: 14,
+              color: iconColor,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildMessageContent(bool isDark) {
     final textColor = esMio
         ? Colors.white
         : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary);
-    
+
+    // Meta colors and widget
+    final timeColor = esMio
+        ? Colors.white.withOpacity(0.95)
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
+
+    final iconColor = esMio
+        ? (message.leido ? Colors.white : Colors.white70)
+        : (message.leido ? Colors.lightBlueAccent : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary));
+
+    Widget metaRow() {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_formatTime(message.fechaCreacion), style: TextStyle(fontSize: 10, color: timeColor)) ,
+          if (esMio) ...[
+            const SizedBox(width: 4),
+            Icon(message.leido ? Icons.done_all : Icons.done, size: 13, color: iconColor),
+          ],
+        ],
+      );
+    }
+
     switch (message.tipoMensaje) {
       case 'ubicacion':
-        return Row(
+        return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.location_on, color: textColor, size: 18),
-            const SizedBox(width: 6),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.location_on, color: textColor, size: 16),
+                const SizedBox(width: 6),
+                Flexible(child: Text(message.mensaje, style: TextStyle(color: textColor, fontSize: 13))),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Align(alignment: Alignment.centerRight, child: metaRow()),
+          ],
+        );
+
+      case 'sistema':
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: textColor, size: 14),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    message.mensaje,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Align(alignment: Alignment.centerRight, child: metaRow()),
+          ],
+        );
+
+      default: // texto
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
               message.mensaje,
-              style: TextStyle(color: textColor, fontSize: 14),
+              style: TextStyle(color: textColor, fontSize: 15, height: 1.18),
             ),
+            const SizedBox(height: 4),
+            Align(alignment: Alignment.centerRight, child: metaRow()),
           ],
-        );
-        
-      case 'sistema':
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.info_outline, color: textColor, size: 16),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                message.mensaje,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-        );
-        
-      default: // texto
-        return Text(
-          message.mensaje,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 15,
-            height: 1.3,
-          ),
         );
     }
   }
