@@ -59,7 +59,13 @@ try {
             $updates[] = 'aceptado_en = NOW()';
             break;
         case 'conductor_llego':
-            $updates[] = 'conductor_llego_en = NOW()';
+            // Actualizar también la asignación a estado 'llegado'
+            $stmtAsig = $db->prepare("
+                UPDATE asignaciones_conductor 
+                SET estado = 'llegado'
+                WHERE solicitud_id = ? AND conductor_id = ?
+            ");
+            $stmtAsig->execute([$solicitudId, $conductorId]);
             break;
         case 'recogido':
         case 'en_transito':
@@ -95,7 +101,7 @@ try {
         $stmt = $db->prepare("
             UPDATE detalles_conductor 
             SET disponible = 1,
-                viajes_completados = viajes_completados + 1
+                total_viajes = COALESCE(total_viajes, 0) + 1
             WHERE usuario_id = ?
         ");
         $stmt->execute([$conductorId]);

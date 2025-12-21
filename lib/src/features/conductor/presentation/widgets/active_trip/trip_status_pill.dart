@@ -4,23 +4,44 @@ import '../common/pulsing_dot.dart';
 
 /// Pill/badge de estado del viaje activo.
 /// 
-/// Muestra el estado actual ("Ir a recoger" o "En camino") con
-/// un indicador visual de color correspondiente.
+/// Muestra el estado actual del viaje:
+/// - "Ir a recoger": En camino al punto de recogida
+/// - "Esperando": Llegó al punto, esperando al pasajero
+/// - "En viaje": Viaje en curso hacia el destino
 class TripStatusPill extends StatelessWidget {
   final bool toPickup;
+  final bool arrivedAtPickup;
   final bool isDark;
 
   const TripStatusPill({
     super.key,
     required this.toPickup,
+    this.arrivedAtPickup = false,
     required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = toPickup ? AppColors.warning : AppColors.success;
-    final text = toPickup ? 'Ir a recoger' : 'En camino';
-    final icon = toPickup ? Icons.navigation_rounded : Icons.directions_car_rounded;
+    Color color;
+    String text;
+    IconData icon;
+
+    if (toPickup) {
+      // Estado 1: En camino al punto de recogida
+      color = AppColors.warning;
+      text = 'Ir a recoger';
+      icon = Icons.navigation_rounded;
+    } else if (arrivedAtPickup) {
+      // Estado 2: Llegó al punto, esperando al pasajero
+      color = AppColors.accent;
+      text = 'Esperando';
+      icon = Icons.person_pin_circle_rounded;
+    } else {
+      // Estado 3: Viaje en curso hacia el destino
+      color = AppColors.success;
+      text = 'En viaje';
+      icon = Icons.directions_car_rounded;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

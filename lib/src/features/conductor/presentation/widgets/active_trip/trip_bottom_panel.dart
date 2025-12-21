@@ -11,6 +11,7 @@ import '../common/pulsing_dot.dart';
 class TripBottomPanel extends StatefulWidget {
   final bool isDark;
   final bool toPickup;
+  final bool arrivedAtPickup;  // NUEVO: esperando iniciar viaje
   final String passengerName;
   final String pickupAddress;
   final String destinationAddress;
@@ -19,6 +20,7 @@ class TripBottomPanel extends StatefulWidget {
   final String arrivalTime;
   final bool isLoading;
   final VoidCallback onArrivedPickup;
+  final VoidCallback onStartTrip;   // NUEVO: iniciar viaje
   final VoidCallback onFinishTrip;
   final VoidCallback? onCall;
   final VoidCallback? onMessage;
@@ -34,6 +36,7 @@ class TripBottomPanel extends StatefulWidget {
     super.key,
     required this.isDark,
     required this.toPickup,
+    required this.arrivedAtPickup,
     required this.passengerName,
     required this.pickupAddress,
     required this.destinationAddress,
@@ -42,6 +45,7 @@ class TripBottomPanel extends StatefulWidget {
     required this.arrivalTime,
     required this.isLoading,
     required this.onArrivedPickup,
+    required this.onStartTrip,
     required this.onFinishTrip,
     this.onCall,
     this.onMessage,
@@ -513,10 +517,31 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
   }
 
   Widget _buildActionButton() {
-    final buttonText = widget.toPickup ? 'Llegué al punto' : 'Finalizar viaje';
-    final buttonAction = widget.toPickup
-        ? widget.onArrivedPickup
-        : widget.onFinishTrip;
+    // Determinar texto, acción y estilo según el estado actual
+    String buttonText;
+    VoidCallback buttonAction;
+    Color buttonColor;
+    IconData buttonIcon;
+
+    if (widget.toPickup) {
+      // Estado 1: En camino al punto de recogida
+      buttonText = 'Llegué al punto';
+      buttonAction = widget.onArrivedPickup;
+      buttonColor = AppColors.primary;
+      buttonIcon = Icons.check_circle_rounded;
+    } else if (widget.arrivedAtPickup) {
+      // Estado 2: Llegó al punto, esperando al cliente
+      buttonText = 'Comenzar viaje';
+      buttonAction = widget.onStartTrip;
+      buttonColor = AppColors.accent;
+      buttonIcon = Icons.play_arrow_rounded;
+    } else {
+      // Estado 3: Viaje en curso, hacia el destino
+      buttonText = 'Finalizar viaje';
+      buttonAction = widget.onFinishTrip;
+      buttonColor = AppColors.success;
+      buttonIcon = Icons.flag_rounded;
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -531,11 +556,9 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
                   buttonAction();
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: widget.toPickup
-                ? AppColors.primary
-                : AppColors.success,
+            backgroundColor: buttonColor,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+            disabledBackgroundColor: buttonColor.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -553,12 +576,7 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      widget.toPickup
-                          ? Icons.check_circle_rounded
-                          : Icons.flag_rounded,
-                      size: 22,
-                    ),
+                    Icon(buttonIcon, size: 22),
                     const SizedBox(width: 8),
                     Text(
                       buttonText,

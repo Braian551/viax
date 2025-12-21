@@ -54,7 +54,7 @@ try {
             dc.latitud_actual as conductor_latitud,
             dc.longitud_actual as conductor_longitud
         FROM solicitudes_servicio s
-        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado = 'asignado'
+        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado IN ('asignado', 'llegado')
         LEFT JOIN usuarios u ON ac.conductor_id = u.id
         LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
         WHERE s.id = ?

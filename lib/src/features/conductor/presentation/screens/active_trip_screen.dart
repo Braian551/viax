@@ -4,6 +4,8 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/conductor/services/conductor_service.dart';
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
+import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
+import 'package:viax/src/global/services/rating_service.dart';
 import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
@@ -94,6 +96,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   // ACCIONES
   // ===========================================================================
 
+  /// Notifica al backend que el conductor llegó al punto de recogida.
   Future<void> _onArrivedPickup() async {
     if (widget.solicitudId != null) {
       try {
@@ -109,7 +112,118 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await _controller.onArrivedPickup();
     if (!mounted || _controller.isDisposed) return;
 
-    _showSnackbar('¡Cliente recogido! Navegando al destino', AppColors.success);
+    _showSnackbar('¡Llegaste al punto! Espera al pasajero', AppColors.accent);
+  }
+
+  /// Inicia el viaje cuando el cliente se sube al vehículo.
+  Future<void> _onStartTrip() async {
+    if (widget.solicitudId != null) {
+      try {
+        final success = await ConductorService.iniciarViaje(
+          conductorId: widget.conductorId,
+          solicitudId: widget.solicitudId!,
+        );
+        if (!success) {
+          _showSnackbar('Error al iniciar el viaje', AppColors.error);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error iniciando viaje: $e');
+        _showSnackbar('Error al iniciar el viaje', AppColors.error);
+        return;
+      }
+    }
+
+    await _controller.onStartTrip();
+    if (!mounted || _controller.isDisposed) return;
+
+    _showSnackbar('¡Viaje iniciado! Navegando al destino', AppColors.success);
+  }
+
+  /// Finaliza el viaje cuando se llega al destino.
+  Future<void> _onFinishTrip() async {
+    if (widget.solicitudId != null) {
+      try {
+        final success = await ConductorService.completarViaje(
+          conductorId: widget.conductorId,
+          solicitudId: widget.solicitudId!,
+        );
+        if (!success) {
+          _showSnackbar('Error al finalizar el viaje', AppColors.error);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error finalizando viaje: $e');
+        _showSnackbar('Error al finalizar el viaje', AppColors.error);
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    
+    // Navegar a pantalla de completación
+    _navigateToTripCompletion();
+  }
+
+  /// Navega a la pantalla de completación del viaje.
+  void _navigateToTripCompletion() {
+    // Calcular datos del viaje
+    final distanciaKm = _controller.distanceKm > 0 
+        ? _controller.distanceKm 
+        : 5.0; // Fallback
+    final duracionMin = _controller.etaMinutes > 0 
+        ? _controller.etaMinutes 
+        : 15; // Fallback
+    
+    // TODO: Obtener precio real del backend
+    final precio = distanciaKm * 2500; // Estimado
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripCompletionScreen(
+          userType: TripCompletionUserType.conductor,
+          tripData: TripCompletionData(
+            solicitudId: widget.solicitudId ?? 0,
+            origen: widget.direccionOrigen,
+            destino: widget.direccionDestino,
+            distanciaKm: distanciaKm,
+            duracionMinutos: duracionMin,
+            precio: precio,
+            metodoPago: 'Efectivo', // TODO: Obtener del backend
+            otroUsuarioNombre: widget.clienteNombre ?? 'Pasajero',
+            otroUsuarioFoto: widget.clienteFoto,
+          ),
+          miUsuarioId: widget.conductorId,
+          otroUsuarioId: widget.clienteId ?? 0,
+          onSubmitRating: (rating, comentario) async {
+            if (widget.clienteId == null) return false;
+            final result = await RatingService.enviarCalificacion(
+              solicitudId: widget.solicitudId ?? 0,
+              calificadorId: widget.conductorId,
+              calificadoId: widget.clienteId!,
+              calificacion: rating,
+              tipoCalificador: 'conductor',
+              comentario: comentario,
+            );
+            return result['success'] == true;
+          },
+          onConfirmPayment: (received) async {
+            if (!received) return false;
+            final result = await RatingService.confirmarPagoEfectivo(
+              solicitudId: widget.solicitudId ?? 0,
+              conductorId: widget.conductorId,
+              monto: precio,
+            );
+            return result['success'] == true;
+          },
+          onComplete: () {
+            // Volver a la pantalla principal del conductor
+            Navigator.popUntil(context, (route) => route.isFirst);
+          },
+        ),
+      ),
+    );
   }
 
   void _showSnackbar(String message, Color color) {
@@ -362,7 +476,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: TripStatusPill(toPickup: _controller.toPickup, isDark: isDark),
+          child: TripStatusPill(
+            toPickup: _controller.toPickup,
+            arrivedAtPickup: _controller.arrivedAtPickup,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(width: 12),
         FloatingButton(
@@ -444,6 +562,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     return TripBottomPanel(
       isDark: isDark,
       toPickup: _controller.toPickup,
+      arrivedAtPickup: _controller.arrivedAtPickup,
       passengerName: widget.clienteNombre ?? '',
       pickupAddress: widget.direccionOrigen,
       destinationAddress: widget.direccionDestino,
@@ -452,8 +571,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       arrivalTime: arrivalLabel,
       isLoading: _controller.loadingRoute,
       onArrivedPickup: _onArrivedPickup,
-      onFinishTrip: () => Navigator.pop(context, true),
-      onMessage: _openChat, // Conectar el botón de mensajes al chat
+      onStartTrip: _onStartTrip,
+      onFinishTrip: _onFinishTrip,
+      onMessage: _openChat,
       // Coordenadas para navegación externa
       pickupLat: widget.origenLat,
       pickupLng: widget.origenLng,

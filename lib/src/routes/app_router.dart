@@ -7,6 +7,7 @@ import 'package:viax/src/features/user/presentation/screens/payment_methods_scre
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/waiting_for_driver_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -127,6 +128,26 @@ class AppRouter {
               clienteId: args?['cliente_id'] ?? 0,
               direccionOrigen: args?['direccion_origen'] ?? 'Origen',
               direccionDestino: args?['direccion_destino'] ?? 'Destino',
+            ),
+            settings: settings,
+          );
+        }
+      case '/user/active_trip':
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final origen = args?['origen'] as Map<String, dynamic>?;
+          final destino = args?['destino'] as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => UserActiveTripScreen(
+              solicitudId: args?['solicitud_id'] ?? 0,
+              clienteId: args?['cliente_id'] ?? 0,
+              origenLat: (origen?['latitud'] as num?)?.toDouble() ?? 0,
+              origenLng: (origen?['longitud'] as num?)?.toDouble() ?? 0,
+              direccionOrigen: origen?['direccion'] ?? 'Origen',
+              destinoLat: (destino?['latitud'] as num?)?.toDouble() ?? 0,
+              destinoLng: (destino?['longitud'] as num?)?.toDouble() ?? 0,
+              direccionDestino: destino?['direccion'] ?? 'Destino',
+              conductorInfo: args?['conductor'],
             ),
             settings: settings,
           );

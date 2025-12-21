@@ -33,7 +33,8 @@ class ActiveTripController {
   bool mapError = false;
   // Arrancamos en 2D para evitar shader/link issues en GPUs débiles; el 3D se activa manualmente
   bool is3DMode = false;
-  bool toPickup = true;
+  bool toPickup = true;           // En camino al punto de recogida
+  bool arrivedAtPickup = false;   // Llegó al punto, esperando iniciar viaje
   bool loadingRoute = false;
   String? error;
 
@@ -51,7 +52,10 @@ class ActiveTripController {
   // Mapa y geolocalización
   MapboxMap? mapboxMap;
   StreamSubscription<geo.Position>? positionStream;
-  CircleAnnotationManager? _circleAnnotationManager;
+  
+  // Managers separados para cada marcador (permite control individual)
+  CircleAnnotationManager? _pickupAnnotationManager;
+  CircleAnnotationManager? _dropoffAnnotationManager;
 
   // Throttling
   DateTime _lastCameraUpdate = DateTime.now();
@@ -95,8 +99,13 @@ class ActiveTripController {
 
   void _cleanupMapResources() {
     try {
-      _circleAnnotationManager?.deleteAll();
-      _circleAnnotationManager = null;
+      _pickupAnnotationManager?.deleteAll();
+      _pickupAnnotationManager = null;
+    } catch (_) {}
+
+    try {
+      _dropoffAnnotationManager?.deleteAll();
+      _dropoffAnnotationManager = null;
     } catch (_) {}
 
     try {
@@ -186,36 +195,57 @@ class ActiveTripController {
     if (mapboxMap == null || isDisposed || !mapReady) return;
 
     try {
-      _circleAnnotationManager ??= await mapboxMap!.annotations
+      // Crear manager para pickup (solo si aún vamos al punto de recogida)
+      if (toPickup) {
+        _pickupAnnotationManager ??= await mapboxMap!.annotations
+            .createCircleAnnotationManager();
+
+        if (_pickupAnnotationManager != null && !isDisposed) {
+          await _pickupAnnotationManager!.create(CircleAnnotationOptions(
+            geometry: pickup,
+            circleRadius: 14.0,
+            circleColor: 0xFF2196F3,
+            circleStrokeColor: 0xFFFFFFFF,
+            circleStrokeWidth: 3.0,
+            circleOpacity: 1.0,
+            circleStrokeOpacity: 1.0,
+          ));
+          debugPrint('✅ Marcador de pickup agregado');
+        }
+      }
+
+      // Crear manager para destino (siempre visible)
+      _dropoffAnnotationManager ??= await mapboxMap!.annotations
           .createCircleAnnotationManager();
 
-      if (_circleAnnotationManager == null || isDisposed) return;
+      if (_dropoffAnnotationManager != null && !isDisposed) {
+        await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
+          geometry: dropoff,
+          circleRadius: 12.0,
+          circleColor: 0xFFF44336,
+          circleStrokeColor: 0xFFFFFFFF,
+          circleStrokeWidth: 3.0,
+          circleOpacity: 1.0,
+          circleStrokeOpacity: 1.0,
+        ));
+        debugPrint('✅ Marcador de destino agregado');
+      }
 
-      // Marcador de pickup (azul)
-      await _circleAnnotationManager!.create(CircleAnnotationOptions(
-        geometry: pickup,
-        circleRadius: 14.0,
-        circleColor: 0xFF2196F3,
-        circleStrokeColor: 0xFFFFFFFF,
-        circleStrokeWidth: 3.0,
-        circleOpacity: 1.0,
-        circleStrokeOpacity: 1.0,
-      ));
-
-      // Marcador de destino (rojo)
-      await _circleAnnotationManager!.create(CircleAnnotationOptions(
-        geometry: dropoff,
-        circleRadius: 12.0,
-        circleColor: 0xFFF44336,
-        circleStrokeColor: 0xFFFFFFFF,
-        circleStrokeWidth: 3.0,
-        circleOpacity: 1.0,
-        circleStrokeOpacity: 1.0,
-      ));
-
-      debugPrint('✅ Marcadores agregados');
     } catch (e) {
       debugPrint('⚠️ Error agregando marcadores: $e');
+    }
+  }
+
+  /// Elimina el marcador del punto de recogida cuando el conductor llega
+  Future<void> _removePickupMarker() async {
+    if (_pickupAnnotationManager == null || isDisposed) return;
+
+    try {
+      await _pickupAnnotationManager!.deleteAll();
+      _pickupAnnotationManager = null;
+      debugPrint('✅ Marcador de pickup eliminado');
+    } catch (e) {
+      debugPrint('⚠️ Error eliminando marcador de pickup: $e');
     }
   }
 
@@ -618,10 +648,30 @@ class ActiveTripController {
     }
   }
 
+  /// Marca que el conductor llegó al punto de recogida.
+  /// Ahora espera que el cliente se suba antes de iniciar el viaje.
   Future<void> onArrivedPickup() async {
     if (!toPickup || isDisposed) return;
+    
+    // Cambiar estado: llegó al punto, espera al cliente
     toPickup = false;
+    arrivedAtPickup = true;
     onStateChanged();
+    
+    // Eliminar el marcador del punto de recogida
+    await _removePickupMarker();
+  }
+
+  /// Inicia el viaje una vez que el cliente se subió.
+  /// Recalcula la ruta hacia el destino.
+  Future<void> onStartTrip() async {
+    if (!arrivedAtPickup || isDisposed) return;
+    
+    // Cambiar estado: viaje en curso hacia destino
+    arrivedAtPickup = false;
+    onStateChanged();
+    
+    // Recalcular ruta hacia el destino
     await loadRoute();
     await fitRouteInView();
   }
