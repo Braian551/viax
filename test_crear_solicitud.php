@@ -273,6 +273,18 @@ try {
     echo "   👤 Cliente ID: {$cliente['id']} ({$cliente['nombre']})\n";
     echo "   🚗 Conductor ID: {$conductor['id']} ({$conductor['nombre']})\n";
     echo "   📍 Radio búsqueda: $radioKm km\n";
+    echo "\n╔════════════════════════════════════════════════════════╗\n";
+    echo "║           INFORMACIÓN PARA PRUEBA DE CHAT             ║\n";
+    echo "╠════════════════════════════════════════════════════════╣\n";
+    echo "║ 💬 Cliente ID:     {$cliente['id']}                              ║\n";
+    echo "║ 💬 Conductor ID:   {$conductor['id']}                              ║\n";
+    echo "║ 💬 Solicitud ID:   $solicitudId                              ║\n";
+    echo "║                                                        ║\n";
+    echo "║ Para probar el chat desde la app:                     ║\n";
+    echo "║ 1. El conductor debe aceptar la solicitud             ║\n";
+    echo "║ 2. Ambos verán el botón de chat en sus pantallas      ║\n";
+    echo "║ 3. Los mensajes se sincronizarán en tiempo real       ║\n";
+    echo "╚════════════════════════════════════════════════════════╝\n";
     echo "\n💡 NOTA: La app del conductor debería recibir esta solicitud\n";
     echo "   si está en modo búsqueda y dentro del radio configurado.\n";
     echo "==========================================================\n";

@@ -158,6 +158,7 @@ class ViajeActivoCard extends StatelessWidget {
 
                         final conductorId = int.tryParse(viaje['conductor_id']?.toString() ?? '0') ?? 0;
                         final solicitudId = int.tryParse(viaje['solicitud_id']?.toString() ?? viaje['id']?.toString() ?? '0');
+                        final clienteId = int.tryParse(viaje['cliente_id']?.toString() ?? '0');
 
                         if (origenLat != null && origenLng != null && destinoLat != null && destinoLng != null && conductorId > 0) {
                           Navigator.push(
@@ -166,6 +167,7 @@ class ViajeActivoCard extends StatelessWidget {
                               builder: (context) => ConductorActiveTripScreen(
                                 conductorId: conductorId,
                                 solicitudId: solicitudId,
+                                clienteId: clienteId,
                                 origenLat: origenLat,
                                 origenLng: origenLng,
                                 destinoLat: destinoLat,
@@ -173,6 +175,7 @@ class ViajeActivoCard extends StatelessWidget {
                                 direccionOrigen: viaje['direccion_origen']?.toString() ?? origen,
                                 direccionDestino: viaje['direccion_destino']?.toString() ?? destino,
                                 clienteNombre: clienteNombre,
+                                clienteFoto: viaje['cliente_foto']?.toString(),
                               ),
                             ),
                           );

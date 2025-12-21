@@ -3,18 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/conductor/services/conductor_service.dart';
+import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
 
 /// Pantalla de viaje activo para el conductor.
-/// 
+///
 /// Diseño estilo DiDi/Uber con mapa de navegación, panel inferior
 /// deslizable y controles de acceso rápido.
 class ConductorActiveTripScreen extends StatefulWidget {
   final int conductorId;
   final int? solicitudId;
   final int? viajeId;
+  final int? clienteId;
   final double origenLat;
   final double origenLng;
   final double destinoLat;
@@ -22,12 +24,14 @@ class ConductorActiveTripScreen extends StatefulWidget {
   final String direccionOrigen;
   final String direccionDestino;
   final String? clienteNombre;
+  final String? clienteFoto;
 
   const ConductorActiveTripScreen({
     super.key,
     required this.conductorId,
     this.solicitudId,
     this.viajeId,
+    this.clienteId,
     required this.origenLat,
     required this.origenLng,
     required this.destinoLat,
@@ -35,6 +39,7 @@ class ConductorActiveTripScreen extends StatefulWidget {
     required this.direccionOrigen,
     required this.direccionDestino,
     this.clienteNombre,
+    this.clienteFoto,
   });
 
   @override
@@ -119,6 +124,66 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     );
   }
 
+  /// Abrir pantalla de chat con el cliente
+  void _openChat() {
+    debugPrint('🔍 [Chat] Intentando abrir chat...');
+    debugPrint('   solicitudId: ${widget.solicitudId}');
+    debugPrint('   clienteId: ${widget.clienteId}');
+    debugPrint('   conductorId: ${widget.conductorId}');
+    
+    if (widget.solicitudId == null) {
+      debugPrint('❌ [Chat] No hay solicitudId');
+      _showSnackbar('No hay información del viaje', AppColors.error);
+      return;
+    }
+
+    final clienteIdToUse = widget.clienteId;
+    
+    if (clienteIdToUse == null) {
+      debugPrint('⚠️ [Chat] clienteId es null, mostrando diálogo de información');
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Chat no disponible'),
+          content: const Text(
+            'La información del cliente no está disponible en este momento. '
+            'Por favor, intenta recargar el viaje o contacta soporte.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    debugPrint('✅ [Chat] Navegando a ChatScreen...');
+    
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            solicitudId: widget.solicitudId!,
+            miUsuarioId: widget.conductorId,
+            otroUsuarioId: clienteIdToUse,
+            miTipo: 'conductor',
+            otroNombre: widget.clienteNombre ?? 'Cliente',
+            otroFoto: widget.clienteFoto,
+            otroSubtitle: 'Tu pasajero',
+          ),
+        ),
+      );
+      debugPrint('✅ [Chat] ChatScreen abierta exitosamente');
+    } catch (e) {
+      debugPrint('❌ [Chat] Error al abrir ChatScreen: $e');
+      _showSnackbar('Error al abrir el chat: $e', AppColors.error);
+    }
+  }
+
   void _showOptionsMenu(bool isDark) {
     showModalBottomSheet(
       context: context,
@@ -157,7 +222,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Volver',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[600]),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
             ),
           ),
           TextButton(
@@ -167,7 +234,10 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             },
             child: Text(
               'Cancelar viaje',
-              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -292,10 +362,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: TripStatusPill(
-            toPickup: _controller.toPickup,
-            isDark: isDark,
-          ),
+          child: TripStatusPill(toPickup: _controller.toPickup, isDark: isDark),
         ),
         const SizedBox(width: 12),
         FloatingButton(
@@ -312,11 +379,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final target = _controller.toPickup
         ? _controller.pickup
         : _controller.dropoff;
-    
+
     double dist = _controller.driverLocation != null
         ? _controller.calculateDistance(_controller.driverLocation!, target)
         : 0;
-    
+
     String distText = dist < 1000
         ? '${dist.toInt()} m'
         : '${(dist / 1000).toStringAsFixed(1)} km';
@@ -351,23 +418,28 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Widget _buildBottomPanel(bool isDark) {
     final fallbackDistance = _controller.driverLocation != null
         ? _controller.calculateDistance(
-            _controller.driverLocation!,
-            _controller.pickup,
-          ) / 1000
+                _controller.driverLocation!,
+                _controller.pickup,
+              ) /
+              1000
         : 0.0;
-    
+
     final displayDistance = _controller.distanceKm > 0
         ? _controller.distanceKm
         : fallbackDistance;
-    
+
     final arrivalTime = _controller.etaMinutes > 0
         ? DateTime.now().add(Duration(minutes: _controller.etaMinutes))
         : null;
-    
+
     final arrivalLabel = arrivalTime != null
         ? '${arrivalTime.hour.toString().padLeft(2, '0')}:'
-          '${arrivalTime.minute.toString().padLeft(2, '0')}'
+              '${arrivalTime.minute.toString().padLeft(2, '0')}'
         : '--:--';
+
+    // Obtener coordenadas actuales del conductor
+    final currentLat = _controller.driverLocation?.coordinates.lat.toDouble();
+    final currentLng = _controller.driverLocation?.coordinates.lng.toDouble();
 
     return TripBottomPanel(
       isDark: isDark,
@@ -381,6 +453,14 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       isLoading: _controller.loadingRoute,
       onArrivedPickup: _onArrivedPickup,
       onFinishTrip: () => Navigator.pop(context, true),
+      onMessage: _openChat, // Conectar el botón de mensajes al chat
+      // Coordenadas para navegación externa
+      pickupLat: widget.origenLat,
+      pickupLng: widget.origenLng,
+      destinationLat: widget.destinoLat,
+      destinationLng: widget.destinoLng,
+      currentLat: currentLat,
+      currentLng: currentLng,
     );
   }
 }

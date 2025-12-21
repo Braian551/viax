@@ -394,6 +394,7 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           MaterialPageRoute(
             builder: (context) => SearchingDriverScreen(
               solicitudId: solicitudId,
+              clienteId: userId,
               latitudOrigen: _pickupLocation!.latitude,
               longitudOrigen: _pickupLocation!.longitude,
               direccionOrigen: _pickupAddress,

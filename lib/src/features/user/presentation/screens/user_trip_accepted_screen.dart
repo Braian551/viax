@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
+import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_driver_panel.dart';
@@ -24,6 +25,7 @@ import '../widgets/user_trip_accepted/user_trip_accepted_map.dart';
 /// - Botones de llamar/mensaje
 class UserTripAcceptedScreen extends StatefulWidget {
   final int solicitudId;
+  final int clienteId;
   final double latitudOrigen;
   final double longitudOrigen;
   final String direccionOrigen;
@@ -35,6 +37,7 @@ class UserTripAcceptedScreen extends StatefulWidget {
   const UserTripAcceptedScreen({
     super.key,
     required this.solicitudId,
+    required this.clienteId,
     required this.latitudOrigen,
     required this.longitudOrigen,
     required this.direccionOrigen,
@@ -622,6 +625,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       '/user/active_trip',
       arguments: {
         'solicitud_id': widget.solicitudId,
+        'cliente_id': widget.clienteId,
         'conductor': _conductor,
         'origen': {
           'latitud': widget.latitudOrigen,
@@ -634,6 +638,41 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           'direccion': widget.direccionDestino,
         },
       },
+    );
+  }
+
+  /// Abrir pantalla de chat con el conductor
+  void _openChat() {
+    final conductorId = _conductor?['id'] as int?;
+    if (conductorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Información del conductor no disponible')),
+      );
+      return;
+    }
+
+    final conductorNombre = _conductor?['nombre'] as String? ?? 'Conductor';
+    final conductorFoto = _conductor?['foto'] as String?;
+    final vehiculo = _conductor?['vehiculo'] as Map<String, dynamic>?;
+    final vehiculoInfo = vehiculo != null
+        ? '${vehiculo['marca'] ?? ''} ${vehiculo['modelo'] ?? ''}'.trim()
+        : null;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          solicitudId: widget.solicitudId,
+          miUsuarioId: widget.clienteId,
+          otroUsuarioId: conductorId,
+          miTipo: 'cliente',
+          otroNombre: conductorNombre,
+          otroFoto: conductorFoto,
+          otroSubtitle: vehiculoInfo != null && vehiculoInfo.isNotEmpty
+              ? 'Conductor de $vehiculoInfo'
+              : 'Tu conductor',
+        ),
+      ),
     );
   }
 
@@ -811,9 +850,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 conductorEtaMinutes: _conductorEtaMinutes,
                 conductorDistanceKm: _conductorDistanceKm,
                 onCall: _callDriver,
-                onCancelChat: () {
-                  // TODO: Implementar chat
-                },
+                onCancelChat: _openChat,
                 isDark: isDark,
               ),
             ),

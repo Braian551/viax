@@ -11,6 +11,7 @@ import 'user_trip_accepted_screen.dart';
 
 class SearchingDriverScreen extends StatefulWidget {
   final dynamic solicitudId;
+  final int clienteId;
   final double latitudOrigen;
   final double longitudOrigen;
   final String direccionOrigen;
@@ -22,6 +23,7 @@ class SearchingDriverScreen extends StatefulWidget {
   const SearchingDriverScreen({
     super.key,
     required this.solicitudId,
+    required this.clienteId,
     required this.latitudOrigen,
     required this.longitudOrigen,
     required this.direccionOrigen,
@@ -191,6 +193,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
               MaterialPageRoute(
                 builder: (context) => UserTripAcceptedScreen(
                   solicitudId: widget.solicitudIdAsInt,
+                  clienteId: widget.clienteId,
                   latitudOrigen: widget.latitudOrigen,
                   longitudOrigen: widget.longitudOrigen,
                   direccionOrigen: widget.direccionOrigen,

@@ -13,7 +13,10 @@ class TripRequestView {
     required this.duracionMinutos,
     required this.direccionOrigen,
     required this.direccionDestino,
+    this.clienteId,
     this.clienteNombre,
+    this.clienteFoto,
+    this.clienteTelefono,
   });
 
 
@@ -27,7 +30,10 @@ class TripRequestView {
   final int duracionMinutos;
   final String direccionOrigen;
   final String direccionDestino;
+  final int? clienteId;
   final String? clienteNombre;
+  final String? clienteFoto;
+  final String? clienteTelefono;
 
   LatLng get origen => LatLng(latitudOrigen, longitudOrigen);
   LatLng get destino => LatLng(latitudDestino, longitudDestino);
@@ -41,18 +47,26 @@ class TripRequestView {
       return int.tryParse(value?.toString() ?? '') ?? 0;
     }
 
+    int? _toIntOrNull(dynamic value) {
+      if (value == null) return null;
+      return int.tryParse(value.toString());
+    }
+
     return TripRequestView(
       id: _toInt(raw['id']),
-      latitudOrigen: _toDouble(raw['latitud_origen']),
-      longitudOrigen: _toDouble(raw['longitud_origen']),
+      latitudOrigen: _toDouble(raw['latitud_origen'] ?? raw['latitud_recogida']),
+      longitudOrigen: _toDouble(raw['longitud_origen'] ?? raw['longitud_recogida']),
       latitudDestino: _toDouble(raw['latitud_destino']),
       longitudDestino: _toDouble(raw['longitud_destino']),
-      distanciaKm: _toDouble(raw['distancia_km']),
+      distanciaKm: _toDouble(raw['distancia_km'] ?? raw['distancia_estimada']),
       precioEstimado: _toDouble(raw['precio_estimado']),
-      duracionMinutos: _toInt(raw['duracion_minutos']),
-      direccionOrigen: raw['direccion_origen']?.toString() ?? 'Sin dirección',
+      duracionMinutos: _toInt(raw['duracion_minutos'] ?? raw['tiempo_estimado']),
+      direccionOrigen: (raw['direccion_origen'] ?? raw['direccion_recogida'])?.toString() ?? 'Sin dirección',
       direccionDestino: raw['direccion_destino']?.toString() ?? 'Sin dirección',
-      clienteNombre: raw['cliente_nombre']?.toString(),
+      clienteId: _toIntOrNull(raw['cliente_id']),
+      clienteNombre: (raw['cliente_nombre'] ?? raw['nombre_usuario'])?.toString(),
+      clienteFoto: (raw['cliente_foto'] ?? raw['foto_usuario'])?.toString(),
+      clienteTelefono: (raw['cliente_telefono'] ?? raw['telefono_usuario'])?.toString(),
     );
   }
 }

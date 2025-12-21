@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/features/conductor/services/navigation_launcher_service.dart';
 import '../common/pulsing_dot.dart';
 
 /// Panel inferior deslizable para viaje activo.
-/// 
+///
 /// Diseño estilo DiDi/Uber con información del pasajero,
 /// estadísticas del viaje y acciones principales.
 class TripBottomPanel extends StatefulWidget {
@@ -21,6 +22,13 @@ class TripBottomPanel extends StatefulWidget {
   final VoidCallback onFinishTrip;
   final VoidCallback? onCall;
   final VoidCallback? onMessage;
+  // Coordenadas para navegación externa
+  final double? pickupLat;
+  final double? pickupLng;
+  final double? destinationLat;
+  final double? destinationLng;
+  final double? currentLat;
+  final double? currentLng;
 
   const TripBottomPanel({
     super.key,
@@ -37,6 +45,12 @@ class TripBottomPanel extends StatefulWidget {
     required this.onFinishTrip,
     this.onCall,
     this.onMessage,
+    this.pickupLat,
+    this.pickupLng,
+    this.destinationLat,
+    this.destinationLng,
+    this.currentLat,
+    this.currentLng,
   });
 
   @override
@@ -59,10 +73,9 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
     super.dispose();
   }
 
-  String get _displayName =>
-      widget.passengerName.trim().isNotEmpty 
-          ? widget.passengerName.trim() 
-          : 'Pasajero';
+  String get _displayName => widget.passengerName.trim().isNotEmpty
+      ? widget.passengerName.trim()
+      : 'Pasajero';
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +107,8 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
               children: [
                 _buildDragHandle(),
                 _buildPassengerInfo(),
+                // Botones de navegación siempre visibles
+                _buildNavigationSection(),
                 AnimatedCrossFade(
                   firstChild: const SizedBox.shrink(),
                   secondChild: _buildExpandedContent(),
@@ -132,17 +147,26 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
   void _handleTap() {
     HapticFeedback.lightImpact();
     final current = _dragController.size;
-    
+
     if (current < _midSize) {
-      _dragController.animateTo(_midSize,
-          duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+      _dragController.animateTo(
+        _midSize,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
     } else if (current < _maxSize - 0.05) {
-      _dragController.animateTo(_maxSize,
-          duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+      _dragController.animateTo(
+        _maxSize,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
       setState(() => _isExpanded = true);
     } else {
-      _dragController.animateTo(_midSize,
-          duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+      _dragController.animateTo(
+        _midSize,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
       setState(() => _isExpanded = false);
     }
   }
@@ -209,7 +233,9 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                widget.toPickup ? widget.pickupAddress : widget.destinationAddress,
+                widget.toPickup
+                    ? widget.pickupAddress
+                    : widget.destinationAddress,
                 style: TextStyle(
                   color: widget.isDark ? Colors.white60 : Colors.grey[600],
                   fontSize: 12,
@@ -244,6 +270,91 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
     );
   }
 
+  Widget _buildNavigationButtons() {
+    // Determinar destino según fase del viaje
+    final targetLat = widget.toPickup
+        ? widget.pickupLat
+        : widget.destinationLat;
+    final targetLng = widget.toPickup
+        ? widget.pickupLng
+        : widget.destinationLng;
+
+    if (targetLat == null || targetLng == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _NavigationButton(
+              label: 'Google Maps',
+              icon: Icons.map_rounded,
+              color: const Color(0xFF4285F4),
+              isDark: widget.isDark,
+              onTap: () => _openGoogleMaps(targetLat, targetLng),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _NavigationButton(
+              label: 'Waze',
+              icon: Icons.navigation_rounded,
+              color: const Color(0xFF33CCFF),
+              isDark: widget.isDark,
+              onTap: () => _openWaze(targetLat, targetLng),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openGoogleMaps(double lat, double lng) async {
+    HapticFeedback.lightImpact();
+    final success = await NavigationLauncherService.openGoogleMaps(
+      destinationLat: lat,
+      destinationLng: lng,
+      originLat: widget.currentLat,
+      originLng: widget.currentLng,
+    );
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No se pudo abrir Google Maps'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openWaze(double lat, double lng) async {
+    HapticFeedback.lightImpact();
+    final success = await NavigationLauncherService.openWaze(
+      destinationLat: lat,
+      destinationLng: lng,
+    );
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No se pudo abrir Waze'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildExpandedContent() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -252,6 +363,64 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
           _buildStatsRow(),
           const SizedBox(height: 12),
           _buildArrivalInfo(),
+        ],
+      ),
+    );
+  }
+
+  /// Construye la sección de botones de navegación externa.
+  /// Se muestra siempre visible para fácil acceso.
+  Widget _buildNavigationSection() {
+    final targetLat = widget.toPickup
+        ? widget.pickupLat
+        : widget.destinationLat;
+    final targetLng = widget.toPickup
+        ? widget.pickupLng
+        : widget.destinationLng;
+
+    if (targetLat == null || targetLng == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Navegar con',
+              style: TextStyle(
+                color: widget.isDark ? Colors.white60 : Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _NavigationButton(
+                  label: 'Google Maps',
+                  icon: Icons.map_rounded,
+                  color: const Color(0xFF4285F4),
+                  isDark: widget.isDark,
+                  onTap: () => _openGoogleMaps(targetLat, targetLng),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _NavigationButton(
+                  label: 'Waze',
+                  icon: Icons.navigation_rounded,
+                  color: const Color(0xFF33CCFF),
+                  isDark: widget.isDark,
+                  onTap: () => _openWaze(targetLat, targetLng),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -291,10 +460,14 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: (widget.isDark ? Colors.white : Colors.grey).withValues(alpha: 0.05),
+        color: (widget.isDark ? Colors.white : Colors.grey).withValues(
+          alpha: 0.05,
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: (widget.isDark ? Colors.white : Colors.grey).withValues(alpha: 0.1),
+          color: (widget.isDark ? Colors.white : Colors.grey).withValues(
+            alpha: 0.1,
+          ),
         ),
       ),
       child: Row(
@@ -341,7 +514,9 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
 
   Widget _buildActionButton() {
     final buttonText = widget.toPickup ? 'Llegué al punto' : 'Finalizar viaje';
-    final buttonAction = widget.toPickup ? widget.onArrivedPickup : widget.onFinishTrip;
+    final buttonAction = widget.toPickup
+        ? widget.onArrivedPickup
+        : widget.onFinishTrip;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -349,12 +524,16 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
         width: double.infinity,
         height: 54,
         child: ElevatedButton(
-          onPressed: widget.isLoading ? null : () {
-            HapticFeedback.mediumImpact();
-            buttonAction();
-          },
+          onPressed: widget.isLoading
+              ? null
+              : () {
+                  HapticFeedback.mediumImpact();
+                  buttonAction();
+                },
           style: ElevatedButton.styleFrom(
-            backgroundColor: widget.toPickup ? AppColors.primary : AppColors.success,
+            backgroundColor: widget.toPickup
+                ? AppColors.primary
+                : AppColors.success,
             foregroundColor: Colors.white,
             disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(
@@ -375,7 +554,9 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      widget.toPickup ? Icons.check_circle_rounded : Icons.flag_rounded,
+                      widget.toPickup
+                          ? Icons.check_circle_rounded
+                          : Icons.flag_rounded,
                       size: 22,
                     ),
                     const SizedBox(width: 8),
@@ -540,6 +721,57 @@ class _StatCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Botón para abrir aplicación de navegación externa.
+class _NavigationButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _NavigationButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.grey[800],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -196,6 +196,7 @@ try {
         $resultado = [
             'id' => (int)$solicitud['id'],
             'usuario_id' => (int)$solicitud['cliente_id'],
+            'cliente_id' => (int)$solicitud['cliente_id'], // Para el chat
             'nombre_usuario' => $solicitud['nombre_usuario'],
             'telefono_usuario' => $solicitud['telefono_usuario'],
             'foto_usuario' => $solicitud['foto_usuario'],
