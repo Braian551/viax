@@ -282,8 +282,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFFFFFF00).withOpacity(0.2),
-                  const Color(0xFFFFFF00).withOpacity(0.1),
+                  const Color(0xFFFFFF00).withValues(alpha: 0.2),
+                  const Color(0xFFFFFF00).withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.5, 1.0],
@@ -297,7 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   gradient: page.gradient,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFFF00).withOpacity(0.3),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),

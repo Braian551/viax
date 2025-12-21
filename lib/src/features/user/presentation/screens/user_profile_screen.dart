@@ -130,7 +130,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -229,7 +229,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  backgroundColor: AppColors.error.withOpacity(0.1),
+                                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
                                 ),
                                 child: _isLoggingOut
                                     ? const SizedBox(
@@ -267,13 +267,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
         ),
       ),
       child: Row(
@@ -284,9 +284,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 width: 2,
               ),
             ),
@@ -331,10 +331,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard.withOpacity(0.5) : AppColors.lightCard.withOpacity(0.5),
+        color: isDark ? AppColors.darkCard.withValues(alpha: 0.5) : AppColors.lightCard.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
       ),
       child: Row(
@@ -371,7 +371,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -402,7 +402,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -420,7 +420,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.1),
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

@@ -66,12 +66,12 @@ class _SavedLocationChipState extends State<SavedLocationChip>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? widget.color.withOpacity(0.15)
-                : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100]),
+                ? widget.color.withValues(alpha: 0.15)
+                : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100]),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
               color: widget.isSelected
-                  ? widget.color.withOpacity(0.3)
+                  ? widget.color.withValues(alpha: 0.3)
                   : Colors.transparent,
               width: 1.5,
             ),

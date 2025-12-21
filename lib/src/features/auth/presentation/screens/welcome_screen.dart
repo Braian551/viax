@@ -49,7 +49,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primary.withOpacity(isDark ? 0.25 : 0.15),
+                        AppColors.primary.withValues(alpha: isDark ? 0.25 : 0.15),
                         Colors.transparent,
                       ],
                       stops: const [0.1, 0.8],
@@ -133,9 +133,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       text: 'Continuar con Google',
                       backgroundColor: Colors.white,
                       textColor: Colors.black,
-                      borderColor: isDark 
-                          ? Colors.white.withOpacity(0.3) 
-                          : Colors.black.withOpacity(0.2),
+                        borderColor: isDark 
+                          ? Colors.white.withValues(alpha: 0.3) 
+                          : Colors.black.withValues(alpha: 0.2),
                       onPressed: () {
                         // TODO: Integrar Google Sign-In
                       },
@@ -153,8 +153,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       text: 'Continuar con Apple',
                       backgroundColor: isDark ? AppColors.darkSurface : const Color(0xFF000000),
                       textColor: Colors.white,
-                      borderColor: isDark
-                          ? Colors.white.withOpacity(0.3)
+                        borderColor: isDark
+                          ? Colors.white.withValues(alpha: 0.3)
                           : Colors.transparent,
                       onPressed: () {
                         // TODO: Integrar Apple Sign-In
@@ -171,7 +171,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       text: 'Continuar con correo',
                       backgroundColor: Colors.transparent,
                       textColor: AppColors.primary,
-                      borderColor: AppColors.primary.withOpacity(0.5),
+                      borderColor: AppColors.primary.withValues(alpha: 0.5),
                       onPressed: () {
                         Navigator.pushNamed(context, RouteNames.emailAuth);
                       },
@@ -204,7 +204,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         text: TextSpan(
                           text: 'Al continuar, aceptas nuestros ',
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                             fontSize: 12,
                             height: 1.5,
                           ),
@@ -212,7 +212,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             TextSpan(
                               text: 'Términos de Servicio',
                               style: TextStyle(
-                                color: AppColors.primary.withOpacity(0.9),
+                                color: AppColors.primary.withValues(alpha: 0.9),
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -220,7 +220,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             TextSpan(
                               text: 'Política de Privacidad',
                               style: TextStyle(
-                                color: AppColors.primary.withOpacity(0.9),
+                                color: AppColors.primary.withValues(alpha: 0.9),
                                 decoration: TextDecoration.underline,
                               ),
                             ),

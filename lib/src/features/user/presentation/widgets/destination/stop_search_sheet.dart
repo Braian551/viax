@@ -134,7 +134,7 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.12),
+                      color: AppColors.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -165,7 +165,7 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: isDark 
-                          ? Colors.white.withOpacity(0.08) 
+                          ? Colors.white.withValues(alpha: 0.08) 
                           : Colors.grey[100],
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -185,7 +185,7 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
             child: Container(
               decoration: BoxDecoration(
                 color: isDark 
-                    ? Colors.white.withOpacity(0.06) 
+                ? Colors.white.withValues(alpha: 0.06) 
                     : Colors.grey[100],
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -251,8 +251,8 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
           height: 1,
           indent: 52,
           color: isDark 
-              ? Colors.white.withOpacity(0.06) 
-              : Colors.grey.withOpacity(0.1),
+            ? Colors.white.withValues(alpha: 0.06) 
+            : Colors.grey.withValues(alpha: 0.1),
         ),
         itemBuilder: (context, index) {
           final location = _suggestions[index];
@@ -314,7 +314,7 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
                 height: 42,
                 decoration: BoxDecoration(
                   color: isDark 
-                      ? Colors.white.withOpacity(0.06) 
+                      ? Colors.white.withValues(alpha: 0.06) 
                       : Colors.grey[100],
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -380,9 +380,9 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withOpacity(0.15)),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
           ),
           child: Row(
             children: [
@@ -390,7 +390,7 @@ class _StopSearchSheetState extends State<StopSearchSheet> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 22),

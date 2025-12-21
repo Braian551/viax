@@ -590,13 +590,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: (isDark
-                                ? Colors.white.withOpacity(0.1)
-                                : Colors.white.withOpacity(0.7)),
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.white.withValues(alpha: 0.7)),
                             borderRadius: BorderRadius.circular(50),
                             border: Border.all(
                               color: (isDark
-                                  ? Colors.white.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.5)),
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.5)),
                               width: 1,
                             ),
                           ),
@@ -607,8 +607,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: (isDark
-                                      ? Colors.white.withOpacity(0.15)
-                                      : AppColors.primary.withOpacity(0.1)),
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : AppColors.primary.withValues(alpha: 0.1)),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Image.asset(
@@ -651,8 +651,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _isOnline
-                                      ? AppColors.success.withOpacity(0.15)
-                                      : Colors.grey.withOpacity(0.15),
+                                      ? AppColors.success.withValues(alpha: 0.15)
+                                      : Colors.grey.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
@@ -695,13 +695,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         height: 50,
                         decoration: BoxDecoration(
                           color: (isDark
-                              ? Colors.white.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.7)),
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.7)),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: (isDark
-                                ? Colors.white.withOpacity(0.2)
-                                : Colors.white.withOpacity(0.5)),
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.5)),
                             width: 1,
                           ),
                         ),
@@ -847,7 +847,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           height: 100,
                           decoration: BoxDecoration(
                             color: (_isOnline ? AppColors.success : AppColors.primary)
-                                .withOpacity(0.12),
+                                .withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -858,7 +858,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         height: 70,
                         decoration: BoxDecoration(
                           color: (_isOnline ? AppColors.success : AppColors.primary)
-                              .withOpacity(0.18),
+                              .withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -868,7 +868,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         height: 50,
                         decoration: BoxDecoration(
                           color: (_isOnline ? AppColors.success : AppColors.primary)
-                              .withOpacity(0.25),
+                              .withValues(alpha: 0.25),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -889,7 +889,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           boxShadow: [
                             BoxShadow(
                               color: (_isOnline ? AppColors.success : AppColors.primary)
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               blurRadius: 16,
                               spreadRadius: 4,
                             ),
@@ -1000,18 +1000,18 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                     height: 52,
                     decoration: BoxDecoration(
                       color: (isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.white.withOpacity(0.8)),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.8)),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: (isDark
-                            ? Colors.white.withOpacity(0.2)
-                            : Colors.white.withOpacity(0.5)),
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.5)),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -1048,17 +1048,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: _showDemandZones
-                    ? Colors.orange.withOpacity(isDark ? 0.3 : 0.2)
+                  ? Colors.orange.withValues(alpha: isDark ? 0.3 : 0.2)
                     : (isDark 
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.8)),
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.8)),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _showDemandZones
-                      ? Colors.orange.withOpacity(0.5)
+                      ? Colors.orange.withValues(alpha: 0.5)
                       : (isDark
-                          ? Colors.white.withOpacity(0.2)
-                          : Colors.white.withOpacity(0.5)),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.5)),
                   width: 1,
                 ),
               ),
@@ -1111,18 +1111,18 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               child: Container(
                 decoration: BoxDecoration(
                   color: (isDark
-                      ? Colors.black.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.85)),
+                      ? Colors.black.withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.85)),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: (isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.6)),
+                  color: (isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.6)),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -1142,7 +1142,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                            (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
                             Colors.transparent,
                           ],
                         ),
@@ -1183,17 +1183,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.success.withOpacity(0.2),
-                            AppColors.success.withOpacity(0.1),
+                              AppColors.success.withValues(alpha: 0.2),
+                              AppColors.success.withValues(alpha: 0.1),
                           ],
                         )
                       : null,
-                  color: _isOnline ? null : Colors.grey.withOpacity(0.1),
+                    color: _isOnline ? null : Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: _isOnline
-                        ? AppColors.success.withOpacity(0.3)
-                        : Colors.grey.withOpacity(0.2),
+                          ? AppColors.success.withValues(alpha: 0.3)
+                          : Colors.grey.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1249,7 +1249,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                             : 'Conéctate para recibir viajes',
                         key: ValueKey('$_isOnline-$_isSearchingRequests-$_searchStatus'),
                         style: TextStyle(
-                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1277,7 +1277,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: AppColors.success.withOpacity(0.2),
+                                  color: AppColors.success.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -1291,7 +1291,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.success.withOpacity(0.5),
+                                  color: AppColors.success.withValues(alpha: 0.5),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                 ),
@@ -1367,13 +1367,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    color.withOpacity(isDark ? 0.15 : 0.1),
-                    color.withOpacity(isDark ? 0.08 : 0.05),
+                  color.withValues(alpha: isDark ? 0.15 : 0.1),
+                  color.withValues(alpha: isDark ? 0.08 : 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -1382,7 +1382,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -1405,7 +1405,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   Text(
                     label,
                     style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1465,7 +1465,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                             color: (_isOnline
                                     ? Colors.red
                                     : AppColors.success)
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                             spreadRadius: -2,

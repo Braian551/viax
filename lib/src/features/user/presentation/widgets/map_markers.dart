@@ -42,9 +42,9 @@ class ClientLocationMarker extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            AppColors.primary.withOpacity(0.5),
-                            AppColors.primary.withOpacity(0.15),
-                            AppColors.primary.withOpacity(0.0),
+                            AppColors.primary.withValues(alpha: 0.5),
+                            AppColors.primary.withValues(alpha: 0.15),
+                            AppColors.primary.withValues(alpha: 0.0),
                           ],
                         ),
                       ),
@@ -59,8 +59,8 @@ class ClientLocationMarker extends StatelessWidget {
                 height: 28 + (pulseAnimation.value * 6),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(
-                    0.15 * (1 - pulseAnimation.value),
+                  color: AppColors.primary.withValues(
+                    alpha: 0.15 * (1 - pulseAnimation.value),
                   ),
                 ),
               ),
@@ -75,7 +75,7 @@ class ClientLocationMarker extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
@@ -137,12 +137,12 @@ class PickupPointMarker extends StatelessWidget {
               border: Border.all(color: Colors.white, width: isCompact ? 3 : 4),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withOpacity(0.5),
+                  color: AppColors.success.withValues(alpha: 0.5),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -183,7 +183,7 @@ class PickupPointMarker extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.success.withOpacity(opacity),
+                  color: AppColors.success.withValues(alpha: opacity),
                   width: 2.5 * (1 - progress),
                 ),
               ),
@@ -200,12 +200,12 @@ class PickupPointMarker extends StatelessWidget {
               border: Border.all(color: Colors.white, width: isCompact ? 3 : 4),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withOpacity(0.5),
+                  color: AppColors.success.withValues(alpha: 0.5),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -230,7 +230,7 @@ class PickupPointMarker extends StatelessWidget {
       ),
       borderRadius: 12,
       blur: 8,
-      backgroundColor: AppColors.success.withOpacity(0.9),
+      backgroundColor: AppColors.success.withValues(alpha: 0.9),
       showBorder: true,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: isCompact ? 100 : 160),
@@ -330,7 +330,7 @@ class DriverMarker extends StatelessWidget {
                   borderRadius: BorderRadius.circular(size * 0.1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
@@ -359,7 +359,8 @@ class DriverMarker extends StatelessWidget {
                       boxShadow: showShadow
                           ? [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
+                                // Soft shadow for fallback vehicle icon
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),

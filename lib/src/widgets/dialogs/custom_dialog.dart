@@ -47,17 +47,17 @@ class CustomDialog extends StatelessWidget {
           color: config.backgroundColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: config.borderColor.withOpacity(0.28),
+            color: config.borderColor.withValues(alpha: 0.28),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.6) : Colors.black.withOpacity(0.08),
+                color: isDark ? Colors.black.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.08),
               blurRadius: 28,
               offset: const Offset(0, 12),
             ),
             BoxShadow(
-              color: config.glowColor.withOpacity(isDark ? 0.18 : 0.12),
+                color: config.glowColor.withValues(alpha: isDark ? 0.18 : 0.12),
               blurRadius: 36,
               spreadRadius: 2,
             ),
@@ -83,7 +83,7 @@ class CustomDialog extends StatelessWidget {
                       border: Border.all(color: config.iconBorderColor, width: 1),
                       boxShadow: [
                         BoxShadow(
-                          color: config.glowColor.withOpacity(isDark ? 0.35 : 0.25),
+                          color: config.glowColor.withValues(alpha: isDark ? 0.35 : 0.25),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         )
@@ -268,9 +268,9 @@ class _DialogConfig {
       primaryButtonTextColor: Colors.white,
       backgroundColor: surface,
       messageColor: messageColor,
-      iconBackground: const Color(0xFF2E7D32).withOpacity(0.12),
-      iconBorderColor: const Color(0xFF2E7D32).withOpacity(0.5),
-      secondaryButtonBorderColor: const Color(0xFF2E7D32).withOpacity(0.4),
+      iconBackground: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+      iconBorderColor: const Color(0xFF2E7D32).withValues(alpha: 0.5),
+      secondaryButtonBorderColor: const Color(0xFF2E7D32).withValues(alpha: 0.4),
       secondaryButtonTextColor: const Color(0xFF2E7D32),
     );
   }
@@ -286,9 +286,9 @@ class _DialogConfig {
       primaryButtonTextColor: Colors.white,
       backgroundColor: surface,
       messageColor: messageColor,
-      iconBackground: const Color(0xFFB00020).withOpacity(0.12),
-      iconBorderColor: const Color(0xFFB00020).withOpacity(0.5),
-      secondaryButtonBorderColor: const Color(0xFFB00020).withOpacity(0.4),
+      iconBackground: const Color(0xFFB00020).withValues(alpha: 0.12),
+      iconBorderColor: const Color(0xFFB00020).withValues(alpha: 0.5),
+      secondaryButtonBorderColor: const Color(0xFFB00020).withValues(alpha: 0.4),
       secondaryButtonTextColor: const Color(0xFFB00020),
     );
   }
@@ -304,9 +304,9 @@ class _DialogConfig {
       primaryButtonTextColor: Colors.white,
       backgroundColor: surface,
       messageColor: messageColor,
-      iconBackground: const Color(0xFFED6C02).withOpacity(0.12),
-      iconBorderColor: const Color(0xFFED6C02).withOpacity(0.5),
-      secondaryButtonBorderColor: const Color(0xFFED6C02).withOpacity(0.4),
+      iconBackground: const Color(0xFFED6C02).withValues(alpha: 0.12),
+      iconBorderColor: const Color(0xFFED6C02).withValues(alpha: 0.5),
+      secondaryButtonBorderColor: const Color(0xFFED6C02).withValues(alpha: 0.4),
       secondaryButtonTextColor: const Color(0xFFED6C02),
     );
   }
@@ -322,9 +322,9 @@ class _DialogConfig {
       primaryButtonTextColor: Colors.white,
       backgroundColor: surface,
       messageColor: messageColor,
-      iconBackground: const Color(0xFF1565C0).withOpacity(0.12),
-      iconBorderColor: const Color(0xFF1565C0).withOpacity(0.5),
-      secondaryButtonBorderColor: const Color(0xFF1565C0).withOpacity(0.4),
+      iconBackground: const Color(0xFF1565C0).withValues(alpha: 0.12),
+      iconBorderColor: const Color(0xFF1565C0).withValues(alpha: 0.5),
+      secondaryButtonBorderColor: const Color(0xFF1565C0).withValues(alpha: 0.4),
       secondaryButtonTextColor: const Color(0xFF1565C0),
     );
   }

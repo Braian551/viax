@@ -36,7 +36,7 @@ class QuickAction extends StatelessWidget {
                   color: bgColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.06),
+                    color: AppColors.primary.withValues(alpha: 0.06),
                     width: 1,
                   ),
                 ),
@@ -46,7 +46,7 @@ class QuickAction extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.16),
+                        color: AppColors.primary.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(icon, color: AppColors.primary, size: 20),
@@ -55,7 +55,7 @@ class QuickAction extends StatelessWidget {
                     Text(
                       label,
                       style: TextStyle(
-                        color: textColor.withOpacity(0.9),
+                        color: textColor.withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),

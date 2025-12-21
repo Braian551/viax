@@ -114,7 +114,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
@@ -152,7 +152,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: CircleAvatar(
@@ -184,7 +184,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -245,7 +245,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     return Container(
       height: 24,
       width: 1,
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha: 0.3),
       margin: const EdgeInsets.symmetric(horizontal: 20),
     );
   }
@@ -264,7 +264,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 12,
           ),
         ),
@@ -364,7 +364,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -376,7 +376,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.directions_car_filled_rounded, color: AppColors.primary, size: 32),
@@ -398,7 +398,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200],
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200],
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -429,7 +429,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -476,7 +476,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -532,7 +532,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: (statusColor ?? AppColors.primary).withOpacity(0.1),
+                    color: (statusColor ?? AppColors.primary).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -629,14 +629,14 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.8), color],
+          colors: [color.withValues(alpha: 0.8), color],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -647,7 +647,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: Colors.white, size: 28),
@@ -669,7 +669,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                 Text(
                   desc,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -699,8 +699,8 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isCompleted 
-                ? AppColors.success.withOpacity(0.3) 
-                : (isDark ? Colors.white10 : Colors.grey[200]!),
+              ? AppColors.success.withValues(alpha: 0.3) 
+              : (isDark ? Colors.white10 : Colors.grey[200]!),
             width: 1,
           ),
         ),
@@ -709,7 +709,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (isCompleted ? AppColors.success : AppColors.primary).withOpacity(0.1),
+                color: (isCompleted ? AppColors.success : AppColors.primary).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -791,7 +791,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 8,
-          shadowColor: AppColors.primary.withOpacity(0.4),
+          shadowColor: AppColors.primary.withValues(alpha: 0.4),
         ),
         child: provider.isLoading
             ? const CircularProgressIndicator(color: Colors.white)

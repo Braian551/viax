@@ -492,7 +492,11 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           // Header con botón de volver
           PickupHeader(
             isDark: isDark,
-            onBack: () => Navigator.pop(context),
+            onBack: () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+              });
+            },
           ),
 
           // Botón para centrar en cliente

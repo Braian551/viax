@@ -273,7 +273,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -350,7 +350,9 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[100],
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.grey[100],
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -387,7 +389,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -402,7 +404,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.12),
+                  color: widget.accentColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -478,7 +480,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
               onPressed: _canConfirm ? _confirmLocation : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: widget.accentColor,
-                disabledBackgroundColor: widget.accentColor.withOpacity(0.5),
+                disabledBackgroundColor: widget.accentColor.withValues(alpha: 0.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

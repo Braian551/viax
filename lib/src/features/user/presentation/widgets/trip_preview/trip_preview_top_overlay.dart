@@ -142,21 +142,21 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: widget.isDark
-                          ? Colors.black.withOpacity(0.6)
-                          : Colors.white.withOpacity(0.85),
+                        color: widget.isDark
+                          ? Colors.black.withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(
                         color: widget.isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : AppColors.primary.withOpacity(0.15),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : AppColors.primary.withValues(alpha: 0.15),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.isDark
-                              ? Colors.black.withOpacity(0.3)
-                              : Colors.black.withOpacity(0.08),
+                            color: widget.isDark
+                              ? Colors.black.withValues(alpha: 0.3)
+                              : Colors.black.withValues(alpha: 0.08),
                           blurRadius: 25,
                           offset: const Offset(0, 8),
                         ),
@@ -193,9 +193,9 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                               gradient: LinearGradient(
                                 colors: [
                                   Colors.transparent,
-                                  widget.isDark
-                                      ? Colors.white.withOpacity(0.15)
-                                      : Colors.black.withOpacity(0.1),
+                                    widget.isDark
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : Colors.black.withValues(alpha: 0.1),
                                   Colors.transparent,
                                 ],
                               ),
@@ -278,11 +278,11 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                                             colors: [
                                               Colors.transparent,
                                               widget.isDark
-                                                  ? Colors.black.withOpacity(
-                                                      0.75,
+                                                  ? Colors.black.withValues(
+                                                      alpha: 0.75,
                                                     )
-                                                  : Colors.white.withOpacity(
-                                                      0.92,
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.92,
                                                     ),
                                             ],
                                           ),
@@ -319,9 +319,9 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                                     height: 5,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(3),
-                                      color: widget.isDark
-                                          ? Colors.white.withOpacity(0.25)
-                                          : Colors.black.withOpacity(0.2),
+                                        color: widget.isDark
+                                          ? Colors.white.withValues(alpha: 0.25)
+                                          : Colors.black.withValues(alpha: 0.2),
                                     ),
                                   ),
                                 ),
@@ -352,9 +352,9 @@ class _GlassBackButton extends StatelessWidget {
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.12),
+        color: AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -396,13 +396,13 @@ class _InfoBadge extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.primary.withOpacity(isDark ? 0.2 : 0.12),
-              AppColors.primaryDark.withOpacity(isDark ? 0.15 : 0.08),
+              AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+              AppColors.primaryDark.withValues(alpha: isDark ? 0.15 : 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             width: 1,
           ),
         ),
@@ -419,7 +419,7 @@ class _InfoBadge extends StatelessWidget {
                 width: 4,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.5),
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -493,9 +493,9 @@ class _LocationRow extends StatelessWidget {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withOpacity(0.2), width: 1),
+                  border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
                 ),
                 child: Center(
                   child: Icon(icon, size: iconSize, color: color),
@@ -509,8 +509,8 @@ class _LocationRow extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: isOrigin ? FontWeight.w600 : FontWeight.w500,
                     color: isDark
-                        ? Colors.white.withOpacity(0.9)
-                        : AppColors.lightTextPrimary,
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : AppColors.lightTextPrimary,
                     height: 1.3,
                   ),
                   maxLines: 1,
@@ -545,7 +545,7 @@ class _ConnectorLine extends StatelessWidget {
             width: 2,
             height: 12,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -576,7 +576,7 @@ class _DottedConnector extends StatelessWidget {
                   width: 2,
                   height: 3,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.4 - (index * 0.05)),
+                    color: AppColors.primary.withValues(alpha: 0.4 - (index * 0.05)),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),

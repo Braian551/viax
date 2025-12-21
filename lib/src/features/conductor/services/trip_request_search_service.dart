@@ -72,20 +72,15 @@ class TripRequestSearchService {
     required Function(String) onError,
   }) async {
     try {
-      final url = Uri.parse(
-        '${AppConfig.conductorServiceUrl}/get_solicitudes_pendientes.php',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await _postWithFallback(
+        path: '/conductor/get_solicitudes_pendientes.php',
+        body: {
           'conductor_id': conductorId,
           'latitud_actual': currentLat,
           'longitud_actual': currentLng,
           'radio_km': searchRadiusKm,
-        }),
-      ).timeout(const Duration(seconds: 10));
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -121,19 +116,15 @@ class TripRequestSearchService {
     required double longitude,
   }) async {
     try {
-      final url = Uri.parse(
-        '${AppConfig.conductorServiceUrl}/update_location.php',
-      );
-
-      await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      await _postWithFallback(
+        path: '/conductor/update_location.php',
+        body: {
           'conductor_id': conductorId,
           'latitud': latitude,
           'longitud': longitude,
-        }),
-      ).timeout(const Duration(seconds: 5));
+        },
+        timeout: const Duration(seconds: 5),
+      );
     } catch (e) {
       print('Error actualizando ubicacion: ');
     }
@@ -144,18 +135,13 @@ class TripRequestSearchService {
     required int conductorId,
   }) async {
     try {
-      final url = Uri.parse(
-        '${AppConfig.conductorServiceUrl}/accept_trip_request.php',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await _postWithFallback(
+        path: '/conductor/accept_trip_request.php',
+        body: {
           'solicitud_id': solicitudId,
           'conductor_id': conductorId,
-        }),
-      ).timeout(const Duration(seconds: 10));
+        },
+      );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -176,19 +162,14 @@ class TripRequestSearchService {
     String? motivo,
   }) async {
     try {
-      final url = Uri.parse(
-        '${AppConfig.conductorServiceUrl}/reject_trip_request.php',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await _postWithFallback(
+        path: '/conductor/reject_trip_request.php',
+        body: {
           'solicitud_id': solicitudId,
           'conductor_id': conductorId,
           'motivo': motivo ?? 'No disponible',
-        }),
-      ).timeout(const Duration(seconds: 10));
+        },
+      );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -204,5 +185,39 @@ class TripRequestSearchService {
   }
 
   static bool get isSearching => _isSearching;
+
+  /// Hace POST probando múltiples hosts locales (IP LAN, 10.0.2.2, localhost)
+  /// para evitar timeouts cuando se cambia entre emulador y dispositivo físico.
+  static Future<http.Response> _postWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    Exception? lastError;
+
+    for (final base in AppConfig.baseUrlCandidates) {
+      final url = Uri.parse('$base$path');
+      try {
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(timeout);
+
+        AppConfig.rememberWorkingBaseUrl(base);
+        return response;
+      } on TimeoutException catch (e) {
+        lastError = e;
+        print('⏳ Timeout en $path usando $base, probando siguiente host...');
+      } catch (e) {
+        lastError = e is Exception ? e : Exception(e.toString());
+        print('🌐 Error en $path usando $base: $e');
+      }
+    }
+
+    throw lastError ?? Exception('No hay hosts disponibles para $path');
+  }
 }
 

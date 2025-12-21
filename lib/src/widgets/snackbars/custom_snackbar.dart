@@ -155,7 +155,7 @@ class CustomSnackbar {
 
   static _SnackbarConfig _getSnackbarConfig(SnackbarType type, bool isDark) {
     final baseBg = isDark ? const Color(0xFF171A1D) : Colors.white;
-    final messageColor = isDark ? Colors.white.withOpacity(0.92) : const Color(0xFF2E3135);
+    final messageColor = isDark ? Colors.white.withValues(alpha: 0.92) : const Color(0xFF2E3135);
     switch (type) {
       case SnackbarType.success:
         return _SnackbarConfig.success(baseBg, messageColor);
@@ -194,9 +194,9 @@ class _SnackbarConfig {
     return _SnackbarConfig(
       icon: Icons.check_circle,
       iconColor: const Color(0xFF2E7D32),
-      iconBackgroundColor: const Color(0xFF4CAF50).withOpacity(0.15),
-      iconBorderColor: const Color(0xFF2E7D32).withOpacity(0.45),
-      borderColor: const Color(0xFF2E7D32).withOpacity(0.6),
+      iconBackgroundColor: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+      iconBorderColor: const Color(0xFF2E7D32).withValues(alpha: 0.45),
+      borderColor: const Color(0xFF2E7D32).withValues(alpha: 0.6),
       actionColor: const Color(0xFF2E7D32),
       messageColor: messageColor,
       backgroundColor: bg,
@@ -207,9 +207,9 @@ class _SnackbarConfig {
     return _SnackbarConfig(
       icon: Icons.error,
       iconColor: const Color(0xFFB00020),
-      iconBackgroundColor: const Color(0xFFEF5350).withOpacity(0.15),
-      iconBorderColor: const Color(0xFFB00020).withOpacity(0.45),
-      borderColor: const Color(0xFFB00020).withOpacity(0.65),
+      iconBackgroundColor: const Color(0xFFEF5350).withValues(alpha: 0.15),
+      iconBorderColor: const Color(0xFFB00020).withValues(alpha: 0.45),
+      borderColor: const Color(0xFFB00020).withValues(alpha: 0.65),
       actionColor: const Color(0xFFB00020),
       messageColor: messageColor,
       backgroundColor: bg,
@@ -220,9 +220,9 @@ class _SnackbarConfig {
     return _SnackbarConfig(
       icon: Icons.warning,
       iconColor: const Color(0xFFED6C02),
-      iconBackgroundColor: const Color(0xFFFFA726).withOpacity(0.15),
-      iconBorderColor: const Color(0xFFED6C02).withOpacity(0.45),
-      borderColor: const Color(0xFFED6C02).withOpacity(0.6),
+      iconBackgroundColor: const Color(0xFFFFA726).withValues(alpha: 0.15),
+      iconBorderColor: const Color(0xFFED6C02).withValues(alpha: 0.45),
+      borderColor: const Color(0xFFED6C02).withValues(alpha: 0.6),
       actionColor: const Color(0xFFED6C02),
       messageColor: messageColor,
       backgroundColor: bg,
@@ -233,9 +233,9 @@ class _SnackbarConfig {
     return _SnackbarConfig(
       icon: Icons.info,
       iconColor: const Color(0xFF1565C0),
-      iconBackgroundColor: const Color(0xFF42A5F5).withOpacity(0.15),
-      iconBorderColor: const Color(0xFF1565C0).withOpacity(0.45),
-      borderColor: const Color(0xFF1565C0).withOpacity(0.6),
+      iconBackgroundColor: const Color(0xFF42A5F5).withValues(alpha: 0.15),
+      iconBorderColor: const Color(0xFF1565C0).withValues(alpha: 0.45),
+      borderColor: const Color(0xFF1565C0).withValues(alpha: 0.6),
       actionColor: const Color(0xFF1565C0),
       messageColor: messageColor,
       backgroundColor: bg,

@@ -45,8 +45,8 @@ Future<void> showTripVehicleDetailSheet({
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white12
-                            : Colors.black.withOpacity(0.05),
+                          ? Colors.white12
+                          : Colors.black.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -91,7 +91,7 @@ Future<void> showTripVehicleDetailSheet({
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -127,7 +127,7 @@ Future<void> showTripVehicleDetailSheet({
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
@@ -156,7 +156,7 @@ Future<void> showTripVehicleDetailSheet({
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Divider(
-                      color: isDark ? Colors.white12 : Colors.black.withOpacity(0.06),
+                      color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
                       height: 1,
                     ),
                   ),

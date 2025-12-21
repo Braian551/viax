@@ -114,8 +114,8 @@ class _WaypointDivider extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.grey.withOpacity(0.15),
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.grey.withValues(alpha: 0.15),
             Colors.transparent,
           ],
         ),

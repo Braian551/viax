@@ -197,14 +197,14 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (isDark 
-                        ? Colors.white.withOpacity(0.1) 
-                        : Colors.white.withOpacity(0.7)),
+                      color: (isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.7)),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (isDark 
-                          ? Colors.white.withOpacity(0.2) 
-                          : Colors.white.withOpacity(0.4)),
+                        color: (isDark
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.4)),
                         width: 1,
                       ),
                     ),
@@ -301,7 +301,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -383,7 +383,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -574,12 +574,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             color: isDark ? AppColors.darkCard : AppColors.lightCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(isDark ? 0.1 : 0.08),
+                color: AppColors.primary.withValues(alpha: isDark ? 0.1 : 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -663,7 +663,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -673,7 +673,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -742,7 +742,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

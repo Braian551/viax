@@ -40,7 +40,7 @@ class AnimatedLogo extends StatelessWidget {
             gradient: showGlow
                 ? RadialGradient(
                     colors: [
-                      AppColors.primary.withOpacity(adjustedGlowOpacity * 0.6),
+                      AppColors.primary.withValues(alpha: adjustedGlowOpacity * 0.6),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.9],
@@ -49,12 +49,12 @@ class AnimatedLogo extends StatelessWidget {
             boxShadow: showGlow
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(isDark ? 0.08 : 0.03),
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.03),
                       blurRadius: isDark ? 30 : 15,
                       spreadRadius: isDark ? 8 : 3,
                     ),
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(isDark ? 0.05 : 0.02),
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.05 : 0.02),
                       blurRadius: isDark ? 50 : 25,
                       spreadRadius: isDark ? 15 : 5,
                     ),
@@ -170,11 +170,11 @@ class _LoadingEnergyState extends State<LoadingEnergy> with TickerProviderStateM
                     width: 3 + (math.sin(angle * 3) * 2),
                     height: 3 + (math.sin(angle * 3) * 2),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.8),
+                      color: AppColors.primary.withValues(alpha: 0.8),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.9),
+                          color: AppColors.primary.withValues(alpha: 0.9),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -191,12 +191,12 @@ class _LoadingEnergyState extends State<LoadingEnergy> with TickerProviderStateM
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(_glowAnimation.value * 0.6),
+                    color: AppColors.primary.withValues(alpha: _glowAnimation.value * 0.6),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(_glowAnimation.value * 0.4),
+                      color: AppColors.primary.withValues(alpha: _glowAnimation.value * 0.4),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -213,12 +213,12 @@ class _LoadingEnergyState extends State<LoadingEnergy> with TickerProviderStateM
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.9),
+                      color: AppColors.primary.withValues(alpha: 0.9),
                       blurRadius: 15,
                       spreadRadius: 3,
                     ),
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.7),
+                      color: AppColors.primary.withValues(alpha: 0.7),
                       blurRadius: 25,
                       spreadRadius: 8,
                     ),
@@ -239,7 +239,7 @@ class _LoadingEnergyState extends State<LoadingEnergy> with TickerProviderStateM
                     width: 2,
                     height: 2,
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.9),
+                      color: AppColors.accent.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                     ),
                   ),

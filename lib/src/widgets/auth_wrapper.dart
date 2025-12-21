@@ -188,8 +188,8 @@ class _AuthWrapperState extends State<AuthWrapper>
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  const Color(0xFF2196F3).withOpacity(0.3),
-                                  const Color(0xFF2196F3).withOpacity(0.1),
+                                  const Color(0xFF2196F3).withValues(alpha: 0.3),
+                                  const Color(0xFF2196F3).withValues(alpha: 0.1),
                                   Colors.transparent,
                                 ],
                                 stops: const [0.0, 0.5, 1.0],
@@ -205,14 +205,14 @@ class _AuthWrapperState extends State<AuthWrapper>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFF2196F3).withOpacity(0.15),
+                                const Color(0xFF2196F3).withValues(alpha: 0.15),
                                 Colors.transparent,
                               ],
                               stops: const [0.0, 0.85],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF2196F3).withOpacity(0.2),
+                                color: const Color(0xFF2196F3).withValues(alpha: 0.2),
                                 blurRadius: 40,
                                 spreadRadius: 10,
                               ),
@@ -257,7 +257,7 @@ class _AuthWrapperState extends State<AuthWrapper>
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                const Color(0xFF2196F3).withOpacity(0.3),
+                                const Color(0xFF2196F3).withValues(alpha: 0.3),
                               ),
                               value: null,
                             ),

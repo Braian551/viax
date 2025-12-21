@@ -35,7 +35,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withOpacity(0.8),
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withValues(alpha: 0.8),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
@@ -78,7 +78,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                 'Te enviaremos un enlace de verificación',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                 ),
               ),
 
@@ -97,11 +97,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                           end: Alignment.bottomRight,
                           colors: [
                             isDark 
-                              ? AppColors.darkSurface.withOpacity(0.8) 
-                              : AppColors.lightSurface.withOpacity(0.8),
+                              ? AppColors.darkSurface.withValues(alpha: 0.8) 
+                              : AppColors.lightSurface.withValues(alpha: 0.8),
                             isDark 
-                              ? AppColors.darkCard.withOpacity(0.4) 
-                              : AppColors.lightCard.withOpacity(0.4),
+                              ? AppColors.darkCard.withValues(alpha: 0.4) 
+                              : AppColors.lightCard.withValues(alpha: 0.4),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
@@ -129,7 +129,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                         decoration: InputDecoration(
                           labelText: 'Correo electrónico',
                           labelStyle: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -143,7 +143,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                 ),

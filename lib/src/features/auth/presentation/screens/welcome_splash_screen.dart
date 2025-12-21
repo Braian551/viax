@@ -85,7 +85,7 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen>
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    AppColors.primary.withOpacity(0.25),
+                                    AppColors.primary.withValues(alpha: 0.25),
                                     Colors.transparent,
                                   ],
                                   stops: const [0.0, 0.9],
@@ -128,7 +128,7 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen>
                               'Tu cuenta ha sido creada exitosamente',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -138,7 +138,7 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen>
                               'Estás listo para comenzar tu experiencia',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                                 fontSize: 15,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -164,7 +164,7 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen>
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        shadowColor: AppColors.primary.withOpacity(0.3),
+                        shadowColor: AppColors.primary.withValues(alpha: 0.3),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

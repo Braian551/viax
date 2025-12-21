@@ -30,7 +30,7 @@ class ConductorDetailsSheet extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
               child: Column(
                 children: [
                   _buildSheetHandle(context),
@@ -147,10 +147,10 @@ class ConductorDetailsSheet extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFf5576c).withOpacity(0.15),
+                                    color: const Color(0xFFf5576c).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: const Color(0xFFf5576c).withOpacity(0.3),
+                                      color: const Color(0xFFf5576c).withValues(alpha: 0.3),
                                       width: 1.5,
                                     ),
                                   ),
@@ -253,7 +253,7 @@ class ConductorDetailsSheet extends StatelessWidget {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -275,10 +275,10 @@ class ConductorDetailsSheet extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -302,7 +302,7 @@ class ConductorDetailsSheet extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -314,7 +314,7 @@ class ConductorDetailsSheet extends StatelessWidget {
             child: Text(
               valueStr,
               style: TextStyle(
-                color: isEmpty ? Theme.of(context).colorScheme.onSurface.withOpacity(0.3) : Theme.of(context).colorScheme.onSurface,
+                color: isEmpty ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3) : Theme.of(context).colorScheme.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -352,13 +352,13 @@ class ConductorDetailsSheet extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: hasDocument 
-              ? const Color(0xFF667eea).withOpacity(0.15)
-              : Theme.of(context).colorScheme.surface.withOpacity(0.05),
+              ? const Color(0xFF667eea).withValues(alpha: 0.15)
+              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasDocument 
-                ? const Color(0xFF667eea).withOpacity(0.3)
-                : Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                ? const Color(0xFF667eea).withValues(alpha: 0.3)
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -368,13 +368,13 @@ class ConductorDetailsSheet extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: hasDocument 
-                    ? const Color(0xFF667eea).withOpacity(0.2)
-                    : Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                    ? const Color(0xFF667eea).withValues(alpha: 0.2)
+                    : Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: hasDocument ? const Color(0xFF667eea) : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: hasDocument ? const Color(0xFF667eea) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                 size: 24,
               ),
             ),
@@ -386,7 +386,7 @@ class ConductorDetailsSheet extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      color: hasDocument ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: hasDocument ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -397,7 +397,7 @@ class ConductorDetailsSheet extends StatelessWidget {
                     style: TextStyle(
                       color: hasDocument 
                           ? const Color(0xFF667eea) 
-                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                       fontSize: 12,
                     ),
                   ),

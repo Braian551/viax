@@ -39,20 +39,20 @@ class GlassPanel extends StatelessWidget {
               color:
                   backgroundColor ??
                   (isDark
-                      ? Colors.black.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.8)),
+                      ? Colors.black.withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.8)),
               borderRadius: BorderRadius.circular(borderRadius),
               border: showBorder
                   ? Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.white.withOpacity(0.5),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.5),
                       width: 1,
                     )
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -182,11 +182,11 @@ class DriverInfoCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary.withOpacity(0.8), AppColors.primary],
+          colors: [AppColors.primary.withValues(alpha: 0.8), AppColors.primary],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -216,7 +216,7 @@ class DriverInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accent.withOpacity(0.15),
+        color: AppColors.accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -263,7 +263,7 @@ class DriverInfoCard extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     return Material(
-      color: color.withOpacity(0.15),
+      color: color.withValues(alpha: 0.15),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -310,8 +310,8 @@ class DriverInfoCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.accent.withOpacity(0.2),
-                AppColors.accent.withOpacity(0.1),
+                AppColors.accent.withValues(alpha: 0.2),
+                AppColors.accent.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(14),
@@ -359,10 +359,10 @@ class DriverInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[100],
+        color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey[300]!,
+          color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey[300]!,
           width: 1.5,
         ),
       ),
@@ -386,12 +386,12 @@ class DriverInfoCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.15),
-            AppColors.primary.withOpacity(0.08),
+            AppColors.primary.withValues(alpha: 0.15),
+            AppColors.primary.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -413,7 +413,7 @@ class DriverInfoCard extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppColors.primary.withOpacity(0.3),
+                    AppColors.primary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -459,7 +459,7 @@ class DriverInfoCard extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
-                color: AppColors.primary.withOpacity(0.8),
+                color: AppColors.primary.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -507,8 +507,8 @@ class GlassHeader extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             isDark ? Colors.black : Colors.white,
-            (isDark ? Colors.black : Colors.white).withOpacity(0.9),
-            (isDark ? Colors.black : Colors.white).withOpacity(0),
+            (isDark ? Colors.black : Colors.white).withValues(alpha: 0.9),
+            (isDark ? Colors.black : Colors.white).withValues(alpha: 0.0),
           ],
         ),
       ),
@@ -562,9 +562,9 @@ class GlassHeader extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
+              color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: statusColor.withOpacity(0.3), width: 1),
+              border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 1),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -599,17 +599,17 @@ class GlassHeader extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.white.withOpacity(0.9),
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.2),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.2),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -620,7 +620,7 @@ class GlassHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(

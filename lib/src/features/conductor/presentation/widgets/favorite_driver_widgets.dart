@@ -129,8 +129,8 @@ class _FavoriteDriverButtonState extends State<FavoriteDriverButton>
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: _isFavorite
-                ? AppColors.accent.withOpacity(0.15)
-                : Colors.grey.withOpacity(0.1),
+                ? AppColors.accent.withValues(alpha: 0.15)
+                : Colors.grey.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: _isLoading
@@ -219,10 +219,10 @@ class TrustLevelIndicator extends StatelessWidget {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.15),
+        color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _color.withOpacity(0.3),
+          color: _color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -246,7 +246,7 @@ class TrustLevelIndicator extends StatelessWidget {
             Text(
               '(${confianza.viajesPrevios})',
               style: TextStyle(
-                color: _color.withOpacity(0.7),
+                color: _color.withValues(alpha: 0.7),
                 fontSize: size * 0.65,
               ),
             ),
@@ -279,7 +279,7 @@ class FavoriteBadge extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withOpacity(0.4),
+            color: AppColors.accent.withValues(alpha: 0.4),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

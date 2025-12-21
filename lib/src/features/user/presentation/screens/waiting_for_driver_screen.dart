@@ -160,10 +160,10 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.red.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -239,10 +239,10 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -390,11 +390,11 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                           horizontal: 16,
                           vertical: 8,
                         ),
-                        backgroundColor: Colors.red.withOpacity(0.1),
+                        backgroundColor: Colors.red.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: Colors.red.withOpacity(0.3),
+                            color: Colors.red.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -446,8 +446,8 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFFFFF00).withOpacity(
-                        0.3 * (1 - _waveAnimation.value),
+                      color: const Color(0xFFFFFF00).withValues(
+                        alpha: 0.3 * (1 - _waveAnimation.value),
                       ),
                       width: 2,
                     ),
@@ -466,8 +466,8 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFFFFF00).withOpacity(
-                        0.3 * (1 - value),
+                      color: const Color(0xFFFFFF00).withValues(
+                        alpha: 0.3 * (1 - value),
                       ),
                       width: 2,
                     ),
@@ -486,8 +486,8 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFFFFF00).withOpacity(
-                        0.3 * (1 - value),
+                      color: const Color(0xFFFFFF00).withValues(
+                        alpha: 0.3 * (1 - value),
                       ),
                       width: 2,
                     ),
@@ -505,7 +505,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFFF00).withOpacity(0.5),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.5),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -565,7 +565,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.5),
+                color: Colors.green.withValues(alpha: 0.5),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -601,10 +601,10 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
           margin: const EdgeInsets.symmetric(horizontal: 40),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
+            color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -650,7 +650,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A).withOpacity(0.95),
+        color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(24),
         ),

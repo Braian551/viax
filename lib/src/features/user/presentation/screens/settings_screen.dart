@@ -211,7 +211,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(
                             'Viax v1.0.0',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 13,
                             ),
                           ),
@@ -219,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(
                             'Â© 2024 Viax. Todos los derechos reservados',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               fontSize: 11,
                             ),
                           ),
@@ -295,10 +295,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1.5,
               ),
             ),
@@ -307,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFF00).withOpacity(0.2),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: const Color(0xFFFFFF00), size: 22),
@@ -329,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -340,7 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: value,
                   onChanged: onChanged,
                   activeColor: const Color(0xFFFFFF00),
-                  activeTrackColor: const Color(0xFFFFFF00).withOpacity(0.3),
+                  activeTrackColor: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                 ),
               ],
             ),
@@ -370,10 +370,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.6),
+                color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1.5,
                 ),
               ),
@@ -382,7 +382,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: tileColor.withOpacity(0.2),
+                        color: tileColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(icon, color: tileColor, size: 22),
@@ -404,7 +404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           subtitle,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -413,7 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     size: 16,
                   ),
                 ],
@@ -451,10 +451,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1.5,
               ),
             ),
@@ -463,7 +463,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFF00).withOpacity(0.2),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.palette_outlined, color: const Color(0xFFFFFF00), size: 22),
@@ -485,7 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         themeProvider.themeModeDisplayName,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -546,13 +546,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFFF00).withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
+              ? const Color(0xFFFFFF00).withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFFFFFF00)
-                : Colors.white.withOpacity(0.1),
+                : Colors.white.withValues(alpha: 0.1),
             width: 1.5,
           ),
         ),

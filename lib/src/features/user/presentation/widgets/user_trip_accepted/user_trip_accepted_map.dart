@@ -65,7 +65,7 @@ class UserTripAcceptedMap extends StatelessWidget {
               Polyline(
                 points: animatedRoute,
                 strokeWidth: 8.0,
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
               ),
             ],
           ),
@@ -167,10 +167,10 @@ class _ClientMarker extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            AppColors.primary.withOpacity(0.5),
-                            AppColors.primary.withOpacity(0.15),
-                            AppColors.primary.withOpacity(0.0),
-                          ],
+                              AppColors.primary.withValues(alpha: 0.5),
+                              AppColors.primary.withValues(alpha: 0.15),
+                              AppColors.primary.withValues(alpha: 0.0),
+                            ],
                         ),
                       ),
                     ),
@@ -184,8 +184,8 @@ class _ClientMarker extends StatelessWidget {
                 height: 28 + (pulseAnimation.value * 6),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(
-                    0.15 * (1 - pulseAnimation.value),
+                  color: AppColors.primary.withValues(
+                    alpha: 0.15 * (1 - pulseAnimation.value),
                   ),
                 ),
               ),
@@ -200,7 +200,7 @@ class _ClientMarker extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),

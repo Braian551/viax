@@ -88,8 +88,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: isDark 
-                ? AppColors.darkSurface.withOpacity(0.95)
-                : AppColors.lightSurface.withOpacity(0.95),
+                ? AppColors.darkSurface.withValues(alpha: 0.95)
+                : AppColors.lightSurface.withValues(alpha: 0.95),
             ),
           ),
         ),
@@ -100,9 +100,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -147,7 +147,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             margin: const EdgeInsets.only(right: 4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
             ),
             child: IconButton(
               icon: Icon(
@@ -165,12 +165,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
           ),
           child: IconButton(
             icon: Icon(
               Icons.logout_rounded, 
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), 
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), 
               size: 22
             ),
             onPressed: () async {
@@ -206,10 +206,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          decoration: BoxDecoration(
+            decoration: BoxDecoration(
             color: isDark
-              ? AppColors.darkSurface.withOpacity(0.95)
-              : AppColors.lightSurface.withOpacity(0.95),
+              ? AppColors.darkSurface.withValues(alpha: 0.95)
+              : AppColors.lightSurface.withValues(alpha: 0.95),
             border: Border(
               top: BorderSide(
                 color: isDark
@@ -258,7 +258,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 icon,
                 color: isSelected 
                   ? Theme.of(context).colorScheme.onPrimary 
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 size: 26,
               ),
               const SizedBox(height: 4),
@@ -267,7 +267,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 style: TextStyle(
                   color: isSelected 
                     ? Theme.of(context).colorScheme.onPrimary 
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
@@ -292,8 +292,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: isDark
-                ? AppColors.darkSurface.withOpacity(0.95)
-                : AppColors.lightSurface.withOpacity(0.95),
+                ? AppColors.darkSurface.withValues(alpha: 0.95)
+                : AppColors.lightSurface.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isDark
@@ -308,7 +308,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.15),
+                    color: AppColors.error.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -343,7 +343,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         onPressed: () => Navigator.pop(context, false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                          backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

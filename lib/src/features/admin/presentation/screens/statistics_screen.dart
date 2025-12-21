@@ -108,7 +108,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: _backgroundColor.withOpacity(0.8),
+              color: _backgroundColor.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -117,7 +117,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         margin: const EdgeInsets.only(left: 8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _surfaceColor.withOpacity(0.1),
+          color: _surfaceColor.withValues(alpha: 0.1),
         ),
         child: IconButton(
           icon: Icon(Icons.close, color: _onSurfaceColor, size: 20),
@@ -133,7 +133,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: _primaryColor.withOpacity(0.3),
+                  color: _primaryColor.withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 0,
                 ),
@@ -162,7 +162,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                 Text(
                   'Métricas y análisis',
                   style: TextStyle(
-                    color: _onPrimaryColor.withOpacity(0.6),
+                    color: _onPrimaryColor.withValues(alpha: 0.6),
                     fontSize: 12,
                     fontWeight: FontWeight.normal,
                   ),
@@ -177,7 +177,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _surfaceColor.withOpacity(0.1),
+            color: _surfaceColor.withValues(alpha: 0.1),
           ),
           child: IconButton(
             icon: Icon(Icons.refresh_rounded, color: _primaryColor),
@@ -219,13 +219,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
 
   Widget _buildShimmerBox({required double height, double? width}) {
     return Shimmer.fromColors(
-      baseColor: _surfaceColor.withOpacity(0.3),
-      highlightColor: _surfaceColor.withOpacity(0.5),
+      baseColor: _surfaceColor.withValues(alpha: 0.3),
+      highlightColor: _surfaceColor.withValues(alpha: 0.5),
       child: Container(
         height: height,
         width: width,
         decoration: BoxDecoration(
-          color: _onSurfaceColor.withOpacity(0.1),
+          color: _onSurfaceColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -271,9 +271,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: _surfaceColor.withOpacity(0.8),
+            color: _surfaceColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _outlineColor.withOpacity(0.1)),
+            border: Border.all(color: _outlineColor.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [
@@ -330,9 +330,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: _surfaceColor.withOpacity(0.8),
+            color: _surfaceColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _outlineColor.withOpacity(0.1)),
+            border: Border.all(color: _outlineColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +342,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _primaryColor.withOpacity(0.2),
+                      color: _primaryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -388,7 +388,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                       horizontalInterval: 1,
                       getDrawingHorizontalLine: (value) {
                         return FlLine(
-                          color: _outlineColor.withOpacity(0.05),
+                          color: _outlineColor.withValues(alpha: 0.05),
                           strokeWidth: 1,
                         );
                       },
@@ -469,7 +469,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                         ),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: _primaryColor.withOpacity(0.1),
+                          color: _primaryColor.withValues(alpha: 0.1),
                         ),
                       ),
                     ],
@@ -510,16 +510,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
-            color: _surfaceColor.withOpacity(0.8),
+            color: _surfaceColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _outlineColor.withOpacity(0.1)),
+            border: Border.all(color: _outlineColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _onSurfaceColor.withOpacity(0.05),
+                  color: _onSurfaceColor.withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -541,7 +541,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
               Text(
                 'Las estadísticas aparecerán aquí',
                 style: TextStyle(
-                  color: _onSurfaceColor.withOpacity(0.4),
+                          color: _onSurfaceColor.withValues(alpha: 0.4),
                   fontSize: 13,
                 ),
               ),
@@ -615,9 +615,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _surfaceColor.withOpacity(0.8),
+            color: _surfaceColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _outlineColor.withOpacity(0.1)),
+            border: Border.all(color: _outlineColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +626,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -688,9 +688,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: _surfaceColor.withOpacity(0.8),
+            color: _surfaceColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _outlineColor.withOpacity(0.1)),
+            border: Border.all(color: _outlineColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -700,7 +700,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _statCardColor1.withOpacity(0.2),
+                      color: _statCardColor1.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(

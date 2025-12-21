@@ -327,7 +327,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
@@ -351,7 +351,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
         child: Container(
           constraints: const BoxConstraints(maxHeight: 400),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
             border: const Border(
               top: BorderSide(color: Colors.white10, width: 1),
             ),
@@ -418,7 +418,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                             Text(
                               '$_estimatedTime min â€¢ ${_estimatedDistance.toStringAsFixed(1)} km',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 14,
                               ),
                             ),
@@ -455,7 +455,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
             Container(
               width: 2,
               height: 20,
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
             ),
             Container(
               width: 12,
@@ -513,14 +513,14 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color(0xFFFFFF00).withOpacity(0.2)
-                  : const Color(0xFF1A1A1A).withOpacity(0.6),
+                color: isSelected
+                  ? const Color(0xFFFFFF00).withValues(alpha: 0.2)
+                  : const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFFFFFF00)
-                    : Colors.white.withOpacity(0.1),
+                  ? const Color(0xFFFFFF00)
+                  : Colors.white.withValues(alpha: 0.1),
                 width: 2,
               ),
             ),
@@ -531,8 +531,8 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFFFFFF00)
-                        : Colors.white.withOpacity(0.1),
+                      ? const Color(0xFFFFFF00)
+                      : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -579,7 +579,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFFF00).withOpacity(0.4),
+              color: const Color(0xFFFFFF00).withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

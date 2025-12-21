@@ -12,7 +12,7 @@ class AdminDialogHelper {
   }) {
     return showDialog<bool>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => _AdminConfirmationDialog(
         type: _AdminDialogType.approve,
         title: 'Â¿Aprobar Conductor?',
@@ -33,7 +33,7 @@ class AdminDialogHelper {
     
     return showDialog<String>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => _AdminRejectionDialog(
         conductorName: conductorName,
         motivoController: controller,
@@ -45,7 +45,7 @@ class AdminDialogHelper {
   static Future<void> showNoHistoryDialog(BuildContext context) {
     return showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => _AdminInfoDialog(
         icon: Icons.folder_open_rounded,
         title: 'Sin Historial',
@@ -60,7 +60,7 @@ class AdminDialogHelper {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => PopScope(
         canPop: false,
         child: Center(
@@ -70,7 +70,7 @@ class AdminDialogHelper {
               color: const Color(0xFF1A1A1A),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFFFFF00).withOpacity(0.3),
+                color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -136,12 +136,12 @@ class _AdminConfirmationDialog extends StatelessWidget {
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: primaryColor.withOpacity(0.3),
+            color: primaryColor.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(0.2),
+              color: primaryColor.withValues(alpha: 0.2),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -163,8 +163,8 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          primaryColor.withOpacity(0.3),
-                          primaryColor.withOpacity(0.05),
+                          primaryColor.withValues(alpha: 0.3),
+                          primaryColor.withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
                       ),
@@ -199,10 +199,10 @@ class _AdminConfirmationDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -212,7 +212,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.person_rounded,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           size: 20,
                         ),
                         const SizedBox(width: 10),
@@ -234,7 +234,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -252,10 +252,10 @@ class _AdminConfirmationDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -274,7 +274,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                             : 'Esta acciÃ³n rechazarÃ¡ los documentos del conductor.',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           height: 1.4,
                         ),
                       ),
@@ -327,7 +327,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white70,
                         side: BorderSide(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           width: 1.5,
                         ),
                         elevation: 0,
@@ -376,12 +376,12 @@ class _AdminRejectionDialog extends StatelessWidget {
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFf5576c).withOpacity(0.3),
+            color: const Color(0xFFf5576c).withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFf5576c).withOpacity(0.2),
+              color: const Color(0xFFf5576c).withValues(alpha: 0.2),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -402,8 +402,8 @@ class _AdminRejectionDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFFf5576c).withOpacity(0.3),
-                          const Color(0xFFf5576c).withOpacity(0.05),
+                          const Color(0xFFf5576c).withValues(alpha: 0.3),
+                          const Color(0xFFf5576c).withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
                       ),
@@ -440,14 +440,14 @@ class _AdminRejectionDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.person_rounded,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -479,7 +479,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -491,21 +491,21 @@ class _AdminRejectionDialog extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Describe el motivo del rechazo...',
                       hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 14,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                      fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -516,7 +516,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                         ),
                       ),
                       counterStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -575,7 +575,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white70,
                         side: BorderSide(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           width: 1.5,
                         ),
                         shape: RoundedRectangleBorder(
@@ -627,12 +627,12 @@ class _AdminInfoDialog extends StatelessWidget {
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFFF00).withOpacity(0.3),
+            color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFFF00).withOpacity(0.15),
+              color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -652,8 +652,8 @@ class _AdminInfoDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFFFFFF00).withOpacity(0.2),
-                          const Color(0xFFFFFF00).withOpacity(0.05),
+                          const Color(0xFFFFFF00).withValues(alpha: 0.2),
+                          const Color(0xFFFFFF00).withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
                       ),
@@ -685,7 +685,7 @@ class _AdminInfoDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -693,13 +693,13 @@ class _AdminInfoDialog extends StatelessWidget {
                     Icon(
                       Icons.folder_open_rounded,
                       size: 64,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       message,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -710,10 +710,10 @@ class _AdminInfoDialog extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFFF00).withOpacity(0.1),
+                          color: const Color(0xFFFFFF00).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFFFFF00).withOpacity(0.3),
+                            color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -729,7 +729,7 @@ class _AdminInfoDialog extends StatelessWidget {
                               child: Text(
                                 tip!,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 13,
                                   height: 1.3,
                                 ),

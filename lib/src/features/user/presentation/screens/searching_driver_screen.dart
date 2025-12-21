@@ -344,8 +344,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                   CircleMarker(
                     point: origin,
                     radius: _currentRadiusKm * 1000,
-                    color: AppColors.primary.withOpacity(0.08),
-                    borderColor: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderColor: AppColors.primary.withValues(alpha: 0.3),
                     borderStrokeWidth: 2,
                     useRadiusInMeter: true,
                   ),
@@ -387,7 +387,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                   end: Alignment.bottomCenter,
                   colors: [
                     (isDark ? Colors.black : Colors.white),
-                    (isDark ? Colors.black : Colors.white).withOpacity(0),
+                    (isDark ? Colors.black : Colors.white)
+                        .withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -450,7 +451,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 20,
                     offset: const Offset(0, 5),
                   ),
@@ -524,8 +525,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                           value: _currentRadiusKm / 10.0,
                           minHeight: 6,
                           backgroundColor: isDark
-                              ? Colors.white.withOpacity(0.1)
-                              : Colors.black.withOpacity(0.05),
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.05),
                           valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
                       ),
@@ -539,8 +540,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -559,7 +560,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                               width: 2,
                               height: 20,
                               margin: const EdgeInsets.symmetric(vertical: 4),
-                              color: Colors.grey.withOpacity(0.3),
+                              color: Colors.grey.withValues(alpha: 0.3),
                             ),
                             const Icon(Icons.location_on, color: AppColors.error, size: 16),
                           ],
@@ -608,8 +609,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
                           color: _isCancelling
-                              ? Colors.grey.withOpacity(0.3)
-                              : AppColors.error.withOpacity(0.5),
+                              ? Colors.grey.withValues(alpha: 0.3)
+                              : AppColors.error.withValues(alpha: 0.5),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -645,11 +646,11 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: highlighted
-            ? AppColors.primary.withOpacity(0.15)
+            ? AppColors.primary.withValues(alpha: 0.15)
             : (isDark ? Colors.white12 : Colors.white),
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDark ? null : [
-          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -693,7 +694,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(opacity),
+                    color: AppColors.primary.withValues(alpha: opacity),
                     width: 2.5 * (1 - progress),
                   ),
                 ),
@@ -707,8 +708,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.primary.withOpacity(0.25),
-                    AppColors.primary.withOpacity(0),
+                    AppColors.primary.withValues(alpha: 0.25),
+                    AppColors.primary.withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -727,7 +728,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withValues(alpha: 0.4),
                     blurRadius: 12,
                   ),
                 ],
@@ -748,7 +749,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: AppColors.error.withOpacity(0.4),
+            color: AppColors.error.withValues(alpha: 0.4),
             blurRadius: 8,
           ),
         ],
@@ -771,7 +772,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
             color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6),
             ],
           ),
           child: const Icon(Icons.local_taxi_rounded, color: AppColors.accent, size: 22),
@@ -788,7 +789,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Stack(
@@ -802,7 +803,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.4 * (1 - progress)),
+                      color: AppColors.primary.withValues(alpha: 0.4 * (1 - progress)),
                       width: 2,
                     ),
                   ),

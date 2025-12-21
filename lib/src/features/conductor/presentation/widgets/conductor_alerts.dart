@@ -651,7 +651,7 @@ class ConfirmationAlert extends StatelessWidget {
                               padding: EdgeInsets.symmetric(
                                 vertical: isSmallScreen ? 14 : 16,
                               ),
-                              backgroundColor: Colors.white.withOpacity(0.1),
+                              backgroundColor: Colors.white.withValues(alpha: 0.1),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),

@@ -123,7 +123,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.black.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -158,10 +158,10 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.8),
+            color: const Color(0xFF1A1A1A).withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -213,15 +213,15 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
         child: Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.green.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.green.withOpacity(0.3),
+              color: Colors.green.withValues(alpha: 0.3),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.2),
+                color: Colors.green.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -235,7 +235,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -251,7 +251,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -351,10 +351,10 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -433,10 +433,10 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A).withOpacity(0.6),
+          color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -468,7 +468,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
               child: LinearProgressIndicator(
                 value: percentage / 100,
                 minHeight: 6,
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   Color(0xFFFFFF00),
                 ),
@@ -511,7 +511,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
   void _showWithdrawDialog() {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.85),
+      barrierColor: Colors.black.withValues(alpha: 0.85),
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: BackdropFilter(
@@ -519,10 +519,10 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFFFFFF00).withOpacity(0.3),
+                color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -532,7 +532,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFF00).withOpacity(0.2),
+                    color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -563,7 +563,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Column(
@@ -595,7 +595,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen> {
                         onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

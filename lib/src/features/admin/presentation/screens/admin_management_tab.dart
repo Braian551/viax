@@ -45,7 +45,7 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
           Text(
             'Administra todos los aspectos de la plataforma',
             style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               fontSize: 16,
             ),
           ),
@@ -228,10 +228,10 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: item.accentColor.withOpacity(0.3),
+                color: item.accentColor.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -240,8 +240,8 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
               child: InkWell(
                 onTap: item.onTap,
                 borderRadius: BorderRadius.circular(20),
-                splashColor: item.accentColor.withOpacity(0.1),
-                highlightColor: item.accentColor.withOpacity(0.05),
+                splashColor: item.accentColor.withValues(alpha: 0.1),
+                highlightColor: item.accentColor.withValues(alpha: 0.05),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Row(
@@ -249,10 +249,10 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: item.accentColor.withOpacity(0.15),
+                          color: item.accentColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: item.accentColor.withOpacity(0.3),
+                            color: item.accentColor.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -276,7 +276,7 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
                             Text(
                               item.subtitle,
                               style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -288,12 +288,12 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
                           Icons.arrow_forward_ios_rounded,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.4),
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
                           size: 16,
                         ),
                       ),

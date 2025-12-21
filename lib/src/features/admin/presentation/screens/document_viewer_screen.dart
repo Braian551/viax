@@ -74,7 +74,7 @@ class DocumentViewerScreen extends StatelessWidget {
                   Text(
                     documentUrl,
                     style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.5),
+                      color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -107,13 +107,13 @@ class DocumentViewerScreen extends StatelessWidget {
           children: [
             Text(
               'Para descargar el documento, copia esta URL:',
-              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.8)),
+              style: TextStyle(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1),
+                color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(

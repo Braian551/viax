@@ -97,7 +97,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black.withOpacity(0.8),
+              color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black).withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -106,7 +106,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
         margin: const EdgeInsets.only(left: 8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1),
+          color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1),
         ),
         child: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -124,7 +124,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  color: const Color(0xFF667eea).withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 0,
                 ),
@@ -168,7 +168,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1),
+            color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1),
           ),
           child: IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF667eea)),
@@ -253,18 +253,18 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.8),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1)),
-          ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1)),
+            ),
           child: TextField(
             controller: _searchController,
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'Buscar logs...',
-              hintStyle: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.5)),
-              prefixIcon: Icon(Icons.search_rounded, color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.5)),
+              hintStyle: TextStyle(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.5)),
+              prefixIcon: Icon(Icons.search_rounded, color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.5)),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: Icon(
@@ -321,13 +321,13 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: isSelected 
-                  ? const Color(0xFF667eea).withOpacity(0.3)
-                  : const Color(0xFF1A1A1A).withOpacity(0.8),
+                  ? const Color(0xFF667eea).withValues(alpha: 0.3)
+                  : const Color(0xFF1A1A1A).withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected 
-                    ? const Color(0xFF667eea)
-                    : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1),
+                  ? const Color(0xFF667eea)
+                  : (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1),
                 width: 1.5,
               ),
             ),
@@ -375,7 +375,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
             Text(
               'Sistema de auditoría',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 13,
               ),
             ),
@@ -383,13 +383,13 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF667eea).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFF667eea).withOpacity(0.3),
+            decoration: BoxDecoration(
+              color: const Color(0xFF667eea).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF667eea).withValues(alpha: 0.3),
+              ),
             ),
-          ),
           child: Text(
             '${_logs.length} registros',
             style: TextStyle(
@@ -410,17 +410,17 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           padding: const EdgeInsets.all(40),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.8),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1)),
-          ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1)),
+            ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.05),
+                  color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -442,7 +442,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
               Text(
                 'Los registros de actividad aparecerán aquí',
                 style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.4),
+                  color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.4),
                   fontSize: 13,
                 ),
               ),
@@ -476,11 +476,11 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.8),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1)),
-          ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1)),
+            ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -496,7 +496,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: actionColor.withOpacity(0.2),
+                            color: actionColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -528,7 +528,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1),
+                                      color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -561,17 +561,17 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.03),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.05)),
-                        ),
+                          decoration: BoxDecoration(
+                            color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.05)),
+                          ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF667eea).withOpacity(0.2),
+                                color: const Color(0xFF667eea).withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -608,7 +608,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
                             ),
                             Icon(
                               Icons.chevron_right_rounded,
-                              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.3),
+                              color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.3),
                               size: 20,
                             ),
                           ],
@@ -655,9 +655,9 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1)),
+              border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -668,7 +668,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _getActionColor(log['accion'] ?? '').withOpacity(0.2),
+                        color: _getActionColor(log['accion'] ?? '').withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -735,9 +735,9 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.05),
+              color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white.withOpacity(0.1)),
+              border: Border.all(color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white).withValues(alpha: 0.1)),
             ),
             child: Text(
               value,

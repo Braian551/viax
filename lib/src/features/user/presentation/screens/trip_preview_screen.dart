@@ -561,8 +561,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
             origin: widget.origin,
             destination: widget.destination,
             stops: widget.stops,
-            onBack: () => Navigator.pop(context),
-            onLocationTap: () => Navigator.pop(context),
+            onBack: () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+              });
+            },
+            onLocationTap: () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+              });
+            },
           ),
 
           // Panel inferior con detalles y precio
@@ -679,7 +687,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               Polyline(
                 points: _animatedRoutePoints,
                 strokeWidth: 12,
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderStrokeWidth: 0,
               ),
             ],
@@ -731,8 +739,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                           height: 60 * _pulseAnimation.value,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.primaryLight.withOpacity(
-                              0.3 / _pulseAnimation.value,
+                            color: AppColors.primaryLight.withValues(
+                              alpha: 0.3 / _pulseAnimation.value,
                             ),
                           ),
                         );
@@ -748,7 +756,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                         border: Border.all(color: AppColors.primary, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.4),
+                            color: AppColors.primary.withValues(alpha: 0.4),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -828,7 +836,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.4),
+                                color: Colors.black.withValues(alpha: 0.4),
                                 blurRadius: 15,
                                 spreadRadius: 3,
                                 offset: const Offset(0, 5),
@@ -871,7 +879,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                       width: 30,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
@@ -888,7 +896,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
   Widget _buildLoadingOverlay(bool isDark) {
     return Container(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.black.withValues(alpha: 0.5),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Center(
@@ -906,16 +914,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               padding: const EdgeInsets.all(36),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.black.withOpacity(0.8)
-                    : Colors.white.withOpacity(0.95),
+                    ? Colors.black.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 30,
                     spreadRadius: 5,
                   ),
@@ -955,7 +963,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
   Widget _buildErrorOverlay(bool isDark) {
     return Container(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.black.withValues(alpha: 0.5),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Center(
@@ -974,16 +982,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.black.withOpacity(0.85)
-                    : Colors.white.withOpacity(0.95),
+                    ? Colors.black.withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.red.withValues(alpha: 0.3),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.red.withOpacity(0.15),
+                    color: Colors.red.withValues(alpha: 0.15),
                     blurRadius: 30,
                     spreadRadius: 5,
                   ),
@@ -995,7 +1003,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -1032,13 +1040,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.withOpacity(0.15),
+                        backgroundColor: Colors.red.withValues(alpha: 0.15),
                         foregroundColor: Colors.red,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
                         ),
                       ),
                       child: const Text(
@@ -1142,6 +1150,8 @@ class _HiddenSheetHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final current = controller.isAttached ? controller.size : 0.42;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -1158,11 +1168,12 @@ class _HiddenSheetHandle extends StatelessWidget {
       onVerticalDragEnd: (details) {
         if (!controller.isAttached) return;
         try {
-          final current = controller.size;
           double target;
-          if (current < 0.28) {
+          final currentSize = controller.isAttached ? controller.size : current;
+
+          if (currentSize < 0.28) {
             target = 0.2;
-          } else if (current > 0.53) {
+          } else if (currentSize > 0.53) {
             target = 0.65;
           } else {
             target = 0.42;
@@ -1179,12 +1190,14 @@ class _HiddenSheetHandle extends StatelessWidget {
           color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

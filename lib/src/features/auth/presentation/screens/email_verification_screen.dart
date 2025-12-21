@@ -387,7 +387,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withOpacity(0.8),
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withValues(alpha: 0.8),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
@@ -440,7 +440,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                         'Hemos enviado un código de 4 dígitos a\n${widget.email}',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                         ),
                       ),
 
@@ -503,8 +503,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
                                                   colors: [
-                                                    AppColors.darkSurface.withOpacity(0.95),
-                                                    AppColors.darkCard.withOpacity(0.9),
+                                                    AppColors.darkSurface.withValues(alpha: 0.95),
+                                                    AppColors.darkCard.withValues(alpha: 0.9),
                                                   ],
                                                 )
                                               : const LinearGradient(
@@ -525,16 +525,16 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                                             // Sombra principal (inferior derecha)
                                             BoxShadow(
                                               color: (isDarkMode
-                                                      ? Colors.black.withOpacity(isFocused ? 0.45 : 0.35)
-                                                      : Colors.black.withOpacity(isFocused ? 0.10 : 0.07)),
+                                                      ? Colors.black.withValues(alpha: isFocused ? 0.45 : 0.35)
+                                                      : Colors.black.withValues(alpha: isFocused ? 0.10 : 0.07)),
                                               blurRadius: isFocused ? 18 : 12,
                                               offset: const Offset(0, 6),
                                             ),
                                             // Brillo superior izquierdo para efecto 3D sutil
                                             BoxShadow(
                                               color: (isDarkMode
-                                                      ? Colors.white.withOpacity(isFocused ? 0.06 : 0.04)
-                                                      : Colors.white.withOpacity(isFocused ? 0.9 : 0.7)),
+                                                      ? Colors.white.withValues(alpha: isFocused ? 0.06 : 0.04)
+                                                      : Colors.white.withValues(alpha: isFocused ? 0.9 : 0.7)),
                                               blurRadius: isFocused ? 12 : 8,
                                               offset: const Offset(-2, -2),
                                             ),
@@ -754,8 +754,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                                       : 'Reenviar código',
                                   style: TextStyle(
                                     color: (_resendCountdown > 0 || _isVerifying)
-                                        ? Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)
-                                        : AppColors.primary,
+                                      ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5)
+                                      : AppColors.primary,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -770,7 +770,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                           decoration: BoxDecoration(
                             color: isDark ? AppColors.darkCard : AppColors.lightCard,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

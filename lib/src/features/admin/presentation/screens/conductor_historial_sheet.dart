@@ -22,7 +22,7 @@ class ConductorHistorialSheet extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
               child: Column(
                 children: [
                   _buildSheetHandle(context),
@@ -33,7 +33,7 @@ class ConductorHistorialSheet extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -98,7 +98,7 @@ class ConductorHistorialSheet extends StatelessWidget {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -132,10 +132,10 @@ class ConductorHistorialSheet extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: estadoColor.withOpacity(0.3),
+                color: estadoColor.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -145,8 +145,8 @@ class ConductorHistorialSheet extends StatelessWidget {
                 // Cabecera
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: estadoColor.withOpacity(0.1),
+                    decoration: BoxDecoration(
+                      color: estadoColor.withValues(alpha: 0.1),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
@@ -157,7 +157,7 @@ class ConductorHistorialSheet extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: estadoColor.withOpacity(0.2),
+                          color: estadoColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -203,9 +203,9 @@ class ConductorHistorialSheet extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: estadoColor.withOpacity(0.2),
+                          color: estadoColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: estadoColor.withOpacity(0.5), width: 1.5),
+                          border: Border.all(color: estadoColor.withValues(alpha: 0.5), width: 1.5),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -259,13 +259,13 @@ class ConductorHistorialSheet extends StatelessWidget {
                         const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFf5576c).withOpacity(0.1),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFf5576c).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFf5576c).withOpacity(0.3),
-                              width: 1,
-                            ),
+                              border: Border.all(
+                                color: const Color(0xFFf5576c).withValues(alpha: 0.3),
+                                width: 1,
+                              ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +283,7 @@ class ConductorHistorialSheet extends StatelessWidget {
                                     Text(
                                       'Motivo de rechazo:',
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -292,7 +292,7 @@ class ConductorHistorialSheet extends StatelessWidget {
                                     Text(
                                       doc['motivo_rechazo'],
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.95),
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.95),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -317,12 +317,12 @@ class ConductorHistorialSheet extends StatelessWidget {
                             icon: const Icon(Icons.visibility_rounded, size: 20),
                             label: const Text('Ver Documento'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: estadoColor.withOpacity(0.2),
+                              backgroundColor: estadoColor.withValues(alpha: 0.2),
                               foregroundColor: estadoColor,
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                side: BorderSide(color: estadoColor.withOpacity(0.5), width: 1.5),
+                                side: BorderSide(color: estadoColor.withValues(alpha: 0.5), width: 1.5),
                               ),
                               elevation: 0,
                             ),
@@ -345,7 +345,7 @@ class ConductorHistorialSheet extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+          Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
           const SizedBox(width: 8),
           Text(
             '$label: ',

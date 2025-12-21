@@ -214,13 +214,13 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
                           color: (isDark 
-                            ? Colors.white.withOpacity(0.1) 
-                            : Colors.white.withOpacity(0.3)),
+                            ? Colors.white.withValues(alpha: 0.1) 
+                            : Colors.white.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(50),
                           border: Border.all(
                             color: (isDark 
-                              ? Colors.white.withOpacity(0.2) 
-                              : Colors.white.withOpacity(0.4)),
+                              ? Colors.white.withValues(alpha: 0.2) 
+                              : Colors.white.withValues(alpha: 0.4)),
                             width: 1,
                           ),
                         ),
@@ -231,8 +231,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: (isDark 
-                                  ? Colors.white.withOpacity(0.15) 
-                                  : Colors.white.withOpacity(0.4)),
+                                  ? Colors.white.withValues(alpha: 0.15) 
+                                  : Colors.white.withValues(alpha: 0.4)),
                                 shape: BoxShape.circle,
                               ),
                               child: Image.asset(
@@ -289,13 +289,13 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                       height: 56,
                       decoration: BoxDecoration(
                         color: (isDark 
-                          ? Colors.white.withOpacity(0.1) 
-                          : Colors.white.withOpacity(0.3)),
+                          ? Colors.white.withValues(alpha: 0.1) 
+                          : Colors.white.withValues(alpha: 0.3)),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: (isDark 
-                            ? Colors.white.withOpacity(0.2) 
-                            : Colors.white.withOpacity(0.4)),
+                            ? Colors.white.withValues(alpha: 0.2) 
+                            : Colors.white.withValues(alpha: 0.4)),
                           width: 1,
                         ),
                       ),
@@ -377,7 +377,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -390,7 +390,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                       border: Border.all(color: Colors.white, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -423,18 +423,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: (isDark 
-                    ? Colors.black.withOpacity(0.4) 
-                    : Colors.white.withOpacity(0.7)),
+                    ? Colors.black.withValues(alpha: 0.4) 
+                    : Colors.white.withValues(alpha: 0.7)),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: (isDark 
-                      ? Colors.white.withOpacity(0.1) 
-                      : Colors.white.withOpacity(0.4)),
+                      ? Colors.white.withValues(alpha: 0.1) 
+                      : Colors.white.withValues(alpha: 0.4)),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),

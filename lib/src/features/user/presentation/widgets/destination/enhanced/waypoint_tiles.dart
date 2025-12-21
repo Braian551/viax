@@ -55,8 +55,8 @@ class WaypointTile extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.grey.withOpacity(0.05),
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -75,12 +75,15 @@ class WaypointTile extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          iconColor.withOpacity(0.18),
-                          iconColor.withOpacity(0.08),
+                          iconColor.withValues(alpha: 0.18),
+                          iconColor.withValues(alpha: 0.08),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: iconColor.withOpacity(0.2), width: 0.5),
+                      border: Border.all(
+                        color: iconColor.withValues(alpha: 0.2),
+                        width: 0.5,
+                      ),
                     ),
                     child: isLoading
                         ? Padding(
@@ -102,7 +105,7 @@ class WaypointTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: iconColor.withOpacity(0.8),
+                            color: iconColor.withValues(alpha: 0.8),
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -140,8 +143,8 @@ class WaypointTile extends StatelessWidget {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -207,8 +210,8 @@ class StopTile extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.grey.withOpacity(0.05),
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -227,12 +230,15 @@ class StopTile extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppColors.accent.withOpacity(0.18),
-                          AppColors.accent.withOpacity(0.08),
+                          AppColors.accent.withValues(alpha: 0.18),
+                          AppColors.accent.withValues(alpha: 0.08),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.accent.withOpacity(0.2), width: 0.5),
+                      border: Border.all(
+                        color: AppColors.accent.withValues(alpha: 0.2),
+                        width: 0.5,
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -255,7 +261,7 @@ class StopTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.accent.withOpacity(0.8),
+                            color: AppColors.accent.withValues(alpha: 0.8),
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -294,7 +300,7 @@ class StopTile extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(Icons.close_rounded, size: 18, color: Colors.red[400]),
@@ -324,7 +330,9 @@ class WaypointsDivider extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15),
+            isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.grey.withValues(alpha: 0.15),
             Colors.transparent,
           ],
         ),

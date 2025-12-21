@@ -171,7 +171,7 @@ class _FavoriteDriversScreenState extends State<FavoriteDriversScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -193,7 +193,7 @@ class _FavoriteDriversScreenState extends State<FavoriteDriversScreen> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       backgroundImage: favorito.fotoPerfil != null
                           ? NetworkImage(favorito.fotoPerfil!)
                           : null,
@@ -265,7 +265,7 @@ class _FavoriteDriversScreenState extends State<FavoriteDriversScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accent.withOpacity(0.1),
+                              color: AppColors.accent.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -298,7 +298,7 @@ class _FavoriteDriversScreenState extends State<FavoriteDriversScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                  color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(

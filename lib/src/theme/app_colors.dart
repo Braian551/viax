@@ -94,12 +94,12 @@ class AppColors {
     colors: [darkBackground, darkSurface],
   );
 
-  // ========== COLORES CON OPACIDAD ==========
+  // ========== COLORES CON ALPHA ========== 
   
   /// Overlays y capas
-  static Color primaryWithOpacity(double opacity) => primary.withOpacity(opacity);
-  static Color blackWithOpacity(double opacity) => Colors.black.withOpacity(opacity);
-  static Color whiteWithOpacity(double opacity) => Colors.white.withOpacity(opacity);
+  static Color primaryWithAlpha(double alpha) => primary.withValues(alpha: alpha);
+  static Color blackWithAlpha(double alpha) => Colors.black.withValues(alpha: alpha);
+  static Color whiteWithAlpha(double alpha) => Colors.white.withValues(alpha: alpha);
 
   // ========== COLORES DE SOMBRAS ==========
   
@@ -114,7 +114,7 @@ class AppColors {
   /// Para efectos de glow/brillo con el color primario
   static BoxShadow primaryGlow({double opacity = 0.25, double blur = 30, double spread = 8}) {
     return BoxShadow(
-      color: primary.withOpacity(opacity),
+      color: primary.withValues(alpha: opacity),
       blurRadius: blur,
       spreadRadius: spread,
     );
@@ -123,7 +123,7 @@ class AppColors {
   /// Para efectos de glow/brillo con el color de acento
   static BoxShadow accentGlow({double opacity = 0.25, double blur = 30, double spread = 8}) {
     return BoxShadow(
-      color: accent.withOpacity(opacity),
+      color: accent.withValues(alpha: opacity),
       blurRadius: blur,
       spreadRadius: spread,
     );
@@ -135,13 +135,13 @@ class AppColors {
 // --------------------------------------------------
 // We provide `withValues({alpha: double})` to match the
 // usage across the codebase that expects this helper.
-// This simply maps to `withOpacity` but clamps the alpha
+// This maps to the core `withValues` and clamps the alpha
 // value to the valid 0.0 - 1.0 range.
 extension AppColorExtensions on Color {
   Color withValues({required double alpha}) {
     double clamped = alpha;
     if (clamped < 0.0) clamped = 0.0;
     if (clamped > 1.0) clamped = 1.0;
-    return withOpacity(clamped);
+    return withValues(alpha: clamped);
   }
 }

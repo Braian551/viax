@@ -25,9 +25,9 @@ class ConductorDrawer extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: isDark 
-                  ? AppColors.darkBackground.withOpacity(0.95)
-                  : Colors.white.withOpacity(0.95),
+                color: isDark 
+                  ? AppColors.darkBackground.withValues(alpha: 0.95)
+                  : Colors.white.withValues(alpha: 0.95),
             ),
             child: SafeArea(
               child: Column(
@@ -214,7 +214,7 @@ class ConductorDrawer extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -228,7 +228,7 @@ class ConductorDrawer extends StatelessWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white,
@@ -267,14 +267,14 @@ class ConductorDrawer extends StatelessWidget {
             children: [
               Icon(
                 Icons.directions_car,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 size: 16,
               ),
               const SizedBox(width: 6),
               Text(
                 tipoVehiculo,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -284,7 +284,7 @@ class ConductorDrawer extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -350,7 +350,7 @@ class ConductorDrawer extends StatelessWidget {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: color.withOpacity(0.5),
+                  color: color.withValues(alpha: 0.5),
                   size: 20,
                 ),
               ],
@@ -368,8 +368,8 @@ class ConductorDrawer extends StatelessWidget {
         height: 1,
         thickness: 1,
         color: isDark 
-            ? Colors.white.withOpacity(0.1)
-            : Colors.grey.withOpacity(0.2),
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.grey.withValues(alpha: 0.2),
       ),
     );
   }
@@ -383,8 +383,8 @@ class ConductorDrawer extends StatelessWidget {
             height: 1,
             thickness: 1,
             color: isDark 
-                ? Colors.white.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.2),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 12),
           Row(
@@ -400,7 +400,7 @@ class ConductorDrawer extends StatelessWidget {
                 'Viax Driver v1.0.0',
                 style: TextStyle(
                   color: isDark 
-                      ? Colors.white.withOpacity(0.5)
+                      ? Colors.white.withValues(alpha: 0.5)
                       : Colors.grey[600],
                   fontSize: 12,
                   fontWeight: FontWeight.w500,

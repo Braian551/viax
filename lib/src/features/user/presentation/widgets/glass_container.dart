@@ -37,15 +37,16 @@ class GlassContainer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Colores base con tinte azul de la app
-    final baseColor = backgroundColor ?? (isDark 
-        ? AppColors.darkCard.withOpacity(0.85)
-        : Colors.white.withOpacity(0.9));
+    final baseColor = backgroundColor ??
+      (isDark
+        ? AppColors.darkCard.withValues(alpha: 0.85)
+        : Colors.white.withValues(alpha: 0.9));
     
     final borderColor = usePrimaryAccent
-        ? AppColors.primary.withOpacity(0.3)
-        : (isDark 
-            ? Colors.white.withOpacity(0.08)
-            : Colors.white.withOpacity(0.6));
+      ? AppColors.primary.withValues(alpha: 0.3)
+      : (isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.6));
 
     return Container(
       width: width,
@@ -64,7 +65,7 @@ class GlassContainer extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         baseColor,
-                        baseColor.withOpacity(0.7),
+                        baseColor.withValues(alpha: 0.7),
                       ],
                     )
                   : null,
@@ -77,8 +78,8 @@ class GlassContainer extends StatelessWidget {
               boxShadow: boxShadow ?? [
                 BoxShadow(
                   color: usePrimaryAccent
-                      ? AppColors.primary.withOpacity(0.15)
-                      : Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                   spreadRadius: usePrimaryAccent ? 2 : 0,

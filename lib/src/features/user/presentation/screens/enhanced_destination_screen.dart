@@ -637,8 +637,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                       colors: [
                         isDark ? Colors.black : Colors.white,
                         isDark
-                            ? Colors.black.withOpacity(0.6)
-                            : Colors.white.withOpacity(0.7),
+                          ? Colors.black.withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.7),
                         Colors.transparent,
                       ],
                     ),

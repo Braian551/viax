@@ -20,9 +20,6 @@ class DemandZoneService {
   /// Intervalo de actualización en segundos
   static const int refreshIntervalSeconds = 30;
   
-  /// URL base del API
-  static String get _baseUrl => AppConfig.baseUrl;
-  
   /// Obtener zonas de demanda cercanas a una ubicación
   static Future<DemandZonesResponse> getDemandZones({
     required double latitude,
@@ -31,18 +28,15 @@ class DemandZoneService {
     double zoneSizeKm = 0.5,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/conductor/get_demand_zones.php');
-      
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await _postWithFallback(
+        path: '/conductor/get_demand_zones.php',
+        body: {
           'latitud': latitude,
           'longitud': longitude,
           'radio_km': radiusKm,
           'zone_size_km': zoneSizeKm,
-        }),
-      ).timeout(const Duration(seconds: 10));
+        },
+      );
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -72,6 +66,40 @@ class DemandZoneService {
       
       return DemandZonesResponse.error('Error de conexión: $e');
     }
+  }
+
+  /// Hace POST probando hosts candidatos hasta que uno responda o se agoten
+  static Future<http.Response> _postWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    Exception? lastError;
+
+    for (final base in AppConfig.baseUrlCandidates) {
+      final url = Uri.parse('$base$path');
+      try {
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(timeout);
+
+        // Recordar el host que funcionÃ³ para siguientes llamadas
+        AppConfig.rememberWorkingBaseUrl(base);
+        return response;
+      } on TimeoutException catch (e) {
+        lastError = e;
+        debugPrint('⏳ Timeout en $path usando $base, probando siguiente host...');
+      } catch (e) {
+        lastError = e is Exception ? e : Exception(e.toString());
+        debugPrint('🌐 Error en $path usando $base: $e');
+      }
+    }
+
+    throw lastError ?? Exception('No hay hosts disponibles para $path');
   }
   
   /// Iniciar actualización automática de zonas

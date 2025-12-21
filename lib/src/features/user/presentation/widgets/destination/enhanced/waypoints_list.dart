@@ -41,7 +41,7 @@ class WaypointsList extends StatelessWidget {
       proxyDecorator: (child, index, animation) => Material(
         elevation: 6,
         borderRadius: BorderRadius.circular(14),
-        shadowColor: AppColors.primary.withOpacity(0.3),
+        shadowColor: AppColors.primary.withValues(alpha: 0.3),
         child: child,
       ),
       itemBuilder: (context, index) {

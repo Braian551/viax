@@ -40,7 +40,7 @@ class LocationInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final bgColor = isDark ? AppColors.darkCard : AppColors.lightBackground; // use unified card color
-    final borderDefault = AppColors.primary.withOpacity(0.06);
+    final borderDefault = AppColors.primary.withValues(alpha: 0.06);
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
@@ -50,10 +50,12 @@ class LocationInput extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: isDark ? bgColor.withOpacity(0.06) : bgColor,
+              color: isDark ? bgColor.withValues(alpha: 0.06) : bgColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isEditing ? AppColors.primary.withOpacity(0.5) : borderDefault,
+                color: isEditing
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : borderDefault,
                 width: isEditing ? 1.5 : 1,
               ),
             ),
@@ -94,7 +96,11 @@ class LocationInput extends StatelessWidget {
                   if (textController != null && textController!.text.isNotEmpty)
                     GestureDetector(
                       onTap: onClearInput,
-                      child: Icon(Icons.close, color: textColor.withOpacity(0.5), size: 20),
+                      child: Icon(
+                        Icons.close,
+                        color: textColor.withValues(alpha: 0.5),
+                        size: 20,
+                      ),
                     ),
                 ] else ...[
                   if (isDestination) ...[
@@ -128,7 +134,11 @@ class LocationInput extends StatelessWidget {
                   if (value != null && onClear != null)
                     GestureDetector(
                       onTap: onClear,
-                      child: Icon(Icons.close, color: textColor.withOpacity(0.5), size: 20),
+                      child: Icon(
+                        Icons.close,
+                        color: textColor.withValues(alpha: 0.5),
+                        size: 20,
+                      ),
                     ),
                 ],
               ],

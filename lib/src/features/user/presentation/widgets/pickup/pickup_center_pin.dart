@@ -57,7 +57,7 @@ class PickupCenterPin extends StatelessWidget {
                 height: isMapMoving ? 8 : 5,
                 margin: EdgeInsets.only(top: isMapMoving ? 15 : 0),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(isMapMoving ? 0.3 : 0.2),
+                  color: Colors.black.withValues(alpha: isMapMoving ? 0.3 : 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -86,7 +86,7 @@ class _Label extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -127,8 +127,8 @@ class _PinHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = isMapMoving
-        ? [AppColors.primary.withOpacity(0.9), AppColors.primary]
-        : [const Color(0xFF00E676), const Color(0xFF00C853)];
+      ? [AppColors.primary.withValues(alpha: 0.9), AppColors.primary]
+      : [const Color(0xFF00E676), const Color(0xFF00C853)];
 
     return Container(
       width: 46,
@@ -139,7 +139,7 @@ class _PinHead extends StatelessWidget {
         border: Border.all(color: Colors.white, width: 3.5),
         boxShadow: [
           BoxShadow(
-            color: colors.last.withOpacity(0.5),
+            color: colors.last.withValues(alpha: 0.5),
             blurRadius: 16,
             spreadRadius: 3,
           ),
@@ -158,8 +158,8 @@ class _PinNeedle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = isMapMoving
-        ? [AppColors.primary, AppColors.primary.withOpacity(0.2)]
-        : [const Color(0xFF00C853), const Color(0xFF00C853).withOpacity(0.2)];
+      ? [AppColors.primary, AppColors.primary.withValues(alpha: 0.2)]
+      : [const Color(0xFF00C853), const Color(0xFF00C853).withValues(alpha: 0.2)];
 
     return Container(
       width: 5,

@@ -120,7 +120,7 @@ class _LocationSuggestionTileState extends State<LocationSuggestionTile>
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),
             child: Material(
-              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 onTap: () {
@@ -128,16 +128,16 @@ class _LocationSuggestionTileState extends State<LocationSuggestionTile>
                   widget.onTap();
                 },
                 borderRadius: BorderRadius.circular(16),
-                splashColor: AppColors.primary.withOpacity(0.1),
-                highlightColor: AppColors.primary.withOpacity(0.05),
+                splashColor: AppColors.primary.withValues(alpha: 0.1),
+                highlightColor: AppColors.primary.withValues(alpha: 0.05),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.08)
-                          : Colors.grey.withOpacity(0.1),
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.grey.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -148,7 +148,7 @@ class _LocationSuggestionTileState extends State<LocationSuggestionTile>
                         height: 44,
                         decoration: BoxDecoration(
                           color: (widget.iconColor ?? const Color(0xFFFF6B35))
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -243,7 +243,7 @@ class SearchSuggestionsList extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 3,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary.withOpacity(0.7),
+                    AppColors.primary.withValues(alpha: 0.7),
                   ),
                 ),
               ),

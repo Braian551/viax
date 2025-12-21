@@ -90,9 +90,9 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               border: Border(
-                bottom: BorderSide(color: Colors.white.withOpacity(0.1)),
+                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
               ),
             ),
             child: Column(
@@ -108,10 +108,10 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                         decoration: InputDecoration(
                           hintText: 'Buscar lugar en Colombia...',
                           hintStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           filled: true,
-                          fillColor: Colors.white.withOpacity(0.1),
+                          fillColor: Colors.white.withValues(alpha: 0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -171,7 +171,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                             _selectedProximity = selected ? entry.value : null;
                           });
                         },
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
                         selectedColor: const Color(0xFFFFD700),
                         labelStyle: TextStyle(
                           color: _selectedProximity == entry.value
@@ -206,7 +206,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                           _searchController.text = query;
                           _search();
                         },
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
                         labelStyle: const TextStyle(color: Colors.white),
                       ),
                   ],
@@ -232,7 +232,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                             children: [
                               Icon(
                                 Icons.error_outline,
-                                color: Colors.red.withOpacity(0.7),
+                                color: Colors.red.withValues(alpha: 0.7),
                                 size: 64,
                               ),
                               const SizedBox(height: 16),
@@ -257,14 +257,14 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                                 children: [
                                   Icon(
                                     Icons.search,
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     size: 64,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     'Realiza una bÃºsqueda para probar',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 16,
                                     ),
                                   ),
@@ -282,10 +282,10 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.white.withValues(alpha: 0.1),
                                   ),
                                 ),
                                 child: Column(
@@ -298,7 +298,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                                           height: 32,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFFD700)
-                                                .withOpacity(0.2),
+                                              .withValues(alpha: 0.2),
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(
@@ -325,7 +325,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFFD700)
-                                                .withOpacity(0.2),
+                                              .withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(8),
                                           ),
@@ -344,7 +344,7 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
                                     Text(
                                       result.getFormattedAddress(),
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -377,9 +377,9 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               border: Border(
-                top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
               ),
             ),
             child: Row(
@@ -422,13 +422,13 @@ class _NominatimTestScreenState extends State<NominatimTestScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.white.withOpacity(0.7),
+          color: Colors.white.withValues(alpha: 0.7),
           fontSize: 11,
         ),
       ),

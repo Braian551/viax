@@ -49,7 +49,7 @@ class TripVehicleBottomSheet extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -215,12 +215,12 @@ class _VehicleListItem extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: isSelected
-                ? (isDark
-                    ? AppColors.primary.withOpacity(0.15)
-                    : AppColors.primary.withOpacity(0.08))
-                : (isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.grey.shade50),
+              ? (isDark
+                ? AppColors.primary.withValues(alpha: 0.15)
+                : AppColors.primary.withValues(alpha: 0.08))
+              : (isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.shade50),
             border: Border.all(
               color: isSelected ? AppColors.primary : Colors.transparent,
               width: isSelected ? 2 : 1,
@@ -263,7 +263,7 @@ class _VehicleListItem extends StatelessWidget {
                           Icon(
                             Icons.info_outline,
                             size: 16,
-                            color: AppColors.primary.withOpacity(0.7),
+                              color: AppColors.primary.withValues(alpha: 0.7),
                           ),
                         ],
                       ],
@@ -341,7 +341,7 @@ class _ConfirmBar extends StatelessWidget {
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
             width: 1,
           ),
         ),

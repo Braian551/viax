@@ -50,7 +50,7 @@ class DemandZonesOverlay extends StatelessWidget {
       point: LatLng(zone.centerLat, zone.centerLng),
       radius: baseRadius,
       color: Color(zone.demandColorValue),
-      borderColor: Color(zone.borderColorValue).withOpacity(0.6),
+      borderColor: Color(zone.borderColorValue).withValues(alpha: 0.6),
       borderStrokeWidth: 2.0,
     );
   }
@@ -143,13 +143,13 @@ class _DemandBadgeState extends State<_DemandBadge>
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: colors[0].withOpacity(0.35),
+                  color: colors[0].withValues(alpha: 0.35),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -251,18 +251,18 @@ class DemandZoneLegend extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isDark
-              ? const Color(0xFF1A1A2E).withOpacity(0.95)
-              : Colors.white.withOpacity(0.95),
+              ? const Color(0xFF1A1A2E).withValues(alpha: 0.95)
+              : Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF1976D2).withOpacity(0.15),
+              color: const Color(0xFF1976D2).withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: const Color(0xFF1976D2).withOpacity(0.2),
+            color: const Color(0xFF1976D2).withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -335,7 +335,7 @@ class DemandZoneLegend extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withOpacity(0.1),
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -388,7 +388,7 @@ class DemandZoneLegend extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: colors[0].withOpacity(0.3),
+                color: colors[0].withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -407,7 +407,7 @@ class DemandZoneLegend extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: colors[0].withOpacity(0.15),
+            color: colors[0].withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -449,12 +449,12 @@ class DemandZoneInfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.2),
+            color: primaryColor.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: primaryColor.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -467,8 +467,8 @@ class DemandZoneInfoCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  primaryColor.withOpacity(0.15),
-                  primaryColor.withOpacity(0.05),
+                  primaryColor.withValues(alpha: 0.15),
+                  primaryColor.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
@@ -481,12 +481,12 @@ class DemandZoneInfoCard extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                      colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
                     ),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.4),
+                        color: primaryColor.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -536,12 +536,12 @@ class DemandZoneInfoCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [primaryColor, primaryColor.withOpacity(0.85)],
+                        colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: primaryColor.withOpacity(0.3),
+                          color: primaryColor.withValues(alpha: 0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -571,8 +571,8 @@ class DemandZoneInfoCard extends StatelessWidget {
                       onPressed: onClose,
                       style: IconButton.styleFrom(
                         backgroundColor: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black.withOpacity(0.05),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.05),
                       ),
                       icon: Icon(
                         Icons.close,
@@ -669,7 +669,7 @@ class DemandZoneInfoCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -714,7 +714,7 @@ class DemandZoneInfoCard extends StatelessWidget {
   }) {
     return Column(
       children: [
-        Icon(icon, color: color.withOpacity(0.7), size: 22),
+        Icon(icon, color: color.withValues(alpha: 0.7), size: 22),
         const SizedBox(height: 6),
         Text(
           value,

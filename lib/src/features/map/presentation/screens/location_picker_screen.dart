@@ -331,24 +331,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.75),
+                  color: Colors.black.withValues(alpha: 0.75),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: _isSearchFocused 
-                      ? const Color(0xFFFFFF00).withOpacity(0.8)
-                      : Colors.white.withOpacity(0.15),
+                      ? const Color(0xFFFFFF00).withValues(alpha: 0.8)
+                      : Colors.white.withValues(alpha: 0.15),
                     width: _isSearchFocused ? 2 : 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: _isSearchFocused ? 24 : 16,
                       offset: const Offset(0, 8),
                       spreadRadius: _isSearchFocused ? 2 : 0,
                     ),
                     if (_isSearchFocused)
                       BoxShadow(
-                        color: const Color(0xFFFFFF00).withOpacity(0.15),
+                        color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
                         blurRadius: 20,
                         offset: const Offset(0, 0),
                         spreadRadius: 2,
@@ -367,7 +367,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                             Icons.search_rounded,
                             color: _isSearchFocused 
                               ? const Color(0xFFFFFF00)
-                              : Colors.white.withOpacity(0.6),
+                              : Colors.white.withValues(alpha: 0.6),
                             size: 24,
                           ),
                         ),
@@ -385,7 +385,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                             decoration: InputDecoration(
                               hintText: 'Buscar direcciÃ³n...',
                               hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -402,13 +402,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.close_rounded,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   size: 18,
                                 ),
                                 onPressed: () {
@@ -454,7 +454,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFFF00).withOpacity(0.2),
+                                      color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -473,13 +473,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                       spreadRadius: 1,
                                     ),
                                     BoxShadow(
-                                      color: const Color(0xFFFFFF00).withOpacity(0.2),
+                                      color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                                       blurRadius: 20,
                                       offset: const Offset(0, 2),
                                       spreadRadius: 2,
@@ -495,7 +495,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFFFFFF00).withOpacity(0.5),
+                                          color: const Color(0xFFFFFF00).withValues(alpha: 0.5),
                                           blurRadius: 8,
                                           spreadRadius: 1,
                                         ),
@@ -516,7 +516,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.4),
+                                        color: Colors.black.withValues(alpha: 0.4),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
@@ -535,11 +535,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                               width: 24,
                               height: 6,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
+                                    color: Colors.black.withValues(alpha: 0.15),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -565,24 +565,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                 curve: Curves.easeOutCubic,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.85),
+                  color: Colors.black.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: _confirmed 
-                      ? const Color(0xFFFFFF00).withOpacity(0.4)
-                      : Colors.white.withOpacity(0.15),
+                      ? const Color(0xFFFFFF00).withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.15),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       blurRadius: 24,
                       offset: const Offset(0, 12),
                       spreadRadius: 2,
                     ),
                     if (_confirmed)
                       BoxShadow(
-                        color: const Color(0xFFFFFF00).withOpacity(0.2),
+                        color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 0),
                         spreadRadius: 2,
@@ -597,10 +597,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                         ),
                       ),
                       child: TextField(
@@ -628,7 +628,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                           ),
                           hintText: 'DirecciÃ³n seleccionada...',
                           hintStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 15,
                           ),
                           border: InputBorder.none,
@@ -648,10 +648,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                         margin: const EdgeInsets.only(top: 16),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFFF00).withOpacity(0.15),
+                          color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFFFFF00).withOpacity(0.3),
+                            color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -706,7 +706,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                     elevation: 0,
-                                    shadowColor: const Color(0xFFFFFF00).withOpacity(0.4),
+                                    shadowColor: const Color(0xFFFFFF00).withValues(alpha: 0.4),
                                   ),
                                   child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -737,10 +737,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                 ),
                               ),
                               child: IconButton(
@@ -754,7 +754,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                 },
                                 icon: Icon(
                                   Icons.refresh_rounded,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   size: 24,
                                 ),
                                 style: IconButton.styleFrom(
@@ -785,14 +785,14 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.9),
+                      color: Colors.black.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 24,
                           offset: const Offset(0, 12),
                         ),
@@ -808,7 +808,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                           itemCount: mapProvider.searchResults.length,
                           separatorBuilder: (context, index) => Divider(
                             height: 1,
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                             indent: 60,
                             endIndent: 20,
                           ),
@@ -830,7 +830,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                         width: 40,
                                         height: 40,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFFFFF00).withOpacity(0.15),
+                                          color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -858,7 +858,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                                       // Icono de flecha
                                       Icon(
                                         Icons.arrow_forward_ios_rounded,
-                                        color: Colors.white.withOpacity(0.4),
+                                        color: Colors.white.withValues(alpha: 0.4),
                                         size: 16,
                                       ),
                                     ],

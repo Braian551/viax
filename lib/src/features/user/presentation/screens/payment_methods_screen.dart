@@ -174,7 +174,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -196,7 +196,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           Text(
             'Agrega un mÃ©todo de pago para continuar',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 14,
             ),
           ),
@@ -229,13 +229,13 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDefault
-                  ? const Color(0xFFFFFF00)
-                  : Colors.white.withOpacity(0.1),
+              border: Border.all(
+                color: isDefault
+                    ? const Color(0xFFFFFF00)
+                    : Colors.white.withValues(alpha: 0.1),
               width: isDefault ? 2 : 1.5,
             ),
           ),
@@ -247,7 +247,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFF00).withOpacity(0.2),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -277,7 +277,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                               ? 'Vence ${method['expiryDate']}'
                               : method['email'] as String,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
                           ),
                         ),
@@ -344,10 +344,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: buttonColor.withOpacity(0.2),
+          color: buttonColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: buttonColor.withOpacity(0.3),
+            color: buttonColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -384,7 +384,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -466,11 +466,11 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -479,7 +479,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFF00).withOpacity(0.2),
+                color: const Color(0xFFFFFF00).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: const Color(0xFFFFFF00), size: 24),
@@ -501,14 +501,14 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.3), size: 18),
+            Icon(Icons.arrow_forward_ios, color: Colors.white.withValues(alpha: 0.3), size: 18),
           ],
         ),
       ),
@@ -639,7 +639,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -653,17 +653,17 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
             counterText: '',
             filled: true,
-            fillColor: Colors.white.withOpacity(0.05),
+            fillColor: Colors.white.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

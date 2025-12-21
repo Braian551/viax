@@ -210,12 +210,12 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.3),
-              width: 1.5,
-            ),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
           ),
           child: Row(
             children: [
@@ -238,7 +238,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                     Text(
                       greeting,
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.3,
@@ -323,7 +323,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
               value: '\$${_formatNumber(ingresos['ingresos_totales'])}',
               subtitle: 'Hoy: \$${_formatNumber(ingresos['ingresos_hoy'])}',
               icon: Icons.attach_money_rounded,
-              gradientColors: [AppColors.success, AppColors.success.withOpacity(0.7)],
+              gradientColors: [AppColors.success, AppColors.success.withValues(alpha: 0.7)],
               onTap: () {
                 widget.onNavigateToTab?.call(2);
               },
@@ -365,15 +365,15 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: gradientColors[0].withOpacity(0.15),
+              color: gradientColors[0].withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: gradientColors[0].withOpacity(0.3),
+                color: gradientColors[0].withValues(alpha: 0.3),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: gradientColors[0].withOpacity(0.2),
+                  color: gradientColors[0].withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -402,7 +402,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: gradientColors[0].withOpacity(0.2),
+                        color: gradientColors[0].withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: gradientColors[0], size: 20),
@@ -423,7 +423,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -462,8 +462,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                 padding: const EdgeInsets.all(40),
                 decoration: BoxDecoration(
                   color: isDark
-                    ? AppColors.darkSurface.withOpacity(0.6)
-                    : AppColors.lightSurface.withOpacity(0.6),
+                    ? AppColors.darkSurface.withValues(alpha: 0.6)
+                    : AppColors.lightSurface.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
@@ -475,12 +475,12 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.notifications_none_rounded,
-                        color: AppColors.primary.withOpacity(0.5),
+                        color: AppColors.primary.withValues(alpha: 0.5),
                         size: 48,
                       ),
                     ),
@@ -488,7 +488,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                     Text(
                       'Sin actividad reciente',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -497,7 +497,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                     Text(
                       'Las acciones del sistema aparecerán aquí',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -515,8 +515,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark
-                    ? AppColors.darkSurface.withOpacity(0.6)
-                    : AppColors.lightSurface.withOpacity(0.6),
+                    ? AppColors.darkSurface.withValues(alpha: 0.6)
+                    : AppColors.lightSurface.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
@@ -529,8 +529,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                   itemCount: actividades.length > 5 ? 5 : actividades.length,
                   separatorBuilder: (_, __) => Divider(
                     color: isDark 
-                      ? AppColors.darkDivider.withOpacity(0.3)
-                      : AppColors.lightDivider.withOpacity(0.3),
+                      ? AppColors.darkDivider.withValues(alpha: 0.3)
+                      : AppColors.lightDivider.withValues(alpha: 0.3),
                     height: 1,
                     indent: 72,
                   ),
@@ -541,10 +541,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                       leading: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -567,7 +567,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                         child: Text(
                           '${actividad['nombre'] ?? ''} ${actividad['apellido'] ?? ''} â€¢ ${_formatDate(actividad['fecha_creacion'])}',
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                         ),

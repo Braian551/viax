@@ -124,31 +124,31 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               end: Alignment.bottomRight,
               colors: widget.focusNode.hasFocus
                   ? [
-                      widget.accentColor.withOpacity(0.08),
-                      widget.accentColor.withOpacity(0.04),
+                    widget.accentColor.withValues(alpha: 0.08),
+                    widget.accentColor.withValues(alpha: 0.04),
                     ]
                   : [
                       widget.isDark
-                          ? Colors.white.withOpacity(0.08)
-                          : Colors.grey.withOpacity(0.08),
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.08),
                       widget.isDark
-                          ? Colors.white.withOpacity(0.04)
-                          : Colors.grey.withOpacity(0.04),
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.grey.withValues(alpha: 0.04),
                     ],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: widget.focusNode.hasFocus
-                  ? widget.accentColor.withOpacity(0.4)
+                  ? widget.accentColor.withValues(alpha: 0.4)
                   : widget.isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: widget.focusNode.hasFocus ? 1.5 : 1,
             ),
             boxShadow: widget.focusNode.hasFocus
                 ? [
                     BoxShadow(
-                      color: widget.accentColor.withOpacity(0.15),
+                      color: widget.accentColor.withValues(alpha: 0.15),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -175,7 +175,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: widget.accentColor.withOpacity(0.12),
+                    color: widget.accentColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -202,8 +202,8 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: widget.isDark
-                                ? Colors.white.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -303,8 +303,8 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(
-                    widget.isDark ? 0.3 : 0.1,
+                  color: Colors.black.withValues(
+                    alpha: widget.isDark ? 0.3 : 0.1,
                   ),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
@@ -318,12 +318,12 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: widget.isDark
-                        ? Colors.black.withOpacity(0.5)
-                        : Colors.white.withOpacity(0.85),
+                        ? Colors.black.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.85),
                     border: Border.all(
                       color: widget.isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.05),
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -338,8 +338,8 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                         gradient: LinearGradient(
                           colors: [
                             widget.isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : Colors.grey.withOpacity(0.15),
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.grey.withValues(alpha: 0.15),
                             Colors.transparent,
                           ],
                         ),
@@ -430,19 +430,19 @@ class _SavedPlaceChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.white.withOpacity(0.6),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
               ),
               boxShadow: isDark
                   ? null
                   : [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -454,7 +454,7 @@ class _SavedPlaceChip extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(icon, size: 14, color: AppColors.primary),
@@ -511,13 +511,13 @@ class _SuggestionTile extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withOpacity(0.15),
-                      AppColors.primary.withOpacity(0.08),
+                      AppColors.primary.withValues(alpha: 0.15),
+                      AppColors.primary.withValues(alpha: 0.08),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -598,13 +598,16 @@ class _QuickOptionTile extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [color.withOpacity(0.12), color.withOpacity(0.06)],
+                  colors: [
+                    color.withValues(alpha: 0.12),
+                    color.withValues(alpha: 0.06),
+                  ],
               ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withOpacity(0.2)),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -615,7 +618,7 @@ class _QuickOptionTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: color, size: 20),
@@ -635,7 +638,7 @@ class _QuickOptionTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

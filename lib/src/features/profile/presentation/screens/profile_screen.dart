@@ -95,10 +95,10 @@ class _ProfileTabState extends State<ProfileTab> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withOpacity(0.6),
+            color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1.5,
             ),
           ),
@@ -111,7 +111,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFFF00).withOpacity(0.3),
+                      color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -136,7 +136,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     Text(
                       email ?? 'No hay sesiÃ³n',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -146,7 +146,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           ? (_location!['direccion'] ?? '')
                           : (_profileData != null && (_profileData!['direccion'] ?? '').toString().isNotEmpty ? _profileData!['direccion'] : 'Sin direcciÃ³n'),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -355,7 +355,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Card(
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.black.withValues(alpha: 0.8),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(

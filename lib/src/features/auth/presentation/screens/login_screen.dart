@@ -193,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withOpacity(0.8),
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withValues(alpha: 0.8),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Confirma tu identidad para continuar',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                 ),
               ),
 
@@ -252,11 +252,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           end: Alignment.bottomRight,
                           colors: [
                             isDark 
-                              ? AppColors.darkSurface.withOpacity(0.8) 
-                              : AppColors.lightSurface.withOpacity(0.8),
+                              ? AppColors.darkSurface.withValues(alpha: 0.8) 
+                              : AppColors.lightSurface.withValues(alpha: 0.8),
                             isDark 
-                              ? AppColors.darkCard.withOpacity(0.4) 
-                              : AppColors.lightCard.withOpacity(0.4),
+                              ? AppColors.darkCard.withValues(alpha: 0.4) 
+                              : AppColors.lightCard.withValues(alpha: 0.4),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: 'Contraseña',
                           labelStyle: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -298,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                 ),
@@ -309,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                               size: 22,
                             ),
                             onPressed: () {

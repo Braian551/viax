@@ -47,11 +47,11 @@ class LocationCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isEditing 
-                ? iconColor.withOpacity(0.05)
+              ? iconColor.withValues(alpha: 0.05)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: isEditing 
-                ? Border.all(color: iconColor.withOpacity(0.3), width: 1.5)
+              ? Border.all(color: iconColor.withValues(alpha: 0.3), width: 1.5)
                 : null,
           ),
           child: Row(
@@ -61,7 +61,7 @@ class LocationCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.12),
+                  color: iconColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: isLoading

@@ -28,22 +28,27 @@ class CustomBottomNavBar extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
       decoration: BoxDecoration(
-        color: (isDark ? AppColors.darkCard : Colors.white).withOpacity(0.75),
+        color: (isDark
+                ? AppColors.darkCard
+                : Colors.white)
+            .withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(35),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+            color: (isDark ? Colors.white : Colors.black)
+                .withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
         ],
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+          color: (isDark ? Colors.white : Colors.black)
+              .withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -80,7 +85,7 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppColors.primary.withOpacity(0.15) 
+              ? AppColors.primary.withValues(alpha: 0.15) 
               : Colors.transparent,
           borderRadius: BorderRadius.circular(25),
         ),

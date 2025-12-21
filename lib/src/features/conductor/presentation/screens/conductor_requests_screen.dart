@@ -190,7 +190,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
           Text(
             'Las solicitudes de viaje aparecerÃ¡n aquÃ­',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
           ),
@@ -211,7 +211,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFFD700).withOpacity(0.3),
+          color: const Color(0xFFFFD700).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -221,7 +221,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withOpacity(0.1),
+              color: const Color(0xFFFFD700).withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
@@ -251,7 +251,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
                       Text(
                         'A ${double.parse(distanciaOrigen).toStringAsFixed(1)} km de ti',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 12,
                         ),
                       ),
@@ -360,7 +360,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 12,
                 ),
               ),
@@ -386,7 +386,7 @@ class _ConductorRequestsScreenState extends State<ConductorRequestsScreen> with 
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

@@ -189,7 +189,7 @@ class _ThemeOption extends StatelessWidget {
 
     return Material(
       color: isSelected
-          ? AppColors.primary.withOpacity(0.1)
+          ? AppColors.primary.withValues(alpha: 0.1)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(

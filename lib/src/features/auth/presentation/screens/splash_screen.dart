@@ -60,7 +60,7 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
           width: 60,
           height: 2,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
+            color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
             borderRadius: BorderRadius.circular(1),
           ),
           child: FractionallySizedBox(
@@ -69,11 +69,11 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
             child: Container(
               height: 2,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(_opacityAnim.value * (isDark ? 1.0 : 0.7)),
+                color: AppColors.primary.withValues(alpha: _opacityAnim.value * (isDark ? 1.0 : 0.7)),
                 borderRadius: BorderRadius.circular(1),
                 boxShadow: isDark ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3 * _opacityAnim.value),
+                    color: AppColors.primary.withValues(alpha: 0.3 * _opacityAnim.value),
                     blurRadius: 4,
                     spreadRadius: 1,
                   ),

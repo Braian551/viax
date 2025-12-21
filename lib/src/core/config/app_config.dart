@@ -21,11 +21,29 @@
 /// static const conductorServiceUrl = '$apiGateway/conductor/v1';
 /// ```
 class AppConfig {
+  // Permite recordar el host que ya funcionó para evitar probar todos cada vez
+  static String? _cachedWorkingBaseUrl;
+
+  // Override opcional por variable de entorno en tiempo de compilación
+  static const String _envBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+
   // Ambiente actual - CAMBIAR AQUÃ PARA ALTERNAR ENTRE LOCAL Y PRODUCCIÃ“N
   static const Environment environment = Environment.development;
 
   // URLs base segÃºn ambiente
   static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) {
+      return _envBaseUrl;
+    }
+
+    // Si ya detectamos un host que responde, úsalo directo
+    if (_cachedWorkingBaseUrl != null) {
+      return _cachedWorkingBaseUrl!;
+    }
+
     switch (environment) {
   case Environment.development:
         // DESARROLLO LOCAL CON LARAGON
@@ -45,6 +63,46 @@ class AppConfig {
         // Railway backend URL - PRODUCCIÃ“N
         return 'https://pinggo-backend-production.up.railway.app';
     }
+  }
+
+  /// Lista de candidatos para entorno local. El primero que responda se usa y se cachea.
+  static List<String> get baseUrlCandidates {
+    if (_envBaseUrl.isNotEmpty) {
+      return [_envBaseUrl];
+    }
+
+    switch (environment) {
+      case Environment.development:
+        const candidates = [
+          // IP LAN de la máquina host (para dispositivo físico)
+          'http://192.168.18.68/viax/backend',
+          // Emulador Android (10.0.2.2 apunta a la máquina host)
+          'http://10.0.2.2/viax/backend',
+          // Loopback común para desktop
+          'http://127.0.0.1/viax/backend',
+          'http://localhost/viax/backend',
+        ];
+
+        if (_cachedWorkingBaseUrl != null && candidates.contains(_cachedWorkingBaseUrl!)) {
+          return [
+            _cachedWorkingBaseUrl!,
+            ...candidates.where((c) => c != _cachedWorkingBaseUrl!),
+          ];
+        }
+
+        return candidates;
+
+      case Environment.staging:
+        return ['https://staging-api.pingo.com'];
+
+      case Environment.production:
+        return ['https://pinggo-backend-production.up.railway.app'];
+    }
+  }
+
+  /// Guarda el host que respondió exitosamente para evitar timeouts repetidos
+  static void rememberWorkingBaseUrl(String url) {
+    _cachedWorkingBaseUrl = url;
   }
 
   // ============================================

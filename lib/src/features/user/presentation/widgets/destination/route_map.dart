@@ -54,7 +54,7 @@ class RouteMap extends StatelessWidget {
               Polyline(
                 points: routePoints,
                 strokeWidth: 10,
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
               ),
               // Línea principal
               Polyline(
@@ -89,7 +89,7 @@ class RouteMap extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
             ),
@@ -103,7 +103,7 @@ class RouteMap extends StatelessWidget {
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -159,7 +159,7 @@ class _OriginMarker extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6),
         ],
       ),
       child: Container(
@@ -189,7 +189,7 @@ class _StopMarker extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
         ],
       ),
       child: Container(
@@ -222,7 +222,7 @@ class _DestinationMarker extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withOpacity(0.3),
+            color: AppColors.primaryDark.withValues(alpha: 0.3),
             blurRadius: 10,
           ),
         ],

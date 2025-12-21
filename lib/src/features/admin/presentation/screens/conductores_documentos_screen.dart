@@ -92,7 +92,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
             ),
           ),
         ),
@@ -200,9 +200,9 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -227,7 +227,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
               Text(
                 label,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -276,13 +276,13 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary
-                            : Theme.of(context).colorScheme.surface.withOpacity(0.6),
+                          ? AppColors.primary
+                          : Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected
+                            color: isSelected
                               ? AppColors.primary
-                              : Theme.of(context).colorScheme.outline.withOpacity(0.7),
+                              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.7),
                           width: 1.5,
                         ),
                         boxShadow: isSelected
@@ -338,13 +338,13 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
               Icon(
                 Icons.folder_open_rounded,
                 size: 64,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
                 'No hay conductores en esta categoría',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   fontSize: 16,
                 ),
               ),
@@ -384,10 +384,10 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.6),
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: estadoColor.withOpacity(0.3),
+                color: estadoColor.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -400,7 +400,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: estadoColor.withOpacity(0.15),
+                        color: estadoColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -437,7 +437,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                   ],
                 ),
                 const SizedBox(height: 12),
-                Divider(color: Theme.of(context).colorScheme.outline.withOpacity(0.1), height: 1),
+                Divider(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1), height: 1),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -483,7 +483,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: (conductor['porcentaje_completitud'] ?? 0) / 100,
-                  backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                  backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                   valueColor: AlwaysStoppedAnimation(estadoColor),
                 ),
                 const SizedBox(height: 8),
@@ -493,7 +493,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                     Text(
                       'Documentos: ${conductor['documentos_completos']}/${conductor['total_documentos_requeridos']}',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -501,7 +501,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFf5576c).withOpacity(0.2),
+                          color: const Color(0xFFf5576c).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
@@ -541,9 +541,9 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
       ),
       child: Text(
         estadosTexto[estado] ?? estado,
@@ -560,7 +560,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
   Widget _buildInfoItem(BuildContext context, IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), size: 16),
+        Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), size: 16),
         const SizedBox(width: 6),
         Expanded(
           child: Column(
@@ -569,7 +569,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
               Text(
                 label,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                   fontSize: 11,
                 ),
               ),

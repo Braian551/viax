@@ -115,7 +115,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -124,7 +124,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         margin: const EdgeInsets.only(left: 8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
         ),
         child: IconButton(
           icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface, size: 20),
@@ -167,7 +167,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 Text(
                   'Administrar sistema',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -180,10 +180,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
-          ),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+            ),
           child: IconButton(
             icon: const Icon(Icons.refresh_rounded, color: AppColors.primary, size: 22),
             onPressed: _loadUsers,
@@ -233,13 +233,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
 
   Widget _buildShimmerBox({required double height, double? width}) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surface.withOpacity(0.1),
-      highlightColor: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+      baseColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+      highlightColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.2),
       child: Container(
         height: height,
         width: width,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -287,10 +287,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
               width: 1.5,
             ),
           ),
@@ -299,14 +299,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
             decoration: InputDecoration(
               hintText: 'Buscar por nombre, email o teléfono...',
-              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14),
+              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 14),
               prefixIcon: Container(
                 padding: const EdgeInsets.all(12),
                 child: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: Icon(Icons.clear_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), size: 20),
+                      icon: Icon(Icons.clear_rounded, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
                       onPressed: () {
                         _searchController.clear();
                         _loadUsers();
@@ -364,7 +364,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
             Text(
               '${_users.length} usuario${_users.length != 1 ? 's' : ''} encontrado${_users.length != 1 ? 's' : ''}',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -402,10 +402,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         child: Container(
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
               width: 1.5,
             ),
           ),
@@ -414,12 +414,12 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.people_outline_rounded,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   size: 64,
                 ),
               ),
@@ -427,7 +427,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
               Text(
                 'No se encontraron usuarios',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -436,7 +436,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
               Text(
                 'Intenta cambiar los filtros de búsqueda',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -471,14 +471,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withOpacity(0.15)
-                  : Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.primary.withOpacity(0.4)
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                  ? AppColors.primary.withValues(alpha: 0.4)
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                 width: 1.5,
               ),
             ),
@@ -487,14 +487,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                  color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   size: 18,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                    color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontSize: 14,
                     letterSpacing: 0.2,
@@ -521,10 +521,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: userColor.withOpacity(0.3),
+              color: userColor.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -542,10 +542,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: userColor.withOpacity(0.15),
+                        color: userColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: userColor.withOpacity(0.3),
+                          color: userColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -582,7 +582,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                             children: [
                               Icon(
                                 Icons.email_outlined,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
@@ -590,7 +590,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                 child: Text(
                                   user['email'] ?? 'Sin email',
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                     fontSize: 13,
                                   ),
                                   maxLines: 1,
@@ -606,10 +606,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: userColor.withOpacity(0.15),
+                                  color: userColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: userColor.withOpacity(0.3),
+                                    color: userColor.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -639,14 +639,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: isActive 
-                                      ? Colors.green.withOpacity(0.15)
-                                      : Colors.red.withOpacity(0.15),
+                                    color: isActive 
+                                      ? Colors.green.withValues(alpha: 0.15)
+                                      : Colors.red.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: isActive 
-                                        ? Colors.green.withOpacity(0.3)
-                                        : Colors.red.withOpacity(0.3),
+                                      ? Colors.green.withValues(alpha: 0.3)
+                                      : Colors.red.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -683,20 +683,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     // Menu button
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: PopupMenuButton(
                         icon: Icon(
                           Icons.more_vert_rounded,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           size: 22,
                         ),
                         color: Theme.of(context).colorScheme.surface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                             width: 1.5,
                           ),
                         ),
@@ -708,7 +708,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF667eea).withOpacity(0.15),
+                                    color: const Color(0xFF667eea).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -732,7 +732,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.15),
+                                    color: AppColors.primary.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -757,8 +757,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color: isActive
-                                        ? Colors.red.withOpacity(0.15)
-                                        : Colors.green.withOpacity(0.15),
+                                      ? Colors.red.withValues(alpha: 0.15)
+                                      : Colors.green.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
@@ -840,10 +840,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               border: Border.all(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                 width: 1.5,
               ),
             ),
@@ -863,7 +863,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -896,7 +896,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -971,10 +971,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 top: 24,
               ),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                   width: 1.5,
                 ),
               ),
@@ -992,10 +992,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.15),
+                                color: AppColors.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   width: 1.5,
                                 ),
                               ),
@@ -1017,7 +1017,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                           ],
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -1053,7 +1053,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     Text(
                       'Tipo de usuario',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1061,10 +1061,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                           width: 1.5,
                         ),
                       ),
@@ -1139,10 +1139,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     // Estado activo
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                           width: 1.5,
                         ),
                       ),
@@ -1158,7 +1158,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                         subtitle: Text(
                           isActive ? 'El usuario puede iniciar sesión' : 'El usuario no puede iniciar sesión',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
                           ),
                         ),
@@ -1181,7 +1181,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                                 width: 1.5,
                               ),
                             ),
@@ -1214,7 +1214,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1305,7 +1305,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -1313,10 +1313,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
               width: 1.5,
             ),
           ),

@@ -21,17 +21,17 @@ class WaypointsPanel extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.black.withOpacity(0.5)
-                : Colors.white.withOpacity(0.85),
+                ? Colors.black.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
