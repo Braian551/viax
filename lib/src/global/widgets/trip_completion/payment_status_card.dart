@@ -20,6 +20,8 @@ class PaymentStatusCard extends StatefulWidget {
   final String metodoPago;
   final bool isDark;
   final ValueChanged<bool>? onPaymentConfirmed;
+  final VoidCallback? onPaymentNotReceived;
+  final bool isLoading;
 
   const PaymentStatusCard({
     super.key,
@@ -28,6 +30,8 @@ class PaymentStatusCard extends StatefulWidget {
     required this.metodoPago,
     required this.isDark,
     this.onPaymentConfirmed,
+    this.onPaymentNotReceived,
+    this.isLoading = false,
   });
 
   @override
@@ -59,7 +63,7 @@ class _PaymentStatusCardState extends State<PaymentStatusCard> {
       return Icons.check_circle_rounded;
     }
     if (widget.status == PaymentStatus.cash) {
-      return Icons.money_rounded;
+      return Icons.payments_rounded;
     }
     return Icons.pending_rounded;
   }
@@ -67,7 +71,7 @@ class _PaymentStatusCardState extends State<PaymentStatusCard> {
   String get _statusText {
     if (_isConfirmed) return 'Pago confirmado';
     if (widget.status == PaymentStatus.paid) return 'Pagado';
-    if (widget.status == PaymentStatus.cash) return 'Pendiente de cobro';
+    if (widget.status == PaymentStatus.cash) return 'Confirma el cobro';
     return 'Pendiente';
   }
 
@@ -81,6 +85,11 @@ class _PaymentStatusCardState extends State<PaymentStatusCard> {
     HapticFeedback.mediumImpact();
     setState(() => _isConfirmed = true);
     widget.onPaymentConfirmed?.call(true);
+  }
+
+  void _reportNotReceived() {
+    HapticFeedback.heavyImpact();
+    widget.onPaymentNotReceived?.call();
   }
 
   @override
@@ -210,44 +219,138 @@ class _PaymentStatusCardState extends State<PaymentStatusCard> {
             ),
           ),
           
-          // Botón de confirmación
+          // Botones de confirmación
           if (_showConfirmButton) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _confirmPayment,
-                icon: const Icon(Icons.check_rounded),
-                label: const Text('Confirmar pago recibido'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 20),
+            
+            // Loading state
+            if (widget.isLoading)
+              const Center(
+                child: CircularProgressIndicator(),
+              )
+            else ...[
+              // Botón principal: Confirmar pago recibido
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _confirmPayment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 24),
+                      SizedBox(width: 10),
+                      Text(
+                        'Confirmar pago recibido',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+              
+              const SizedBox(height: 12),
+              
+              // Botón secundario: No recibí el pago
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _reportNotReceived,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: BorderSide(color: AppColors.error.withValues(alpha: 0.5), width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.cancel_outlined, size: 20, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Text(
+                        'No recibí el pago',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Advertencia sobre disputas
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, 
+                        color: AppColors.warning, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Si reportas "No recibí", se verificará con el cliente y puede generar una disputa',
+                        style: TextStyle(
+                          color: AppColors.warning,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
           
           // Mensaje de confirmado
           if (_isConfirmed && widget.status == PaymentStatus.cash) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.verified_rounded, color: AppColors.success, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  '¡Pago confirmado correctamente!',
-                  style: TextStyle(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.verified_rounded, 
+                      color: AppColors.success, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '¡Pago confirmado!',
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ],
@@ -258,7 +361,7 @@ class _PaymentStatusCardState extends State<PaymentStatusCard> {
   IconData _getPaymentIcon(String metodo) {
     final lower = metodo.toLowerCase();
     if (lower.contains('efectivo') || lower.contains('cash')) {
-      return Icons.money_rounded;
+      return Icons.payments_rounded;
     } else if (lower.contains('tarjeta') || lower.contains('card')) {
       return Icons.credit_card_rounded;
     } else if (lower.contains('nequi') || lower.contains('daviplata')) {

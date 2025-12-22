@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/dispute_service.dart';
 import '../../providers/conductor_provider.dart';
 import '../../services/trip_request_search_service.dart';
 import '../../services/demand_zone_service.dart';
@@ -22,10 +23,7 @@ import '../widgets/demand_zones_overlay.dart';
 class ConductorHomeScreen extends StatefulWidget {
   final Map<String, dynamic> conductorUser;
 
-  const ConductorHomeScreen({
-    super.key,
-    required this.conductorUser,
-  });
+  const ConductorHomeScreen({super.key, required this.conductorUser});
 
   @override
   State<ConductorHomeScreen> createState() => _ConductorHomeScreenState();
@@ -35,32 +33,37 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController _mapController = MapController();
-  
+
   // Flag para prevenir setState después de dispose
   bool _isDisposed = false;
-  
+
   /// Safe setState that checks if widget is still mounted
   void _safeSetState(VoidCallback fn) {
     if (!_isDisposed && mounted) {
       setState(fn);
     }
   }
+
   geo.Position? _currentPosition;
   bool _isLoadingLocation = true;
   bool _isMapReady = false;
   bool _isOnline = false;
   StreamSubscription<geo.Position>? _positionStream;
-  
+
   // Variables para búsqueda de solicitudes
   bool _isSearchingRequests = false;
   String _searchStatus = 'Buscando solicitudes cercanas...';
-  
+
   // Variables para zonas de demanda (surge pricing)
   List<DemandZone> _demandZones = [];
   bool _showDemandZones = true;
   bool _showDemandLegend = false;
   DemandZone? _selectedZone;
-  
+
+  // Variables para disputa activa
+  bool _hasActiveDispute = false;
+  DisputaData? _activeDispute;
+
   late AnimationController _pulseController;
   late AnimationController _connectionController;
   late AnimationController _fadeController;
@@ -77,7 +80,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     WidgetsBinding.instance.addObserver(this);
     _initializeAnimations();
     _requestLocationPermission();
-    
+    _checkActiveDispute(); // Verificar disputa activa al inicio
+
     // Marcar mapa como listo
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!_isDisposed && mounted) {
@@ -89,20 +93,51 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     });
   }
 
+  /// Verifica si el conductor tiene una disputa activa
+  Future<void> _checkActiveDispute() async {
+    try {
+      final conductorId = widget.conductorUser['id'];
+      if (conductorId == null) return;
+
+      debugPrint('🔍 Verificando disputa activa para conductor $conductorId');
+
+      final result = await DisputeService().checkDisputeStatus(conductorId);
+
+      if (result.tieneDisputa && result.disputa != null && mounted) {
+        debugPrint('⚠️ ¡Disputa activa encontrada! ID: ${result.disputa!.id}');
+        _safeSetState(() {
+          _hasActiveDispute = true;
+          _activeDispute = result.disputa;
+        });
+
+        // Mostrar overlay de disputa después de que el widget esté construido
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showDisputeAlert();
+          }
+        });
+      } else {
+        debugPrint('✅ No hay disputas activas');
+      }
+    } catch (e) {
+      debugPrint('❌ Error verificando disputa: $e');
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     switch (state) {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
         debugPrint('⏸️ App pausada');
         break;
-        
+
       case AppLifecycleState.detached:
         debugPrint('🔌 App desconectada');
         break;
-        
+
       case AppLifecycleState.resumed:
         debugPrint('✅ App en foreground');
         // Actualizar posición del mapa si es necesario
@@ -110,7 +145,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           _centerMapOnLocation(_currentPosition!);
         }
         break;
-        
+
       case AppLifecycleState.hidden:
         debugPrint('👁️ App oculta');
         break;
@@ -129,9 +164,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     );
 
     // Animación de rotación para el icono de búsqueda
-    _rotateAnimation = Tween<double>(begin: 0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.linear),
-    );
+    _rotateAnimation = Tween<double>(
+      begin: 0,
+      end: 2 * math.pi,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.linear));
 
     // Animación de escala para transiciones
     _connectionController = AnimationController(
@@ -150,9 +186,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     // Animación de slide para panel inferior
     _slideController = AnimationController(
@@ -160,13 +197,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     // Iniciar animaciones de entrada
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -179,8 +213,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   Future<void> _requestLocationPermission() async {
     try {
-      geo.LocationPermission permission = await geo.Geolocator.checkPermission();
-      
+      geo.LocationPermission permission =
+          await geo.Geolocator.checkPermission();
+
       if (permission == geo.LocationPermission.denied) {
         permission = await geo.Geolocator.requestPermission();
       }
@@ -206,7 +241,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       final position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high,
       );
-      
+
       if (_isDisposed) return;
 
       _safeSetState(() {
@@ -230,10 +265,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   void _centerMapOnLocation(geo.Position position) {
     try {
-      _mapController.move(
-        LatLng(position.latitude, position.longitude),
-        16.0,
-      );
+      _mapController.move(LatLng(position.latitude, position.longitude), 16.0);
     } catch (e) {
       debugPrint('Error al centrar mapa: $e');
     }
@@ -245,25 +277,26 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       distanceFilter: 10, // Actualizar cada 10 metros
     );
 
-    _positionStream = geo.Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen(
-      (geo.Position position) {
-        _safeSetState(() => _currentPosition = position);
-        
-        // Actualizar mapa con debounce
-        _debouncedUpdateMapLocation(position);
-      },
-      onError: (error) {
-        debugPrint('❌ Error en stream de ubicación: $error');
-      },
-    );
+    _positionStream =
+        geo.Geolocator.getPositionStream(
+          locationSettings: locationSettings,
+        ).listen(
+          (geo.Position position) {
+            _safeSetState(() => _currentPosition = position);
+
+            // Actualizar mapa con debounce
+            _debouncedUpdateMapLocation(position);
+          },
+          onError: (error) {
+            debugPrint('❌ Error en stream de ubicación: $error');
+          },
+        );
   }
 
   void _debouncedUpdateMapLocation(geo.Position position) {
     // Solo actualizar si el mapa está listo y la app está en foreground
     if (!_isMapReady || !mounted) return;
-    
+
     _centerMapOnLocation(position);
   }
 
@@ -289,7 +322,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   void _stopSearchingRequests() {
     TripRequestSearchService.stopSearching();
-    
+
     _safeSetState(() {
       _isSearchingRequests = false;
       _searchStatus = 'Buscando solicitudes cercanas...';
@@ -301,11 +334,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
     if (requests.isNotEmpty) {
       // Hay solicitudes disponibles - mostrar LA PRIMERA solicitud
-      debugPrint('🎯 ${requests.length} solicitudes encontradas! Mostrando la primera...');
-      
+      debugPrint(
+        '🎯 ${requests.length} solicitudes encontradas! Mostrando la primera...',
+      );
+
       // Detener búsqueda temporalmente
       _stopSearchingRequests();
-      
+
       // Navegar a pantalla de solicitud con LA PRIMERA solicitud únicamente
       // Lógica tipo Uber/InDrive: muestra una a la vez
       Navigator.push(
@@ -313,8 +348,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         MaterialPageRoute(
           builder: (context) => ConductorSearchingPassengersScreen(
             conductorId: widget.conductorUser['id'] as int,
-            conductorNombre: widget.conductorUser['nombre']?.toString() ?? 'Conductor',
-            tipoVehiculo: widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Sedan',
+            conductorNombre:
+                widget.conductorUser['nombre']?.toString() ?? 'Conductor',
+            tipoVehiculo:
+                widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Sedan',
             solicitud: requests.first, // SOLO LA PRIMERA solicitud
           ),
         ),
@@ -337,7 +374,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   void _onSearchError(String error) {
     if (_isDisposed || !mounted) return;
-    
+
     debugPrint('❌ Error en búsqueda: $error');
     _safeSetState(() {
       _searchStatus = 'Error de conexión. Reintentando...';
@@ -354,7 +391,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     }
 
     debugPrint('🔥 Iniciando carga de zonas de demanda...');
-    
+
     DemandZoneService.startAutoRefresh(
       latitude: _currentPosition!.latitude,
       longitude: _currentPosition!.longitude,
@@ -377,7 +414,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _safeSetState(() {
       _selectedZone = zone;
     });
-    
+
     // Mostrar información de la zona
     HapticFeedback.selectionClick();
     debugPrint('📍 Zona seleccionada: ${zone.demandLabel} - ${zone.surgeText}');
@@ -392,10 +429,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   /// Navegar a una zona de demanda
   void _navigateToZone(DemandZone zone) {
-    _mapController.move(
-      LatLng(zone.centerLat, zone.centerLng),
-      16.0,
-    );
+    _mapController.move(LatLng(zone.centerLat, zone.centerLng), 16.0);
     _closeZoneInfo();
     HapticFeedback.mediumImpact();
   }
@@ -447,32 +481,35 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       _safeSetState(() => _isOnline = true);
       _connectionController.forward();
       HapticFeedback.mediumImpact();
-      
+
       // Limpiar caché de solicitudes procesadas (para permitir ver solicitudes que antes rechazó)
       TripRequestSearchService.clearProcessedRequests();
-      
+
       // Iniciar búsqueda continua de solicitudes
       _startSearchingRequests();
-      
+
       // Refrescar zonas de demanda al conectarse
       _startDemandZonesUpdates();
-      
-      _showStatusSnackbar('¡Conectado! Buscando pasajeros...', AppColors.success);
+
+      _showStatusSnackbar(
+        '¡Conectado! Buscando pasajeros...',
+        AppColors.success,
+      );
     } else {
       // Desconectarse: Detener búsqueda
       _safeSetState(() => _isOnline = false);
       _connectionController.reverse();
       HapticFeedback.lightImpact();
-      
+
       // Detener búsqueda de solicitudes
       _stopSearchingRequests();
-      
+
       // Las zonas de demanda siguen visibles cuando está offline para consistencia
       // No detenemos DemandZoneService.stopAutoRefresh() aquí
-      
+
       // Limpiar caché de solicitudes procesadas
       TripRequestSearchService.clearProcessedRequests();
-      
+
       _showStatusSnackbar('Estás fuera de línea', Colors.grey);
     }
   }
@@ -490,19 +527,14 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             const SizedBox(width: 12),
             Text(
               message,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ],
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -518,13 +550,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _slideController.dispose();
     _positionStream?.cancel();
     _mapController.dispose();
-    
+
     // Detener búsqueda si está activa
     _stopSearchingRequests();
-    
+
     // Detener actualización de zonas de demanda
     DemandZoneService.stopAutoRefresh();
-    
+
     super.dispose();
   }
 
@@ -539,7 +571,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         children: [
           // Mapa de fondo
           _buildMap(),
-          
+
           // Overlay con controles
           _buildOverlay(),
         ],
@@ -608,7 +640,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                 decoration: BoxDecoration(
                                   color: (isDark
                                       ? Colors.white.withValues(alpha: 0.15)
-                                      : AppColors.primary.withValues(alpha: 0.1)),
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        )),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Image.asset(
@@ -627,7 +661,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                     Text(
                                       'Hola,',
                                       style: TextStyle(
-                                        color: isDark ? Colors.white70 : Colors.black54,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black54,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -635,7 +671,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                     Text(
                                       _conductorName,
                                       style: TextStyle(
-                                        color: isDark ? Colors.white : Colors.black87,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: -0.3,
@@ -648,10 +686,15 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               ),
                               // Indicador de estado inline
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: _isOnline
-                                      ? AppColors.success.withValues(alpha: 0.15)
+                                      ? AppColors.success.withValues(
+                                          alpha: 0.15,
+                                        )
                                       : Colors.grey.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -662,7 +705,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                       width: 6,
                                       height: 6,
                                       decoration: BoxDecoration(
-                                        color: _isOnline ? AppColors.success : Colors.grey,
+                                        color: _isOnline
+                                            ? AppColors.success
+                                            : Colors.grey,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -670,7 +715,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                     Text(
                                       _isOnline ? 'Online' : 'Offline',
                                       style: TextStyle(
-                                        color: _isOnline ? AppColors.success : Colors.grey,
+                                        color: _isOnline
+                                            ? AppColors.success
+                                            : Colors.grey,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -732,7 +779,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   Widget _buildMap() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Si no hay ubicación, mostrar pantalla de carga
     if (_isLoadingLocation) {
       return Container(
@@ -812,7 +859,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
           userAgentPackageName: 'com.viax.app',
         ),
-        
+
         // ========== ZONAS DE DEMANDA (SURGE PRICING) ==========
         // Mostrar siempre que haya zonas (también cuando está offline para planificación)
         if (_showDemandZones && _demandZones.isNotEmpty)
@@ -822,7 +869,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             animate: true,
             onZoneTap: _onDemandZoneTap,
           ),
-        
+
         // Marcador de ubicación actual con animación - MÁS GRANDE
         MarkerLayer(
           markers: [
@@ -846,8 +893,11 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: (_isOnline ? AppColors.success : AppColors.primary)
-                                .withValues(alpha: 0.12),
+                            color:
+                                (_isOnline
+                                        ? AppColors.success
+                                        : AppColors.primary)
+                                    .withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -857,8 +907,11 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         width: 70,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: (_isOnline ? AppColors.success : AppColors.primary)
-                              .withValues(alpha: 0.18),
+                          color:
+                              (_isOnline
+                                      ? AppColors.success
+                                      : AppColors.primary)
+                                  .withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -867,8 +920,11 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: (_isOnline ? AppColors.success : AppColors.primary)
-                              .withValues(alpha: 0.25),
+                          color:
+                              (_isOnline
+                                      ? AppColors.success
+                                      : AppColors.primary)
+                                  .withValues(alpha: 0.25),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -881,22 +937,30 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: _isOnline
-                                ? [AppColors.success, AppColors.success.withGreen(160)]
+                                ? [
+                                    AppColors.success,
+                                    AppColors.success.withGreen(160),
+                                  ]
                                 : [AppColors.primary, AppColors.primaryDark],
                           ),
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 4),
                           boxShadow: [
                             BoxShadow(
-                              color: (_isOnline ? AppColors.success : AppColors.primary)
-                                  .withValues(alpha: 0.5),
+                              color:
+                                  (_isOnline
+                                          ? AppColors.success
+                                          : AppColors.primary)
+                                      .withValues(alpha: 0.5),
                               blurRadius: 16,
                               spreadRadius: 4,
                             ),
                           ],
                         ),
                         child: Icon(
-                          _isOnline ? Icons.local_taxi : Icons.navigation_rounded,
+                          _isOnline
+                              ? Icons.local_taxi
+                              : Icons.navigation_rounded,
                           color: Colors.white,
                           size: 20,
                         ),
@@ -914,7 +978,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   Widget _buildOverlay() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return SafeArea(
       child: Stack(
         children: [
@@ -922,17 +986,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           Column(
             children: [
               const Spacer(),
-              
+
               // Botón de centrar ubicación (FAB style con glass)
               _buildCenterLocationButton(isDark),
-              
+
               const SizedBox(height: 16),
-              
+
               // Panel inferior con controles
               _buildBottomPanel(),
             ],
           ),
-          
+
           // ========== CONTROLES DE ZONAS DE DEMANDA ==========
           // Mostrar siempre que haya zonas (también cuando está offline para consistencia)
           if (_demandZones.isNotEmpty) ...[
@@ -956,7 +1020,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               ),
             ),
           ],
-          
+
           // Tarjeta de información de zona seleccionada
           if (_selectedZone != null)
             Positioned(
@@ -1048,17 +1112,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: _showDemandZones
-                  ? Colors.orange.withValues(alpha: isDark ? 0.3 : 0.2)
-                    : (isDark 
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.white.withValues(alpha: 0.8)),
+                    ? Colors.orange.withValues(alpha: isDark ? 0.3 : 0.2)
+                    : (isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.8)),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _showDemandZones
                       ? Colors.orange.withValues(alpha: 0.5)
                       : (isDark
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.5)),
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.5)),
                   width: 1,
                 ),
               ),
@@ -1066,10 +1130,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _showDemandZones 
+                    _showDemandZones
                         ? Icons.local_fire_department
                         : Icons.local_fire_department_outlined,
-                    color: _showDemandZones 
+                    color: _showDemandZones
                         ? Colors.orange
                         : (isDark ? Colors.white70 : Colors.grey[700]),
                     size: 18,
@@ -1078,7 +1142,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   Text(
                     'Zonas',
                     style: TextStyle(
-                      color: _showDemandZones 
+                      color: _showDemandZones
                           ? Colors.orange
                           : (isDark ? Colors.white70 : Colors.grey[700]),
                       fontSize: 12,
@@ -1115,9 +1179,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                       : Colors.white.withValues(alpha: 0.85)),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                  color: (isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.white.withValues(alpha: 0.6)),
+                    color: (isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.6)),
                     width: 1.5,
                   ),
                   boxShadow: [
@@ -1133,7 +1197,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   children: [
                     // Status y estadísticas
                     _buildStatusSection(),
-                    
+
                     // Divisor con gradiente
                     Container(
                       height: 1,
@@ -1142,13 +1206,15 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+                            (isDark ? Colors.white : Colors.black).withValues(
+                              alpha: 0.1,
+                            ),
                             Colors.transparent,
                           ],
                         ),
                       ),
                     ),
-                    
+
                     // Botón de conexión
                     _buildConnectionButton(),
                   ],
@@ -1183,17 +1249,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                              AppColors.success.withValues(alpha: 0.2),
-                              AppColors.success.withValues(alpha: 0.1),
+                            AppColors.success.withValues(alpha: 0.2),
+                            AppColors.success.withValues(alpha: 0.1),
                           ],
                         )
                       : null,
-                    color: _isOnline ? null : Colors.grey.withValues(alpha: 0.1),
+                  color: _isOnline ? null : Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: _isOnline
-                          ? AppColors.success.withValues(alpha: 0.3)
-                          : Colors.grey.withValues(alpha: 0.2),
+                        ? AppColors.success.withValues(alpha: 0.3)
+                        : Colors.grey.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1215,7 +1281,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           },
                         )
                       : Icon(
-                          _isOnline ? Icons.wifi_rounded : Icons.wifi_off_rounded,
+                          _isOnline
+                              ? Icons.wifi_rounded
+                              : Icons.wifi_off_rounded,
                           color: _isOnline ? AppColors.success : Colors.grey,
                           size: 26,
                           key: ValueKey(_isOnline ? 'online' : 'offline'),
@@ -1245,11 +1313,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                       duration: const Duration(milliseconds: 200),
                       child: Text(
                         _isOnline
-                            ? (_isSearchingRequests ? _searchStatus : 'Listo para recibir viajes')
+                            ? (_isSearchingRequests
+                                  ? _searchStatus
+                                  : 'Listo para recibir viajes')
                             : 'Conéctate para recibir viajes',
-                        key: ValueKey('$_isOnline-$_isSearchingRequests-$_searchStatus'),
+                        key: ValueKey(
+                          '$_isOnline-$_isSearchingRequests-$_searchStatus',
+                        ),
                         style: TextStyle(
-                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodyMedium?.color?.withValues(
+                            alpha: 0.6,
+                          ),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1277,7 +1351,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.2),
+                                color: AppColors.success.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -1291,7 +1365,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.success.withValues(alpha: 0.5),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.5,
+                                  ),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                 ),
@@ -1305,9 +1381,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Estadísticas rápidas con efecto glass mejorado
           Consumer<ConductorProvider>(
             builder: (context, provider, child) {
@@ -1367,8 +1443,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                  color.withValues(alpha: isDark ? 0.15 : 0.1),
-                  color.withValues(alpha: isDark ? 0.08 : 0.05),
+                    color.withValues(alpha: isDark ? 0.15 : 0.1),
+                    color.withValues(alpha: isDark ? 0.08 : 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -1385,11 +1461,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                       color: color.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 20,
-                    ),
+                    child: Icon(icon, color: color, size: 20),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -1405,7 +1477,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   Text(
                     label,
                     style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.6,
+                      ),
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1462,9 +1536,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: (_isOnline
-                                    ? Colors.red
-                                    : AppColors.success)
+                            color: (_isOnline ? Colors.red : AppColors.success)
                                 .withValues(alpha: 0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
@@ -1517,5 +1589,240 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         },
       ),
     );
+  }
+
+  /// Muestra alerta de disputa activa
+  void _showDisputeAlert() {
+    if (_activeDispute == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: AppColors.error.withValues(alpha: 0.95),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Ícono animado
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.8, end: 1.0),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeInOut,
+                      builder: (context, value, child) {
+                        return Transform.scale(scale: value, child: child);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.gavel_rounded,
+                          color: Colors.white,
+                          size: 80,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    const Text(
+                      '⚠️ CUENTA SUSPENDIDA',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Tienes una disputa de pago activa.',
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Card con estados
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.person, color: Colors.white70),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  'Cliente dice:',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'SÍ PAGUÉ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.directions_car,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  'Tú dijiste:',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'NO RECIBÍ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Botón para resolver
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => _resolveDispute(dialogContext),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle, size: 24),
+                            SizedBox(width: 12),
+                            Text(
+                              'Confirmo que recibí el pago',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Resuelve la disputa activa
+  Future<void> _resolveDispute(BuildContext dialogContext) async {
+    if (_activeDispute == null) return;
+
+    try {
+      final conductorId = widget.conductorUser['id'];
+      final success = await DisputeService().resolveDispute(
+        disputaId: _activeDispute!.id,
+        conductorId: conductorId,
+      );
+
+      if (success && mounted) {
+        Navigator.pop(dialogContext);
+        _safeSetState(() {
+          _hasActiveDispute = false;
+          _activeDispute = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '¡Disputa resuelta! Tu cuenta está desbloqueada.',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Error al resolver disputa'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error resolviendo disputa: $e');
+    }
   }
 }
