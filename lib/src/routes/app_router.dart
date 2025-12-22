@@ -278,6 +278,7 @@ class AppRouter {
           return FadeSlidePageRoute(
             page: ConductorTripsScreen(
               conductorId: conductorId,
+              conductorUser: conductorUser,
             ),
             settings: settings,
           );
@@ -290,6 +291,7 @@ class AppRouter {
           return FadeSlidePageRoute(
             page: ConductorEarningsScreen(
               conductorId: conductorId,
+              conductorUser: conductorUser,
             ),
             settings: settings,
           );
