@@ -624,60 +624,61 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   Widget _buildActionButtons(bool isDark) {
     return Column(
       children: [
-        // Botón principal
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: _canComplete && !_isSubmitting
-                ? (_selectedRating > 0 ? _submitRating : _skipRating)
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _selectedRating > 0
-                  ? AppColors.primary
-                  : (isDark ? Colors.white12 : Colors.grey[300]),
-              foregroundColor: _selectedRating > 0
-                  ? Colors.black
-                  : (isDark ? Colors.white54 : Colors.grey[600]),
-              disabledBackgroundColor: isDark
-                  ? Colors.white12
-                  : Colors.grey[200],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+        // Botón principal - solo mostrar si NO se ha enviado la calificación
+        if (!_ratingSubmitted)
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _canComplete && !_isSubmitting
+                  ? (_selectedRating > 0 ? _submitRating : _skipRating)
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _selectedRating > 0
+                    ? AppColors.primary
+                    : (isDark ? Colors.white12 : Colors.grey[300]),
+                foregroundColor: _selectedRating > 0
+                    ? Colors.black
+                    : (isDark ? Colors.white54 : Colors.grey[600]),
+                disabledBackgroundColor: isDark
+                    ? Colors.white12
+                    : Colors.grey[200],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: _selectedRating > 0 ? 4 : 0,
               ),
-              elevation: _selectedRating > 0 ? 4 : 0,
-            ),
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _selectedRating > 0
-                            ? Icons.send_rounded
-                            : Icons.arrow_forward_rounded,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _selectedRating > 0
-                            ? 'Enviar calificación'
-                            : 'Continuar sin calificar',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _selectedRating > 0
+                              ? Icons.send_rounded
+                              : Icons.arrow_forward_rounded,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _selectedRating > 0
+                              ? 'Enviar calificación'
+                              : 'Continuar sin calificar',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
           ),
-        ),
 
         // Mensaje de pago pendiente
         if (_isConductor && _isEfectivo && !_paymentReported) ...[

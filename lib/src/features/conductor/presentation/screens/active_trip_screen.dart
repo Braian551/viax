@@ -219,7 +219,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           },
           onComplete: () {
             // Volver a la pantalla principal del conductor
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
           },
         ),
       ),

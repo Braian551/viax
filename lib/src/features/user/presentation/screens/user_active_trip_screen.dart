@@ -392,7 +392,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           },
           onComplete: () {
             // Volver a la pantalla principal
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
           },
         ),
       ),
