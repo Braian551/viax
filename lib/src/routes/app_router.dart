@@ -161,7 +161,13 @@ class AppRouter {
       case RouteNames.paymentMethods:
         return MaterialPageRoute(builder: (_) => const PaymentMethodsScreen());
       case RouteNames.tripHistory:
-        return MaterialPageRoute(builder: (_) => const TripHistoryScreen());
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final userId = args?['user_id'] ?? args?['id'] ?? 0;
+          return MaterialPageRoute(
+            builder: (_) => TripHistoryScreen(userId: userId),
+          );
+        }
       case RouteNames.settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case RouteNames.favoritePlaces:

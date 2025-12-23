@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-// Shimmer import removed because it's unused here
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
@@ -13,6 +12,7 @@ import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -31,6 +31,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   // Usuario
   String? _userName;
+  int? _userId;
   bool _loadingUser = true;
 
   // Animaciones
@@ -130,6 +131,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           if (mounted) {
             setState(() {
               _userName = user?['nombre'] ?? 'Usuario';
+              _userId = user?['id'] as int?;
               _loadingUser = false;
             });
             _animationController.forward();
@@ -501,8 +503,20 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
 
   Widget _buildTabContent(bool isDark) {
+    // Perfil
     if (_selectedIndex == 3) {
       return const UserProfileScreen();
+    }
+    
+    // Historial de Viajes
+    if (_selectedIndex == 1) {
+      if (_userId == null) {
+        return Container(
+          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      }
+      return TripHistoryScreen(userId: _userId!);
     }
     
     // Fondo sólido para otras pestañas
