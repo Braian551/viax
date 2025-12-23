@@ -87,11 +87,17 @@ try {
             direccion_destino,
             distancia_estimada,
             tiempo_estimado,
+            precio_estimado,
+            metodo_pago,
             estado,
             fecha_creacion,
             solicitado_en
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), NOW())
     ");
+    
+    // Obtener precio si se proporcionó, o usar 0 por defecto
+    $precioEstimado = $data['precio_estimado'] ?? $data['precio'] ?? 0;
+    $metodoPago = $data['metodo_pago'] ?? 'efectivo';
     
     $stmt->execute([
         $uuid,
@@ -104,7 +110,9 @@ try {
         $data['longitud_destino'],
         $data['direccion_destino'],
         $data['distancia_km'],
-        $data['duracion_minutos']
+        $data['duracion_minutos'],
+        $precioEstimado,
+        $metodoPago
     ]);
     
     $solicitudId = $db->lastInsertId();

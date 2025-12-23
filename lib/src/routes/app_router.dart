@@ -29,6 +29,10 @@ import 'package:viax/src/features/conductor/presentation/screens/conductor_home_
 import 'package:viax/src/features/conductor/presentation/screens/conductor_profile_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_trips_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_earnings_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_vehicle_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_documents_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_settings_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_help_screen.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/routes/animated_routes.dart';
 import 'package:viax/src/widgets/auth_wrapper.dart';
@@ -296,8 +300,60 @@ class AppRouter {
             settings: settings,
           );
         }
+      case RouteNames.conductorVehicle:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorVehicleScreen(
+              conductorId: conductorId,
+              conductorUser: conductorUser,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.conductorDocuments:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorDocumentsScreen(
+              conductorId: conductorId,
+              conductorUser: conductorUser,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.conductorSettings:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorSettingsScreen(
+              conductorId: conductorId,
+              conductorUser: conductorUser,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.conductorHelp:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorHelpScreen(
+              conductorId: conductorId,
+              conductorUser: conductorUser,
+            ),
+            settings: settings,
+          );
+        }
       
-      // Agregar mÃ¡s rutas aquÃ­
+      // Agregar más rutas aquí
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

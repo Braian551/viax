@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 
 /// Card de estadística individual
 /// Diseño compacto con animaciones de entrada
@@ -78,7 +79,7 @@ class _EarningsStatCardState extends State<EarningsStatCard>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: widget.color.withValues(alpha: isDark ? 0.15 : 0.1),
               borderRadius: BorderRadius.circular(18),
@@ -102,17 +103,21 @@ class _EarningsStatCardState extends State<EarningsStatCard>
                     size: 24,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 8),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    widget.value,
-                    key: ValueKey(widget.value),
-                    style: TextStyle(
-                      color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      widget.value,
+                      key: ValueKey(widget.value),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ),
@@ -167,7 +172,7 @@ class EarningsStatsGrid extends StatelessWidget {
               child: EarningsStatCard(
                 icon: Icons.trending_up_rounded,
                 label: 'Promedio',
-                value: '\$${averagePerTrip.toStringAsFixed(0)}',
+                value: formatCurrency(averagePerTrip),
                 color: AppColors.accent,
                 index: 1,
               ),

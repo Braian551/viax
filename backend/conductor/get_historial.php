@@ -48,16 +48,20 @@ try {
                 s.completado_en as fecha_completado,
                 s.direccion_recogida as origen,
                 s.direccion_destino as destino,
+                s.precio_estimado,
+                s.precio_final,
+                s.metodo_pago,
+                s.pago_confirmado,
                 u.nombre as cliente_nombre,
                 u.apellido as cliente_apellido,
                 c.calificacion,
                 c.comentarios as comentario,
-                0 as precio_estimado,
-                0 as precio_final
+                COALESCE(t.monto_conductor, s.precio_final * 0.90, 0) as ganancia_viaje
               FROM solicitudes_servicio s
               INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
               INNER JOIN usuarios u ON s.cliente_id = u.id
               LEFT JOIN calificaciones c ON s.id = c.solicitud_id AND c.usuario_calificado_id = :conductor_id2
+              LEFT JOIN transacciones t ON s.id = t.solicitud_id
               WHERE ac.conductor_id = :conductor_id
               AND s.estado IN ('completada', 'entregado')
               ORDER BY s.completado_en DESC
@@ -88,8 +92,11 @@ try {
             'cliente_apellido' => $viaje['cliente_apellido'],
             'calificacion' => $viaje['calificacion'] ? (int)$viaje['calificacion'] : null,
             'comentario' => $viaje['comentario'],
-            'precio_estimado' => (float)$viaje['precio_estimado'],
-            'precio_final' => (float)$viaje['precio_final']
+            'precio_estimado' => (float)($viaje['precio_estimado'] ?? 0),
+            'precio_final' => (float)($viaje['precio_final'] ?? 0),
+            'metodo_pago' => $viaje['metodo_pago'] ?? 'efectivo',
+            'pago_confirmado' => (bool)$viaje['pago_confirmado'],
+            'ganancia_viaje' => (float)($viaje['ganancia_viaje'] ?? 0)
         ];
     }, $viajes);
 

@@ -43,4 +43,7 @@
   static const String conductorEarnings = '/conductor/earnings';
   static const String conductorProfile = '/conductor/profile';
   static const String conductorVehicle = '/conductor/vehicle';
+  static const String conductorDocuments = '/conductor/documents';
+  static const String conductorSettings = '/conductor/settings';
+  static const String conductorHelp = '/conductor/help';
 }

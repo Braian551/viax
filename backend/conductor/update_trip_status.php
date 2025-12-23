@@ -74,9 +74,19 @@ try {
             break;
         case 'entregado':
             $updates[] = 'entregado_en = NOW()';
+            // Guardar precio final si se proporciona
+            if (isset($data['precio_final']) && $data['precio_final'] > 0) {
+                $updates[] = 'precio_final = ?';
+                $params[] = $data['precio_final'];
+            }
             break;
         case 'completada':
             $updates[] = 'completado_en = NOW()';
+            // Guardar precio final si se proporciona
+            if (isset($data['precio_final']) && $data['precio_final'] > 0) {
+                $updates[] = 'precio_final = ?';
+                $params[] = $data['precio_final'];
+            }
             break;
         case 'cancelada':
             $updates[] = 'cancelado_en = NOW()';

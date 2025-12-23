@@ -164,6 +164,65 @@ try {
     else if ($clienteConfirma === true && $conductorConfirma === true) {
         $resultado['mensaje'] = 'Pago confirmado por ambas partes.';
         
+        // Obtener precio del viaje para crear la transacción
+        $stmtPrecio = $db->prepare("SELECT precio_final, precio_estimado FROM solicitudes_servicio WHERE id = ?");
+        $stmtPrecio->execute([$solicitudId]);
+        $precioData = $stmtPrecio->fetch(PDO::FETCH_ASSOC);
+        $montoTotal = $precioData['precio_final'] > 0 ? $precioData['precio_final'] : $precioData['precio_estimado'];
+        
+        // Crear transacción si no existe
+        $stmtCheckTx = $db->prepare("SELECT id FROM transacciones WHERE solicitud_id = ?");
+        $stmtCheckTx->execute([$solicitudId]);
+        if (!$stmtCheckTx->fetch()) {
+            $montoConductor = $montoTotal * 0.90; // 90% para el conductor
+            $comisionPlataforma = $montoTotal * 0.10; // 10% comisión
+            
+            $stmtTx = $db->prepare("
+                INSERT INTO transacciones (
+                    solicitud_id, cliente_id, conductor_id, 
+                    monto_total, monto_conductor, comision_plataforma,
+                    metodo_pago, estado, estado_pago,
+                    fecha_transaccion, completado_en
+                ) VALUES (?, ?, ?, ?, ?, ?, 'efectivo', 'completada', 'completado', NOW(), NOW())
+            ");
+            $stmtTx->execute([
+                $solicitudId, 
+                $viaje['cliente_id'], 
+                $viaje['conductor_id'],
+                $montoTotal,
+                $montoConductor,
+                $comisionPlataforma
+            ]);
+            
+            // Actualizar ganancias del conductor en detalles_conductor
+            $stmtGanancias = $db->prepare("
+                UPDATE detalles_conductor 
+                SET ganancias_totales = COALESCE(ganancias_totales, 0) + ?,
+                    total_viajes = COALESCE(total_viajes, 0) + 1
+                WHERE usuario_id = ?
+            ");
+            $stmtGanancias->execute([$montoConductor, $viaje['conductor_id']]);
+            
+            // Registrar en pagos_viaje
+            $stmtPago = $db->prepare("
+                INSERT INTO pagos_viaje (solicitud_id, conductor_id, cliente_id, monto, metodo_pago, estado, confirmado_en)
+                VALUES (?, ?, ?, ?, 'efectivo', 'confirmado', NOW())
+                ON CONFLICT (solicitud_id) DO UPDATE SET estado = 'confirmado', confirmado_en = NOW()
+            ");
+            $stmtPago->execute([$solicitudId, $viaje['conductor_id'], $viaje['cliente_id'], $montoTotal]);
+            
+            // Marcar pago como confirmado en solicitud
+            $stmtConfirmar = $db->prepare("
+                UPDATE solicitudes_servicio 
+                SET pago_confirmado = TRUE, pago_confirmado_en = NOW()
+                WHERE id = ?
+            ");
+            $stmtConfirmar->execute([$solicitudId]);
+            
+            $resultado['transaccion_creada'] = true;
+            $resultado['monto_conductor'] = $montoConductor;
+        }
+        
         // Si había disputa, resolverla
         if ($viaje['tiene_disputa']) {
             $stmt = $db->prepare("

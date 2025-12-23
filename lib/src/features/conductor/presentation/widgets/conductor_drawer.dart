@@ -105,12 +105,10 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Mi Vehículo',
                           onTap: () {
                             Navigator.pop(context);
-                            // TODO: Navegar a pantalla de vehículo
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Próximamente: Gestión de vehículo'),
-                                duration: Duration(seconds: 2),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.conductorVehicle,
+                              arguments: conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -122,12 +120,10 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Documentos',
                           onTap: () {
                             Navigator.pop(context);
-                            // TODO: Navegar a pantalla de documentos
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Próximamente: Gestión de documentos'),
-                                duration: Duration(seconds: 2),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.conductorDocuments,
+                              arguments: conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -141,12 +137,10 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Configuración',
                           onTap: () {
                             Navigator.pop(context);
-                            // TODO: Navegar a configuración
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Próximamente: Configuración'),
-                                duration: Duration(seconds: 2),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.conductorSettings,
+                              arguments: conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -158,12 +152,10 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Ayuda y Soporte',
                           onTap: () {
                             Navigator.pop(context);
-                            // TODO: Navegar a ayuda
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Próximamente: Centro de ayuda'),
-                                duration: Duration(seconds: 2),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.conductorHelp,
+                              arguments: conductorUser,
                             );
                           },
                           isDark: isDark,

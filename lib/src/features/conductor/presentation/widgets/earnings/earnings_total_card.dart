@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 
 /// Card principal de ganancias totales
 /// Diseño glassmorphism con animaciones suaves
@@ -172,6 +173,7 @@ class _EarningsTotalCardState extends State<EarningsTotalCard>
     final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -182,45 +184,41 @@ class _EarningsTotalCardState extends State<EarningsTotalCard>
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '\$',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+        const SizedBox(height: 6),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.3),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
               ),
-            ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.3),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
+            );
+          },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 56),
+            child: FittedBox(
+              key: ValueKey<double>(widget.total),
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
               child: Text(
-                widget.total.toStringAsFixed(0),
-                key: ValueKey<double>(widget.total),
+                formatCurrency(widget.total),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: textColor,
                   fontSize: 52,
                   fontWeight: FontWeight.bold,
-                  height: 1,
+                  height: 0.92,
                   letterSpacing: -2,
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ],
     );

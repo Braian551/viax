@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../services/conductor_earnings_service.dart';
+import '../../../../user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 
 /// Item individual del desglose de ganancias
 class EarningsBreakdownItem extends StatefulWidget {
@@ -113,7 +114,7 @@ class _EarningsBreakdownItemState extends State<EarningsBreakdownItem>
                         ),
                       ),
                       Text(
-                        '\$${widget.amount.toStringAsFixed(0)}',
+                        formatCurrency(widget.amount),
                         style: TextStyle(
                           color: textColor,
                           fontSize: 16,
@@ -300,7 +301,7 @@ class _DailyEarningsItem extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${amount.toStringAsFixed(0)}',
+            formatCurrency(amount),
             style: TextStyle(
               color: AppColors.success,
               fontSize: 16,
