@@ -341,7 +341,7 @@ function updateEmpresa($db, $input) {
     
     $campos = [
         'nombre', 'nit', 'razon_social', 'email', 'telefono', 'telefono_secundario',
-        'direccion', 'municipio', 'departamento', 'representante_nombre,
+        'direccion', 'municipio', 'departamento', 'representante_nombre',
         'representante_telefono', 'representante_email', 'logo_url', 
         'descripcion', 'estado', 'notas_admin'
     ];
@@ -553,4 +553,4 @@ function logAuditAction($db, $adminId, $action, $tabla, $registroId, $detalles) 
         error_log("Error al registrar auditoría: " . $e->getMessage());
     }
 }
-?>
+

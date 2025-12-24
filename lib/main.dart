@@ -16,133 +16,133 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 
 void main() async {
-  // Configure robust global error handling as early as possible
-  WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(() async {
+    // Configure robust global error handling as early as possible
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // NOTE: UI Color Scheme Update (November 2025)
-  // - Primary buttons changed from yellow (0xFFFFFF00) to blue (AppColors.primary)
-  // - Email auth screens now use consistent blue theming
-  // - All buttons maintain white text on blue background for accessibility
+    // NOTE: UI Color Scheme Update (November 2025)
+    // - Primary buttons changed from yellow (0xFFFFFF00) to blue (AppColors.primary)
+    // - Email auth screens now use consistent blue theming
+    // - All buttons maintain white text on blue background for accessibility
 
-  // Forward Flutter framework errors to zone handler (and keep red-screen in debug)
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // Print to console
-    try {
-      developer.log(
-        'FlutterError: \\n${details.exceptionAsString()}\\n${details.stack}',
-        name: 'GlobalError',
-      );
-    } catch (_) {}
-    // Also forward to the current zone so runZonedGuarded can capture
-    Zone.current.handleUncaughtError(details.exception, details.stack ?? StackTrace.current);
-  };
+    // Forward Flutter framework errors to zone handler (and keep red-screen in debug)
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // Print to console
+      try {
+        developer.log(
+          'FlutterError: \n${details.exceptionAsString()}\n${details.stack}',
+          name: 'GlobalError',
+        );
+      } catch (_) {}
+      // Also forward to the current zone so runZonedGuarded can capture
+      Zone.current.handleUncaughtError(details.exception, details.stack ?? StackTrace.current);
+    };
 
-  // Catch uncaught async and platform channel errors
-  ui.PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-    try {
-      developer.log('PlatformDispatcher error: $error', name: 'GlobalError', stackTrace: stack);
-    } catch (_) {}
-    // Return true to indicate the error was handled to avoid process kill
-    return true;
-  };
+    // Catch uncaught async and platform channel errors
+    ui.PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      try {
+        developer.log('PlatformDispatcher error: $error', name: 'GlobalError', stackTrace: stack);
+      } catch (_) {}
+      // Return true to indicate the error was handled to avoid process kill
+      return true;
+    };
 
-  // Friendly error widget in release to avoid hard crash during build failures
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Material(
-      color: Colors.black,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, color: Color(0xFF2196F3), size: 42),
-              const SizedBox(height: 12),
-              const Text(
-                'Se produjo un error en la interfaz',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                details.exceptionAsString(),
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-                textAlign: TextAlign.center,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+    // Friendly error widget in release to avoid hard crash during build failures
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Color(0xFF2196F3), size: 42),
+                const SizedBox(height: 12),
+                const Text(
+                  'Se produjo un error en la interfaz',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  details.exceptionAsString(),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  textAlign: TextAlign.center,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  };
+      );
+    };
 
-  await initializeDateFormatting('es_ES', null);
+    await initializeDateFormatting('es_ES', null);
 
-  // ============================================
-  // INICIALIZAR MAPBOX CON ACCESS TOKEN
-  // ============================================
-  try {
-    MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
-    debugPrint('✅ Mapbox inicializado correctamente');
-  } catch (e) {
-    debugPrint('⚠️ Error inicializando Mapbox: $e');
-  }
+    // ============================================
+    // INICIALIZAR MAPBOX CON ACCESS TOKEN
+    // ============================================
+    try {
+      MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
+      debugPrint('✅ Mapbox inicializado correctamente');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando Mapbox: $e');
+    }
 
-  // Inicializar Service Locator (Inyección de Dependencias)
-  // Esto configura todos los datasources, repositories y use cases
-  final serviceLocator = ServiceLocator();
-  try {
-    await serviceLocator.init();
-  } catch (e) {
-    print('Error initializing service locator: $e');
-    // Continue without service locator for now
-  }
+    // Inicializar Service Locator (Inyección de Dependencias)
+    // Esto configura todos los datasources, repositories y use cases
+    final serviceLocator = ServiceLocator();
+    try {
+      await serviceLocator.init();
+    } catch (e) {
+      print('Error initializing service locator: $e');
+      // Continue without service locator for now
+    }
 
-  runZonedGuarded(() {
     runApp(
       MultiProvider(
         providers: [
-        // Theme Provider (debe estar primero)
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        
-        // Database Provider (legacy)
-        ChangeNotifierProvider(create: (_) => DatabaseProvider()),
-        
-        
-        // User Microservice Provider
-        if (serviceLocator.isInitialized) ChangeNotifierProvider(
-          create: (_) => serviceLocator.createUserProvider(),
-        ),
-        
-        // Conductor Microservice Provider
-        if (serviceLocator.isInitialized) ChangeNotifierProvider(
-          create: (_) => serviceLocator.createConductorProfileProvider(),
-        ),
+          // Theme Provider (debe estar primero)
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          
+          // Database Provider (legacy)
+          ChangeNotifierProvider(create: (_) => DatabaseProvider()),
+          
+          
+          // User Microservice Provider
+          if (serviceLocator.isInitialized) ChangeNotifierProvider(
+            create: (_) => serviceLocator.createUserProvider(),
+          ),
+          
+          // Conductor Microservice Provider
+          if (serviceLocator.isInitialized) ChangeNotifierProvider(
+            create: (_) => serviceLocator.createConductorProfileProvider(),
+          ),
 
-        // Trip Microservice Provider
-        if (serviceLocator.isInitialized) ChangeNotifierProvider(
-          create: (_) => serviceLocator.createTripProvider(),
-        ),
+          // Trip Microservice Provider
+          if (serviceLocator.isInitialized) ChangeNotifierProvider(
+            create: (_) => serviceLocator.createTripProvider(),
+          ),
 
-        // Map Microservice Provider
-        if (serviceLocator.isInitialized) ChangeNotifierProvider(
-          create: (_) => serviceLocator.createMapProvider(),
-        ),
+          // Map Microservice Provider
+          if (serviceLocator.isInitialized) ChangeNotifierProvider(
+            create: (_) => serviceLocator.createMapProvider(),
+          ),
 
-        // Admin Microservice Provider
-        if (serviceLocator.isInitialized) ChangeNotifierProvider(
-          create: (_) => serviceLocator.createAdminProvider(),
-        ),
+          // Admin Microservice Provider
+          if (serviceLocator.isInitialized) ChangeNotifierProvider(
+            create: (_) => serviceLocator.createAdminProvider(),
+          ),
 
-        // ========== LEGACY PROVIDERS (por deprecar gradualmente) ==========
-        
-        // Conductor Providers (legacy - funcionalidad migrada a Conductor Microservice)
-        ChangeNotifierProvider(create: (_) => ConductorProvider()),
-        ChangeNotifierProvider(create: (_) => ConductorProfileProvider()),
-        ChangeNotifierProvider(create: (_) => ConductorTripsProvider()),
-        ChangeNotifierProvider(create: (_) => ConductorEarningsProvider()),
+          // ========== LEGACY PROVIDERS (por deprecar gradualmente) ==========
+          
+          // Conductor Providers (legacy - funcionalidad migrada a Conductor Microservice)
+          ChangeNotifierProvider(create: (_) => ConductorProvider()),
+          ChangeNotifierProvider(create: (_) => ConductorProfileProvider()),
+          ChangeNotifierProvider(create: (_) => ConductorTripsProvider()),
+          ChangeNotifierProvider(create: (_) => ConductorEarningsProvider()),
         ],
         child: const MyApp(),
       ),

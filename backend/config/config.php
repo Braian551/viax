@@ -43,4 +43,3 @@ function sendJsonResponse($success, $message, $data = []) {
     echo json_encode($response);
     exit;
 }
-?>
