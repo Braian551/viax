@@ -117,6 +117,25 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
           ),
           const SizedBox(height: 24),
           _buildSection(
+            title: 'Empresas',
+            items: [
+              _ManagementItem(
+                title: 'Empresas de Transporte',
+                subtitle: 'Registrar y gestionar empresas de transporte',
+                icon: Icons.business_rounded,
+                accentColor: AppColors.primary,
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    RouteNames.adminEmpresas,
+                    arguments: {'admin_id': adminId, 'admin_user': widget.adminUser},
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
             title: 'Reportes y Auditoría',
             items: [
               _ManagementItem(

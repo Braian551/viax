@@ -35,6 +35,7 @@
   static const String adminConfig = '/admin/config';
   static const String adminConductorDocs = '/admin/conductor-docs';
   static const String adminPricing = '/admin/pricing';
+  static const String adminEmpresas = '/admin/empresas';
   
   // Rutas de conductor
   static const String conductorHome = '/conductor/home';
