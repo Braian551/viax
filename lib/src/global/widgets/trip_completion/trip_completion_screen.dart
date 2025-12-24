@@ -82,8 +82,8 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
 
   bool get _isConductor => widget.userType == TripCompletionUserType.conductor;
   bool get _isCliente => widget.userType == TripCompletionUserType.cliente;
-  bool get _isEfectivo =>
-      widget.tripData.metodoPago.toLowerCase().contains('efectivo');
+  // Solo efectivo es soportado
+  bool get _isEfectivo => true;
 
   bool get _canComplete {
     // CONDUCTOR: Solo necesita reportar el pago (sí o no), puede continuar aunque haya disputa

@@ -18,7 +18,6 @@
   static const String trackingTrip = '/tracking_trip';
   static const String userProfile = '/user_profile';
   static const String editProfile = '/edit_profile';
-  static const String paymentMethods = '/payment_methods';
   static const String tripHistory = '/trip_history';
   static const String favoritePlaces = '/favorite_places';
   static const String promotions = '/promotions';

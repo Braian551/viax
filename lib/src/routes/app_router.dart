@@ -3,7 +3,6 @@ import 'package:viax/src/features/user/presentation/screens/home_user.dart';
 import 'package:viax/src/features/user/presentation/screens/confirm_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/enhanced_destination_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
-import 'package:viax/src/features/user/presentation/screens/payment_methods_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/waiting_for_driver_screen.dart';
@@ -158,8 +157,6 @@ class AppRouter {
         }
       case RouteNames.userProfile:
         return MaterialPageRoute(builder: (_) => const UserProfileScreen());
-      case RouteNames.paymentMethods:
-        return MaterialPageRoute(builder: (_) => const PaymentMethodsScreen());
       case RouteNames.tripHistory:
         {
           final args = settings.arguments as Map<String, dynamic>?;

@@ -194,12 +194,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               isDark: isDark,
                               onTap: () {},
                             ),
-                            _buildOptionTile(
-                              icon: Icons.credit_card_rounded,
-                              title: 'Métodos de Pago',
-                              subtitle: 'Tarjetas, efectivo',
+                            _buildInfoTile(
+                              icon: Icons.payments_rounded,
+                              title: 'Método de Pago',
+                              subtitle: 'Solo efectivo',
                               isDark: isDark,
-                              onTap: () {},
                             ),
                             _buildOptionTile(
                               icon: Icons.notifications_none_rounded,
@@ -384,6 +383,73 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Widget informativo (sin interacción)
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.success,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -36,8 +36,8 @@ try {
     
     $offset = ($page - 1) * $limit;
     
-    // Construir query base
-    $whereClause = "WHERE ss.usuario_id = :usuario_id";
+    // Construir query base - NOTA: la columna es cliente_id, no usuario_id
+    $whereClause = "WHERE ss.cliente_id = :usuario_id";
     $params = [':usuario_id' => $usuario_id];
     
     // Filtro por estado
@@ -60,30 +60,36 @@ try {
     $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
     $totalPages = ceil($totalRecords / $limit);
     
-    // Query principal con JOIN a conductores y transacciones
+    // Query principal con JOIN a conductores
+    // NOTA: usar direccion_recogida/direccion_destino en lugar de origen/destino
+    // usar distancia_estimada en lugar de distancia_km
+    // usar tiempo_estimado en lugar de duracion_estimada
+    // usar fecha_creacion/solicitado_en en lugar de fecha_solicitud
+    // usar completado_en en lugar de fecha_completado
     $query = "
         SELECT 
             ss.id,
-            ss.tipo_servicio,
+            COALESCE(ss.tipo_servicio, 'transporte') as tipo_servicio,
             ss.estado,
-            ss.origen,
-            ss.destino,
-            ss.distancia_km,
-            ss.duracion_estimada,
+            COALESCE(ss.direccion_recogida, '') as origen,
+            COALESCE(ss.direccion_destino, '') as destino,
+            ss.distancia_estimada as distancia_km,
+            ss.tiempo_estimado as duracion_estimada,
             COALESCE(ss.precio_estimado, 0) as precio_estimado,
             COALESCE(ss.precio_final, ss.precio_estimado, 0) as precio_final,
             COALESCE(ss.metodo_pago, 'efectivo') as metodo_pago,
             COALESCE(ss.pago_confirmado, false) as pago_confirmado,
-            ss.fecha_solicitud,
-            ss.fecha_completado,
+            COALESCE(ss.solicitado_en, ss.fecha_creacion) as fecha_solicitud,
+            ss.completado_en as fecha_completado,
             u.nombre as conductor_nombre,
             u.apellido as conductor_apellido,
-            dc.calificacion as calificacion_conductor
+            COALESCE(dc.calificacion_promedio, 0) as calificacion_conductor
         FROM solicitudes_servicio ss
-        LEFT JOIN detalles_conductor dc ON ss.conductor_id = dc.conductor_id
-        LEFT JOIN usuarios u ON dc.conductor_id = u.id
+        LEFT JOIN asignaciones_conductor ac ON ss.id = ac.solicitud_id AND ac.estado = 'aceptada'
+        LEFT JOIN detalles_conductor dc ON ac.conductor_id = dc.id
+        LEFT JOIN usuarios u ON dc.usuario_id = u.id
         $whereClause
-        ORDER BY ss.fecha_solicitud DESC
+        ORDER BY COALESCE(ss.solicitado_en, ss.fecha_creacion) DESC
         LIMIT :limit OFFSET :offset
     ";
     

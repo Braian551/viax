@@ -97,7 +97,7 @@ try {
     
     // Obtener precio si se proporcionó, o usar 0 por defecto
     $precioEstimado = $data['precio_estimado'] ?? $data['precio'] ?? 0;
-    $metodoPago = $data['metodo_pago'] ?? 'efectivo';
+    $metodoPago = 'efectivo'; // Solo efectivo soportado
     
     $stmt->execute([
         $uuid,

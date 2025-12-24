@@ -184,7 +184,6 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
         items: [
           CustomNavBarItem(icon: Icons.home_rounded, label: 'Inicio'),
           CustomNavBarItem(icon: Icons.history_rounded, label: 'Viajes'),
-          CustomNavBarItem(icon: Icons.payment_rounded, label: 'Pagos'),
           CustomNavBarItem(icon: Icons.person_rounded, label: 'Perfil'),
         ],
       ),
@@ -504,7 +503,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   Widget _buildTabContent(bool isDark) {
     // Perfil
-    if (_selectedIndex == 3) {
+    if (_selectedIndex == 2) {
       return const UserProfileScreen();
     }
     
@@ -519,17 +518,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       return TripHistoryScreen(userId: _userId!);
     }
     
-    // Fondo sólido para otras pestañas
+    // No debería llegar aquí
     return Container(
       color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      child: SafeArea(
-        child: Center(
-          child: Text(
-            'Contenido de pestaña $_selectedIndex',
-            style: TextStyle(color: isDark ? Colors.white : Colors.black),
-          ),
-        ),
-      ),
     );
   }
 

@@ -232,14 +232,7 @@ class TripSummaryCard extends StatelessWidget {
   }
 
   IconData _getPaymentIcon(String metodo) {
-    final lower = metodo.toLowerCase();
-    if (lower.contains('efectivo') || lower.contains('cash')) {
-      return Icons.money_rounded;
-    } else if (lower.contains('tarjeta') || lower.contains('card')) {
-      return Icons.credit_card_rounded;
-    } else if (lower.contains('nequi') || lower.contains('daviplata')) {
-      return Icons.phone_android_rounded;
-    }
-    return Icons.payment_rounded;
+    // Solo efectivo soportado
+    return Icons.money_rounded;
   }
 }
