@@ -9,6 +9,7 @@ class TripHistorySummaryCard extends StatefulWidget {
   final String label;
   final Color color;
   final int index;
+  final bool isDark;
 
   const TripHistorySummaryCard({
     super.key,
@@ -17,6 +18,7 @@ class TripHistorySummaryCard extends StatefulWidget {
     required this.label,
     required this.color,
     this.index = 0,
+    this.isDark = false,
   });
 
   @override
@@ -56,6 +58,13 @@ class _TripHistorySummaryCardState extends State<TripHistorySummaryCard>
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = widget.isDark 
+        ? AppColors.darkSurface.withOpacity(0.8)
+        : Colors.white;
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
@@ -63,11 +72,11 @@ class _TripHistorySummaryCardState extends State<TripHistorySummaryCard>
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withOpacity(0.1),
+                color: widget.color.withOpacity(widget.isDark ? 0.2 : 0.1),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -79,7 +88,7 @@ class _TripHistorySummaryCardState extends State<TripHistorySummaryCard>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.1),
+                  color: widget.color.withOpacity(widget.isDark ? 0.2 : 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -105,7 +114,7 @@ class _TripHistorySummaryCardState extends State<TripHistorySummaryCard>
                 widget.label,
                 style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.lightTextPrimary.withOpacity(0.5),
+                  color: textColor.withOpacity(0.5),
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -123,12 +132,14 @@ class TripHistorySummaryGrid extends StatelessWidget {
   final int totalViajes;
   final int completados;
   final int cancelados;
+  final bool isDark;
 
   const TripHistorySummaryGrid({
     super.key,
     required this.totalViajes,
     required this.completados,
     required this.cancelados,
+    this.isDark = false,
   });
 
   @override
@@ -144,6 +155,7 @@ class TripHistorySummaryGrid extends StatelessWidget {
               label: 'Total viajes',
               color: AppColors.primary,
               index: 0,
+              isDark: isDark,
             ),
           ),
           const SizedBox(width: 12),
@@ -154,6 +166,7 @@ class TripHistorySummaryGrid extends StatelessWidget {
               label: 'Completados',
               color: AppColors.success,
               index: 1,
+              isDark: isDark,
             ),
           ),
           const SizedBox(width: 12),
@@ -164,6 +177,7 @@ class TripHistorySummaryGrid extends StatelessWidget {
               label: 'Cancelados',
               color: AppColors.error,
               index: 2,
+              isDark: isDark,
             ),
           ),
         ],

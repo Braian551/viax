@@ -7,19 +7,21 @@ import '../../../services/user_trips_service.dart';
 /// Bottom Sheet con detalles del viaje
 class TripDetailBottomSheet extends StatefulWidget {
   final UserTripModel trip;
+  final bool isDark;
 
   const TripDetailBottomSheet({
     super.key,
     required this.trip,
+    this.isDark = false,
   });
 
   /// Método estático para mostrar el bottom sheet
-  static void show(BuildContext context, UserTripModel trip) {
+  static void show(BuildContext context, UserTripModel trip, {bool isDark = false}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => TripDetailBottomSheet(trip: trip),
+      builder: (context) => TripDetailBottomSheet(trip: trip, isDark: isDark),
     );
   }
 
@@ -84,6 +86,13 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = widget.isDark 
+        ? AppColors.darkSurface 
+        : Colors.white;
+    final handleColor = widget.isDark 
+        ? Colors.grey.shade600 
+        : Colors.grey.shade300;
+    
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
@@ -97,9 +106,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
               maxChildSize: 0.95,
               builder: (context, scrollController) {
                 return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   ),
                   child: Column(
                     children: [
@@ -109,7 +118,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
+                          color: handleColor,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -147,6 +156,13 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildHeader() {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    final bgColor = widget.isDark 
+        ? AppColors.darkBackground 
+        : AppColors.lightBackground;
+    
     return Row(
       children: [
         Container(
@@ -173,10 +189,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             children: [
               Text(
                 _capitalize(widget.trip.tipoServicio),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.lightTextPrimary,
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 4),
@@ -184,7 +200,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 _formatFullDate(widget.trip.fechaSolicitud),
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.lightTextPrimary.withOpacity(0.5),
+                  color: textColor.withOpacity(0.5),
                 ),
               ),
             ],
@@ -192,9 +208,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         ),
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(Icons.close_rounded, color: textColor),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.lightBackground,
+            backgroundColor: bgColor,
           ),
         ),
       ],
@@ -243,21 +259,29 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildRouteSection() {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    final bgColor = widget.isDark 
+        ? AppColors.darkBackground.withOpacity(0.5) 
+        : AppColors.lightBackground.withOpacity(0.5);
+    final borderColor = widget.isDark ? AppColors.darkSurface : Colors.white;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lightBackground.withOpacity(0.5),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Ruta',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.lightTextPrimary,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -273,7 +297,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                     decoration: BoxDecoration(
                       color: AppColors.success,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: borderColor, width: 2),
                     ),
                   ),
                   Container(
@@ -292,7 +316,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                       'Origen',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.lightTextPrimary.withOpacity(0.5),
+                        color: textColor.withOpacity(0.5),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -301,10 +325,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                       widget.trip.origen.isNotEmpty 
                           ? widget.trip.origen 
                           : 'No disponible',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.lightTextPrimary,
+                        color: textColor,
                       ),
                     ),
                   ],
@@ -322,7 +346,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 decoration: BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: borderColor, width: 2),
                 ),
               ),
               const SizedBox(width: 12),
@@ -334,7 +358,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                       'Destino',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.lightTextPrimary.withOpacity(0.5),
+                        color: textColor.withOpacity(0.5),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -343,10 +367,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                       widget.trip.destino.isNotEmpty 
                           ? widget.trip.destino 
                           : 'No disponible',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.lightTextPrimary,
+                        color: textColor,
                       ),
                     ),
                   ],
@@ -360,15 +384,19 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildDetailsSection() {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Detalles del viaje',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.lightTextPrimary,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 12),
@@ -403,12 +431,19 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     required String label,
     required String value,
   }) {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    final cardColor = widget.isDark 
+        ? AppColors.darkSurface.withOpacity(0.6) 
+        : Colors.white;
+    
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+        border: Border.all(color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1)),
       ),
       child: Row(
         children: [
@@ -421,15 +456,15 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.lightTextPrimary.withOpacity(0.5),
+                  color: textColor.withOpacity(0.5),
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.lightTextPrimary,
+                  color: textColor,
                 ),
               ),
             ],
@@ -440,17 +475,21 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildPaymentSection() {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.05),
-            AppColors.accent.withOpacity(0.05),
+            AppColors.primary.withOpacity(widget.isDark ? 0.1 : 0.05),
+            AppColors.accent.withOpacity(widget.isDark ? 0.1 : 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+        border: Border.all(color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,12 +502,12 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 size: 20,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Información de pago',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.lightTextPrimary,
+                  color: textColor,
                 ),
               ),
             ],
@@ -490,17 +529,17 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             ),
           ],
           const SizedBox(height: 12),
-          const Divider(height: 1),
+          Divider(height: 1, color: textColor.withOpacity(0.1)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total pagado',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.lightTextPrimary,
+                  color: textColor,
                 ),
               ),
               Text(
@@ -549,6 +588,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildPaymentRow(String label, String value, {bool isHighlighted = false}) {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -556,7 +599,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
           label,
           style: TextStyle(
             fontSize: 13,
-            color: AppColors.lightTextPrimary.withOpacity(0.6),
+            color: textColor.withOpacity(0.6),
           ),
         ),
         Text(
@@ -564,7 +607,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
           style: TextStyle(
             fontSize: 14,
             fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
-            color: isHighlighted ? AppColors.primary : AppColors.lightTextPrimary,
+            color: isHighlighted ? AppColors.primary : textColor,
           ),
         ),
       ],
@@ -572,17 +615,24 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildConductorSection() {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    final bgColor = widget.isDark 
+        ? AppColors.darkBackground.withOpacity(0.5) 
+        : AppColors.lightBackground.withOpacity(0.5);
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lightBackground.withOpacity(0.5),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
             child: const Icon(
               Icons.person_rounded,
               color: AppColors.primary,
@@ -594,21 +644,21 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Tu conductor',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: textColor.withOpacity(0.5),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   widget.trip.conductorNombreCompleto,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.lightTextPrimary,
+                    color: textColor,
                   ),
                 ),
                 if (widget.trip.calificacionConductor != null) ...[
@@ -630,7 +680,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                         widget.trip.calificacionConductor!.toStringAsFixed(1),
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.lightTextPrimary.withOpacity(0.6),
+                          color: textColor.withOpacity(0.6),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

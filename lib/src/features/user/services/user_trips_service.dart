@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../../core/config/app_config.dart';
 
 /// Modelo de viaje del usuario
 class UserTripModel {
@@ -105,7 +106,7 @@ class UserPaymentSummary {
 
 /// Servicio para obtener historial de viajes del usuario
 class UserTripsService {
-  static const String baseUrl = 'https://viabordo.com/backend/user';
+  static String get baseUrl => '${AppConfig.baseUrl}/user';
 
   /// Obtener historial de viajes del usuario
   static Future<Map<String, dynamic>> getHistorial({

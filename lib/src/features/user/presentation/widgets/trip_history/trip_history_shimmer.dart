@@ -4,10 +4,12 @@ import '../../../../../theme/app_colors.dart';
 /// Skeleton loading shimmer effect para la lista de viajes
 class TripHistoryShimmer extends StatefulWidget {
   final int itemCount;
+  final bool isDark;
 
   const TripHistoryShimmer({
     super.key,
     this.itemCount = 4,
+    this.isDark = false,
   });
 
   @override
@@ -52,6 +54,7 @@ class _TripHistoryShimmerState extends State<TripHistoryShimmer>
             return _ShimmerCard(
               animation: _animation,
               delay: index * 0.1,
+              isDark: widget.isDark,
             );
           },
         );
@@ -63,23 +66,32 @@ class _TripHistoryShimmerState extends State<TripHistoryShimmer>
 class _ShimmerCard extends StatelessWidget {
   final Animation<double> animation;
   final double delay;
+  final bool isDark;
 
   const _ShimmerCard({
     required this.animation,
     required this.delay,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isDark 
+        ? AppColors.darkSurface.withOpacity(0.6)
+        : Colors.white;
+    final shadowColor = isDark
+        ? Colors.black.withOpacity(0.2)
+        : Colors.black.withOpacity(0.03);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -96,6 +108,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 44,
                 borderRadius: 12,
                 animation: animation,
+                isDark: isDark,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -106,12 +119,14 @@ class _ShimmerCard extends StatelessWidget {
                       width: 80,
                       height: 16,
                       animation: animation,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 6),
                     _ShimmerBox(
                       width: 120,
                       height: 12,
                       animation: animation,
+                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -123,6 +138,7 @@ class _ShimmerCard extends StatelessWidget {
                     width: 70,
                     height: 18,
                     animation: animation,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 6),
                   _ShimmerBox(
@@ -130,6 +146,7 @@ class _ShimmerCard extends StatelessWidget {
                     height: 16,
                     borderRadius: 8,
                     animation: animation,
+                    isDark: isDark,
                   ),
                 ],
               ),
@@ -141,6 +158,7 @@ class _ShimmerCard extends StatelessWidget {
             width: double.infinity,
             height: 1,
             animation: animation,
+            isDark: isDark,
           ),
           const SizedBox(height: 16),
           // Origin
@@ -151,6 +169,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 24,
                 borderRadius: 12,
                 animation: animation,
+                isDark: isDark,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -158,6 +177,7 @@ class _ShimmerCard extends StatelessWidget {
                   width: double.infinity,
                   height: 14,
                   animation: animation,
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -170,6 +190,7 @@ class _ShimmerCard extends StatelessWidget {
               width: 2,
               height: 20,
               animation: animation,
+              isDark: isDark,
             ),
           ),
           const SizedBox(height: 8),
@@ -181,6 +202,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 24,
                 borderRadius: 12,
                 animation: animation,
+                isDark: isDark,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -188,6 +210,7 @@ class _ShimmerCard extends StatelessWidget {
                   width: double.infinity,
                   height: 14,
                   animation: animation,
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -201,6 +224,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 24,
                 borderRadius: 8,
                 animation: animation,
+                isDark: isDark,
               ),
               const SizedBox(width: 8),
               _ShimmerBox(
@@ -208,6 +232,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 24,
                 borderRadius: 8,
                 animation: animation,
+                isDark: isDark,
               ),
               const SizedBox(width: 8),
               _ShimmerBox(
@@ -215,6 +240,7 @@ class _ShimmerCard extends StatelessWidget {
                 height: 24,
                 borderRadius: 8,
                 animation: animation,
+                isDark: isDark,
               ),
             ],
           ),
@@ -229,16 +255,22 @@ class _ShimmerBox extends StatelessWidget {
   final double height;
   final double borderRadius;
   final Animation<double> animation;
+  final bool isDark;
 
   const _ShimmerBox({
     required this.width,
     required this.height,
     this.borderRadius = 6,
     required this.animation,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = isDark 
+        ? AppColors.darkBackground 
+        : AppColors.lightBackground;
+    
     return Container(
       width: width,
       height: height,
@@ -248,9 +280,9 @@ class _ShimmerBox extends StatelessWidget {
           begin: Alignment(animation.value - 1, 0),
           end: Alignment(animation.value + 1, 0),
           colors: [
-            AppColors.lightBackground.withOpacity(0.5),
-            AppColors.lightBackground.withOpacity(0.2),
-            AppColors.lightBackground.withOpacity(0.5),
+            baseColor.withOpacity(isDark ? 0.3 : 0.5),
+            baseColor.withOpacity(isDark ? 0.1 : 0.2),
+            baseColor.withOpacity(isDark ? 0.3 : 0.5),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),

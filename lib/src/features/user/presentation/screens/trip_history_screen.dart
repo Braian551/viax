@@ -7,6 +7,7 @@ import '../widgets/trip_history/trip_history_widgets.dart';
 
 /// Pantalla de historial de viajes y pagos del usuario
 /// Con arquitectura limpia, widgets reutilizables y animaciones fluidas
+/// Soporta modo oscuro y claro
 class TripHistoryScreen extends StatelessWidget {
   final int userId;
 
@@ -95,8 +96,13 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Consumer<UserTripsProvider>(
           builder: (context, provider, _) {
@@ -107,7 +113,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                 controller: _scrollController,
                 slivers: [
                   // AppBar animado
-                  _buildAnimatedAppBar(),
+                  _buildAnimatedAppBar(isDark, textColor, backgroundColor, surfaceColor),
 
                   // Header con resumen de pagos
                   if (provider.paymentSummary != null)
@@ -120,12 +126,13 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                       ),
                     ),
 
-                  // Grid de estadísticas
+                  // Grid de estadÃ­sticas
                   SliverToBoxAdapter(
                     child: TripHistorySummaryGrid(
                       totalViajes: provider.totalTrips,
                       completados: provider.completedTrips,
                       cancelados: provider.cancelledTrips,
+                      isDark: isDark,
                     ),
                   ),
 
@@ -140,6 +147,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                       onFilterChanged: (filter) {
                         provider.setFilter(filter, userId: widget.userId);
                       },
+                      isDark: isDark,
                     ),
                   ),
 
@@ -148,7 +156,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                   ),
 
                   // Lista de viajes
-                  _buildTripsList(provider),
+                  _buildTripsList(provider, isDark),
 
                   // Espacio inferior
                   const SliverToBoxAdapter(
@@ -163,13 +171,13 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     );
   }
 
-  Widget _buildAnimatedAppBar() {
+  Widget _buildAnimatedAppBar(bool isDark, Color textColor, Color backgroundColor, Color surfaceColor) {
     return SliverAppBar(
       expandedHeight: 0,
       floating: true,
       pinned: true,
       elevation: _isScrolled ? 4 : 0,
-      backgroundColor: _isScrolled ? Colors.white : AppColors.lightBackground,
+      backgroundColor: _isScrolled ? surfaceColor : backgroundColor,
       leading: AnimatedBuilder(
         animation: _headerAnimationController,
         builder: (context, child) {
@@ -182,9 +190,9 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
           );
         },
         child: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
-            color: AppColors.lightTextPrimary,
+            color: textColor,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -200,10 +208,10 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
             ),
           );
         },
-        child: const Text(
+        child: Text(
           'Mis viajes',
           style: TextStyle(
-            color: AppColors.lightTextPrimary,
+            color: textColor,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -234,7 +242,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                 size: 20,
               ),
             ),
-            onPressed: () => _showDateFilter(context),
+            onPressed: () => _showDateFilter(context, isDark),
           ),
         ),
         const SizedBox(width: 8),
@@ -242,15 +250,15 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     );
   }
 
-  Widget _buildTripsList(UserTripsProvider provider) {
+  Widget _buildTripsList(UserTripsProvider provider, bool isDark) {
     // Estado de carga
     if (provider.loadState == LoadState.loading && provider.trips.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: TripHistoryShimmer(itemCount: 4),
+      return SliverToBoxAdapter(
+        child: TripHistoryShimmer(itemCount: 4, isDark: isDark),
       );
     }
 
-    // Estado vacío
+    // Estado vacÃ­o
     if (provider.trips.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -259,6 +267,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
               ? _getFilterLabel(provider.selectedFilter)
               : null,
           onRefresh: () => provider.refresh(userId: widget.userId),
+          isDark: isDark,
         ),
       );
     }
@@ -267,7 +276,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          // Cargar más al llegar al final
+          // Cargar mÃ¡s al llegar al final
           if (index == provider.trips.length - 1 && provider.hasMore) {
             provider.loadMore(userId: widget.userId);
           }
@@ -276,7 +285,8 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
           return TripHistoryCard(
             trip: trip,
             index: index,
-            onTap: () => TripDetailBottomSheet.show(context, trip),
+            isDark: isDark,
+            onTap: () => TripDetailBottomSheet.show(context, trip, isDark: isDark),
           );
         },
         childCount: provider.trips.length,
@@ -297,14 +307,18 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     }
   }
 
-  void _showDateFilter(BuildContext context) {
+  void _showDateFilter(BuildContext context, bool isDark) {
+    final backgroundColor = isDark ? AppColors.darkSurface : Colors.white;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final dividerColor = isDark ? AppColors.darkDivider : Colors.grey.shade300;
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -314,43 +328,47 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Filtrar por fecha',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.lightTextPrimary,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 24),
             _buildDateOption(
               context,
-              'Última semana',
+              'Ãšltima semana',
               Icons.calendar_today_rounded,
               () {},
+              isDark,
             ),
             _buildDateOption(
               context,
-              'Último mes',
+              'Ãšltimo mes',
               Icons.date_range_rounded,
               () {},
+              isDark,
             ),
             _buildDateOption(
               context,
-              'Últimos 3 meses',
+              'Ãšltimos 3 meses',
               Icons.calendar_month_rounded,
               () {},
+              isDark,
             ),
             _buildDateOption(
               context,
               'Personalizado',
               Icons.edit_calendar_rounded,
               () {},
+              isDark,
             ),
             const SizedBox(height: 16),
           ],
@@ -364,7 +382,13 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     String label,
     IconData icon,
     VoidCallback onTap,
+    bool isDark,
   ) {
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final borderColor = isDark 
+        ? AppColors.primary.withOpacity(0.2) 
+        : AppColors.primary.withOpacity(0.1);
+    
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -375,7 +399,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+          border: Border.all(color: borderColor),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -384,16 +408,16 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
             const SizedBox(width: 14),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.lightTextPrimary,
+                color: textColor,
               ),
             ),
             const Spacer(),
             Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.lightTextPrimary.withOpacity(0.3),
+              color: textColor.withOpacity(0.3),
             ),
           ],
         ),

@@ -345,7 +345,7 @@ class _ConductorTripsScreenState extends State<ConductorTripsScreen>
         return TripHistoryCard(
           trip: trip,
           index: index,
-          onTap: () => TripDetailBottomSheet.show(context, trip),
+          onTap: () => TripDetailBottomSheet.show(context, trip, isDark: isDark),
         );
       },
     );

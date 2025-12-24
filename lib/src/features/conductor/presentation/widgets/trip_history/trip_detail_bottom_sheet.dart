@@ -17,7 +17,8 @@ class TripDetailBottomSheet extends StatefulWidget {
   });
 
   /// Muestra el bottom sheet con animación
-  static Future<void> show(BuildContext context, TripModel trip) {
+  /// [isDark] es opcional, el tema se detecta automáticamente del contexto
+  static Future<void> show(BuildContext context, TripModel trip, {bool isDark = false}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,

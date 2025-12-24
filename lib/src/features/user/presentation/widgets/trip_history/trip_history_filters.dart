@@ -18,11 +18,13 @@ class TripFilter {
 class TripHistoryFilters extends StatefulWidget {
   final String selectedFilter;
   final ValueChanged<String> onFilterChanged;
+  final bool isDark;
 
   const TripHistoryFilters({
     super.key,
     required this.selectedFilter,
     required this.onFilterChanged,
+    this.isDark = false,
   });
 
   @override
@@ -80,6 +82,7 @@ class _TripHistoryFiltersState extends State<TripHistoryFilters>
               isSelected: isSelected,
               onTap: () => widget.onFilterChanged(filter.id),
               index: index,
+              isDark: widget.isDark,
             );
           },
         ),
@@ -93,12 +96,14 @@ class _FilterChip extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final int index;
+  final bool isDark;
 
   const _FilterChip({
     required this.filter,
     required this.isSelected,
     required this.onTap,
     required this.index,
+    this.isDark = false,
   });
 
   @override
@@ -147,6 +152,8 @@ class _FilterChipState extends State<_FilterChip>
   @override
   Widget build(BuildContext context) {
     final color = _getFilterColor();
+    final isDark = widget.isDark;
+    final bgColor = isDark ? AppColors.darkCard : Colors.white;
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -158,16 +165,16 @@ class _FilterChipState extends State<_FilterChip>
           margin: const EdgeInsets.only(right: 10),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: widget.isSelected ? color : Colors.white,
+            color: widget.isSelected ? color : bgColor,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: widget.isSelected ? color : color.withOpacity(0.3),
+              color: widget.isSelected ? color : color.withOpacity(isDark ? 0.4 : 0.3),
               width: 1.5,
             ),
             boxShadow: widget.isSelected
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.3),
+                      color: color.withOpacity(isDark ? 0.4 : 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),

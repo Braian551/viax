@@ -6,11 +6,13 @@ import '../../../../../theme/app_colors.dart';
 class TripHistoryEmptyState extends StatefulWidget {
   final String? filterText;
   final VoidCallback? onRefresh;
+  final bool isDark;
 
   const TripHistoryEmptyState({
     super.key,
     this.filterText,
     this.onRefresh,
+    this.isDark = false,
   });
 
   @override
@@ -61,6 +63,10 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
 
   @override
   Widget build(BuildContext context) {
+    final textColor = widget.isDark 
+        ? AppColors.darkTextPrimary 
+        : AppColors.lightTextPrimary;
+    
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
@@ -89,13 +95,13 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppColors.primary.withOpacity(0.15),
-                          AppColors.accent.withOpacity(0.1),
+                          AppColors.primary.withOpacity(widget.isDark ? 0.25 : 0.15),
+                          AppColors.accent.withOpacity(widget.isDark ? 0.15 : 0.1),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -104,7 +110,7 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
                     child: Icon(
                       Icons.directions_car_rounded,
                       size: 50,
-                      color: AppColors.primary.withOpacity(0.6),
+                      color: AppColors.primary.withOpacity(widget.isDark ? 0.8 : 0.6),
                     ),
                   ),
                 ),
@@ -117,7 +123,7 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.lightTextPrimary.withOpacity(0.8),
+                    color: textColor.withOpacity(0.8),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -129,7 +135,7 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
                       : 'Cuando realices tu primer viaje,\naparecerá aquí',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.lightTextPrimary.withOpacity(0.5),
+                    color: textColor.withOpacity(0.5),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
