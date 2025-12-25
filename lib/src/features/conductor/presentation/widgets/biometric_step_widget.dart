@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/scanner_overlay.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/biometric_instruction_card.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/biometric_progress_bar.dart';
 import 'dart:io';
 import 'dart:async';
 
@@ -346,7 +349,7 @@ class _BiometricStepWidgetState extends State<BiometricStepWidget> with WidgetsB
                 
                 // 2. Scanner Animation Overlay (Now clipped inside circle)
                 if (_currentStep != LivenessStep.completed)
-                  _ScannerOverlay(),
+                  const ScannerOverlay(),
                   
                 // 3. Success Overlay
                 if (_currentStep == LivenessStep.completed)
@@ -364,133 +367,17 @@ class _BiometricStepWidgetState extends State<BiometricStepWidget> with WidgetsB
         const SizedBox(height: 30),
         
         // Dynamic Instruction Card
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 400),
-          transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: SlideTransition(position: Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(anim), child: child)),
-          child: Container(
-            key: ValueKey(_instructionText),
-            margin: const EdgeInsets.symmetric(horizontal: 20), // Prevent edge touching
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: widget.isDark ? Colors.grey.shade900.withOpacity(0.9) : Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Prevent height overflow
-              children: [
-                Icon(_instructionIcon, size: 48, color: AppColors.primary),
-                const SizedBox(height: 12),
-                Flexible( // Handle long text
-                  child: Text(
-                    _instructionText,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Inter',
-                      color: widget.isDark ? Colors.white : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        BiometricInstructionCard(
+          text: _instructionText,
+          icon: _instructionIcon,
+          isDark: widget.isDark,
         ),
         
         const SizedBox(height: 24),
         
         // Modern Segmented Progress Bar
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(4, (index) {
-             double threshold = (index + 1) / 4.0;
-             bool active = _progress >= (index / 4.0);
-             bool completed = _progress >= threshold;
-             
-             return AnimatedContainer(
-               duration: const Duration(milliseconds: 300),
-               margin: const EdgeInsets.symmetric(horizontal: 4),
-               height: 6,
-               width: completed ? 20 : (active ? 40 : 12),
-               decoration: BoxDecoration(
-                 color: completed ? Colors.green : (active ? AppColors.primary : Colors.grey.withOpacity(0.3)),
-                 borderRadius: BorderRadius.circular(3),
-               ),
-             );
-          }),
-        ),
+        BiometricProgressBar(progress: _progress),
       ],
     );
   }
-}
-
-class _ScannerOverlay extends StatefulWidget {
-  @override
-  __ScannerOverlayState createState() => __ScannerOverlayState();
-}
-
-class __ScannerOverlayState extends State<_ScannerOverlay> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-         return CustomPaint(
-           painter: _ScannerPainter(_controller.value),
-         );
-      },
-    );
-  }
-}
-
-class _ScannerPainter extends CustomPainter {
-  final double value;
-  _ScannerPainter(this.value);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final y = value * size.height;
-    
-    // Draw scanning line
-    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    
-    // Draw gradient glow
-    final gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [AppColors.primary.withOpacity(0.0), AppColors.primary.withOpacity(0.3)],
-    );
-    
-    final rect = Rect.fromLTWH(0, y - 40, size.width, 40);
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
