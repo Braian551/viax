@@ -342,21 +342,24 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     // Para flujo directo -> podría necesitar un login silencioso pero no tenemos contraseña; navegamos por tipo y email
 
     if (tipo == 'administrador') {
-      Navigator.pushReplacementNamed(
+      Navigator.pushNamedAndRemoveUntil(
         context,
         RouteNames.adminHome,
+        (route) => false,
         arguments: {'email': widget.email},
       );
     } else if (tipo == 'conductor') {
-      Navigator.pushReplacementNamed(
+      Navigator.pushNamedAndRemoveUntil(
         context,
         RouteNames.conductorHome,
+        (route) => false,
         arguments: {'email': widget.email},
       );
     } else {
-      Navigator.pushReplacementNamed(
+      Navigator.pushNamedAndRemoveUntil(
         context,
         RouteNames.home,
+        (route) => false,
         arguments: {'email': widget.email},
       );
     }

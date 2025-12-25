@@ -21,8 +21,8 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   /// 
   /// NOTA: En producciÃ³n con microservicios reales, esto serÃ­a:
   /// - Desarrollo: http://localhost:8001/v1
-  /// - Staging: https://staging-api.pingo.com/user-service/v1
-  /// - ProducciÃ³n: https://api.pingo.com/user-service/v1
+  /// - Staging: https://staging-api.viax.com/user-service/v1
+  /// - ProducciÃ³n: https://api.viax.com/user-service/v1
   /// 
   /// Por ahora apunta al monolito pero la estructura ya estÃ¡ preparada
   String get _baseUrl => '${AppConfig.authServiceUrl}';

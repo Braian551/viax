@@ -17,7 +17,7 @@
 /// static const paymentServiceUrl = '$apiGateway/payment-service/v1';
 /// 
 /// // ProducciÃ³n
-/// static const apiGateway = 'https://api.pingo.com';
+/// static const apiGateway = 'https://api.viax.com';
 /// static const conductorServiceUrl = '$apiGateway/conductor/v1';
 /// ```
 class AppConfig {
@@ -58,10 +58,10 @@ class AppConfig {
         // return 'http://10.0.2.2/viax/backend';
         
       case Environment.staging:
-        return 'https://staging-api.pingo.com';
+        return 'https://staging-api.viax.com';
       case Environment.production:
         // Railway backend URL - PRODUCCIÃ“N
-        return 'https://pinggo-backend-production.up.railway.app';
+        return 'https://viax-backend-production.up.railway.app';
     }
   }
 
@@ -93,10 +93,10 @@ class AppConfig {
         return candidates;
 
       case Environment.staging:
-        return ['https://staging-api.pingo.com'];
+        return ['https://staging-api.viax.com'];
 
       case Environment.production:
-        return ['https://pinggo-backend-production.up.railway.app'];
+        return ['https://viax-backend-production.up.railway.app'];
     }
   }
 
@@ -110,9 +110,9 @@ class AppConfig {
   // ============================================
   // Cada servicio tiene su propia URL modular
   // En producciÃ³n con servidores separados, cambiar a:
-  //   - authServiceUrl: 'https://auth.pingo.com/v1'
-  //   - conductorServiceUrl: 'https://conductors.pingo.com/v1'
-  //   - adminServiceUrl: 'https://admin.pingo.com/v1'
+  //   - authServiceUrl: 'https://auth.viax.com/v1'
+  //   - conductorServiceUrl: 'https://conductors.viax.com/v1'
+  //   - adminServiceUrl: 'https://admin.viax.com/v1'
   
   /// Microservicio de AutenticaciÃ³n y Usuarios
   /// Endpoints: login, register, profile, email_service, etc.

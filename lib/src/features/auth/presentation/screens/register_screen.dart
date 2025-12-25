@@ -86,9 +86,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          Navigator.pushReplacementNamed(
+          Navigator.pushNamedAndRemoveUntil(
             context, 
             RouteNames.welcomeSplash,
+            (route) => false,
             arguments: {'email': widget.email},
           );
         }
@@ -96,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (e.toString().contains('Field') || e.toString().contains('latitud')) {
            _showSnackBar('Registro local completado (Modo Offline).', isError: false);
            await Future.delayed(const Duration(seconds: 1));
-           if (mounted) Navigator.pushReplacementNamed(context, RouteNames.home, arguments: {'email': widget.email});
+           if (mounted) Navigator.pushNamedAndRemoveUntil(context, RouteNames.home, (route) => false, arguments: {'email': widget.email});
            return;
         }
         _showSnackBar('Error: ${e.toString()}', isError: true);

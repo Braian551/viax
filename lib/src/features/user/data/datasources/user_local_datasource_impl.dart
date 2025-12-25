@@ -10,10 +10,10 @@ import 'user_local_datasource.dart';
 /// - Serializar/deserializar JSON
 /// - Manejar errores de almacenamiento local
 class UserLocalDataSourceImpl implements UserLocalDataSource {
-  static const String _legacySessionKey = 'pingo_user_session';
-  static const String _legacyUserEmailKey = 'pingo_user_email';
-  static const String _legacyUserIdKey = 'pingo_user_id';
-  static const String _legacyUserTypeKey = 'pingo_user_type';
+  static const String _legacySessionKey = 'viax_user_session';
+  static const String _legacyUserEmailKey = 'viax_user_email';
+  static const String _legacyUserIdKey = 'viax_user_id';
+  static const String _legacyUserTypeKey = 'viax_user_type';
 
   static const String _sessionKey = 'viax_user_session';
   static const String _userEmailKey = 'viax_user_email';

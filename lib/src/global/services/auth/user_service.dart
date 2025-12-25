@@ -251,11 +251,11 @@ class UserService {
   }
 
   // Session helpers using SharedPreferences (legacy keys migrated to Viax)
-  static const String _legacyUserEmail = 'pingo_user_email';
-  static const String _legacyUserId = 'pingo_user_id';
-  static const String _legacyUserType = 'pingo_user_type';
-  static const String _legacyUserName = 'pingo_user_name';
-  static const String _legacyUserPhone = 'pingo_user_phone';
+  static const String _legacyUserEmail = 'viax_user_email';
+  static const String _legacyUserId = 'viax_user_id';
+  static const String _legacyUserType = 'viax_user_type';
+  static const String _legacyUserName = 'viax_user_name';
+  static const String _legacyUserPhone = 'viax_user_phone';
 
   static const String _kUserEmail = 'viax_user_email';
   static const String _kUserId = 'viax_user_id';
@@ -298,7 +298,7 @@ class UserService {
     String? nombre = prefs.getString(_kUserName);
     String? telefono = prefs.getString(_kUserPhone);
 
-    // MigraciÃ³n automÃ¡tica desde claves legacy (pingo_*) si no existen las nuevas
+    // MigraciÃ³n automÃ¡tica desde claves legacy (viax_*) si no existen las nuevas
     if (email == null && id == null &&
         !prefs.containsKey(_kUserEmail) && !prefs.containsKey(_kUserId)) {
       final legacyEmail = prefs.getString(_legacyUserEmail);
