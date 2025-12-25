@@ -19,7 +19,7 @@ class RegisterStepIndicator extends StatelessWidget {
     
     return Center(
       child: SizedBox(
-        width: 200, // Fixed width to keep steps compact and centered
+        width: 320, // Increased width for "longer" look
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(totalSteps, (index) {
@@ -64,8 +64,8 @@ class RegisterStepIndicator extends StatelessWidget {
                 if (index < totalSteps - 1)
                   Container(
                     height: 3,
-                    width: 32,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    width: 70, // Increased line length
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: isCompleted 
                           ? AppColors.primary 
