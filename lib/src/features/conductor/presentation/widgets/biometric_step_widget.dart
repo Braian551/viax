@@ -296,13 +296,27 @@ class _BiometricStepWidgetState extends State<BiometricStepWidget> with WidgetsB
       return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
+    // Explicitly handle aspect ratio to "COVER" the 280x280 circle
+    final size = MediaQuery.of(context).size;
+    // Calculate scale to ensure the camera preview covers the circle completely
+    // CameraPreview preserves aspect ratio. We scale it up.
+    var scale = 1.0;
+    if (_controller!.value.aspectRatio < 1) {
+       // Portrait aspect ratio (e.g. 9/16)
+       scale = 1 / _controller!.value.aspectRatio; 
+    } else {
+       // Landscape aspect ratio (shouldn't happen often for front cam in portrait app, but safety)
+       scale = _controller!.value.aspectRatio;
+    }
+
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Camera Circle
-        Container(
-          width: 250,
-          height: 250,
+        // Camera Circle with Scanner Effect
+         Container(
+          width: 280,
+          height: 280,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
@@ -311,54 +325,172 @@ class _BiometricStepWidgetState extends State<BiometricStepWidget> with WidgetsB
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                spreadRadius: 2,
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 25,
+                spreadRadius: 5,
               )
             ],
           ),
+          // IMPORTANT: ClipOval here to clip BOTH Camera and Scanner Overlay
           child: ClipOval(
-            child: CameraPreview(_controller!),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. Camera Preview (Scaled to Cover)
+                Transform.scale(
+                  scale: scale * 1.2, // Slight extra zoom to avoid any edges
+                  child: Center(
+                    child: CameraPreview(_controller!),
+                  ),
+                ),
+                
+                // 2. Scanner Animation Overlay (Now clipped inside circle)
+                if (_currentStep != LivenessStep.completed)
+                  _ScannerOverlay(),
+                  
+                // 3. Success Overlay
+                if (_currentStep == LivenessStep.completed)
+                  Container(
+                    color: Colors.black45,
+                    child: const Center(
+                      child: Icon(Icons.check_circle_outline_rounded, color: Colors.greenAccent, size: 80),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 30),
+        
+        // Dynamic Instruction Card
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: SlideTransition(position: Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(anim), child: child)),
+          child: Container(
+            key: ValueKey(_instructionText),
+            margin: const EdgeInsets.symmetric(horizontal: 20), // Prevent edge touching
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: widget.isDark ? Colors.grey.shade900.withOpacity(0.9) : Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Prevent height overflow
+              children: [
+                Icon(_instructionIcon, size: 48, color: AppColors.primary),
+                const SizedBox(height: 12),
+                Flexible( // Handle long text
+                  child: Text(
+                    _instructionText,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                      color: widget.isDark ? Colors.white : Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         
         const SizedBox(height: 24),
         
-        // Dynamic Instruction
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Column(
-            key: ValueKey(_instructionText),
-            children: [
-              Icon(_instructionIcon, size: 40, color: widget.isDark ? Colors.white : Colors.black87),
-              const SizedBox(height: 8),
-              Text(
-                _instructionText,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: widget.isDark ? Colors.white : Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Progress Bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: LinearProgressIndicator(
-            value: _progress,
-            backgroundColor: widget.isDark ? Colors.white12 : Colors.grey.shade200,
-            color: AppColors.primary,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(4),
-          ),
+        // Modern Segmented Progress Bar
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(4, (index) {
+             double threshold = (index + 1) / 4.0;
+             bool active = _progress >= (index / 4.0);
+             bool completed = _progress >= threshold;
+             
+             return AnimatedContainer(
+               duration: const Duration(milliseconds: 300),
+               margin: const EdgeInsets.symmetric(horizontal: 4),
+               height: 6,
+               width: completed ? 20 : (active ? 40 : 12),
+               decoration: BoxDecoration(
+                 color: completed ? Colors.green : (active ? AppColors.primary : Colors.grey.withOpacity(0.3)),
+                 borderRadius: BorderRadius.circular(3),
+               ),
+             );
+          }),
         ),
       ],
     );
   }
+}
+
+class _ScannerOverlay extends StatefulWidget {
+  @override
+  __ScannerOverlayState createState() => __ScannerOverlayState();
+}
+
+class __ScannerOverlayState extends State<_ScannerOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+         return CustomPaint(
+           painter: _ScannerPainter(_controller.value),
+         );
+      },
+    );
+  }
+}
+
+class _ScannerPainter extends CustomPainter {
+  final double value;
+  _ScannerPainter(this.value);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final y = value * size.height;
+    
+    // Draw scanning line
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    
+    // Draw gradient glow
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [AppColors.primary.withOpacity(0.0), AppColors.primary.withOpacity(0.3)],
+    );
+    
+    final rect = Rect.fromLTWH(0, y - 40, size.width, 40);
+    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

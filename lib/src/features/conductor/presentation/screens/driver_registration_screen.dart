@@ -237,26 +237,33 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                 // Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back_ios_new_rounded, 
-                          color: isDark ? Colors.white : Colors.black87, size: 20),
-                        onPressed: _prevStep,
-                        style: IconButton.styleFrom(
-                          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                          padding: const EdgeInsets.all(12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_back_ios_new_rounded, 
+                            color: isDark ? Colors.white : Colors.black87, size: 20),
+                          onPressed: _prevStep,
+                          style: IconButton.styleFrom(
+                            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                            padding: const EdgeInsets.all(12),
+                          ),
                         ),
                       ),
-                      const Spacer(),
-                      // Reuse RegisterStepIndicator
-                      RegisterStepIndicator(
-                        currentStep: _currentStep,
-                        totalSteps: _totalSteps,
-                        lineWidth: 30,
+                      
+                      // Center Indicator (With constraints to prevent overflow)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 250),
+                        child: FittedBox(
+                          child: RegisterStepIndicator(
+                            currentStep: _currentStep,
+                            totalSteps: _totalSteps,
+                            lineWidth: 30,
+                          ),
+                        ),
                       ),
-                      const Spacer(),
-                      const SizedBox(width: 48), // Balance the back button (icon 20 + padding 12*2 = 44 approx)
                     ],
                   ),
                 ),
@@ -602,18 +609,15 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ],
 
         if (_isBiometricActive)
-           SizedBox(
-             height: 480,
-             child: BiometricStepWidget(
-               isDark: isDark,
-               onVerificationComplete: (file) {
-                 setState(() {
-                   _selfiePhoto = file;
-                   _isBiometricActive = false;
-                 });
-                 CustomSnackbar.showSuccess(context, message: '¡Identidad verificada correctamente!');
-               },
-             ),
+           BiometricStepWidget(
+             isDark: isDark,
+             onVerificationComplete: (file) {
+               setState(() {
+                 _selfiePhoto = file;
+                 _isBiometricActive = false;
+               });
+               CustomSnackbar.showSuccess(context, message: '¡Identidad verificada correctamente!');
+             },
            )
         else
         // Action Button
@@ -703,11 +707,14 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Asegúrate de tener buena iluminación y no usar gafas oscuras o gorra. Esto es necesario para validar que eres tú.',
+          _selfiePhoto != null 
+              ? '¡Validación exitosa! Tu identidad ha sido confirmada. Puedes continuar.' 
+              : 'Asegúrate de tener buena iluminación y no usar gafas oscuras o gorra. Esto es necesario para validar que eres tú.',
           textAlign: TextAlign.center,
           style: TextStyle(
-             color: isDark ? Colors.white70 : Colors.black87,
+             color: _selfiePhoto != null ? Colors.green : (isDark ? Colors.white70 : Colors.black87),
              fontSize: 14,
+             fontWeight: _selfiePhoto != null ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ],
