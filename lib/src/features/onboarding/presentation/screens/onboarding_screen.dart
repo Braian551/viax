@@ -113,18 +113,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                        Row(
                         children: [
-                           Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: 24,
-                              height: 24,
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.flash_on, color: AppColors.primary, size: 24),
-                            ),
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 28,
+                            height: 28,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.flash_on, color: AppColors.primary, size: 28),
                           ),
                           const SizedBox(width: 12),
                           Text(
