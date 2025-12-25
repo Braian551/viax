@@ -37,6 +37,8 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/routes/animated_routes.dart';
 import 'package:viax/src/widgets/auth_wrapper.dart';
 
+import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
+
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -102,6 +104,8 @@ class AppRouter {
             ),
           );
         }
+      case RouteNames.driverRegistration:
+        return FadeSlidePageRoute(page: const DriverRegistrationScreen(), settings: settings);
       case RouteNames.home:
         // Cuando el usuario se autentique debe ir a la pantalla principal (HomeUserScreen)
         return MaterialPageRoute(builder: (_) => const HomeUserScreen());

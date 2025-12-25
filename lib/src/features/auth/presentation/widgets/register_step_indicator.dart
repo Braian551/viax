@@ -4,13 +4,13 @@ import 'package:viax/src/theme/app_colors.dart';
 class RegisterStepIndicator extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
-  final List<String> stepTitles;
+  final double lineWidth;
 
   const RegisterStepIndicator({
     super.key,
     required this.currentStep,
     required this.totalSteps,
-    this.stepTitles = const ['Personal', 'Contacto', 'Seguridad'],
+    this.lineWidth = 70,
   });
 
   @override
@@ -18,10 +18,11 @@ class RegisterStepIndicator extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Center(
-      child: SizedBox(
-        width: 320, // Increased width for "longer" look
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: List.generate(totalSteps, (index) {
             final isActive = index == currentStep;
             final isCompleted = index < currentStep;
@@ -32,8 +33,8 @@ class RegisterStepIndicator extends StatelessWidget {
                 // Step Circle
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isActive || isCompleted 
@@ -49,13 +50,13 @@ class RegisterStepIndicator extends StatelessWidget {
                   ),
                   child: Center(
                     child: isCompleted 
-                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
+                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
                         : Text(
                             '${index + 1}',
                             style: TextStyle(
                               color: isActive ? Colors.white : (isDark ? Colors.white54 : Colors.grey),
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: 14,
                             ),
                           ),
                   ),
@@ -64,7 +65,7 @@ class RegisterStepIndicator extends StatelessWidget {
                 if (index < totalSteps - 1)
                   Container(
                     height: 3,
-                    width: 70, // Increased line length
+                    width: lineWidth, 
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: isCompleted 

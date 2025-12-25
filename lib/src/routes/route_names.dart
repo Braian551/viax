@@ -11,6 +11,7 @@
   static const String phoneAuth = '/phone-auth';
   static const String home = '/home';
   static const String locationPicker = '/location-picker';
+  static const String driverRegistration = '/driver-registration';
   
   // Rutas de usuario
   static const String requestTrip = '/request_trip';

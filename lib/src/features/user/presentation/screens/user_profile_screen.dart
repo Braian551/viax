@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -356,7 +357,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            CustomSnackbar.showInfo(context, message: 'Próximamente: Registra tu vehículo y empieza a ganar.');
+            Navigator.pushNamed(context, RouteNames.driverRegistration);
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
