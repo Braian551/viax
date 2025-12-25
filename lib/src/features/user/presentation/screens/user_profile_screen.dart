@@ -167,6 +167,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                             // Calificación (Mocked)
                             _buildRatingSection(isDark),
 
+                            const SizedBox(height: 24),
+
+                            // Opción para ser conductor (Novedad)
+                            _buildBecomeDriverCard(isDark),
+
                             const SizedBox(height: 32),
 
                             // Opciones
@@ -322,6 +327,91 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBecomeDriverCard(bool isDark) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            CustomSnackbar.showInfo(context, message: 'Próximamente: Registra tu vehículo y empieza a ganar.');
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                // Icono decorativo
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.directions_car_filled_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Texto
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Genera Ingresos Extra',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Conviértete en conductor de Viax y maneja tu propio tiempo.',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
