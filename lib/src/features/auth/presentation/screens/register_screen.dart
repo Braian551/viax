@@ -176,42 +176,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-                  child: Row(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                       GestureDetector(
-                         onTap: _prevStep,
-                         child: Container(
-                           padding: const EdgeInsets.all(10),
-                           decoration: BoxDecoration(
-                             color: isDark ? Colors.white10 : Colors.grey.shade100,
-                             borderRadius: BorderRadius.circular(12),
+                       Align(
+                         alignment: Alignment.centerLeft,
+                         child: GestureDetector(
+                           onTap: _prevStep,
+                           child: Container(
+                             padding: const EdgeInsets.all(8),
+                             decoration: BoxDecoration(
+                               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                               shape: BoxShape.circle,
+                               border: Border.all(
+                                 color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                               ),
+                             ),
+                             child: Icon(
+                               Icons.arrow_back_ios_new_rounded, 
+                               size: 18,
+                               color: textColor,
+                             ),
                            ),
-                           child: Icon(
-                             Icons.arrow_back_rounded, 
-                             size: 20,
-                             color: textColor
-                            ),
                          ),
                        ),
-                       const SizedBox(width: 20),
-                       Text(
-                         'Crear Cuenta',
-                         style: TextStyle(
-                           fontSize: 20,
-                           fontWeight: FontWeight.bold,
-                           color: textColor,
-                         ),
+                       RegisterStepIndicator(
+                         currentStep: _currentStep, 
+                         totalSteps: _totalSteps,
                        ),
                     ],
                   ),
                 ),
-
-                // Progress Indicator
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  child: RegisterStepIndicator(currentStep: _currentStep, totalSteps: _totalSteps),
-                ),
+                
+                const SizedBox(height: 8),
                 
                 // Form Content
                 Expanded(
