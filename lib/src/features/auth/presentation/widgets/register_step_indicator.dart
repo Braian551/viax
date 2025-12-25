@@ -13,25 +13,55 @@ class RegisterStepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(totalSteps, (index) {
-        final isActive = index == currentStep;
-        final isPassed = index < currentStep;
-
-        return Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            height: 4,
-            decoration: BoxDecoration(
-               color: isActive || isPassed 
-                  ? AppColors.primary 
-                  : AppColors.primary.withOpacity(0.2),
-               borderRadius: BorderRadius.circular(2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          children: [
+            // Background Track
+            Container(
+              height: 4,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white10 
+                    : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-        );
-      }),
+            // Validating / Completed Track
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate width based on progress
+                // Step 0: 33% (1/3), Step 1: 66%, Step 2: 100%
+                final double progress = (currentStep + 1) / totalSteps;
+                final double width = constraints.maxWidth * progress;
+
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.fastOutSlowIn,
+                  height: 4,
+                  width: width,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primaryLight, AppColors.primary],
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 }

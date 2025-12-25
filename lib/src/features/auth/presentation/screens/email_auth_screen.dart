@@ -1,10 +1,10 @@
-﻿// lib/src/features/auth/presentation/screens/email_auth_screen.dart
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/widgets/auth_text_field.dart';
 
 class EmailAuthScreen extends StatefulWidget {
   const EmailAuthScreen({super.key});
@@ -89,83 +89,19 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Campo de email con estilo consistente
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            isDark 
-                              ? AppColors.darkSurface.withValues(alpha: 0.8) 
-                              : AppColors.lightSurface.withValues(alpha: 0.8),
-                            isDark 
-                              ? AppColors.darkCard.withValues(alpha: 0.4) 
-                              : AppColors.lightCard.withValues(alpha: 0.4),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark ? AppColors.darkShadow : AppColors.lightShadow,
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Correo electrónico',
-                          labelStyle: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixIcon: Container(
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [AppColors.primary, AppColors.primaryLight],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.email_rounded, color: Colors.white, size: 20),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        ),
-                        validator: (value) {
+                    // Campo de email usando componente compartido
+                    AuthTextField(
+                      controller: _emailController,
+                      label: 'Correo electrónico',
+                      icon: Icons.email_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
                         final email = value?.trim() ?? '';
                         if (email.isEmpty) return 'Por favor ingresa tu correo electrónico';
-
-                        // A forgiving but safe regex for common email addresses
                         final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}");
                         if (!emailRegex.hasMatch(email)) return 'Por favor ingresa un correo válido';
-
-                          return null;
-                        },
-                      ),
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 30),

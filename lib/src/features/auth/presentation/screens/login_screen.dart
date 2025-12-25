@@ -6,6 +6,7 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/auth_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? email;
@@ -244,85 +245,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Campo de contraseña con estilo consistente
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            isDark 
-                              ? AppColors.darkSurface.withValues(alpha: 0.8) 
-                              : AppColors.lightSurface.withValues(alpha: 0.8),
-                            isDark 
-                              ? AppColors.darkCard.withValues(alpha: 0.4) 
-                              : AppColors.lightCard.withValues(alpha: 0.4),
-                          ],
+                    // Campo de contraseña usando componente compartido
+                    AuthTextField(
+                      controller: _passwordController,
+                      label: 'Contraseña',
+                      icon: Icons.lock_rounded,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                          size: 22,
                         ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark ? AppColors.darkShadow : AppColors.lightShadow,
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          labelStyle: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixIcon: Container(
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [AppColors.primary, AppColors.primaryLight],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.lock_rounded, color: Colors.black, size: 20),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                              size: 22,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        ),
-                        validator: (value) {
+                      validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Por favor ingresa tu contraseña';
                         }
@@ -331,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                         return null;
                       },
-                    ),
                     ),
 
                     const SizedBox(height: 16),

@@ -2,8 +2,9 @@
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:viax/src/features/auth/presentation/widgets/register_text_field.dart';
+import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
+import 'dart:ui';
 
 class RegisterScreen extends StatefulWidget {
   final String email;
@@ -92,7 +93,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       } catch (e) {
-        // Fallback for demo/testing if backend fails on specific constraint
         if (e.toString().contains('Field') || e.toString().contains('latitud')) {
            _showSnackBar('Registro local completado (Modo Offline).', isError: false);
            await Future.delayed(const Duration(seconds: 1));
@@ -120,15 +120,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _nextStep() {
     final bool isLastStep = _currentStep == _totalSteps - 1;
     
-    // Validations per step
+    // Validations
     if (_currentStep == 0) {
       if (_nameController.text.isEmpty || _lastNameController.text.isEmpty) {
-        _showSnackBar('Por favor completa tu nombre y apellido', isError: true);
+        _showSnackBar('Completa todos los campos personales', isError: true);
         return;
       }
     } else if (_currentStep == 1) {
        if (_phoneController.text.isEmpty) {
-         _showSnackBar('Por favor ingresa tu teléfono', isError: true);
+         _showSnackBar('Ingresa un número de teléfono válido', isError: true);
          return;
        }
     }
@@ -150,131 +150,212 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                children: [
-                   Row(
-                     children: [
-                       IconButton(
-                         onPressed: _prevStep,
-                         icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.primary),
-                         padding: EdgeInsets.zero,
-                         constraints: const BoxConstraints(),
-                       ),
-                       const Spacer(),
-                       Text(
-                         'Paso ${_currentStep + 1} de $_totalSteps',
-                         style: TextStyle(
-                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                           fontWeight: FontWeight.w600,
+      body: Stack(
+        children: [
+          // Background Blobs (Soft Gradient)
+          Positioned(
+            top: -100,
+            right: -50,
+            child: _buildGradientBlob(size, AppColors.primary.withValues(alpha: 0.15)),
+          ),
+          Positioned(
+            top: size.height * 0.4,
+            left: -80,
+            child: _buildGradientBlob(size, AppColors.accent.withValues(alpha: 0.1)),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                  child: Row(
+                    children: [
+                       GestureDetector(
+                         onTap: _prevStep,
+                         child: Container(
+                           padding: const EdgeInsets.all(10),
+                           decoration: BoxDecoration(
+                             color: isDark ? Colors.white10 : Colors.grey.shade100,
+                             borderRadius: BorderRadius.circular(12),
+                           ),
+                           child: Icon(
+                             Icons.arrow_back_rounded, 
+                             size: 20,
+                             color: textColor
+                            ),
                          ),
                        ),
-                       const Spacer(),
-                       const SizedBox(width: 24), // Balance icon
-                     ],
-                   ),
-                   const SizedBox(height: 20),
-                   RegisterStepIndicator(currentStep: _currentStep, totalSteps: _totalSteps),
-                ],
-              ),
-            ),
-            
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                             begin: const Offset(0.05, 0),
-                             end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _buildCurrentStepContent(isDark),
+                       const SizedBox(width: 20),
+                       Text(
+                         'Crear Cuenta',
+                         style: TextStyle(
+                           fontSize: 20,
+                           fontWeight: FontWeight.bold,
+                           color: textColor,
+                         ),
+                       ),
+                    ],
                   ),
                 ),
-              ),
-            ),
 
-            // Bottom Button
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _nextStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 4,
-                    shadowColor: AppColors.primary.withOpacity(0.4),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : Text(
-                          _currentStep == _totalSteps - 1 ? 'Crear Cuenta' : 'Siguiente',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                // Progress Indicator
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  child: RegisterStepIndicator(currentStep: _currentStep, totalSteps: _totalSteps),
                 ),
-              ),
+                
+                // Form Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInBack,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                 begin: const Offset(0.1, 0),
+                                 end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _buildCurrentStepContent(isDark, textColor),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Bottom Action Button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 60,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _nextStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _currentStep == _totalSteps - 1 ? 'Registrarme' : 'Continuar',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCurrentStepContent(bool isDark) {
+  Widget _buildGradientBlob(Size size, Color color) {
+    return Container(
+      width: size.width * 0.7,
+      height: size.width * 0.7,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+        child: Container(color: Colors.transparent),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStepContent(bool isDark, Color textColor) {
+    if (_useMinimalHeader) {
+       // Minimal layout doesn't repeat step numbers.
+       // We can adjust spacing here.
+    }
+    return _buildContentInternal(isDark, textColor);
+  }
+
+  bool get _useMinimalHeader => true;
+
+  Widget _buildContentInternal(bool isDark, Color textColor) {
     switch (_currentStep) {
       case 0:
         return Column(
           key: const ValueKey(0),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTitle('Información Personal', 'Cuéntanos un poco sobre ti.'),
-            const SizedBox(height: 24),
-            RegisterTextField(
+            const SizedBox(height: 10),
+            Text(
+              'Empecemos con tus datos.',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+                height: 1.2,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Ingresa tu nombre para identificarte en la app.',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 40),
+            AuthTextField(
               controller: _nameController,
               label: 'Nombre',
               icon: Icons.person_rounded,
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
+              validator: (v) => v!.isEmpty ? 'Requerido' : null,
             ),
-            RegisterTextField(
+            const SizedBox(height: 16),
+            AuthTextField(
               controller: _lastNameController,
               label: 'Apellido',
               icon: Icons.person_outline_rounded,
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
+              validator: (v) => v!.isEmpty ? 'Requerido' : null,
             ),
           ],
         );
@@ -283,39 +364,109 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: const ValueKey(1),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             _buildTitle('Contacto', '¿Cómo podemos contactarte?'),
-             const SizedBox(height: 24),
-             // Email is read-only usually since passed from previous screen, 
-             // but could be displayed as info
+             const SizedBox(height: 10),
+             Text(
+              'Contacto',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+                letterSpacing: -0.5,
+              ),
+             ),
+             const SizedBox(height: 10),
+             Text(
+              'Necesitamos tu número para coordinar tus viajes.',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+             ),
+             const SizedBox(height: 40),
+             // Info Card for Email - styled like AuthTextField
              Container(
-               padding: const EdgeInsets.all(16),
                decoration: BoxDecoration(
-                 color: AppColors.primary.withOpacity(0.1),
-                 borderRadius: BorderRadius.circular(12),
-               ),
-               child: Row(
-                 children: [
-                   const Icon(Icons.email_rounded, color: AppColors.primary),
-                   const SizedBox(width: 12),
-                   Expanded(
-                     child: Text(
-                       widget.email,
-                       style: TextStyle(
-                         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                         fontWeight: FontWeight.w500,
-                       ),
-                     ),
+                 gradient: LinearGradient(
+                   begin: Alignment.topLeft,
+                   end: Alignment.bottomRight,
+                   colors: [
+                     isDark 
+                       ? AppColors.darkSurface.withValues(alpha: 0.8) 
+                       : AppColors.lightSurface.withValues(alpha: 0.8),
+                     isDark 
+                       ? AppColors.darkCard.withValues(alpha: 0.4) 
+                       : AppColors.lightCard.withValues(alpha: 0.4),
+                   ],
+                 ),
+                 borderRadius: BorderRadius.circular(16),
+                 border: Border.all(
+                   color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                   width: 1.5,
+                 ),
+                 boxShadow: [
+                   BoxShadow(
+                     color: isDark ? AppColors.darkShadow : AppColors.lightShadow,
+                     blurRadius: 8,
+                     offset: const Offset(0, 2),
                    ),
                  ],
                ),
+               child: Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                 child: Row(
+                   children: [
+                     Container(
+                       padding: const EdgeInsets.all(8),
+                       decoration: BoxDecoration(
+                         gradient: LinearGradient(
+                           colors: [AppColors.primary, AppColors.primaryLight],
+                         ),
+                         borderRadius: BorderRadius.circular(10),
+                         boxShadow: [
+                           BoxShadow(
+                             color: AppColors.primary.withValues(alpha: 0.3),
+                             blurRadius: 8,
+                             spreadRadius: 1,
+                           ),
+                         ],
+                       ),
+                       child: const Icon(Icons.email_rounded, color: Colors.white, size: 20),
+                     ),
+                     const SizedBox(width: 16),
+                     Expanded(
+                       child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           Text(
+                             'Correo Electrónico',
+                             style: TextStyle(
+                               fontSize: 12,
+                               color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                             ),
+                           ),
+                           Text(
+                             widget.email,
+                             style: TextStyle(
+                               fontWeight: FontWeight.w600,
+                               color: textColor,
+                               fontSize: 16,
+                             ),
+                           ),
+                         ],
+                       ),
+                     ),
+                     const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                   ],
+                 ),
+               ),
              ),
-             const SizedBox(height: 16),
-             RegisterTextField(
+             const SizedBox(height: 24),
+             AuthTextField(
               controller: _phoneController,
-              label: 'Teléfono',
-              icon: Icons.phone_rounded,
+              label: 'Teléfono Móvil',
+              icon: Icons.phone_android_rounded,
               keyboardType: TextInputType.phone,
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
+              validator: (v) => v!.isEmpty ? 'Requerido' : null,
             ),
           ],
         );
@@ -324,29 +475,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: const ValueKey(2),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTitle('Seguridad', 'Protege tu cuenta con una contraseña segura.'),
-            const SizedBox(height: 24),
-            RegisterTextField(
+            const SizedBox(height: 10),
+             Text(
+              'Seguridad',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+                letterSpacing: -0.5,
+              ),
+             ),
+             const SizedBox(height: 10),
+             Text(
+              'Crea una contraseña segura para proteger tu cuenta.',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+             ),
+            const SizedBox(height: 40),
+            AuthTextField(
               controller: _passwordController,
               label: 'Contraseña',
               icon: Icons.lock_rounded,
               obscureText: _obscurePassword,
-              suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              suffixIcon: GestureDetector(
+                onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                child: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
               ),
               validator: (v) => (v?.length ?? 0) < 6 ? 'Mínimo 6 caracteres' : null,
             ),
-            RegisterTextField(
+            const SizedBox(height: 16),
+            AuthTextField(
               controller: _confirmPasswordController,
-              label: 'Confirmar Contraseña',
+              label: 'Repetir Contraseña',
               icon: Icons.lock_outline_rounded,
               obscureText: _obscureConfirmPassword,
-               suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+               suffixIcon: GestureDetector(
+                onTap: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                child: Icon(_obscureConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
               ),
-              validator: (v) => v != _passwordController.text ? 'Las contraseñas no coinciden' : null,
+              validator: (v) => v != _passwordController.text ? 'No coinciden' : null,
               isLast: true,
             ),
           ],
@@ -354,30 +523,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  Widget _buildTitle(String title, String subtitle) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 16,
-            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-          ),
-        ),
-      ],
-    );
   }
 }
