@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../domain/entities/empresa_transporte.dart';
 
 /// Modelo de Datos para EmpresaTransporte
@@ -182,6 +183,7 @@ class EmpresaFormData {
   String? representanteEmail;
   List<String> tiposVehiculo;
   String? logoUrl;
+  File? logoFile;
   String? descripcion;
   String estado;
   String? notasAdmin;
@@ -201,6 +203,7 @@ class EmpresaFormData {
     this.representanteEmail,
     this.tiposVehiculo = const [],
     this.logoUrl,
+    this.logoFile,
     this.descripcion,
     this.estado = 'activo',
     this.notasAdmin,

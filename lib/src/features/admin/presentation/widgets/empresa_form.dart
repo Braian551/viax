@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/admin/data/models/empresa_transporte_model.dart';
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
 import 'package:viax/src/theme/app_colors.dart';
@@ -58,6 +61,16 @@ class _EmpresaFormState extends State<EmpresaForm> {
         : EmpresaFormData();
     
     _initControllers();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _formData.logoFile = File(pickedFile.path);
+      });
+    }
   }
 
   void _initControllers() {
@@ -132,6 +145,68 @@ class _EmpresaFormState extends State<EmpresaForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : Colors.grey[200],
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                        image: _formData.logoFile != null
+                            ? DecorationImage(
+                                image: FileImage(_formData.logoFile!),
+                                fit: BoxFit.cover,
+                              )
+                            : (_formData.logoUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(
+                                      '${AppConfig.baseUrl}/${_formData.logoUrl}',
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null),
+                      ),
+                      child: _formData.logoFile == null && _formData.logoUrl == null
+                          ? const Icon(
+                              Icons.add_a_photo,
+                              size: 40,
+                              color: Colors.grey,
+                            )
+                          : null,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             _buildSectionTitle(context, 'Información Básica', Icons.business),
             const SizedBox(height: 16),
             _buildTextField(

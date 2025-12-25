@@ -37,7 +37,12 @@ try {
     $action = $_GET['action'] ?? $_POST['action'] ?? null;
     
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $input = getJsonInput();
+        $contentType = $_SERVER["CONTENT_TYPE"] ?? '';
+        if (strpos($contentType, 'application/json') !== false) {
+            $input = getJsonInput();
+        } else {
+            $input = $_POST;
+        }
         $action = $action ?? $input['action'] ?? null;
     }
     
@@ -247,8 +252,30 @@ function createEmpresa($db, $input) {
     
     // Preparar tipos_vehiculo como array PostgreSQL
     $tiposVehiculo = null;
-    if (!empty($input['tipos_vehiculo']) && is_array($input['tipos_vehiculo'])) {
-        $tiposVehiculo = phpArrayToPg($input['tipos_vehiculo']);
+    if (!empty($input['tipos_vehiculo'])) {
+        // En multipart puede venir como string JSON o array directo
+        $vehiculos = $input['tipos_vehiculo'];
+        if (is_string($vehiculos)) {
+            // Intentar decodificar si es string JSON
+            $decoded = json_decode($vehiculos, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $vehiculos = $decoded;
+            } else {
+                // Si no es JSON, asumir CSV o un solo valor
+                $vehiculos = explode(',', $vehiculos);
+            }
+        }
+        
+        if (is_array($vehiculos)) {
+            $tiposVehiculo = phpArrayToPg($vehiculos);
+        }
+    }
+    
+    // Manejar subida de logo
+    $logoUrl = $input['logo_url'] ?? null;
+    $uploadedLogo = handleLogoUpload();
+    if ($uploadedLogo) {
+        $logoUrl = $uploadedLogo;
     }
     
     $query = "INSERT INTO empresas_transporte (
@@ -274,7 +301,7 @@ function createEmpresa($db, $input) {
         $input['representante_telefono'] ?? null,
         $input['representante_email'] ?? null,
         $tiposVehiculo,
-        $input['logo_url'] ?? null,
+        $logoUrl,
         $input['descripcion'] ?? null,
         $input['estado'] ?? 'activo',
         $adminId,
@@ -331,8 +358,26 @@ function updateEmpresa($db, $input) {
     
     // Preparar tipos_vehiculo
     $tiposVehiculo = null;
-    if (isset($input['tipos_vehiculo']) && is_array($input['tipos_vehiculo'])) {
-        $tiposVehiculo = phpArrayToPg($input['tipos_vehiculo']);
+    if (isset($input['tipos_vehiculo'])) {
+        $vehiculos = $input['tipos_vehiculo'];
+        if (is_string($vehiculos)) {
+            $decoded = json_decode($vehiculos, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $vehiculos = $decoded;
+            } else {
+                $vehiculos = explode(',', $vehiculos);
+            }
+        }
+        
+        if (is_array($vehiculos)) {
+            $tiposVehiculo = phpArrayToPg($vehiculos);
+        }
+    }
+    
+    // Manejar subida de logo
+    $uploadedLogo = handleLogoUpload();
+    if ($uploadedLogo) {
+        $input['logo_url'] = $uploadedLogo;
     }
     
     // Construir query dinámico solo con campos proporcionados
@@ -552,5 +597,58 @@ function logAuditAction($db, $adminId, $action, $tabla, $registroId, $detalles) 
     } catch (Exception $e) {
         error_log("Error al registrar auditoría: " . $e->getMessage());
     }
+}
+
+/**
+ * Validar y guardar logo de empresa
+ */
+function handleLogoUpload() {
+    if (!isset($_FILES['logo']) || $_FILES['logo']['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    $file = $_FILES['logo'];
+    
+    // Validar errores
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Error en la subida del archivo: ' . $file['error']);
+    }
+
+    // Validar tamaño (5MB)
+    if ($file['size'] > 5 * 1024 * 1024) {
+        throw new Exception('El archivo excede el tamaño máximo permitido (5MB)');
+    }
+
+    // Validar tipo
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mimeType, $allowedTypes)) {
+        throw new Exception('Tipo de archivo no permitido. Solo se permiten JPG, PNG y WEBP.');
+    }
+
+    // Estructura: uploads/empresas/YYYY/MM/
+    $year = date('Y');
+    $month = date('m');
+    $uploadDir = __DIR__ . "/../uploads/empresas/$year/$month/";
+    
+    if (!file_exists($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+            throw new Exception('No se pudo crear el directorio de subida');
+        }
+    }
+
+    // Nombre único
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'logo_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+    $targetPath = $uploadDir . $filename;
+    
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return "uploads/empresas/$year/$month/$filename";
+    }
+
+    throw new Exception('Error al mover el archivo subido');
 }
 

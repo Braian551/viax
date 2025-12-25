@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/error/exceptions.dart';
@@ -118,17 +119,46 @@ class EmpresaRemoteDataSourceImpl implements EmpresaRemoteDataSource {
   @override
   Future<int> createEmpresa(Map<String, dynamic> empresaData, int adminId) async {
     try {
-      final body = {
-        'action': 'create',
-        'admin_id': adminId,
-        ...empresaData,
-      };
+      final logoFile = empresaData['logo_file'] as File?;
+      if (empresaData.containsKey('logo_file')) {
+        empresaData.remove('logo_file');
+      }
 
-      final response = await client.post(
-        Uri.parse('$baseUrl/empresas.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(body),
-      );
+      http.Response response;
+
+      if (logoFile != null) {
+        final uri = Uri.parse('$baseUrl/empresas.php');
+        var request = http.MultipartRequest('POST', uri);
+        
+        request.fields['action'] = 'create';
+        request.fields['admin_id'] = adminId.toString();
+        
+        empresaData.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              request.fields[key] = json.encode(value);
+            } else {
+              request.fields[key] = value.toString();
+            }
+          }
+        });
+
+        request.files.add(await http.MultipartFile.fromPath('logo', logoFile.path));
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else {
+        final body = {
+          'action': 'create',
+          'admin_id': adminId,
+          ...empresaData,
+        };
+
+        response = await client.post(
+          Uri.parse('$baseUrl/empresas.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(body),
+        );
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -149,18 +179,48 @@ class EmpresaRemoteDataSourceImpl implements EmpresaRemoteDataSource {
   @override
   Future<void> updateEmpresa(int id, Map<String, dynamic> empresaData, int adminId) async {
     try {
-      final body = {
-        'action': 'update',
-        'id': id,
-        'admin_id': adminId,
-        ...empresaData,
-      };
+      final logoFile = empresaData['logo_file'] as File?;
+      if (empresaData.containsKey('logo_file')) {
+        empresaData.remove('logo_file');
+      }
 
-      final response = await client.post(
-        Uri.parse('$baseUrl/empresas.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(body),
-      );
+      http.Response response;
+
+      if (logoFile != null) {
+        final uri = Uri.parse('$baseUrl/empresas.php');
+        var request = http.MultipartRequest('POST', uri);
+        
+        request.fields['action'] = 'update';
+        request.fields['id'] = id.toString();
+        request.fields['admin_id'] = adminId.toString();
+        
+        empresaData.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              request.fields[key] = json.encode(value);
+            } else {
+              request.fields[key] = value.toString();
+            }
+          }
+        });
+
+        request.files.add(await http.MultipartFile.fromPath('logo', logoFile.path));
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else {
+        final body = {
+          'action': 'update',
+          'id': id,
+          'admin_id': adminId,
+          ...empresaData,
+        };
+
+        response = await client.post(
+          Uri.parse('$baseUrl/empresas.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(body),
+        );
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

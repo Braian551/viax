@@ -130,8 +130,13 @@ class EmpresaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final data = formData.toJson();
+      if (formData.logoFile != null) {
+        data['logo_file'] = formData.logoFile;
+      }
+
       final empresaId = await _repository.createEmpresa(
-        formData.toJson(),
+        data,
         adminId,
       );
       
@@ -156,9 +161,14 @@ class EmpresaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final data = formData.toJson();
+      if (formData.logoFile != null) {
+        data['logo_file'] = formData.logoFile;
+      }
+
       await _repository.updateEmpresa(
         id,
-        formData.toJson(),
+        data,
         adminId,
       );
       
