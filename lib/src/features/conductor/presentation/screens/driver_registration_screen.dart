@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/steps/vehicle_step_widget.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
   const DriverRegistrationScreen({super.key});
@@ -370,77 +371,20 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   }
 
   Widget _buildVehicleStep(bool isDark) {
-    return Column(
-      key: const ValueKey(0),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle('Tu Vehículo', 'Cuéntanos qué vas a conducir.', isDark),
-        
-        // Vehicle Type Selector Grid
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.5,
-          children: [
-            _buildTypeOption('moto', Icons.two_wheeler_rounded, 'Moto', isDark),
-            _buildTypeOption('carro', Icons.directions_car_rounded, 'Carro', isDark),
-            _buildTypeOption('taxi', Icons.local_taxi_rounded, 'Taxi', isDark),
-            _buildTypeOption('motocarro', Icons.electric_rickshaw_rounded, 'Motocarro', isDark), 
-          ],
-        ),
-        const SizedBox(height: 24),
-        
-        AuthTextField(
-          controller: _brandController, 
-          label: 'Marca', 
-          icon: _getVehicleIcon(_selectedVehicleType),
-        ),
-        const SizedBox(height: 16),
-        AuthTextField(controller: _modelController, label: 'Modelo (Ref)', icon: Icons.model_training_rounded),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: AuthTextField(controller: _yearController, label: 'Año', icon: Icons.calendar_today_rounded, keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: AuthTextField(controller: _colorController, label: 'Color', icon: Icons.color_lens_rounded)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        AuthTextField(
-          controller: _plateController, 
-          label: 'Placa', 
-          icon: Icons.tag_rounded,
-        ),
-        const SizedBox(height: 24),
-        
-        Text('Foto del Vehículo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-        const SizedBox(height: 8),
-        _buildImageUpload(
-          label: 'Tap para subir foto del vehículo',
-          file: _vehiclePhoto,
-          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _vehiclePhoto = file)),
-          isDark: isDark,
-        ),
-        
-        const SizedBox(height: 24),
-        
-        Text('Empresa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _showCompanyPicker(isDark),
-          child: AbsorbPointer(
-            child: AuthTextField(
-              controller: _companyController,
-              label: 'Seleccionar Empresa (Opcional)',
-              icon: Icons.business_rounded,
-              readOnly: true,
-            ),
-          ),
-        ),
-      ],
+    return VehicleStepWidget(
+      isDark: isDark,
+      selectedVehicleType: _selectedVehicleType,
+      onTypeSelected: (type) => setState(() => _selectedVehicleType = type),
+      brandController: _brandController,
+      modelController: _modelController,
+      yearController: _yearController,
+      colorController: _colorController,
+      plateController: _plateController,
+      vehiclePhoto: _vehiclePhoto,
+      onPickPhoto: () => _pickImage(ImageSource.gallery, (file) => setState(() => _vehiclePhoto = file)),
+      selectedCompany: _selectedCompany,
+      companyController: _companyController,
+      onShowCompanyPicker: () => _showCompanyPicker(isDark),
     );
   }
 
@@ -461,42 +405,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
     );
   }
 
-  Widget _buildTypeOption(String value, IconData icon, String label, bool isDark) {
-    final isSelected = _selectedVehicleType == value;
-    final color = isSelected ? AppColors.primary : (isDark ? AppColors.darkCard : AppColors.lightCard);
-    
-    return GestureDetector(
-      onTap: () => setState(() => _selectedVehicleType = value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : (isDark ? Colors.white12 : Colors.black12),
-            width: 2,
-          ),
-          boxShadow: isSelected ? [
-            BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))
-          ] : [],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54), size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildLicenseStep(bool isDark) {
     return Column(
