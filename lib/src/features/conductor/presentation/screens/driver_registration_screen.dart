@@ -425,19 +425,22 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
 
 
   Widget _buildLicenseStep(bool isDark) {
-    return Column(
-      key: const ValueKey(1),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle('Licencia', 'Datos de tu permiso de conducción.', isDark),
-        
-        AuthTextField(
-          controller: _licenseNumberController, 
-          label: 'Número de Licencia', 
-          icon: Icons.card_membership_rounded,
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 24),
+    return Form(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        key: const ValueKey(1),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepTitle('Licencia', 'Datos de tu permiso de conducción.', isDark),
+          
+          AuthTextField(
+            controller: _licenseNumberController, 
+            label: 'Número de Licencia', 
+            icon: Icons.card_membership_rounded,
+            keyboardType: TextInputType.number,
+            validator: (value) => value == null || value.isEmpty ? 'El número de licencia es requerido' : null,
+          ),
+          const SizedBox(height: 24),
         
         Text(
           'Categoría',
@@ -468,60 +471,67 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           isDark: isDark,
         ),
       ],
+    ),
     );
   }
 
   Widget _buildDocumentsStep(bool isDark) {
-    return Column(
-      key: const ValueKey(2),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle('Documentos', 'Sube fotos claras de tus documentos.', isDark),
-        
-        // SOAT
-        AuthTextField(
-          controller: _soatController,
-          label: 'Número del SOAT',
-          icon: Icons.health_and_safety_rounded,
-        ),
-        const SizedBox(height: 12),
-        ImageUploadCard(
-          label: 'Foto del SOAT',
-          file: _soatPhoto,
-          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _soatPhoto = file)),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 24),
+    return Form(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        key: const ValueKey(2),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepTitle('Documentos', 'Sube fotos claras de tus documentos.', isDark),
+          
+          // SOAT
+          AuthTextField(
+            controller: _soatController,
+            label: 'Número del SOAT',
+            icon: Icons.health_and_safety_rounded,
+            validator: (value) => value == null || value.isEmpty ? 'El número de SOAT es requerido' : null,
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto del SOAT',
+            file: _soatPhoto,
+            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _soatPhoto = file)),
+            isDark: isDark,
+          ),
+          const SizedBox(height: 24),
 
-        // Tecnomecánica
-        AuthTextField(
-          controller: _tecnomechanicController,
-          label: 'N° Revisión Tecnomecánica',
-          icon: Icons.build_circle_rounded,
-        ),
-        const SizedBox(height: 12),
-        ImageUploadCard(
-          label: 'Foto Tecnomecánica',
-          file: _tecnoPhoto,
-          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _tecnoPhoto = file)),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 24),
+          // Tecnomecánica
+          AuthTextField(
+            controller: _tecnomechanicController,
+            label: 'N° Revisión Tecnomecánica',
+            icon: Icons.build_circle_rounded,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto Tecnomecánica',
+            file: _tecnoPhoto,
+            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _tecnoPhoto = file)),
+            isDark: isDark,
+          ),
+          const SizedBox(height: 24),
 
-        // Tarjeta Propiedad
-        AuthTextField(
-          controller: _propertyCardController,
-          label: 'N° Tarjeta de Propiedad',
-          icon: Icons.folder_shared_rounded,
-        ),
-        const SizedBox(height: 12),
-        ImageUploadCard(
-          label: 'Foto Tarjeta Propiedad',
-          file: _propertyPhoto,
-          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _propertyPhoto = file)),
-          isDark: isDark,
-        ),
-      ],
+          // Tarjeta Propiedad
+          AuthTextField(
+            controller: _propertyCardController,
+            label: 'N° Tarjeta de Propiedad',
+            icon: Icons.folder_shared_rounded,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto Tarjeta Propiedad',
+            file: _propertyPhoto,
+            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _propertyPhoto = file)),
+            isDark: isDark,
+          ),
+        ],
+      ),
     );
   }
 
