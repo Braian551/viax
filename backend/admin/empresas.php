@@ -629,26 +629,21 @@ function handleLogoUpload() {
         throw new Exception('Tipo de archivo no permitido. Solo se permiten JPG, PNG y WEBP.');
     }
 
-    // Estructura: uploads/empresas/YYYY/MM/
+    // Estructura R2: empresas/YYYY/MM/
     $year = date('Y');
     $month = date('m');
-    $uploadDir = __DIR__ . "/../uploads/empresas/$year/$month/";
     
-    if (!file_exists($uploadDir)) {
-        if (!mkdir($uploadDir, 0755, true)) {
-            throw new Exception('No se pudo crear el directorio de subida');
-        }
-    }
-
     // Nombre único
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'logo_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
-    $targetPath = $uploadDir . $filename;
+    $filename = "empresas/$year/$month/logo_" . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
     
-    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-        return "uploads/empresas/$year/$month/$filename";
+    try {
+        require_once __DIR__ . '/../config/R2Service.php';
+        $r2 = new R2Service();
+        $url = $r2->uploadFile($file['tmp_name'], $filename, $mimeType);
+        return $url;
+    } catch (Exception $e) {
+        throw new Exception('Error subiendo a R2: ' . $e->getMessage());
     }
-
-    throw new Exception('Error al mover el archivo subido');
 }
 

@@ -39,7 +39,7 @@ void main() async {
     };
 
     // Catch uncaught async and platform channel errors
-    ui.PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    ui.PlatformDispatcher.instance.onError = (Object  error, StackTrace stack) {
       try {
         developer.log('PlatformDispatcher error: $error', name: 'GlobalError', stackTrace: stack);
       } catch (_) {}

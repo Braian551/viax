@@ -37,25 +37,18 @@ try {
         throw new Exception('Conductor no encontrado');
     }
 
-    // Handle File Upload
-    $uploadDir = '../uploads/vehicles/';
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
+    // Handle File Upload using R2
+    require_once '../config/R2Service.php';
     
     $file = $_FILES['image'];
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'vehicle_' . $conductor_id . '_' . time() . '.' . $extension;
-    $targetPath = $uploadDir . $filename;
+    $filename = 'vehicle/' . $conductor_id . '_' . time() . '.' . $extension;
     
-    if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-        throw new Exception('Error al guardar la imagen');
-    }
-    
-    // Calculate relative path for DB
-    $dbPath = 'uploads/vehicles/' . $filename;
+    $r2 = new R2Service();
+    // Use the returned URL directly
+    $dbPath = $r2->uploadFile($file['tmp_name'], $filename, $file['type']);
 
-    // Update DB
+    // Update DB with the full URL
     $updateQuery = "UPDATE detalles_conductor SET 
                     foto_vehiculo = :foto_vehiculo,
                     actualizado_en = NOW()

@@ -163,7 +163,9 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                           leading: CircleAvatar(
                             backgroundColor: widget.isDark ? AppColors.darkCard : Colors.grey[200],
                             backgroundImage: company['logo_url'] != null 
-                              ? NetworkImage('${AppConfig.baseUrl}/${company['logo_url']}') 
+                              ? (company['logo_url'].toString().startsWith('http') 
+                                  ? NetworkImage(company['logo_url']) 
+                                  : NetworkImage('${AppConfig.baseUrl}/${company['logo_url']}'))
                               : null,
                             child: company['logo_url'] == null ? const Icon(Icons.business) : null,
                           ),
