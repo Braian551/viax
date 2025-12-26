@@ -73,11 +73,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < _totalSteps - 1) {
-       // Validate current step fields here if needed
-       // For instance, check if controllers are empty
-       if (!_validateStep(_currentStep)) return;
+    // Always validate the current step before proceeding
+    if (!_validateStep(_currentStep)) return;
 
+    if (_currentStep < _totalSteps - 1) {
       setState(() => _currentStep++);
     } else {
       _submitRegistration();
@@ -89,13 +88,21 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       if (_brandController.text.isEmpty || _modelController.text.isEmpty || 
           _yearController.text.isEmpty || _colorController.text.isEmpty || 
           _plateController.text.isEmpty) {
-        CustomSnackbar.showError(context, message: 'Por favor completa todos los datos del vehículo.');
+        CustomSnackbar.showError(context, message: 'Completa todos los datos del vehículo.');
+        return false;
+      }
+      if (_vehiclePhoto == null) {
+        CustomSnackbar.showError(context, message: 'Debes subir una foto del vehículo.');
         return false;
       }
     } else if (step == 1) {
       if (_licenseNumberController.text.isEmpty) {
          CustomSnackbar.showError(context, message: 'Ingresa el número de tu licencia.');
          return false;
+      }
+      if (_licensePhoto == null) {
+        CustomSnackbar.showError(context, message: 'Debes subir la foto de tu licencia.');
+        return false;
       }
     } else if (step == 2) {
       if (_soatController.text.isEmpty || _tecnomechanicController.text.isEmpty || _propertyCardController.text.isEmpty) {
@@ -108,7 +115,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       }
     } else if (step == 3) {
       if (_selfiePhoto == null) {
-         CustomSnackbar.showError(context, message: 'Debes tomarte una selfie para verificar tu identidad.');
+         CustomSnackbar.showError(context, message: 'Biometría requerida. Tómate la selfie.');
          return false;
       }
     }
@@ -248,36 +255,45 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Header
+                // Responsive Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Stack(
-                    alignment: Alignment.center,
+                  child: Row(
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
+                      // Back Button - Compact
+                      SizedBox(
+                        width: 40,
+                        height: 40,
                         child: IconButton(
                           icon: Icon(Icons.arrow_back_ios_new_rounded, 
-                            color: isDark ? Colors.white : Colors.black87, size: 20),
+                            color: isDark ? Colors.white : Colors.black87, size: 18),
                           onPressed: _prevStep,
                           style: IconButton.styleFrom(
                             backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.zero, // Remove internal padding
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
                       ),
-                      
-                      // Center Indicator (With constraints to prevent overflow)
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 250),
-                        child: FittedBox(
-                          child: RegisterStepIndicator(
-                            currentStep: _currentStep,
-                            totalSteps: _totalSteps,
-                            lineWidth: 30,
+                      const SizedBox(width: 16),
+                      // Step Indicator - Flexible
+                      Expanded(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 240),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: RegisterStepIndicator(
+                                currentStep: _currentStep,
+                                totalSteps: _totalSteps,
+                                lineWidth: 24, // Slightly smaller line width
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                       // Spacer to balance the row (40width + 16gap)
+                       const SizedBox(width: 56), 
                     ],
                   ),
                 ),
