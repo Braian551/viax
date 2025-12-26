@@ -141,22 +141,21 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
       {'id': 'motocarro', 'icon': Icons.electric_rickshaw_rounded, 'label': 'Motocarro'},
     ];
 
-    return SizedBox(
-      height: 110,
-      child: GridView.builder(
-        scrollDirection: Axis.horizontal,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-           crossAxisCount: 1,
-           childAspectRatio: 1.2, 
-           mainAxisSpacing: 12,
-        ),
-        itemCount: types.length,
-        itemBuilder: (context, index) {
-          final type = types[index];
-          final isSelected = widget.selectedVehicleType == type['id'];
-          return _buildTypeCard(context, type['id'] as String, type['icon'] as IconData, type['label'] as String, isSelected);
-        },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+         crossAxisCount: 2,
+         childAspectRatio: 1.5, 
+         crossAxisSpacing: 12,
+         mainAxisSpacing: 12,
       ),
+      itemCount: types.length,
+      itemBuilder: (context, index) {
+        final type = types[index];
+        final isSelected = widget.selectedVehicleType == type['id'];
+        return _buildTypeCard(context, type['id'] as String, type['icon'] as IconData, type['label'] as String, isSelected);
+      },
     );
   }
 
