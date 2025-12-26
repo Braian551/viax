@@ -11,6 +11,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/steps/vehicle_step_widget.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
   const DriverRegistrationScreen({super.key});
@@ -444,7 +445,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ),
         const SizedBox(height: 24),
 
-        _buildImageUpload(
+        ImageUploadCard(
           label: 'Foto de la Licencia',
           file: _licensePhoto,
           onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _licensePhoto = file)),
@@ -453,33 +454,6 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       ],
     );
   }
-
-  Widget _buildCategoryChip(String category, bool isDark) {
-    final isSelected = _selectedCategory == category;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = category),
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : (isDark ? Colors.white24 : Colors.black12),
-          ),
-        ),
-        child: Text(
-          category,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
-          ),
-        ),
-      ),
-    );
-  }
-
-
 
   Widget _buildDocumentsStep(bool isDark) {
     return Column(
@@ -495,7 +469,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           icon: Icons.health_and_safety_rounded,
         ),
         const SizedBox(height: 12),
-        _buildImageUpload(
+        ImageUploadCard(
           label: 'Foto del SOAT',
           file: _soatPhoto,
           onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _soatPhoto = file)),
@@ -510,7 +484,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           icon: Icons.build_circle_rounded,
         ),
         const SizedBox(height: 12),
-        _buildImageUpload(
+        ImageUploadCard(
           label: 'Foto Tecnomecánica',
           file: _tecnoPhoto,
           onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _tecnoPhoto = file)),
@@ -525,7 +499,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           icon: Icons.folder_shared_rounded,
         ),
         const SizedBox(height: 12),
-        _buildImageUpload(
+        ImageUploadCard(
           label: 'Foto Tarjeta Propiedad',
           file: _propertyPhoto,
           onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _propertyPhoto = file)),
@@ -734,5 +708,29 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       case 'motocarro': return Icons.electric_rickshaw_rounded;
       default: return Icons.directions_car_rounded;
     }
+  }
+  Widget _buildCategoryChip(String category, bool isDark) {
+    final isSelected = _selectedCategory == category;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = category),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : (isDark ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Text(
+          category,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
+          ),
+        ),
+      ),
+    );
   }
 }

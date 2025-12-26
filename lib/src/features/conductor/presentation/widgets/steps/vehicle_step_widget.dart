@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
 
 class VehicleStepWidget extends StatelessWidget {
   final bool isDark;
@@ -244,69 +245,11 @@ class VehicleStepWidget extends StatelessWidget {
   }
 
   Widget _buildPhotoUploadSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            'Foto del Vehículo',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-          ),
-        ),
-        GestureDetector(
-          onTap: onPickPhoto,
-          child: Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: vehiclePhoto != null ? AppColors.success : (isDark ? Colors.white24 : Colors.grey.shade300),
-                width: 1.5,
-                style: vehiclePhoto != null ? BorderStyle.solid : BorderStyle.none, // Dashed effect simulated or removed for simpler solid
-              ),
-              image: vehiclePhoto != null 
-                  ? DecorationImage(
-                      image: FileImage(vehiclePhoto!),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken)
-                    )
-                  : null
-            ),
-             child: vehiclePhoto != null 
-              ? Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.check, color: Colors.white, size: 24),
-                  ),
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo_rounded, size: 32, color: AppColors.primary.withOpacity(0.8)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Toca para subir una foto',
-                      style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
-                        fontWeight: FontWeight.w500
-                      ),
-                    )
-                  ],
-                ),
-          ),
-        ),
-      ],
+    return ImageUploadCard(
+      label: 'Foto del Vehículo',
+      file: vehiclePhoto,
+      onTap: onPickPhoto,
+      isDark: isDark,
     );
   }
 
