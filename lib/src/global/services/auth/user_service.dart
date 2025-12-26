@@ -481,6 +481,7 @@ class UserService {
     required String soatNumber,
     required String tecnomecanicaNumber,
     required String propertyCardNumber,
+    int? companyId,
   }) async {
     try {
       final Map<String, dynamic> body = {
@@ -496,6 +497,7 @@ class UserService {
         'tecnomecanica_numero': tecnomecanicaNumber,
         'tecnomecanica_vencimiento': '2025-12-31', // Mocked default for MVP
         'tarjeta_propiedad_numero': propertyCardNumber,
+        if (companyId != null) 'empresa_id': companyId,
       };
 
       final response = await http.post(
@@ -517,6 +519,56 @@ class UserService {
     } catch (e) {
       print('Error registering vehicle: $e');
       return {'success': true, 'message': 'Simulated success (Network error)'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> uploadVehiclePhoto({
+    required int conductorId,
+    required String filePath,
+  }) async {
+    try {
+      final uri = Uri.parse('${AppConfig.conductorServiceUrl}/upload_vehicle_photo.php');
+      final request = http.MultipartRequest('POST', uri);
+      
+      request.fields['conductor_id'] = conductorId.toString();
+      request.files.add(await http.MultipartFile.fromPath('image', filePath));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        return {'success': false, 'message': 'Error ${response.statusCode}: ${response.body}'};
+      }
+    } catch (e) {
+      print('Error uploading vehicle photo: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> searchCompanies(String query) async {
+    try {
+      // Allow empty query to fetch all/top companies
+      // if (query.isEmpty) return []; 
+      
+      final response = await http.get(
+        Uri.parse('${AppConfig.conductorServiceUrl}/search_companies.php?query=$query'),
+        headers: {
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+         final data = jsonDecode(response.body) as Map<String, dynamic>;
+         if (data['success'] == true && data['data'] != null) {
+           return List<Map<String, dynamic>>.from(data['data']);
+         }
+      }
+      return [];
+    } catch (e) {
+      print('Error searching companies: $e');
+      return [];
     }
   }
 

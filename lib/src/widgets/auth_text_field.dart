@@ -13,6 +13,7 @@ class AuthTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool isLast;
   final bool enabled;
+  final bool readOnly;
 
   const AuthTextField({
     super.key,
@@ -25,6 +26,7 @@ class AuthTextField extends StatelessWidget {
     this.suffixIcon,
     this.isLast = false,
     this.enabled = true,
+    this.readOnly = false,
   });
 
   @override
@@ -63,6 +65,7 @@ class AuthTextField extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscureText,
         enabled: enabled,
+        readOnly: readOnly,
         textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
         style: TextStyle(
           color: Theme.of(context).textTheme.bodyLarge?.color,

@@ -180,6 +180,16 @@ try {
         $insertStmt->execute();
     }
 
+    // Update empresa_id in usuarios table
+    if (array_key_exists('empresa_id', $input)) {
+        $empresa_id = $input['empresa_id']; // Can be null
+        $updateEmpresaQuery = "UPDATE usuarios SET empresa_id = :empresa_id WHERE id = :id";
+        $updateEmpresaStmt = $db->prepare($updateEmpresaQuery);
+        $updateEmpresaStmt->bindParam(':empresa_id', $empresa_id, is_null($empresa_id) ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $updateEmpresaStmt->bindParam(':id', $conductor_id, PDO::PARAM_INT);
+        $updateEmpresaStmt->execute();
+    }
+
     $db->commit();
 
     echo json_encode([

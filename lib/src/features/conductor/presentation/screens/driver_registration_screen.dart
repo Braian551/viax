@@ -9,6 +9,7 @@ import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui';
+import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
   const DriverRegistrationScreen({super.key});
@@ -31,6 +32,11 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   final _colorController = TextEditingController();
   final _plateController = TextEditingController();
   String _selectedVehicleType = 'moto'; // 'moto' or 'carro'
+  
+  // New Fields
+  File? _vehiclePhoto;
+  Map<String, dynamic>? _selectedCompany;
+  final TextEditingController _companyController = TextEditingController();
 
   // Step 2: License Info
   final _licenseNumberController = TextEditingController();
@@ -146,11 +152,17 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         color: _colorController.text,
         plate: _plateController.text,
         soatNumber: _soatController.text,
+        companyId: _selectedCompany?['id'],
         tecnomecanicaNumber: _tecnomechanicController.text,
         propertyCardNumber: _propertyCardController.text,
       );
 
-      if (result['success'] != true) {
+      if (result['success'] == true) {
+        // Upload Vehicle Photo if exists
+        if (_vehiclePhoto != null) {
+          await UserService.uploadVehiclePhoto(conductorId: uid, filePath: _vehiclePhoto!.path);
+        }
+      } else {
          CustomSnackbar.showError(context, message: 'Error datos basico: ${result['message']}');
          setState(() => _isLoading = false);
          return;
@@ -402,7 +414,50 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           label: 'Placa', 
           icon: Icons.tag_rounded,
         ),
+        const SizedBox(height: 24),
+        
+        Text('Foto del Vehículo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+        const SizedBox(height: 8),
+        _buildImageUpload(
+          label: 'Tap para subir foto del vehículo',
+          file: _vehiclePhoto,
+          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _vehiclePhoto = file)),
+          isDark: isDark,
+        ),
+        
+        const SizedBox(height: 24),
+        
+        Text('Empresa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showCompanyPicker(isDark),
+          child: AbsorbPointer(
+            child: AuthTextField(
+              controller: _companyController,
+              label: 'Seleccionar Empresa (Opcional)',
+              icon: Icons.business_rounded,
+              readOnly: true,
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showCompanyPicker(bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent, // Let sheet handle styling
+      builder: (context) => CompanyPickerSheet(
+        isDark: isDark, 
+        onSelected: (company) {
+           setState(() {
+             _selectedCompany = company;
+             _companyController.text = company != null ? company['nombre'] : 'Independiente';
+           });
+        }
+      ),
     );
   }
 
