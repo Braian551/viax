@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/core/config/app_config.dart';
 
 /// Card que muestra información resumida de una empresa
 class EmpresaCard extends StatelessWidget {
@@ -89,7 +91,9 @@ class EmpresaCard extends StatelessWidget {
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    empresa.logoUrl!,
+                    empresa.logoUrl!.startsWith('http') 
+                        ? empresa.logoUrl!
+                        : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => _buildDefaultLogo(),
                   ),

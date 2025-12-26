@@ -83,17 +83,76 @@ class R2Service {
         curl_close($ch);
 
         if ($httpCode >= 200 && $httpCode < 300) {
-             // Return Public URL (assuming public access or custom domain)
-             // R2 Public URL format usually is custom domain or similar
-             // For now using the CF Worker/Public Bucket pattern if configured, or the S3 endpoint style
-             // User provided "S3 API" URL, but for public access usually a domain is set.
-             // Based on bucket name, let's assume standard public access domain for now or return the S3 path
-             // A common pattern is https://pub-xxxxxxxx.r2.dev/filename if authorized
-             // OR specific domain. I'll return the full URL we uploaded to, or a cleaner one if provided later.
-             return "https://pub-9e36b59ddd8dc8dcc4edc374e6140fda.r2.dev/{$fileName}";
+             // Return Proxy URL relative path
+             // Frontend will prepend BaseURL to this: r2_proxy.php?key=...
+             return "r2_proxy.php?key={$fileName}";
         } else {
             throw new Exception("R2 Upload Failed: HTTP $httpCode - Response: $response - CurlError: $error");
         }
+    }
+
+    public function getFile($fileName) {
+        $host = "{$this->bucketName}.{$this->accountId}.r2.cloudflarestorage.com";
+        $endpoint = "https://{$host}/{$fileName}";
+        
+        $datetime = gmdate('Ymd\THis\Z');
+        $date = gmdate('Ymd');
+
+        // Headers for GET
+        $headers = [
+            'host' => $host,
+            'x-amz-content-sha256' => hash('sha256', ''), // Empty payload for GET
+            'x-amz-date' => $datetime,
+        ];
+        
+        // Canonical Request
+        $canonicalUri = '/' . $fileName;
+        $canonicalQueryString = '';
+        
+        ksort($headers);
+        $canonicalHeaders = '';
+        $signedHeaders = '';
+        foreach ($headers as $key => $value) {
+            $canonicalHeaders .= strtolower($key) . ':' . trim($value) . "\n";
+            $signedHeaders .= strtolower($key) . ';';
+        }
+        $signedHeaders = rtrim($signedHeaders, ';');
+
+        $payloadHash = hash('sha256', '');
+        $canonicalRequest = "GET\n$canonicalUri\n$canonicalQueryString\n$canonicalHeaders\n$signedHeaders\n$payloadHash";
+
+        // String to Sign
+        $stringToSign = "AWS4-HMAC-SHA256\n$datetime\n$date/{$this->region}/s3/aws4_request\n" . hash('sha256', $canonicalRequest);
+
+        // Signature Calculation
+        $kSecret = 'AWS4' . $this->secretAccessKey;
+        $kDate = hash_hmac('sha256', $date, $kSecret, true);
+        $kRegion = hash_hmac('sha256', $this->region, $kDate, true);
+        $kService = hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+
+        $authorization = "AWS4-HMAC-SHA256 Credential={$this->accessKeyId}/$date/{$this->region}/s3/aws4_request, SignedHeaders=$signedHeaders, Signature=$signature";
+        
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // Important: passthrough headers might be needed, but R2 returns proper types usually.
+        // We will return the raw content.
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: $authorization",
+            "x-amz-date: $datetime",
+            "x-amz-content-sha256: $payloadHash"
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if ($httpCode == 200) {
+            return ['content' => $response, 'type' => $contentType];
+        }
+        return false;
     }
 }
 ?>

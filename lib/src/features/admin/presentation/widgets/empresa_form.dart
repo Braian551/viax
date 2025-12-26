@@ -63,13 +63,31 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _initControllers();
   }
 
+  bool _isPickingImage = false;
+
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _formData.logoFile = File(pickedFile.path);
-      });
+    if (_isPickingImage) return;
+    
+    setState(() {
+      _isPickingImage = true;
+    });
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _formData.logoFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingImage = false;
+        });
+      }
     }
   }
 
@@ -167,9 +185,11 @@ class _EmpresaFormState extends State<EmpresaForm> {
                               )
                             : (_formData.logoUrl != null
                                 ? DecorationImage(
-                                    image: NetworkImage(
-                                      '${AppConfig.baseUrl}/${_formData.logoUrl}',
-                                    ),
+                                    image: _formData.logoUrl!.startsWith('http')
+                                        ? NetworkImage(_formData.logoUrl!)
+                                        : NetworkImage(
+                                            '${AppConfig.baseUrl}/${_formData.logoUrl}',
+                                          ),
                                     fit: BoxFit.cover,
                                   )
                                 : null),
