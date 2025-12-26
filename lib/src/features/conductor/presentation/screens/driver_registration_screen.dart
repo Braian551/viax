@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
@@ -21,7 +21,7 @@ class DriverRegistrationScreen extends StatefulWidget {
 }
 
 class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
-  final _formKey = GlobalKey<FormState>();
+
   int _currentStep = 0;
   final int _totalSteps = 4;
   bool _isLoading = false;
@@ -675,56 +675,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
     );
   }
 
-  Widget _buildImageUpload({required String label, required File? file, required VoidCallback onTap, required bool isDark}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: file != null ? Colors.green : (isDark ? Colors.white24 : Colors.grey.shade300)),
-        ),
-        child: Row(
-          children: [
-             Icon(file != null ? Icons.check_circle_rounded : Icons.cloud_upload_rounded, 
-                  color: file != null ? Colors.green : AppColors.primary),
-             const SizedBox(width: 12),
-             Expanded(
-               child: Text(
-                 file != null ? 'Foto cargada correctamente' : label,
-                 style: TextStyle(
-                   color: isDark ? Colors.white : Colors.black87,
-                   fontWeight: FontWeight.w500,
-                 ),
-               ),
-             ),
-             if (file == null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                   color: AppColors.primary.withValues(alpha: 0.1),
-                   borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('SUBIR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              )
-          ],
-        ),
-      ),
-    );
-  }
 
 
-  IconData _getVehicleIcon(String type) {
-    switch (type) {
-      case 'moto': return Icons.two_wheeler_rounded;
-      case 'carro': return Icons.directions_car_rounded;
-      case 'taxi': return Icons.local_taxi_rounded;
-      case 'motocarro': return Icons.electric_rickshaw_rounded;
-      default: return Icons.directions_car_rounded;
-    }
-  }
+
+
   Widget _buildCategoryChip(String category, bool isDark) {
     final isSelected = _selectedCategory == category;
     return GestureDetector(

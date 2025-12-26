@@ -2,8 +2,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http_parser/http_parser.dart'; // Add this for MediaType
-import 'package:mime/mime.dart'; // Add this for mime lookup if needed, or manual
+
 import 'package:viax/src/core/config/app_config.dart';
 
 class UserService {
@@ -602,9 +601,28 @@ class UserService {
       return data;
     } catch (e) {
       print('Error registering license: $e');
-      return {'success': true, 'message': 'Simulated success (Network error)'};
+      return {'success': false, 'message': 'Error de conexión: $e'};
     }
   }
+
+  static Future<List<Map<String, dynamic>>> getVehicleColors() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/utils/get_colors.php'));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting colors: $e');
+      return [];
+    }
+  }
+
+
 
 
   // Upload Driver Document

@@ -16,6 +16,13 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 // Remove leading slash
 $path = ltrim($path, '/');
 
+// Normalize path for subdirectory deployment (local/fix)
+file_put_contents('debug_path.log', "Original Path: [$path]\n", FILE_APPEND);
+if (strpos($path, 'viax/backend/') === 0) {
+    $path = substr($path, strlen('viax/backend/'));
+    file_put_contents('debug_path.log', "Normalized Path: [$path]\n", FILE_APPEND);
+}
+
 // Route to appropriate API endpoints
 if ($path === '') {
     // Health check for root path
@@ -36,6 +43,15 @@ if ($path === '') {
 } elseif (strpos($path, 'pricing/') === 0) {
     $endpoint = substr($path, 8); // Remove 'pricing/'
     require_once __DIR__ . '/pricing/' . $endpoint . '.php';
+} elseif (strpos($path, 'pricing/') === 0) {
+    $endpoint = substr($path, 8); // Remove 'pricing/'
+    require_once __DIR__ . '/pricing/' . $endpoint . '.php';
+} elseif (strpos($path, 'utils/') !== false) {
+    // Robustly handle utils route regardless of prefix
+    $parts = explode('/', $path);
+    $endpoint = end($parts);
+    require_once __DIR__ . '/utils/' . $endpoint;
+    exit;
 } elseif ($path === 'verify_system') {
     require_once __DIR__ . '/verify_system.php';
 } elseif ($path === 'health') {

@@ -14,6 +14,7 @@ class AuthTextField extends StatelessWidget {
   final bool isLast;
   final bool enabled;
   final bool readOnly;
+  final TextCapitalization textCapitalization;
 
   const AuthTextField({
     super.key,
@@ -27,6 +28,7 @@ class AuthTextField extends StatelessWidget {
     this.isLast = false,
     this.enabled = true,
     this.readOnly = false,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -62,6 +64,7 @@ class AuthTextField extends StatelessWidget {
       ),
       child: TextFormField(
         controller: controller,
+        textCapitalization: textCapitalization,
         keyboardType: keyboardType,
         obscureText: obscureText,
         enabled: enabled,
