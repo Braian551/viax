@@ -180,12 +180,52 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            '${provider.users.length} usuarios encontrados',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${provider.users.length} usuarios encontrados',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => provider.setShowInactive(!provider.showInactive),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: provider.showInactive 
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: provider.showInactive ? Colors.red : AppColors.primary,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        provider.showInactive ? Icons.person_off_rounded : Icons.person_rounded,
+                        size: 16,
+                        color: provider.showInactive ? Colors.red : AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        provider.showInactive ? 'Inactivos' : 'Activos',
+                        style: TextStyle(
+                          color: provider.showInactive ? Colors.red : AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -220,18 +260,91 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
             padding: const EdgeInsets.only(bottom: 12),
             child: UserListCard(
               user: user,
-              onTap: () {
-                // TODO: Navigate to details
-              },
+              onTap: () => _showUserDetails(context, user),
               onAction: (action) {
-                if (action == 'activate' || action == 'deactivate') {
-                  provider.toggleUserStatus(user['id'], user['es_activo'] == 1);
+                if (action == 'details') {
+                  _showUserDetails(context, user);
+                } else if (action == 'edit') {
+                  _showUserEdit(context, provider, user);
+                } else if (action == 'activate' || action == 'deactivate') {
+                  _showStatusConfirmation(context, provider, user);
                 }
-                // Handle other actions
               },
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserDetailsSheet(user: user),
+    );
+  }
+
+  void _showUserEdit(BuildContext context, AdminUserManagementProvider provider, Map<String, dynamic> user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserEditSheet(
+        user: user,
+        onSave: (nombre, apellido, telefono, tipoUsuario) async {
+          final success = await provider.updateUser(
+            userId: user['id'],
+            nombre: nombre,
+            apellido: apellido,
+            telefono: telefono,
+            tipoUsuario: tipoUsuario,
+          );
+          
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(success ? 'Usuario actualizado correctamente' : 'Error al actualizar usuario'),
+                backgroundColor: success ? Colors.green : Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  void _showStatusConfirmation(BuildContext context, AdminUserManagementProvider provider, Map<String, dynamic> user) {
+    final isActivating = user['es_activo'] == 0;
+    final action = isActivating ? 'activar' : 'desactivar';
+    final color = isActivating ? Colors.green : Colors.red;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿$action usuario?'.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('¿Estás seguro de que deseas $action a ${user['nombre']}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await provider.toggleUserStatus(user['id'], !isActivating);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(isActivating ? 'Activar' : 'Desactivar'),
+          ),
+        ],
       ),
     );
   }
