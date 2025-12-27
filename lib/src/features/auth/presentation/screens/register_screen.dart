@@ -34,7 +34,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  bool _isEmpresa = false;
   int _currentStep = 0;
   final int _totalSteps = 3;
 
@@ -73,7 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           name: _nameController.text,
           lastName: _lastNameController.text,
           phone: _phoneController.text,
-          role: _isEmpresa ? 'empresa' : 'cliente',
+          role: 'cliente',
         );
 
         _showSnackBar('¡Registro exitoso!', isError: false);
@@ -359,39 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               icon: Icons.person_outline_rounded,
               validator: (v) => v!.isEmpty ? 'Requerido' : null,
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? AppColors.darkDivider : Colors.grey.shade300),
-              ),
-              child: SwitchListTile(
-                title: Text(
-                  'Soy una Empresa',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-                subtitle: Text(
-                  'Regístrate para gestionar flotas',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-                value: _isEmpresa,
-                onChanged: (bool value) {
-                  setState(() {
-                    _isEmpresa = value;
-                  });
-                },
-                activeColor: AppColors.primary,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
+
           ],
         );
       case 1:

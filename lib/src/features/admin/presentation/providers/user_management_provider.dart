@@ -126,7 +126,7 @@ class AdminUserManagementProvider with ChangeNotifier {
     );
   }
 
-  /// Actualizar informaciÃ³n completa del usuario
+  /// Actualizar información completa del usuario
   Future<bool> updateUser({
     required int userId,
     String? nombre,
@@ -136,38 +136,49 @@ class AdminUserManagementProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     
-    final result = await manageUserUseCase.updateUser(
-      adminId: adminId,
-      userId: userId,
-      nombre: nombre,
-      apellido: apellido,
-      telefono: telefono,
-      tipoUsuario: tipoUsuario,
-    );
+    print('Provider.updateUser - userId: $userId, nombre: $nombre, tipoUsuario: $tipoUsuario');
+    
+    try {
+      final result = await manageUserUseCase.updateUser(
+        adminId: adminId,
+        userId: userId,
+        nombre: nombre,
+        apellido: apellido,
+        telefono: telefono,
+        tipoUsuario: tipoUsuario,
+      );
 
-    return result.fold(
-      (failure) {
-        _setError(failure.toString()); // TODO: Improve error message
-        return false;
-      },
-      (success) {
-        if (success) {
-          // Update local list
-          final index = _users.indexWhere((u) => u['id'] == userId);
-          if (index != -1) {
-            final updatedUser = Map<String, dynamic>.from(_users[index]);
-            if (nombre != null) updatedUser['nombre'] = nombre;
-            if (apellido != null) updatedUser['apellido'] = apellido;
-            if (telefono != null) updatedUser['telefono'] = telefono;
-            if (tipoUsuario != null) updatedUser['tipo_usuario'] = tipoUsuario;
-            _users[index] = updatedUser;
-            notifyListeners();
+      return result.fold(
+        (failure) {
+          print('Provider.updateUser - Failure: $failure');
+          _setError('Error al actualizar: ${failure.toString()}');
+          return false;
+        },
+        (success) {
+          print('Provider.updateUser - Success: $success');
+          if (success) {
+            // Update local list
+            final index = _users.indexWhere((u) => u['id'] == userId);
+            if (index != -1) {
+              final updatedUser = Map<String, dynamic>.from(_users[index]);
+              if (nombre != null) updatedUser['nombre'] = nombre;
+              if (apellido != null) updatedUser['apellido'] = apellido;
+              if (telefono != null) updatedUser['telefono'] = telefono;
+              if (tipoUsuario != null) updatedUser['tipo_usuario'] = tipoUsuario;
+              _users[index] = updatedUser;
+              notifyListeners();
+            }
           }
-        }
-        _setLoading(false);
-        return success;
-      },
-    );
+          _setLoading(false);
+          return success;
+        },
+      );
+    } catch (e, stack) {
+      print('Provider.updateUser - Exception: $e');
+      print('Provider.updateUser - Stack: $stack');
+      _setError('Error inesperado: $e');
+      return false;
+    }
   }
 
   void _setLoading(bool loading) {

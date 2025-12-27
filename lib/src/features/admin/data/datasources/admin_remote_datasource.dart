@@ -122,20 +122,30 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     if (esActivo != null) requestData['es_activo'] = esActivo ? 1 : 0;
     if (esVerificado != null) requestData['es_verificado'] = esVerificado ? 1 : 0;
 
-    final response = await client.put(
-      Uri.parse('$_baseUrl/user_management.php'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode(requestData),
-    );
+    print('AdminRemoteDataSource.updateUser - Request: ${jsonEncode(requestData)}');
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['success'] == true;
-    } else {
-      throw ServerException('Error al actualizar usuario: ${response.statusCode}');
+    try {
+      final response = await client.put(
+        Uri.parse('$_baseUrl/user_management.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(requestData),
+      );
+
+      print('AdminRemoteDataSource.updateUser - Status: ${response.statusCode}');
+      print('AdminRemoteDataSource.updateUser - Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      } else {
+        throw ServerException('Error al actualizar usuario: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('AdminRemoteDataSource.updateUser - Error: $e');
+      rethrow;
     }
   }
 

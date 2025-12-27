@@ -268,6 +268,17 @@ class AppRouter {
           );
         }
       
+      // Rutas de empresa
+      case RouteNames.companyHome:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => CompanyHomeScreen(
+              user: args?['user'] ?? {},
+            ),
+          );
+        }
+      
       // Rutas de conductor
       case RouteNames.conductorHome:
         {
