@@ -20,6 +20,22 @@ try {
     $lastName = trim($input['lastName']);
     $phone = trim($input['phone']);
 
+    // Validar tipo de usuario (cliente o empresa)
+    $tipoUsuario = 'cliente';
+    
+    // Si se especifica un rol, validarlo
+    if (isset($input['role']) && !empty($input['role'])) {
+        $requestedRole = trim($input['role']);
+        if (in_array($requestedRole, ['empresa', 'cliente'])) {
+            $tipoUsuario = $requestedRole;
+        }
+    } else if (isset($input['tipo_usuario']) && !empty($input['tipo_usuario'])) {
+        $requestedRole = trim($input['tipo_usuario']);
+        if (in_array($requestedRole, ['empresa', 'cliente'])) {
+            $tipoUsuario = $requestedRole;
+        }
+    }
+
     if (!$email) {
         sendJsonResponse(false, 'Email inválido');
     }
@@ -55,12 +71,12 @@ try {
     // Insertar nuevo usuario
     $uuid = uniqid('user_', true);
     $query = "
-        INSERT INTO usuarios (uuid, nombre, apellido, email, telefono, hash_contrasena) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO usuarios (uuid, nombre, apellido, email, telefono, hash_contrasena, tipo_usuario) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ";
 
     $stmt = $db->prepare($query);
-    $stmt->execute([$uuid, $name, $lastName, $email, $phone, $password]);
+    $stmt->execute([$uuid, $name, $lastName, $email, $phone, $password, $tipoUsuario]);
     $userId = $db->lastInsertId();
 
     // Si el frontend envía device_uuid, registrar el dispositivo como confiable por primera vez

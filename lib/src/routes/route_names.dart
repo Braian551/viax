@@ -38,6 +38,8 @@
   static const String adminPricing = '/admin/pricing';
   static const String adminEmpresas = '/admin/empresas';
   
+  // Rutas de empresa
+  static const String companyHome = '/company/home';
   // Rutas de conductor
   static const String conductorHome = '/conductor/home';
   static const String conductorTrips = '/conductor/trips';

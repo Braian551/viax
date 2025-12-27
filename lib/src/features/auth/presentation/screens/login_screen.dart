@@ -112,6 +112,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 (route) => false,
                 arguments: {'conductor_user': user},
               );
+            } else if (tipoUsuario == 'empresa') {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                RouteNames.companyHome,
+                (route) => false,
+                arguments: {'user': user},
+              );
             } else {
               // Cliente
               Navigator.pushNamedAndRemoveUntil(

@@ -38,6 +38,7 @@ import 'package:viax/src/routes/animated_routes.dart';
 import 'package:viax/src/widgets/auth_wrapper.dart';
 
 import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
+import 'package:viax/src/features/company/presentation/screens/company_home_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {

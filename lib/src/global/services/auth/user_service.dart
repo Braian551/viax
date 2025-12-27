@@ -17,6 +17,7 @@ class UserService {
     double? longitude,
     String? city,
     String? state,
+    String? role,
   }) async {
     try {
       final Map<String, dynamic> requestData = {
@@ -26,6 +27,10 @@ class UserService {
         'lastName': lastName,
         'phone': phone,
       };
+      
+      if (role != null) {
+        requestData['role'] = role;
+      }
 
       // Agregar direcciÃ³n si estÃ¡ disponible
       if (address != null && address.isNotEmpty) {
