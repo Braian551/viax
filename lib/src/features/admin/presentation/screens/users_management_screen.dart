@@ -34,6 +34,7 @@ class UsersManagementScreen extends StatelessWidget {
       create: (_) => AdminUserManagementProvider(
         getUsersUseCase: getUsersUseCase,
         manageUserUseCase: manageUserUseCase,
+        adminId: adminId,
       )..loadUsers(),
       child: const _UsersManagementContent(),
     );

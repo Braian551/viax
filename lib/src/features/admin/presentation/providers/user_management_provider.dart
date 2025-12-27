@@ -5,10 +5,12 @@ import '../../domain/usecases/manage_user_usecase.dart';
 class AdminUserManagementProvider with ChangeNotifier {
   final GetUsersUseCase getUsersUseCase;
   final ManageUserUseCase manageUserUseCase;
+  final int adminId;
 
   AdminUserManagementProvider({
     required this.getUsersUseCase,
     required this.manageUserUseCase,
+    required this.adminId,
   });
 
   bool _isLoading = false;
@@ -34,8 +36,9 @@ class AdminUserManagementProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
+      print('Provider: Loading users for adminId: $adminId, query: $_searchQuery, filter: $_currentFilter');
       final result = await getUsersUseCase(
-        adminId: 1, // TODO: Obtener ID real del admin
+        adminId: adminId,
         page: _currentPage,
         search: _searchQuery,
         tipoUsuario: _currentFilter,
@@ -44,7 +47,16 @@ class AdminUserManagementProvider with ChangeNotifier {
       result.fold(
         (failure) => _setError(failure.toString()), // TODO: Better error message
         (data) {
-          final newUsers = data['usuarios'] ?? [];
+
+          // Fix: The backend returns {data: {usuarios: [...]}}, so we need to access the nested keys
+          // We check both data['data']['usuarios'] and data['usuarios'] to be safe
+          List<dynamic> newUsers = [];
+          if (data['data'] != null && data['data']['usuarios'] != null) {
+            newUsers = data['data']['usuarios'];
+          } else if (data['usuarios'] != null) {
+            newUsers = data['usuarios'];
+          }
+          
           if (refresh) {
             _users = newUsers;
           } else {

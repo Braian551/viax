@@ -88,6 +88,10 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       },
     );
 
+    print('AdminRemoteDataSource.getUsers URL: $uri');
+    print('AdminRemoteDataSource.getUsers Status: ${response.statusCode}');
+    print('AdminRemoteDataSource.getUsers Body: ${response.body}');
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
