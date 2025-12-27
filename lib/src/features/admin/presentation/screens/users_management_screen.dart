@@ -10,91 +10,85 @@ import '../../domain/usecases/manage_user_usecase.dart';
 import '../providers/user_management_provider.dart';
 import '../widgets/user_management_widgets.dart';
 
-class UsersManagementScreen extends StatelessWidget {
+/// Pantalla de gestión de usuarios
+class UsersManagementScreen extends StatefulWidget {
   final int adminId;
   final Map<String, dynamic> adminUser;
 
   const UsersManagementScreen({
-    Key? key,
+    super.key,
     required this.adminId,
     required this.adminUser,
-  }) : super(key: key);
+  });
 
   @override
-  Widget build(BuildContext context) {
-    // Dependency Injection Setup (Local for this feature)
-    // In a larger app, use GetIt or global Providers
+  State<UsersManagementScreen> createState() => _UsersManagementScreenState();
+}
+
+class _UsersManagementScreenState extends State<UsersManagementScreen> {
+  late AdminUserManagementProvider _provider;
+  final TextEditingController _searchController = TextEditingController();
+  String? _tipoFilter;
+
+  @override
+  void initState() {
+    super.initState();
     final client = http.Client();
     final remoteDataSource = AdminRemoteDataSourceImpl(client: client);
     final repository = AdminUserRepositoryImpl(remoteDataSource: remoteDataSource);
     final getUsersUseCase = GetUsersUseCase(repository);
     final manageUserUseCase = ManageUserUseCase(repository);
-
-    return ChangeNotifierProvider(
-      create: (_) => AdminUserManagementProvider(
-        getUsersUseCase: getUsersUseCase,
-        manageUserUseCase: manageUserUseCase,
-        adminId: adminId,
-      )..loadUsers(),
-      child: const _UsersManagementContent(),
-    );
-  }
-}
-
-class _UsersManagementContent extends StatefulWidget {
-  const _UsersManagementContent({Key? key}) : super(key: key);
-
-  @override
-  State<_UsersManagementContent> createState() => _UsersManagementContentState();
-}
-
-class _UsersManagementContentState extends State<_UsersManagementContent> with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
-    _animationController.forward();
+    
+    _provider = AdminUserManagementProvider(
+      getUsersUseCase: getUsersUseCase,
+      manageUserUseCase: manageUserUseCase,
+      adminId: widget.adminId,
+    )..loadUsers();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AdminUserManagementProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(context, provider),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context, provider),
-            Expanded(
-              child: provider.isLoading && provider.users.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildUserList(context, provider),
-            ),
-          ],
+    return ChangeNotifierProvider.value(
+      value: _provider,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        extendBodyBehindAppBar: true,
+        appBar: _buildAppBar(isDark),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildSearchAndFilters(isDark),
+              Expanded(
+                child: Consumer<AdminUserManagementProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading && provider.users.isEmpty) {
+                      return _buildLoadingState();
+                    }
+
+                    if (provider.users.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    return _buildUsersList(provider);
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, AdminUserManagementProvider provider) {
+  PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -102,123 +96,195 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurface.withValues(alpha: 0.95)
+                  : AppColors.lightSurface.withValues(alpha: 0.95),
+            ),
           ),
         ),
       ),
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: Text(
-        'Gestión de Usuarios',
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontWeight: FontWeight.bold,
-        ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.people_rounded,
+              color: AppColors.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Gestión de Usuarios',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
-          onPressed: () => provider.loadUsers(refresh: true),
+          icon: const Icon(Icons.refresh_rounded),
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+          onPressed: () => _provider.loadUsers(refresh: true),
         ),
+        const SizedBox(width: 8),
       ],
     );
   }
 
-  Widget _buildHeader(BuildContext context, AdminUserManagementProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  Widget _buildSearchAndFilters(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UserSearchField(
-            controller: _searchController,
-            onChanged: (value) => provider.setSearchQuery(value),
-            onClear: () {
-              _searchController.clear();
-              provider.setSearchQuery('');
-            },
-          ),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                UserFilterTab(
-                  label: 'Todos',
-                  value: null,
-                  icon: Icons.people_rounded,
-                  isSelected: provider.currentFilter == null,
-                  onTap: () => provider.setFilter(null),
-                ),
-                const SizedBox(width: 8),
-                UserFilterTab(
-                  label: 'Clientes',
-                  value: 'cliente',
-                  icon: Icons.person_rounded,
-                  isSelected: provider.currentFilter == 'cliente',
-                  onTap: () => provider.setFilter('cliente'),
-                ),
-                const SizedBox(width: 8),
-                UserFilterTab(
-                  label: 'Conductores',
-                  value: 'conductor',
-                  icon: Icons.local_taxi_rounded,
-                  isSelected: provider.currentFilter == 'conductor',
-                  onTap: () => provider.setFilter('conductor'),
-                ),
-                const SizedBox(width: 8),
-                UserFilterTab(
-                  label: 'Empresas',
-                  value: 'empresa',
-                  icon: Icons.business_rounded,
-                  isSelected: provider.currentFilter == 'empresa',
-                  onTap: () => provider.setFilter('empresa'),
-                ),
-              ],
+          // Barra de búsqueda
+          Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurface.withValues(alpha: 0.8)
+                  : AppColors.lightSurface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${provider.users.length} usuarios encontrados',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w500,
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Buscar por nombre, email o teléfono...',
+                hintStyle: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          _searchController.clear();
+                          _provider.setSearchQuery('');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
+              onSubmitted: (value) {
+                _provider.setSearchQuery(value);
+              },
+              onChanged: (value) {
+                setState(() {}); // Update clear button visibility
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Filtros de tipo
+          Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip(
+                        label: 'Todos',
+                        isSelected: _tipoFilter == null,
+                        onTap: () {
+                          setState(() => _tipoFilter = null);
+                          _provider.setFilter(null);
+                        },
+                      ),
+                      _buildFilterChip(
+                        label: 'Clientes',
+                        isSelected: _tipoFilter == 'cliente',
+                        color: const Color(0xFF11998e),
+                        onTap: () {
+                          setState(() => _tipoFilter = 'cliente');
+                          _provider.setFilter('cliente');
+                        },
+                      ),
+                      _buildFilterChip(
+                        label: 'Conductores',
+                        isSelected: _tipoFilter == 'conductor',
+                        color: const Color(0xFF667eea),
+                        onTap: () {
+                          setState(() => _tipoFilter = 'conductor');
+                          _provider.setFilter('conductor');
+                        },
+                      ),
+                      _buildFilterChip(
+                        label: 'Empresas',
+                        isSelected: _tipoFilter == 'empresa',
+                        color: AppColors.warning,
+                        onTap: () {
+                          setState(() => _tipoFilter = 'empresa');
+                          _provider.setFilter('empresa');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Toggle for Activos/Inactivos
               GestureDetector(
-                onTap: () => provider.setShowInactive(!provider.showInactive),
-                child: Container(
+                onTap: () {
+                  _provider.setShowInactive(!_provider.showInactive);
+                  setState(() {});
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: provider.showInactive 
-                        ? Colors.red.withValues(alpha: 0.1)
-                        : AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    color: _provider.showInactive 
+                        ? Colors.red.withValues(alpha: 0.15)
+                        : AppColors.success.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: provider.showInactive ? Colors.red : AppColors.primary,
-                      width: 1,
+                      color: _provider.showInactive ? Colors.red : AppColors.success,
+                      width: 1.5,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        provider.showInactive ? Icons.person_off_rounded : Icons.person_rounded,
+                        _provider.showInactive 
+                            ? Icons.person_off_rounded 
+                            : Icons.person_rounded,
                         size: 16,
-                        color: provider.showInactive ? Colors.red : AppColors.primary,
+                        color: _provider.showInactive ? Colors.red : AppColors.success,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        provider.showInactive ? 'Inactivos' : 'Activos',
+                        _provider.showInactive ? 'Inactivos' : 'Activos',
                         style: TextStyle(
-                          color: provider.showInactive ? Colors.red : AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          color: _provider.showInactive ? Colors.red : AppColors.success,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -232,47 +298,115 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
     );
   }
 
-  Widget _buildUserList(BuildContext context, AdminUserManagementProvider provider) {
-    if (provider.users.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person_off_rounded, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
-            const SizedBox(height: 16),
-            Text(
-              'No se encontraron usuarios',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    final chipColor = color ?? AppColors.primary;
+    
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? chipColor : Colors.grey.withValues(alpha: 0.3),
+              width: isSelected ? 1.5 : 1,
             ),
-          ],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? chipColor
+                  : Theme.of(context).textTheme.bodyMedium?.color,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
+  Widget _buildUsersList(AdminUserManagementProvider provider) {
+    return RefreshIndicator(
+      onRefresh: () async => provider.loadUsers(refresh: true),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         itemCount: provider.users.length,
         itemBuilder: (context, index) {
           final user = provider.users[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: UserListCard(
-              user: user,
-              onTap: () => _showUserDetails(context, user),
-              onAction: (action) {
-                if (action == 'details') {
-                  _showUserDetails(context, user);
-                } else if (action == 'edit') {
-                  _showUserEdit(context, provider, user);
-                } else if (action == 'activate' || action == 'deactivate') {
-                  _showStatusConfirmation(context, provider, user);
-                }
-              },
-            ),
+          return UserCard(
+            user: user,
+            onTap: () => _showUserDetails(context, user),
+            onEdit: () => _showUserEdit(context, provider, user),
+            onToggleStatus: () => _showStatusConfirmation(context, provider, user),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: AppColors.primary,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.people_outline_rounded,
+                color: AppColors.primary,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No hay usuarios',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No se encontraron usuarios con los filtros actuales',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -306,7 +440,7 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
              ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(success ? 'Usuario actualizado correctamente' : 'Error al actualizar usuario'),
-                backgroundColor: success ? Colors.green : Colors.red,
+                backgroundColor: success ? AppColors.success : AppColors.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -319,18 +453,34 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
   void _showStatusConfirmation(BuildContext context, AdminUserManagementProvider provider, Map<String, dynamic> user) {
     final isActivating = user['es_activo'] == 0;
     final action = isActivating ? 'activar' : 'desactivar';
-    final color = isActivating ? Colors.green : Colors.red;
+    final color = isActivating ? AppColors.success : AppColors.warning;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('¿$action usuario?'.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('¿Estás seguro de que deseas $action a ${user['nombre']}?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isActivating ? Icons.play_circle_outline : Icons.pause_circle_outline,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text('${action[0].toUpperCase()}${action.substring(1)} Usuario'),
+          ],
+        ),
+        content: Text('¿Estás seguro de que deseas $action a "${user['nombre']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -340,7 +490,6 @@ class _UsersManagementContentState extends State<_UsersManagementContent> with S
             style: ElevatedButton.styleFrom(
               backgroundColor: color,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(isActivating ? 'Activar' : 'Desactivar'),
           ),
