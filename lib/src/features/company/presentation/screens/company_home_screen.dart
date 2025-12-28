@@ -37,7 +37,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         final isLoading = provider.isLoadingCompany;
         final errorMessage = provider.errorMessage;
         
-        final displayName = companyData?['nombre'] ?? widget.user['nombre']?.toString() ?? 'Empresa';
+        final companyName = companyData?['nombre'] ?? 'Empresa';
+        final userName = widget.user['nombre']?.toString() ?? 'Usuario';
         final logoUrl = companyData?['logo_url'];
 
         return Scaffold(
@@ -50,7 +51,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
               CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  _buildAppBar(context, displayName, logoUrl, isDark),
+                  _buildAppBar(context, companyName, logoUrl, isDark),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -72,7 +73,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                               ),
                             ),
 
-                          _buildWelcomeHeader(displayName, isDark),
+                          _buildWelcomeHeader(userName, isDark),
                           const SizedBox(height: 32),
                           _buildStatsSection(isDark),
                           const SizedBox(height: 32),
@@ -147,7 +148,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         ),
       ),
       title: Text(
-        'Panel Empresa',
+        title,
         style: TextStyle(
           color: isDark ? Colors.white : Colors.black,
           fontSize: 18,
