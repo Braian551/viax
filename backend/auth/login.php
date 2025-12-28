@@ -16,7 +16,7 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    $query = "SELECT id, uuid, nombre, apellido, email, telefono, tipo_usuario, hash_contrasena FROM usuarios WHERE email = ? LIMIT 1";
+    $query = "SELECT id, uuid, nombre, apellido, email, telefono, tipo_usuario, empresa_id, hash_contrasena FROM usuarios WHERE email = ? LIMIT 1";
     $stmt = $db->prepare($query);
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);

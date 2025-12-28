@@ -47,4 +47,16 @@ class CompanyRepositoryImpl implements CompanyRepository {
       return Left(ServerFailure('Error inesperado: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getCompanyDetails(dynamic empresaId) async {
+    try {
+      final details = await remoteDataSource.getCompanyDetails(empresaId);
+      return Right(details);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
 }

@@ -142,12 +142,21 @@ function listEmpresas($db) {
     $stmt->execute($params);
     $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Procesar tipos_vehiculo de array PostgreSQL a array PHP
+    // Procesar datos de respuesta
     foreach ($empresas as &$empresa) {
+        // Tipos de vehículo
         if ($empresa['tipos_vehiculo']) {
             $empresa['tipos_vehiculo'] = pgArrayToPhp($empresa['tipos_vehiculo']);
         } else {
             $empresa['tipos_vehiculo'] = [];
+        }
+        
+        // Convertir logo_url relativo a absoluto
+        if (!empty($empresa['logo_url']) && strpos($empresa['logo_url'], 'http') !== 0) {
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'];
+            $baseDir = dirname($_SERVER['PHP_SELF'], 2);
+            $empresa['logo_url'] = "$protocol://$host$baseDir/" . $empresa['logo_url'];
         }
     }
     
@@ -201,8 +210,16 @@ function getEmpresa($db) {
         $empresa['tipos_vehiculo'] = [];
     }
     
+    // Convertir logo_url relativo a absoluto si es necesario
+    if (!empty($empresa['logo_url']) && strpos($empresa['logo_url'], 'http') !== 0) {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $baseDir = dirname($_SERVER['PHP_SELF'], 2); // Subir 2 niveles desde /admin/ para llegar a /backend/
+        $empresa['logo_url'] = "$protocol://$host$baseDir/" . $empresa['logo_url'];
+    }
+    
     // Obtener conductores de la empresa
-    $conductoresQuery = "SELECT id, nombre, telefono, email, calificacion_conductor 
+    $conductoresQuery = "SELECT id, nombre, telefono, email, calificacion_promedio 
                          FROM usuarios 
                          WHERE empresa_id = ? AND tipo_usuario = 'conductor'
                          ORDER BY nombre";
@@ -646,4 +663,3 @@ function handleLogoUpload() {
         throw new Exception('Error subiendo a R2: ' . $e->getMessage());
     }
 }
-

@@ -13,4 +13,7 @@ abstract class CompanyRepository {
   
   /// Update pricing configuration for a company
   Future<Either<Failure, bool>> updatePricing(dynamic empresaId, List<Map<String, dynamic>> precios);
+
+  /// Get company details
+  Future<Either<Failure, Map<String, dynamic>>> getCompanyDetails(dynamic id);
 }

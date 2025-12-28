@@ -269,6 +269,7 @@ class UserService {
   static const String _kUserType = 'viax_user_type';
   static const String _kUserName = 'viax_user_name';
   static const String _kUserPhone = 'viax_user_phone';
+  static const String _kUserEmpresaId = 'viax_user_empresa_id';
 
   static Future<void> saveSession(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
@@ -295,6 +296,13 @@ class UserService {
     if (user.containsKey('telefono') && user['telefono'] != null) {
       await prefs.setString(_kUserPhone, user['telefono'].toString());
     }
+    // Guardar empresa_id si estÃ¡ disponible
+    if (user.containsKey('empresa_id') && user['empresa_id'] != null) {
+      final empresaId = int.tryParse(user['empresa_id'].toString());
+      if (empresaId != null) {
+        await prefs.setInt(_kUserEmpresaId, empresaId);
+      }
+    }
   }
 
   static Future<Map<String, dynamic>?> getSavedSession() async {
@@ -304,6 +312,7 @@ class UserService {
     String? tipoUsuario = prefs.getString(_kUserType);
     String? nombre = prefs.getString(_kUserName);
     String? telefono = prefs.getString(_kUserPhone);
+    int? empresaId = prefs.getInt(_kUserEmpresaId);
 
     // MigraciÃ³n automÃ¡tica desde claves legacy (viax_*) si no existen las nuevas
     if (email == null && id == null &&
@@ -354,6 +363,7 @@ class UserService {
       if (tipoUsuario != null) 'tipo_usuario': tipoUsuario,
       if (nombre != null) 'nombre': nombre,
       if (telefono != null) 'telefono': telefono,
+      if (empresaId != null) 'empresa_id': empresaId,
     };
     
     // Debug: verificar quÃ© estamos recuperando
@@ -369,6 +379,7 @@ class UserService {
     await prefs.remove(_kUserType);
     await prefs.remove(_kUserName);
     await prefs.remove(_kUserPhone);
+    await prefs.remove(_kUserEmpresaId);
     // TambiÃ©n eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
     await prefs.remove(_legacyUserId);

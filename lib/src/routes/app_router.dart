@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:viax/src/features/user/presentation/screens/home_user.dart';
 import 'package:viax/src/features/user/presentation/screens/confirm_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/enhanced_destination_screen.dart';
@@ -39,6 +40,7 @@ import 'package:viax/src/widgets/auth_wrapper.dart';
 
 import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_home_screen.dart';
+import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -272,9 +274,16 @@ class AppRouter {
       case RouteNames.companyHome:
         {
           final args = settings.arguments as Map<String, dynamic>?;
+          final user = args?['user'] ?? {};
+          final empresaId = user['empresa_id'];
+          print('AppRouter: Navigating to companyHome. User: ${user['nombre']}, EmpresaId: $empresaId');
+          
           return MaterialPageRoute(
-            builder: (_) => CompanyHomeScreen(
-              user: args?['user'] ?? {},
+            builder: (_) => ChangeNotifierProvider(
+              create: (_) => CompanyProvider(empresaId: empresaId),
+              child: CompanyHomeScreen(
+                user: user,
+              ),
             ),
           );
         }
