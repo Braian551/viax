@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -17,6 +19,8 @@ class CompanyHomeScreen extends StatefulWidget {
 }
 
 class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
+  bool _isLoggingOut = false;
+
   @override
   void initState() {
     super.initState();
@@ -157,15 +161,40 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-          onPressed: () {
-            // Implement logout
-            Navigator.pushNamedAndRemoveUntil(context, RouteNames.welcome, (route) => false);
-          },
+          icon: _isLoggingOut 
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent))
+            : const Icon(Icons.logout_rounded, color: Colors.redAccent),
+          onPressed: _isLoggingOut ? null : _confirmLogout,
         ),
         const SizedBox(width: 8),
       ],
     );
+  }
+
+  Future<void> _performLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+    try {
+      await UserService.clearSession();
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, RouteNames.welcome, (route) => false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoggingOut = false);
+    }
+  }
+
+  Future<void> _confirmLogout() async {
+    if (_isLoggingOut) return;
+    final confirmed = await DialogHelper.showConfirmation(
+      context,
+      title: 'Cerrar sesión',
+      message: '¿Estás seguro de que deseas cerrar sesión?',
+      confirmText: 'Sí, cerrar',
+      cancelText: 'Cancelar',
+    );
+
+    if (confirmed == true) await _performLogout();
   }
 
   Widget _buildWelcomeHeader(String name, bool isDark) {
