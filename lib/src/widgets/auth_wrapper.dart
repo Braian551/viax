@@ -88,6 +88,11 @@ class _AuthWrapperState extends State<AuthWrapper>
               RouteNames.conductorHome,
               arguments: {'conductor_user': session},
             );
+          } else if (tipoUsuarioGuardado == 'empresa') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.companyHome,
+              arguments: {'user': session},
+            );
           } else {
             // Cliente
             Navigator.of(context).pushReplacementNamed(
@@ -124,6 +129,11 @@ class _AuthWrapperState extends State<AuthWrapper>
               Navigator.of(context).pushReplacementNamed(
                 RouteNames.conductorHome,
                 arguments: {'conductor_user': user},
+              );
+            } else if (tipoUsuario == 'empresa') {
+              Navigator.of(context).pushReplacementNamed(
+                RouteNames.companyHome,
+                arguments: {'user': user},
               );
             } else {
               // Cliente
