@@ -12,6 +12,7 @@ import 'package:viax/src/features/conductor/providers/conductor_trips_provider.d
 import 'package:viax/src/features/conductor/providers/conductor_earnings_provider.dart';
 import 'package:viax/src/core/di/service_locator.dart';
 import 'package:viax/src/core/config/env_config.dart';
+import 'package:viax/src/core/config/app_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 
@@ -183,6 +184,7 @@ class MyApp extends StatelessWidget {
     }
 
     return MaterialApp(
+      scaffoldMessengerKey: AppConfig.scaffoldMessengerKey,
       title: 'Viax',
       debugShowCheckedModeBanner: false,
       // Usar los temas del ThemeProvider

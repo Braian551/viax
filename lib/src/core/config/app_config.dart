@@ -1,4 +1,6 @@
-﻿/// ConfiguraciÃ³n centralizada de la aplicaciÃ³n
+﻿import 'package:flutter/material.dart';
+
+/// ConfiguraciÃ³n centralizada de la aplicaciÃ³n
 /// 
 /// Contiene constantes y configuraciones que pueden variar
 /// segÃºn el entorno (dev, staging, production).
@@ -29,6 +31,9 @@ class AppConfig {
     'API_BASE_URL',
     defaultValue: '',
   );
+
+  // Key global para manejo de SnackBars sin contexto
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   // Ambiente actual - CAMBIAR AQUÃ PARA ALTERNAR ENTRE LOCAL Y PRODUCCIÃ“N
   static const Environment environment = Environment.development;

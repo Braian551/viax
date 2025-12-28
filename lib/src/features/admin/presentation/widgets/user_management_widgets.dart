@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../conductor/presentation/widgets/components/company_picker_sheet.dart';
 
 /// Card que muestra información de un usuario (estilo EmpresaCard)
 class UserCard extends StatelessWidget {
@@ -565,7 +566,7 @@ class UserDetailsSheet extends StatelessWidget {
 /// Sheet para editar usuario
 class UserEditSheet extends StatefulWidget {
   final Map<String, dynamic> user;
-  final Function(String nombre, String apellido, String telefono, String tipoUsuario) onSave;
+  final Function(String nombre, String apellido, String telefono, String tipoUsuario, int? empresaId, String? empresaNombre) onSave;
 
   const UserEditSheet({
     super.key,
@@ -582,6 +583,8 @@ class _UserEditSheetState extends State<UserEditSheet> {
   late TextEditingController _apellidoController;
   late TextEditingController _telefonoController;
   late String _selectedRole;
+  Map<String, dynamic>? _selectedCompany;
+  int? _selectedEmpresaId;
 
   @override
   void initState() {
@@ -590,6 +593,9 @@ class _UserEditSheetState extends State<UserEditSheet> {
     _apellidoController = TextEditingController(text: widget.user['apellido']);
     _telefonoController = TextEditingController(text: widget.user['telefono']);
     _selectedRole = widget.user['tipo_usuario'] ?? 'cliente';
+    _selectedEmpresaId = widget.user['empresa_id'] != null 
+      ? int.tryParse(widget.user['empresa_id'].toString()) 
+      : null;
   }
 
   @override
@@ -686,16 +692,46 @@ class _UserEditSheetState extends State<UserEditSheet> {
                 ],
               ),
             ),
+            
+            // Company selector - shown when empresa or conductor is selected
+            if (_selectedRole == 'empresa' || _selectedRole == 'conductor') ...[
+              const SizedBox(height: 24),
+              Text(
+                'Empresa Asociada',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildCompanySelector(),
+            ],
+            
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  int? finalEmpresaId = _selectedEmpresaId;
+                  String? finalEmpresaNombre = _selectedCompany?['nombre'];
+
+                  // If role is NOT empresa/conductor, clear the company association
+                  if (_selectedRole != 'empresa' && _selectedRole != 'conductor') {
+                    finalEmpresaId = -1; // Sentinel value for "Clear"
+                    finalEmpresaNombre = ''; 
+                  } else if (_selectedEmpresaId == null) {
+                      // If support role selected but no company picked, ensure cleared
+                      finalEmpresaId = -1;
+                  }
+
                   widget.onSave(
                     _nombreController.text,
                     _apellidoController.text,
                     _telefonoController.text,
                     _selectedRole,
+                    finalEmpresaId,
+                    finalEmpresaNombre,
                   );
                   Navigator.pop(context);
                 },
@@ -782,6 +818,94 @@ class _UserEditSheetState extends State<UserEditSheet> {
                 color: isSelected ? color : Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompanySelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasCompany = _selectedCompany != null || _selectedEmpresaId != null;
+    final companyName = _selectedCompany?['nombre'] ?? 
+      widget.user['empresa_nombre'] ??
+      (_selectedEmpresaId != null ? 'Empresa ID: $_selectedEmpresaId' : 'Sin empresa');
+    
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => CompanyPickerSheet(
+            isDark: isDark,
+            showIndependentOption: false,
+            onSelected: (company) {
+              setState(() {
+                _selectedCompany = company;
+                _selectedEmpresaId = company != null 
+                  ? int.tryParse(company['id'].toString()) 
+                  : null;
+              });
+            },
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface.withValues(alpha: 0.8) : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasCompany ? AppColors.primary.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.black12),
+            width: hasCompany ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: hasCompany 
+                  ? AppColors.primary.withValues(alpha: 0.1) 
+                  : (isDark ? Colors.white12 : Colors.black12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                hasCompany ? Icons.business_rounded : Icons.search_rounded,
+                color: hasCompany ? AppColors.primary : Colors.grey,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasCompany ? companyName : 'Seleccionar Empresa',
+                    style: TextStyle(
+                      color: hasCompany 
+                        ? Theme.of(context).textTheme.bodyLarge?.color 
+                        : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                      fontWeight: hasCompany ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  if (!hasCompany)
+                    Text(
+                      'Toca para buscar y vincular',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
             ),
           ],
         ),

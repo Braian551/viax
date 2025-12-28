@@ -133,10 +133,12 @@ class AdminUserManagementProvider with ChangeNotifier {
     String? apellido,
     String? telefono,
     String? tipoUsuario,
+    int? empresaId,
+    String? empresaNombre,
   }) async {
     _setLoading(true);
     
-    print('Provider.updateUser - userId: $userId, nombre: $nombre, tipoUsuario: $tipoUsuario');
+    print('Provider.updateUser - userId: $userId, nombre: $nombre, tipoUsuario: $tipoUsuario, empresaId: $empresaId');
     
     try {
       final result = await manageUserUseCase.updateUser(
@@ -146,6 +148,7 @@ class AdminUserManagementProvider with ChangeNotifier {
         apellido: apellido,
         telefono: telefono,
         tipoUsuario: tipoUsuario,
+        empresaId: empresaId,
       );
 
       return result.fold(
@@ -165,6 +168,17 @@ class AdminUserManagementProvider with ChangeNotifier {
               if (apellido != null) updatedUser['apellido'] = apellido;
               if (telefono != null) updatedUser['telefono'] = telefono;
               if (tipoUsuario != null) updatedUser['tipo_usuario'] = tipoUsuario;
+              
+              if (empresaId != null) {
+                if (empresaId == -1) {
+                  updatedUser['empresa_id'] = null;
+                  updatedUser['empresa_nombre'] = null;
+                } else {
+                  updatedUser['empresa_id'] = empresaId;
+                }
+              }
+              if (empresaNombre != null) updatedUser['empresa_nombre'] = empresaNombre;
+              
               _users[index] = updatedUser;
               notifyListeners();
             }

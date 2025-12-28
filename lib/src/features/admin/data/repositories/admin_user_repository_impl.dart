@@ -45,6 +45,7 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     String? tipoUsuario,
     bool? esActivo,
     bool? esVerificado,
+    int? empresaId,
   }) async {
     try {
       final result = await remoteDataSource.updateUser(
@@ -56,6 +57,7 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
         tipoUsuario: tipoUsuario,
         esActivo: esActivo,
         esVerificado: esVerificado,
+        empresaId: empresaId,
       );
       return Right(result);
     } on ServerException catch (e) {

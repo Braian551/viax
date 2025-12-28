@@ -16,6 +16,7 @@ class ManageUserUseCase {
     String? tipoUsuario,
     bool? esActivo,
     bool? esVerificado,
+    int? empresaId,
   }) {
     return repository.updateUser(
       adminId: adminId,
@@ -26,6 +27,7 @@ class ManageUserUseCase {
       tipoUsuario: tipoUsuario,
       esActivo: esActivo,
       esVerificado: esVerificado,
+      empresaId: empresaId,
     );
   }
 

@@ -7,8 +7,14 @@ import 'dart:async';
 class CompanyPickerSheet extends StatefulWidget {
   final bool isDark;
   final Function(Map<String, dynamic>?) onSelected;
+  final bool showIndependentOption;
 
-  const CompanyPickerSheet({super.key, required this.isDark, required this.onSelected});
+  const CompanyPickerSheet({
+    super.key,
+    required this.isDark,
+    required this.onSelected,
+    this.showIndependentOption = true,
+  });
 
   @override
   State<CompanyPickerSheet> createState() => _CompanyPickerSheetState();
@@ -101,39 +107,40 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
           
           const SizedBox(height: 24),
           
-          InkWell(
-            onTap: () {
-              widget.onSelected(null); // Independent
-              Navigator.pop(context);
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.primary),
-                borderRadius: BorderRadius.circular(12),
-                color: AppColors.primary.withOpacity(0.1),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.person_outline_rounded, color: AppColors.primary),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Trabajar Independiente',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+          if (widget.showIndependentOption) ...[
+            InkWell(
+              onTap: () {
+                widget.onSelected(null); // Independent
+                Navigator.pop(context);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.primary),
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.primary.withOpacity(0.1),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_outline_rounded, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Trabajar Independiente',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
-                ],
+                    const Spacer(),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
+                  ],
+                ),
               ),
             ),
-          ),
-          
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
           Text(
             'Resultados',
             style: TextStyle(

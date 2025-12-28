@@ -24,6 +24,7 @@ abstract class AdminRemoteDataSource {
     String? tipoUsuario,
     bool? esActivo,
     bool? esVerificado,
+    int? empresaId,
   });
 
   Future<bool> deleteUser({
@@ -109,6 +110,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     String? tipoUsuario,
     bool? esActivo,
     bool? esVerificado,
+    int? empresaId,
   }) async {
     final Map<String, dynamic> requestData = {
       'admin_id': adminId,
@@ -121,6 +123,9 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     if (tipoUsuario != null) requestData['tipo_usuario'] = tipoUsuario;
     if (esActivo != null) requestData['es_activo'] = esActivo ? 1 : 0;
     if (esVerificado != null) requestData['es_verificado'] = esVerificado ? 1 : 0;
+    if (empresaId != null) {
+      requestData['empresa_id'] = empresaId == -1 ? null : empresaId;
+    }
 
     print('AdminRemoteDataSource.updateUser - Request: ${jsonEncode(requestData)}');
 

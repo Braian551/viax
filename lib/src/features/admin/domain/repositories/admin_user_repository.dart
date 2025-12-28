@@ -23,6 +23,7 @@ abstract class AdminUserRepository {
     String? tipoUsuario,
     bool? esActivo,
     bool? esVerificado,
+    int? empresaId,
   });
 
   /// Elimina (o desactiva) un usuario

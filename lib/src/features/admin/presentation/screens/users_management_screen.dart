@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/config/app_config.dart';
 import '../../../../theme/app_colors.dart';
 import '../../data/datasources/admin_remote_datasource.dart';
 import '../../data/repositories/admin_user_repository_impl.dart';
@@ -347,13 +348,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           parent: AlwaysScrollableScrollPhysics(),
         ),
         itemCount: provider.users.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (itemContext, index) {
           final user = provider.users[index];
           return UserCard(
             user: user,
-            onTap: () => _showUserDetails(context, user),
-            onEdit: () => _showUserEdit(context, provider, user),
-            onToggleStatus: () => _showStatusConfirmation(context, provider, user),
+            onTap: () => _showUserDetails(user),
+            onEdit: () => _showUserEdit(provider, user),
+            onToggleStatus: () => _showStatusConfirmation(provider, user),
           );
         },
       ),
@@ -411,7 +412,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     );
   }
 
-  void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
+  void _showUserDetails(Map<String, dynamic> user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -420,37 +421,38 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     );
   }
 
-  void _showUserEdit(BuildContext context, AdminUserManagementProvider provider, Map<String, dynamic> user) {
+  void _showUserEdit(AdminUserManagementProvider provider, Map<String, dynamic> user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => UserEditSheet(
         user: user,
-        onSave: (nombre, apellido, telefono, tipoUsuario) async {
+        onSave: (nombre, apellido, telefono, tipoUsuario, empresaId, empresaNombre) async {
           final success = await provider.updateUser(
             userId: user['id'],
             nombre: nombre,
             apellido: apellido,
             telefono: telefono,
             tipoUsuario: tipoUsuario,
+            empresaId: empresaId,
+            empresaNombre: empresaNombre,
           );
           
-          if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(success ? 'Usuario actualizado correctamente' : 'Error al actualizar usuario'),
-                backgroundColor: success ? AppColors.success : AppColors.error,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
+          
+           AppConfig.scaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text(success ? 'Usuario actualizado correctamente' : 'Error al actualizar usuario'),
+              backgroundColor: success ? AppColors.success : AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         },
       ),
     );
   }
 
-  void _showStatusConfirmation(BuildContext context, AdminUserManagementProvider provider, Map<String, dynamic> user) {
+  void _showStatusConfirmation(AdminUserManagementProvider provider, Map<String, dynamic> user) {
     final isActivating = user['es_activo'] == 0;
     final action = isActivating ? 'activar' : 'desactivar';
     final color = isActivating ? AppColors.success : AppColors.warning;
