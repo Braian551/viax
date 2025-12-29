@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -52,6 +53,11 @@ class ConductorActiveTripScreen extends StatefulWidget {
 class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     with WidgetsBindingObserver {
   late final ActiveTripController _controller;
+  
+  // Estado para mensajes flotantes
+  String? _statusMessage;
+  Color? _statusColor;
+  Timer? _statusTimer;
 
   @override
   void initState() {
@@ -112,7 +118,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await _controller.onArrivedPickup();
     if (!mounted || _controller.isDisposed) return;
 
-    _showSnackbar('¡Llegaste al punto! Espera al pasajero', AppColors.accent);
+    _showStatus('¡Llegaste al punto! Espera al pasajero', AppColors.accent);
   }
 
   /// Inicia el viaje cuando el cliente se sube al vehículo.
@@ -124,12 +130,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           solicitudId: widget.solicitudId!,
         );
         if (!success) {
-          _showSnackbar('Error al iniciar el viaje', AppColors.error);
+          _showStatus('Error al iniciar el viaje', AppColors.error);
           return;
         }
       } catch (e) {
         debugPrint('Error iniciando viaje: $e');
-        _showSnackbar('Error al iniciar el viaje', AppColors.error);
+        _showStatus('Error al iniciar el viaje', AppColors.error);
         return;
       }
     }
@@ -137,7 +143,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await _controller.onStartTrip();
     if (!mounted || _controller.isDisposed) return;
 
-    _showSnackbar('¡Viaje iniciado! Navegando al destino', AppColors.success);
+    _showStatus('¡Viaje iniciado! Navegando al destino', AppColors.success);
   }
 
   /// Finaliza el viaje cuando se llega al destino.
@@ -149,12 +155,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           solicitudId: widget.solicitudId!,
         );
         if (!success) {
-          _showSnackbar('Error al finalizar el viaje', AppColors.error);
+          _showStatus('Error al finalizar el viaje', AppColors.error);
           return;
         }
       } catch (e) {
         debugPrint('Error finalizando viaje: $e');
-        _showSnackbar('Error al finalizar el viaje', AppColors.error);
+        _showStatus('Error al finalizar el viaje', AppColors.error);
         return;
       }
     }
@@ -226,16 +232,19 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     );
   }
 
-  void _showSnackbar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+  void _showStatus(String message, Color color) {
+    _statusTimer?.cancel();
+    setState(() {
+      _statusMessage = message;
+      _statusColor = color;
+    });
+    HapticFeedback.mediumImpact();
+    // Ocultar automáticamente después de 4 segundos
+    _statusTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() => _statusMessage = null);
+      }
+    });
   }
 
   /// Abrir pantalla de chat con el cliente
@@ -247,7 +256,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     
     if (widget.solicitudId == null) {
       debugPrint('❌ [Chat] No hay solicitudId');
-      _showSnackbar('No hay información del viaje', AppColors.error);
+      _showStatus('No hay información del viaje', AppColors.error);
       return;
     }
 
@@ -294,7 +303,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       debugPrint('✅ [Chat] ChatScreen abierta exitosamente');
     } catch (e) {
       debugPrint('❌ [Chat] Error al abrir ChatScreen: $e');
-      _showSnackbar('Error al abrir el chat: $e', AppColors.error);
+      _showStatus('Error al abrir el chat: $e', AppColors.error);
     }
   }
 
@@ -392,6 +401,15 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
               right: 16,
               child: _buildNavigationCard(isDark),
             ),
+
+            // Mensajes de estado (Llegada, Inicio de viaje, etc)
+            if (_statusMessage != null)
+              Positioned(
+                top: statusBarHeight + 180,
+                left: 20,
+                right: 20,
+                child: _buildStatusMessage(),
+              ),
 
             // Controles del mapa
             Positioned(
@@ -581,6 +599,45 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       destinationLng: widget.destinoLng,
       currentLat: currentLat,
       currentLng: currentLng,
+    );
+  }
+  Widget _buildStatusMessage() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _statusColor ?? AppColors.primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (_statusColor ?? AppColors.primary).withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              _statusMessage!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
