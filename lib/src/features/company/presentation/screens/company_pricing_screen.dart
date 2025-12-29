@@ -6,16 +6,16 @@ import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
-class CompanyPricingScreen extends StatefulWidget {
+class CompanyPricingTab extends StatefulWidget {
   final Map<String, dynamic> user;
 
-  const CompanyPricingScreen({super.key, required this.user});
+  const CompanyPricingTab({super.key, required this.user});
 
   @override
-  State<CompanyPricingScreen> createState() => _CompanyPricingScreenState();
+  State<CompanyPricingTab> createState() => _CompanyPricingTabState();
 }
 
-class _CompanyPricingScreenState extends State<CompanyPricingScreen> {
+class _CompanyPricingTabState extends State<CompanyPricingTab> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _pricingConfigs = [];
   String? _errorMessage;
@@ -114,15 +114,7 @@ class _CompanyPricingScreenState extends State<CompanyPricingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Tarifas de Empresa'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: _buildBody(),
-    );
+    return _buildBody();
   }
 
   Widget _buildBody() {

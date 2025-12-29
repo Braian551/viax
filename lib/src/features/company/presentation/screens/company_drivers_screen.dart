@@ -6,16 +6,16 @@ import 'package:viax/src/theme/app_colors.dart';
 import '../widgets/company_widgets.dart';
 import 'package:viax/src/features/admin/presentation/widgets/user_management_widgets.dart';
 
-class CompanyDriversScreen extends StatefulWidget {
+class CompanyDriversTab extends StatefulWidget {
   final Map<String, dynamic> user;
 
-  const CompanyDriversScreen({super.key, required this.user});
+  const CompanyDriversTab({super.key, required this.user});
 
   @override
-  State<CompanyDriversScreen> createState() => _CompanyDriversScreenState();
+  State<CompanyDriversTab> createState() => _CompanyDriversTabState();
 }
 
-class _CompanyDriversScreenState extends State<CompanyDriversScreen> {
+class _CompanyDriversTabState extends State<CompanyDriversTab> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _drivers = [];
   String? _errorMessage;
@@ -69,15 +69,7 @@ class _CompanyDriversScreenState extends State<CompanyDriversScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Mis Conductores'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: _buildBody(),
-    );
+    return _buildBody();
   }
 
   Widget _buildBody() {
