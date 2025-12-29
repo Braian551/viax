@@ -65,8 +65,8 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
   final DraggableScrollableController _dragController =
       DraggableScrollableController();
 
-  static const double _minSize = 0.22;
-  static const double _midSize = 0.38;
+  static const double _minSize = 0.20;
+  static const double _midSize = 0.32;
   static const double _maxSize = 0.55;
 
   bool _isExpanded = false;
