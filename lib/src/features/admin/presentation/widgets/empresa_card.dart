@@ -11,6 +11,7 @@ class EmpresaCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onToggleStatus;
+  final VoidCallback? onSetCommission;
 
   const EmpresaCard({
     super.key,
@@ -19,6 +20,7 @@ class EmpresaCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onToggleStatus,
+    this.onSetCommission,
   });
 
   @override
@@ -332,6 +334,18 @@ class EmpresaCard extends StatelessWidget {
   Widget _buildActions(BuildContext context) {
     return Row(
       children: [
+        if (onSetCommission != null)
+          Expanded(
+            child: _buildActionButton(
+              context,
+              icon: Icons.percent_rounded,
+              label: 'Comisión',
+              color: AppColors.primary,
+              onTap: onSetCommission!,
+            ),
+          ),
+        if (onSetCommission != null && onEdit != null)
+          const SizedBox(width: 8),
         if (onEdit != null)
           Expanded(
             child: _buildActionButton(

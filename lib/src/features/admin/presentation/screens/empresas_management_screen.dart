@@ -5,6 +5,7 @@ import 'package:viax/src/features/admin/data/models/empresa_transporte_model.dar
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
 import 'package:viax/src/features/admin/presentation/providers/empresa_provider.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_card.dart';
+import 'package:viax/src/features/admin/presentation/widgets/empresa_commission_dialog.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_form.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
@@ -302,6 +303,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
             onEdit: () => _showEditEmpresaSheet(empresa),
             onDelete: () => _confirmDeleteEmpresa(empresa),
             onToggleStatus: () => _toggleEmpresaStatus(empresa),
+            onSetCommission: () => _showCommissionDialog(empresa),
           );
         },
       ),
@@ -814,6 +816,20 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
             : (_empresaProvider.errorMessage ?? 'Error al cambiar estado'),
         isSuccess: success,
       );
+    }
+  }
+
+  void _showCommissionDialog(EmpresaTransporte empresa) async {
+    final empresaMap = {
+      'id': empresa.id,
+      'nombre': empresa.nombre,
+      'comision_admin_porcentaje': 0.0, // Will be fetched by the dialog
+    };
+    
+    final result = await EmpresaCommissionDialog.show(context, empresaMap);
+    
+    if (result == true && mounted) {
+      _loadEmpresas(); // Refresh list after commission update
     }
   }
 

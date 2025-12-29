@@ -1,7 +1,7 @@
 <?php
 /**
- * Company Pricing API
- * Permite a las empresas gestionar sus propias tarifas
+ * Company Pricing API - Full Features
+ * Permite a las empresas gestionar sus propias tarifas completas
  */
 
 require_once '../config/config.php';
@@ -20,54 +20,17 @@ try {
     $db = $database->getConnection();
     $method = $_SERVER['REQUEST_METHOD'];
     
-    // Obtener datos
     if ($method === 'GET') {
         $input = $_GET;
     } else {
         $input = getJsonInput();
     }
 
-    // Verificar ID de empresa (o usuario empresa)
-    if (empty($input['empresa_id']) && empty($input['user_id'])) {
-        sendJsonResponse(false, 'ID de empresa o usuario requerido');
-        exit();
-    }
-
-    // Si viene user_id, buscar su empresa_id (si es usuario tipo empresa)
-    // OJO: El frontend puede enviar directamente empresa_id si ya lo tiene.
-    // Asumiremos que el frontend envía 'empresa_id' que corresponde al ID en 'empresas_transporte'.
-    // Si el usuario logueado es 'empresa', su ID de usuario NO es el ID de la empresa.
-    // Debemos buscar el ID de empresa asociado al usuario. 
-    // PERO: En la migración 018:
-    // usuarios.empresa_id es para conductores asociados.
-    // ¿Cómo se vincula el usuario "Dueño de empresa" con la tabla "empresas_transporte"?
-    // Revisando 018: "creado_por BIGINT REFERENCES usuarios(id)". 
-    // No hay un link directo "usuario X es dueño de empresa Y" excepto por ¿quién la creó?
-    // O tal vez el usuario TIPO 'empresa' tiene un registro en 'empresas_transporte'?
-    // Revisemos la lógica de registro.
-    
-    // Si el usuario es tipo 'empresa', ¿tiene un registro en empresas_transporte?
-    // Asumiré que el frontend envía el ID de la empresa (empresas_transporte.id).
-    // O si envía usuario_id, debo buscar la empresa asociada.
-    
-    // Por simplicidad para este paso, requerimos 'empresa_id' param explícito,
-    // o 'user_id' y buscamos si es conductor.
-    // Pero para el DASHBOARD de empresa, el usuario logueado es el Admin de la empresa.
-    // Asumiremos que los datos de la empresa vienen en el objeto USER o se pasan como argumento.
-    // Si no, el backend debe resolverlo.
-    
-    $empresaId = isset($input['empresa_id']) ? $input['empresa_id'] : null;
-    
-    // Fallback: Si no viene empresa_id, pero viene user_id y es tipo empresa...
-    // Esto es complejo si no sabemos la relación exacta.
-    // Vamos a confiar en que el frontend manda el empresa_id correcto.
-    // (En CompanyHomeScreen usaremos los datos disponibles).
+    $empresaId = isset($input['empresa_id']) ? intval($input['empresa_id']) : null;
     
     if (!$empresaId) {
-         // Intento de resolver por user_id si es propietario?
-         // Por ahora error si falta.
-         sendJsonResponse(false, 'Falta parametro empresa_id');
-         exit();
+        sendJsonResponse(false, 'Falta parametro empresa_id');
+        exit();
     }
 
     switch ($method) {
@@ -89,25 +52,32 @@ try {
 
 function handleGetPricing($db, $empresaId) {
     try {
-        // 1. Obtener configuración global (default)
-        $queryGlobal = "SELECT * FROM configuracion_precios WHERE empresa_id IS NULL";
-        $stmtGlobal = $db->query($queryGlobal);
-        $globalPrices = $stmtGlobal->fetchAll(PDO::FETCH_ASSOC); // Lista de tipos
+        // 1. Obtener info de la empresa (incluyendo comisión admin)
+        $empresaQuery = "SELECT id, nombre, comision_admin_porcentaje, saldo_pendiente 
+                         FROM empresas_transporte WHERE id = ?";
+        $empresaStmt = $db->prepare($empresaQuery);
+        $empresaStmt->execute([$empresaId]);
+        $empresaInfo = $empresaStmt->fetch(PDO::FETCH_ASSOC);
         
-        // 2. Obtener configuración específica de la empresa
+        // 2. Obtener configuración global (default)
+        $queryGlobal = "SELECT * FROM configuracion_precios WHERE empresa_id IS NULL AND activo = 1";
+        $stmtGlobal = $db->query($queryGlobal);
+        $globalPrices = $stmtGlobal->fetchAll(PDO::FETCH_ASSOC);
+        
+        // 3. Obtener configuración específica de la empresa
         $queryEmpresa = "SELECT * FROM configuracion_precios WHERE empresa_id = ?";
         $stmtEmpresa = $db->prepare($queryEmpresa);
         $stmtEmpresa->execute([$empresaId]);
         $empresaPrices = $stmtEmpresa->fetchAll(PDO::FETCH_ASSOC);
         
-        // Organizar por tipo_vehiculo para fácil mezcla
+        // Organizar por tipo_vehiculo
         $result = [];
         
         // Mapear globales como base
         foreach ($globalPrices as $p) {
             $type = $p['tipo_vehiculo'];
             $p['es_global'] = true;
-            $p['heredado'] = true; // Por defecto hereda si no hay override
+            $p['heredado'] = true;
             $result[$type] = $p;
         }
         
@@ -119,7 +89,15 @@ function handleGetPricing($db, $empresaId) {
             $result[$type] = $p;
         }
         
-        sendJsonResponse(true, 'Tarifas obtenidas', array_values($result));
+        sendJsonResponse(true, 'Tarifas obtenidas', [
+            'precios' => array_values($result),
+            'empresa' => $empresaInfo ? [
+                'id' => $empresaInfo['id'],
+                'nombre' => $empresaInfo['nombre'],
+                'comision_admin_porcentaje' => floatval($empresaInfo['comision_admin_porcentaje'] ?? 0),
+                'saldo_pendiente' => floatval($empresaInfo['saldo_pendiente'] ?? 0)
+            ] : null
+        ]);
         
     } catch (Exception $e) {
         sendJsonResponse(false, 'Error al leer tarifas: ' . $e->getMessage());
@@ -128,14 +106,21 @@ function handleGetPricing($db, $empresaId) {
 
 function handleUpdatePricing($db, $input, $empresaId) {
     try {
-        if (empty($input['precios']) || !is_array($input['precios'])) {
-            sendJsonResponse(false, 'Se requiere array de precios');
+        // Validar si viene un precio individual o array
+        $precios = [];
+        if (isset($input['precios']) && is_array($input['precios'])) {
+            $precios = $input['precios'];
+        } elseif (isset($input['tipo_vehiculo'])) {
+            // Precio individual
+            $precios = [$input];
+        } else {
+            sendJsonResponse(false, 'Se requiere datos de precios');
             return;
         }
         
         $db->beginTransaction();
         
-        foreach ($input['precios'] as $precio) {
+        foreach ($precios as $precio) {
             $tipo = $precio['tipo_vehiculo'];
             
             // Verificar si existe para actualizar o insertar
@@ -145,32 +130,77 @@ function handleUpdatePricing($db, $input, $empresaId) {
             $exists = $stmtCheck->fetch();
             
             if ($exists) {
-                // Update
+                // Update completo
                 $sql = "UPDATE configuracion_precios SET 
-                        tarifa_base = ?, costo_por_km = ?, costo_por_minuto = ?, 
-                        tarifa_minima = ?, recargo_hora_pico = ?, recargo_nocturno = ?, 
-                        recargo_festivo = ?, comision_plataforma = ?, activo = ?
+                        tarifa_base = ?, 
+                        costo_por_km = ?, 
+                        costo_por_minuto = ?, 
+                        tarifa_minima = ?,
+                        tarifa_maxima = ?,
+                        recargo_hora_pico = ?, 
+                        recargo_nocturno = ?, 
+                        recargo_festivo = ?,
+                        descuento_distancia_larga = ?,
+                        umbral_km_descuento = ?,
+                        comision_plataforma = ?,
+                        comision_metodo_pago = ?,
+                        distancia_minima = ?,
+                        distancia_maxima = ?,
+                        tiempo_espera_gratis = ?,
+                        costo_tiempo_espera = ?,
+                        activo = ?,
+                        fecha_actualizacion = NOW()
                         WHERE id = ?";
                 $stmt = $db->prepare($sql);
                 $stmt->execute([
-                    $precio['tarifa_base'], $precio['costo_por_km'], $precio['costo_por_minuto'],
-                    $precio['tarifa_minima'], $precio['recargo_hora_pico'], $precio['recargo_nocturno'],
-                    $precio['recargo_festivo'], $precio['comision_plataforma'], $precio['activo'] ?? 1,
+                    $precio['tarifa_base'] ?? 0,
+                    $precio['costo_por_km'] ?? 0,
+                    $precio['costo_por_minuto'] ?? 0,
+                    $precio['tarifa_minima'] ?? 0,
+                    $precio['tarifa_maxima'] ?? null,
+                    $precio['recargo_hora_pico'] ?? 0,
+                    $precio['recargo_nocturno'] ?? 0,
+                    $precio['recargo_festivo'] ?? 0,
+                    $precio['descuento_distancia_larga'] ?? 0,
+                    $precio['umbral_km_descuento'] ?? 15,
+                    $precio['comision_plataforma'] ?? 0,
+                    $precio['comision_metodo_pago'] ?? 0,
+                    $precio['distancia_minima'] ?? 1,
+                    $precio['distancia_maxima'] ?? 50,
+                    $precio['tiempo_espera_gratis'] ?? 3,
+                    $precio['costo_tiempo_espera'] ?? 0,
+                    $precio['activo'] ?? 1,
                     $exists['id']
                 ]);
             } else {
-                // Insert
-                $sql = "INSERT INTO configuracion_precios 
-                        (empresa_id, tipo_vehiculo, tarifa_base, costo_por_km, costo_por_minuto, 
-                         tarifa_minima, recargo_hora_pico, recargo_nocturno, recargo_festivo, 
-                         comision_plataforma, activo)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                // Insert completo
+                $sql = "INSERT INTO configuracion_precios (
+                        empresa_id, tipo_vehiculo, tarifa_base, costo_por_km, costo_por_minuto,
+                        tarifa_minima, tarifa_maxima, recargo_hora_pico, recargo_nocturno, 
+                        recargo_festivo, descuento_distancia_larga, umbral_km_descuento,
+                        comision_plataforma, comision_metodo_pago, distancia_minima, 
+                        distancia_maxima, tiempo_espera_gratis, costo_tiempo_espera, activo
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $db->prepare($sql);
                 $stmt->execute([
                     $empresaId, $tipo,
-                    $precio['tarifa_base'], $precio['costo_por_km'], $precio['costo_por_minuto'],
-                    $precio['tarifa_minima'], $precio['recargo_hora_pico'], $precio['recargo_nocturno'],
-                    $precio['recargo_festivo'], $precio['comision_plataforma'], $precio['activo'] ?? 1
+                    $precio['tarifa_base'] ?? 0,
+                    $precio['costo_por_km'] ?? 0,
+                    $precio['costo_por_minuto'] ?? 0,
+                    $precio['tarifa_minima'] ?? 0,
+                    $precio['tarifa_maxima'] ?? null,
+                    $precio['recargo_hora_pico'] ?? 0,
+                    $precio['recargo_nocturno'] ?? 0,
+                    $precio['recargo_festivo'] ?? 0,
+                    $precio['descuento_distancia_larga'] ?? 0,
+                    $precio['umbral_km_descuento'] ?? 15,
+                    $precio['comision_plataforma'] ?? 0,
+                    $precio['comision_metodo_pago'] ?? 0,
+                    $precio['distancia_minima'] ?? 1,
+                    $precio['distancia_maxima'] ?? 50,
+                    $precio['tiempo_espera_gratis'] ?? 3,
+                    $precio['costo_tiempo_espera'] ?? 0,
+                    $precio['activo'] ?? 1
                 ]);
             }
         }
