@@ -56,6 +56,8 @@ class _CompanyPricingTabState extends State<CompanyPricingTab> {
       final url = Uri.parse('${AppConfig.baseUrl}/company/pricing.php?empresa_id=$empresaId');
       final response = await http.get(url);
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -76,10 +78,12 @@ class _CompanyPricingTabState extends State<CompanyPricingTab> {
         });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error de conexión: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error de conexión: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 
