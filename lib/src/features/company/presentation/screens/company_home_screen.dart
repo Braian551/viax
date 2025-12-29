@@ -53,26 +53,6 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     );
   }
 
-  Future<void> _logout() async {
-    final confirmed = await DialogHelper.showConfirmation(
-      context,
-      title: 'Cerrar sesión',
-      message: '¿Estás seguro de que deseas cerrar sesión?',
-      confirmText: 'Sí, cerrar',
-      cancelText: 'Cancelar',
-    );
-
-    if (confirmed == true) {
-      await UserService.clearSession();
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context, 
-        RouteNames.welcome, 
-        (route) => false,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -138,14 +118,6 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.logout_rounded, color: isDark ? Colors.redAccent.shade100 : Colors.redAccent),
-          onPressed: _logout,
-          tooltip: 'Cerrar sesión',
-        ),
-        const SizedBox(width: 8),
-      ],
     );
   }
 
