@@ -31,8 +31,8 @@ class ActiveTripController {
   bool isDisposed = false;
   bool mapReady = false;
   bool mapError = false;
-  // Arrancamos en 2D para evitar shader/link issues en GPUs débiles; el 3D se activa manualmente
-  bool is3DMode = false;
+  // Inicia en 3D por defecto para mejor experiencia de navegación tipo Waze/Google Maps
+  bool is3DMode = true;
   bool toPickup = true;           // En camino al punto de recogida
   bool arrivedAtPickup = false;   // Llegó al punto, esperando iniciar viaje
   bool loadingRoute = false;
@@ -195,40 +195,103 @@ class ActiveTripController {
     if (mapboxMap == null || isDisposed || !mapReady) return;
 
     try {
-      // Crear manager para pickup (solo si aún vamos al punto de recogida)
+      // =====================================================================
+      // MARCADOR DE PICKUP (punto de recogida) - Estilo Pin Verde tipo Waze
+      // Múltiples capas para crear efecto de pin con sombra
+      // =====================================================================
       if (toPickup) {
         _pickupAnnotationManager ??= await mapboxMap!.annotations
             .createCircleAnnotationManager();
 
         if (_pickupAnnotationManager != null && !isDisposed) {
+          // Capa 1: Sombra/Glow exterior (efecto de profundidad)
           await _pickupAnnotationManager!.create(CircleAnnotationOptions(
             geometry: pickup,
-            circleRadius: 14.0,
-            circleColor: 0xFF2196F3,
+            circleRadius: 28.0,
+            circleColor: 0xFF1B5E20,      // Verde muy oscuro para sombra
+            circleOpacity: 0.25,
+            circleStrokeWidth: 0,
+          ));
+          
+          // Capa 2: Halo medio
+          await _pickupAnnotationManager!.create(CircleAnnotationOptions(
+            geometry: pickup,
+            circleRadius: 22.0,
+            circleColor: 0xFF2E7D32,      // Verde oscuro
+            circleOpacity: 0.5,
+            circleStrokeWidth: 0,
+          ));
+          
+          // Capa 3: Círculo principal (pin body)
+          await _pickupAnnotationManager!.create(CircleAnnotationOptions(
+            geometry: pickup,
+            circleRadius: 16.0,
+            circleColor: 0xFF4CAF50,      // Verde brillante
             circleStrokeColor: 0xFFFFFFFF,
             circleStrokeWidth: 3.0,
             circleOpacity: 1.0,
             circleStrokeOpacity: 1.0,
           ));
-          debugPrint('✅ Marcador de pickup agregado');
+          
+          // Capa 4: Punto central blanco (como Google Maps pin)
+          await _pickupAnnotationManager!.create(CircleAnnotationOptions(
+            geometry: pickup,
+            circleRadius: 6.0,
+            circleColor: 0xFFFFFFFF,      // Blanco centro
+            circleOpacity: 1.0,
+            circleStrokeWidth: 0,
+          ));
+          
+          debugPrint('✅ Marcador PIN de pickup agregado');
         }
       }
 
-      // Crear manager para destino (siempre visible)
+      // =====================================================================
+      // MARCADOR DE DESTINO - Estilo Pin Rojo tipo Google Maps
+      // =====================================================================
       _dropoffAnnotationManager ??= await mapboxMap!.annotations
           .createCircleAnnotationManager();
 
       if (_dropoffAnnotationManager != null && !isDisposed) {
+        // Capa 1: Sombra exterior
         await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
           geometry: dropoff,
-          circleRadius: 12.0,
-          circleColor: 0xFFF44336,
+          circleRadius: 26.0,
+          circleColor: 0xFFB71C1C,        // Rojo muy oscuro para sombra
+          circleOpacity: 0.25,
+          circleStrokeWidth: 0,
+        ));
+        
+        // Capa 2: Halo medio
+        await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
+          geometry: dropoff,
+          circleRadius: 20.0,
+          circleColor: 0xFFC62828,        // Rojo oscuro
+          circleOpacity: 0.5,
+          circleStrokeWidth: 0,
+        ));
+        
+        // Capa 3: Círculo principal (pin body)
+        await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
+          geometry: dropoff,
+          circleRadius: 14.0,
+          circleColor: 0xFFE53935,        // Rojo brillante
           circleStrokeColor: 0xFFFFFFFF,
           circleStrokeWidth: 3.0,
           circleOpacity: 1.0,
           circleStrokeOpacity: 1.0,
         ));
-        debugPrint('✅ Marcador de destino agregado');
+        
+        // Capa 4: Punto central blanco
+        await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
+          geometry: dropoff,
+          circleRadius: 5.0,
+          circleColor: 0xFFFFFFFF,        // Blanco centro
+          circleOpacity: 1.0,
+          circleStrokeWidth: 0,
+        ));
+        
+        debugPrint('✅ Marcador PIN de destino agregado');
       }
 
     } catch (e) {
@@ -352,15 +415,18 @@ class ActiveTripController {
     if (mapboxMap == null || isDisposed) return;
 
     try {
+      // Configurar el puck de ubicación del conductor
+      // Sin pulsing para evitar artefactos visuales (espacios blancos)
       await mapboxMap!.location.updateSettings(
         LocationComponentSettings(
           enabled: true,
-          pulsingEnabled: false,
+          pulsingEnabled: false,         // Desactivado para evitar artefactos
           showAccuracyRing: false,
-          puckBearingEnabled: true,
+          puckBearingEnabled: true,      // Muestra dirección del conductor
           puckBearing: PuckBearing.HEADING,
         ),
       );
+      debugPrint('✅ Location puck habilitado');
     } catch (e) {
       debugPrint('Error en location settings: $e');
     }
@@ -376,11 +442,11 @@ class ActiveTripController {
     final center = driverLocation ?? pickup;
 
     try {
+      // Iniciar con vista 3D por defecto para experiencia de navegación inmersiva
       await mapboxMap!.setCamera(CameraOptions(
         center: center,
-        zoom: 18.0,
-        // Sin pitch para evitar shaders 3D en dispositivos con drivers inestables
-        pitch: 0,
+        zoom: 17.5,
+        pitch: is3DMode ? 55 : 0,
         bearing: currentBearing,
       ));
     } catch (e) {
