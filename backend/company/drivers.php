@@ -39,8 +39,7 @@ try {
     $query = "SELECT 
                 u.id, u.nombre, u.apellido, u.email, u.telefono, 
                 u.foto_perfil, u.es_activo, u.es_verificado,
-                u.fecha_registro,
-                d.tipo_vehiculo, d.marca, d.modelo, d.placa
+                u.fecha_registro
               FROM usuarios u
               LEFT JOIN detalles_conductor d ON u.id = d.usuario_id
               WHERE u.tipo_usuario = 'conductor' 
@@ -58,6 +57,6 @@ try {
     
 } catch (Exception $e) {
     error_log("Error company/drivers.php: " . $e->getMessage());
-    sendJsonResponse(false, 'Error del servidor');
+    sendJsonResponse(false, 'Error del servidor: ' . $e->getMessage());
 }
 ?>
