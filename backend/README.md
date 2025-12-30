@@ -1,13 +1,13 @@
-# PingGo Backend
+# Viax Backend
 
-Backend API para la aplicación PingGo.
+Backend API para la aplicación Viax.
 
 ## 🚀 Deployment en Railway
 
 ### Opción 1: Repo Separado (Recomendado)
 
 1. **Crear nuevo repositorio en GitHub:**
-   - Ve a GitHub y crea un nuevo repo llamado `pinggo-backend`
+   - Ve a GitHub y crea un nuevo repo llamado `viax-backend`
    - No inicialices con README
 
 2. **Subir solo el backend:**
@@ -17,18 +17,18 @@ Backend API para la aplicación PingGo.
    git add .
    git commit -m "Initial backend deployment"
    git branch -M main
-   git remote add origin https://github.com/Braian551/pinggo-backend.git
+   git remote add origin https://github.com/Braian551/viax-backend.git
    git push -u origin main
    ```
 
 3. **Deploy en Railway:**
-   - Conecta el repo `pinggo-backend`
+   - Conecta el repo `viax-backend`
    - Railway detectará automáticamente la configuración
    - Agrega una base de datos MySQL
 
 ### Opción 2: Usar el repo completo con configuración específica
 
-Si prefieres usar el repo completo, Railway usará la configuración en `railway.json` y `nixpacks.toml` para construir solo la carpeta `pingo/backend`.
+Si prefieres usar el repo completo, Railway usará la configuración en `railway.json` y `nixpacks.toml` para construir solo la carpeta `viax/backend`.
 
 ## 📊 Base de Datos
 

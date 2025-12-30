@@ -1,6 +1,6 @@
 # 🚀 Viax - Plataforma de Movilidad
 
-Aplicación Flutter (anteriormente "PingGo") ahora renombrada a **Viax**, para servicios de movilidad y envíos rápidos, con backend PHP/MySQL, mapas interactivos y sistema de verificación por email.
+Aplicación Flutter **Viax**, para servicios de movilidad y envíos rápidos, con backend PHP/MySQL, mapas interactivos y sistema de verificación por email.
 
 ## ✅ Estado del Proyecto
 
@@ -35,7 +35,7 @@ Backend (PHP + MySQL - Railway)
 
 ### 🚀 **Despliegue**
 - **Frontend**: Compilación manual (APK/AAB)
-- **Backend**: Railway (https://pinggo-backend-production.up.railway.app)
+- **Backend**: Railway (https://viax-backend-production.up.railway.app)
 - **Base de datos**: MySQL en Railway (sql10.freesqldatabase.com)
 - **Email**: PHPMailer con Gmail SMTP
 
@@ -96,7 +96,7 @@ flutter run
 | **Mapbox Routes** | 100k/mes | ✅ Activo | api.mapbox.com |
 | **TomTom Traffic** | 2.5k/día | ✅ Activo | api.tomtom.com |
 | **Nominatim** | Ilimitado | ✅ Activo | nominatim.openstreetmap.org |
-| **Backend API** | - | ✅ Activo | pinggo-backend-production.up.railway.app |
+| **Backend API** | - | ✅ Activo | viax-backend-production.up.railway.app |
 | **MySQL Database** | - | ✅ Activo | sql10.freesqldatabase.com |
 | **Email Service** | - | ✅ Activo | Gmail SMTP |
 
@@ -123,7 +123,7 @@ $this->password = 'root';
 static const Environment environment = Environment.production;
 
 // lib/src/global/config/api_config.dart
-static const String baseUrl = 'https://pinggo-backend-production.up.railway.app';
+static const String baseUrl = 'https://viax-backend-production.up.railway.app';
 
 // backend/config/database.php
 $this->host = 'sql10.freesqldatabase.com';
@@ -137,7 +137,7 @@ $this->password = 'BVeitwKy1q';
 ### 🔧 **URLs de Producción (Railway)**
 ```dart
 // Backend URLs (lib/src/core/constants/app_constants.dart)
-const String baseUrl = 'https://pinggo-backend-production.up.railway.app';
+const String baseUrl = 'https://viax-backend-production.up.railway.app';
 const String verifySystemUrl = '$baseUrl/verify_system_json.php';
 
 // Database connection (Railway)
@@ -164,7 +164,7 @@ lib/
 │   ├── core/                 # Configuración central
 │   │   ├── config/          # Configuración de APIs
 │   │   ├── constants/       # URLs y constantes
-│   │   └── providers/       # Providers globales
+│   │   ├── providers/       # Providers globales
 │   ├── features/            # Funcionalidades principales
 │   │   ├── auth/           # Autenticación y registro
 │   │   ├── home/           # Pantalla principal
@@ -300,7 +300,7 @@ flutter install
 ```
 
 ### 🖥️ **Backend (Railway)**
-- **URL**: https://pinggo-backend-production.up.railway.app
+- **URL**: https://viax-backend-production.up.railway.app
 - **Estado**: ✅ Desplegado automáticamente
 - **Base de datos**: MySQL en Railway
 - **Email**: Gmail SMTP configurado
@@ -313,7 +313,7 @@ flutter install
 ### 🔧 **Configuración de Producción**
 ```dart
 // lib/src/core/constants/app_constants.dart
-const String baseUrl = 'https://pinggo-backend-production.up.railway.app';
+const String baseUrl = 'https://viax-backend-production.up.railway.app';
 
 // lib/src/core/config/env_config.dart
 const String mapboxAccessToken = 'tu_token_mapbox';
@@ -357,13 +357,13 @@ const String tomtomApiKey = 'tu_api_key_tomtom';
 - Optimizar rendimiento
 - Preparar para Google Play Store
 
-## �📄 **Licencia**
+## 📄 **Licencia**
 
 Este proyecto está bajo la Licencia MIT.
 
 ---
 
-## 🎉 **Proyecto Viax** (Antes PingGo)
+## 🎉 **Proyecto Viax**
 
 **🚀 Completamente funcional y listo para producción**
 
@@ -377,8 +377,8 @@ Este proyecto está bajo la Licencia MIT.
 - **Documentación exhaustiva**
 
 ### 📞 **Soporte**
-- **Repositorio**: https://github.com/Braian551/pingo
-- **Backend**: https://github.com/Braian551/pinggo-backend
+- **Repositorio**: https://github.com/Braian551/viax
+- **Backend**: https://github.com/Braian551/viax-backend
 - **Documentación**: Carpeta `docs/`
 - **Estado**: Producción ready
 

@@ -1,7 +1,7 @@
-# Módulo Conductor - PingGo
+# Módulo Conductor - Viax
 
 ## Descripción
-Módulo completo para la gestión de conductores en la aplicación PingGo. Incluye pantallas, servicios, providers y backend completo.
+Módulo completo para la gestión de conductores en la aplicación Viax. Incluye pantallas, servicios, providers y backend completo.
 
 ## Estructura del Módulo
 
@@ -24,7 +24,7 @@ lib/src/features/conductor/
 ## Backend (PHP)
 
 ```
-pingo/backend/conductor/
+viax/backend/conductor/
 ├── get_info.php                    # Obtener información del conductor
 ├── get_viajes_activos.php          # Obtener viajes en curso
 ├── get_estadisticas.php            # Obtener estadísticas del día
@@ -55,7 +55,7 @@ pingo/backend/conductor/
 - Gestión de viajes activos
 
 ### Servicios Backend
-Todos los endpoints están en `http://10.0.2.2/pingo/backend/conductor/`
+Todos los endpoints están en `http://10.0.2.2/viax/backend/conductor/`
 
 #### GET /get_info.php
 **Parámetros**: `conductor_id`
@@ -88,7 +88,7 @@ Todos los endpoints están en `http://10.0.2.2/pingo/backend/conductor/`
 ## Migraciones
 
 ### Migración 002: Campos adicionales para conductor
-Ubicación: `pingo/backend/migrations/002_conductor_fields.sql`
+Ubicación: `viax/backend/migrations/002_conductor_fields.sql`
 
 Agrega los siguientes campos a `detalles_conductor`:
 - `disponible`: Estado de disponibilidad
@@ -100,7 +100,7 @@ Agrega los siguientes campos a `detalles_conductor`:
 
 ### Ejecutar Migraciones
 ```bash
-cd pingo/backend
+cd viax/backend
 php migrations/run_migrations.php
 ```
 

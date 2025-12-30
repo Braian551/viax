@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: pinggo-backend
+    name: viax-backend
     runtime: php
     buildCommand: "composer install --no-dev --optimize-autoloader"
     startCommand: "apache2-foreground"
@@ -17,6 +17,6 @@ services:
         value: production
 
 databases:
-  - name: pinggo-db
-    databaseName: pingo
-    user: pingo_user
+  - name: viax-db
+    databaseName: viax
+    user: viax_user

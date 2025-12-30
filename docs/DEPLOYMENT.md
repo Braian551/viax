@@ -1,4 +1,4 @@
-# 🚀 Despliegue PingGo - Guía Completa
+# 🚀 Despliegue Viax - Guía Completa
 
 ## 📋 **Estado Actual del Despliegue**
 
@@ -6,15 +6,15 @@
 
 | Servicio | URL | Estado | Tecnología |
 |----------|-----|--------|------------|
-| **Backend API** | https://pinggo-backend-production.up.railway.app | ✅ Activo | PHP 8.3 + MySQL |
+| **Backend API** | https://viax-backend-production.up.railway.app | ✅ Activo | PHP 8.3 + MySQL |
 | **Base de Datos** | sql10.freesqldatabase.com | ✅ Activo | MySQL 8.0 |
 | **Frontend** | - | ✅ Listo | Flutter (Build manual) |
 
 ## 🖥️ **Backend (Railway)**
 
 ### 📍 **Información del Servicio**
-- **Nombre**: pinggo-backend-production
-- **URL**: https://pinggo-backend-production.up.railway.app
+- **Nombre**: viax-backend-production
+- **URL**: https://viax-backend-production.up.railway.app
 - **Framework**: PHP 8.3 puro (sin framework)
 - **Base de datos**: MySQL externa (freesqldatabase.com)
 - **Email**: PHPMailer con Gmail SMTP
@@ -28,12 +28,12 @@ define('DB_USER', 'sql10740070');
 define('DB_PASS', '********');
 
 // URLs del backend
-define('BASE_URL', 'https://pinggo-backend-production.up.railway.app');
+define('BASE_URL', 'https://viax-backend-production.up.railway.app');
 ```
 
 ### 📁 **Estructura del Backend**
 ```
-pinggo-backend (Railway)
+viax-backend (Railway)
 ├── auth/
 │   ├── login.php              # Inicio de sesión
 │   ├── register.php           # Registro de usuarios
@@ -164,7 +164,7 @@ flutter install
 ### 🔧 **Configuración de APIs**
 ```dart
 // lib/src/core/constants/app_constants.dart
-const String baseUrl = 'https://pinggo-backend-production.up.railway.app';
+const String baseUrl = 'https://viax-backend-production.up.railway.app';
 
 // lib/src/core/config/env_config.dart
 const String mapboxAccessToken = 'tu_token_mapbox';
@@ -174,7 +174,7 @@ const String tomtomApiKey = 'tu_api_key_tomtom';
 ## 🚀 **Proceso de Despliegue**
 
 ### 🔄 **Backend (Automático)**
-1. **Push a rama main** en `pinggo-backend`
+1. **Push a rama main** en `viax-backend`
 2. **Railway detecta cambios** automáticamente
 3. **Build con Nixpacks** (PHP + Composer)
 4. **Despliegue automático** en minutos
@@ -210,7 +210,7 @@ const String tomtomApiKey = 'tu_api_key_tomtom';
 ### 🔧 **Backend no responde**
 ```bash
 # Verificar estado
-curl https://pinggo-backend-production.up.railway.app/verify_system_json.php
+curl https://viax-backend-production.up.railway.app/verify_system_json.php
 
 # Revisar logs en Railway dashboard
 # Verificar conexión a base de datos
@@ -231,7 +231,7 @@ curl https://pinggo-backend-production.up.railway.app/verify_system_json.php
 
 ### 🚀 **Backend**
 ```bash
-cd pinggo-backend
+cd viax-backend
 git add .
 git commit -m "Nueva funcionalidad"
 git push origin main
@@ -240,7 +240,7 @@ git push origin main
 
 ### 📱 **Frontend**
 ```bash
-cd ping_go
+cd viax
 flutter build apk --release
 # Distribuir APK actualizado
 ```

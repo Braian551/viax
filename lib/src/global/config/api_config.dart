@@ -10,7 +10,7 @@
   // static const String baseUrl = 'http://10.0.2.2/viax/backend';
   
   // Para producciÃ³n Railway, cambiar a:
-  // static const String baseUrl = 'https://pinggo-backend-production.up.railway.app';
+  // static const String baseUrl = 'https://viax-backend-production.up.railway.app';
 
   // Endpoints principales
   static const String authEndpoint = '$baseUrl/auth';
