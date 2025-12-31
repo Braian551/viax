@@ -230,7 +230,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
         ),
 
         // Lugares guardados (solo cuando no hay texto escrito y tiene focus)
-        if (widget.focusNode.hasFocus &&
+        if (false && widget.focusNode.hasFocus && // Temporarily disabled
             widget.controller.text.isEmpty &&
             !widget.hasLocationSelected)
           Padding(
