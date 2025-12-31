@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../../global/models/simple_location.dart';
 import '../../../../../global/services/location_suggestion_service.dart';
 import '../../../../../theme/app_colors.dart';
@@ -250,8 +251,51 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
 
   Widget _buildContent(bool isDark) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Shimmer.fromColors(
+          baseColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[300]!,
+          highlightColor: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100]!,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 4,
+            separatorBuilder: (context, index) => const SizedBox(height: 24),
+            itemBuilder: (context, index) {
+              return Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          height: 14,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: 150,
+                          height: 12,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       );
     }
 

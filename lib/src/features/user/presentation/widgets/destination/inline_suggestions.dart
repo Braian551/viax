@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../../global/models/simple_location.dart';
 import '../../../../../global/services/location_suggestion_service.dart';
 import '../../../../../theme/app_colors.dart';
@@ -276,18 +277,66 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
 
-        // Loading
-        if (_isLoading)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(widget.accentColor),
-                ),
+        // Loading Shimmer
+        if (_isLoading && widget.focusNode.hasFocus)
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            decoration: BoxDecoration(
+              color: widget.isDark
+                  ? Colors.black.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Shimmer.fromColors(
+              baseColor: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[300]!,
+              highlightColor: widget.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100]!,
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                height: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                width: 150,
+                                height: 12,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),

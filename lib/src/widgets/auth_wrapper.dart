@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -172,7 +173,7 @@ class _AuthWrapperState extends State<AuthWrapper>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Usar color del tema
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -198,8 +199,8 @@ class _AuthWrapperState extends State<AuthWrapper>
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  const Color(0xFF2196F3).withValues(alpha: 0.3),
-                                  const Color(0xFF2196F3).withValues(alpha: 0.1),
+                                  AppColors.primary.withValues(alpha: 0.3),
+                                  AppColors.primary.withValues(alpha: 0.1),
                                   Colors.transparent,
                                 ],
                                 stops: const [0.0, 0.5, 1.0],
@@ -215,36 +216,24 @@ class _AuthWrapperState extends State<AuthWrapper>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFF2196F3).withValues(alpha: 0.15),
+                                AppColors.primary.withValues(alpha: 0.15),
                                 Colors.transparent,
                               ],
                               stops: const [0.0, 0.85],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF2196F3).withValues(alpha: 0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 blurRadius: 40,
                                 spreadRadius: 10,
                               ),
                             ],
                           ),
                           child: Center(
-                            child: ShaderMask(
-                              shaderCallback: (bounds) {
-                                return const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF2196F3),
-                                    Color(0xFF1976D2),
-                                  ],
-                                ).createShader(bounds);
-                              },
-                              child: Image.asset(
-                                'assets/images/logo.png',
-                                width: 80,
-                                height: 80,
-                              ),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 80,
+                              height: 80,
                             ),
                           ),
                         ),
@@ -267,7 +256,7 @@ class _AuthWrapperState extends State<AuthWrapper>
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                const Color(0xFF2196F3).withValues(alpha: 0.3),
+                                AppColors.primary.withValues(alpha: 0.3),
                               ),
                               value: null,
                             ),
@@ -278,8 +267,8 @@ class _AuthWrapperState extends State<AuthWrapper>
                             height: 28,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(0xFF2196F3),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary,
                               ),
                               value: null,
                             ),
