@@ -12,6 +12,7 @@ import 'dart:ui';
 import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/steps/vehicle_step_widget.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
   const DriverRegistrationScreen({super.key});
@@ -351,14 +352,20 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
     }
   }
 
-  Future<void> _pickImage(ImageSource source, Function(File) onPicked) async {
+  Future<void> _pickSecurePhoto(Function(File) onPicked) async {
     try {
-      final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
-      if (pickedFile != null) {
-        onPicked(File(pickedFile.path));
+      // Use DocumentPickerHelper with allowGallery: false to enforce camera and show visual guides
+      final path = await DocumentPickerHelper.pickDocument(
+        context: context,
+        documentType: DocumentType.image,
+        allowGallery: false, // Strict: Camera only
+      );
+      
+      if (path != null) {
+        onPicked(File(path));
       }
     } catch (e) {
-      CustomSnackbar.showError(context, message: 'Error al seleccionar imagen: $e');
+      CustomSnackbar.showError(context, message: 'Error al capturar foto: $e');
     }
   }
 
@@ -398,7 +405,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       colorController: _colorController,
       plateController: _plateController,
       vehiclePhoto: _vehiclePhoto,
-      onPickPhoto: () => _pickImage(ImageSource.gallery, (file) => setState(() => _vehiclePhoto = file)),
+      onPickPhoto: () => _pickSecurePhoto((file) => setState(() => _vehiclePhoto = file)),
       selectedCompany: _selectedCompany,
       companyController: _companyController,
       onShowCompanyPicker: () => _showCompanyPicker(isDark),
@@ -467,7 +474,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ImageUploadCard(
           label: 'Foto de la Licencia',
           file: _licensePhoto,
-          onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _licensePhoto = file)),
+          onTap: () => _pickSecurePhoto((file) => setState(() => _licensePhoto = file)),
           isDark: isDark,
         ),
       ],
@@ -495,7 +502,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto del SOAT',
             file: _soatPhoto,
-            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _soatPhoto = file)),
+            onTap: () => _pickSecurePhoto((file) => setState(() => _soatPhoto = file)),
             isDark: isDark,
           ),
           const SizedBox(height: 24),
@@ -511,7 +518,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tecnomecánica',
             file: _tecnoPhoto,
-            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _tecnoPhoto = file)),
+            onTap: () => _pickSecurePhoto((file) => setState(() => _tecnoPhoto = file)),
             isDark: isDark,
           ),
           const SizedBox(height: 24),
@@ -527,7 +534,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tarjeta Propiedad',
             file: _propertyPhoto,
-            onTap: () => _pickImage(ImageSource.gallery, (file) => setState(() => _propertyPhoto = file)),
+            onTap: () => _pickSecurePhoto((file) => setState(() => _propertyPhoto = file)),
             isDark: isDark,
           ),
         ],

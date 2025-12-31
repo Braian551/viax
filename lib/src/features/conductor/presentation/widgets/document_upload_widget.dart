@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
 enum DocumentType {
   image,
@@ -644,6 +645,8 @@ class _VisualGuidesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Dialog(
       backgroundColor: Colors.transparent,
       child: ClipRRect(
@@ -653,40 +656,57 @@ class _VisualGuidesDialog extends StatelessWidget {
           child: Container(
              padding: const EdgeInsets.all(24),
              decoration: BoxDecoration(
-               color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
+               color: isDark ? AppColors.darkSurface.withValues(alpha: 0.95) : AppColors.lightSurface.withValues(alpha: 0.95),
                borderRadius: BorderRadius.circular(24),
-               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+               border: Border.all(
+                 color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+               ),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.2),
+                   blurRadius: 20,
+                   spreadRadius: 5,
+                 )
+               ]
              ),
              child: Column(
                mainAxisSize: MainAxisSize.min,
                children: [
-                 const Icon(Icons.camera_alt_rounded, color: Color(0xFFFFFF00), size: 48),
-                 const SizedBox(height: 16),
-                 const Text(
+                 Container(
+                   padding: const EdgeInsets.all(16),
+                   decoration: BoxDecoration(
+                     color: AppColors.primary.withValues(alpha: 0.1),
+                     shape: BoxShape.circle,
+                   ),
+                   child: Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 40),
+                 ),
+                 const SizedBox(height: 20),
+                 Text(
                    'Instrucciones para la foto',
                    style: TextStyle(
-                     color: Colors.white,
+                     color: isDark ? Colors.white : Colors.black87,
                      fontSize: 20,
                      fontWeight: FontWeight.bold,
                    ),
                    textAlign: TextAlign.center,
                  ),
                  const SizedBox(height: 24),
-                 _buildGuideItem(Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas'),
+                 _buildGuideItem(context, Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas', isDark),
                  const SizedBox(height: 16),
-                 _buildGuideItem(Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto'),
+                 _buildGuideItem(context, Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto', isDark),
                  const SizedBox(height: 16),
-                 _buildGuideItem(Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo'),
+                 _buildGuideItem(context, Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo', isDark),
                  const SizedBox(height: 32),
                  SizedBox(
                    width: double.infinity,
                    child: ElevatedButton(
                      onPressed: () => Navigator.pop(context, true),
                      style: ElevatedButton.styleFrom(
-                       backgroundColor: const Color(0xFFFFFF00),
-                       foregroundColor: Colors.black,
+                       backgroundColor: AppColors.primary,
+                       foregroundColor: Colors.white,
                        padding: const EdgeInsets.symmetric(vertical: 16),
-                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                       elevation: 0,
                      ),
                      child: const Text('Entendido, abrir cámara', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                    ),
@@ -699,24 +719,39 @@ class _VisualGuidesDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildGuideItem(IconData icon, String title, String subtitle) {
+  Widget _buildGuideItem(BuildContext context, IconData icon, String title, String subtitle, bool isDark) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
+          child: Icon(icon, color: isDark ? Colors.white70 : Colors.black54, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 14)),
+              Text(
+                title, 
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 16
+                )
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle, 
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54, 
+                  fontSize: 14,
+                  height: 1.2,
+                )
+              ),
             ],
           ),
         ),
