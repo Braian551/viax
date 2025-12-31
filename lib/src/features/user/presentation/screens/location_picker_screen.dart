@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' hide Path;
-import 'package:http/http.dart' as http;
+// Removed http import
 import 'package:geolocator/geolocator.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../global/services/mapbox_service.dart';
 
 /// Pantalla mejorada de selección de ubicación en mapa
 /// Con animaciones suaves, efecto glass y diseño moderno estilo DiDi/Uber
@@ -181,17 +182,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
       setState(() => _isLoadingAddress = true);
 
       try {
-        final url = Uri.parse(
-          'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${point.latitude}&lon=${point.longitude}',
+        final place = await MapboxService.reverseGeocode(
+          position: point,
         );
-        final resp = await http.get(url, headers: {
-          'User-Agent': 'ViaxApp/1.0 (student_project_demo)',
-        });
 
-        if (resp.statusCode == 200 && mounted) {
-          final data = json.decode(resp.body);
+        if (place != null && mounted) {
           setState(() {
-            _address = data['display_name'] ?? 'Dirección desconocida';
+            _address = place.placeName;
           });
         }
       } catch (e) {

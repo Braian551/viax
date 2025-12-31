@@ -1,48 +1,48 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import '../models/simple_location.dart';
+import 'mapbox_service.dart';
 
-/// Servicio reutilizable para sugerencias de ubicación
-/// Prioriza resultados locales (ciudad/país del usuario)
+/// Servicio potenciado para sugerencias de ubicación usando Mapbox
+/// Usa estrategia de búsqueda local-first con bounding box + POI priority (estilo DiDi)
 class LocationSuggestionService {
-  static const String _nominatimBaseUrl = 'https://nominatim.openstreetmap.org';
-  static const String _userAgent = 'ViaxApp/1.0';
-  
-  /// Cache simple para evitar llamadas repetidas
   static final Map<String, List<SimpleLocation>> _cache = {};
   static const int _cacheMaxSize = 50;
   
-  /// Ubicación del usuario para priorizar resultados locales
+  /// Tipos de lugares a buscar: POIs primero (escuelas, negocios), luego direcciones
+  static const List<String> poiTypes = ['poi', 'poi.landmark', 'address', 'place', 'neighborhood'];
+  
   LatLng? userLocation;
-  String? userCountryCode;
+  String countryCode;
   String? userCity;
+  LatLng? referencePoint;
   
   LocationSuggestionService({
     this.userLocation,
-    this.userCountryCode,
+    this.countryCode = 'co',
     this.userCity,
+    this.referencePoint,
   });
   
-  /// Configura la ubicación del usuario para priorizar resultados
   void setUserContext({
     LatLng? location,
-    String? countryCode,
+    String? country,
     String? city,
+    LatLng? reference,
   }) {
     userLocation = location ?? userLocation;
-    userCountryCode = countryCode ?? userCountryCode;
+    countryCode = country ?? countryCode;
     userCity = city ?? userCity;
+    referencePoint = reference ?? referencePoint;
   }
   
-  /// Busca sugerencias priorizando ubicaciones locales
-  /// 
-  /// [query] - Texto a buscar
-  /// [limit] - Número máximo de resultados
-  /// [localFirst] - Si es true, prioriza resultados cercanos
+  void setReferencePoint(LatLng? point) {
+    referencePoint = point;
+  }
+  
+  /// Busca sugerencias con estrategia LOCAL-FIRST + POI PRIORITY (como DiDi)
   Future<List<SimpleLocation>> searchSuggestions({
     required String query,
     int limit = 8,
@@ -52,196 +52,176 @@ class LocationSuggestionService {
       return [];
     }
     
-    final cacheKey = '${query.toLowerCase()}_${userCountryCode ?? ''}_$limit';
+    final distanceRef = referencePoint ?? userLocation;
+    final cacheKey = '${query.toLowerCase()}_${distanceRef?.latitude}_${distanceRef?.longitude}_${countryCode}_$limit';
     
-    // Verificar cache
     if (_cache.containsKey(cacheKey)) {
       return _cache[cacheKey]!;
     }
     
     try {
-      List<SimpleLocation> results = [];
+      List<MapboxPlace> places = [];
       
-      if (localFirst && (userLocation != null || userCountryCode != null)) {
-        // Primero buscar localmente
-        results = await _searchWithContext(query, limit);
+      // ESTRATEGIA LOCAL-FIRST + POI PRIORITY (como DiDi)
+      if (localFirst && distanceRef != null) {
+        // Paso 1: Buscar POIs en ~50km
+        final bbox50km = _createBoundingBox(distanceRef, 0.45);
         
-        // Si hay pocos resultados locales, complementar con búsqueda global
-        if (results.length < 3) {
-          final globalResults = await _searchGlobal(query, limit - results.length);
-          // Agregar solo los que no están duplicados
-          for (var r in globalResults) {
-            if (!results.any((e) => _isSimilarLocation(e, r))) {
-              results.add(r);
+        places = await MapboxService.searchPlaces(
+          query: query,
+          limit: 10,
+          proximity: distanceRef,
+          country: countryCode,
+          bbox: bbox50km,
+          types: poiTypes, // ¡CLAVE: Incluir POIs!
+          fuzzyMatch: true,
+        );
+        
+        // Paso 2: Si < 3 resultados, expandir a ~100km
+        if (places.length < 3) {
+          final bbox100km = _createBoundingBox(distanceRef, 0.9);
+          
+          final morePlaces = await MapboxService.searchPlaces(
+            query: query,
+            limit: 10,
+            proximity: distanceRef,
+            country: countryCode,
+            bbox: bbox100km,
+            types: poiTypes,
+            fuzzyMatch: true,
+          );
+          
+          final existingIds = places.map((p) => p.id).toSet();
+          for (var p in morePlaces) {
+            if (!existingIds.contains(p.id)) {
+              places.add(p);
             }
           }
         }
-      } else {
-        // Búsqueda global simple
-        results = await _searchGlobal(query, limit);
       }
       
-      // Ordenar: más cercanos primero si tenemos ubicación del usuario
-      if (userLocation != null && results.isNotEmpty) {
-        results = _sortByDistance(results);
+      // Paso 3: Fallback nacional con POIs
+      if (places.isEmpty) {
+        places = await MapboxService.searchPlaces(
+          query: query,
+          limit: limit,
+          proximity: distanceRef,
+          country: countryCode,
+          types: poiTypes,
+          fuzzyMatch: true,
+        );
       }
       
-      // Guardar en cache
-      _addToCache(cacheKey, results);
+      final results = _convertPlacesToLocations(places, distanceRef);
       
-      return results;
+      if (distanceRef != null && results.isNotEmpty) {
+        results.sort((a, b) {
+          final distA = a.distanceKm ?? double.infinity;
+          final distB = b.distanceKm ?? double.infinity;
+          return distA.compareTo(distB);
+        });
+      }
+      
+      final limitedResults = results.take(limit).toList();
+      _addToCache(cacheKey, limitedResults);
+      
+      return limitedResults;
     } catch (e) {
       debugPrint('LocationSuggestionService error: $e');
       return [];
     }
   }
   
-  /// Búsqueda con contexto local (país/viewbox)
-  Future<List<SimpleLocation>> _searchWithContext(String query, int limit) async {
-    final params = <String, String>{
-      'q': query,
-      'format': 'jsonv2',
-      'addressdetails': '1',
-      'limit': '$limit',
-    };
-    
-    // Agregar código de país si está disponible
-    if (userCountryCode != null && userCountryCode!.isNotEmpty) {
-      params['countrycodes'] = userCountryCode!;
-    }
-    
-    // Agregar viewbox si tenemos ubicación (área de ±0.5 grados)
-    if (userLocation != null) {
-      final lat = userLocation!.latitude;
-      final lng = userLocation!.longitude;
-      params['viewbox'] = '${lng - 0.5},${lat + 0.5},${lng + 0.5},${lat - 0.5}';
-      params['bounded'] = '0'; // No restringir estrictamente, solo priorizar
-    }
-    
-    return _executeSearch(params);
+  List<double> _createBoundingBox(LatLng center, double radiusDegrees) {
+    return [
+      center.longitude - radiusDegrees,
+      center.latitude - radiusDegrees,
+      center.longitude + radiusDegrees,
+      center.latitude + radiusDegrees,
+    ];
   }
   
-  /// Búsqueda global sin restricciones
-  Future<List<SimpleLocation>> _searchGlobal(String query, int limit) async {
-    final params = <String, String>{
-      'q': query,
-      'format': 'jsonv2',
-      'addressdetails': '1',
-      'limit': '$limit',
-    };
+  List<SimpleLocation> _convertPlacesToLocations(
+    List<MapboxPlace> places, 
+    LatLng? referencePoint,
+  ) {
+    final Distance distanceCalculator = const Distance();
     
-    return _executeSearch(params);
-  }
-  
-  /// Ejecuta la búsqueda HTTP
-  Future<List<SimpleLocation>> _executeSearch(Map<String, String> params) async {
-    final uri = Uri.parse('$_nominatimBaseUrl/search').replace(queryParameters: params);
-    
-    final response = await http.get(uri, headers: {
-      'User-Agent': _userAgent,
-    }).timeout(const Duration(seconds: 8));
-    
-    if (response.statusCode == 200) {
-      return await compute(_parseSuggestionsResponse, response.body);
-    }
-    
-    return [];
-  }
-  
-  /// Ordena resultados por distancia al usuario
-  List<SimpleLocation> _sortByDistance(List<SimpleLocation> locations) {
-    if (userLocation == null) return locations;
-    
-    final Distance distance = const Distance();
-    
-    locations.sort((a, b) {
-      final distA = distance.as(
-        LengthUnit.Kilometer,
-        userLocation!,
-        LatLng(a.latitude, a.longitude),
+    return places.map((place) {
+      double? distanceKm;
+      if (referencePoint != null) {
+        distanceKm = distanceCalculator.as(
+          LengthUnit.Kilometer,
+          referencePoint,
+          place.coordinates,
+        );
+      }
+      
+      final placeInfo = _extractPlaceInfo(place);
+      
+      return SimpleLocation(
+        latitude: place.coordinates.latitude,
+        longitude: place.coordinates.longitude,
+        address: place.placeName,
+        placeName: placeInfo.name,
+        subtitle: placeInfo.subtitle,
+        distanceKm: distanceKm,
+        placeType: place.placeType,
       );
-      final distB = distance.as(
-        LengthUnit.Kilometer,
-        userLocation!,
-        LatLng(b.latitude, b.longitude),
-      );
-      return distA.compareTo(distB);
-    });
+    }).toList();
+  }
+  
+  _PlaceInfo _extractPlaceInfo(MapboxPlace place) {
+    String name = place.text;
+    String subtitle = '';
     
-    return locations;
+    final fullName = place.placeName;
+    if (fullName.contains(',')) {
+      final parts = fullName.split(',').map((e) => e.trim()).toList();
+      if (parts.length > 1) {
+        final startIndex = parts[0] == name ? 1 : 0;
+        subtitle = parts.sublist(startIndex).take(3).join(', ');
+      }
+    }
+    
+    if (subtitle.isEmpty && place.address != null) {
+      subtitle = place.address!;
+    }
+    
+    return _PlaceInfo(name: name, subtitle: subtitle);
   }
   
-  /// Verifica si dos ubicaciones son similares (para evitar duplicados)
-  bool _isSimilarLocation(SimpleLocation a, SimpleLocation b) {
-    // Considerar similar si están a menos de 100m
-    const threshold = 0.001; // ~100m en grados
-    return (a.latitude - b.latitude).abs() < threshold &&
-           (a.longitude - b.longitude).abs() < threshold;
-  }
-  
-  /// Agrega al cache con límite de tamaño
   void _addToCache(String key, List<SimpleLocation> results) {
     if (_cache.length >= _cacheMaxSize) {
-      // Eliminar la entrada más antigua
       _cache.remove(_cache.keys.first);
     }
     _cache[key] = results;
   }
   
-  /// Limpia el cache
   static void clearCache() {
     _cache.clear();
   }
   
-  /// Geocodificación inversa para obtener dirección de coordenadas
   Future<String?> reverseGeocode(double lat, double lon) async {
     try {
-      final uri = Uri.parse('$_nominatimBaseUrl/reverse').replace(
-        queryParameters: {
-          'format': 'jsonv2',
-          'lat': '$lat',
-          'lon': '$lon',
-        },
-      );
-      
-      final response = await http.get(uri, headers: {
-        'User-Agent': _userAgent,
-      }).timeout(const Duration(seconds: 5));
-      
-      if (response.statusCode == 200) {
-        final data = await compute(_parseReverseGeocodeResponse, response.body);
-        
-        // Extraer código de país para futuras búsquedas
-        if (data['address'] != null) {
-          userCountryCode = data['address']['country_code']?.toString().toUpperCase();
-          userCity = data['address']['city'] ?? 
-                     data['address']['town'] ?? 
-                     data['address']['village'];
-        }
-        
-        return data['display_name'] as String?;
-      }
+      final place = await MapboxService.reverseGeocode(position: LatLng(lat, lon));
+      return place?.placeName;
     } catch (e) {
       debugPrint('Reverse geocode error: $e');
     }
     return null;
   }
   
-  /// Extrae información legible de una dirección
   static LocationInfo parseAddress(String fullAddress) {
     final parts = fullAddress.split(',').map((e) => e.trim()).toList();
-    
     return LocationInfo(
       name: parts.isNotEmpty ? parts[0] : fullAddress,
-      subtitle: parts.length > 1 
-          ? parts.sublist(1).take(2).join(', ')
-          : '',
+      subtitle: parts.length > 1 ? parts.sublist(1).take(2).join(', ') : '',
       fullAddress: fullAddress,
     );
   }
 }
 
-/// Información parseada de una ubicación
 class LocationInfo {
   final String name;
   final String subtitle;
@@ -254,21 +234,8 @@ class LocationInfo {
   });
 }
 
-// Helper function for compute
-List<SimpleLocation> _parseSuggestionsResponse(String responseBody) {
-  final List data = json.decode(responseBody) as List;
-  
-  return data.map((item) {
-    return SimpleLocation(
-      latitude: double.tryParse(item['lat']?.toString() ?? '0') ?? 0,
-      longitude: double.tryParse(item['lon']?.toString() ?? '0') ?? 0,
-      address: item['display_name'] ?? '',
-    );
-  }).toList().cast<SimpleLocation>();
+class _PlaceInfo {
+  final String name;
+  final String subtitle;
+  const _PlaceInfo({required this.name, required this.subtitle});
 }
-
-Map<String, dynamic> _parseReverseGeocodeResponse(String responseBody) {
-  return json.decode(responseBody) as Map<String, dynamic>;
-}
-
-

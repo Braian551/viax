@@ -164,6 +164,9 @@ class MapboxService {
     LatLng? proximity,
     int limit = 5,
     List<String>? types,
+    String? country,
+    List<double>? bbox,
+    bool fuzzyMatch = true,
   }) async {
     try {
       if (query.trim().isEmpty) return [];
@@ -172,6 +175,7 @@ class MapboxService {
         'access_token': EnvConfig.mapboxPublicToken,
         'limit': limit.toString(),
         'language': 'es',
+        'fuzzyMatch': fuzzyMatch.toString(),
       };
 
       if (proximity != null) {
@@ -181,6 +185,16 @@ class MapboxService {
 
       if (types != null && types.isNotEmpty) {
         queryParams['types'] = types.join(',');
+      }
+      
+      // Restringir por país (muy importante para resultados locales)
+      if (country != null && country.isNotEmpty) {
+        queryParams['country'] = country;
+      }
+      
+      // Restringir por bounding box (área geográfica específica)
+      if (bbox != null && bbox.length == 4) {
+        queryParams['bbox'] = bbox.join(',');
       }
 
       final encodedQuery = Uri.encodeComponent(query);

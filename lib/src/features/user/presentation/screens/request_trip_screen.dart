@@ -1,12 +1,11 @@
 ﻿import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../global/models/simple_location.dart';
+import '../../../../global/services/mapbox_service.dart';
 import '../../../../theme/app_colors.dart';
 import 'trip_preview_screen.dart';
 import 'location_picker_screen.dart';
@@ -42,6 +41,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   List<SimpleLocation> _suggestions = [];
   bool _isLoadingSuggestions = false;
   bool _isGettingLocation = false;
+  bool _isProgrammaticChange = false;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -257,11 +257,29 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
     if (query.isNotEmpty) {
       // Don't await here - let it run asynchronously to avoid blocking UI
-      _searchLocation(query);
+      _searchLocation(query, targetField);
     }
   }
 
   void _onTextChanged({required String targetField}) {
+    // Strict focus check: Don't search if user isn't focused on this field
+    // This prevents auto-filled location from triggering search/spinner
+    bool hasFocus = false;
+    if (targetField == 'origin') {
+      hasFocus = _originFocusNode.hasFocus;
+    } else if (targetField == 'destination') {
+      hasFocus = _destinationFocusNode.hasFocus;
+    } else if (targetField.startsWith('stop_')) {
+      final index = int.parse(targetField.split('_')[1]);
+      if (index < _stopFocusNodes.length) {
+        hasFocus = _stopFocusNodes[index].hasFocus;
+      }
+    }
+
+    if (!hasFocus) return;
+
+    if (_isProgrammaticChange) return;
+    
     setState(() {}); // Rebuild to show/hide clear button
     
     String query = '';
@@ -277,7 +295,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 450), () {
       if (query.isNotEmpty) {
-        _searchLocation(query);
+        _searchLocation(query, targetField);
       } else {
         if (mounted) setState(() => _suggestions = []);
       }
@@ -640,15 +658,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   setState(() {
                     if (_originFocusNode.hasFocus) {
                       _selectedOrigin = suggestion;
-                      _originController.text = suggestion.address;
+                      _originController.text = _formatAddressForDisplay(suggestion.address);
                     } else if (_destinationFocusNode.hasFocus) {
                       _selectedDestination = suggestion;
-                      _destinationController.text = suggestion.address;
+                      _destinationController.text = _formatAddressForDisplay(suggestion.address);
                     } else {
                        for (int i = 0; i < _stopFocusNodes.length; i++) {
                         if (_stopFocusNodes[i].hasFocus) {
                           _stops[i] = suggestion;
-                          _stopControllers[i].text = suggestion.address;
+                          _stopControllers[i].text = _formatAddressForDisplay(suggestion.address);
                           break;
                         }
                       }
@@ -688,7 +706,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              suggestion.address.split(',').first,
+                              suggestion.displayName,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -700,7 +718,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              suggestion.address,
+                              suggestion.displaySubtitle,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -846,14 +864,20 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
         setState(() {
           if (targetField == 'origin') {
             _selectedOrigin = location;
+            _isProgrammaticChange = true;
             _originController.text = location.address;
+            _isProgrammaticChange = false;
           } else if (targetField == 'destination') {
             _selectedDestination = location;
+            _isProgrammaticChange = true;
             _destinationController.text = location.address;
+            _isProgrammaticChange = false;
           } else if (targetField.startsWith('stop_')) {
              final index = int.parse(targetField.split('_')[1]);
              _stops[index] = location;
+             _isProgrammaticChange = true;
              _stopControllers[index].text = location.address;
+             _isProgrammaticChange = false;
           }
         });
       }
@@ -868,46 +892,154 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
   Future<String?> _reverseGeocode(double lat, double lon) async {
     try {
-      final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lon');
-      final resp = await http.get(url, headers: {
-        'User-Agent': 'ViaxApp/1.0 (student_project_demo)'
-      });
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body) as Map<String, dynamic>;
-        return data['display_name'] as String?;
-      } else {
-        debugPrint('Reverse geocode failed: ${resp.statusCode}');
+      final place = await MapboxService.reverseGeocode(position: LatLng(lat, lon));
+      if (place != null) {
+        // Formatear la dirección para que sea más legible
+        final addressToFormat = place.placeName.isNotEmpty ? place.placeName : place.text;
+        return _formatAddressForDisplay(addressToFormat);
       }
     } catch (e) {
       debugPrint('Reverse geocode error: $e');
     }
     return null;
   }
+  
+  /// Formatea una dirección para mostrarla al usuario de forma limpia
+  /// Remueve códigos postales, abreviaturas técnicas, etc.
+  String _formatAddressForDisplay(String rawAddress) {
+    if (rawAddress.isEmpty) return rawAddress;
+    
+    // Dividir la dirección en partes
+    final parts = rawAddress.split(',').map((e) => e.trim()).toList();
+    
+    // Filtrar partes que contienen solo números (códigos postales)
+    // o que son demasiado cortas/técnicas
+    final cleanParts = parts.where((part) {
+      // Remover códigos postales (ej: "050013", "110111")
+      if (RegExp(r'^\d{5,6}$').hasMatch(part)) return false;
+      
+      // Remover partes que empiezan con código postal seguido de ciudad
+      if (RegExp(r'^\d{5,6}\s+').hasMatch(part)) {
+        // Obtener la parte después del código postal
+        return false;
+      }
+      
+      // Mantener partes válidas
+      return part.isNotEmpty;
+    }).map((part) {
+      // Limpiar códigos postales dentro de la parte
+      // Ej: "050013 Medellín" -> "Medellín"
+      final cleaned = part.replaceAll(RegExp(r'^\d{5,6}\s+'), '');
+      return cleaned.trim();
+    }).where((part) => part.isNotEmpty).toList();
+    
+    // Limitar a 3 partes para no mostrar demasiado
+    final limitedParts = cleanParts.take(3).toList();
+    
+    // Unir las partes filtradas
+    return limitedParts.join(', ');
+  }
 
-  Future<void> _searchLocation(String query) async {
+  Future<void> _searchLocation(String query, String targetField) async {
     setState(() {
       _isLoadingSuggestions = true;
     });
     try {
-      final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=jsonv2&addressdetails=1&limit=6');
-      final resp = await http.get(url, headers: {
-        'User-Agent': 'ViaxApp/1.0 (student_project_demo)'
-      });
-      if (resp.statusCode == 200) {
-        final List data = json.decode(resp.body) as List;
-        final results = data.map((item) => SimpleLocation(
-          latitude: double.tryParse(item['lat']?.toString() ?? '0') ?? 0,
-          longitude: double.tryParse(item['lon']?.toString() ?? '0') ?? 0,
-          address: item['display_name'] ?? '',
-        )).toList();
-        if (mounted) {
-          setState(() => _suggestions = results.cast<SimpleLocation>());
+      // Usar origen como punto de referencia para proximidad y distancias
+      final referencePoint = _selectedOrigin != null 
+          ? LatLng(_selectedOrigin!.latitude, _selectedOrigin!.longitude) 
+          : null;
+      
+      // NUEVA ESTRATEGIA: Buscar SIN bounding box para obtener todos los POIs
+      // Luego filtrar y ordenar por distancia del lado del cliente
+      // Mapbox usará proximity para priorizar resultados cercanos
+      
+      // Tipos de lugares a buscar: POIs primero (escuelas, negocios), luego direcciones
+      const poiTypes = ['poi', 'poi.landmark', 'address', 'place', 'neighborhood'];
+      
+      // Buscar con proximity (la API priorizará resultados cercanos)
+      // SIN bounding box restrictivo que pueda excluir POIs
+      final places = await MapboxService.searchPlaces(
+        query: query,
+        limit: 15, // Obtener más resultados para filtrar
+        proximity: referencePoint, // Mapbox priorizará resultados cercanos
+        country: 'co', // Solo Colombia
+        types: poiTypes,
+        fuzzyMatch: true,
+      );
+      
+      // Convertir a SimpleLocation con distancias y formato mejorado
+      final Distance distanceCalculator = const Distance();
+      
+      final results = places.map((place) {
+        // Calcular distancia si tenemos punto de referencia
+        double? distanceKm;
+        if (referencePoint != null) {
+          distanceKm = distanceCalculator.as(
+            LengthUnit.Kilometer,
+            referencePoint,
+            place.coordinates,
+          );
         }
-      } else {
-        debugPrint('Search failed: ${resp.statusCode}');
+        
+        // Extraer nombre y subtítulo del contexto de Mapbox
+        // Aplicar formato para remover códigos postales
+        String placeName = _formatAddressForDisplay(place.text);
+        String subtitle = '';
+        
+        final fullName = place.placeName;
+        if (fullName.contains(',')) {
+          final parts = fullName.split(',').map((e) => e.trim()).toList();
+          if (parts.length > 1) {
+            final startIndex = parts[0] == place.text ? 1 : 0;
+            // Formatear cada parte del subtítulo para remover códigos postales
+            final subtitleParts = parts.sublist(startIndex).take(3).toList();
+            subtitle = _formatAddressForDisplay(subtitleParts.join(', '));
+          }
+        }
+        
+        // Formatear la dirección completa
+        final cleanAddress = _formatAddressForDisplay(place.placeName);
+        
+        return SimpleLocation(
+          latitude: place.coordinates.latitude,
+          longitude: place.coordinates.longitude,
+          address: cleanAddress,
+          placeName: placeName,
+          subtitle: subtitle.isNotEmpty ? subtitle : (place.address != null ? _formatAddressForDisplay(place.address!) : ''),
+          distanceKm: distanceKm,
+          placeType: place.placeType,
+        );
+      }).toList();
+      
+      // Ordenar por distancia (más cercanos primero)
+      if (referencePoint != null) {
+        results.sort((a, b) {
+          final distA = a.distanceKm ?? double.infinity;
+          final distB = b.distanceKm ?? double.infinity;
+          return distA.compareTo(distB);
+        });
+      }
+      
+      // Limitar a 8 resultados para UI limpia
+      final limitedResults = results.take(8).toList();
+      
+      if (mounted) {
+        // Verificar si el campo que solicitó la búsqueda sigue siendo el enfocado
+        bool isFieldFocused = false;
+        if (targetField == 'origin' && _originFocusNode.hasFocus) isFieldFocused = true;
+        else if (targetField == 'destination' && _destinationFocusNode.hasFocus) isFieldFocused = true;
+        else if (targetField.startsWith('stop_')) {
+          final index = int.parse(targetField.split('_')[1]);
+          if (index < _stopFocusNodes.length && _stopFocusNodes[index].hasFocus) isFieldFocused = true;
+        }
+
+        if (isFieldFocused) {
+          setState(() => _suggestions = limitedResults);
+        }
       }
     } catch (e) {
-      debugPrint('Nominatim search error: $e');
+      debugPrint('Mapbox search error: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingSuggestions = false);

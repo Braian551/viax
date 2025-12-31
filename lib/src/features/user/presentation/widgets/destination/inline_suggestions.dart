@@ -64,6 +64,9 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
   }
 
   void _onTextChanged() {
+    // Strict focus check: Don't search/update if user isn't focused
+    if (!widget.focusNode.hasFocus) return;
+
     // Notificar que el texto cambió (marca como no seleccionado)
     widget.onTextChanged();
 
@@ -493,7 +496,10 @@ class _SuggestionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final info = LocationSuggestionService.parseAddress(location.address);
+    // Usar las propiedades mejoradas de SimpleLocation
+    final name = location.displayName;
+    final subtitle = location.displaySubtitle;
+    final distance = location.formattedDistance;
 
     return Material(
       color: Colors.transparent,
@@ -522,7 +528,7 @@ class _SuggestionTile extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  Icons.location_on_rounded,
+                  _getIconForPlaceType(location.placeType),
                   color: AppColors.primary,
                   size: 18,
                 ),
@@ -533,7 +539,7 @@ class _SuggestionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      info.name,
+                      name,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -543,9 +549,9 @@ class _SuggestionTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (info.subtitle.isNotEmpty)
+                    if (subtitle.isNotEmpty)
                       Text(
-                        info.subtitle,
+                        subtitle,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white38 : Colors.grey[500],
@@ -556,18 +562,55 @@ class _SuggestionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.north_west_rounded,
-                size: 16,
-                color: isDark ? Colors.white24 : Colors.grey[400],
-              ),
+              // Mostrar distancia si está disponible
+              if (distance.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    distance,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white54 : Colors.grey[600],
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  Icons.north_west_rounded,
+                  size: 16,
+                  color: isDark ? Colors.white24 : Colors.grey[400],
+                ),
             ],
           ),
         ),
       ),
     );
   }
+  
+  /// Icono basado en el tipo de lugar
+  IconData _getIconForPlaceType(String? placeType) {
+    switch (placeType) {
+      case 'poi':
+        return Icons.place_rounded;
+      case 'address':
+        return Icons.home_rounded;
+      case 'place':
+        return Icons.location_city_rounded;
+      case 'neighborhood':
+        return Icons.apartment_rounded;
+      default:
+        return Icons.location_on_rounded;
+    }
+  }
 }
+
 
 class _QuickOptionTile extends StatelessWidget {
   final IconData icon;

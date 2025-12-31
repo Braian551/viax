@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
 import '../../providers/map_provider.dart';
 import '../widgets/osm_map_widget.dart';
-// import '../widgets/location_search_widget.dart'; // not used here
 import '../../../../global/services/auth/user_service.dart';
-import 'package:viax/src/global/services/nominatim_service.dart';
+import '../../../../global/models/simple_location.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   final String? initialAddress;
@@ -18,7 +17,7 @@ class LocationPickerScreen extends StatefulWidget {
     super.key,
     this.initialAddress,
     this.initialLocation,
-    this.screenTitle = 'Seleccionar ubicaciÃ³n',
+    this.screenTitle = 'Seleccionar ubicación',
     this.showConfirmButton = true,
   });
 
@@ -55,7 +54,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
   }
 
   void _setupAnimations() {
-    // AnimaciÃ³n del pin al mover el mapa
+    // Animación del pin al mover el mapa
     _pinAnimationController = AnimationController(
       duration: const Duration(milliseconds: 250),
       vsync: this,
@@ -69,7 +68,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
       curve: Curves.easeOutBack,
     ));
     
-    // AnimaciÃ³n de pulso para el pin
+    // Animación de pulso para el pin
     _pulseAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -149,11 +148,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
     }
   }
 
-  void _onSearchResultTap(NominatimResult result) {
+  void _onSearchResultTap(SimpleLocation result) {
     final mapProvider = Provider.of<MapProvider>(context, listen: false);
     mapProvider.selectSearchResult(result);
-    _searchController.text = result.getFormattedAddress();
-    _editableAddressController.text = result.getFormattedAddress();
+    _searchController.text = result.address;
+    _editableAddressController.text = result.address;
     _searchFocusNode.unfocus();
   }
 
@@ -195,7 +194,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
     final newAddress = _editableAddressController.text.trim();
     if (newAddress.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('DirecciÃ³n vacÃ­a'))
+        const SnackBar(content: Text('Dirección vacía'))
       );
       return;
     }
@@ -242,7 +241,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
-                'UbicaciÃ³n guardada exitosamente',
+                'Ubicación guardada exitosamente',
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
@@ -263,6 +262,14 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
   @override
   Widget build(BuildContext context) {
     final mapProvider = Provider.of<MapProvider>(context);
+
+    // Filter out duplicate locations by address if needed, or just display as is
+    // Often addresses might be duplicated if using multiple sources or history
+    final uniqueResults = <String, SimpleLocation>{};
+    for (var r in mapProvider.searchResults) {
+      uniqueResults[r.address] = r;
+    }
+    final displayResults = uniqueResults.values.toList();
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -322,7 +329,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
               ),
             ),
 
-            // Barra de bÃºsqueda moderna con efecto glass y animaciones suaves
+            // Barra de búsqueda moderna con efecto glass y animaciones suaves
             Positioned(
               top: 20,
               left: 20,
@@ -383,7 +390,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Buscar direcciÃ³n...',
+                              hintText: 'Buscar dirección...',
                               hintStyle: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 16,
@@ -429,7 +436,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
               ),
             ),
 
-            // Pin de ubicaciÃ³n profesional estilo Uber con animaciones suaves
+            // Pin de ubicación profesional estilo Uber con animaciones suaves
             Center(
               child: IgnorePointer(
                 ignoring: true,
@@ -593,7 +600,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Campo de direcciÃ³n mejorado
+                    // Campo de dirección mejorado
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       decoration: BoxDecoration(
@@ -626,7 +633,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                             minWidth: 44,
                             minHeight: 44,
                           ),
-                          hintText: 'DirecciÃ³n seleccionada...',
+                          hintText: 'Dirección seleccionada...',
                           hintStyle: TextStyle(
                             color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 15,
@@ -672,7 +679,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                             const SizedBox(width: 12),
                             const Expanded(
                               child: Text(
-                                'UbicaciÃ³n confirmada',
+                                'Ubicación confirmada',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -684,13 +691,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                         ),
                       ),
 
-                    // Botones de acciÃ³n
+                    // Botones de acción
                     if (!_confirmed)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
                         child: Row(
                           children: [
-                            // BotÃ³n de guardar (principal)
+                            // Botón de guardar (principal)
                             Expanded(
                               flex: 3,
                               child: AnimatedScale(
@@ -731,7 +738,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                             ),
                             const SizedBox(width: 12),
                             
-                            // BotÃ³n de limpiar
+                            // Botón de limpiar
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               width: 56,
@@ -772,8 +779,8 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
               ),
             ),
 
-            // Resultados de bÃºsqueda con diseÃ±o profesional
-            if (mapProvider.searchResults.isNotEmpty && _isSearchFocused)
+            // Resultados de búsqueda con diseño profesional
+            if (displayResults.isNotEmpty && _isSearchFocused)
               Positioned(
                 top: 84,
                 left: 20,
@@ -798,104 +805,53 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                         ),
                       ],
                     ),
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.4,
+                    ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 300),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: mapProvider.searchResults.length,
-                          separatorBuilder: (context, index) => Divider(
-                            height: 1,
-                            color: Colors.white.withValues(alpha: 0.08),
-                            indent: 60,
-                            endIndent: 20,
-                          ),
-                          itemBuilder: (context, i) {
-                            final r = mapProvider.searchResults[i];
-                            return Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => _onSearchResultTap(r),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Icono de ubicaciÃ³n
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.location_on_rounded,
-                                          color: Color(0xFFFFFF00),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      
-                                      // Texto de la direcciÃ³n
-                                      Expanded(
-                                        child: Text(
-                                          r.getFormattedAddress(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      
-                                      // Icono de flecha
-                                      Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        color: Colors.white.withValues(alpha: 0.4),
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shrinkWrap: true,
+                        itemCount: displayResults.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
+                        itemBuilder: (context, index) {
+                          final r = displayResults[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.location_on_rounded,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              r.address,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            onTap: () => _onSearchResultTap(r),
+                          );
+                        },
                       ),
                     ),
                   ),
-                ),
-              ),
-
-            // Indicador de carga
-            if (mapProvider.isLoading)
-              const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
                 ),
               ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _editableAddressController.dispose();
-    _searchFocusNode.dispose();
-    _mapMoveTimer?.cancel();
-    _moveDebounce?.cancel();
-    _pinAnimationController.dispose();
-    _pulseAnimationController.dispose();
-    super.dispose();
   }
 }
