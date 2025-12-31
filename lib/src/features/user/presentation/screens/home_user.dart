@@ -61,7 +61,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 300),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(

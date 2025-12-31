@@ -80,7 +80,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
   void _setupAnimations() {
     _mainAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -506,7 +506,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
