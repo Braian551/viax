@@ -4,7 +4,6 @@ import '../../../../../../global/services/location_suggestion_service.dart';
 import '../../../../../../theme/app_colors.dart';
 
 class WaypointTile extends StatelessWidget {
-  final Key tileKey;
   final int index;
   final String label;
   final SimpleLocation? value;
@@ -18,7 +17,6 @@ class WaypointTile extends StatelessWidget {
 
   const WaypointTile({
     super.key,
-    required this.tileKey,
     required this.index,
     required this.label,
     required this.value,
@@ -37,7 +35,6 @@ class WaypointTile extends StatelessWidget {
     final info = hasValue ? LocationSuggestionService.parseAddress(value!.address) : null;
 
     return Column(
-      key: tileKey,
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
@@ -165,7 +162,6 @@ class WaypointTile extends StatelessWidget {
 }
 
 class StopTile extends StatelessWidget {
-  final Key tileKey;
   final int index;
   final int stopIndex;
   final SimpleLocation? stop;
@@ -176,7 +172,6 @@ class StopTile extends StatelessWidget {
 
   const StopTile({
     super.key,
-    required this.tileKey,
     required this.index,
     required this.stopIndex,
     required this.stop,
@@ -192,7 +187,6 @@ class StopTile extends StatelessWidget {
     final info = hasValue ? LocationSuggestionService.parseAddress(stop!.address) : null;
 
     return Column(
-      key: tileKey,
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(

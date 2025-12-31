@@ -322,30 +322,41 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   }
 
   Widget _buildSuggestionTile(SimpleLocation location, bool isDark) {
-    final info = LocationSuggestionService.parseAddress(location.address);
+    // Usar las propiedades mejoradas de SimpleLocation
+    final name = location.displayName;
+    final subtitle = location.displaySubtitle;
+    final distance = location.formattedDistance;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _selectLocation(location),
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.grey[100],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.15),
+                      AppColors.primary.withValues(alpha: 0.08),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    width: 0.5,
+                  ),
                 ),
                 child: Icon(
-                  Icons.location_on_outlined,
-                  color: isDark ? Colors.white54 : Colors.grey[600],
-                  size: 22,
+                  _getIconForPlaceType(location.placeType),
+                  color: AppColors.primary,
+                  size: 18,
                 ),
               ),
               const SizedBox(width: 14),
@@ -354,20 +365,21 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      info.name,
+                      name,
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : Colors.grey[900],
+                        letterSpacing: -0.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (info.subtitle.isNotEmpty)
+                    if (subtitle.isNotEmpty)
                       Text(
-                        info.subtitle,
+                        subtitle,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: isDark ? Colors.white38 : Colors.grey[500],
                         ),
                         maxLines: 1,
@@ -376,16 +388,52 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.north_west_rounded,
-                size: 18,
-                color: isDark ? Colors.white24 : Colors.grey[400],
-              ),
+              // Mostrar distancia si está disponible
+              if (distance.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    distance,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white54 : Colors.grey[600],
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  Icons.north_west_rounded,
+                  size: 16,
+                  color: isDark ? Colors.white24 : Colors.grey[400],
+                ),
             ],
           ),
         ),
       ),
     );
+  }
+  
+  /// Icono basado en el tipo de lugar
+  IconData _getIconForPlaceType(String? placeType) {
+    switch (placeType) {
+      case 'poi':
+        return Icons.place_rounded;
+      case 'address':
+        return Icons.home_rounded;
+      case 'place':
+        return Icons.location_city_rounded;
+      case 'neighborhood':
+        return Icons.apartment_rounded;
+      default:
+        return Icons.location_on_rounded;
+    }
   }
 
   Widget _buildQuickOption({

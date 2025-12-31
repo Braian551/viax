@@ -47,7 +47,7 @@ class WaypointsList extends StatelessWidget {
       itemBuilder: (context, index) {
         if (index == 0) {
           return WaypointTile(
-            tileKey: const ValueKey('origin'),
+            key: const ValueKey('origin'),
             index: index,
             label: 'Origen',
             value: origin,
@@ -63,7 +63,7 @@ class WaypointsList extends StatelessWidget {
 
         if (index == totalItems - 1) {
           return WaypointTile(
-            tileKey: const ValueKey('destination'),
+            key: const ValueKey('destination'),
             index: index,
             label: 'Destino',
             value: destination,
@@ -79,7 +79,7 @@ class WaypointsList extends StatelessWidget {
 
         final stopIndex = index - 1;
         return StopTile(
-          tileKey: ValueKey('stop_$stopIndex'),
+          key: ValueKey('stop_$stopIndex'),
           index: index,
           stopIndex: stopIndex,
           stop: stops[stopIndex],
