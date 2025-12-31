@@ -19,6 +19,7 @@ class DocumentUploadWidget extends StatelessWidget {
   final IconData icon;
   final DocumentType acceptedType;
   final bool isRequired;
+  final bool allowGallery; // New parameter to restrict gallery
 
   const DocumentUploadWidget({
     super.key,
@@ -30,6 +31,7 @@ class DocumentUploadWidget extends StatelessWidget {
     this.icon = Icons.upload_file_rounded,
     this.acceptedType = DocumentType.any,
     this.isRequired = false,
+    this.allowGallery = true, // Default to true for backward compatibility
   });
 
   @override
@@ -320,7 +322,7 @@ class DocumentUploadWidget extends StatelessWidget {
   String _getAcceptedTypesText() {
     switch (acceptedType) {
       case DocumentType.image:
-        return 'Toca para seleccionar imagen';
+        return allowGallery ? 'Toca para seleccionar imagen' : 'Toca para tomar foto';
       case DocumentType.pdf:
         return 'Toca para seleccionar PDF';
       case DocumentType.any:
@@ -509,12 +511,28 @@ class DocumentPickerHelper {
   static Future<String?> showPickerOptions({
     required BuildContext context,
     required DocumentType documentType,
+    bool allowGallery = true,
   }) async {
+    // Si no se permite galeria y es tipo imagen, abrir camara directamente con guias visuales
+    if (!allowGallery && documentType == DocumentType.image) {
+      // Mostrar guias visuales antes
+      final bool? proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => const _VisualGuidesDialog(),
+      );
+      
+      if (proceed == true) {
+        return 'camera';
+      }
+      return null;
+    }
+
     final source = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => _DocumentPickerBottomSheet(
         documentType: documentType,
+        allowGallery: allowGallery,
       ),
     );
 
@@ -524,11 +542,13 @@ class DocumentPickerHelper {
   static Future<String?> pickDocument({
     required BuildContext context,
     required DocumentType documentType,
+    bool allowGallery = true,
   }) async {
     try {
       final action = await showPickerOptions(
         context: context,
         documentType: documentType,
+        allowGallery: allowGallery,
       );
 
       if (action == null) {
@@ -554,8 +574,16 @@ class DocumentPickerHelper {
           debugPrint('No se seleccionÃ³ ningÃºn PDF');
         }
       } else {
-        // Seleccionar imagen directamente sin verificar permisos manualmente
-        // ImagePicker maneja los permisos automÃ¡ticamente
+        // Seleccionar imagen
+        
+        // Si la accion es camara, mostrar guias (doble verificacion si se llama directo)
+        if (action == 'camera') {
+           // Las guias ya se mostraron en showPickerOptions si !allowGallery
+           // Pero si llego aqui via bottom sheet (allowGallery=true), no se mostraron
+           // Seria bueno mostrarlas siempre para la camara?
+           // Por ahora asumimos que si !allowGallery, ya se mostraron.
+        }
+
         debugPrint('Seleccionando imagen desde: $action');
         final ImageSource source = action == 'camera'
             ? ImageSource.camera
@@ -577,9 +605,6 @@ class DocumentPickerHelper {
           final file = File(image.path);
           if (await file.exists()) {
             debugPrint('Archivo existe en el sistema de archivos');
-            
-            // Usar directamente el path de ImagePicker, es seguro
-            // ImagePicker ya guarda el archivo en cache y es estable
             return image.path;
           } else {
             debugPrint('Archivo no existe despuÃ©s de ser seleccionado');
@@ -614,11 +639,99 @@ class DocumentPickerHelper {
   }
 }
 
+class _VisualGuidesDialog extends StatelessWidget {
+  const _VisualGuidesDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+             padding: const EdgeInsets.all(24),
+             decoration: BoxDecoration(
+               color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
+               borderRadius: BorderRadius.circular(24),
+               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+             ),
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
+               children: [
+                 const Icon(Icons.camera_alt_rounded, color: Color(0xFFFFFF00), size: 48),
+                 const SizedBox(height: 16),
+                 const Text(
+                   'Instrucciones para la foto',
+                   style: TextStyle(
+                     color: Colors.white,
+                     fontSize: 20,
+                     fontWeight: FontWeight.bold,
+                   ),
+                   textAlign: TextAlign.center,
+                 ),
+                 const SizedBox(height: 24),
+                 _buildGuideItem(Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas'),
+                 const SizedBox(height: 16),
+                 _buildGuideItem(Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto'),
+                 const SizedBox(height: 16),
+                 _buildGuideItem(Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo'),
+                 const SizedBox(height: 32),
+                 SizedBox(
+                   width: double.infinity,
+                   child: ElevatedButton(
+                     onPressed: () => Navigator.pop(context, true),
+                     style: ElevatedButton.styleFrom(
+                       backgroundColor: const Color(0xFFFFFF00),
+                       foregroundColor: Colors.black,
+                       padding: const EdgeInsets.symmetric(vertical: 16),
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                     ),
+                     child: const Text('Entendido, abrir cámara', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                   ),
+                 ),
+               ],
+             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideItem(IconData icon, String title, String subtitle) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 14)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _DocumentPickerBottomSheet extends StatelessWidget {
   final DocumentType documentType;
+  final bool allowGallery;
 
   const _DocumentPickerBottomSheet({
     required this.documentType,
+    required this.allowGallery,
   });
 
   @override
@@ -663,15 +776,27 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
                   icon: Icons.camera_alt_rounded,
                   title: 'Tomar foto',
                   subtitle: 'Usa la cÃ¡mara',
-                  onTap: () => Navigator.pop(context, 'camera'),
+                  onTap: () async {
+                    // Show dialog first? No, simple tap
+                    // Navigator.pop(context, 'camera'); 
+                    // Better to show guides even here? Let's show guides.
+                     final bool? proceed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => const _VisualGuidesDialog(),
+                      );
+                      if (context.mounted && proceed == true) {
+                         Navigator.pop(context, 'camera');
+                      }
+                  },
                 ),
-                _buildOption(
-                  context: context,
-                  icon: Icons.photo_library_rounded,
-                  title: 'GalerÃ­a de fotos',
-                  subtitle: 'Selecciona una imagen',
-                  onTap: () => Navigator.pop(context, 'gallery'),
-                ),
+                if (allowGallery)
+                  _buildOption(
+                    context: context,
+                    icon: Icons.photo_library_rounded,
+                    title: 'GalerÃ­a de fotos',
+                    subtitle: 'Selecciona una imagen',
+                    onTap: () => Navigator.pop(context, 'gallery'),
+                  ),
               ],
               
               if (documentType == DocumentType.pdf ||
@@ -739,3 +864,4 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
     );
   }
 }
+

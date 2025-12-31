@@ -65,8 +65,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // NOTE: This might be slow if there are many blocked users. 
     // Optimization: Store face encodings in DB instead of raw images processing every time.
     // For this implementation, we will mock the blocked list or limit it to latest 5 to avoid timeouts in MVP.
+    // 3. Get Blocked Users Faces
+    // Fetch paths of selfies from users who are blocked due to biometric issues
+    // We look for 'bloqueado' status in details and get their latest selfie (assuming stored in biometria folder or profile pic)
+    // For this implementation, we scan the uploads/conductores/*/biometria/ folders for blocked users.
+    
     $blocked_paths = []; 
-    // $blocked_query = "..."
+    $queryBlocked = "SELECT id, usuario_id FROM detalles_conductor WHERE estado_biometrico = 'bloqueado' LIMIT 20";
+    $stmtBlocked = $db->prepare($queryBlocked);
+    $stmtBlocked->execute();
+    
+    while ($blockedRow = $stmtBlocked->fetch(PDO::FETCH_ASSOC)) {
+        $bUserId = $blockedRow['usuario_id'];
+        // Construct path to their biometry folder
+        $bUserDir = "../uploads/conductores/" . $bUserId . "/biometria/";
+        if (is_dir($bUserDir)) {
+            // Get latest file in that dir
+            $files = scandir($bUserDir, SCANDIR_SORT_DESCENDING);
+            foreach ($files as $f) {
+                if ($f != '.' && $f != '..' && preg_match('/\.(jpg|jpeg|png)$/i', $f)) {
+                    $blocked_paths[] = $bUserDir . $f;
+                    break; // Just take the latest one
+                }
+            }
+        }
+    }
     
     // 4. Call Python Script
     $python_script = "../python_services/verify_face.py";

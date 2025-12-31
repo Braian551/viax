@@ -232,10 +232,12 @@ class _LicenseRegistrationScreenState extends State<LicenseRegistrationScreen> {
           icon: Icons.badge_rounded,
           acceptedType: DocumentType.any,
           isRequired: false,
+          allowGallery: false,
           onTap: () async {
             final path = await DocumentPickerHelper.pickDocument(
               context: context,
               documentType: DocumentType.any,
+              allowGallery: false,
             );
             if (path != null) {
               setState(() {

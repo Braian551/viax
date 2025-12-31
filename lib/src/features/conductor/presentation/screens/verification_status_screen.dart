@@ -179,7 +179,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
       case VerificationStatus.enRevision:
         statusColor = Colors.blue;
         statusIcon = Icons.search_rounded;
-        statusMessage = 'Tu perfil estÃ¡ siendo revisado por nuestro equipo';
+        statusMessage = 'Tus documentos estÃ¡n siendo verificados';
         break;
       case VerificationStatus.aprobado:
         statusColor = Colors.green;

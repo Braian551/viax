@@ -444,10 +444,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           icon: Icons.shield_rounded,
           acceptedType: DocumentType.any,
           isRequired: false,
+          allowGallery: false, // Strict: Camera only
           onTap: () async {
             final path = await DocumentPickerHelper.pickDocument(
               context: context,
               documentType: DocumentType.any,
+              allowGallery: false,
             );
             if (path != null) {
               setState(() {
@@ -493,10 +495,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           icon: Icons.build_rounded,
           acceptedType: DocumentType.any,
           isRequired: false,
+          allowGallery: false, // Strict: Camera only
           onTap: () async {
             final path = await DocumentPickerHelper.pickDocument(
               context: context,
               documentType: DocumentType.any,
+              allowGallery: false,
             );
             if (path != null) {
               setState(() {
@@ -536,10 +540,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           icon: Icons.credit_card_rounded,
           acceptedType: DocumentType.any,
           isRequired: false,
+          allowGallery: false, // Strict: Camera only
           onTap: () async {
             final path = await DocumentPickerHelper.pickDocument(
               context: context,
               documentType: DocumentType.any,
+              allowGallery: false,
             );
             if (path != null) {
               setState(() {

@@ -58,9 +58,18 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
 
   Future<void> _loadColors() async {
     final colors = await UserService.getVehicleColors();
+    // Deduplicate colors locally to prevent DropdownButton errors
+    final uniqueColors = <Map<String, dynamic>>[];
+    final seen = <String>{};
+    for (final color in colors) {
+      if (!seen.contains(color['nombre'])) {
+        seen.add(color['nombre']);
+        uniqueColors.add(color);
+      }
+    }
     if (mounted) {
       setState(() {
-        _colors = colors;
+        _colors = uniqueColors;
         _isLoadingColors = false;
         
         // Auto-select if current text matches one
@@ -321,6 +330,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         ],
       ),
       child: DropdownButtonFormField<String>(
+        menuMaxHeight: 300, // Limit height to allow scrolling
         value: _selectedColorName,
         items: _colors.map((color) {
           return DropdownMenuItem<String>(

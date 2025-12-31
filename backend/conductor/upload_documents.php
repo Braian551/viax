@@ -195,13 +195,27 @@ try {
         ");
         $stmt->execute([$relativeUrl, $conductorId]);
 
-        // Guardar en historial
+        // Check if driver belongs to a company
+        $stmtCompany = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = ?");
+        $stmtCompany->execute([$conductorId]);
+        $userCompany = $stmtCompany->fetch(PDO::FETCH_ASSOC);
+        $empresaId = $userCompany['empresa_id'] ?? null;
+
+        $asignadoEmpresaId = null;
+        $verificadoPorAdmin = 1; // Default to admin
+
+        if ($empresaId) {
+            $asignadoEmpresaId = $empresaId;
+            $verificadoPorAdmin = 0; // If company, admin doesn't need to verify initially
+        }
+
+        // Guardar en historial con routing
         $stmt = $db->prepare("
             INSERT INTO documentos_conductor_historial 
-            (conductor_id, tipo_documento, url_documento, activo) 
-            VALUES (?, ?, ?, 1)
+            (conductor_id, tipo_documento, url_documento, activo, asignado_empresa_id, verificado_por_admin) 
+            VALUES (?, ?, ?, 1, ?, ?)
         ");
-        $stmt->execute([$conductorId, $tipoDocumento, $relativeUrl]);
+        $stmt->execute([$conductorId, $tipoDocumento, $relativeUrl, $asignadoEmpresaId, $verificadoPorAdmin]);
 
         // Marcar documento anterior como inactivo si existe
         if ($oldUrl) {
