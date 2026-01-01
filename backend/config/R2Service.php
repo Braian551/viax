@@ -83,9 +83,8 @@ class R2Service {
         curl_close($ch);
 
         if ($httpCode >= 200 && $httpCode < 300) {
-             // Return Proxy URL relative path
-             // Frontend will prepend BaseURL to this: r2_proxy.php?key=...
-             return "r2_proxy.php?key={$fileName}";
+             // Return just the key (filename). Frontend will construct the full proxy URL.
+             return $fileName;
         } else {
             throw new Exception("R2 Upload Failed: HTTP $httpCode - Response: $response - CurlError: $error");
         }
@@ -297,6 +296,7 @@ class R2Service {
         }
     }
 
+
     public function debugList($prefix = '') {
         $host = "{$this->bucketName}.{$this->accountId}.r2.cloudflarestorage.com";
         $endpoint = "https://{$host}/?list-type=2&prefix={$prefix}";
@@ -355,4 +355,3 @@ class R2Service {
         return "HTTP CODE: " . $info['http_code'] . "\nRESPONSE:\n" . $response;
     }
 }
-?>

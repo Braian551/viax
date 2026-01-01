@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:ui' as ui;
+import 'dart:ui' as ui; 
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/routes/app_router.dart';
