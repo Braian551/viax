@@ -58,6 +58,24 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   File? _propertyPhoto;
   File? _selfiePhoto;
 
+  // Dates
+  DateTime? _soatDate;
+  DateTime? _tecnoDate;
+
+  Future<void> _pickDate(Function(DateTime) onPicked) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 90)),
+      firstDate: now, // Document must be valid now
+      lastDate: now.add(const Duration(days: 365 * 5)),
+      locale: const Locale('es', 'ES'),
+    );
+    if (picked != null) {
+      onPicked(picked);
+    }
+  }
+
   bool _isBiometricActive = false; // Controls embedded camera view
 
   @override
@@ -111,6 +129,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
          CustomSnackbar.showError(context, message: 'Faltan números de documentos.');
          return false;
       }
+      if (_soatDate == null || _tecnoDate == null) {
+         CustomSnackbar.showError(context, message: 'Selecciona las fechas de vencimiento.');
+         return false;
+      }
       if (_soatPhoto == null || _tecnoPhoto == null || _propertyPhoto == null) {
          CustomSnackbar.showError(context, message: 'Faltan fotos de los documentos.');
          return false;
@@ -148,11 +170,17 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       final uid = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
       
       // 1. Register Data
-      await UserService.registerDriverLicense(
+      final licenseResult = await UserService.registerDriverLicense(
         userId: uid,
         licenseNumber: _licenseNumberController.text,
         category: _selectedCategory,
       );
+
+      if (licenseResult['success'] != true) {
+         CustomSnackbar.showError(context, message: 'Error licencia: ${licenseResult['message']}');
+         setState(() => _isLoading = false);
+         return;
+      }
 
       final result = await UserService.registerDriverVehicle(
         userId: uid,
@@ -162,10 +190,13 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         year: _yearController.text,
         color: _colorController.text,
         plate: _plateController.text,
+
         soatNumber: _soatController.text,
-        companyId: _selectedCompany?['id'],
+        soatDate: _soatDate!.toIso8601String().split('T')[0],
         tecnomecanicaNumber: _tecnomechanicController.text,
+        tecnomecanicaDate: _tecnoDate!.toIso8601String().split('T')[0],
         propertyCardNumber: _propertyCardController.text,
+        companyId: _selectedCompany?['id'],
       );
 
       if (result['success'] == true) {
@@ -504,8 +535,15 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             icon: Icons.health_and_safety_rounded,
             validator: (value) => value == null || value.isEmpty ? 'El número de SOAT es requerido' : null,
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
             ],
+          ),
+          const SizedBox(height: 12),
+          _buildDatePickerField(
+            label: 'Vencimiento SOAT',
+            selectedDate: _soatDate,
+            onTap: () => _pickDate((date) => setState(() => _soatDate = date)),
+            isDark: isDark,
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
@@ -524,6 +562,13 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             keyboardType: TextInputType.number,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+          const SizedBox(height: 12),
+          _buildDatePickerField(
+            label: 'Vencimiento Tecnomecánica',
+            selectedDate: _tecnoDate,
+            onTap: () => _pickDate((date) => setState(() => _tecnoDate = date)),
+            isDark: isDark,
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
@@ -729,6 +774,66 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             fontWeight: FontWeight.bold,
             color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required String label,
+    required DateTime? selectedDate,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.calendar_today_rounded,
+              color: isDark ? Colors.white70 : Colors.black54,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    selectedDate != null
+                        ? "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}"
+                        : "Seleccionar fecha",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: selectedDate != null ? FontWeight.w500 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
+          ],
         ),
       ),
     );

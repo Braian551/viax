@@ -35,7 +35,7 @@ try {
     }
 
     // Verify conductor exists
-    $checkQuery = "SELECT id FROM usuarios WHERE id = :conductor_id AND tipo_usuario = 'conductor'";
+    $checkQuery = "SELECT id FROM usuarios WHERE id = :conductor_id";
     $checkStmt = $db->prepare($checkQuery);
     $checkStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
     $checkStmt->execute();
@@ -141,7 +141,7 @@ try {
             actualizado_en
         ) VALUES (
             :usuario_id,
-            'TEMP',
+            'PENDIENTE',
             DATE_ADD(NOW(), INTERVAL 1 YEAR),
             :vehiculo_tipo,
             :vehiculo_marca,

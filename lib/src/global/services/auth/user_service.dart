@@ -486,21 +486,23 @@ class UserService {
     }
   }
   static Future<Map<String, dynamic>> registerDriverVehicle({
-    required int userId, // Assuming userId is passed, backend might need conductorId but usually they are linked 1:1 or same ID
-    required String type, // moto, carro
+    required int userId, 
+    required String type, 
     required String brand,
     required String model,
     required String year,
     required String color,
     required String plate,
     required String soatNumber,
+    required String soatDate,
     required String tecnomecanicaNumber,
+    required String tecnomecanicaDate,
     required String propertyCardNumber,
     int? companyId,
   }) async {
     try {
       final Map<String, dynamic> body = {
-        'conductor_id': userId, // In this architecture user_id usually matches conductor_id or is treated as such
+        'conductor_id': userId, 
         'vehiculo_tipo': type,
         'vehiculo_marca': brand,
         'vehiculo_modelo': model,
@@ -508,9 +510,9 @@ class UserService {
         'vehiculo_color': color,
         'vehiculo_placa': plate,
         'soat_numero': soatNumber,
-        'soat_vencimiento': '2025-12-31', // Mocked default for MVP
+        'soat_vencimiento': soatDate,
         'tecnomecanica_numero': tecnomecanicaNumber,
-        'tecnomecanica_vencimiento': '2025-12-31', // Mocked default for MVP
+        'tecnomecanica_vencimiento': tecnomecanicaDate,
         'tarjeta_propiedad_numero': propertyCardNumber,
         if (companyId != null) 'empresa_id': companyId,
       };

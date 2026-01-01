@@ -53,9 +53,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          }
     }
     
+    require_once '../config/R2Service.php';
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $id_doc_rel_path = $row['ruta_archivo']; // This is like "uploads/..."
-    $id_doc_full_path = "../" . $id_doc_rel_path;
+    $id_doc_db_path = $row['ruta_archivo']; 
+    
+    // Check for R2 proxy format: r2_proxy.php?key=documents/...
+    $r2_prefix = 'r2_proxy.php?key=';
+    
+    if (strpos($id_doc_db_path, $r2_prefix) !== false) {
+        // It's in R2, extract the key
+        $r2_key = str_replace($r2_prefix, '', $id_doc_db_path);
+        
+        // It's in R2, need to download it to temp for processing
+        $r2 = new R2Service();
+        $temp_id_path = sys_get_temp_dir() . '/temp_id_' . time() . '_' . rand(1000,9999) . '.' . pathinfo($r2_key, PATHINFO_EXTENSION);
+        
+        $fileContent = $r2->getFile($r2_key);
+        
+        if ($fileContent && isset($fileContent['content'])) {
+            file_put_contents($temp_id_path, $fileContent['content']);
+            $id_doc_full_path = $temp_id_path;
+        } else {
+            error_log("Failed to download R2 file: $r2_key");
+            echo json_encode(["success" => false, "message" => "Could not download ID document from R2: $r2_key"]);
+            exit;
+        }
+    } elseif (strpos($id_doc_db_path, 'documents/') === 0) {
+        // Direct R2 key stored (fallback)
+        $r2 = new R2Service();
+        $temp_id_path = sys_get_temp_dir() . '/temp_id_' . time() . '_' . rand(1000,9999) . '.' . pathinfo($id_doc_db_path, PATHINFO_EXTENSION);
+        
+        $fileContent = $r2->getFile($id_doc_db_path);
+        
+        if ($fileContent && isset($fileContent['content'])) {
+            file_put_contents($temp_id_path, $fileContent['content']);
+            $id_doc_full_path = $temp_id_path;
+        } else {
+             echo json_encode(["success" => false, "message" => "Could not download ID document from R2 (direct key)"]);
+             exit;
+        }
+    } else {
+        // Legacy local path
+        $id_doc_full_path = "../" . $id_doc_db_path;
+    }
 
     // 3. Get Blocked Users Faces
     // Fetch paths of bio-verified photos of users who are now blocked

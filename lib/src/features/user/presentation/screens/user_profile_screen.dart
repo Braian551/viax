@@ -384,8 +384,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: hasPendingRequest ? null : () {
-            Navigator.pushNamed(context, RouteNames.driverRegistration);
+            onTap: hasPendingRequest ? null : () async {
+            await Navigator.pushNamed(context, RouteNames.driverRegistration);
+            _loadUserData(); // Refresh profile after return
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(

@@ -51,27 +51,67 @@ try {
         exit;
     }
 
-    // Construir query
-    $where_clauses = ["u.tipo_usuario = 'conductor'"];
+    // Query para contar estadísticas globales (sin filtros de página/estado)
+    $stats_sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN dc.estado_verificacion IN ('pendiente', 'en_revision') OR dc.estado_verificacion IS NULL THEN 1 ELSE 0 END) as pendientes,
+                    SUM(CASE WHEN dc.estado_verificacion = 'en_revision' THEN 1 ELSE 0 END) as en_revision,
+                    SUM(CASE WHEN dc.estado_verificacion = 'aprobado' THEN 1 ELSE 0 END) as aprobados,
+                    SUM(CASE WHEN dc.estado_verificacion = 'rechazado' THEN 1 ELSE 0 END) as rechazados,
+                    SUM(CASE WHEN (
+                        (dc.licencia_vencimiento IS NOT NULL AND dc.licencia_vencimiento < CURRENT_DATE) OR
+                        (dc.soat_vencimiento IS NOT NULL AND dc.soat_vencimiento < CURRENT_DATE) OR
+                        (dc.tecnomecanica_vencimiento IS NOT NULL AND dc.tecnomecanica_vencimiento < CURRENT_DATE) OR
+                        (dc.vencimiento_seguro IS NOT NULL AND dc.vencimiento_seguro < CURRENT_DATE)
+                    ) THEN 1 ELSE 0 END) as con_documentos_vencidos
+                  FROM usuarios u 
+                  LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id 
+                  -- Incluir si es conductor OR si tiene detalles (solicitud en proceso aunque sea cliente)
+                  WHERE u.tipo_usuario = 'conductor' OR dc.id IS NOT NULL";
+    
+    $stmt = $db->prepare($stats_sql);
+    $stmt->execute();
+    $stats_result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $estadisticas = [
+        'total_conductores' => intval($stats_result['total']),
+        'pendientes_verificacion' => intval($stats_result['pendientes']),
+        'en_revision' => intval($stats_result['en_revision']),
+        'aprobados' => intval($stats_result['aprobados']),
+        'rechazados' => intval($stats_result['rechazados']),
+        'con_documentos_vencidos' => intval($stats_result['con_documentos_vencidos']),
+    ];
+
+    // Construir query principal con LEFT JOIN para incluir conductores sin detalles
+    // Lo mismo aqui: validamos conductor O que tenga detalles
+    $where_clauses = ["(u.tipo_usuario = 'conductor' OR dc.id IS NOT NULL)"];
     $params = [];
 
     if ($conductor_id !== null) {
-        $where_clauses[] = "dc.usuario_id = :conductor_id";
+        $where_clauses[] = "u.id = :conductor_id";
         $params[':conductor_id'] = $conductor_id;
     }
 
-    if ($estado_verificacion !== null && in_array($estado_verificacion, ['pendiente', 'en_revision', 'aprobado', 'rechazado'])) {
-        $where_clauses[] = "dc.estado_verificacion = :estado";
-        $params[':estado'] = $estado_verificacion;
+    if ($estado_verificacion !== null) {
+        if ($estado_verificacion === 'pendiente') {
+            // "Pendientes" en el frontend ahora agrupa:
+            // 1. NULL (Sin registro en detalles)
+            // 2. 'pendiente' (Registrado pero sin subir)
+            // 3. 'en_revision' (Subió documentos y espera aprobación)
+            $where_clauses[] = "(dc.estado_verificacion IN ('pendiente', 'en_revision') OR dc.estado_verificacion IS NULL)";
+        } else {
+            $where_clauses[] = "dc.estado_verificacion = :estado";
+            $params[':estado'] = $estado_verificacion;
+        }
     }
 
     $where_sql = implode(' AND ', $where_clauses);
     $offset = ($page - 1) * $per_page;
 
-    // Query para contar total
+    // Query para contar total filtrado (para paginación)
     $count_sql = "SELECT COUNT(*) as total 
-                  FROM detalles_conductor dc
-                  INNER JOIN usuarios u ON dc.usuario_id = u.id
+                  FROM usuarios u
+                  LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
                   WHERE $where_sql";
 
     $stmt = $db->prepare($count_sql);
@@ -85,6 +125,7 @@ try {
     // Query principal
     $sql = "SELECT 
                 dc.*,
+                u.id as usuario_id,
                 u.nombre,
                 u.apellido,
                 u.email,
@@ -93,10 +134,18 @@ try {
                 u.es_verificado,
                 u.es_activo,
                 u.fecha_registro as usuario_creado_en
-            FROM detalles_conductor dc
-            INNER JOIN usuarios u ON dc.usuario_id = u.id
+            FROM usuarios u
+            LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
             WHERE $where_sql
-            ORDER BY dc.fecha_ultima_verificacion DESC, dc.creado_en DESC
+            ORDER BY 
+                CASE 
+                     WHEN dc.estado_verificacion = 'en_revision' THEN 0 
+                     WHEN dc.estado_verificacion = 'pendiente' THEN 1
+                     WHEN dc.estado_verificacion IS NULL THEN 2
+                     ELSE 3 
+                END ASC,
+                dc.fecha_ultima_verificacion ASC,
+                u.fecha_registro DESC
             LIMIT :limit OFFSET :offset";
 
     $stmt = $db->prepare($sql);
@@ -148,7 +197,7 @@ try {
         }
 
         $conductores[] = [
-            'id' => $row['id'],
+            'id' => $row['id'] ?? null,
             'usuario_id' => $row['usuario_id'],
             
             // Información del usuario
@@ -192,28 +241,15 @@ try {
             'tarjeta_propiedad_foto_url' => $row['tarjeta_propiedad_foto_url'],
             
             // Estado de aprobación
-            'aprobado' => $row['aprobado'],
-            'estado_aprobacion' => $row['estado_aprobacion'],
-            'estado_verificacion' => $row['estado_verificacion'],
+            'aprobado' => $row['aprobado'] ?? 0,
+            'estado_aprobacion' => $row['estado_aprobacion'] ?? 'pendiente',
+            'estado_verificacion' => $row['estado_verificacion'] ?? 'pendiente',
             'fecha_ultima_verificacion' => $row['fecha_ultima_verificacion'],
             
-            // Calificaciones
-            'calificacion_promedio' => floatval($row['calificacion_promedio']),
-            'total_calificaciones' => intval($row['total_calificaciones']),
-            
-            // Ubicación y disponibilidad
-            'disponible' => $row['disponible'],
-            'latitud_actual' => $row['latitud_actual'],
-            'longitud_actual' => $row['longitud_actual'],
-            'ultima_actualizacion' => $row['ultima_actualizacion'],
-            
-            // Estadísticas
-            'total_viajes' => intval($row['total_viajes']),
-            
-            // Fechas
-            'creado_en' => $row['creado_en'],
-            'actualizado_en' => $row['actualizado_en'],
-            'fecha_creacion' => $row['fecha_creacion'],
+            // Calificaciones (manejar nulls)
+            'calificacion_promedio' => floatval($row['calificacion_promedio'] ?? 0),
+            'total_calificaciones' => intval($row['total_calificaciones'] ?? 0),
+            'total_viajes' => intval($row['total_viajes'] ?? 0),
             
             // Análisis de documentos
             'documentos_pendientes' => $pendientes,
@@ -223,29 +259,6 @@ try {
             'documentos_vencidos' => $documentos_vencidos,
             'tiene_documentos_vencidos' => count($documentos_vencidos) > 0,
         ];
-    }
-
-    // Calcular estadísticas generales
-    $estadisticas = [
-        'total_conductores' => $total_conductores,
-        'pendientes_verificacion' => 0,
-        'en_revision' => 0,
-        'aprobados' => 0,
-        'rechazados' => 0,
-        'con_documentos_vencidos' => 0,
-    ];
-
-    foreach ($conductores as $conductor) {
-        $estado = $conductor['estado_verificacion'];
-        if ($estado === 'pendiente') {
-            $estadisticas['pendientes_verificacion']++;
-        } else if (isset($estadisticas[$estado])) {
-            $estadisticas[$estado]++;
-        }
-        
-        if ($conductor['tiene_documentos_vencidos']) {
-            $estadisticas['con_documentos_vencidos']++;
-        }
     }
 
     echo json_encode([
