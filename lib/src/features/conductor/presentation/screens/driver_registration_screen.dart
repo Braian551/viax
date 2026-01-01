@@ -517,10 +517,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             controller: _tecnomechanicController,
             label: 'N° Revisión Tecnomecánica',
             icon: Icons.build_circle_rounded,
+            keyboardType: TextInputType.number,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
@@ -536,10 +535,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             controller: _propertyCardController,
             label: 'N° Tarjeta de Propiedad',
             icon: Icons.folder_shared_rounded,
+            keyboardType: TextInputType.number,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
