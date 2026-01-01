@@ -214,5 +214,145 @@ class R2Service {
         // 204 No Content is standard for DELETE success
         return ($httpCode >= 200 && $httpCode < 300);
     }
+    public function listObjects($prefix = '') {
+        $host = "{$this->bucketName}.{$this->accountId}.r2.cloudflarestorage.com";
+        $endpoint = "https://{$host}/?list-type=2&prefix={$prefix}";
+        
+        $datetime = gmdate('Ymd\THis\Z');
+        $date = gmdate('Ymd');
+
+        // Headers
+        $headers = [
+            'host' => $host,
+            'x-amz-content-sha256' => hash('sha256', ''),
+            'x-amz-date' => $datetime,
+        ];
+
+        // Canonical Request
+        $canonicalUri = '/';
+        
+        // Query Params must be sorted and encoded
+        $params = [
+            'list-type' => '2',
+            'prefix' => $prefix
+        ];
+        ksort($params);
+        
+        $canonicalQueryString = [];
+        foreach ($params as $key => $value) {
+            $canonicalQueryString[] = rawurlencode($key) . '=' . rawurlencode($value);
+        }
+        $canonicalQueryString = implode('&', $canonicalQueryString);
+        
+        ksort($headers);
+        $canonicalHeaders = '';
+        $signedHeaders = '';
+        foreach ($headers as $key => $value) {
+            $canonicalHeaders .= strtolower($key) . ':' . trim($value) . "\n";
+            $signedHeaders .= strtolower($key) . ';';
+        }
+        $signedHeaders = rtrim($signedHeaders, ';');
+
+        $payloadHash = hash('sha256', '');
+        $canonicalRequest = "GET\n$canonicalUri\n$canonicalQueryString\n$canonicalHeaders\n$signedHeaders\n$payloadHash";
+
+        // String to Sign
+        $stringToSign = "AWS4-HMAC-SHA256\n$datetime\n$date/{$this->region}/s3/aws4_request\n" . hash('sha256', $canonicalRequest);
+
+        // Signature
+        $kSecret = 'AWS4' . $this->secretAccessKey;
+        $kDate = hash_hmac('sha256', $date, $kSecret, true);
+        $kRegion = hash_hmac('sha256', $this->region, $kDate, true);
+        $kService = hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+
+        $authorization = "AWS4-HMAC-SHA256 Credential={$this->accessKeyId}/$date/{$this->region}/s3/aws4_request, SignedHeaders=$signedHeaders, Signature=$signature";
+
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: $authorization",
+            "x-amz-date: $datetime",
+            "x-amz-content-sha256: $payloadHash"
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode == 200) {
+            // Parse XML response
+            $xml = simplexml_load_string($response);
+            $files = [];
+            if ($xml && isset($xml->Contents)) {
+                foreach ($xml->Contents as $content) {
+                    $files[] = (string)$content->Key;
+                }
+            }
+            return $files;
+        } else {
+             // throw new Exception("List Failed: " . $response);
+             return []; // Fail silent or empty
+        }
+    }
+
+    public function debugList($prefix = '') {
+        $host = "{$this->bucketName}.{$this->accountId}.r2.cloudflarestorage.com";
+        $endpoint = "https://{$host}/?list-type=2&prefix={$prefix}";
+        
+        $datetime = gmdate('Ymd\THis\Z');
+        $date = gmdate('Ymd');
+
+        // Headers
+        $headers = [
+            'host' => $host,
+            'x-amz-content-sha256' => hash('sha256', ''),
+            'x-amz-date' => $datetime,
+        ];
+
+        // Canonical Request
+        $canonicalUri = '/';
+        $canonicalQueryString = "list-type=2&prefix={$prefix}";
+        
+        ksort($headers);
+        $canonicalHeaders = '';
+        $signedHeaders = '';
+        foreach ($headers as $key => $value) {
+            $canonicalHeaders .= strtolower($key) . ':' . trim($value) . "\n";
+            $signedHeaders .= strtolower($key) . ';';
+        }
+        $signedHeaders = rtrim($signedHeaders, ';');
+
+        $payloadHash = hash('sha256', '');
+        $canonicalRequest = "GET\n$canonicalUri\n$canonicalQueryString\n$canonicalHeaders\n$signedHeaders\n$payloadHash";
+
+        // String to Sign
+        $stringToSign = "AWS4-HMAC-SHA256\n$datetime\n$date/{$this->region}/s3/aws4_request\n" . hash('sha256', $canonicalRequest);
+
+        // Signature
+        $kSecret = 'AWS4' . $this->secretAccessKey;
+        $kDate = hash_hmac('sha256', $date, $kSecret, true);
+        $kRegion = hash_hmac('sha256', $this->region, $kDate, true);
+        $kService = hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+
+        $authorization = "AWS4-HMAC-SHA256 Credential={$this->accessKeyId}/$date/{$this->region}/s3/aws4_request, SignedHeaders=$signedHeaders, Signature=$signature";
+
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: $authorization",
+            "x-amz-date: $datetime",
+            "x-amz-content-sha256: $payloadHash"
+        ]);
+
+        $response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        
+        return "HTTP CODE: " . $info['http_code'] . "\nRESPONSE:\n" . $response;
+    }
 }
 ?>

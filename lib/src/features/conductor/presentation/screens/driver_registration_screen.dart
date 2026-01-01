@@ -236,6 +236,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                await Future.delayed(const Duration(seconds: 2));
                if (mounted) Navigator.pop(context);
              }
+        } else {
              // Handle blocked or mismatch or other errors
              final status = bioResult['biometric_status'] ?? 'unknown';
              String errorMsg = bioResult['message'] ?? 'Error en verificación biométrica.';
@@ -243,8 +244,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
              if (status == 'blocked') errorMsg = 'Cuenta bloqueada por seguridad.';
              if (status == 'mismatch') errorMsg = 'El rostro no coincide con documentos.';
              
-             CustomSnackbar.showError(context, message: errorMsg);
-             setState(() => _isLoading = false);
+             if (mounted) {
+                CustomSnackbar.showError(context, message: errorMsg);
+                setState(() => _isLoading = false);
+             }
         }
       } else {
          // Should not happen due to validation, but safe fallback

@@ -196,6 +196,8 @@ try {
             $documentos_vencidos[] = 'Seguro';
         }
 
+
+
         $conductores[] = [
             'id' => $row['id'] ?? null,
             'usuario_id' => $row['usuario_id'],

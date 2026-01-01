@@ -479,9 +479,14 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
       return;
     }
 
-    final String fullUrl = documentUrl.startsWith('http') 
-        ? documentUrl 
-        : '${AppConfig.baseUrl}/$documentUrl';
+    String fullUrl;
+    if (documentUrl.startsWith('http')) {
+      fullUrl = documentUrl;
+    } else {
+      // Si no empieza con http, asumimos que es una key de R2 y usamos el proxy
+      // Esto arregla la visualización de imágenes de Cloudflare
+      fullUrl = '${AppConfig.baseUrl}/r2_proxy.php?key=$documentUrl';
+    }
 
     Navigator.push(
       context,
