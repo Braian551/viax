@@ -5,12 +5,13 @@ import 'dart:convert';
 import '../../../core/config/app_config.dart';
 
 /// Servicio para subir documentos del conductor
+/// Soporta imágenes (jpg, jpeg, png, webp) hasta 5MB y PDFs hasta 10MB
 class DocumentUploadService {
   /// Sube un documento/foto al servidor
   /// 
   /// [conductorId] - ID del conductor
   /// [tipoDocumento] - Tipo: 'licencia', 'soat', 'tecnomecanica', 'tarjeta_propiedad', 'seguro'
-  /// [imagePath] - Ruta local del archivo a subir
+  /// [imagePath] - Ruta local del archivo a subir (imagen o PDF)
   /// 
   /// Retorna la URL relativa del documento subido o null si hay error
   static Future<String?> uploadDocument({
@@ -29,12 +30,19 @@ class DocumentUploadService {
         return null;
       }
 
-      // Validar tamaÃ±o (max 5MB)
+      // Determinar si es PDF o imagen
+      final extension = imagePath.toLowerCase().split('.').last;
+      final isPdf = extension == 'pdf';
+      
+      // Validar tamaño (max 10MB para PDFs, 5MB para imágenes)
+      final maxSize = isPdf ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
       final fileSize = await file.length();
-      debugPrint('TamaÃ±o del archivo: ${fileSize} bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+      debugPrint('Tamaño del archivo: ${fileSize} bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+      debugPrint('Tipo de archivo: ${isPdf ? 'PDF' : 'Imagen'}');
 
-      if (fileSize > 5 * 1024 * 1024) {
-        debugPrint('Error: El archivo excede 5MB');
+      if (fileSize > maxSize) {
+        final maxMB = maxSize / 1024 / 1024;
+        debugPrint('Error: El archivo excede ${maxMB}MB');
         return null;
       }
 

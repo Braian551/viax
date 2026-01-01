@@ -474,7 +474,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
     );
   }
 
-  void _viewDocument(String? documentUrl, String documentName) {
+  void _viewDocument(String? documentUrl, String documentName, {String? tipoArchivo}) {
     if (documentUrl == null || documentUrl.isEmpty) {
       CustomSnackbar.showError(context, message: 'Documento no disponible');
       return;
@@ -495,6 +495,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
         builder: (context) => DocumentViewerScreen(
           documentUrl: fullUrl,
           documentName: documentName,
+          tipoArchivo: tipoArchivo,
         ),
       ),
     );

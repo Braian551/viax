@@ -5,17 +5,21 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Pantalla para visualizar documentos/imágenes en pantalla completa
-/// Diseño moderno con soporte para zoom, descarga y tema de la app
+/// Diseño moderno con soporte para zoom, descarga, PDFs y tema de la app
 class DocumentViewerScreen extends StatefulWidget {
   final String documentUrl;
   final String documentName;
+  /// Tipo de archivo: 'imagen' o 'pdf'. Si es null, se detecta automáticamente por la URL.
+  final String? tipoArchivo;
 
   const DocumentViewerScreen({
     super.key,
     required this.documentUrl,
     required this.documentName,
+    this.tipoArchivo,
   });
 
   @override
@@ -29,6 +33,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
   bool _isLoading = true;
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
+  bool _isPdf = false;
 
   @override
   void initState() {
@@ -41,6 +46,19 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    
+    // Detectar si es PDF
+    _isPdf = _detectIfPdf();
+  }
+
+  bool _detectIfPdf() {
+    // Si se especificó el tipo explícitamente
+    if (widget.tipoArchivo != null) {
+      return widget.tipoArchivo!.toLowerCase() == 'pdf';
+    }
+    // Detectar por la URL
+    final url = widget.documentUrl.toLowerCase();
+    return url.endsWith('.pdf') || url.contains('application/pdf');
   }
 
   @override
@@ -114,7 +132,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
         ),
         const SizedBox(height: 2),
         Text(
-          'Desliza para hacer zoom',
+          _isPdf ? 'Documento PDF' : 'Desliza para hacer zoom',
           style: TextStyle(
             color: textColor.withValues(alpha: 0.5),
             fontSize: 11,
@@ -159,6 +177,12 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
     Color secondaryText,
     bool isDark,
   ) {
+    // Si es PDF, mostrar vista especial para PDF
+    if (_isPdf) {
+      return _buildPdfViewer(context, textColor, secondaryText, isDark);
+    }
+    
+    // Para imágenes, mostrar el visor interactivo
     return SafeArea(
       child: Center(
         child: Hero(
@@ -173,6 +197,166 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildPdfViewer(
+    BuildContext context,
+    Color textColor,
+    Color secondaryText,
+    bool isDark,
+  ) {
+    return SafeArea(
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ícono de PDF
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.picture_as_pdf_rounded,
+                  color: Colors.red,
+                  size: 64,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Nombre del documento
+              Text(
+                widget.documentName,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              
+              Text(
+                'Documento PDF',
+                style: TextStyle(
+                  color: secondaryText,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Botones de acción
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Botón de abrir en navegador
+                  ElevatedButton.icon(
+                    onPressed: () => _openPdfInBrowser(),
+                    icon: const Icon(Icons.open_in_browser_rounded),
+                    label: const Text('Abrir'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Botón de descargar
+                  OutlinedButton.icon(
+                    onPressed: _isDownloading ? null : () => _downloadImage(context),
+                    icon: _isDownloading 
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : const Icon(Icons.download_rounded),
+                    label: Text(_isDownloading ? 'Descargando...' : 'Descargar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Nota informativa
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Los PDFs se abren en el visor externo',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPdfInBrowser() async {
+    final uri = Uri.parse(widget.documentUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          _showSnackbar(context, 'No se puede abrir el documento', isError: true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackbar(context, 'Error al abrir: $e', isError: true);
+      }
+    }
   }
 
   Widget _buildImage(Color textColor, Color secondaryText, bool isDark) {

@@ -7,7 +7,8 @@ class ConductorDetailsSheet extends StatelessWidget {
   final VoidCallback onAprobar;
   final VoidCallback onRechazar;
   final Function(int) onShowHistory;
-  final Function(String?, String) onViewDocument;
+  /// Callback para ver documento: (url, nombre, tipoArchivo)
+  final Function(String?, String, {String? tipoArchivo}) onViewDocument;
 
   const ConductorDetailsSheet({
     super.key,
@@ -139,7 +140,7 @@ class ConductorDetailsSheet extends StatelessWidget {
                             _buildInfoRow(context, 'Vencimiento', _formatDate(conductor['licencia_vencimiento']), Icons.event_outlined),
                           ]),
                           if (conductor['licencia_foto_url'] != null)
-                             _buildDocButton(context, 'Ver Licencia', conductor['licencia_foto_url'], Icons.drive_eta_rounded),
+                             _buildDocButton(context, 'Ver Licencia', conductor['licencia_foto_url'], Icons.drive_eta_rounded, conductor['licencia_tipo_archivo']),
 
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Vehículo'),
@@ -165,13 +166,13 @@ class ConductorDetailsSheet extends StatelessWidget {
                             runSpacing: 12,
                             children: [
                               if (conductor['soat_foto_url'] != null)
-                                _buildMiniDocButton(context, 'SOAT', conductor['soat_foto_url']),
+                                _buildMiniDocButton(context, 'SOAT', conductor['soat_foto_url'], conductor['soat_tipo_archivo']),
                               if (conductor['tecnomecanica_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Tecno', conductor['tecnomecanica_foto_url']),
+                                _buildMiniDocButton(context, 'Tecno', conductor['tecnomecanica_foto_url'], conductor['tecnomecanica_tipo_archivo']),
                               if (conductor['seguro_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url']),
+                                _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url'], conductor['seguro_tipo_archivo']),
                               if (conductor['tarjeta_propiedad_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Tarjeta', conductor['tarjeta_propiedad_foto_url']),
+                                _buildMiniDocButton(context, 'Tarjeta', conductor['tarjeta_propiedad_foto_url'], conductor['tarjeta_propiedad_tipo_archivo']),
                             ],
                           ),
 
@@ -278,17 +279,37 @@ class ConductorDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDocButton(BuildContext context, String label, String? url, IconData icon) {
+  Widget _buildDocButton(BuildContext context, String label, String? url, IconData icon, String? tipoArchivo) {
+    final isPdf = tipoArchivo?.toLowerCase() == 'pdf';
     return Container(
       margin: const EdgeInsets.only(top: 12),
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: () => onViewDocument(url, label),
-        icon: Icon(icon, size: 18),
-        label: Text(label),
+        onPressed: () => onViewDocument(url, label, tipoArchivo: tipoArchivo),
+        icon: Icon(isPdf ? Icons.picture_as_pdf_rounded : icon, size: 18, color: isPdf ? Colors.red : AppColors.primary),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label),
+            if (isPdf) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'PDF',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red),
+                ),
+              ),
+            ],
+          ],
+        ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+          foregroundColor: isPdf ? Colors.red : AppColors.primary,
+          side: BorderSide(color: (isPdf ? Colors.red : AppColors.primary).withValues(alpha: 0.3)),
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -296,15 +317,39 @@ class ConductorDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniDocButton(BuildContext context, String label, String? url) {
+  Widget _buildMiniDocButton(BuildContext context, String label, String? url, String? tipoArchivo) {
+    final isPdf = tipoArchivo?.toLowerCase() == 'pdf';
     return ActionChip(
-      avatar: Icon(Icons.description_outlined, size: 16, color: AppColors.primary),
-      label: Text(label),
-      onPressed: () => onViewDocument(url, 'Documento $label'),
-      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+      avatar: Icon(
+        isPdf ? Icons.picture_as_pdf_rounded : Icons.description_outlined, 
+        size: 16, 
+        color: isPdf ? Colors.red : AppColors.primary,
+      ),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (isPdf) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: const Text(
+                'PDF',
+                style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+            ),
+          ],
+        ],
+      ),
+      onPressed: () => onViewDocument(url, 'Documento $label', tipoArchivo: tipoArchivo),
+      backgroundColor: (isPdf ? Colors.red : AppColors.primary).withValues(alpha: 0.1),
       side: BorderSide.none,
-      labelStyle: const TextStyle(
-        color: AppColors.primary,
+      labelStyle: TextStyle(
+        color: isPdf ? Colors.red : AppColors.primary,
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),

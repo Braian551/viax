@@ -391,6 +391,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
     }
   }
 
+  /// Para fotos de identidad/selfie - SOLO cámara (seguridad)
   Future<void> _pickSecurePhoto(Function(File) onPicked) async {
     try {
       // Use DocumentPickerHelper with allowGallery: false to enforce camera and show visual guides
@@ -405,6 +406,24 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       }
     } catch (e) {
       CustomSnackbar.showError(context, message: 'Error al capturar foto: $e');
+    }
+  }
+
+  /// Para documentos legales - permite cámara O PDF
+  Future<void> _pickDocumentPhoto(Function(File) onPicked) async {
+    try {
+      // Use DocumentType.any to allow camera or PDF selection
+      final path = await DocumentPickerHelper.pickDocument(
+        context: context,
+        documentType: DocumentType.any,
+        allowGallery: false, // No galería, pero sí cámara y PDF
+      );
+      
+      if (path != null) {
+        onPicked(File(path));
+      }
+    } catch (e) {
+      CustomSnackbar.showError(context, message: 'Error al seleccionar documento: $e');
     }
   }
 
@@ -514,7 +533,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ImageUploadCard(
           label: 'Foto de la Licencia',
           file: _licensePhoto,
-          onTap: () => _pickSecurePhoto((file) => setState(() => _licensePhoto = file)),
+          onTap: () => _pickDocumentPhoto((file) => setState(() => _licensePhoto = file)),
           isDark: isDark,
         ),
       ],
@@ -552,7 +571,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto del SOAT',
             file: _soatPhoto,
-            onTap: () => _pickSecurePhoto((file) => setState(() => _soatPhoto = file)),
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _soatPhoto = file)),
             isDark: isDark,
           ),
           const SizedBox(height: 24),
@@ -577,7 +596,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tecnomecánica',
             file: _tecnoPhoto,
-            onTap: () => _pickSecurePhoto((file) => setState(() => _tecnoPhoto = file)),
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _tecnoPhoto = file)),
             isDark: isDark,
           ),
           const SizedBox(height: 24),
@@ -595,7 +614,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tarjeta Propiedad',
             file: _propertyPhoto,
-            onTap: () => _pickSecurePhoto((file) => setState(() => _propertyPhoto = file)),
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _propertyPhoto = file)),
             isDark: isDark,
           ),
         ],

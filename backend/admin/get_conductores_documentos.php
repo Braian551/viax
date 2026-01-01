@@ -219,6 +219,7 @@ try {
             'licencia_expedicion' => $row['licencia_expedicion'],
             'licencia_categoria' => $row['licencia_categoria'],
             'licencia_foto_url' => $row['licencia_foto_url'],
+            'licencia_tipo_archivo' => $row['licencia_tipo_archivo'] ?? 'imagen',
             
             // Vehículo
             'vehiculo_tipo' => $row['vehiculo_tipo'],
@@ -233,14 +234,18 @@ try {
             'numero_poliza_seguro' => $row['numero_poliza_seguro'],
             'vencimiento_seguro' => $row['vencimiento_seguro'],
             'seguro_foto_url' => $row['seguro_foto_url'],
+            'seguro_tipo_archivo' => $row['seguro_tipo_archivo'] ?? 'imagen',
             'soat_numero' => $row['soat_numero'],
             'soat_vencimiento' => $row['soat_vencimiento'],
             'soat_foto_url' => $row['soat_foto_url'],
+            'soat_tipo_archivo' => $row['soat_tipo_archivo'] ?? 'imagen',
             'tecnomecanica_numero' => $row['tecnomecanica_numero'],
             'tecnomecanica_vencimiento' => $row['tecnomecanica_vencimiento'],
             'tecnomecanica_foto_url' => $row['tecnomecanica_foto_url'],
+            'tecnomecanica_tipo_archivo' => $row['tecnomecanica_tipo_archivo'] ?? 'imagen',
             'tarjeta_propiedad_numero' => $row['tarjeta_propiedad_numero'],
             'tarjeta_propiedad_foto_url' => $row['tarjeta_propiedad_foto_url'],
+            'tarjeta_propiedad_tipo_archivo' => $row['tarjeta_propiedad_tipo_archivo'] ?? 'imagen',
             
             // Estado de aprobación
             'aprobado' => $row['aprobado'] ?? 0,

@@ -102,7 +102,7 @@ Future<void> showDocumentHistory({
   required BuildContext context,
   required int adminId,
   required int conductorId,
-  required Function(String?, String) onViewDocument,
+  required Function(String?, String, {String? tipoArchivo}) onViewDocument,
 }) async {
   // Mostrar loading
   AdminDialogHelper.showLoading(context, message: 'Cargando historial...');

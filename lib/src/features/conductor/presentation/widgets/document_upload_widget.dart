@@ -507,19 +507,31 @@ class DocumentUploadWidget extends StatelessWidget {
   }
 }
 
-/// Helper para mostrar bottom sheet de selecciÃ³n de documento
+/// Helper para mostrar bottom sheet de selección de documento
 class DocumentPickerHelper {
   static Future<String?> showPickerOptions({
     required BuildContext context,
     required DocumentType documentType,
     bool allowGallery = true,
   }) async {
-    // Si no se permite galeria y es tipo imagen, abrir camara directamente con guias visuales
+    // Si no se permite galería pero el tipo es 'any', mostrar opciones de cámara y PDF
+    if (!allowGallery && documentType == DocumentType.any) {
+      return await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => _DocumentPickerBottomSheet(
+          documentType: documentType,
+          allowGallery: false, // No galería, pero sí cámara y PDF
+        ),
+      );
+    }
+    
+    // Si no se permite galería y es solo tipo imagen, abrir cámara directamente con guías visuales
     if (!allowGallery && documentType == DocumentType.image) {
-      // Mostrar guias visuales antes
+      // Mostrar guías visuales antes
       final bool? proceed = await showDialog<bool>(
         context: context,
-        builder: (context) => const _VisualGuidesDialog(),
+        builder: (context) => const _DocumentGuidesDialog(guideType: DocumentGuideType.camera),
       );
       
       if (proceed == true) {
@@ -640,12 +652,37 @@ class DocumentPickerHelper {
   }
 }
 
-class _VisualGuidesDialog extends StatelessWidget {
-  const _VisualGuidesDialog();
+/// Tipos de guía para documentos
+enum DocumentGuideType { camera, pdf }
+
+/// Diálogo de guías visuales reutilizable para cámara y PDF
+class _DocumentGuidesDialog extends StatelessWidget {
+  final DocumentGuideType guideType;
+  
+  const _DocumentGuidesDialog({required this.guideType});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCamera = guideType == DocumentGuideType.camera;
+    
+    // Configuración según el tipo
+    final icon = isCamera ? Icons.camera_alt_rounded : Icons.picture_as_pdf_rounded;
+    final color = isCamera ? AppColors.primary : Colors.red;
+    final title = isCamera ? 'Instrucciones para la foto' : 'Instrucciones para PDF';
+    final buttonText = isCamera ? 'Entendido, abrir cámara' : 'Entendido, seleccionar PDF';
+    
+    final guides = isCamera 
+        ? [
+            _GuideItem(Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas'),
+            _GuideItem(Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto'),
+            _GuideItem(Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo'),
+          ]
+        : [
+            _GuideItem(Icons.description_rounded, 'Documento legible', 'Asegúrate que el PDF sea claro y legible'),
+            _GuideItem(Icons.storage_rounded, 'Tamaño máximo', 'El archivo no debe superar 10MB'),
+            _GuideItem(Icons.verified_rounded, 'Documento oficial', 'Usa el documento original, no escaneados de baja calidad'),
+          ];
     
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -654,79 +691,91 @@ class _VisualGuidesDialog extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-             padding: const EdgeInsets.all(24),
-             decoration: BoxDecoration(
-               color: isDark ? AppColors.darkSurface.withValues(alpha: 0.95) : AppColors.lightSurface.withValues(alpha: 0.95),
-               borderRadius: BorderRadius.circular(24),
-               border: Border.all(
-                 color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-               ),
-               boxShadow: [
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.2),
-                   blurRadius: 20,
-                   spreadRadius: 5,
-                 )
-               ]
-             ),
-             child: ConstrainedBox(
-               constraints: BoxConstraints(
-                 maxHeight: MediaQuery.of(context).size.height * 0.8,
-               ),
-               child: SingleChildScrollView(
-                 child: Column(
-                   mainAxisSize: MainAxisSize.min,
-                   children: [
-                     Container(
-                       padding: const EdgeInsets.all(16),
-                       decoration: BoxDecoration(
-                         color: AppColors.primary.withValues(alpha: 0.1),
-                         shape: BoxShape.circle,
-                       ),
-                       child: Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 40),
-                     ),
-                     const SizedBox(height: 20),
-                     Text(
-                       'Instrucciones para la foto',
-                       style: TextStyle(
-                         color: isDark ? Colors.white : Colors.black87,
-                         fontSize: 20,
-                         fontWeight: FontWeight.bold,
-                       ),
-                       textAlign: TextAlign.center,
-                     ),
-                     const SizedBox(height: 24),
-                     _buildGuideItem(context, Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas', isDark),
-                     const SizedBox(height: 16),
-                     _buildGuideItem(context, Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto', isDark),
-                     const SizedBox(height: 16),
-                     _buildGuideItem(context, Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo', isDark),
-                     const SizedBox(height: 32),
-                     SizedBox(
-                       width: double.infinity,
-                       child: ElevatedButton(
-                         onPressed: () => Navigator.pop(context, true),
-                         style: ElevatedButton.styleFrom(
-                           backgroundColor: AppColors.primary,
-                           foregroundColor: Colors.white,
-                           padding: const EdgeInsets.symmetric(vertical: 16),
-                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                           elevation: 0,
-                         ),
-                         child: const Text('Entendido, abrir cámara', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
-             ),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDark 
+                  ? AppColors.darkSurface.withValues(alpha: 0.95) 
+                  : AppColors.lightSurface.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                )
+              ],
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Ícono principal
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: color, size: 40),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Título
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Guías
+                    ...guides.map((guide) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildGuideRow(context, guide, isDark),
+                    )),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Botón de acción
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          buttonText, 
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildGuideItem(BuildContext context, IconData icon, String title, String subtitle, bool isDark) {
+  Widget _buildGuideRow(BuildContext context, _GuideItem guide, bool isDark) {
     return Row(
       children: [
         Container(
@@ -735,7 +784,7 @@ class _VisualGuidesDialog extends StatelessWidget {
             color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: isDark ? Colors.white70 : Colors.black54, size: 24),
+          child: Icon(guide.icon, color: isDark ? Colors.white70 : Colors.black54, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -743,21 +792,21 @@ class _VisualGuidesDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title, 
+                guide.title,
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87, 
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 16
-                )
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
-                subtitle, 
+                guide.subtitle,
                 style: TextStyle(
-                  color: isDark ? Colors.white54 : Colors.black54, 
+                  color: isDark ? Colors.white54 : Colors.black54,
                   fontSize: 14,
                   height: 1.2,
-                )
+                ),
               ),
             ],
           ),
@@ -767,6 +816,15 @@ class _VisualGuidesDialog extends StatelessWidget {
   }
 }
 
+class _GuideItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  
+  const _GuideItem(this.icon, this.title, this.subtitle);
+}
+
+/// Bottom sheet para seleccionar tipo de documento (cámara, galería, PDF)
 class _DocumentPickerBottomSheet extends StatelessWidget {
   final DocumentType documentType;
   final bool allowGallery;
@@ -778,6 +836,8 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
@@ -785,75 +845,84 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
+            color: isDark 
+                ? AppColors.darkSurface.withValues(alpha: 0.95)
+                : AppColors.lightSurface.withValues(alpha: 0.95),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Handle
               Container(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              
+              // Título
+              Text(
                 'Seleccionar documento',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black87,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Elige cómo quieres subir tu documento',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 24),
               
-              // Opciones segÃºn el tipo de documento aceptado
-              if (documentType == DocumentType.image ||
-                  documentType == DocumentType.any) ...[
-                _buildOption(
+              // Opciones según el tipo de documento aceptado
+              if (documentType == DocumentType.image || documentType == DocumentType.any)
+                _buildPickerOption(
                   context: context,
+                  isDark: isDark,
                   icon: Icons.camera_alt_rounded,
                   title: 'Tomar foto',
-                  subtitle: 'Usa la cÃ¡mara',
-                  onTap: () async {
-                    // Show dialog first? No, simple tap
-                    // Navigator.pop(context, 'camera'); 
-                    // Better to show guides even here? Let's show guides.
-                     final bool? proceed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => const _VisualGuidesDialog(),
-                      );
-                      if (context.mounted && proceed == true) {
-                         Navigator.pop(context, 'camera');
-                      }
-                  },
+                  subtitle: 'Usa la cámara del dispositivo',
+                  color: AppColors.primary,
+                  onTap: () => _handleCameraOption(context),
                 ),
-                if (allowGallery)
-                  _buildOption(
-                    context: context,
-                    icon: Icons.photo_library_rounded,
-                    title: 'GalerÃ­a de fotos',
-                    subtitle: 'Selecciona una imagen',
-                    onTap: () => Navigator.pop(context, 'gallery'),
-                  ),
-              ],
               
-              if (documentType == DocumentType.pdf ||
-                  documentType == DocumentType.any) ...[
-                _buildOption(
+              if (allowGallery && (documentType == DocumentType.image || documentType == DocumentType.any))
+                _buildPickerOption(
                   context: context,
+                  isDark: isDark,
+                  icon: Icons.photo_library_rounded,
+                  title: 'Galería de fotos',
+                  subtitle: 'Selecciona una imagen existente',
+                  color: Colors.purple,
+                  onTap: () => Navigator.pop(context, 'gallery'),
+                ),
+              
+              if (documentType == DocumentType.pdf || documentType == DocumentType.any)
+                _buildPickerOption(
+                  context: context,
+                  isDark: isDark,
                   icon: Icons.picture_as_pdf_rounded,
                   title: 'Archivo PDF',
                   subtitle: 'Selecciona un documento PDF',
-                  color: Colors.red.shade400,
-                  onTap: () => Navigator.pop(context, 'pdf'),
+                  color: Colors.red,
+                  onTap: () => _handlePdfOption(context),
                 ),
-              ],
               
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -861,49 +930,98 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildOption({
+  Future<void> _handleCameraOption(BuildContext context) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _DocumentGuidesDialog(guideType: DocumentGuideType.camera),
+    );
+    if (context.mounted && proceed == true) {
+      Navigator.pop(context, 'camera');
+    }
+  }
+
+  Future<void> _handlePdfOption(BuildContext context) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _DocumentGuidesDialog(guideType: DocumentGuideType.pdf),
+    );
+    if (context.mounted && proceed == true) {
+      Navigator.pop(context, 'pdf');
+    }
+  }
+
+  Widget _buildPickerOption({
     required BuildContext context,
+    required bool isDark,
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color color,
     required VoidCallback onTap,
-    Color? color,
   }) {
-    final optionColor = color ?? const Color(0xFFFFFF00);
-    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: optionColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark 
+                  ? Colors.white.withValues(alpha: 0.05) 
+                  : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark 
+                    ? Colors.white.withValues(alpha: 0.08) 
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black54,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ],
+            ),
           ),
-          child: Icon(icon, color: optionColor, size: 24),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 13,
-          ),
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        tileColor: Colors.white.withValues(alpha: 0.05),
       ),
     );
   }
 }
-

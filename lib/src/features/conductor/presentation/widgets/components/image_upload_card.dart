@@ -16,6 +16,8 @@ class ImageUploadCard extends StatelessWidget {
     required this.isDark,
   });
 
+  bool get _isPdf => file != null && file!.path.toLowerCase().endsWith('.pdf');
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -23,13 +25,49 @@ class ImageUploadCard extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+              // Badge de tipo de archivo
+              if (file != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _isPdf 
+                        ? Colors.red.withOpacity(0.15) 
+                        : AppColors.success.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
+                        size: 14,
+                        color: _isPdf ? Colors.red : AppColors.success,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isPdf ? 'PDF' : 'Imagen',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: _isPdf ? Colors.red : AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
         GestureDetector(
@@ -41,11 +79,13 @@ class ImageUploadCard extends StatelessWidget {
               color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: file != null ? AppColors.success : (isDark ? Colors.white24 : Colors.grey.shade300),
+                color: file != null 
+                    ? (_isPdf ? Colors.red : AppColors.success) 
+                    : (isDark ? Colors.white24 : Colors.grey.shade300),
                 width: 1.5,
                 style: file != null ? BorderStyle.solid : BorderStyle.none,
               ),
-              image: file != null 
+              image: file != null && !_isPdf
                   ? DecorationImage(
                       image: FileImage(file!),
                       fit: BoxFit.cover,
@@ -55,14 +95,43 @@ class ImageUploadCard extends StatelessWidget {
             ),
              child: file != null 
               ? Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.check, color: Colors.white, size: 24),
-                  ),
+                  child: _isPdf
+                      // Vista para PDF
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.picture_as_pdf_rounded,
+                                color: Colors.red,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'PDF seleccionado',
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        )
+                      // Vista para imagen (con check verde)
+                      : Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.check, color: Colors.white, size: 24),
+                        ),
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -70,7 +139,7 @@ class ImageUploadCard extends StatelessWidget {
                     Icon(Icons.add_a_photo_rounded, size: 32, color: AppColors.primary.withOpacity(0.8)),
                     const SizedBox(height: 8),
                     Text(
-                      'Toca para subir foto',
+                      'Toca para subir foto o PDF',
                       style: TextStyle(
                         color: isDark ? Colors.white60 : Colors.grey.shade600,
                         fontWeight: FontWeight.w500

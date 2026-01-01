@@ -4,7 +4,7 @@ import 'package:viax/src/theme/app_colors.dart';
 
 class ConductorHistorialSheet extends StatelessWidget {
   final List<Map<String, dynamic>> historial;
-  final Function(String?, String) onViewDocument;
+  final Function(String?, String, {String? tipoArchivo}) onViewDocument;
 
   const ConductorHistorialSheet({
     super.key,
@@ -260,12 +260,43 @@ class ConductorHistorialSheet extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => onViewDocument(doc['ruta_archivo'], nombreDoc),
-                      icon: const Icon(Icons.visibility_rounded, size: 18),
-                      label: const Text('Ver Documento Original'),
+                      onPressed: () => onViewDocument(doc['ruta_archivo'], nombreDoc, tipoArchivo: doc['tipo_archivo']?.toString()),
+                      icon: Icon(
+                        doc['tipo_archivo']?.toString().toLowerCase() == 'pdf' 
+                            ? Icons.picture_as_pdf_rounded 
+                            : Icons.visibility_rounded, 
+                        size: 18,
+                        color: doc['tipo_archivo']?.toString().toLowerCase() == 'pdf' 
+                            ? Colors.red 
+                            : AppColors.primary,
+                      ),
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Ver Documento Original'),
+                          if (doc['tipo_archivo']?.toString().toLowerCase() == 'pdf') ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'PDF',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                        foregroundColor: doc['tipo_archivo']?.toString().toLowerCase() == 'pdf' 
+                            ? Colors.red 
+                            : AppColors.primary,
+                        side: BorderSide(color: (doc['tipo_archivo']?.toString().toLowerCase() == 'pdf' 
+                            ? Colors.red 
+                            : AppColors.primary).withValues(alpha: 0.3)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),

@@ -1,6 +1,11 @@
 <?php
 /**
  * Upload de Documentos del Conductor
+ * 
+ * Soporta imágenes (jpg, jpeg, png, webp) y PDFs
+ * Organiza archivos en Cloudflare R2:
+ * - imagenes/documents/{conductor_id}/{tipo}_{timestamp}.{ext}
+ * - pdfs/documents/{conductor_id}/{tipo}_{timestamp}.pdf
  */
 
 header('Content-Type: application/json');
@@ -49,11 +54,33 @@ try {
 
     $file = $_FILES['documento'];
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $mimeType = $file['type'];
     
-    // R2 Upload
-    $filename = 'documents/' . $conductorId . '/' . $tipoDocumento . '_' . time() . '.' . $extension;
+    // Validar extensiones permitidas (imágenes y PDF)
+    $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+    if (!in_array($extension, $extensionesPermitidas)) {
+        throw new Exception('Tipo de archivo no permitido. Use: ' . implode(', ', $extensionesPermitidas));
+    }
+    
+    // Validar tamaño máximo (10MB para PDFs, 5MB para imágenes)
+    $maxSize = ($extension === 'pdf') ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    if ($file['size'] > $maxSize) {
+        $maxMB = $maxSize / 1024 / 1024;
+        throw new Exception("El archivo excede el tamaño máximo de {$maxMB}MB");
+    }
+    
+    // Determinar si es imagen o PDF y carpeta correspondiente
+    $esImagen = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
+    $tipoArchivo = $esImagen ? 'imagen' : 'pdf';
+    $carpeta = $esImagen ? 'imagenes' : 'pdfs';
+    
+    // Construir ruta en R2: {carpeta}/documents/{conductor_id}/{tipo}_{timestamp}.{ext}
+    $timestamp = time();
+    $filename = "{$carpeta}/documents/{$conductorId}/{$tipoDocumento}_{$timestamp}.{$extension}";
+    
+    // Subir a R2
     $r2 = new R2Service();
-    $relativeUrl = $r2->uploadFile($file['tmp_name'], $filename, $file['type']);
+    $relativeUrl = $r2->uploadFile($file['tmp_name'], $filename, $mimeType);
 
     $db = new Database();
     $db = $db->getConnection();
@@ -68,23 +95,65 @@ try {
             'tarjeta_propiedad' => 'tarjeta_propiedad_foto_url',
             'seguro' => 'seguro_foto_url'
         ];
+        
+        $columnTipoMap = [
+            'licencia' => 'licencia_tipo_archivo',
+            'soat' => 'soat_tipo_archivo',
+            'tecnomecanica' => 'tecnomecanica_tipo_archivo',
+            'tarjeta_propiedad' => 'tarjeta_propiedad_tipo_archivo',
+            'seguro' => 'seguro_tipo_archivo'
+        ];
+        
         $column = $columnMap[$tipoDocumento];
+        $columnTipo = $columnTipoMap[$tipoDocumento];
 
-        // Update details
-        $stmt = $db->prepare("UPDATE detalles_conductor SET $column = ?, actualizado_en = NOW() WHERE usuario_id = ?");
-        $stmt->execute([$relativeUrl, $conductorId]);
+        // Verificar si existe columna tipo_archivo (puede no existir si no se ejecutó migración)
+        $checkColumn = $db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'detalles_conductor' AND column_name = '{$columnTipo}'");
+        $tieneColumnaTipo = $checkColumn->rowCount() > 0;
 
-        // History
-        $stmt = $db->prepare("INSERT INTO documentos_conductor_historial 
-            (conductor_id, tipo_documento, url_documento, activo, verificado_por_admin) 
-            VALUES (?, ?, ?, 1, 1)");
-        $stmt->execute([$conductorId, $tipoDocumento, $relativeUrl]);
+        // Update details - actualizar URL y tipo de archivo si existe la columna
+        if ($tieneColumnaTipo) {
+            $stmt = $db->prepare("UPDATE detalles_conductor SET $column = ?, $columnTipo = ?, actualizado_en = NOW() WHERE usuario_id = ?");
+            $stmt->execute([$relativeUrl, $tipoArchivo, $conductorId]);
+        } else {
+            $stmt = $db->prepare("UPDATE detalles_conductor SET $column = ?, actualizado_en = NOW() WHERE usuario_id = ?");
+            $stmt->execute([$relativeUrl, $conductorId]);
+        }
+
+        // History - verificar si tiene columnas nuevas
+        $checkHistorial = $db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'documentos_conductor_historial' AND column_name = 'tipo_archivo'");
+        $historialTieneTipo = $checkHistorial->rowCount() > 0;
+        
+        if ($historialTieneTipo) {
+            $stmt = $db->prepare("INSERT INTO documentos_conductor_historial 
+                (conductor_id, tipo_documento, url_documento, tipo_archivo, nombre_archivo_original, tamanio_archivo, activo, verificado_por_admin) 
+                VALUES (?, ?, ?, ?, ?, ?, 1, 0)");
+            $stmt->execute([
+                $conductorId, 
+                $tipoDocumento, 
+                $relativeUrl, 
+                $tipoArchivo,
+                $file['name'],
+                $file['size']
+            ]);
+        } else {
+            $stmt = $db->prepare("INSERT INTO documentos_conductor_historial 
+                (conductor_id, tipo_documento, url_documento, activo, verificado_por_admin) 
+                VALUES (?, ?, ?, 1, 0)");
+            $stmt->execute([$conductorId, $tipoDocumento, $relativeUrl]);
+        }
 
         $db->commit();
 
         $response['success'] = true;
         $response['message'] = 'Documento subido exitosamente';
-        $response['data'] = ['url' => $relativeUrl];
+        $response['data'] = [
+            'url' => $relativeUrl,
+            'tipo_archivo' => $tipoArchivo,
+            'carpeta' => $carpeta,
+            'nombre_original' => $file['name'],
+            'tamanio' => $file['size']
+        ];
 
     } catch (Exception $e) {
         $db->rollBack();
