@@ -7,6 +7,7 @@ class ImageUploadCard extends StatelessWidget {
   final File? file;
   final VoidCallback onTap;
   final bool isDark;
+  final String? placeholderText;
 
   const ImageUploadCard({
     super.key,
@@ -14,6 +15,7 @@ class ImageUploadCard extends StatelessWidget {
     required this.file,
     required this.onTap,
     required this.isDark,
+    this.placeholderText,
   });
 
   bool get _isPdf => file != null && file!.path.toLowerCase().endsWith('.pdf');
@@ -139,7 +141,7 @@ class ImageUploadCard extends StatelessWidget {
                     Icon(Icons.add_a_photo_rounded, size: 32, color: AppColors.primary.withOpacity(0.8)),
                     const SizedBox(height: 8),
                     Text(
-                      'Toca para subir foto o PDF',
+                      placeholderText ?? 'Toca para subir foto o PDF',
                       style: TextStyle(
                         color: isDark ? Colors.white60 : Colors.grey.shade600,
                         fontWeight: FontWeight.w500

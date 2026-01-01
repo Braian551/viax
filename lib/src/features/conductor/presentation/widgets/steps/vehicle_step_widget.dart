@@ -426,6 +426,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
       file: widget.vehiclePhoto,
       onTap: widget.onPickPhoto,
       isDark: widget.isDark,
+      placeholderText: 'Toca para subir foto',
     );
   }
 
