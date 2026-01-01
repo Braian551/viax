@@ -102,6 +102,7 @@ Future<void> showDocumentHistory({
   required BuildContext context,
   required int adminId,
   required int conductorId,
+  required Function(String?, String) onViewDocument,
 }) async {
   // Mostrar loading
   AdminDialogHelper.showLoading(context, message: 'Cargando historial...');
@@ -135,7 +136,10 @@ Future<void> showDocumentHistory({
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (context) => ConductorHistorialSheet(historial: historial),
+        builder: (context) => ConductorHistorialSheet(
+          historial: historial,
+          onViewDocument: onViewDocument,
+        ),
       );
     } else {
       CustomSnackbar.showError(context, message: response['message'] ?? 'Error al cargar historial');

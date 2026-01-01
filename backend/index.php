@@ -30,18 +30,23 @@ if ($path === '') {
     echo json_encode(['status' => 'healthy', 'message' => 'Viax API Backend is running']);
 } elseif (strpos($path, 'user/') === 0) {
     $endpoint = substr($path, 5); // Remove 'user/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/user/' . $endpoint . '.php';
 } elseif (strpos($path, 'conductor/') === 0) {
     $endpoint = substr($path, 10); // Remove 'conductor/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/conductor/' . $endpoint . '.php';
 } elseif (strpos($path, 'admin/') === 0) {
     $endpoint = substr($path, 6); // Remove 'admin/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/admin/' . $endpoint . '.php';
 } elseif (strpos($path, 'auth/') === 0) {
     $endpoint = substr($path, 5); // Remove 'auth/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/auth/' . $endpoint . '.php';
 } elseif (strpos($path, 'pricing/') === 0) {
     $endpoint = substr($path, 8); // Remove 'pricing/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/pricing/' . $endpoint . '.php';
 } elseif (strpos($path, 'pricing/') === 0) {
     $endpoint = substr($path, 8); // Remove 'pricing/'

@@ -1,10 +1,11 @@
 ﻿// lib/src/widgets/dialogs/admin_dialog_helper.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
-/// Helper especÃ­fico para diÃ¡logos administrativos con diseÃ±os personalizados
+/// Helper específico para diálogos administrativos con diseños personalizados
 class AdminDialogHelper {
-  /// Muestra un diÃ¡logo de confirmaciÃ³n para aprobar conductor
+  /// Muestra un diálogo de confirmación para aprobar conductor
   static Future<bool?> showApprovalConfirmation(
     BuildContext context, {
     required String conductorName,
@@ -15,7 +16,7 @@ class AdminDialogHelper {
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => _AdminConfirmationDialog(
         type: _AdminDialogType.approve,
-        title: 'Â¿Aprobar Conductor?',
+        title: '¿Aprobar Conductor?',
         conductorName: conductorName,
         subtitle: subtitle,
         confirmText: 'Aprobar',
@@ -24,7 +25,7 @@ class AdminDialogHelper {
     );
   }
 
-  /// Muestra un diÃ¡logo de confirmaciÃ³n para rechazar conductor
+  /// Muestra un diálogo de confirmación para rechazar conductor
   static Future<String?> showRejectionDialog(
     BuildContext context, {
     required String conductorName,
@@ -41,7 +42,7 @@ class AdminDialogHelper {
     );
   }
 
-  /// Muestra un diÃ¡logo informativo cuando no hay historial
+  /// Muestra un diálogo informativo cuando no hay historial
   static Future<void> showNoHistoryDialog(BuildContext context) {
     return showDialog(
       context: context,
@@ -49,14 +50,16 @@ class AdminDialogHelper {
       builder: (context) => _AdminInfoDialog(
         icon: Icons.folder_open_rounded,
         title: 'Sin Historial',
-        message: 'Este conductor aÃºn no tiene historial de documentos registrado.',
+        message: 'Este conductor aún no tiene historial de documentos registrado.',
         tip: 'El historial se genera cuando el conductor sube o actualiza sus documentos.',
       ),
     );
   }
 
-  /// Muestra un diÃ¡logo de carga
+  /// Muestra un diálogo de carga
   static void showLoading(BuildContext context, {String? message}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -64,28 +67,53 @@ class AdminDialogHelper {
       builder: (context) => PopScope(
         canPop: false,
         child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(color: Color(0xFFFFFF00)),
-                if (message != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    message,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              decoration: BoxDecoration(
+                color: isDark 
+                    ? AppColors.darkSurface.withValues(alpha: 0.95) 
+                    : AppColors.lightSurface.withValues(alpha: 0.98),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
-              ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  ),
+                  if (message != null) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
@@ -96,10 +124,9 @@ class AdminDialogHelper {
 
 enum _AdminDialogType {
   approve,
-  // reject, // No se usa actualmente pero se puede usar en el futuro
 }
 
-/// DiÃ¡logo de confirmaciÃ³n personalizado para acciones administrativas
+/// Diálogo de confirmación personalizado para acciones administrativas
 class _AdminConfirmationDialog extends StatelessWidget {
   final _AdminDialogType type;
   final String title;
@@ -120,12 +147,14 @@ class _AdminConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color primaryColor = type == _AdminDialogType.approve 
-        ? const Color(0xFF11998e) 
-        : const Color(0xFFf5576c);
+        ? AppColors.success
+        : AppColors.error;
     
     final IconData icon = type == _AdminDialogType.approve
         ? Icons.check_circle_outline_rounded
         : Icons.cancel_outlined;
+        
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -133,15 +162,15 @@ class _AdminConfirmationDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 360),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: primaryColor.withValues(alpha: 0.3),
-            width: 2,
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withValues(alpha: 0.2),
+              color: primaryColor.withValues(alpha: 0.15),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -163,7 +192,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          primaryColor.withValues(alpha: 0.3),
+                          primaryColor.withValues(alpha: 0.2),
                           primaryColor.withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
@@ -182,8 +211,8 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         color: primaryColor,
                         letterSpacing: 0.3,
                       ),
@@ -199,10 +228,10 @@ class _AdminConfirmationDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -212,17 +241,17 @@ class _AdminConfirmationDialog extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.person_rounded,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           size: 20,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             conductorName,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -234,7 +263,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -274,7 +303,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                             : 'Esta acciÃ³n rechazarÃ¡ los documentos del conductor.',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
                           height: 1.4,
                         ),
                       ),
@@ -294,7 +323,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                   // BotÃ³n confirmar
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(true),
                       style: ElevatedButton.styleFrom(
@@ -310,7 +339,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
                         confirmText,
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -321,13 +350,13 @@ class _AdminConfirmationDialog extends StatelessWidget {
                   // BotÃ³n cancelar
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(false),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
+                        foregroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Theme.of(context).dividerColor,
                           width: 1.5,
                         ),
                         elevation: 0,
@@ -355,7 +384,7 @@ class _AdminConfirmationDialog extends StatelessWidget {
   }
 }
 
-/// DiÃ¡logo para rechazar conductor con campo de texto
+/// Diálogo para rechazar conductor con campo de texto
 class _AdminRejectionDialog extends StatelessWidget {
   final String conductorName;
   final TextEditingController motivoController;
@@ -367,21 +396,24 @@ class _AdminRejectionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = AppColors.error;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 360),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFf5576c).withValues(alpha: 0.3),
-            width: 2,
+            color: primaryColor.withValues(alpha: 0.3),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFf5576c).withValues(alpha: 0.2),
+              color: primaryColor.withValues(alpha: 0.15),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -402,30 +434,30 @@ class _AdminRejectionDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFFf5576c).withValues(alpha: 0.3),
-                          const Color(0xFFf5576c).withValues(alpha: 0.05),
+                          primaryColor.withValues(alpha: 0.2),
+                          primaryColor.withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
                       ),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.cancel_outlined,
                         size: 44,
-                        color: Color(0xFFf5576c),
+                        color: primaryColor,
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
                       'Rechazar Conductor',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFf5576c),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -440,24 +472,24 @@ class _AdminRejectionDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.person_rounded,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       size: 20,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         conductorName,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -479,7 +511,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -487,36 +519,41 @@ class _AdminRejectionDialog extends StatelessWidget {
                     controller: motivoController,
                     maxLines: 4,
                     maxLength: 500,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface, 
+                      fontSize: 14
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Describe el motivo del rechazo...',
                       hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                         fontSize: 14,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      fillColor: isDark 
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.1),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFf5576c),
+                        borderSide: BorderSide(
+                          color: primaryColor,
                           width: 1.5,
                         ),
                       ),
                       counterStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -534,14 +571,15 @@ class _AdminRejectionDialog extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () {
                         if (motivoController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Debes indicar el motivo del rechazo'),
-                              backgroundColor: Color(0xFFf5576c),
+                            SnackBar(
+                              content: const Text('Debes indicar el motivo del rechazo'),
+                              backgroundColor: primaryColor,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                           return;
@@ -549,7 +587,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                         Navigator.of(context).pop(motivoController.text.trim());
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFf5576c),
+                        backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -560,7 +598,7 @@ class _AdminRejectionDialog extends StatelessWidget {
                         'Rechazar',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -569,13 +607,13 @@ class _AdminRejectionDialog extends StatelessWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
+                        foregroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Theme.of(context).dividerColor,
                           width: 1.5,
                         ),
                         shape: RoundedRectangleBorder(
@@ -602,7 +640,7 @@ class _AdminRejectionDialog extends StatelessWidget {
   }
 }
 
-/// DiÃ¡logo informativo personalizado
+/// Diálogo informativo personalizado
 class _AdminInfoDialog extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -618,21 +656,23 @@ class _AdminInfoDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 340),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
-            width: 2,
+            color: AppColors.primary.withValues(alpha: 0.3),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               blurRadius: 30,
               spreadRadius: 0,
             ),
@@ -652,14 +692,14 @@ class _AdminInfoDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFFFFFF00).withValues(alpha: 0.2),
-                          const Color(0xFFFFFF00).withValues(alpha: 0.05),
+                          AppColors.primary.withValues(alpha: 0.2),
+                          AppColors.primary.withValues(alpha: 0.05),
                         ],
                         stops: const [0.3, 1.0],
                       ),
                     ),
                     child: Center(
-                      child: Icon(icon, size: 44, color: const Color(0xFFFFFF00)),
+                      child: Icon(icon, size: 44, color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -669,9 +709,9 @@ class _AdminInfoDialog extends StatelessWidget {
                       title,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFFFFF00),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -685,21 +725,21 @@ class _AdminInfoDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     Icon(
                       Icons.folder_open_rounded,
-                      size: 64,
-                      color: Colors.white.withValues(alpha: 0.3),
+                      size: 50,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       message,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -710,10 +750,10 @@ class _AdminInfoDialog extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFFF00).withValues(alpha: 0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -721,7 +761,7 @@ class _AdminInfoDialog extends StatelessWidget {
                           children: [
                             const Icon(
                               Icons.lightbulb_outline_rounded,
-                              color: Color(0xFFFFFF00),
+                              color: AppColors.primary,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -729,7 +769,7 @@ class _AdminInfoDialog extends StatelessWidget {
                               child: Text(
                                 tip!,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.7),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                   fontSize: 13,
                                   height: 1.3,
                                 ),
@@ -750,12 +790,12 @@ class _AdminInfoDialog extends StatelessWidget {
               padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
               child: SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFFF00),
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -765,7 +805,7 @@ class _AdminInfoDialog extends StatelessWidget {
                     'Entendido',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                       letterSpacing: 0.3,
                     ),
                   ),

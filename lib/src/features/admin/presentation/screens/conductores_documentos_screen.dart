@@ -467,6 +467,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
           context: context,
           adminId: widget.adminId,
           conductorId: conductorId,
+          onViewDocument: _viewDocument,
         ),
         onViewDocument: _viewDocument,
       ),

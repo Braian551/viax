@@ -1,6 +1,10 @@
-﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+﻿import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 /// Pantalla para visualizar documentos/imágenes en pantalla completa
 /// Diseño moderno con soporte para zoom, descarga y tema de la app
@@ -23,6 +27,8 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   bool _isLoading = true;
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
 
   @override
   void initState() {
@@ -72,7 +78,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
       leading: _buildBackButton(context, textColor),
       title: _buildTitle(textColor),
       actions: [
-        _buildCopyUrlButton(context),
+        _buildDownloadButton(context),
         const SizedBox(width: 8),
       ],
     );
@@ -119,18 +125,31 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
     );
   }
 
-  Widget _buildCopyUrlButton(BuildContext context) {
+  Widget _buildDownloadButton(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: IconButton(
-        icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 20),
-        onPressed: () => _copyUrlToClipboard(context),
-        tooltip: 'Copiar URL',
-      ),
+      child: _isDownloading
+          ? Padding(
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  value: _downloadProgress > 0 ? _downloadProgress : null,
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            )
+          : IconButton(
+              icon: const Icon(Icons.download_rounded, color: AppColors.primary, size: 20),
+              onPressed: () => _downloadImage(context),
+              tooltip: 'Descargar imagen',
+            ),
     );
   }
 
@@ -164,7 +183,6 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
         fit: BoxFit.contain,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) {
-            // Image loaded successfully
             if (_isLoading) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
@@ -276,7 +294,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
           ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
-            onPressed: () => setState(() {}), // Retry
+            onPressed: () => setState(() {}),
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Reintentar'),
             style: OutlinedButton.styleFrom(
@@ -293,9 +311,104 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
     );
   }
 
-  void _copyUrlToClipboard(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: widget.documentUrl));
+  Future<void> _downloadImage(BuildContext context) async {
+    if (_isDownloading) return;
+
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+    });
+
+    try {
+      // 1. Verificación de permisos según versión de Android
+      if (Platform.isAndroid) {
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        final sdkInt = androidInfo.version.sdkInt;
+        
+        // En Android 13+ (SDK 33+), el permiso de WRITE_EXTERNAL_STORAGE ya no existe/es necesario para Downloads
+        // Solo pedimos permiso en versiones anteriores (Android 12 o inferior)
+        if (sdkInt < 33) {
+          final status = await Permission.storage.request();
+          if (!status.isGranted) {
+             // Reintentar con MANAGE_EXTERNAL_STORAGE si es necesario (Android 11/12 legacy)
+             // O simplemente fallar si el usuario denegó
+             if (mounted) {
+               _showSnackbar(context, 'Permiso de almacenamiento denegado', isError: true);
+               setState(() => _isDownloading = false);
+             }
+             return;
+          }
+        }
+      }
+
+      // 2. Descargar imagen
+      final response = await http.get(Uri.parse(widget.documentUrl));
+      
+      if (response.statusCode != 200) {
+        throw Exception('Error HTTP: ${response.statusCode}');
+      }
+
+      // 3. Determinar ruta de descargas
+      Directory? directory;
+      if (Platform.isAndroid) {
+        // Opción A: Intentar usar ruta pública directa (funciona en la mayoría)
+        directory = Directory('/storage/emulated/0/Download');
+        // Fallback: Si no existe, usar path_provider
+        if (!await directory.exists()) {
+           directory = await getExternalStorageDirectory(); 
+        }
+      } else {
+        directory = await getApplicationDocumentsDirectory();
+      }
+
+      if (directory == null) {
+        throw Exception('No se pudo acceder al directorio de descargas');
+      }
+
+      // 4. Guardar archivo
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = _getExtensionFromUrl(widget.documentUrl);
+      final sanitizedName = widget.documentName
+          .replaceAll(RegExp(r'[^\w\s-]'), '')
+          .replaceAll(' ', '_');
+      final filename = '${sanitizedName}_$timestamp$extension';
+      
+      final file = File('${directory.path}/$filename');
+      await file.writeAsBytes(response.bodyBytes);
+
+      // 5. Notificar éxito
+      if (mounted) {
+        _showSnackbar(
+          context, 
+          'Guardado en: Descargas/$filename',
+          isError: false,
+          icon: Icons.check_circle_rounded,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackbar(context, 'Error al descargar: ${e.toString()}', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
+  }
+
+  String _getExtensionFromUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return '.jpg';
     
+    final path = uri.path.toLowerCase();
+    if (path.endsWith('.png')) return '.png';
+    if (path.endsWith('.gif')) return '.gif';
+    if (path.endsWith('.webp')) return '.webp';
+    if (path.endsWith('.pdf')) return '.pdf';
+    return '.jpg';
+  }
+
+  void _showSnackbar(BuildContext context, String message, {bool isError = false, IconData? icon}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -306,20 +419,26 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen>
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 16),
+              child: Icon(
+                icon ?? (isError ? Icons.error_rounded : Icons.check_rounded),
+                color: Colors.white,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'URL copiada al portapapeles',
-              style: TextStyle(fontWeight: FontWeight.w500),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),
-        backgroundColor: AppColors.success,
+        backgroundColor: isError ? AppColors.error : AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
