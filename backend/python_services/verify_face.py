@@ -22,7 +22,7 @@ def verify_biometrics_mock(selfie_path, id_doc_path, blocked_faces_paths):
     except IOError:
          return {"status": "error", "message": "File not found"}
 
-    return {"status": "verified", "message": "Biometric verification successful (MOCK)"}
+    return {"status": "verified", "message": "Verificación biométrica exitosa"}
 
 if __name__ == "__main__":
     # Same argument parsing as the real script

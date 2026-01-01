@@ -20,220 +20,168 @@ class ConductorDetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Usamos Container en lugar de DraggableScrollableSheet para un modal fijo más limpio
+    // o DraggableScrollableSheet sin el handle visual si se prefiere funcionalidad
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
+      initialChildSize: 0.85,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
+              decoration: BoxDecoration(
+                color: isDark 
+                    ? AppColors.darkSurface.withValues(alpha: 0.98) 
+                    : AppColors.lightSurface.withValues(alpha: 0.98),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                    width: 1,
+                  ),
+                ),
+              ),
               child: Column(
                 children: [
-                  _buildSheetHandle(context),
+                   // Espaciado superior limpio sin handle
+                  const SizedBox(height: 20),
+                  
+                  // Título centralizado
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.person_pin_rounded,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                conductor['nombre_completo'] ?? 'Conductor',
+                                style: TextStyle(
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Detalles de registro',
+                                style: TextStyle(
+                                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 20,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  Divider(height: 1, color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
+                  
                   Expanded(
                     child: SingleChildScrollView(
                       controller: scrollController,
                       padding: const EdgeInsets.all(24),
+                      physics: const BouncingScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDetailSection(context, 'Información Personal', [
-                            _buildDetailRow(context, 'Nombre completo', conductor['nombre_completo']),
-                            _buildDetailRow(context, 'Email', conductor['email']),
-                            _buildDetailRow(context, 'Teléfono', conductor['telefono']),
-                            _buildDetailRow(context, 'Usuario activo', conductor['es_activo'] == 1 ? 'Sí' : 'No'),
-                            _buildDetailRow(context, 'Verificado', conductor['es_verificado'] == 1 ? 'Sí' : 'No'),
+                          _buildSectionTitle(context, 'Información Personal'),
+                          _buildInfoCard(context, [
+                            _buildInfoRow(context, 'Email', conductor['email'], Icons.email_outlined),
+                            _buildInfoRow(context, 'Teléfono', conductor['telefono'], Icons.phone_outlined),
+                            _buildInfoRow(context, 'Estado', conductor['es_activo'] == 1 ? 'Activo' : 'Inactivo', 
+                              conductor['es_activo'] == 1 ? Icons.check_circle_outline : Icons.cancel_outlined),
                           ]),
+
                           const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Licencia de Conducción', [
-                            _buildDetailRow(context, 'Número', conductor['licencia_conduccion']),
-                            _buildDetailRow(context, 'Categoría', conductor['licencia_categoria']),
-                            _buildDetailRow(context, 'Expedición', _formatDate(conductor['licencia_expedicion'])),
-                            _buildDetailRow(context, 'Vencimiento', _formatDate(conductor['licencia_vencimiento'])),
+                          _buildSectionTitle(context, 'Licencia de Conducción'),
+                          _buildInfoCard(context, [
+                            _buildInfoRow(context, 'Número', conductor['licencia_conduccion'], Icons.badge_outlined),
+                            _buildInfoRow(context, 'Categoría', conductor['licencia_categoria'], Icons.category_outlined),
+                            _buildInfoRow(context, 'Vencimiento', _formatDate(conductor['licencia_vencimiento']), Icons.event_outlined),
                           ]),
-                          const SizedBox(height: 16),
                           if (conductor['licencia_foto_url'] != null)
-                            _buildDocumentButton(context,
-                              label: 'Ver Foto de Licencia',
-                              documentUrl: conductor['licencia_foto_url'],
-                              icon: Icons.photo_camera_rounded,
-                            ),
+                             _buildDocButton(context, 'Ver Licencia', conductor['licencia_foto_url'], Icons.drive_eta_rounded),
+
                           const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Vehículo', [
-                            _buildDetailRow(context, 'Tipo', conductor['vehiculo_tipo']),
-                            _buildDetailRow(context, 'Placa', conductor['vehiculo_placa']),
-                            _buildDetailRow(context, 'Marca', conductor['vehiculo_marca']),
-                            _buildDetailRow(context, 'Modelo', conductor['vehiculo_modelo']),
-                            _buildDetailRow(context, 'Año', conductor['vehiculo_anio']?.toString()),
-                            _buildDetailRow(context, 'Color', conductor['vehiculo_color']),
+                          _buildSectionTitle(context, 'Vehículo'),
+                          _buildInfoCard(context, [
+                            _buildInfoRow(context, 'Placa', conductor['vehiculo_placa'], Icons.directions_car_outlined, isBold: true),
+                            _buildInfoRow(context, 'Modelo', '${conductor['vehiculo_marca']} ${conductor['vehiculo_modelo']} ${conductor['vehiculo_anio'] ?? ''}', Icons.info_outline),
+                            _buildInfoRow(context, 'Color', conductor['vehiculo_color'], Icons.color_lens_outlined),
+                            _buildInfoRow(context, 'Tipo', conductor['vehiculo_tipo'], Icons.local_taxi_outlined),
                           ]),
+                          
                           const SizedBox(height: 24),
-                          _buildDetailSection(context, 'SOAT', [
-                            _buildDetailRow(context, 'Número', conductor['soat_numero']),
-                            _buildDetailRow(context, 'Vencimiento', _formatDate(conductor['soat_vencimiento'])),
+                          _buildSectionTitle(context, 'Documentación Legal'),
+                          _buildInfoCard(context, [
+                            _buildInfoRow(context, 'SOAT', _formatDate(conductor['soat_vencimiento']), Icons.security_outlined),
+                            _buildInfoRow(context, 'Tecnomecánica', _formatDate(conductor['tecnomecanica_vencimiento']), Icons.build_outlined),
+                            _buildInfoRow(context, 'Seguro', _formatDate(conductor['vencimiento_seguro']), Icons.shield_outlined),
+                            _buildInfoRow(context, 'Tarjeta Propiedad', conductor['tarjeta_propiedad_numero'], Icons.credit_card_outlined),
                           ]),
+                          
                           const SizedBox(height: 16),
-                          if (conductor['soat_foto_url'] != null)
-                            _buildDocumentButton(context,
-                              label: 'Ver Foto de SOAT',
-                              documentUrl: conductor['soat_foto_url'],
-                              icon: Icons.photo_camera_rounded,
-                            ),
-                          const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Tecnomecánica', [
-                            _buildDetailRow(context, 'Número', conductor['tecnomecanica_numero']),
-                            _buildDetailRow(context, 'Vencimiento', _formatDate(conductor['tecnomecanica_vencimiento'])),
-                          ]),
-                          const SizedBox(height: 16),
-                          if (conductor['tecnomecanica_foto_url'] != null)
-                            _buildDocumentButton(context,
-                              label: 'Ver Foto de Tecnomecánica',
-                              documentUrl: conductor['tecnomecanica_foto_url'],
-                              icon: Icons.photo_camera_rounded,
-                            ),
-                          const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Seguro', [
-                            _buildDetailRow(context, 'Aseguradora', conductor['aseguradora']),
-                            _buildDetailRow(context, 'Póliza', conductor['numero_poliza_seguro']),
-                            _buildDetailRow(context, 'Vencimiento', _formatDate(conductor['vencimiento_seguro'])),
-                          ]),
-                          const SizedBox(height: 16),
-                          if (conductor['seguro_foto_url'] != null)
-                            _buildDocumentButton(context,
-                              label: 'Ver Foto de Seguro',
-                              documentUrl: conductor['seguro_foto_url'],
-                              icon: Icons.photo_camera_rounded,
-                            ),
-                          const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Otros Documentos', [
-                            _buildDetailRow(context, 'Tarjeta de propiedad', conductor['tarjeta_propiedad_numero']),
-                          ]),
-                          const SizedBox(height: 16),
-                          if (conductor['tarjeta_propiedad_foto_url'] != null)
-                            _buildDocumentButton(context,
-                              label: 'Ver Tarjeta de Propiedad',
-                              documentUrl: conductor['tarjeta_propiedad_foto_url'],
-                              icon: Icons.photo_camera_rounded,
-                            ),
-                          const SizedBox(height: 24),
-                          _buildDetailSection(context, 'Estado de Verificación', [
-                            _buildDetailRow(context, 'Estado', conductor['estado_verificacion']),
-                            _buildDetailRow(context, 'Aprobado', conductor['aprobado'] == 1 ? 'Sí' : 'No'),
-                            _buildDetailRow(context, 'Última verificación', _formatDate(conductor['fecha_ultima_verificacion'])),
-                          ]),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () => onShowHistory(conductor['usuario_id']),
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text('Ver Historial de Documentos'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF667eea),
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              if (conductor['soat_foto_url'] != null)
+                                _buildMiniDocButton(context, 'SOAT', conductor['soat_foto_url']),
+                              if (conductor['tecnomecanica_foto_url'] != null)
+                                _buildMiniDocButton(context, 'Tecno', conductor['tecnomecanica_foto_url']),
+                              if (conductor['seguro_foto_url'] != null)
+                                _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url']),
+                              if (conductor['tarjeta_propiedad_foto_url'] != null)
+                                _buildMiniDocButton(context, 'Tarjeta', conductor['tarjeta_propiedad_foto_url']),
+                            ],
                           ),
+
+                          const SizedBox(height: 24),
+                          _buildHistoryButton(context),
+
                           if (conductor['documentos_vencidos'] != null && (conductor['documentos_vencidos'] as List).isNotEmpty)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 24),
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFf5576c).withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color(0xFFf5576c).withValues(alpha: 0.3),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Row(
-                                        children: [
-                                          Icon(Icons.warning_rounded, color: Color(0xFFf5576c), size: 20),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Documentos Vencidos',
-                                            style: TextStyle(
-                                              color: Color(0xFFf5576c),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      ...(conductor['documentos_vencidos'] as List).map((doc) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.circle, size: 6, color: Color(0xFFf5576c)),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              doc.toString(),
-                                              style: TextStyle(
-                                                color: Theme.of(context).colorScheme.onSurface,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          if (conductor['estado_verificacion'] == 'pendiente' || conductor['estado_verificacion'] == 'en_revision')
-                            Column(
-                              children: [
-                                const SizedBox(height: 24),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: onAprobar,
-                                        icon: const Icon(Icons.check_circle_rounded),
-                                        label: const Text('Aprobar'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF11998e),
-                                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                                          padding: const EdgeInsets.symmetric(vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: onRechazar,
-                                        icon: const Icon(Icons.cancel_rounded),
-                                        label: const Text('Rechazar'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFf5576c),
-                                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                                          padding: const EdgeInsets.symmetric(vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                            _buildExpiredWarning(context, conductor['documentos_vencidos'] as List),
+
+                          const SizedBox(height: 100), // Espacio para botones flotantes
                         ],
                       ),
                     ),
@@ -247,80 +195,177 @@ class ConductorDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSheetHandle(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      width: 40,
-      height: 4,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(2),
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildDetailSection(BuildContext context, String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+  Widget _buildInfoCard(BuildContext context, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-              width: 1,
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(children: children),
-        ),
-      ],
+        ],
+      ),
+      child: Column(
+        children: children,
+      ),
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, dynamic value) {
+  Widget _buildInfoRow(BuildContext context, String label, dynamic value, IconData icon, {bool isBold = false}) {
     final valueStr = value?.toString() ?? 'N/A';
-    final isEmpty = value == null || valueStr == 'N/A' || valueStr.isEmpty;
     
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+          ),
+          const Spacer(),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Text(
               valueStr,
               style: TextStyle(
-                color: isEmpty ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3) : Theme.of(context).colorScheme.onSurface,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
               ),
               textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocButton(BuildContext context, String label, String? url, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => onViewDocument(url, label),
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniDocButton(BuildContext context, String label, String? url) {
+    return ActionChip(
+      avatar: Icon(Icons.description_outlined, size: 16, color: AppColors.primary),
+      label: Text(label),
+      onPressed: () => onViewDocument(url, 'Documento $label'),
+      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+      side: BorderSide.none,
+      labelStyle: const TextStyle(
+        color: AppColors.primary,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    );
+  }
+
+  Widget _buildHistoryButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: () => onShowHistory(conductor['usuario_id']),
+        icon: const Icon(Icons.history, size: 20),
+        label: const Text('Ver Historial de Cambios'),
+        style: TextButton.styleFrom(
+          foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: Theme.of(context).dividerColor.withValues(alpha: 0.05),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpiredWarning(BuildContext context, List docs) {
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+              const SizedBox(width: 8),
+              Text(
+                'Documentos Vencidos',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...docs.map((d) => Padding(
+            padding: const EdgeInsets.only(left: 32, bottom: 4),
+            child: Text(
+              '• $d',
+              style: TextStyle(
+                color: AppColors.error.withValues(alpha: 0.8),
+                fontSize: 13,
+              ),
+            ),
+          )),
         ],
       ),
     );
@@ -334,89 +379,5 @@ class ConductorDetailsSheet extends StatelessWidget {
     } catch (e) {
       return date.toString();
     }
-  }
-
-  Widget _buildDocumentButton(BuildContext context, {
-    required String label,
-    required String? documentUrl,
-    required IconData icon,
-  }) {
-    final bool hasDocument = documentUrl != null && documentUrl.isNotEmpty;
-    
-    return GestureDetector(
-      onTap: hasDocument 
-          ? () => _viewDocument(documentUrl, label)
-          : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: hasDocument 
-              ? const Color(0xFF667eea).withValues(alpha: 0.15)
-              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasDocument 
-                ? const Color(0xFF667eea).withValues(alpha: 0.3)
-                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: hasDocument 
-                    ? const Color(0xFF667eea).withValues(alpha: 0.2)
-                    : Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: hasDocument ? const Color(0xFF667eea) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: hasDocument ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    hasDocument ? 'Toca para ver' : 'No disponible',
-                    style: TextStyle(
-                      color: hasDocument 
-                          ? const Color(0xFF667eea) 
-                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (hasDocument)
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Color(0xFF667eea),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _viewDocument(String? documentUrl, String documentName) {
-    onViewDocument(documentUrl, documentName);
   }
 }

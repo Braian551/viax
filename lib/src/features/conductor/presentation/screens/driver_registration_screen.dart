@@ -205,10 +205,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                await Future.delayed(const Duration(seconds: 2));
                if (mounted) Navigator.pop(context);
              }
-        } else {
-             // Handle blocked or mismatch
+             // Handle blocked or mismatch or other errors
              final status = bioResult['biometric_status'] ?? 'unknown';
-             String errorMsg = 'Error en verificación biométrica.';
+             String errorMsg = bioResult['message'] ?? 'Error en verificación biométrica.';
+             
              if (status == 'blocked') errorMsg = 'Cuenta bloqueada por seguridad.';
              if (status == 'mismatch') errorMsg = 'El rostro no coincide con documentos.';
              
@@ -317,9 +317,13 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _nextStep,
+                      onPressed: (_isLoading || (_currentStep == 3 && _selfiePhoto == null)) 
+                          ? null 
+                          : _nextStep,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        disabledForegroundColor: Colors.grey.shade600,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -604,7 +608,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         Center(
           child: GestureDetector(
             onTap: () {
-              if (_selfiePhoto != null) return;
+              // Simply reopen camera to retake
               setState(() => _isBiometricActive = true);
             },
             child: Column(

@@ -1,0 +1,419 @@
+import 'package:flutter/material.dart';
+import 'package:viax/src/theme/app_colors.dart';
+
+/// Card que muestra información resumida de un conductor pendiente de verificación
+class ConductorCard extends StatelessWidget {
+  final Map<String, dynamic> conductor;
+  final VoidCallback? onTap;
+  final VoidCallback? onAprobar;
+  final VoidCallback? onRechazar;
+
+  const ConductorCard({
+    super.key,
+    required this.conductor,
+    this.onTap,
+    this.onAprobar,
+    this.onRechazar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final estadoVerificacion = conductor['estado_verificacion'] ?? 'pendiente';
+    final statusColor = _getStatusColor(estadoVerificacion);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: isDark 
+              ? AppColors.darkSurface.withValues(alpha: 0.8)
+              : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: statusColor.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context, statusColor),
+                  const SizedBox(height: 12),
+                  _buildInfo(context),
+                  const SizedBox(height: 12),
+                  _buildDocumentProgress(context, statusColor),
+                  if (_hasExpiredDocuments()) ...[
+                    const SizedBox(height: 8),
+                    _buildExpiredWarning(context),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildActions(context),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, Color statusColor) {
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.person_outline_rounded,
+            color: statusColor,
+            size: 28,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                conductor['nombre_completo'] ?? 'Sin nombre',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                conductor['email'] ?? 'Sin email',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        _buildStatusBadge(context, statusColor),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, Color color) {
+    final estado = conductor['estado_verificacion'] ?? 'pendiente';
+    final label = _getStatusLabel(estado);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfo(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildInfoItem(
+            context,
+            Icons.badge_outlined,
+            'Licencia',
+            conductor['licencia_conduccion'] ?? 'N/A',
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildInfoItem(
+            context,
+            Icons.directions_car_outlined,
+            'Placa',
+            conductor['vehiculo_placa'] ?? 'N/A',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoItem(BuildContext context, IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                  fontSize: 10,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentProgress(BuildContext context, Color statusColor) {
+    final completed = conductor['documentos_completos'] ?? 0;
+    final total = conductor['total_documentos_requeridos'] ?? 7;
+    final percentage = total > 0 ? completed / total : 0.0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Documentos: $completed/$total',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              '${(percentage * 100).toInt()}%',
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percentage,
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            valueColor: AlwaysStoppedAnimation(statusColor),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpiredWarning(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            'Documentos vencidos',
+            style: TextStyle(
+              color: AppColors.error,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    final estado = conductor['estado_verificacion'] ?? 'pendiente';
+    
+    if (estado == 'aprobado') {
+      return _buildApprovedActions(context);
+    }
+    
+    return Row(
+      children: [
+        if (onAprobar != null)
+          Expanded(
+            child: _buildActionButton(
+              context,
+              icon: Icons.check_circle_outline,
+              label: 'Aprobar',
+              color: AppColors.success,
+              onTap: onAprobar!,
+            ),
+          ),
+        if (onAprobar != null && onRechazar != null)
+          const SizedBox(width: 8),
+        if (onRechazar != null)
+          Expanded(
+            child: _buildActionButton(
+              context,
+              icon: Icons.cancel_outlined,
+              label: 'Rechazar',
+              color: AppColors.error,
+              onTap: onRechazar!,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildApprovedActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.verified_rounded, color: AppColors.success, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            'Conductor verificado',
+            style: TextStyle(
+              color: AppColors.success,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _hasExpiredDocuments() {
+    return conductor['tiene_documentos_vencidos'] == true;
+  }
+
+  Color _getStatusColor(String estado) {
+    switch (estado) {
+      case 'aprobado':
+        return AppColors.success;
+      case 'rechazado':
+        return AppColors.error;
+      case 'en_revision':
+        return AppColors.primary;
+      case 'pendiente':
+      default:
+        return AppColors.warning;
+    }
+  }
+
+  String _getStatusLabel(String estado) {
+    switch (estado) {
+      case 'aprobado':
+        return 'Aprobado';
+      case 'rechazado':
+        return 'Rechazado';
+      case 'en_revision':
+        return 'En Revisión';
+      case 'pendiente':
+      default:
+        return 'Pendiente';
+    }
+  }
+}

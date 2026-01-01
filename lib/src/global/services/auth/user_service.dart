@@ -678,6 +678,8 @@ class UserService {
     required String selfiePath,
   }) async {
     try {
+      print('verifyBiometrics: Starting request for userId=$userId, selfiePath=$selfiePath');
+      
       final uri = Uri.parse('${AppConfig.conductorServiceUrl}/verify_biometrics.php');
       final request = http.MultipartRequest('POST', uri);
       
@@ -688,16 +690,50 @@ class UserService {
         selfiePath,
       ));
 
-      final streamedResponse = await request.send();
+      print('verifyBiometrics: Sending request to $uri...');
+
+      // Add timeout to prevent indefinite hanging
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          print('verifyBiometrics: REQUEST TIMED OUT after 30 seconds');
+          throw Exception('Request timed out after 30 seconds');
+        },
+      );
+      
+      print('verifyBiometrics: Got streamed response, status=${streamedResponse.statusCode}');
+      
       final response = await http.Response.fromStream(streamedResponse);
+
+      print('verifyBiometrics: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-         return {'success': false, 'message': 'HTTP Error: ${response.statusCode}'};
+         return {'success': false, 'message': 'HTTP Error: ${response.statusCode}', 'body': response.body};
       }
     } catch (e) {
+      print('verifyBiometrics: Exception caught: $e');
       return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+  
+  /// Get driver profile/registration status for a user
+  static Future<Map<String, dynamic>?> getDriverProfile({required int userId}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.conductorServiceUrl}/get_profile.php?conductor_id=$userId'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+      return null;
+    } catch (e) {
+      print('getDriverProfile error: $e');
+      return null;
     }
   }
 }

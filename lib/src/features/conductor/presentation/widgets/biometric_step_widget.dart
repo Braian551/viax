@@ -233,12 +233,24 @@ class _BiometricStepWidgetState extends State<BiometricStepWidget> with WidgetsB
     });
 
     try {
-      await _controller!.stopImageStream();
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Do not stop stream before capture to avoid surface race conditions
+      // await _controller!.stopImageStream();
+      // await Future.delayed(const Duration(milliseconds: 200));
+      
       final XFile image = await _controller!.takePicture();
+      await _controller!.stopImageStream(); // Stop AFTER capture
+      
       widget.onVerificationComplete(File(image.path));
     } catch (e) {
       print("Error capturing image: $e");
+      // If capture fails, revert state so user can try again
+      setState(() {
+         _currentStep = LivenessStep.centerFace;
+         _instructionText = "Error al capturar. Intenta de nuevo.";
+         _instructionIcon = Icons.error_outline;
+         _progress = 0.0;
+         _consecutiveSuccessFrames = 0;
+      });
     }
   }
 

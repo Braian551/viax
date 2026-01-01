@@ -92,7 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // 4. Call Python Script
-    $python_script = "../python_services/verify_face.py";
+    // Use FULL PATH to Python since Apache doesn't inherit user's PATH
+    $python_exe = "C:\\laragon\\bin\\python\\python-3.10\\python.exe";
+    $python_script = realpath("../python_services/verify_face.py");
     $blocked_json = json_encode($blocked_paths);
     
     // Validate paths verify they exist
@@ -100,10 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          echo json_encode(["success" => false, "message" => "ID document file missing on server."]);
          exit;
     }
+    
+    if (!file_exists($python_exe)) {
+         echo json_encode(["success" => false, "message" => "Python not found at: $python_exe"]);
+         exit;
+    }
 
-    // Escape arguments
-    // On Windows, python is usually 'python', not 'python3'
-    $cmd = "python " . escapeshellarg($python_script) . " " . escapeshellarg($selfie_path) . " " . escapeshellarg($id_doc_full_path) . " " . escapeshellarg($blocked_json);
+    // Escape arguments  
+    $cmd = escapeshellarg($python_exe) . " " . escapeshellarg($python_script) . " " . escapeshellarg($selfie_path) . " " . escapeshellarg($id_doc_full_path) . " " . escapeshellarg($blocked_json) . " 2>&1";
     
     $output = shell_exec($cmd);
     $result = json_decode($output, true);
@@ -111,23 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result && isset($result['status'])) {
         $status = $result['status'];
         
-        // Update DB
+        // Update DB - use usuario_id column (not conductor_id)
         $db_status = ($status == 'verified') ? 'verificado' : (($status == 'blocked') ? 'bloqueado' : 'fallido');
         
-        $update = "UPDATE detalles_conductor SET estado_biometrico = :status WHERE id = (SELECT id FROM detalles_conductor WHERE conductor_id = :cid)";
-        // Note: detalles_conductor might imply conductor_id is the primary key or unique foreign key.
-        // Assuming conductor_id in POST is valid user ID. 
-        // Need to be careful with schema. user_id vs conductor_id.
-        // Let's assume conductor_id passed here IS the id in conductores table.
-        
-        // Simpler update if relation is 1:1
-        $update = "UPDATE detalles_conductor SET estado_biometrico = :status WHERE id = :cid"; 
-        // Wait, detalles_conductor usually has 'conductor_id' FK context.
-        $update = "UPDATE detalles_conductor SET estado_biometrico = :status WHERE conductor_id = :cid";
+        $update = "UPDATE detalles_conductor SET estado_biometrico = :status WHERE usuario_id = :uid";
 
         $stmtUp = $db->prepare($update);
         $stmtUp->bindParam(":status", $db_status);
-        $stmtUp->bindParam(":cid", $conductor_id);
+        $stmtUp->bindParam(":uid", $conductor_id);
         $stmtUp->execute();
 
         echo json_encode([
@@ -136,7 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "biometric_status" => $status
         ]);
     } else {
-        echo json_encode(["success" => false, "message" => "Biometric service failed", "raw_output" => $output]);
+        // If JSON decode fails, return raw output for debugging
+        $clean_output = trim(preg_replace('/\s\s+/', ' ', $output ?? 'No output'));
+        echo json_encode(["success" => false, "message" => "Biometric service failed", "raw_output" => $clean_output]);
     }
 
 } else {

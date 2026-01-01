@@ -66,8 +66,8 @@ try {
                 dc.aprobado,
                 dc.estado_aprobacion
               FROM usuarios u
-              LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
-              WHERE u.id = :conductor_id AND u.tipo_usuario = 'conductor'";
+              INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
+              WHERE u.id = :conductor_id";
     
     $stmt = $db->prepare($query);
     $stmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
@@ -76,7 +76,12 @@ try {
     $conductor = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$conductor) {
-        throw new Exception('Conductor no encontrado');
+        // No driver registration found for this user
+        echo json_encode([
+            'success' => false,
+            'message' => 'No se encontró registro de conductor para este usuario'
+        ]);
+        exit();
     }
 
     // Build profile response

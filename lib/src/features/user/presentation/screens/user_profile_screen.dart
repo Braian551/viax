@@ -19,6 +19,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   bool _isLoading = true;
   bool _isLoggingOut = false;
   
+  // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
+  String? _driverStatus;
+  
   // Animaciones
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -51,6 +54,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     try {
       final sess = await UserService.getSavedSession();
       if (sess != null) {
+        // Check if user has pending driver registration
+        final userId = sess['id'];
+        if (userId != null) {
+          final driverProfile = await UserService.getDriverProfile(userId: userId);
+          print('DEBUG: driverProfile response = $driverProfile');
+          if (driverProfile != null && driverProfile['success'] == true) {
+            // The status is inside 'profile' object
+            final profile = driverProfile['profile'];
+            if (profile != null) {
+              // Check estado_aprobacion: 'pendiente', 'aprobado', 'rechazado'
+              _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
+              print('DEBUG: _driverStatus = $_driverStatus');
+            }
+          }
+        }
+        
         if (mounted) {
           setState(() {
             _userName = sess['nombre'] ?? 'Usuario';
@@ -333,21 +352,30 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   }
 
   Widget _buildBecomeDriverCard(bool isDark) {
+    // Check if user has pending/approved driver registration
+    final bool hasPendingRequest = _driverStatus == 'pendiente';
+    final bool isApproved = _driverStatus == 'aprobado' || _driverStatus == 'activo';
+    
+    // If approved, show switch to driver mode
+    if (isApproved) {
+      return _buildSwitchToDriverCard(isDark);
+    }
+    
+    // Pending or new registration
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withValues(alpha: 0.8),
-          ],
+          colors: hasPendingRequest 
+            ? [Colors.orange, Colors.orange.shade700]
+            : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: (hasPendingRequest ? Colors.orange : AppColors.primary).withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -356,7 +384,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
+          onTap: hasPendingRequest ? null : () {
             Navigator.pushNamed(context, RouteNames.driverRegistration);
           },
           borderRadius: BorderRadius.circular(24),
@@ -371,34 +399,115 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.directions_car_filled_rounded,
+                  child: Icon(
+                    hasPendingRequest ? Icons.hourglass_top_rounded : Icons.directions_car_filled_rounded,
                     color: Colors.white,
                     size: 28,
                   ),
                 ),
                 const SizedBox(width: 16),
                 // Texto
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Genera Ingresos Extra',
-                        style: TextStyle(
+                        hasPendingRequest ? 'Solicitud en Proceso' : 'Genera Ingresos Extra',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Conviértete en conductor de Viax y maneja tu propio tiempo.',
+                        hasPendingRequest 
+                          ? 'Tu solicitud está siendo revisada. Te notificaremos cuando sea aprobada.'
+                          : 'Conviértete en conductor de Viax y maneja tu propio tiempo.',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 13,
                           height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!hasPendingRequest)
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSwitchToDriverCard(bool isDark) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.green, Colors.green.shade700],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushNamed(context, RouteNames.conductorHome);
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.swap_horiz_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Modo Conductor',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Cambiar a tu cuenta de conductor',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
                         ),
                       ),
                     ],

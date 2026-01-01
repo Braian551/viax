@@ -1,5 +1,5 @@
 <?php
-// Suprimir warnings y notices
+// Suprimir warnings y notices en producción
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 
@@ -15,24 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../config/database.php';
 
-// Activar temporalmente el reporte de errores para debugging
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('log_errors', '1');
-
-// Crear conexión mysqli
-$conn = new mysqli('localhost', 'root', 'root', 'viax');
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error de conexión a la base de datos: ' . $conn->connect_error
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-$conn->set_charset("utf8");
-
 try {
+    // Usar PDO como el resto del backend
+    $database = new Database();
+    $db = $database->getConnection();
+
     // Validar método
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         throw new Exception('Método no permitido');
@@ -51,12 +38,11 @@ try {
     }
 
     // Verificar que es admin
-    $stmt = $conn->prepare("SELECT tipo_usuario FROM usuarios WHERE id = ? AND tipo_usuario = 'administrador'");
-    $stmt->bind_param("i", $admin_id);
+    $stmt = $db->prepare("SELECT tipo_usuario FROM usuarios WHERE id = :id AND tipo_usuario = 'administrador'");
+    $stmt->bindParam(':id', $admin_id, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($result->num_rows === 0) {
+    if ($stmt->rowCount() === 0) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
@@ -68,18 +54,15 @@ try {
     // Construir query
     $where_clauses = ["u.tipo_usuario = 'conductor'"];
     $params = [];
-    $types = "";
 
     if ($conductor_id !== null) {
-        $where_clauses[] = "dc.usuario_id = ?";
-        $params[] = $conductor_id;
-        $types .= "i";
+        $where_clauses[] = "dc.usuario_id = :conductor_id";
+        $params[':conductor_id'] = $conductor_id;
     }
 
     if ($estado_verificacion !== null && in_array($estado_verificacion, ['pendiente', 'en_revision', 'aprobado', 'rechazado'])) {
-        $where_clauses[] = "dc.estado_verificacion = ?";
-        $params[] = $estado_verificacion;
-        $types .= "s";
+        $where_clauses[] = "dc.estado_verificacion = :estado";
+        $params[':estado'] = $estado_verificacion;
     }
 
     $where_sql = implode(' AND ', $where_clauses);
@@ -91,12 +74,12 @@ try {
                   INNER JOIN usuarios u ON dc.usuario_id = u.id
                   WHERE $where_sql";
 
-    $stmt = $conn->prepare($count_sql);
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
+    $stmt = $db->prepare($count_sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
     }
     $stmt->execute();
-    $total_result = $stmt->get_result()->fetch_assoc();
+    $total_result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total_conductores = $total_result['total'];
 
     // Query principal
@@ -114,18 +97,18 @@ try {
             INNER JOIN usuarios u ON dc.usuario_id = u.id
             WHERE $where_sql
             ORDER BY dc.fecha_ultima_verificacion DESC, dc.creado_en DESC
-            LIMIT ? OFFSET ?";
+            LIMIT :limit OFFSET :offset";
 
-    $stmt = $conn->prepare($sql);
-    $params[] = $per_page;
-    $params[] = $offset;
-    $types .= "ii";
-    $stmt->bind_param($types, ...$params);
+    $stmt = $db->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    $stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-
+    
     $conductores = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         // Calcular documentos pendientes y verificados
         $documentos_requeridos = [
             'licencia_conduccion' => 'Número de licencia',
