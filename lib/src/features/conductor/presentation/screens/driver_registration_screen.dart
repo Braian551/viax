@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
@@ -446,6 +447,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             icon: Icons.card_membership_rounded,
             keyboardType: TextInputType.number,
             validator: (value) => value == null || value.isEmpty ? 'El número de licencia es requerido' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 24),
         
@@ -497,6 +499,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             label: 'Número del SOAT',
             icon: Icons.health_and_safety_rounded,
             validator: (value) => value == null || value.isEmpty ? 'El número de SOAT es requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
+            ],
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
@@ -513,6 +518,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             label: 'N° Revisión Tecnomecánica',
             icon: Icons.build_circle_rounded,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
+            ],
           ),
           const SizedBox(height: 12),
           ImageUploadCard(
@@ -529,6 +537,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
             label: 'N° Tarjeta de Propiedad',
             icon: Icons.folder_shared_rounded,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric
+            ],
           ),
           const SizedBox(height: 12),
           ImageUploadCard(

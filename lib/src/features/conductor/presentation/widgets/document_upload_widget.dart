@@ -669,49 +669,56 @@ class _VisualGuidesDialog extends StatelessWidget {
                  )
                ]
              ),
-             child: Column(
-               mainAxisSize: MainAxisSize.min,
-               children: [
-                 Container(
-                   padding: const EdgeInsets.all(16),
-                   decoration: BoxDecoration(
-                     color: AppColors.primary.withValues(alpha: 0.1),
-                     shape: BoxShape.circle,
-                   ),
-                   child: Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 40),
-                 ),
-                 const SizedBox(height: 20),
-                 Text(
-                   'Instrucciones para la foto',
-                   style: TextStyle(
-                     color: isDark ? Colors.white : Colors.black87,
-                     fontSize: 20,
-                     fontWeight: FontWeight.bold,
-                   ),
-                   textAlign: TextAlign.center,
-                 ),
-                 const SizedBox(height: 24),
-                 _buildGuideItem(context, Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas', isDark),
-                 const SizedBox(height: 16),
-                 _buildGuideItem(context, Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto', isDark),
-                 const SizedBox(height: 16),
-                 _buildGuideItem(context, Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo', isDark),
-                 const SizedBox(height: 32),
-                 SizedBox(
-                   width: double.infinity,
-                   child: ElevatedButton(
-                     onPressed: () => Navigator.pop(context, true),
-                     style: ElevatedButton.styleFrom(
-                       backgroundColor: AppColors.primary,
-                       foregroundColor: Colors.white,
-                       padding: const EdgeInsets.symmetric(vertical: 16),
-                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                       elevation: 0,
+             child: ConstrainedBox(
+               constraints: BoxConstraints(
+                 maxHeight: MediaQuery.of(context).size.height * 0.8,
+               ),
+               child: SingleChildScrollView(
+                 child: Column(
+                   mainAxisSize: MainAxisSize.min,
+                   children: [
+                     Container(
+                       padding: const EdgeInsets.all(16),
+                       decoration: BoxDecoration(
+                         color: AppColors.primary.withValues(alpha: 0.1),
+                         shape: BoxShape.circle,
+                       ),
+                       child: Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 40),
                      ),
-                     child: const Text('Entendido, abrir cámara', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                   ),
+                     const SizedBox(height: 20),
+                     Text(
+                       'Instrucciones para la foto',
+                       style: TextStyle(
+                         color: isDark ? Colors.white : Colors.black87,
+                         fontSize: 20,
+                         fontWeight: FontWeight.bold,
+                       ),
+                       textAlign: TextAlign.center,
+                     ),
+                     const SizedBox(height: 24),
+                     _buildGuideItem(context, Icons.crop_free_rounded, 'Documento completo', 'Asegúrate de que se vean las 4 esquinas', isDark),
+                     const SizedBox(height: 16),
+                     _buildGuideItem(context, Icons.wb_sunny_rounded, 'Buena iluminación', 'Evita sombras sobre el texto', isDark),
+                     const SizedBox(height: 16),
+                     _buildGuideItem(context, Icons.flash_off_rounded, 'Sin reflejos', 'Evita el uso del flash directo', isDark),
+                     const SizedBox(height: 32),
+                     SizedBox(
+                       width: double.infinity,
+                       child: ElevatedButton(
+                         onPressed: () => Navigator.pop(context, true),
+                         style: ElevatedButton.styleFrom(
+                           backgroundColor: AppColors.primary,
+                           foregroundColor: Colors.white,
+                           padding: const EdgeInsets.symmetric(vertical: 16),
+                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                           elevation: 0,
+                         ),
+                         child: const Text('Entendido, abrir cámara', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                       ),
+                     ),
+                   ],
                  ),
-               ],
+               ),
              ),
           ),
         ),

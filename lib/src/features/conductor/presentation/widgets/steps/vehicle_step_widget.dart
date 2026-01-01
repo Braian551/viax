@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
@@ -262,14 +263,22 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
             controller: widget.brandController,
             label: 'Marca',
             icon: Icons.branding_watermark_rounded,
+            textCapitalization: TextCapitalization.characters,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Alphanumeric + Space
+            ],
           ),
           const SizedBox(height: 16),
           AuthTextField(
             controller: widget.modelController,
             label: 'Modelo (Ref)',
             icon: Icons.model_training_rounded,
-             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            textCapitalization: TextCapitalization.characters,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Alphanumeric + Space
+            ],
           ),
           const SizedBox(height: 16),
           AuthTextField(
@@ -278,6 +287,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
             icon: Icons.calendar_today_rounded,
             keyboardType: TextInputType.number,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 16),
           _isLoadingColors 
@@ -290,6 +300,9 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
             icon: Icons.tag_rounded,
             textCapitalization: TextCapitalization.characters,
             validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric no space
+            ],
           ),
         ],
       ),

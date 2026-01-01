@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
@@ -15,6 +16,7 @@ class AuthTextField extends StatelessWidget {
   final bool enabled;
   final bool readOnly;
   final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AuthTextField({
     super.key,
@@ -29,6 +31,7 @@ class AuthTextField extends StatelessWidget {
     this.enabled = true,
     this.readOnly = false,
     this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
   });
 
   @override
@@ -64,6 +67,7 @@ class AuthTextField extends StatelessWidget {
       ),
       child: TextFormField(
         controller: controller,
+        inputFormatters: inputFormatters,
         textCapitalization: textCapitalization,
         keyboardType: keyboardType,
         obscureText: obscureText,
