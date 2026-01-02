@@ -159,7 +159,9 @@ class ConductorDetailsSheet extends StatelessWidget {
                           _buildSectionTitle(context, 'Documentación Legal'),
                           _buildInfoCard(context, [
                             _buildInfoRow(context, 'SOAT', _formatDate(conductor['soat_vencimiento']), Icons.security_outlined),
+                            _buildInfoRow(context, 'Número SOAT', conductor['soat_numero'], Icons.tag),
                             _buildInfoRow(context, 'Tecnomecánica', _formatDate(conductor['tecnomecanica_vencimiento']), Icons.build_outlined),
+                            _buildInfoRow(context, 'Número Tecno', conductor['tecnomecanica_numero'], Icons.tag),
                             // _buildInfoRow(context, 'Seguro', _formatDate(conductor['vencimiento_seguro']), Icons.shield_outlined), // REMOVED
                             _buildInfoRow(context, 'Tarjeta Propiedad', conductor['tarjeta_propiedad_numero'], Icons.credit_card_outlined),
                           ]),
