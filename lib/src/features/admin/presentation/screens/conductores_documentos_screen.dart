@@ -9,7 +9,10 @@ import 'conductor_details_sheet.dart';
 import 'document_viewer_screen.dart';
 import 'conductor_actions.dart';
 
+import 'package:viax/src/features/admin/presentation/widgets/documents_loading_shimmer.dart'; // Import this
+
 class ConductoresDocumentosScreen extends StatefulWidget {
+  // ... (lines 13-24 unchanged)
   final int adminId;
   final Map<String, dynamic> adminUser;
 
@@ -24,6 +27,7 @@ class ConductoresDocumentosScreen extends StatefulWidget {
 }
 
 class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScreen> {
+  // ... (variable declarations unchanged)
   bool _isLoading = true;
   List<Map<String, dynamic>> _conductores = [];
   Map<String, dynamic>? _estadisticas;
@@ -44,6 +48,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
   }
 
   Future<void> _loadDocumentos() async {
+     // ... (unchanged)
     setState(() => _isLoading = true);
 
     try {
@@ -96,12 +101,16 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.top + 70)),
-              if (_estadisticas != null)
-                SliverToBoxAdapter(child: _buildEstadisticas()),
-              SliverToBoxAdapter(child: _buildFilterSection()),
-              _buildContent(),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 30)),
+              if (_isLoading && _conductores.isEmpty)
+                 const SliverToBoxAdapter(child: DocumentsLoadingShimmer())
+              else ...[
+                SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.top + 70)),
+                if (_estadisticas != null)
+                  SliverToBoxAdapter(child: _buildEstadisticas()),
+                SliverToBoxAdapter(child: _buildFilterSection()),
+                _buildContent(),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 30)),
+              ],
             ],
           ),
         ),
@@ -342,11 +351,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
   }
 
   Widget _buildContent() {
-    if (_isLoading && _conductores.isEmpty) {
-      return SliverToBoxAdapter(
-        child: _buildLoadingState(),
-      );
-    }
+
 
     if (_conductores.isEmpty) {
       return SliverToBoxAdapter(
@@ -383,25 +388,7 @@ class _ConductoresDocumentosScreenState extends State<ConductoresDocumentosScree
     );
   }
 
-  Widget _buildLoadingState() {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Center(
-        child: Column(
-          children: [
-            const CircularProgressIndicator(color: AppColors.primary),
-            const SizedBox(height: 16),
-            Text(
-              'Cargando conductores...',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildEmptyState() {
     return Padding(
