@@ -58,6 +58,7 @@ try {
                 dc.tecnomecanica_foto_url,
                 dc.tarjeta_propiedad_numero,
                 dc.tarjeta_propiedad_foto_url,
+                dc.foto_vehiculo,
                 dc.calificacion_promedio,
                 dc.total_viajes,
                 dc.disponible,
@@ -147,7 +148,7 @@ try {
             'tecnomecanica_foto_url' => $conductor['tecnomecanica_foto_url'],
             'tarjeta_propiedad_numero' => $conductor['tarjeta_propiedad_numero'],
             'tarjeta_propiedad_foto_url' => $conductor['tarjeta_propiedad_foto_url'],
-            'foto_vehiculo' => null // Not yet implemented
+            'foto_vehiculo' => $conductor['foto_vehiculo']
         ];
     }
 

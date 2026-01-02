@@ -228,6 +228,8 @@ try {
             'vehiculo_anio' => $row['vehiculo_anio'],
             'vehiculo_color' => $row['vehiculo_color'],
             'vehiculo_placa' => $row['vehiculo_placa'],
+            'vehiculo_foto_url' => $row['foto_vehiculo'],
+            'vehiculo_tipo_archivo' => 'imagen', // Default for uploaded photos
             
             // Seguros y documentos
             'aseguradora' => $row['aseguradora'],

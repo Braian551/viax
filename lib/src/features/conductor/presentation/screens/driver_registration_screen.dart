@@ -201,10 +201,16 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
 
       if (result['success'] == true) {
         // Upload Vehicle Photo if exists
+        print('Registration Debug: Vehicle registration success. Checking photo...');
         if (_vehiclePhoto != null) {
-          await UserService.uploadVehiclePhoto(conductorId: uid, filePath: _vehiclePhoto!.path);
+          print('Registration Debug: Uploading vehicle photo from ${_vehiclePhoto!.path}');
+          final uploadResult = await UserService.uploadVehiclePhoto(conductorId: uid, filePath: _vehiclePhoto!.path);
+          print('Registration Debug: Upload result: $uploadResult');
+        } else {
+          print('Registration Debug: Vehicle photo is null!');
         }
       } else {
+         print('Registration Debug: Vehicle registration failed: ${result['message']}');
          CustomSnackbar.showError(context, message: 'Error datos basico: ${result['message']}');
          setState(() => _isLoading = false);
          return;

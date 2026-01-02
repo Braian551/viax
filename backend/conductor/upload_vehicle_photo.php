@@ -28,13 +28,13 @@ try {
 
     $conductor_id = intval($_POST['conductor_id']);
     
-    // Validate conductor exists
-    $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = :id AND tipo_usuario = 'conductor'");
+    // Validate user exists (don't check tipo_usuario because they are still 'cliente' during registration)
+    $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = :id");
     $stmt->bindParam(':id', $conductor_id);
     $stmt->execute();
     
     if ($stmt->rowCount() === 0) {
-        throw new Exception('Conductor no encontrado');
+        throw new Exception('Usuario no encontrado');
     }
 
     // Handle File Upload using R2

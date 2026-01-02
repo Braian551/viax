@@ -150,6 +150,10 @@ class ConductorDetailsSheet extends StatelessWidget {
                             _buildInfoRow(context, 'Color', conductor['vehiculo_color'], Icons.color_lens_outlined),
                             _buildInfoRow(context, 'Tipo', conductor['vehiculo_tipo'], Icons.local_taxi_outlined),
                           ]),
+                          if (conductor['vehiculo_foto_url'] != null)
+                             _buildDocButton(context, 'Ver Foto Vehículo', conductor['vehiculo_foto_url'], Icons.directions_car_rounded, conductor['vehiculo_tipo_archivo'])
+                          else
+                             _buildDocButton(context, 'Sin Foto Vehículo', null, Icons.directions_car_rounded, null),
                           
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Documentación Legal'),
@@ -285,8 +289,8 @@ class ConductorDetailsSheet extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12),
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: () => onViewDocument(url, label, tipoArchivo: tipoArchivo),
-        icon: Icon(isPdf ? Icons.picture_as_pdf_rounded : icon, size: 18, color: isPdf ? Colors.red : AppColors.primary),
+        onPressed: url != null ? () => onViewDocument(url, label, tipoArchivo: tipoArchivo) : null,
+        icon: Icon(isPdf ? Icons.picture_as_pdf_rounded : icon, size: 18, color: url != null ? (isPdf ? Colors.red : AppColors.primary) : Colors.grey),
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
