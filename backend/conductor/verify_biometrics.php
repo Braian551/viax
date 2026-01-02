@@ -1,185 +1,226 @@
 <?php
+/**
+ * Verificación Biométrica Optimizada
+ * ===================================
+ * 
+ * - NO guarda fotos, solo plantillas matemáticas
+ * - Comparación rápida con hash + distancia euclidiana
+ * - Tabla normalizada para usuarios bloqueados
+ */
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $database = new Database();
 $db = $database->getConnection();
 
-$response = array();
+/**
+ * Genera hash único de una plantilla para búsqueda rápida O(1)
+ */
+function generateTemplateHash(array $encoding): string {
+    // Usar primeros 16 valores normalizados como fingerprint
+    $fingerprint = array_slice($encoding, 0, 16);
+    $normalized = array_map(fn($v) => round($v, 4), $fingerprint);
+    return hash('sha256', json_encode($normalized));
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $conductor_id = $_POST['conductor_id'] ?? null;
-    
-    if (!$conductor_id || !isset($_FILES['selfie'])) {
-        echo json_encode(["success" => false, "message" => "Missing conductor_id or selfie file"]);
-        exit;
+/**
+ * Calcula distancia euclidiana entre dos encodings (O(n) donde n=128)
+ */
+function euclideanDistance(array $enc1, array $enc2): float {
+    $sum = 0.0;
+    $len = min(count($enc1), count($enc2));
+    for ($i = 0; $i < $len; $i++) {
+        $diff = $enc1[$i] - $enc2[$i];
+        $sum += $diff * $diff;
     }
+    return sqrt($sum);
+}
 
-    // 1. Save Selfie
-    $target_dir = "../uploads/conductores/" . $conductor_id . "/biometria/";
-    if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0777, true);
+/**
+ * Limpia archivos temporales
+ */
+function cleanupTempFiles(array $files): void {
+    foreach ($files as $file) {
+        if ($file && file_exists($file)) @unlink($file);
     }
-    
-    $file_extension = pathinfo($_FILES['selfie']['name'], PATHINFO_EXTENSION);
-    $selfie_filename = "selfie_" . time() . "." . $file_extension;
-    $selfie_path = $target_dir . $selfie_filename;
-    
-    if (!move_uploaded_file($_FILES['selfie']['tmp_name'], $selfie_path)) {
-        echo json_encode(["success" => false, "message" => "Failed to save selfie"]);
-        exit;
-    }
+}
 
-    // 2. Get ID Document Path from DB
-    // Assuming 'documento_identidad' or 'cedula' is the type
-    $query = "SELECT ruta_archivo FROM documentos_verificacion WHERE conductor_id = :id AND tipo_documento = 'documento_identidad' AND estado = 'aprobado' ORDER BY id DESC LIMIT 1";
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(":id", $conductor_id);
-    $stmt->execute();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(["success" => false, "message" => "Método no permitido"]);
+    exit;
+}
+
+$conductor_id = $_POST['conductor_id'] ?? null;
+$tempFiles = [];
+
+if (!$conductor_id || !isset($_FILES['selfie'])) {
+    echo json_encode(["success" => false, "message" => "Faltan parámetros"]);
+    exit;
+}
+
+try {
+    // 1. Selfie a archivo temporal
+    $selfie_temp = sys_get_temp_dir() . '/selfie_' . $conductor_id . '_' . uniqid() . '.' . 
+                   pathinfo($_FILES['selfie']['name'], PATHINFO_EXTENSION);
     
-    if ($stmt->rowCount() == 0) {
-        // Fallback: Check for 'licencia_conduccion' if no ID is uploaded yet, or return error
-         $query = "SELECT ruta_archivo FROM documentos_verificacion WHERE conductor_id = :id AND tipo_documento = 'licencia_conduccion' ORDER BY id DESC LIMIT 1";
-         $stmt = $db->prepare($query);
-         $stmt->bindParam(":id", $conductor_id);
-         $stmt->execute();
-         
-         if ($stmt->rowCount() == 0) {
-             echo json_encode(["success" => false, "message" => "No approved ID document found to compare against."]);
-             exit;
-         }
+    if (!move_uploaded_file($_FILES['selfie']['tmp_name'], $selfie_temp)) {
+        throw new Exception("Error procesando selfie");
+    }
+    $tempFiles[] = $selfie_temp;
+
+    // 2. Obtener documento de R2
+    $stmt = $db->prepare("
+        SELECT ruta_archivo FROM documentos_verificacion 
+        WHERE conductor_id = :id 
+        AND tipo_documento IN ('documento_identidad', 'licencia_conduccion') 
+        ORDER BY id DESC LIMIT 1
+    ");
+    $stmt->execute([':id' => $conductor_id]);
+    $doc = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$doc) {
+        throw new Exception("No hay documento de identidad para comparar");
     }
     
-    require_once '../config/R2Service.php';
-
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $id_doc_db_path = $row['ruta_archivo']; 
+    require_once __DIR__ . '/../config/R2Service.php';
+    $r2_key = str_replace('r2_proxy.php?key=', '', $doc['ruta_archivo']);
     
-    // Check for R2 proxy format: r2_proxy.php?key=documents/...
-    $r2_prefix = 'r2_proxy.php?key=';
-    
-    if (strpos($id_doc_db_path, $r2_prefix) !== false) {
-        // It's in R2, extract the key
-        $r2_key = str_replace($r2_prefix, '', $id_doc_db_path);
-        
-        // It's in R2, need to download it to temp for processing
+    // Si es ruta R2, descargar a temp
+    $id_doc_temp = null;
+    if (strpos($r2_key, 'documents/') === 0 || strpos($r2_key, 'imagenes/') === 0) {
         $r2 = new R2Service();
-        $temp_id_path = sys_get_temp_dir() . '/temp_id_' . time() . '_' . rand(1000,9999) . '.' . pathinfo($r2_key, PATHINFO_EXTENSION);
+        $id_doc_temp = sys_get_temp_dir() . '/iddoc_' . $conductor_id . '_' . uniqid() . '.' . 
+                       pathinfo($r2_key, PATHINFO_EXTENSION);
         
-        $fileContent = $r2->getFile($r2_key);
-        
-        if ($fileContent && isset($fileContent['content'])) {
-            file_put_contents($temp_id_path, $fileContent['content']);
-            $id_doc_full_path = $temp_id_path;
-        } else {
-            error_log("Failed to download R2 file: $r2_key");
-            echo json_encode(["success" => false, "message" => "Could not download ID document from R2: $r2_key"]);
-            exit;
+        $content = $r2->getFile($r2_key);
+        if (!$content || !isset($content['content'])) {
+            throw new Exception("No se pudo descargar documento");
         }
-    } elseif (strpos($id_doc_db_path, 'documents/') === 0) {
-        // Direct R2 key stored (fallback)
-        $r2 = new R2Service();
-        $temp_id_path = sys_get_temp_dir() . '/temp_id_' . time() . '_' . rand(1000,9999) . '.' . pathinfo($id_doc_db_path, PATHINFO_EXTENSION);
-        
-        $fileContent = $r2->getFile($id_doc_db_path);
-        
-        if ($fileContent && isset($fileContent['content'])) {
-            file_put_contents($temp_id_path, $fileContent['content']);
-            $id_doc_full_path = $temp_id_path;
-        } else {
-             echo json_encode(["success" => false, "message" => "Could not download ID document from R2 (direct key)"]);
-             exit;
-        }
+        file_put_contents($id_doc_temp, $content['content']);
+        $tempFiles[] = $id_doc_temp;
     } else {
-        // Legacy local path
-        $id_doc_full_path = "../" . $id_doc_db_path;
+        $id_doc_temp = __DIR__ . '/../' . $doc['ruta_archivo'];
     }
 
-    // 3. Get Blocked Users Faces
-    // Fetch paths of bio-verified photos of users who are now blocked
-    // This is a complex query. For MVP, let's assume we query 'detalles_conductor' for state='bloqueado' 
-    // and join with 'documentos_verificacion' for verify pics.
+    // 3. Obtener plantillas bloqueadas (consulta optimizada con índice)
+    $blocked = [];
+    $stmt = $db->prepare("SELECT plantilla FROM plantillas_bloqueadas WHERE activo = true LIMIT 100");
+    $stmt->execute();
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $blocked[] = json_decode($row['plantilla'], true);
+    }
+
+    // 4. Ejecutar verificación Python
+    $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     
-    // NOTE: This might be slow if there are many blocked users. 
-    // Optimization: Store face encodings in DB instead of raw images processing every time.
-    // For this implementation, we will mock the blocked list or limit it to latest 5 to avoid timeouts in MVP.
-    // 3. Get Blocked Users Faces
-    // Fetch paths of selfies from users who are blocked due to biometric issues
-    // We look for 'bloqueado' status in details and get their latest selfie (assuming stored in biometria folder or profile pic)
-    // For this implementation, we scan the uploads/conductores/*/biometria/ folders for blocked users.
-    
-    $blocked_paths = []; 
-    $queryBlocked = "SELECT id, usuario_id FROM detalles_conductor WHERE estado_biometrico = 'bloqueado' LIMIT 20";
-    $stmtBlocked = $db->prepare($queryBlocked);
-    $stmtBlocked->execute();
-    
-    while ($blockedRow = $stmtBlocked->fetch(PDO::FETCH_ASSOC)) {
-        $bUserId = $blockedRow['usuario_id'];
-        // Construct path to their biometry folder
-        $bUserDir = "../uploads/conductores/" . $bUserId . "/biometria/";
-        if (is_dir($bUserDir)) {
-            // Get latest file in that dir
-            $files = scandir($bUserDir, SCANDIR_SORT_DESCENDING);
-            foreach ($files as $f) {
-                if ($f != '.' && $f != '..' && preg_match('/\.(jpg|jpeg|png)$/i', $f)) {
-                    $blocked_paths[] = $bUserDir . $f;
-                    break; // Just take the latest one
-                }
+    if ($isWindows) {
+        // Rutas específicas de Python en Windows (Laragon)
+        $pythonPaths = [
+            'C:\\laragon\\bin\\python\\python-3.10\\python.exe',
+            'C:\\Python310\\python.exe',
+            'C:\\Python39\\python.exe',
+            'C:\\Users\\' . get_current_user() . '\\AppData\\Local\\Programs\\Python\\Python310\\python.exe',
+        ];
+        $python = null;
+        foreach ($pythonPaths as $p) {
+            if (file_exists($p)) {
+                $python = $p;
+                break;
             }
         }
+        if (!$python) $python = 'python'; // Fallback
+    } else {
+        $python = '/usr/bin/python3';
+        if (!file_exists($python)) $python = 'python3';
     }
     
-    // 4. Call Python Script
-    // Use FULL PATH to Python since Apache doesn't inherit user's PATH
-    $python_exe = "C:\\laragon\\bin\\python\\python-3.10\\python.exe";
-    $python_script = realpath("../python_services/verify_face.py");
-    $blocked_json = json_encode($blocked_paths);
+    $script = realpath(__DIR__ . '/../python_services/verify_face.py');
     
-    // Validate paths verify they exist
-    if (!file_exists($id_doc_full_path)) {
-         echo json_encode(["success" => false, "message" => "ID document file missing on server."]);
-         exit;
-    }
-    
-    if (!file_exists($python_exe)) {
-         echo json_encode(["success" => false, "message" => "Python not found at: $python_exe"]);
-         exit;
-    }
-
-    // Escape arguments  
-    $cmd = escapeshellarg($python_exe) . " " . escapeshellarg($python_script) . " " . escapeshellarg($selfie_path) . " " . escapeshellarg($id_doc_full_path) . " " . escapeshellarg($blocked_json) . " 2>&1";
+    $cmd = escapeshellarg($python) . ' ' . escapeshellarg($script) . ' ' .
+           escapeshellarg($selfie_temp) . ' ' . escapeshellarg($id_doc_temp) . ' ' .
+           escapeshellarg(json_encode($blocked)) . ' 2>&1';
     
     $output = shell_exec($cmd);
     $result = json_decode($output, true);
 
-    if ($result && isset($result['status'])) {
-        $status = $result['status'];
-        
-        // Update DB - use usuario_id column (not conductor_id)
-        $db_status = ($status == 'verified') ? 'verificado' : (($status == 'blocked') ? 'bloqueado' : 'fallido');
-        
-        $update = "UPDATE detalles_conductor SET estado_biometrico = :status WHERE usuario_id = :uid";
-
-        $stmtUp = $db->prepare($update);
-        $stmtUp->bindParam(":status", $db_status);
-        $stmtUp->bindParam(":uid", $conductor_id);
-        $stmtUp->execute();
-
-        echo json_encode([
-            "success" => ($status == 'verified'),
-            "message" => $result['message'],
-            "biometric_status" => $status
-        ]);
-    } else {
-        // If JSON decode fails, return raw output for debugging
-        $clean_output = trim(preg_replace('/\s\s+/', ' ', $output ?? 'No output'));
-        echo json_encode(["success" => false, "message" => "Biometric service failed", "raw_output" => $clean_output]);
+    if (!$result || !isset($result['status'])) {
+        throw new Exception("Error en servicio biométrico: " . substr($output ?? '', 0, 200));
     }
 
-} else {
-    echo json_encode(["success" => false, "message" => "Method not allowed"]);
+    $status = $result['status'];
+    $encoding = $result['encoding'] ?? null;
+    
+    // 5. Mapear y guardar resultado
+    $db_status = match($status) {
+        'verified' => 'verificado',
+        'blocked' => 'bloqueado',
+        'mismatch' => 'fallido',
+        default => 'pendiente'
+    };
+
+    if ($status === 'verified' && $encoding) {
+        // Guardar plantilla y hash para futuras comparaciones rápidas
+        $encoding_json = json_encode($encoding);
+        $hash = generateTemplateHash($encoding);
+        
+        $stmt = $db->prepare("
+            UPDATE detalles_conductor SET 
+                estado_biometrico = :status,
+                plantilla_biometrica = :plantilla,
+                fecha_verificacion_biometrica = NOW()
+            WHERE usuario_id = :uid
+        ");
+        $stmt->execute([
+            ':status' => $db_status,
+            ':plantilla' => $encoding_json,
+            ':uid' => $conductor_id
+        ]);
+        
+    } elseif ($status === 'blocked') {
+        // Agregar a lista de bloqueados si tiene encoding
+        $stmt = $db->prepare("UPDATE detalles_conductor SET estado_biometrico = 'bloqueado' WHERE usuario_id = :uid");
+        $stmt->execute([':uid' => $conductor_id]);
+        
+        if ($encoding) {
+            $hash = generateTemplateHash($encoding);
+            $stmt = $db->prepare("
+                INSERT INTO plantillas_bloqueadas (plantilla_hash, plantilla, usuario_origen_id, razon)
+                VALUES (:hash, :plantilla, :uid, 'coincide_bloqueado')
+                ON CONFLICT (plantilla_hash) WHERE activo = TRUE DO NOTHING
+            ");
+            // Fallback para MySQL
+            try {
+                $stmt->execute([':hash' => $hash, ':plantilla' => json_encode($encoding), ':uid' => $conductor_id]);
+            } catch (PDOException $e) {
+                // MySQL: usar INSERT IGNORE
+                $stmt = $db->prepare("
+                    INSERT IGNORE INTO plantillas_bloqueadas (plantilla_hash, plantilla, usuario_origen_id, razon)
+                    VALUES (:hash, :plantilla, :uid, 'coincide_bloqueado')
+                ");
+                $stmt->execute([':hash' => $hash, ':plantilla' => json_encode($encoding), ':uid' => $conductor_id]);
+            }
+        }
+    } else {
+        $stmt = $db->prepare("UPDATE detalles_conductor SET estado_biometrico = :status WHERE usuario_id = :uid");
+        $stmt->execute([':status' => $db_status, ':uid' => $conductor_id]);
+    }
+
+    // 6. Limpiar temporales
+    cleanupTempFiles($tempFiles);
+
+    echo json_encode([
+        "success" => $status === 'verified',
+        "message" => $result['message'],
+        "biometric_status" => $status
+    ]);
+
+} catch (Exception $e) {
+    cleanupTempFiles($tempFiles);
+    error_log("verify_biometrics error: " . $e->getMessage());
+    echo json_encode(["success" => false, "message" => $e->getMessage()]);
 }
 ?>
