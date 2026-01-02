@@ -445,8 +445,9 @@ class AdminService {
     required String motivo,
   }) async {
     try {
+      final uri = Uri.parse('$_baseUrl/rechazar_conductor.php');
       final response = await http.post(
-        Uri.parse('$_baseUrl/rechazar_conductor.php'),
+        uri,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

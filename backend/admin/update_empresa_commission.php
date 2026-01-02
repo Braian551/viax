@@ -80,7 +80,7 @@ try {
     // Registrar en log de auditoría si existe
     try {
         $logQuery = "INSERT INTO logs_auditoria 
-                    (usuario_id, accion, tabla_afectada, registro_id, descripcion, fecha_hora)
+                    (usuario_id, accion, entidad, entidad_id, descripcion, fecha_creacion)
                     VALUES (NULL, 'update_commission', 'empresas_transporte', ?, ?, NOW())";
         $logStmt = $conn->prepare($logQuery);
         $logStmt->execute([
