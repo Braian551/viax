@@ -313,18 +313,9 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
                 isDark: isDark,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildDocumentCard(
-                icon: Icons.security_rounded,
-                title: 'Seguro',
-                isValid: true,
-                isDark: isDark,
-              ),
-            ),
           ],
         ),
-        const SizedBox(height: 12),
+        // const SizedBox(height: 12), // Adjusted spacing
         Row(
           children: [
             Expanded(

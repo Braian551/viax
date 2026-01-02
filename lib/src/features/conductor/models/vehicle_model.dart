@@ -9,9 +9,9 @@ class VehicleModel {
   final String? color;
   final String placa;
   final VehicleType tipo;
-  final String? aseguradora;
-  final String? numeroPoliza;
-  final DateTime? vencimientoSeguro;
+  // final String? aseguradora; // REMOVED
+  // final String? numeroPoliza; // REMOVED 
+  // final DateTime? vencimientoSeguro; // REMOVED
   final String? soatNumero;
   final DateTime? soatVencimiento;
   final String? tecnomecanicaNumero;
@@ -29,9 +29,9 @@ class VehicleModel {
     this.color,
     required this.placa,
     required this.tipo,
-    this.aseguradora,
-    this.numeroPoliza,
-    this.vencimientoSeguro,
+    // this.aseguradora,
+    // this.numeroPoliza,
+    // this.vencimientoSeguro,
     this.soatNumero,
     this.soatVencimiento,
     this.tecnomecanicaNumero,
@@ -51,11 +51,11 @@ class VehicleModel {
       color: json['vehiculo_color']?.toString(),
       placa: json['vehiculo_placa']?.toString() ?? '',
       tipo: VehicleType.fromString(json['vehiculo_tipo']?.toString() ?? 'moto'),
-      aseguradora: json['aseguradora']?.toString(),
-      numeroPoliza: json['numero_poliza_seguro']?.toString(),
-      vencimientoSeguro: json['vencimiento_seguro'] != null
-          ? DateTime.tryParse(json['vencimiento_seguro'].toString())
-          : null,
+      // aseguradora: json['aseguradora']?.toString(),
+      // numeroPoliza: json['numero_poliza_seguro']?.toString(),
+      // vencimientoSeguro: json['vencimiento_seguro'] != null
+      //     ? DateTime.tryParse(json['vencimiento_seguro'].toString())
+      //     : null,
       soatNumero: json['soat_numero']?.toString(),
       soatVencimiento: json['soat_vencimiento'] != null
           ? DateTime.tryParse(json['soat_vencimiento'].toString())
@@ -80,9 +80,9 @@ class VehicleModel {
       'vehiculo_color': color,
       'vehiculo_placa': placa,
       'vehiculo_tipo': tipo.value,
-      'aseguradora': aseguradora,
-      'numero_poliza_seguro': numeroPoliza,
-      'vencimiento_seguro': vencimientoSeguro?.toIso8601String(),
+      // 'aseguradora': aseguradora,
+      // 'numero_poliza_seguro': numeroPoliza,
+      // 'vencimiento_seguro': vencimientoSeguro?.toIso8601String(),
       'soat_numero': soatNumero,
       'soat_vencimiento': soatVencimiento?.toIso8601String(),
       'tecnomecanica_numero': tecnomecanicaNumero,
@@ -141,9 +141,9 @@ class VehicleModel {
     String? color,
     String? placa,
     VehicleType? tipo,
-    String? aseguradora,
-    String? numeroPoliza,
-    DateTime? vencimientoSeguro,
+    // String? aseguradora,
+    // String? numeroPoliza,
+    // DateTime? vencimientoSeguro,
     String? soatNumero,
     DateTime? soatVencimiento,
     String? tecnomecanicaNumero,
@@ -161,9 +161,9 @@ class VehicleModel {
       color: color ?? this.color,
       placa: placa ?? this.placa,
       tipo: tipo ?? this.tipo,
-      aseguradora: aseguradora ?? this.aseguradora,
-      numeroPoliza: numeroPoliza ?? this.numeroPoliza,
-      vencimientoSeguro: vencimientoSeguro ?? this.vencimientoSeguro,
+      // aseguradora: aseguradora ?? this.aseguradora,
+      // numeroPoliza: numeroPoliza ?? this.numeroPoliza,
+      // vencimientoSeguro: vencimientoSeguro ?? this.vencimientoSeguro,
       soatNumero: soatNumero ?? this.soatNumero,
       soatVencimiento: soatVencimiento ?? this.soatVencimiento,
       tecnomecanicaNumero: tecnomecanicaNumero ?? this.tecnomecanicaNumero,

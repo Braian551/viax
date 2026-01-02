@@ -130,8 +130,10 @@ class ConductorHistorialSheet extends StatelessWidget {
       'soat': 'SOAT',
       'tecnomecanica': 'Tecnomecánica',
       'tarjeta_propiedad': 'Tarjeta de Propiedad',
-      'seguro_contractual': 'Seguro Contractual',
-      'seguro': 'Seguro Contractual',
+      'tecnomecanica': 'Tecnomecánica',
+      'tarjeta_propiedad': 'Tarjeta de Propiedad',
+      // 'seguro_contractual': 'Seguro Contractual',
+      // 'seguro': 'Seguro Contractual',
     };
 
     final String nombreDoc = tiposDocumento[doc['tipo_documento']] ?? doc['tipo_documento'] ?? 'Documento';
@@ -389,8 +391,9 @@ class ConductorHistorialSheet extends StatelessWidget {
       case 'soat': return Icons.health_and_safety_rounded;
       case 'tecnomecanica': return Icons.build_circle_rounded;
       case 'tarjeta_propiedad': return Icons.directions_car_rounded;
-      case 'seguro':
-      case 'seguro_contractual': return Icons.shield_rounded;
+      case 'tarjeta_propiedad': return Icons.directions_car_rounded;
+      // case 'seguro':
+      // case 'seguro_contractual': return Icons.shield_rounded;
       default: return Icons.file_present_rounded;
     }
   }

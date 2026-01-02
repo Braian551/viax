@@ -150,7 +150,6 @@ class DocumentUploadService {
       'soat',
       'tecnomecanica',
       'tarjeta_propiedad',
-      'seguro',
     ];
     return validTypes.contains(tipo);
   }

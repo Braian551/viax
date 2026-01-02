@@ -52,10 +52,10 @@ try {
     $vehiculo_color = isset($input['vehiculo_color']) ? $input['vehiculo_color'] : null;
     $vehiculo_placa = isset($input['vehiculo_placa']) ? strtoupper($input['vehiculo_placa']) : '';
     
-    // Insurance data
-    $aseguradora = isset($input['aseguradora']) ? $input['aseguradora'] : null;
-    $numero_poliza_seguro = isset($input['numero_poliza_seguro']) ? $input['numero_poliza_seguro'] : null;
-    $vencimiento_seguro = isset($input['vencimiento_seguro']) ? date('Y-m-d', strtotime($input['vencimiento_seguro'])) : null;
+    // Insurance data - REMOVED as per requirement
+    // $aseguradora = isset($input['aseguradora']) ? $input['aseguradora'] : null;
+    // $numero_poliza_seguro = isset($input['numero_poliza_seguro']) ? $input['numero_poliza_seguro'] : null;
+    // $vencimiento_seguro = isset($input['vencimiento_seguro']) ? date('Y-m-d', strtotime($input['vencimiento_seguro'])) : null;
     
     // SOAT data
     $soat_numero = isset($input['soat_numero']) ? $input['soat_numero'] : null;
@@ -89,9 +89,6 @@ try {
                         vehiculo_anio = :vehiculo_anio,
                         vehiculo_color = :vehiculo_color,
                         vehiculo_placa = :vehiculo_placa,
-                        aseguradora = :aseguradora,
-                        numero_poliza_seguro = :numero_poliza_seguro,
-                        vencimiento_seguro = :vencimiento_seguro,
                         soat_numero = :soat_numero,
                         soat_vencimiento = :soat_vencimiento,
                         tecnomecanica_numero = :tecnomecanica_numero,
@@ -107,9 +104,6 @@ try {
         $updateStmt->bindParam(':vehiculo_anio', $vehiculo_anio, PDO::PARAM_INT);
         $updateStmt->bindParam(':vehiculo_color', $vehiculo_color);
         $updateStmt->bindParam(':vehiculo_placa', $vehiculo_placa);
-        $updateStmt->bindParam(':aseguradora', $aseguradora);
-        $updateStmt->bindParam(':numero_poliza_seguro', $numero_poliza_seguro);
-        $updateStmt->bindParam(':vencimiento_seguro', $vencimiento_seguro);
         $updateStmt->bindParam(':soat_numero', $soat_numero);
         $updateStmt->bindParam(':soat_vencimiento', $soat_vencimiento);
         $updateStmt->bindParam(':tecnomecanica_numero', $tecnomecanica_numero);
@@ -129,9 +123,6 @@ try {
             vehiculo_anio,
             vehiculo_color,
             vehiculo_placa,
-            aseguradora,
-            numero_poliza_seguro,
-            vencimiento_seguro,
             soat_numero,
             soat_vencimiento,
             tecnomecanica_numero,
@@ -149,9 +140,6 @@ try {
             :vehiculo_anio,
             :vehiculo_color,
             :vehiculo_placa,
-            :aseguradora,
-            :numero_poliza_seguro,
-            :vencimiento_seguro,
             :soat_numero,
             :soat_vencimiento,
             :tecnomecanica_numero,
@@ -169,9 +157,9 @@ try {
         $insertStmt->bindParam(':vehiculo_anio', $vehiculo_anio, PDO::PARAM_INT);
         $insertStmt->bindParam(':vehiculo_color', $vehiculo_color);
         $insertStmt->bindParam(':vehiculo_placa', $vehiculo_placa);
-        $insertStmt->bindParam(':aseguradora', $aseguradora);
-        $insertStmt->bindParam(':numero_poliza_seguro', $numero_poliza_seguro);
-        $insertStmt->bindParam(':vencimiento_seguro', $vencimiento_seguro);
+        // $insertStmt->bindParam(':aseguradora', $aseguradora);
+        // $insertStmt->bindParam(':numero_poliza_seguro', $numero_poliza_seguro);
+        // $insertStmt->bindParam(':vencimiento_seguro', $vencimiento_seguro);
         $insertStmt->bindParam(':soat_numero', $soat_numero);
         $insertStmt->bindParam(':soat_vencimiento', $soat_vencimiento);
         $insertStmt->bindParam(':tecnomecanica_numero', $tecnomecanica_numero);

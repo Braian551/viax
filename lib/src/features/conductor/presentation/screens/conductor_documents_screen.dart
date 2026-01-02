@@ -114,14 +114,7 @@ class _ConductorDocumentsScreenState extends State<ConductorDocumentsScreen>
             status: DocumentStatus.approved,
             expirationDate: '30/12/2025',
           ),
-          DocumentItem(
-            id: 'insurance',
-            title: 'Póliza de Seguro',
-            description: 'Seguro de responsabilidad civil',
-            icon: Icons.security_rounded,
-            status: DocumentStatus.pending,
-            expirationDate: '01/01/2026',
-          ),
+          // Insurance removed
           DocumentItem(
             id: 'criminal_record',
             title: 'Antecedentes Penales',

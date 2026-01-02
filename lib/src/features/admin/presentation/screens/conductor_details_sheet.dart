@@ -156,7 +156,7 @@ class ConductorDetailsSheet extends StatelessWidget {
                           _buildInfoCard(context, [
                             _buildInfoRow(context, 'SOAT', _formatDate(conductor['soat_vencimiento']), Icons.security_outlined),
                             _buildInfoRow(context, 'Tecnomecánica', _formatDate(conductor['tecnomecanica_vencimiento']), Icons.build_outlined),
-                            _buildInfoRow(context, 'Seguro', _formatDate(conductor['vencimiento_seguro']), Icons.shield_outlined),
+                            // _buildInfoRow(context, 'Seguro', _formatDate(conductor['vencimiento_seguro']), Icons.shield_outlined), // REMOVED
                             _buildInfoRow(context, 'Tarjeta Propiedad', conductor['tarjeta_propiedad_numero'], Icons.credit_card_outlined),
                           ]),
                           
@@ -169,8 +169,8 @@ class ConductorDetailsSheet extends StatelessWidget {
                                 _buildMiniDocButton(context, 'SOAT', conductor['soat_foto_url'], conductor['soat_tipo_archivo']),
                               if (conductor['tecnomecanica_foto_url'] != null)
                                 _buildMiniDocButton(context, 'Tecno', conductor['tecnomecanica_foto_url'], conductor['tecnomecanica_tipo_archivo']),
-                              if (conductor['seguro_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url'], conductor['seguro_tipo_archivo']),
+                              // if (conductor['seguro_foto_url'] != null)
+                              //   _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url'], conductor['seguro_tipo_archivo']), // REMOVED
                               if (conductor['tarjeta_propiedad_foto_url'] != null)
                                 _buildMiniDocButton(context, 'Tarjeta', conductor['tarjeta_propiedad_foto_url'], conductor['tarjeta_propiedad_tipo_archivo']),
                             ],
