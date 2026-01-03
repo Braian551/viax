@@ -13,6 +13,7 @@ import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_ba
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
+import 'package:viax/src/features/notifications/notifications.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomeUserScreen extends StatefulWidget {
@@ -34,6 +35,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   String? _userName;
   int? _userId;
   bool _loadingUser = true;
+
+  // Notificaciones
+  int _unreadNotifications = 0;
+  Timer? _notificationTimer;
 
   // Animaciones
   late AnimationController _animationController;
@@ -136,6 +141,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               _loadingUser = false;
             });
             _animationController.forward();
+            
+            // Cargar notificaciones después de obtener el usuario
+            if (_userId != null) {
+              _loadUnreadNotifications();
+              _startNotificationPolling();
+            }
           }
         }
       }
@@ -147,12 +158,46 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     }
   }
 
+  /// Carga el conteo de notificaciones no leídas
+  Future<void> _loadUnreadNotifications() async {
+    if (_userId == null) return;
+    final count = await NotificationService.getUnreadCount(userId: _userId!);
+    if (mounted) {
+      setState(() => _unreadNotifications = count);
+    }
+  }
+
+  /// Inicia el polling para actualizar notificaciones
+  void _startNotificationPolling() {
+    _notificationTimer?.cancel();
+    _notificationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadUnreadNotifications(),
+    );
+  }
+
+  /// Abre la pantalla de notificaciones
+  void _openNotifications() {
+    if (_userId == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationsScreen(userId: _userId!),
+      ),
+    ).then((_) {
+      // Recargar conteo al volver
+      _loadUnreadNotifications();
+    });
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
     _mapController.dispose();
+    _notificationTimer?.cancel();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -281,37 +326,11 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Botón de Notificaciones con efecto glass
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: (isDark 
-                          ? Colors.white.withValues(alpha: 0.1) 
-                          : Colors.white.withValues(alpha: 0.3)),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: (isDark 
-                            ? Colors.white.withValues(alpha: 0.2) 
-                            : Colors.white.withValues(alpha: 0.4)),
-                          width: 1,
-                        ),
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.notifications_outlined,
-                          color: isDark ? Colors.white : Colors.grey[800],
-                          size: 26,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
+                // Botón de Notificaciones con badge
+                NotificationBadge(
+                  count: _unreadNotifications,
+                  isDark: isDark,
+                  onTap: _openNotifications,
                 ),
               ],
             ),

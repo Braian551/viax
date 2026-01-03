@@ -44,6 +44,10 @@ if ($path === '') {
     $endpoint = substr($path, 5); // Remove 'auth/'
     $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
     require_once __DIR__ . '/auth/' . $endpoint . '.php';
+} elseif (strpos($path, 'notifications/') === 0) {
+    $endpoint = substr($path, 14); // Remove 'notifications/'
+    $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
+    require_once __DIR__ . '/notifications/' . $endpoint . '.php';
 } elseif (strpos($path, 'pricing/') === 0) {
     $endpoint = substr($path, 8); // Remove 'pricing/'
     $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
