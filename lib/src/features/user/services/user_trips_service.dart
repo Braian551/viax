@@ -114,11 +114,19 @@ class UserTripsService {
     int page = 1,
     int limit = 20,
     String? estado,
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
   }) async {
     try {
       var uri = '$baseUrl/get_trip_history.php?usuario_id=$userId&page=$page&limit=$limit';
       if (estado != null && estado != 'all') {
         uri += '&estado=$estado';
+      }
+      if (fechaInicio != null) {
+        uri += '&fecha_inicio=${fechaInicio.toIso8601String().split('T')[0]}';
+      }
+      if (fechaFin != null) {
+        uri += '&fecha_fin=${fechaFin.toIso8601String().split('T')[0]}';
       }
 
       final response = await http.get(

@@ -178,25 +178,8 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
       pinned: true,
       elevation: _isScrolled ? 4 : 0,
       backgroundColor: _isScrolled ? surfaceColor : backgroundColor,
-      leading: AnimatedBuilder(
-        animation: _headerAnimationController,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(_headerSlideAnimation.value, 0),
-            child: Opacity(
-              opacity: _headerFadeAnimation.value,
-              child: child,
-            ),
-          );
-        },
-        child: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: textColor,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      leading: null,
+      automaticallyImplyLeading: false, // Don't show back button automatically
       title: AnimatedBuilder(
         animation: _headerAnimationController,
         builder: (context, child) {
@@ -212,7 +195,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
           'Mis viajes',
           style: TextStyle(
             color: textColor,
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -245,7 +228,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
             onPressed: () => _showDateFilter(context, isDark),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
       ],
     );
   }
@@ -312,18 +295,23 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final dividerColor = isDark ? AppColors.darkDivider : Colors.grey.shade300;
     
+    // Capture the provider from the current context before showing the modal
+    final provider = context.read<UserTripsProvider>();
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      builder: (modalContext) => ChangeNotifierProvider.value(
+        value: provider,
+        child: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Container(
               width: 40,
               height: 4,
@@ -346,35 +334,89 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
               context,
               'Última semana',
               Icons.calendar_today_rounded,
-              () {},
+              () {
+                final now = DateTime.now();
+                final start = now.subtract(const Duration(days: 7));
+                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+              },
               isDark,
             ),
             _buildDateOption(
               context,
               'Último mes',
               Icons.date_range_rounded,
-              () {},
+              () {
+                final now = DateTime.now();
+                final start = now.subtract(const Duration(days: 30));
+                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+              },
               isDark,
             ),
             _buildDateOption(
               context,
               'Últimos 3 meses',
               Icons.calendar_month_rounded,
-              () {},
+              () {
+                final now = DateTime.now();
+                final start = now.subtract(const Duration(days: 90));
+                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+              },
               isDark,
             ),
             _buildDateOption(
               context,
               'Personalizado',
               Icons.edit_calendar_rounded,
-              () {},
+              () async {
+                final result = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: ColorScheme.light(
+                          primary: AppColors.primary,
+                          onPrimary: Colors.black,
+                          surface: isDark ? AppColors.darkSurface : Colors.white,
+                          onSurface: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                
+                if (result != null && context.mounted) {
+                  context.read<UserTripsProvider>().setDateFilter(
+                    result.start, 
+                    result.end, 
+                    userId: widget.userId
+                  );
+                }
+              },
               isDark,
             ),
+            
+            // Opción para limpiar filtro
+            if (context.read<UserTripsProvider>().startDate != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextButton(
+                  onPressed: () {
+                     context.read<UserTripsProvider>().setDateFilter(null, null, userId: widget.userId);
+                     Navigator.pop(context);
+                  },
+                  child: const Text('Limpiar filtro', style: TextStyle(color: Colors.red)),
+                ),
+              ),
+              
             const SizedBox(height: 16),
           ],
         ),
-      ),
-    );
+          ),
+        ),
+      );
   }
 
   Widget _buildDateOption(

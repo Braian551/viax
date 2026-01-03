@@ -25,6 +25,8 @@ try {
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $limit = isset($_GET['limit']) ? min(50, max(1, intval($_GET['limit']))) : 20;
     $estado = isset($_GET['estado']) ? $_GET['estado'] : null;
+    $fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : null;
+    $fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : null;
     
     if ($usuario_id <= 0) {
         echo json_encode([
@@ -48,6 +50,16 @@ try {
             $whereClause .= " AND ss.estado = :estado";
             $params[':estado'] = $estado;
         }
+    }
+    // Filtro por fecha
+    if ($fecha_inicio) {
+        $whereClause .= " AND DATE(COALESCE(ss.solicitado_en, ss.fecha_creacion)) >= :fecha_inicio";
+        $params[':fecha_inicio'] = $fecha_inicio;
+    }
+
+    if ($fecha_fin) {
+        $whereClause .= " AND DATE(COALESCE(ss.solicitado_en, ss.fecha_creacion)) <= :fecha_fin";
+        $params[':fecha_fin'] = $fecha_fin;
     }
     
     // Obtener total de registros

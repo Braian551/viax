@@ -11,6 +11,8 @@ class UserTripsProvider extends ChangeNotifier {
   LoadState _loadState = LoadState.initial;
   String _errorMessage = '';
   String _selectedFilter = 'all';
+  DateTime? _startDate;
+  DateTime? _endDate;
   int _currentPage = 1;
   bool _hasMore = true;
 
@@ -20,6 +22,8 @@ class UserTripsProvider extends ChangeNotifier {
   LoadState get loadState => _loadState;
   String get errorMessage => _errorMessage;
   String get selectedFilter => _selectedFilter;
+  DateTime? get startDate => _startDate;
+  DateTime? get endDate => _endDate;
   bool get isLoading => _loadState == LoadState.loading;
   bool get hasMore => _hasMore;
 
@@ -47,6 +51,8 @@ class UserTripsProvider extends ChangeNotifier {
       userId: userId,
       page: _currentPage,
       estado: _selectedFilter == 'all' ? null : _selectedFilter,
+      fechaInicio: _startDate,
+      fechaFin: _endDate,
     );
 
     if (result['success'] == true) {
@@ -85,20 +91,31 @@ class UserTripsProvider extends ChangeNotifier {
 
   /// Cargar resumen de pagos
   Future<void> loadPaymentSummary({required int userId}) async {
-    final summary = await UserTripsService.getPaymentSummary(userId: userId);
+    final summary = await UserTripsService.getPaymentSummary(
+      userId: userId,
+      fechaInicio: _startDate?.toIso8601String().split('T')[0],
+      fechaFin: _endDate?.toIso8601String().split('T')[0],
+    );
     if (summary != null) {
       _paymentSummary = summary;
       notifyListeners();
     }
   }
 
-  /// Cambiar filtro
+  /// Cambiar filtro de estado
   void setFilter(String filter, {required int userId}) {
     if (_selectedFilter != filter) {
       _selectedFilter = filter;
       _trips = [];
       loadTrips(userId: userId, refresh: true);
     }
+  }
+
+  /// Establecer filtro de fechas
+  void setDateFilter(DateTime? start, DateTime? end, {required int userId}) {
+    _startDate = start;
+    _endDate = end;
+    refresh(userId: userId);
   }
 
   /// Refrescar todo
