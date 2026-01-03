@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:viax/src/global/services/mapbox_service.dart';
-import 'package:viax/src/core/config/env_config.dart';
+import 'package:viax/src/global/services/app_secrets_service.dart';
 
 /// Controlador para la lógica de negocio del viaje activo.
 /// 
@@ -131,9 +131,14 @@ class ActiveTripController {
     if (_mapboxInitialized) return;
 
     try {
-      MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
-      _mapboxInitialized = true;
-      debugPrint('✅ Mapbox inicializado');
+      final token = AppSecretsService.instance.mapboxToken;
+      if (token.isNotEmpty) {
+        MapboxOptions.setAccessToken(token);
+        _mapboxInitialized = true;
+        debugPrint('✅ Mapbox inicializado');
+      } else {
+        debugPrint('⚠️ Mapbox token no disponible');
+      }
     } catch (e) {
       debugPrint('⚠️ Error inicializando Mapbox: $e');
       mapError = true;

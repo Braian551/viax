@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import '../../core/config/env_config.dart';
+import 'app_secrets_service.dart';
 import 'quota_monitor_service.dart';
 
 /// Servicio para interactuar con la API de Mapbox
@@ -49,7 +49,7 @@ class MapboxService {
         '&steps=$steps'
         '&geometries=geojson'
         '&overview=full'
-        '&access_token=${EnvConfig.mapboxPublicToken}',
+        '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
@@ -98,7 +98,7 @@ class MapboxService {
         '&steps=true'
         '&geometries=geojson'
         '&overview=full'
-        '&access_token=${EnvConfig.mapboxPublicToken}',
+        '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
@@ -147,7 +147,7 @@ class MapboxService {
       }
     }
 
-    return '$_baseUrl/styles/v1/mapbox/$style/static/$overlays/$lng,$lat,$zoom,0/${width}x$height@2x?access_token=${EnvConfig.mapboxPublicToken}';
+    return '$_baseUrl/styles/v1/mapbox/$style/static/$overlays/$lng,$lat,$zoom,0/${width}x$height@2x?access_token=${AppSecretsService.instance.mapboxToken}';
   }
 
   // ============================================
@@ -172,7 +172,7 @@ class MapboxService {
       if (query.trim().isEmpty) return [];
 
       final queryParams = <String, String>{
-        'access_token': EnvConfig.mapboxPublicToken,
+        'access_token': AppSecretsService.instance.mapboxToken,
         'limit': limit.toString(),
         'language': 'es',
         'fuzzyMatch': fuzzyMatch.toString(),
@@ -224,7 +224,7 @@ class MapboxService {
     try {
       final url = Uri.parse(
         '$_baseUrl/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json'
-        '?access_token=${EnvConfig.mapboxPublicToken}'
+        '?access_token=${AppSecretsService.instance.mapboxToken}'
         '&language=es'
         '&types=address,poi,place',
       );
@@ -255,7 +255,7 @@ class MapboxService {
       // Primero intentar solo con 'address' que es direcciÃ³n de calle
       final url = Uri.parse(
         '$_baseUrl/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json'
-        '?access_token=${EnvConfig.mapboxPublicToken}'
+        '?access_token=${AppSecretsService.instance.mapboxToken}'
         '&language=es'
         '&types=address',
       );
@@ -297,7 +297,7 @@ class MapboxService {
   /// [isDarkMode] - Si es true, usa estilo oscuro, si es false usa estilo claro
   static String getTileUrl({bool isDarkMode = false}) {
     final style = isDarkMode ? 'dark-v11' : 'streets-v12';
-    return 'https://api.mapbox.com/styles/v1/mapbox/$style/tiles/{z}/{x}/{y}@2x?access_token=${EnvConfig.mapboxPublicToken}';
+    return 'https://api.mapbox.com/styles/v1/mapbox/$style/tiles/{z}/{x}/{y}@2x?access_token=${AppSecretsService.instance.mapboxToken}';
   }
 
   /// Obtener estilo de mapa según el tema
@@ -335,7 +335,7 @@ class MapboxService {
         '$_baseUrl/directions-matrix/v1/mapbox/$profile/$coordinates'
         '?sources=$sources'
         '&destinations=$destinationsIdx'
-        '&access_token=${EnvConfig.mapboxPublicToken}',
+        '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
@@ -379,7 +379,7 @@ class MapboxService {
 
       final url = Uri.parse(
         '$_baseUrl/matching/v5/mapbox/$profile/$coordinates'
-        '?access_token=${EnvConfig.mapboxPublicToken}'
+        '?access_token=${AppSecretsService.instance.mapboxToken}'
         '&geometries=geojson'
         '&radiuses=$radius;$radius'
         '&steps=false'

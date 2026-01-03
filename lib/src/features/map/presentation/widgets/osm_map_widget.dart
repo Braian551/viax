@@ -4,7 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../providers/map_provider.dart';
-import '../../../../core/config/env_config.dart';
+import '../../../../global/services/app_secrets_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/quota_monitor_service.dart';
 
@@ -103,8 +103,8 @@ class _OSMMapWidgetState extends State<OSMMapWidget> {
         TileLayer(
           urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
           userAgentPackageName: 'com.viax.app',
-          additionalOptions: const {
-            'accessToken': EnvConfig.mapboxPublicToken,
+          additionalOptions: {
+            'accessToken': AppSecretsService.instance.mapboxToken,
           },
           tileProvider: NetworkTileProvider(),
           // Callback para contar tiles cargados (monitoreo de cuotas)

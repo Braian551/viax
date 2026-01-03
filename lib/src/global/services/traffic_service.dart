@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import '../../core/config/env_config.dart';
+import 'app_secrets_service.dart';
 import 'quota_monitor_service.dart';
 
 /// Servicio de informaciÃ³n de trÃ¡fico usando TomTom API
@@ -27,8 +27,7 @@ class TrafficService {
     int zoom = 15, // 0-22, mayor = mÃ¡s detalle
   }) async {
     try {
-      if (EnvConfig.tomtomApiKey == 'YOUR_TOMTOM_API_KEY_HERE' || 
-          EnvConfig.tomtomApiKey.isEmpty) {
+      if (AppSecretsService.instance.tomtomApiKey.isEmpty) {
         print('TomTom API Key no configurada');
         return null;
       }
@@ -36,7 +35,7 @@ class TrafficService {
       final url = Uri.parse(
         '$_baseUrl/traffic/services/4/flowSegmentData/absolute/$zoom/json'
         '?point=${location.latitude},${location.longitude}'
-        '&key=${EnvConfig.tomtomApiKey}'
+        '&key=${AppSecretsService.instance.tomtomApiKey}'
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 10));
@@ -70,8 +69,7 @@ class TrafficService {
     double radiusKm = 5.0,
   }) async {
     try {
-      if (EnvConfig.tomtomApiKey == 'YOUR_TOMTOM_API_KEY_HERE' || 
-          EnvConfig.tomtomApiKey.isEmpty) {
+      if (AppSecretsService.instance.tomtomApiKey.isEmpty) {
         print('TomTom API Key no configurada');
         return [];
       }
@@ -89,7 +87,7 @@ class TrafficService {
       final url = Uri.parse(
         '$_baseUrl/traffic/services/5/incidentDetails'
         '?bbox=$minLng,$minLat,$maxLng,$maxLat'
-        '&key=${EnvConfig.tomtomApiKey}'
+        '&key=${AppSecretsService.instance.tomtomApiKey}'
         '&language=es-ES'
       );
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
-import 'package:viax/src/core/config/env_config.dart';
+import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../../services/trip_request_service.dart';
@@ -255,8 +255,8 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                       TileLayer(
                         urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
                         userAgentPackageName: 'com.example.ping_go',
-                        additionalOptions: const {
-                          'access_token': EnvConfig.mapboxPublicToken,
+                        additionalOptions: {
+                          'access_token': AppSecretsService.instance.mapboxToken,
                         },
                       ),
                       if (_route != null)

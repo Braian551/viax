@@ -11,7 +11,7 @@ import 'package:viax/src/features/conductor/providers/conductor_profile_provider
 import 'package:viax/src/features/conductor/providers/conductor_trips_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_earnings_provider.dart';
 import 'package:viax/src/core/di/service_locator.dart';
-import 'package:viax/src/core/config/env_config.dart';
+import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
@@ -84,11 +84,26 @@ void main() async {
     await initializeDateFormatting('es_ES', null);
 
     // ============================================
+    // INICIALIZAR API KEYS DESDE BACKEND
+    // ============================================
+    try {
+      await AppSecretsService.instance.initialize();
+      debugPrint('✅ API Keys cargadas desde backend');
+    } catch (e) {
+      debugPrint('⚠️ Error cargando API Keys: $e');
+    }
+
+    // ============================================
     // INICIALIZAR MAPBOX CON ACCESS TOKEN
     // ============================================
     try {
-      MapboxOptions.setAccessToken(EnvConfig.mapboxPublicToken);
-      debugPrint('✅ Mapbox inicializado correctamente');
+      final mapboxToken = AppSecretsService.instance.mapboxToken;
+      if (mapboxToken.isNotEmpty) {
+        MapboxOptions.setAccessToken(mapboxToken);
+        debugPrint('✅ Mapbox inicializado correctamente');
+      } else {
+        debugPrint('⚠️ Mapbox token no disponible');
+      }
     } catch (e) {
       debugPrint('⚠️ Error inicializando Mapbox: $e');
     }

@@ -7,10 +7,30 @@ class R2Service {
     private $region = 'auto'; // R2 uses auto
 
     public function __construct() {
-        $this->accountId = '9e36b59ddd8dc8dcc4edc374e6140fda';
-        $this->accessKeyId = '5cad6e2f8d263db4251b7662983a4f13';
-        $this->secretAccessKey = '01e3898d9bcd9da30faa201b77e816bafffb4699f3586f5ad443894875c14013';
-        $this->bucketName = 'uploadviax';
+        // Load .env file if exists
+        $envFile = __DIR__ . '/.env';
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (strpos($line, '#') === 0) continue;
+                if (strpos($line, '=') !== false) {
+                    list($key, $value) = explode('=', $line, 2);
+                    $_ENV[trim($key)] = trim($value);
+                    putenv(trim($key) . '=' . trim($value));
+                }
+            }
+        }
+
+        // Load from environment variables
+        $this->accountId = getenv('R2_ACCOUNT_ID') ?: $_ENV['R2_ACCOUNT_ID'] ?? '';
+        $this->accessKeyId = getenv('R2_ACCESS_KEY_ID') ?: $_ENV['R2_ACCESS_KEY_ID'] ?? '';
+        $this->secretAccessKey = getenv('R2_SECRET_ACCESS_KEY') ?: $_ENV['R2_SECRET_ACCESS_KEY'] ?? '';
+        $this->bucketName = getenv('R2_BUCKET_NAME') ?: $_ENV['R2_BUCKET_NAME'] ?? 'uploadviax';
+
+        // Validate required credentials
+        if (empty($this->accountId) || empty($this->accessKeyId) || empty($this->secretAccessKey)) {
+            throw new Exception('R2 credentials not configured. Check .env file.');
+        }
     }
 
     public function uploadFile($fileTempPath, $fileName, $contentType) {

@@ -30,23 +30,11 @@ class AppConstants {
   static const bool useEmailMock = false;
   
   // ============================================
-  // CONFIGURACIÃ“N DE BASE DE DATOS
+  // CONFIGURACIÓN DE BASE DE DATOS
   // ============================================
-  // NOTA: La app ahora usa API REST, no conexiÃ³n directa a MySQL
-  // La base de datos se maneja a travÃ©s del backend de Railway
-  // Ver: lib/src/global/config/api_config.dart para URLs de API
-
-  // ConfiguraciÃ³n legacy (ya no se usa - mantener por compatibilidad)
-  @Deprecated('La app ahora usa API REST. Ver ApiConfig para URLs')
-  static const String databaseHost = 'sql10.freesqldatabase.com';
-  @Deprecated('La app ahora usa API REST. Ver ApiConfig para URLs')
-  static const String databasePort = '3306';
-  @Deprecated('La app ahora usa API REST. Ver ApiConfig para URLs')
-  static const String databaseName = 'sql10805022';
-  @Deprecated('La app ahora usa API REST. Ver ApiConfig para URLs')
-  static const String databaseUser = 'sql10805022';
-  @Deprecated('La app ahora usa API REST. Ver ApiConfig para URLs')
-  static const String databasePassword = 'BVeitwKy1q';
+  // SECURITY: Direct database connection was REMOVED.
+  // All database access MUST go through the backend API.
+  // See: lib/src/global/config/api_config.dart for API URLs
   
   // ============================================
   // CONFIGURACIÃ“N DE LA APLICACIÃ“N
