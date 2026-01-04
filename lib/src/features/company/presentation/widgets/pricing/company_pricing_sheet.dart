@@ -115,8 +115,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1C) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -126,43 +126,61 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.3),
+              color: isDark ? Colors.white24 : Colors.black12,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+          
           // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                  child: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Editar Tarifas', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text(widget.vehicleTypeName, style: TextStyle(color: Colors.grey[500])),
+                      Text(
+                        'Editar Tarifas',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        widget.vehicleTypeName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: Icon(
+                    Icons.close,
+                    color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                  ),
                 ),
               ],
             ),
           ),
-          // Section Tabs
+          
+          // Tab Bar - Simple and clean
           SizedBox(
-            height: 46,
+            height: 42,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -171,26 +189,33 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                 final isSelected = _currentSection == index;
                 return GestureDetector(
                   onTap: () => setState(() => _currentSection = index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                  child: Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.transparent,
+                      color: isSelected 
+                          ? AppColors.primary 
+                          : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.1)),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
-                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(_sections[index]['icon'] as IconData, size: 16, color: isSelected ? Colors.white : Colors.grey),
+                        Icon(
+                          _sections[index]['icon'] as IconData, 
+                          size: 16, 
+                          color: isSelected 
+                              ? Colors.white 
+                              : (isDark ? Colors.white60 : AppColors.lightTextSecondary),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           _sections[index]['title'] as String,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
+                            color: isSelected 
+                                ? Colors.white 
+                                : (isDark ? Colors.white60 : AppColors.lightTextSecondary),
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             fontSize: 13,
                           ),
@@ -202,29 +227,38 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
               },
             ),
           ),
-          const SizedBox(height: 8),
+          
+          const SizedBox(height: 16),
+          
           // Form
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPadding),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: _buildCurrentSection(),
               ),
             ),
           ),
+          
           // Buttons
           Container(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + MediaQuery.of(context).padding.bottom),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A1C) : Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+              color: isDark ? AppColors.darkCard : Colors.white,
+              border: Border(
+                top: BorderSide(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+              ),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextButton(
                     onPressed: _isSaving ? null : () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      foregroundColor: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                    ),
                     child: const Text('Cancelar'),
                   ),
                 ),
@@ -237,11 +271,12 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: _isSaving
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Guardar', style: TextStyle(fontWeight: FontWeight.bold)),
+                        : const Text('Guardar', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -264,8 +299,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(key: const ValueKey('distancia'), children: [
           _buildField('Costo por Km (\$)', widget.controllers['costo_por_km']!),
           _buildField('Costo por Minuto (\$)', widget.controllers['costo_por_minuto']!),
-          _buildField('Dist. Mínima (km)', widget.controllers['distancia_minima']!),
-          _buildField('Dist. Máxima (km)', widget.controllers['distancia_maxima']!),
+          _buildField('Distancia Mínima (km)', widget.controllers['distancia_minima']!),
+          _buildField('Distancia Máxima (km)', widget.controllers['distancia_maxima']!),
         ]);
       case 2:
         return Column(key: const ValueKey('recargos'), children: [
@@ -275,28 +310,27 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         ]);
       case 3:
         return Column(key: const ValueKey('descuentos'), children: [
-          _buildField('Desc. Dist. Larga (%)', widget.controllers['descuento_distancia_larga']!),
-          _buildField('Umbral Desc. (km)', widget.controllers['umbral_km_descuento']!),
+          _buildField('Descuento Distancia Larga (%)', widget.controllers['descuento_distancia_larga']!),
+          _buildField('Umbral Descuento (km)', widget.controllers['umbral_km_descuento']!),
         ]);
       case 4:
         return Column(key: const ValueKey('comision'), children: [
-          _buildField('Tu Comisión a Conductores (%)', widget.controllers['comision_plataforma']!),
+          _buildField('Comisión a Conductores (%)', widget.controllers['comision_plataforma']!),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+              color: AppColors.blue50,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.info, size: 20),
-                const SizedBox(width: 12),
-                const Expanded(
+                const Icon(Icons.info_outline, color: AppColors.primary, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
                   child: Text(
-                    'Esta es la comisión que cobras a tus conductores por cada viaje.',
-                    style: TextStyle(fontSize: 13),
+                    'Esta es la comisión que cobras a tus conductores.',
+                    style: TextStyle(fontSize: 13, color: AppColors.blue800),
                   ),
                 ),
               ],
@@ -305,7 +339,7 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         ]);
       case 5:
         return Column(key: const ValueKey('espera'), children: [
-          _buildField('Espera Gratis (min)', widget.controllers['tiempo_espera_gratis']!),
+          _buildField('Tiempo Espera Gratis (min)', widget.controllers['tiempo_espera_gratis']!),
           _buildField('Costo/Min Extra (\$)', widget.controllers['costo_tiempo_espera']!),
         ]);
       default:
@@ -314,19 +348,46 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   }
 
   Widget _buildField(String label, TextEditingController controller, {bool optional = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(optional ? r'^(\d+\.?\d{0,2})?' : r'^\d+\.?\d{0,2}'))],
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(optional ? r'^(\d+\.?\d{0,2})?' : r'^\d+\.?\d{0,2}'))],
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+            ),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              filled: true,
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.08),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12), 
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
