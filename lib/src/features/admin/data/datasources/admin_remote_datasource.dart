@@ -124,7 +124,12 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     if (esActivo != null) requestData['es_activo'] = esActivo ? 1 : 0;
     if (esVerificado != null) requestData['es_verificado'] = esVerificado ? 1 : 0;
     if (empresaId != null) {
-      requestData['empresa_id'] = empresaId == -1 ? null : empresaId;
+      // Para conductores, empresa_id es obligatorio (ya no se permite -1 para "sin empresa")
+      // Valor -1 ahora significa "mantener empresa actual" no "sin empresa"
+      if (empresaId > 0) {
+        requestData['empresa_id'] = empresaId;
+      }
+      // Si es -1 no se envía empresa_id para no modificar
     }
 
     print('AdminRemoteDataSource.updateUser - Request: ${jsonEncode(requestData)}');

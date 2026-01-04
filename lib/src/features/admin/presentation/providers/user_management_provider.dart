@@ -169,13 +169,10 @@ class AdminUserManagementProvider with ChangeNotifier {
               if (telefono != null) updatedUser['telefono'] = telefono;
               if (tipoUsuario != null) updatedUser['tipo_usuario'] = tipoUsuario;
               
-              if (empresaId != null) {
-                if (empresaId == -1) {
-                  updatedUser['empresa_id'] = null;
-                  updatedUser['empresa_nombre'] = null;
-                } else {
-                  updatedUser['empresa_id'] = empresaId;
-                }
+              if (empresaId != null && empresaId > 0) {
+                // Para conductores, empresa_id es obligatorio
+                // Solo actualizar si se proporciona un ID válido
+                updatedUser['empresa_id'] = empresaId;
               }
               if (empresaNombre != null) updatedUser['empresa_nombre'] = empresaNombre;
               

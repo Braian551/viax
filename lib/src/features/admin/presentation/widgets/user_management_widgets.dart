@@ -840,7 +840,6 @@ class _UserEditSheetState extends State<UserEditSheet> {
           backgroundColor: Colors.transparent,
           builder: (context) => CompanyPickerSheet(
             isDark: isDark,
-            showIndependentOption: false,
             onSelected: (company) {
               setState(() {
                 _selectedCompany = company;

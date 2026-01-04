@@ -115,6 +115,11 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         CustomSnackbar.showError(context, message: 'Debes subir una foto del vehículo.');
         return false;
       }
+      // Validación obligatoria de empresa
+      if (_selectedCompany == null) {
+        CustomSnackbar.showError(context, message: 'Debes seleccionar una empresa de transporte. Ya no se permite trabajar como independiente.');
+        return false;
+      }
     } else if (step == 1) {
       if (_licenseNumberController.text.isEmpty) {
          CustomSnackbar.showError(context, message: 'Ingresa el número de tu licencia.');
@@ -196,7 +201,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         tecnomecanicaNumber: _tecnomechanicController.text,
         tecnomecanicaDate: _tecnoDate!.toIso8601String().split('T')[0],
         propertyCardNumber: _propertyCardController.text,
-        companyId: _selectedCompany?['id'],
+        companyId: _selectedCompany!['id'], // Obligatorio - ya validado en _validateStep
       );
 
       if (result['success'] == true) {
@@ -484,9 +489,14 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       builder: (context) => CompanyPickerSheet(
         isDark: isDark, 
         onSelected: (company) {
+           if (company == null) {
+             // Ya no permitido - mostrar mensaje
+             CustomSnackbar.showError(context, message: 'Debes seleccionar una empresa de transporte');
+             return;
+           }
            setState(() {
              _selectedCompany = company;
-             _companyController.text = company != null ? company['nombre'] : 'Independiente';
+             _companyController.text = company['nombre'];
            });
         }
       ),

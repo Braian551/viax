@@ -431,18 +431,65 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
   }
 
   Widget _buildCompanySection(BuildContext context) {
+    final bool hasCompany = widget.selectedCompany != null;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            'Empresa de Transporte',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: widget.isDark ? Colors.white70 : Colors.black87,
-            ),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                'Empresa de Transporte',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: widget.isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'OBLIGATORIO',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Info banner
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Todos los conductores deben estar vinculados a una empresa de transporte autorizada.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: widget.isDark ? Colors.blue.shade200 : Colors.blue.shade700,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         GestureDetector(
@@ -453,7 +500,10 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
               color: widget.isDark ? AppColors.darkSurface : Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: widget.isDark ? Colors.white10 : Colors.grey.shade200,
+                color: hasCompany 
+                    ? AppColors.primary 
+                    : (widget.isDark ? Colors.red.withOpacity(0.5) : Colors.red.withOpacity(0.3)),
+                width: hasCompany ? 2 : 1.5,
               ),
               boxShadow: [
                  BoxShadow(
@@ -468,10 +518,15 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: hasCompany 
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.business_rounded, color: AppColors.primary),
+                  child: Icon(
+                    Icons.business_rounded, 
+                    color: hasCompany ? AppColors.primary : Colors.red,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -479,25 +534,43 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                         widget.companyController.text.isEmpty ? 'Seleccionar Empresa' : widget.companyController.text,
+                         widget.companyController.text.isEmpty 
+                             ? 'Seleccionar Empresa' 
+                             : widget.companyController.text,
                          style: TextStyle(
                            fontSize: 16,
                            fontWeight: FontWeight.bold,
-                           color: widget.isDark ? Colors.white : Colors.black87,
+                           color: hasCompany 
+                               ? (widget.isDark ? Colors.white : Colors.black87)
+                               : Colors.red,
                          ),
                       ),
-                      if (widget.companyController.text.isEmpty)
-                      Text(
-                        'Opcional',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: widget.isDark ? Colors.white38 : Colors.grey.shade500,
+                      if (!hasCompany)
+                        Text(
+                          'Toca para seleccionar',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.red.withOpacity(0.7),
+                          ),
                         ),
-                      ),
+                      if (hasCompany)
+                        Text(
+                          'Empresa seleccionada ✓',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primary,
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: widget.isDark ? Colors.white38 : Colors.grey.shade400),
+                Icon(
+                  Icons.arrow_forward_ios_rounded, 
+                  size: 16, 
+                  color: hasCompany 
+                      ? AppColors.primary 
+                      : Colors.red.withOpacity(0.5),
+                ),
               ],
             ),
           ),

@@ -7,13 +7,12 @@ import 'dart:async';
 class CompanyPickerSheet extends StatefulWidget {
   final bool isDark;
   final Function(Map<String, dynamic>?) onSelected;
-  final bool showIndependentOption;
+  // Removido: showIndependentOption - ya no se permite independiente
 
   const CompanyPickerSheet({
     super.key,
     required this.isDark,
     required this.onSelected,
-    this.showIndependentOption = true,
   });
 
   @override
@@ -107,42 +106,34 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
           
           const SizedBox(height: 24),
           
-          if (widget.showIndependentOption) ...[
-            InkWell(
-              onTap: () {
-                widget.onSelected(null); // Independent
-                Navigator.pop(context);
-              },
+          // Mensaje informativo de que es obligatorio seleccionar empresa
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary),
-                  borderRadius: BorderRadius.circular(12),
-                  color: AppColors.primary.withOpacity(0.1),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.person_outline_rounded, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Trabajar Independiente',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
-                  ],
-                ),
-              ),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
             ),
-            const SizedBox(height: 24),
-          ],
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Debes seleccionar una empresa de transporte para poder operar como conductor.',
+                    style: TextStyle(
+                      color: widget.isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
           Text(
-            'Resultados',
+            'Empresas Disponibles',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

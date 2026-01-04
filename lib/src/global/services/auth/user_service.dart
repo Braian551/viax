@@ -63,58 +63,13 @@ class UserService {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        
-        // SOLUCIÃ“N TEMPORAL PARA FASE DE PRUEBAS:
-        // Si hay error de BD pero el usuario se creÃ³ exitosamente, ignoramos el error
-        if (responseData['success'] == true) {
-          return responseData;
-        } else if (responseData['message']?.contains('usuario creado') ?? false) {
-          // Si el mensaje indica que el usuario fue creado pero hay error secundario
-          return {
-            'success': true, 
-            'message': 'Usuario registrado exitosamente (con advertencias de BD)'
-          };
-        } else if (responseData['message']?.contains('Field') ?? false) {
-          // Si es error de campo faltante pero probablemente el usuario se creÃ³
-          return {
-            'success': true,
-            'message': 'Registro completado con advertencias tÃ©cnicas',
-            'warning': responseData['message']
-          };
-        }
-        
-        return responseData;
-      } else if (response.statusCode == 500) {
-        // Error interno del servidor - posiblemente el usuario se creÃ³ pero hay error secundario
-        final responseData = jsonDecode(response.body);
-        
-        // SOLUCIÃ“N TEMPORAL: Asumimos que el registro fue exitoso a pesar del error 500
-        // Esto es solo para fase de pruebas
-        print('Error 500 detectado, pero continuando para pruebas: ${responseData['message']}');
-        
-        return {
-          'success': true,
-          'message': 'Usuario registrado (error secundario ignorado)',
-          'technical_warning': responseData['message']
-        };
+        return jsonDecode(response.body);
       } else {
-        throw Exception('Error del servidor: ${response.statusCode}');
+        // Include response body in error to help debugging
+        throw Exception('Error del servidor ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       print('Error en registro: $e');
-      
-      // SOLUCIÃ“N TEMPORAL: Para pruebas, podrÃ­amos intentar asumir Ã©xito
-      // en ciertos tipos de errores conocidos
-      if (e.toString().contains('Field') || e.toString().contains('latitud')) {
-        print('Error de campo ignorado para pruebas - asumiendo registro exitoso');
-        return {
-          'success': true,
-          'message': 'Usuario registrado (error de campo ignorado en pruebas)',
-          'warning': e.toString()
-        };
-      }
-      
       rethrow;
     }
   }
@@ -498,9 +453,17 @@ class UserService {
     required String tecnomecanicaNumber,
     required String tecnomecanicaDate,
     required String propertyCardNumber,
-    int? companyId,
+    required int companyId, // OBLIGATORIO - ya no permite null
   }) async {
     try {
+      // Validar que companyId sea válido
+      if (companyId <= 0) {
+        return {
+          'success': false, 
+          'message': 'Debes seleccionar una empresa de transporte. Ya no se permite trabajar como independiente.'
+        };
+      }
+      
       final Map<String, dynamic> body = {
         'conductor_id': userId, 
         'vehiculo_tipo': type,
@@ -514,7 +477,7 @@ class UserService {
         'tecnomecanica_numero': tecnomecanicaNumber,
         'tecnomecanica_vencimiento': tecnomecanicaDate,
         'tarjeta_propiedad_numero': propertyCardNumber,
-        if (companyId != null) 'empresa_id': companyId,
+        'empresa_id': companyId, // Siempre se envía
       };
 
       final response = await http.post(

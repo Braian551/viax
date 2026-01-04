@@ -168,14 +168,48 @@ try {
         $insertStmt->execute();
     }
 
-    // Update empresa_id in usuarios table
+    // Update empresa_id in usuarios table - OBLIGATORIO para conductores
     if (array_key_exists('empresa_id', $input)) {
-        $empresa_id = $input['empresa_id']; // Can be null
-        $updateEmpresaQuery = "UPDATE usuarios SET empresa_id = :empresa_id WHERE id = :id";
+        $empresa_id = $input['empresa_id'];
+        
+        // Validar que empresa_id no sea null - conductores DEBEN tener empresa
+        if ($empresa_id === null || $empresa_id === '' || $empresa_id <= 0) {
+            throw new Exception('Debes seleccionar una empresa de transporte. Los conductores independientes ya no están permitidos.');
+        }
+        
+        // Verificar que la empresa existe y está activa
+        $checkEmpresaQuery = "SELECT id, estado FROM empresas_transporte WHERE id = :empresa_id";
+        $checkEmpresaStmt = $db->prepare($checkEmpresaQuery);
+        $checkEmpresaStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
+        $checkEmpresaStmt->execute();
+        $empresa = $checkEmpresaStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$empresa) {
+            throw new Exception('La empresa seleccionada no existe');
+        }
+        
+        if ($empresa['estado'] !== 'activo') {
+            throw new Exception('La empresa seleccionada no está activa');
+        }
+        
+        // Crear solicitud de vinculación
+        $solicitudQuery = "INSERT INTO solicitudes_vinculacion_conductor (conductor_id, empresa_id, estado, mensaje_conductor, creado_en)
+                          VALUES (:conductor_id, :empresa_id, 'pendiente', 'Solicitud desde registro de conductor', NOW())
+                          ON CONFLICT (conductor_id, empresa_id, estado) DO NOTHING";
+        $solicitudStmt = $db->prepare($solicitudQuery);
+        $solicitudStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+        $solicitudStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
+        $solicitudStmt->execute();
+        
+        // Actualizar usuario con empresa_id y estado pendiente de aprobación
+        $updateEmpresaQuery = "UPDATE usuarios SET empresa_id = :empresa_id, estado_vinculacion = 'pendiente_aprobacion' WHERE id = :id";
         $updateEmpresaStmt = $db->prepare($updateEmpresaQuery);
-        $updateEmpresaStmt->bindParam(':empresa_id', $empresa_id, is_null($empresa_id) ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $updateEmpresaStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
         $updateEmpresaStmt->bindParam(':id', $conductor_id, PDO::PARAM_INT);
         $updateEmpresaStmt->execute();
+    } else {
+        // Si no envía empresa_id, es un error
+        throw new Exception('Debes seleccionar una empresa de transporte');
     }
 
     $db->commit();

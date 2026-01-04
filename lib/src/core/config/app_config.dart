@@ -57,10 +57,10 @@ class AppConfig {
         // Para dispositivo fÃ­sico: usar IP de tu mÃ¡quina (ej: 192.168.1.X)
         
         // DISPOSITIVO FÍSICO - usa tu IP local:
-        // return 'http://192.168.18.68/viax/backend';
+       return 'http://192.168.18.68/viax/backend';
         
         // EMULADOR ANDROID - descomentar esta línea:
-        return 'http://10.0.2.2/viax/backend';
+        // return 'http://10.0.2.2/viax/backend';
         
       case Environment.staging:
         return 'https://staging-api.viax.com';
