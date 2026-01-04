@@ -319,7 +319,7 @@ class ConductorCard extends StatelessWidget {
     final estadoSolicitud = conductor['estado_solicitud'];
 
     if (estado == 'rechazado' || estadoSolicitud == 'rechazada') {
-      return const SizedBox.shrink();
+      return _buildRejectedStatus(context);
     }
     
     return Row(
@@ -366,6 +366,31 @@ class ConductorCard extends StatelessWidget {
             'Conductor verificado',
             style: TextStyle(
               color: AppColors.success,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRejectedStatus(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.cancel_rounded, color: AppColors.error, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            'Conductor rechazado',
+            style: TextStyle(
+              color: AppColors.error,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
