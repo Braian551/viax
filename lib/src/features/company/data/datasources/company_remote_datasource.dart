@@ -9,8 +9,35 @@ import 'package:viax/src/core/error/exceptions.dart';
 abstract class CompanyRemoteDataSource {
   Future<List<Map<String, dynamic>>> getDrivers(dynamic empresaId);
   Future<List<Map<String, dynamic>>> getPricing(dynamic empresaId);
-  Future<bool> updatePricing(dynamic empresaId, List<Map<String, dynamic>> precios);
+  Future<bool> updatePricing(
+    dynamic empresaId,
+    List<Map<String, dynamic>> precios,
+  );
   Future<Map<String, dynamic>> getCompanyDetails(dynamic empresaId);
+
+  /// Obtener estadísticas del dashboard
+  Future<Map<String, dynamic>> getDashboardStats({
+    required dynamic empresaId,
+    String periodo = 'hoy',
+  });
+
+  /// Obtener documentos de conductores de la empresa
+  Future<Map<String, dynamic>> getConductoresDocumentos({
+    required dynamic empresaId,
+    dynamic userId,
+    String? estadoVerificacion,
+    int page = 1,
+    int perPage = 20,
+  });
+
+  /// Procesar solicitud de conductor (aprobar/rechazar)
+  Future<bool> procesarSolicitudConductor({
+    required dynamic empresaId,
+    required int conductorId,
+    required String accion,
+    required int procesadoPor,
+    String? razon,
+  });
 }
 
 class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
@@ -21,9 +48,14 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   @override
   Future<Map<String, dynamic>> getCompanyDetails(dynamic empresaId) async {
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/admin/empresas.php?action=get&id=$empresaId');
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/admin/empresas.php?action=get&id=$empresaId',
+      );
       print('CompanyRemoteDataSource: Calling URL: $url');
-      final response = await client.get(url, headers: {'Accept': 'application/json'});
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
       print('CompanyRemoteDataSource: Response status: ${response.statusCode}');
       print('CompanyRemoteDataSource: Response body: ${response.body}');
 
@@ -32,7 +64,37 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
         if (data['success'] == true) {
           return Map<String, dynamic>.from(data['empresa']);
         }
-        throw ServerException(data['message'] ?? 'Error al obtener detalles de la empresa');
+        throw ServerException(
+          data['message'] ?? 'Error al obtener detalles de la empresa',
+        );
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getDashboardStats({
+    required dynamic empresaId,
+    String periodo = 'hoy',
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/dashboard_stats.php?empresa_id=$empresaId&periodo=$periodo',
+      );
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al obtener estadísticas');
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
     } catch (e) {
@@ -44,15 +106,24 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   @override
   Future<List<Map<String, dynamic>>> getDrivers(dynamic empresaId) async {
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/company/drivers.php?empresa_id=$empresaId');
-      final response = await client.get(url, headers: {'Accept': 'application/json'});
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/drivers.php?empresa_id=$empresaId',
+      );
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['data']['conductores'] ?? []);
+          return List<Map<String, dynamic>>.from(
+            data['data']['conductores'] ?? [],
+          );
         }
-        throw ServerException(data['message'] ?? 'Error al obtener conductores');
+        throw ServerException(
+          data['message'] ?? 'Error al obtener conductores',
+        );
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
     } catch (e) {
@@ -64,8 +135,13 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   @override
   Future<List<Map<String, dynamic>>> getPricing(dynamic empresaId) async {
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/company/pricing.php?empresa_id=$empresaId');
-      final response = await client.get(url, headers: {'Accept': 'application/json'});
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/pricing.php?empresa_id=$empresaId',
+      );
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -82,7 +158,10 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   }
 
   @override
-  Future<bool> updatePricing(dynamic empresaId, List<Map<String, dynamic>> precios) async {
+  Future<bool> updatePricing(
+    dynamic empresaId,
+    List<Map<String, dynamic>> precios,
+  ) async {
     try {
       final url = Uri.parse('${AppConfig.baseUrl}/company/pricing.php');
       final response = await client.post(
@@ -90,6 +169,84 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'empresa_id': empresaId, 'precios': precios}),
       );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  /// Obtener documentos de conductores que aplicaron a la empresa
+  @override
+  Future<Map<String, dynamic>> getConductoresDocumentos({
+    required dynamic empresaId,
+    dynamic userId,
+    String? estadoVerificacion,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      var url =
+          '${AppConfig.baseUrl}/company/conductores_documentos.php?empresa_id=$empresaId';
+      if (userId != null) url += '&user_id=$userId';
+      if (estadoVerificacion != null)
+        url += '&estado_verificacion=$estadoVerificacion';
+      url += '&page=$page&per_page=$perPage';
+
+      final response = await client.get(
+        Uri.parse(url),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al obtener documentos');
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  /// Aprobar o rechazar solicitud/documentos de conductor
+  @override
+  Future<bool> procesarSolicitudConductor({
+    required dynamic empresaId,
+    required int conductorId,
+    required String accion,
+    required int procesadoPor,
+    String? razon,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/conductores_documentos.php',
+      );
+      final requestBody = {
+        'empresa_id': empresaId,
+        'conductor_id': conductorId,
+        'accion': accion,
+        'procesado_por': procesadoPor,
+        if (razon != null) 'razon': razon,
+      };
+      print('DEBUG: procesarSolicitudConductor sending: $requestBody');
+      
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody),
+      );
+      
+      print('DEBUG: Response status: ${response.statusCode}');
+      print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

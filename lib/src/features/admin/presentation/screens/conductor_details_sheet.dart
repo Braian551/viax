@@ -367,7 +367,12 @@ class ConductorDetailsSheet extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: TextButton.icon(
-        onPressed: () => onShowHistory(conductor['usuario_id']),
+        onPressed: () {
+          final id = int.tryParse(conductor['usuario_id']?.toString() ?? '');
+          if (id != null) {
+            onShowHistory(id);
+          }
+        },
         icon: const Icon(Icons.history, size: 20),
         label: const Text('Ver Historial de Cambios'),
         style: TextButton.styleFrom(

@@ -7,7 +7,6 @@ import '../../data/datasources/company_remote_datasource.dart';
 import '../../data/repositories/company_repository_impl.dart';
 import '../../domain/usecases/get_company_drivers.dart';
 import '../../domain/usecases/get_company_pricing.dart';
-import '../../domain/usecases/get_company_pricing.dart';
 import '../../domain/usecases/update_company_pricing.dart';
 import '../../domain/usecases/get_company_details.dart';
 
@@ -15,6 +14,7 @@ class CompanyProvider extends ChangeNotifier {
   final dynamic empresaId;
   
   late final CompanyRepositoryImpl _repository;
+  late final CompanyRemoteDataSourceImpl _dataSource;
   late final GetCompanyDrivers _getDrivers;
   late final GetCompanyPricing _getPricing;
   late final UpdateCompanyPricing _updatePricing;
@@ -25,25 +25,36 @@ class CompanyProvider extends ChangeNotifier {
   bool _isLoadingPricing = false;
   bool _isSaving = false;
   bool _isLoadingCompany = false;
+  bool _isLoadingStats = false;
   List<Map<String, dynamic>> _drivers = [];
   List<Map<String, dynamic>> _pricing = [];
   Map<String, dynamic>? _company;
+  Map<String, dynamic>? _dashboardStats;
   String? _errorMessage;
 
   // Getters
   bool get isLoadingDrivers => _isLoadingDrivers;
   bool get isLoadingPricing => _isLoadingPricing;
   bool get isLoadingCompany => _isLoadingCompany;
+  bool get isLoadingStats => _isLoadingStats;
   bool get isSaving => _isSaving;
   List<Map<String, dynamic>> get drivers => _drivers;
   List<Map<String, dynamic>> get pricing => _pricing;
   Map<String, dynamic>? get company => _company;
+  Map<String, dynamic>? get dashboardStats => _dashboardStats;
   String? get errorMessage => _errorMessage;
   int get driverCount => _drivers.length;
+  
+  // Dashboard stats getters
+  int get viajesHoy => _dashboardStats?['viajes']?['hoy'] ?? 0;
+  int get totalConductores => _dashboardStats?['conductores']?['activos'] ?? 0;
+  String get gananciasDisplay => _dashboardStats?['ganancias']?['display'] ?? '\$0';
+  int get solicitudesPendientes => _dashboardStats?['solicitudes_pendientes'] ?? 0;
+  double get calificacionPromedio => (_dashboardStats?['calificacion']?['promedio'] ?? 0.0).toDouble();
 
   CompanyProvider({required this.empresaId}) {
-    final dataSource = CompanyRemoteDataSourceImpl(client: http.Client());
-    _repository = CompanyRepositoryImpl(remoteDataSource: dataSource);
+    _dataSource = CompanyRemoteDataSourceImpl(client: http.Client());
+    _repository = CompanyRepositoryImpl(remoteDataSource: _dataSource);
     _getDrivers = GetCompanyDrivers(_repository);
     _getPricing = GetCompanyPricing(_repository);
     _updatePricing = UpdateCompanyPricing(_repository);
@@ -74,6 +85,31 @@ class CompanyProvider extends ChangeNotifier {
     );
 
     _isLoadingCompany = false;
+    notifyListeners();
+    
+    // Cargar estadísticas del dashboard después de los detalles
+    await loadDashboardStats();
+  }
+
+  Future<void> loadDashboardStats({String periodo = 'hoy'}) async {
+    if (empresaId == null) return;
+    
+    _isLoadingStats = true;
+    notifyListeners();
+
+    try {
+      final stats = await _dataSource.getDashboardStats(
+        empresaId: empresaId,
+        periodo: periodo,
+      );
+      _dashboardStats = stats;
+      print('CompanyProvider: Dashboard stats loaded: $stats');
+    } catch (e) {
+      print('CompanyProvider: Error loading dashboard stats: $e');
+      // No actualizamos el error para no bloquear la UI
+    }
+
+    _isLoadingStats = false;
     notifyListeners();
   }
 

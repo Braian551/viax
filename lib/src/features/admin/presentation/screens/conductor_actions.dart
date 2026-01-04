@@ -17,13 +17,23 @@ Future<void> aprobarConductor({
   );
 
   if (confirm == true) {
+    // Validar ID primero
+    if (conductor['usuario_id'] == null) {
+      CustomSnackbar.showError(context, message: 'Error: ID de conductor no válido');
+      return;
+    }
+
     // Mostrar loading
     AdminDialogHelper.showLoading(context, message: 'Aprobando conductor...');
+
+    print('DEBUG: aprobarConductor called');
+    print('DEBUG: adminId: $adminId (${adminId.runtimeType})');
+    print('DEBUG: conductor["usuario_id"]: ${conductor["usuario_id"]} (${conductor["usuario_id"]?.runtimeType})');
 
     try {
       final response = await AdminService.aprobarConductor(
         adminId: adminId,
-        conductorId: conductor['usuario_id'],
+        conductorId: int.parse(conductor['usuario_id'].toString()),
       );
 
       // Cerrar loading
@@ -45,6 +55,7 @@ Future<void> aprobarConductor({
       if (Navigator.canPop(context)) Navigator.pop(context);
       await Future.delayed(const Duration(milliseconds: 100));
       if (context.mounted) {
+        print('DEBUG: Error caught: $e');
         CustomSnackbar.showError(context, message: 'Error al aprobar conductor: $e');
       }
     }
@@ -63,13 +74,19 @@ Future<void> rechazarConductor({
   );
 
   if (motivo != null && motivo.isNotEmpty) {
+    // Validar ID primero
+    if (conductor['usuario_id'] == null) {
+      CustomSnackbar.showError(context, message: 'Error: ID de conductor no válido');
+      return;
+    }
+
     // Mostrar loading
     AdminDialogHelper.showLoading(context, message: 'Rechazando conductor...');
 
     try {
       final response = await AdminService.rechazarConductor(
         adminId: adminId,
-        conductorId: conductor['usuario_id'],
+        conductorId: int.parse(conductor['usuario_id'].toString()),
         motivo: motivo,
       );
 

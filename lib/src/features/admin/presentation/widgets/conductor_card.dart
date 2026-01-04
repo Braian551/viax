@@ -20,7 +20,12 @@ class ConductorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final estadoVerificacion = conductor['estado_verificacion'] ?? 'pendiente';
-    final statusColor = _getStatusColor(estadoVerificacion);
+    final estadoSolicitud = conductor['estado_solicitud'];
+    
+    Color statusColor = _getStatusColor(estadoVerificacion);
+    if (estadoSolicitud == 'rechazada') {
+      statusColor = AppColors.error;
+    }
     
     return GestureDetector(
       onTap: onTap,
@@ -124,14 +129,30 @@ class ConductorCard extends StatelessWidget {
 
   Widget _buildStatusBadge(BuildContext context, Color color) {
     final estado = conductor['estado_verificacion'] ?? 'pendiente';
-    final label = _getStatusLabel(estado);
+    final esSolicitud = conductor['es_solicitud_pendiente'] == true;
+    final estadoSolicitud = conductor['estado_solicitud'];
+    
+    String label = _getStatusLabel(estado);
+    Color badgeColor = color;
+
+    if (esSolicitud) {
+      if (estadoSolicitud == 'rechazada') {
+        label = 'Rechazado';
+        badgeColor = AppColors.error;
+      } else {
+        label = 'Solicitud';
+        badgeColor = AppColors.warning;
+      }
+    } else if (estado == 'pendiente' || estado == null) {
+      label = 'Docs Pendientes';
+    }
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: badgeColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -140,7 +161,7 @@ class ConductorCard extends StatelessWidget {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: color,
+              color: badgeColor,
               shape: BoxShape.circle,
             ),
           ),
@@ -148,15 +169,16 @@ class ConductorCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+              color: badgeColor,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildInfo(BuildContext context) {
     return Row(
@@ -219,8 +241,9 @@ class ConductorCard extends StatelessWidget {
   }
 
   Widget _buildDocumentProgress(BuildContext context, Color statusColor) {
-    final completed = conductor['documentos_completos'] ?? 0;
-    final total = conductor['total_documentos_requeridos'] ?? 7;
+    // Safely parse int values from dynamic types
+    final completed = int.tryParse(conductor['documentos_completos']?.toString() ?? '0') ?? 0;
+    final total = int.tryParse(conductor['total_documentos_requeridos']?.toString() ?? '7') ?? 7;
     final percentage = total > 0 ? completed / total : 0.0;
     
     return Column(
@@ -291,6 +314,12 @@ class ConductorCard extends StatelessWidget {
     
     if (estado == 'aprobado') {
       return _buildApprovedActions(context);
+    }
+
+    final estadoSolicitud = conductor['estado_solicitud'];
+
+    if (estado == 'rechazado' || estadoSolicitud == 'rechazada') {
+      return const SizedBox.shrink();
     }
     
     return Row(

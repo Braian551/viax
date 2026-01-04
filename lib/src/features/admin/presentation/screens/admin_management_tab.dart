@@ -67,36 +67,6 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
                 },
               ),
               _ManagementItem(
-                title: 'Documentos de Conductores',
-                subtitle: 'Revisar y verificar documentos de conductores',
-                icon: Icons.description_rounded,
-                accentColor: AppColors.primary,
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    RouteNames.adminConductorDocs,
-                    arguments: {'admin_id': adminId, 'admin_user': widget.adminUser},
-                  );
-                },
-              ),
-              _ManagementItem(
-                title: 'Conductores',
-                subtitle: 'Administrar conductores y sus vehículos',
-                icon: Icons.drive_eta_rounded,
-                accentColor: AppColors.accent,
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    RouteNames.adminUsers,
-                    arguments: {
-                      'admin_id': adminId,
-                      'admin_user': widget.adminUser,
-                      'filter': 'conductores',
-                    },
-                  );
-                },
-              ),
-              _ManagementItem(
                 title: 'Clientes',
                 subtitle: 'Ver y gestionar clientes registrados',
                 icon: Icons.person_outline_rounded,
@@ -121,7 +91,7 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
             items: [
               _ManagementItem(
                 title: 'Empresas de Transporte',
-                subtitle: 'Registrar y gestionar empresas de transporte',
+                subtitle: 'Registrar y gestionar empresas (conductores gestionados por cada empresa)',
                 icon: Icons.business_rounded,
                 accentColor: AppColors.primary,
                 onTap: () {

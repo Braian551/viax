@@ -11,6 +11,7 @@ import 'tabs/company_dashboard_tab.dart';
 import 'tabs/company_profile_tab.dart';
 import 'company_drivers_screen.dart'; // Contains CompanyDriversTab
 import 'company_pricing_screen.dart'; // Contains CompanyPricingTab
+import 'company_conductores_documentos_screen.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -53,6 +54,19 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     );
   }
 
+  void _navigateToDocumentos() {
+    final empresaId = widget.user['empresa_id'] ?? widget.user['id'];
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CompanyConductoresDocumentosScreen(
+          user: widget.user,
+          empresaId: empresaId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -77,6 +91,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                 CompanyDashboardTab(
                   onNavigateToDrivers: () => _onNavigateToTab(1),
                   onNavigateToPricing: () => _onNavigateToTab(2),
+                  onNavigateToDocumentos: () => _navigateToDocumentos(),
                 ),
                 CompanyDriversTab(user: widget.user),
                 CompanyPricingTab(user: widget.user),

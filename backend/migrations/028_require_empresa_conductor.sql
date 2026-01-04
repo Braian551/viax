@@ -152,7 +152,7 @@ BEGIN
     SET empresa_id = v_empresa_id, 
         estado_vinculacion = 'vinculado',
         es_activo = 1, 
-        actualizado_en = CURRENT_TIMESTAMP
+        fecha_actualizacion = CURRENT_TIMESTAMP
     WHERE id = v_conductor_id;
     
     -- Actualizar contador de conductores en empresa

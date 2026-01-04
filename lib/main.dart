@@ -4,7 +4,7 @@ import 'dart:developer' as developer;
 import 'dart:ui' as ui; 
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:viax/src/routes/app_router.dart';
+import 'package:viax/src/routes/app_router.dart';   
 import 'package:viax/src/providers/database_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_profile_provider.dart';

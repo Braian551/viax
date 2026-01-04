@@ -6,11 +6,13 @@ import 'package:viax/src/theme/app_colors.dart';
 class CompanyDashboardTab extends StatefulWidget {
   final VoidCallback? onNavigateToDrivers;
   final VoidCallback? onNavigateToPricing;
+  final VoidCallback? onNavigateToDocumentos;
 
   const CompanyDashboardTab({
     super.key,
     this.onNavigateToDrivers,
     this.onNavigateToPricing,
+    this.onNavigateToDocumentos,
   });
 
   @override
@@ -81,27 +83,55 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
   }
 
   Widget _buildStatsSection(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('32', 'Viajes Hoy', Icons.route_rounded, Colors.blue),
-          _buildStatItem('12', 'Conductores', Icons.people_rounded, Colors.orange),
-          _buildStatItem('\$450k', 'Ganancias', Icons.payments_rounded, Colors.green),
-        ],
-      ),
+    return Consumer<CompanyProvider>(
+      builder: (context, provider, _) {
+        final isLoading = provider.isLoadingStats;
+        
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: isLoading
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      provider.viajesHoy.toString(),
+                      'Viajes Hoy',
+                      Icons.route_rounded,
+                      Colors.blue,
+                    ),
+                    _buildStatItem(
+                      provider.totalConductores.toString(),
+                      'Conductores',
+                      Icons.people_rounded,
+                      Colors.orange,
+                    ),
+                    _buildStatItem(
+                      provider.gananciasDisplay,
+                      'Ganancias',
+                      Icons.payments_rounded,
+                      Colors.green,
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -142,7 +172,7 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
       crossAxisCount: 2,
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      childAspectRatio: 1.1,
+      childAspectRatio: 1.0, // Ajustado para evitar overflow
       children: [
         _buildModernDashboardCard(
           context,
@@ -154,19 +184,19 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
         ),
         _buildModernDashboardCard(
           context,
+          'Documentos',
+          'Verificar docs',
+          Icons.description_rounded,
+          Colors.amber,
+          widget.onNavigateToDocumentos ?? () {},
+        ),
+        _buildModernDashboardCard(
+          context,
           'Tarifas',
           'Configurar precios',
           Icons.attach_money_rounded,
           Colors.green,
           widget.onNavigateToPricing ?? () {},
-        ),
-        _buildModernDashboardCard(
-          context,
-          'Vehículos',
-          'Ver estado',
-          Icons.directions_car_rounded,
-          Colors.indigo,
-          () {},
         ),
         _buildModernDashboardCard(
           context,
@@ -189,12 +219,12 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
     VoidCallback onTap,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -221,24 +251,31 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

@@ -200,7 +200,7 @@ try {
 
         $conductores[] = [
             'id' => $row['id'] ?? null,
-            'usuario_id' => $row['usuario_id'],
+            'usuario_id' => intval($row['usuario_id']),
             
             // Información del usuario
             'nombre_completo' => trim(($row['nombre'] ?? '') . ' ' . ($row['apellido'] ?? '')),
