@@ -5,6 +5,7 @@ import 'package:viax/src/features/company/presentation/widgets/dashboard/dashboa
 import 'package:viax/src/features/company/presentation/widgets/dashboard/dashboard_stats.dart';
 import 'package:viax/src/features/company/presentation/widgets/dashboard/dashboard_menu_grid.dart';
 import 'package:viax/src/features/company/presentation/widgets/dashboard/promo_banner.dart';
+import 'package:viax/src/features/company/presentation/widgets/vehicles/vehicle_management_sheet.dart';
 
 class CompanyDashboardTab extends StatefulWidget {
   final VoidCallback? onNavigateToDrivers;
@@ -56,8 +57,8 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
                 onDriversTap: widget.onNavigateToDrivers,
                 onDocumentsTap: widget.onNavigateToDocumentos,
                 onPricingTap: widget.onNavigateToPricing,
+                onVehiclesTap: () => _showVehicleManagement(context),
                 onReportsTap: () {
-                  // Todo: Reports Tab
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Próximamente: Reportes avanzados')),
                   );
@@ -81,6 +82,24 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
           ],
         );
       },
+    );
+  }
+
+  void _showVehicleManagement(BuildContext context) {
+    final provider = context.read<CompanyProvider>();
+    // provider.company returns the company details map
+    final empresaId = provider.company?['id'] ?? provider.empresaId;
+    
+    // We will let the sheet load the enabled vehicles itself
+    // or we could derive it from provider.pricing if loaded
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => VehicleManagementSheet(
+        empresaId: empresaId,
+        currentVehicleTypes: const [], // Sheet will load this
+      ),
     );
   }
 }
