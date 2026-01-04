@@ -17,11 +17,15 @@ import 'package:viax/src/features/admin/presentation/screens/document_viewer_scr
 class CompanyConductoresDocumentosScreen extends StatefulWidget {
   final Map<String, dynamic> user;
   final dynamic empresaId;
+  final int? initialUserId;
+  final String? initialSearch;
 
   const CompanyConductoresDocumentosScreen({
     super.key,
     required this.user,
     required this.empresaId,
+    this.initialUserId,
+    this.initialSearch,
   });
 
   @override
@@ -55,7 +59,21 @@ class _CompanyConductoresDocumentosScreenState
   void initState() {
     super.initState();
     _dataSource = CompanyRemoteDataSourceImpl(client: http.Client());
-    _loadDocumentos();
+    
+    if (widget.initialSearch != null) {
+      _searchController.text = widget.initialSearch!;
+    }
+    
+    _loadDocumentos().then((_) {
+      if (widget.initialUserId != null && mounted) {
+        try {
+          final target = _conductores.firstWhere(
+            (c) => c['usuario_id'] == widget.initialUserId || c['id'] == widget.initialUserId,
+          );
+          _showConductorDetails(target);
+        } catch (_) {}
+      }
+    });
   }
 
   @override

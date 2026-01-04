@@ -36,18 +36,34 @@ try {
     // Obtener conductores vinculados a esta empresa
     // La relación según migración 018 es: usuarios.empresa_id
     
+    // Parametros
+    $params = [$empresaId];
+    
+    // Búsqueda
+    $search = isset($_GET['search']) ? trim($_GET['search']) : null;
+    $searchClause = "";
+    
+    if ($search) {
+        $searchClause = " AND (u.nombre ILIKE ? OR u.apellido ILIKE ? OR u.email ILIKE ?)";
+        $params[] = "%$search%";
+        $params[] = "%$search%";
+        $params[] = "%$search%";
+    }
+    
     $query = "SELECT 
                 u.id, u.nombre, u.apellido, u.email, u.telefono, 
                 u.foto_perfil, u.es_activo, u.es_verificado,
-                u.fecha_registro
+                u.fecha_registro,
+                d.estado_verificacion
               FROM usuarios u
               LEFT JOIN detalles_conductor d ON u.id = d.usuario_id
               WHERE u.tipo_usuario = 'conductor' 
               AND u.empresa_id = ?
+              $searchClause
               ORDER BY u.fecha_registro DESC";
               
     $stmt = $db->prepare($query);
-    $stmt->execute([$empresaId]);
+    $stmt->execute($params);
     $conductores = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     sendJsonResponse(true, 'Conductores obtenidos', [
