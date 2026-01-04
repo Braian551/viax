@@ -121,11 +121,8 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
           children: [
             // Admin Commission Info Card
-            if (_empresaInfo != null) _buildAdminCommissionCard(isDark),
-            const SizedBox(height: 20),
-
-            // Balance Card
-            if (_empresaInfo != null) _buildBalanceCard(isDark),
+            // Summary Section (Commission & Balance)
+            if (_empresaInfo != null) _buildSummarySection(isDark),
             const SizedBox(height: 24),
 
             // Section Header
@@ -183,30 +180,25 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Shimmer for Admin Card
-        Shimmer.fromColors(
-          baseColor: Colors.grey.withValues(alpha: 0.1),
-          highlightColor: Colors.grey.withValues(alpha: 0.05),
-          child: Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+        // Shimmer for Summary Cards (Row)
+        Row(
+          children: [
+            Expanded(
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey.withValues(alpha: 0.1),
+                highlightColor: Colors.grey.withValues(alpha: 0.05),
+                child: Container(height: 110, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        // Shimmer for Balance Card
-        Shimmer.fromColors(
-          baseColor: Colors.grey.withValues(alpha: 0.1),
-          highlightColor: Colors.grey.withValues(alpha: 0.05),
-          child: Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey.withValues(alpha: 0.1),
+                highlightColor: Colors.grey.withValues(alpha: 0.05),
+                child: Container(height: 110, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+              ),
             ),
-          ),
+          ],
         ),
         const SizedBox(height: 30),
         // Shimmer for Pricing Cards
@@ -215,13 +207,7 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
            child: Shimmer.fromColors(
              baseColor: Colors.grey.withValues(alpha: 0.1),
              highlightColor: Colors.grey.withValues(alpha: 0.05),
-             child: Container(
-               height: 180,
-               decoration: BoxDecoration(
-                 color: Colors.white,
-                 borderRadius: BorderRadius.circular(20),
-               ),
-             ),
+             child: Container(height: 180, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
            ),
          )),
       ],
@@ -263,62 +249,98 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     );
   }
 
-  Widget _buildAdminCommissionCard(bool isDark) {
-    // Keep existing layout but ensure it matches modern style if not already
+  Widget _buildSummarySection(bool isDark) {
     final comisionAdmin = _empresaInfo?['comision_admin_porcentaje'] ?? 0.0;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.primaryDark.withValues(alpha: 0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.percent_rounded, color: AppColors.primary, size: 28),
+    final saldo = _empresaInfo?['saldo_pendiente'] ?? 0.0;
+    final hasDebt = saldo > 0;
+
+    return Row(
+      children: [
+        // Commission Card
+        Expanded(
+          child: _buildSummaryCard(
+            context: context,
+            title: 'Comisión',
+            value: '${comisionAdmin.toStringAsFixed(1)}%',
+            subtitle: 'Plataforma',
+            icon: Icons.percent_rounded,
+            color: AppColors.primary,
+            isDark: isDark,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Comisión Plataforma',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontSize: 13,
-                  ),
+        ),
+        const SizedBox(width: 16),
+        // Balance Card
+        Expanded(
+          child: _buildSummaryCard(
+            context: context,
+            title: hasDebt ? 'Pendiente' : 'Al día',
+            value: '\$${saldo.toStringAsFixed(0)}',
+            subtitle: hasDebt ? 'Saldo' : 'Cuenta',
+            icon: hasDebt ? Icons.priority_high_rounded : Icons.check_circle_outline_rounded,
+            color: hasDebt ? AppColors.warning : AppColors.success,
+            isDark: isDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required BuildContext context,
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${comisionAdmin.toStringAsFixed(1)}%',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'de tu comisión a conductores',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+                child: Icon(icon, color: color, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -326,68 +348,7 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     );
   }
 
-  Widget _buildBalanceCard(bool isDark) {
-    final saldo = _empresaInfo?['saldo_pendiente'] ?? 0.0;
-    final hasDebt = saldo > 0;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: hasDebt
-              ? [AppColors.warning.withValues(alpha: 0.15), AppColors.warning.withValues(alpha: 0.05)]
-              : [AppColors.success.withValues(alpha: 0.15), AppColors.success.withValues(alpha: 0.05)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: hasDebt
-              ? AppColors.warning.withValues(alpha: 0.3)
-              : AppColors.success.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: (hasDebt ? AppColors.warning : AppColors.success).withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              hasDebt ? Icons.account_balance_wallet_outlined : Icons.check_circle_outline,
-              color: hasDebt ? AppColors.warning : AppColors.success,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasDebt ? 'Saldo Pendiente' : 'Cuenta al día',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '\$${saldo.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: hasDebt ? AppColors.warning : AppColors.success,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Future<void> _showEditSheet(Map<String, dynamic> config) async {
     final controllers = {
