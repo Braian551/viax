@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:viax/src/features/company/data/datasources/company_remote_datasource.dart';
@@ -46,12 +47,31 @@ class _CompanyConductoresDocumentosScreenState
     'rechazado': 'Rechazados',
   };
 
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+
   @override
   void initState() {
     super.initState();
     _dataSource = CompanyRemoteDataSourceImpl(client: http.Client());
     _loadDocumentos();
   }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _loadDocumentos();
+    });
+  }
+
 
   Future<void> _loadDocumentos() async {
     setState(() => _isLoading = true);
@@ -60,6 +80,7 @@ class _CompanyConductoresDocumentosScreenState
       final data = await _dataSource.getConductoresDocumentos(
         empresaId: widget.empresaId,
         estadoVerificacion: _filtroEstado == 'todos' ? null : _filtroEstado,
+        searchQuery: _searchController.text,
       );
 
       if (!mounted) return;
@@ -120,6 +141,7 @@ class _CompanyConductoresDocumentosScreenState
                   SliverToBoxAdapter(child: _buildSolicitudesPendientes()),
                 if (_estadisticas != null)
                   SliverToBoxAdapter(child: _buildEstadisticas()),
+                SliverToBoxAdapter(child: _buildSearchBar()),
                 SliverToBoxAdapter(child: _buildFilterSection()),
                 _buildContent(),
                 const SliverPadding(padding: EdgeInsets.only(bottom: 30)),
@@ -257,74 +279,125 @@ class _CompanyConductoresDocumentosScreenState
   }
 
   Widget _buildEstadisticas() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.analytics_outlined,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Resumen de Conductores',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Pendientes',
-                  _estadisticas!['pendientes_verificacion']?.toString() ?? '0',
-                  Icons.pending_actions_rounded,
-                  AppColors.warning,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Aprobados',
-                  _estadisticas!['aprobados']?.toString() ?? '0',
-                  Icons.verified_user_rounded,
-                  AppColors.success,
-                ),
-              ),
-            ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildCompactStat(
+              'Pendientes',
+              _estadisticas!['pendientes_verificacion']?.toString() ?? '0',
+              AppColors.warning,
+            ),
+            _buildVerticalDivider(),
+            _buildCompactStat(
+              'Aprobados',
+              _estadisticas!['aprobados']?.toString() ?? '0',
+              AppColors.success,
+            ),
+            _buildVerticalDivider(),
+            _buildCompactStat(
+              'Rechazados',
+              _estadisticas!['rechazados']?.toString() ?? '0',
+              AppColors.error,
+            ),
+            _buildVerticalDivider(),
+            _buildCompactStat(
+              'Total',
+              _estadisticas!['total_conductores']?.toString() ?? '0',
+              AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactStat(String label, String value, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Vencidos',
-                  _estadisticas!['con_documentos_vencidos']?.toString() ?? '0',
-                  Icons.warning_amber_rounded,
-                  AppColors.error,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Total',
-                  _estadisticas!['total_conductores']?.toString() ?? '0',
-                  Icons.people_outline_rounded,
-                  AppColors.primary,
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 30,
+      width: 1,
+      color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark 
+            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)
+            : Colors.grey.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: _onSearchChanged,
+          decoration: InputDecoration(
+            hintText: 'Buscar conductor o cliente...',
+            prefixIcon: Icon(
+              Icons.search_rounded, 
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              fontSize: 14,
+            ),
+          ),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

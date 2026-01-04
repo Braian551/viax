@@ -26,6 +26,7 @@ abstract class CompanyRemoteDataSource {
     required dynamic empresaId,
     dynamic userId,
     String? estadoVerificacion,
+    String? searchQuery,
     int page = 1,
     int perPage = 20,
   });
@@ -187,6 +188,7 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
     required dynamic empresaId,
     dynamic userId,
     String? estadoVerificacion,
+    String? searchQuery,
     int page = 1,
     int perPage = 20,
   }) async {
@@ -196,6 +198,8 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
       if (userId != null) url += '&user_id=$userId';
       if (estadoVerificacion != null)
         url += '&estado_verificacion=$estadoVerificacion';
+      if (searchQuery != null && searchQuery.isNotEmpty)
+        url += '&search=${Uri.encodeComponent(searchQuery)}';
       url += '&page=$page&per_page=$perPage';
 
       final response = await client.get(

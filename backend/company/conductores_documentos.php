@@ -161,6 +161,12 @@ function handleGet($db) {
         $params[':conductor_id'] = $conductor_id;
     }
 
+    $search = isset($_GET['search']) ? trim($_GET['search']) : null;
+    if ($search) {
+        $where_clauses[] = "(u.nombre ILIKE :search OR u.apellido ILIKE :search OR u.email ILIKE :search)";
+        $params[':search'] = "%$search%";
+    }
+
     if ($estado_verificacion !== null) {
         if ($estado_verificacion === 'rechazado') {
             $where_clauses[] = "(dc.estado_verificacion = 'rechazado' OR u.id IN (SELECT conductor_id FROM solicitudes_vinculacion_conductor WHERE empresa_id = :empresa_id_rech AND estado = 'rechazada'))";
