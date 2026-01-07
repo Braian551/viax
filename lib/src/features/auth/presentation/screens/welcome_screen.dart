@@ -143,6 +143,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     
                     const SizedBox(height: 14),
                     
+                    /*
                     // Iniciar con Apple
                     _buildSocialButton(
                       icon: Icon(
@@ -160,6 +161,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         // TODO: Integrar Apple Sign-In
                       },
                     ),                    const SizedBox(height: 14),
+                    */
                     
                     // Iniciar con correo
                     _buildSocialButton(
@@ -177,6 +179,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       },
                     ),
                     
+                    /*
                     const SizedBox(height: 14),
                     
                     // Iniciar con teléfono
@@ -193,6 +196,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Navigator.pushNamed(context, RouteNames.phoneAuth);
                       },
                     ),
+                    */
                     
                     const SizedBox(height: 28),
                     
