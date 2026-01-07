@@ -58,3 +58,9 @@ lib/src/core/config/env_config.dart
 # Backup files
 *.backup
 *.bak
+
+# Backend Secrets
+backend/config/.env
+backend/config/google_oauth.php
+**/backend/config/.env
+
