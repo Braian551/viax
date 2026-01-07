@@ -226,17 +226,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
                             ),
                           )
-                        : Image.network(
-                            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                        : Image.asset(
+                            'assets/images/google_logo.png',
                             height: 24,
                             width: 24,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.g_mobiledata,
-                                size: 24,
-                                color: Colors.black,
-                              );
-                            },
                           ),
                       text: _isGoogleLoading ? 'Conectando...' : 'Continuar con Google',
                       backgroundColor: Colors.white,
