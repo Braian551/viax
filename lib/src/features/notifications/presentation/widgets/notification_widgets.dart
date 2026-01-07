@@ -199,42 +199,55 @@ class NotificationBadge extends StatelessWidget {
             ),
           ),
           child: Stack(
+            alignment: Alignment.center,
             children: [
-              IconButton(
-                padding: EdgeInsets.zero,
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: isDark ? Colors.white : Colors.grey[800],
-                  size: 26,
+              // Icono centrado
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(50),
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.notifications_outlined,
+                      color: isDark ? Colors.white : Colors.grey[800],
+                      size: 26,
+                    ),
+                  ),
                 ),
-                onPressed: onTap,
               ),
+              // Badge
               if (count > 0)
                 Positioned(
-                  right: 8,
-                  top: 8,
+                  right: 10,
+                  top: 10,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
                     constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
+                      minWidth: 16,
+                      minHeight: 16,
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isDark ? AppColors.darkSurface : Colors.white,
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         width: 1.5,
                       ),
                     ),
                     child: Center(
                       child: Text(
-                        count > 99 ? '99+' : count.toString(),
+                        count > 9 ? '+9' : count.toString(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9, 
                           fontWeight: FontWeight.bold,
+                          height: 1.0,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
