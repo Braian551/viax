@@ -58,6 +58,16 @@ class _NotificationsContentState extends State<_NotificationsContent>
     _scrollController = ScrollController()..addListener(_onScroll);
     
     _headerController.forward();
+    
+    // Marcar todas como leídas al entrar (comportamiento estilo app)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Pequeño delay para que la UI cargue primero
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          context.read<NotificationProvider>().markAllAsRead(userId: widget.userId);
+        }
+      });
+    });
   }
 
   void _onScroll() {
@@ -181,34 +191,7 @@ class _NotificationsContentState extends State<_NotificationsContent>
                 ),
               ),
               
-              // Acciones
-              if (provider.unreadCount > 0)
-                TextButton(
-                  onPressed: () async {
-                    final success = await provider.markAllAsRead(
-                      userId: widget.userId,
-                    );
-                    if (success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Todas las notificaciones marcadas como leídas'),
-                          backgroundColor: AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    'Leer todo',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              // Acciones (Eliminado botón Leer todo)
               
               // Menú de opciones
               PopupMenuButton<String>(
