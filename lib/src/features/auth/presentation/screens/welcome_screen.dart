@@ -65,7 +65,39 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             arguments: result['user'],
           );
         } else {
-          Navigator.of(context).pushReplacementNamed(RouteNames.home);
+          // Determinar redirección basada en rol
+          final user = result['user'];
+          final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
+          
+          if (tipoUsuario == 'administrador') {
+            Navigator.pushNamedAndRemoveUntil(
+              context, 
+              RouteNames.adminHome,
+              (route) => false,
+              arguments: {'admin_user': user},
+            );
+          } else if (tipoUsuario == 'conductor') {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.conductorHome,
+              (route) => false,
+              arguments: {'conductor_user': user},
+            );
+          } else if (tipoUsuario == 'empresa') {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.companyHome,
+              (route) => false,
+              arguments: {'user': user},
+            );
+          } else {
+            // Cliente
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.home,
+              (route) => false,
+            );
+          }
         }
       } else {
         _showErrorSnackBar(result['message'] ?? 'Error en la autenticación');
