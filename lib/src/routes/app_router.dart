@@ -41,6 +41,7 @@ import 'package:viax/src/widgets/auth_wrapper.dart';
 import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_home_screen.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
+import 'package:viax/src/features/auth/presentation/screens/phone_required_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -69,6 +70,14 @@ class AppRouter {
         }
       case RouteNames.phoneAuth:
         return FadeSlidePageRoute(page: const PhoneAuthScreen(), settings: settings);
+      case RouteNames.phoneRequired:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return FadeSlidePageRoute(
+            page: PhoneRequiredScreen(userData: args),
+            settings: settings,
+          );
+        }
       case RouteNames.emailAuth:
         return FadeSlidePageRoute(page: const EmailAuthScreen(), settings: settings);
       case RouteNames.emailVerification:

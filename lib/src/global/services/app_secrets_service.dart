@@ -56,7 +56,7 @@ class AppSecretsService {
 
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/config/api_keys.php'),
+        Uri.parse('${AppConfig.baseUrl}/get_api_keys.php'),
         headers: {
           'Accept': 'application/json',
         },

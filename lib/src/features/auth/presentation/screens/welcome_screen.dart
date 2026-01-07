@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/auth/google_auth_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -13,6 +14,8 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool _isGoogleLoading = false;
+  
   @override
   void initState() {
     super.initState();
@@ -22,8 +25,72 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _checkSession() async {
     final session = await UserService.getSavedSession();
     if (session != null && mounted) {
-      Navigator.of(context).pushReplacementNamed(RouteNames.home);
+      // Verificar si necesita ingresar teléfono
+      final requiresPhone = await GoogleAuthService.checkRequiresPhone();
+      if (requiresPhone && mounted) {
+        Navigator.of(context).pushReplacementNamed(
+          RouteNames.phoneRequired,
+          arguments: session,
+        );
+      } else if (mounted) {
+        Navigator.of(context).pushReplacementNamed(RouteNames.home);
+      }
     }
+  }
+  
+  /// Inicia sesión con Google usando el SDK nativo
+  Future<void> _signInWithGoogle() async {
+    if (_isGoogleLoading) return;
+    
+    setState(() {
+      _isGoogleLoading = true;
+    });
+    
+    try {
+      // Usar el SDK de Google Sign-In directamente
+      final result = await GoogleAuthService.signInWithGoogle();
+      
+      if (!mounted) return;
+      
+      if (result['cancelled'] == true) {
+        // Usuario canceló, no mostrar error
+        return;
+      }
+      
+      if (result['success'] == true) {
+        // Verificar si necesita teléfono
+        if (result['requires_phone'] == true) {
+          Navigator.of(context).pushReplacementNamed(
+            RouteNames.phoneRequired,
+            arguments: result['user'],
+          );
+        } else {
+          Navigator.of(context).pushReplacementNamed(RouteNames.home);
+        }
+      } else {
+        _showErrorSnackBar(result['message'] ?? 'Error en la autenticación');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('Error: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+      }
+    }
+  }
+  
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -118,27 +185,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   children: [
                     // Iniciar con Google
                     _buildSocialButton(
-                      icon: Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-                        height: 24,
-                        width: 24,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.g_mobiledata,
-                            size: 24,
-                            color: Colors.black,
-                          );
-                        },
-                      ),
-                      text: 'Continuar con Google',
+                      icon: _isGoogleLoading 
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                            ),
+                          )
+                        : Image.network(
+                            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                            height: 24,
+                            width: 24,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.g_mobiledata,
+                                size: 24,
+                                color: Colors.black,
+                              );
+                            },
+                          ),
+                      text: _isGoogleLoading ? 'Conectando...' : 'Continuar con Google',
                       backgroundColor: Colors.white,
                       textColor: Colors.black,
                         borderColor: isDark 
                           ? Colors.white.withValues(alpha: 0.3) 
                           : Colors.black.withValues(alpha: 0.2),
-                      onPressed: () {
-                        // TODO: Integrar Google Sign-In
-                      },
+                      onPressed: _isGoogleLoading ? () {} : _signInWithGoogle,
                     ),
                     
                     const SizedBox(height: 14),

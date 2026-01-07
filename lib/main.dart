@@ -4,6 +4,8 @@ import 'dart:developer' as developer;
 import 'dart:ui' as ui; 
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:viax/firebase_options.dart';
 import 'package:viax/src/routes/app_router.dart';   
 import 'package:viax/src/providers/database_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
@@ -82,6 +84,18 @@ void main() async {
     };
 
     await initializeDateFormatting('es_ES', null);
+
+    // ============================================
+    // INICIALIZAR FIREBASE
+    // ============================================
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('✅ Firebase inicializado correctamente');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando Firebase: $e');
+    }
 
     // ============================================
     // INICIALIZAR API KEYS DESDE BACKEND

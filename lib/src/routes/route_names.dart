@@ -9,6 +9,7 @@
   static const String register = '/register';
   static const String welcomeSplash = '/welcome-splash';
   static const String phoneAuth = '/phone-auth';
+  static const String phoneRequired = '/phone-required';
   static const String home = '/home';
   static const String locationPicker = '/location-picker';
   static const String driverRegistration = '/driver-registration';

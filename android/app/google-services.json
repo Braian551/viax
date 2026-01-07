@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "879318355876",
+    "project_id": "viax-81a5e",
+    "storage_bucket": "viax-81a5e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879318355876:android:df6e77f75ed055f5e6bb31",
+        "android_client_info": {
+          "package_name": "com.example.viax"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "879318355876-e3nakm38is93umdd2d1l7kph07ucioll.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.viax",
+            "certificate_hash": "1e7f9f2249cb597942d73a9f8a65938ea6e0af66"
+          }
+        },
+        {
+          "client_id": "879318355876-ii7g05sqsun2fijeqe9mik186a3fbisb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcit9gkhhtM2aUv2DNlh938Qxl0jwL50E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "879318355876-ii7g05sqsun2fijeqe9mik186a3fbisb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "879318355876-d78p0odtdo2lfhkfg6q61hhrh8vhs2o2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.viax"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

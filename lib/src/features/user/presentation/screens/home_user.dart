@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/auth/google_auth_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
@@ -131,9 +132,31 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       if (sess != null) {
         final id = sess['id'] as int?;
         final email = sess['email'] as String?;
+        
+        // Verificar si el usuario necesita ingresar teléfono
+        final requiresPhone = await GoogleAuthService.checkRequiresPhone();
+        if (requiresPhone && mounted) {
+          Navigator.of(context).pushReplacementNamed(
+            RouteNames.phoneRequired,
+            arguments: sess,
+          );
+          return;
+        }
+        
         final profile = await UserService.getProfile(userId: id, email: email);
         if (profile != null && profile['success'] == true) {
           final user = profile['user'];
+          
+          // Doble verificación del teléfono desde el servidor
+          final telefono = user?['telefono'];
+          if ((telefono == null || telefono.toString().isEmpty) && mounted) {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.phoneRequired,
+              arguments: user,
+            );
+            return;
+          }
+          
           if (mounted) {
             setState(() {
               _userName = user?['nombre'] ?? 'Usuario';

@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Load environment variables from .env if available
-    $envFile = __DIR__ . '/.env';
+    $envFile = __DIR__ . '/config/.env';
     if (file_exists($envFile)) {
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
