@@ -58,16 +58,6 @@ class _NotificationsContentState extends State<_NotificationsContent>
     _scrollController = ScrollController()..addListener(_onScroll);
     
     _headerController.forward();
-    
-    // Marcar todas como leídas al entrar (comportamiento estilo app)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Pequeño delay para que la UI cargue primero
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          context.read<NotificationProvider>().markAllAsRead(userId: widget.userId);
-        }
-      });
-    });
   }
 
   void _onScroll() {
@@ -94,8 +84,16 @@ class _NotificationsContentState extends State<_NotificationsContent>
     final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          // Marcar todas como leídas al salir de la pantalla
+          context.read<NotificationProvider>().markAllAsRead(userId: widget.userId);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: backgroundColor,
       body: SafeArea(
         child: Consumer<NotificationProvider>(
           builder: (context, provider, _) {
@@ -124,7 +122,7 @@ class _NotificationsContentState extends State<_NotificationsContent>
           },
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildHeader(
