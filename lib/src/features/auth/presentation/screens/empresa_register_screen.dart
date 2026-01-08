@@ -1,16 +1,17 @@
 // lib/src/features/auth/presentation/screens/empresa_register_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
-import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
+import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 
 /// Pantalla de registro de empresas de transporte
-/// Sigue el mismo formato del formulario de admin pero adaptado para registro público
+/// UI optimizada para coincidir con el registro de usuarios
 class EmpresaRegisterScreen extends StatefulWidget {
   const EmpresaRegisterScreen({super.key});
 
@@ -20,8 +21,9 @@ class EmpresaRegisterScreen extends StatefulWidget {
 
 class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _pageController = PageController();
-  int _currentPage = 0;
+  int _currentStep = 0;
+  final int _totalSteps = 4;
+  
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -53,7 +55,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   
   // Tipos de vehículos seleccionados
-  List<String> _tiposVehiculoSeleccionados = [];
+  final List<String> _tiposVehiculoSeleccionados = [];
   
   final List<String> _tiposVehiculoDisponibles = [
     'moto',
@@ -64,7 +66,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   @override
   void dispose() {
-    _pageController.dispose();
     _nombreEmpresaController.dispose();
     _nitController.dispose();
     _razonSocialController.dispose();
@@ -102,29 +103,26 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     }
   }
 
-  void _nextPage() {
-    if (_currentPage < 3) {
-      // Validar página actual antes de avanzar
-      if (_validateCurrentPage()) {
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+  void _nextStep() {
+    if (_currentStep < _totalSteps - 1) {
+      if (_validateCurrentStep()) {
+        setState(() => _currentStep++);
       }
+    } else {
+      _submitForm();
     }
   }
 
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  void _prevStep() {
+    if (_currentStep > 0) {
+      setState(() => _currentStep--);
+    } else {
+      Navigator.pop(context);
     }
   }
 
-  bool _validateCurrentPage() {
-    switch (_currentPage) {
+  bool _validateCurrentStep() {
+    switch (_currentStep) {
       case 0: // Información empresa
         if (_nombreEmpresaController.text.trim().isEmpty) {
           _showError('El nombre de la empresa es requerido');
@@ -201,13 +199,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
       if (result['success'] == true) {
         if (mounted) {
-          _showSuccess('¡Registro exitoso! Tu solicitud está pendiente de aprobación.');
-          await Future.delayed(const Duration(seconds: 2));
-          if (mounted) {
-            Navigator.of(context).pop();
-            // Mostrar diálogo de confirmación
-            _showRegistrationSuccessDialog();
-          }
+          _showRegistrationSuccessDialog();
         }
       } else {
         _showError(result['message'] ?? 'Error al registrar la empresa');
@@ -239,7 +231,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
             const Expanded(
               child: Text(
                 '¡Solicitud Enviada!',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -261,7 +253,10 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         ),
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+               Navigator.of(context).pop(); // Close dialog
+               Navigator.of(context).pop(); // Go back to login/welcome
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -277,592 +272,142 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     CustomSnackbar.showError(context, message: message);
   }
 
-  void _showSuccess(String message) {
-    CustomSnackbar.showSuccess(context, message: message);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface.withValues(alpha: 0.8),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-            ),
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-              size: 20,
-            ),
-            onPressed: () {
-              if (_currentPage > 0) {
-                _previousPage();
-              } else {
-                Navigator.pop(context);
-              }
-            },
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        title: Text(
-          'Registrar Empresa',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
+      backgroundColor: backgroundColor,
+      body: Stack(
         children: [
-          // Indicador de progreso
-          _buildProgressIndicator(isDark),
-          
-          // Contenido del formulario
-          Expanded(
-            child: Form(
-              key: _formKey,
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (page) => setState(() => _currentPage = page),
-                children: [
-                  _buildEmpresaInfoPage(isDark),
-                  _buildContactoPage(isDark),
-                  _buildRepresentantePage(isDark),
-                  _buildSeguridadPage(isDark),
-                ],
-              ),
-            ),
+           // Background Blobs
+          Positioned(
+            top: -100,
+            right: -50,
+            child: _buildGradientBlob(size, AppColors.primary.withValues(alpha: 0.15)),
           ),
-          
-          // Botones de navegación
-          _buildNavigationButtons(isDark),
-        ],
-      ),
-    );
-  }
+          Positioned(
+            top: size.height * 0.4,
+            left: -80,
+            child: _buildGradientBlob(size, AppColors.accent.withValues(alpha: 0.1)),
+          ),
 
-  Widget _buildProgressIndicator(bool isDark) {
-    final steps = ['Empresa', 'Contacto', 'Representante', 'Seguridad'];
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Column(
-        children: [
-          Row(
-            children: List.generate(4, (index) {
-              final isCompleted = index < _currentPage;
-              final isCurrent = index == _currentPage;
-              
-              return Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isCompleted || isCurrent
-                              ? AppColors.primary
-                              : (isDark ? Colors.white12 : Colors.black12),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    if (index < 3) const SizedBox(width: 4),
-                  ],
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: steps.asMap().entries.map((entry) {
-              final isCurrent = entry.key == _currentPage;
-              return Text(
-                entry.value,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
-                  color: isCurrent
-                      ? AppColors.primary
-                      : Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmpresaInfoPage(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: EntranceFader(
-        delay: const Duration(milliseconds: 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context, 'Información de la Empresa', Icons.business),
-            const SizedBox(height: 20),
-            
-            // Logo picker
-            Center(
-              child: GestureDetector(
-                onTap: _pickLogo,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface : Colors.grey[200],
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 2),
-                        image: _logoFile != null
-                            ? DecorationImage(
-                                image: FileImage(_logoFile!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: _logoFile == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo, size: 28, color: Colors.grey[500]),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Logo',
-                                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                                ),
-                              ],
-                            )
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.edit, size: 14, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'Opcional',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            AuthTextField(
-              controller: _nombreEmpresaController,
-              label: 'Nombre de la Empresa *',
-              icon: Icons.business_rounded,
-              textCapitalization: TextCapitalization.words,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre es requerido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            Row(
+          SafeArea(
+            child: Column(
               children: [
-                Expanded(
-                  child: AuthTextField(
-                    controller: _nitController,
-                    label: 'NIT',
-                    icon: Icons.badge_outlined,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AuthTextField(
-                    controller: _razonSocialController,
-                    label: 'Razón Social',
-                    icon: Icons.article_outlined,
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _descripcionController,
-              label: 'Descripción (opcional)',
-              icon: Icons.description_outlined,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 24),
-            
-            _buildSectionTitle(context, 'Tipos de Vehículos', Icons.directions_car),
-            const SizedBox(height: 12),
-            _buildVehicleTypeSelector(isDark),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContactoPage(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: EntranceFader(
-        delay: const Duration(milliseconds: 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context, 'Información de Contacto', Icons.contact_phone),
-            const SizedBox(height: 20),
-            
-            AuthTextField(
-              controller: _emailController,
-              label: 'Email de la Empresa *',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El email es requerido';
-                }
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                  return 'Ingresa un email válido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _telefonoController,
-              label: 'Teléfono Principal *',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El teléfono es requerido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _telefonoSecundarioController,
-              label: 'Teléfono Secundario (opcional)',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 24),
-            
-            _buildSectionTitle(context, 'Ubicación', Icons.location_on),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _direccionController,
-              label: 'Dirección',
-              icon: Icons.location_on_outlined,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: AuthTextField(
-                    controller: _municipioController,
-                    label: 'Municipio',
-                    icon: Icons.location_city_outlined,
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AuthTextField(
-                    controller: _departamentoController,
-                    label: 'Departamento',
-                    icon: Icons.map_outlined,
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRepresentantePage(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: EntranceFader(
-        delay: const Duration(milliseconds: 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context, 'Representante Legal', Icons.person),
-            const SizedBox(height: 8),
-            Text(
-              'Esta persona será el administrador de la cuenta de la empresa',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            AuthTextField(
-              controller: _representanteNombreController,
-              label: 'Nombre Completo *',
-              icon: Icons.person_outline,
-              textCapitalization: TextCapitalization.words,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre es requerido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _representanteTelefonoController,
-              label: 'Teléfono del Representante',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _representanteEmailController,
-              label: 'Email del Representante',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 30),
-            
-            // Información adicional
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'El email de la empresa será tu usuario para iniciar sesión',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSeguridadPage(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: EntranceFader(
-        delay: const Duration(milliseconds: 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context, 'Seguridad de la Cuenta', Icons.lock_outline),
-            const SizedBox(height: 8),
-            Text(
-              'Crea una contraseña segura para tu cuenta',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            AuthTextField(
-              controller: _passwordController,
-              label: 'Contraseña *',
-              icon: Icons.lock_rounded,
-              obscureText: _obscurePassword,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                  size: 22,
-                ),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'La contraseña es requerida';
-                }
-                if (value.length < 6) {
-                  return 'Mínimo 6 caracteres';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            AuthTextField(
-              controller: _confirmPasswordController,
-              label: 'Confirmar Contraseña *',
-              icon: Icons.lock_rounded,
-              obscureText: _obscureConfirmPassword,
-              isLast: true,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                  size: 22,
-                ),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Confirma tu contraseña';
-                }
-                if (value != _passwordController.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            
-            // Resumen
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark ? Colors.white12 : Colors.black12,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                 // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Icon(Icons.summarize_outlined, color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Resumen del Registro',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                        ),
-                      ),
+                       Align(
+                         alignment: Alignment.centerLeft,
+                         child: GestureDetector(
+                           onTap: _prevStep,
+                           child: Container(
+                             padding: const EdgeInsets.all(8),
+                             decoration: BoxDecoration(
+                               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                               shape: BoxShape.circle,
+                               border: Border.all(
+                                 color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                               ),
+                             ),
+                             child: Icon(
+                               Icons.arrow_back_ios_new_rounded, 
+                               size: 18,
+                               color: textColor,
+                             ),
+                           ),
+                         ),
+                       ),
+                       RegisterStepIndicator(
+                         currentStep: _currentStep, 
+                         totalSteps: _totalSteps,
+                         lineWidth: 40,
+                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildSummaryRow('Empresa', _nombreEmpresaController.text),
-                  _buildSummaryRow('Email', _emailController.text),
-                  _buildSummaryRow('Teléfono', _telefonoController.text),
-                  _buildSummaryRow('Representante', _representanteNombreController.text),
-                  if (_tiposVehiculoSeleccionados.isNotEmpty)
-                    _buildSummaryRow('Vehículos', _tiposVehiculoSeleccionados.join(', ')),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Términos y condiciones
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.warning, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Al registrarte, aceptas los Términos de Servicio y la Política de Privacidad de Viax.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+                
+                const SizedBox(height: 8),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInBack,
+                        transitionBuilder: (child, animation) {
+                           return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                 begin: const Offset(0.1, 0),
+                                 end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _buildCurrentStepContent(isDark, textColor),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                ),
 
-  Widget _buildSummaryRow(String label, String value) {
-    if (value.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).textTheme.bodySmall?.color,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
+                // Buttons
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 60,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _nextStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _currentStep == _totalSteps - 1 ? 'Enviar Solicitud' : 'Continuar',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -870,24 +415,413 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
-    return Row(
+  Widget _buildGradientBlob(Size size, Color color) {
+    return Container(
+      width: size.width * 0.7,
+      height: size.width * 0.7,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+        child: Container(color: Colors.transparent),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStepContent(bool isDark, Color textColor) {
+    switch (_currentStep) {
+      case 0:
+        return _buildEmpresaInfoContent(isDark, textColor);
+      case 1:
+        return _buildContactoContent(isDark, textColor);
+      case 2:
+        return _buildRepresentanteContent(isDark, textColor);
+      case 3:
+        return _buildSeguridadContent(isDark, textColor);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildHeaderTitle(String title, String subtitle, Color textColor, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 20, color: AppColors.primary),
-        ),
-        const SizedBox(width: 12),
+        const SizedBox(height: 10),
         Text(
           title,
           style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontSize: 18,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: textColor,
+            height: 1.2,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white60 : Colors.black54,
+          ),
+        ),
+        const SizedBox(height: 30),
+      ],
+    );
+  }
+
+  Widget _buildEmpresaInfoContent(bool isDark, Color textColor) {
+    return Column(
+      key: const ValueKey(0),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderTitle(
+          'Registrar Empresa', 
+          'Ingresa los datos básicos para identificar tu empresa.', 
+          textColor, 
+          isDark
+        ),
+        
+        // Logo Picker
+        Center(
+          child: GestureDetector(
+            onTap: _pickLogo,
+            child: Stack(
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.grey[200],
+                    shape: BoxShape.circle,
+                     // Add subtle shadow/border to match theme
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                    border: Border.all(color: AppColors.primary, width: 2),
+                    image: _logoFile != null
+                        ? DecorationImage(
+                            image: FileImage(_logoFile!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _logoFile == null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo_rounded, size: 28, color: Colors.grey[500]),
+                          ],
+                        )
+                      : null,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Text(
+            'Logo de la empresa (Opcional)',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white54 : Colors.grey[600],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        AuthTextField(
+          controller: _nombreEmpresaController,
+          label: 'Nombre de la Empresa *',
+          icon: Icons.business_rounded,
+          textCapitalization: TextCapitalization.words,
+          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+             Expanded(
+               child: AuthTextField(
+                 controller: _nitController,
+                 label: 'NIT',
+                 icon: Icons.badge_outlined,
+               ),
+             ),
+             const SizedBox(width: 12),
+             Expanded(
+               child: AuthTextField(
+                 controller: _razonSocialController,
+                 label: 'Razón Social',
+                 icon: Icons.article_outlined,
+                 textCapitalization: TextCapitalization.words,
+               ),
+             ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        AuthTextField(
+          controller: _descripcionController,
+          label: 'Descripción (Opcional)',
+          icon: Icons.description_outlined,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Tipos de Vehículos',
+          style: TextStyle(
+            fontSize: 16,
             fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildVehicleTypeSelector(isDark),
+         const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildContactoContent(bool isDark, Color textColor) {
+    return Column(
+      key: const ValueKey(1),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderTitle(
+          'Contacto', 
+          'Información para contactarnos con tu empresa.', 
+          textColor, 
+          isDark
+        ),
+
+        AuthTextField(
+          controller: _emailController,
+          label: 'Email Corporativo *',
+          icon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
+          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 16),
+        AuthTextField(
+          controller: _telefonoController,
+          label: 'Teléfono Principal *',
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 16),
+         AuthTextField(
+          controller: _telefonoSecundarioController,
+          label: 'Teléfono Secundario',
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 24),
+         Text(
+          'Ubicación',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        AuthTextField(
+          controller: _direccionController,
+          label: 'Dirección',
+          icon: Icons.location_on_outlined,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+        const SizedBox(height: 16),
+        Row(
+           children: [
+             Expanded(
+               child: AuthTextField(
+                 controller: _municipioController,
+                 label: 'Municipio',
+                 icon: Icons.location_city_outlined,
+               ),
+             ),
+             const SizedBox(width: 12),
+             Expanded(
+               child: AuthTextField(
+                 controller: _departamentoController,
+                 label: 'Departamento',
+                 icon: Icons.map_outlined,
+               ),
+             ),
+           ],
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildRepresentanteContent(bool isDark, Color textColor) {
+    return Column(
+      key: const ValueKey(2),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderTitle(
+          'Representante', 
+          'Persona encargada de administrar la cuenta.', 
+          textColor, 
+          isDark
+        ),
+
+        AuthTextField(
+          controller: _representanteNombreController,
+          label: 'Nombre Completo *',
+          icon: Icons.person_outline,
+          textCapitalization: TextCapitalization.words,
+          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 16),
+         AuthTextField(
+          controller: _representanteTelefonoController,
+          label: 'Teléfono Directo',
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 16),
+        AuthTextField(
+          controller: _representanteEmailController,
+          label: 'Email Personal',
+          icon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: AppColors.primary, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'El email corporativo será tu usuario principal para iniciar sesión.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildSeguridadContent(bool isDark, Color textColor) {
+    return Column(
+      key: const ValueKey(3),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderTitle(
+          'Seguridad', 
+          'Protege tu cuenta con una contraseña segura.', 
+          textColor, 
+          isDark
+        ),
+
+        AuthTextField(
+          controller: _passwordController,
+          label: 'Contraseña *',
+          icon: Icons.lock_rounded,
+          obscureText: _obscurePassword,
+          suffixIcon: GestureDetector(
+            onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+            child: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
+          ),
+          validator: (v) => (v?.length ?? 0) < 6 ? 'Mínimo 6 caracteres' : null,
+        ),
+        const SizedBox(height: 16),
+         AuthTextField(
+          controller: _confirmPasswordController,
+          label: 'Confirmar Contraseña *',
+          icon: Icons.lock_rounded,
+          obscureText: _obscureConfirmPassword,
+          isLast: true,
+          suffixIcon: GestureDetector(
+            onTap: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+            child: Icon(_obscureConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
+          ),
+          validator: (v) => v != _passwordController.text ? 'No coinciden' : null,
+        ),
+        
+        const SizedBox(height: 30),
+        
+        // Resumen simplificado
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ]
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.check_circle_outline_rounded, color: AppColors.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Todo listo para enviar',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Al hacer clic en "Enviar Solicitud", confirmas que los datos ingresados son verídicos y aceptas los términos y condiciones de Viax.',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -896,163 +830,38 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   Widget _buildVehicleTypeSelector(bool isDark) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       children: _tiposVehiculoDisponibles.map((tipo) {
         final isSelected = _tiposVehiculoSeleccionados.contains(tipo);
-        
-        return GestureDetector(
-          onTap: () {
+        return FilterChip(
+          label: Text(tipo.toUpperCase()),
+          selected: isSelected,
+          onSelected: (selected) {
             setState(() {
-              if (isSelected) {
-                _tiposVehiculoSeleccionados.remove(tipo);
-              } else {
+              if (selected) {
                 _tiposVehiculoSeleccionados.add(tipo);
+              } else {
+                _tiposVehiculoSeleccionados.remove(tipo);
               }
             });
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.15)
-                  : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.primary
-                    : (isDark ? Colors.white12 : Colors.black12),
-                width: isSelected ? 1.5 : 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _getVehicleIcon(tipo),
-                  size: 20,
-                  color: isSelected
-                      ? AppColors.primary
-                      : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _formatVehicleType(tipo),
-                  style: TextStyle(
-                    color: isSelected
-                        ? AppColors.primary
-                        : Theme.of(context).textTheme.bodyMedium?.color,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-                if (isSelected) ...[
-                  const SizedBox(width: 6),
-                  const Icon(Icons.check_circle, size: 16, color: AppColors.primary),
-                ],
-              ],
+          backgroundColor: isDark ? AppColors.darkSurface : Colors.grey[100],
+          selectedColor: AppColors.primary.withValues(alpha: 0.2),
+          labelStyle: TextStyle(
+            color: isSelected ? AppColors.primary : (isDark ? Colors.white70 : Colors.black87),
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : Colors.transparent,
             ),
           ),
+          checkmarkColor: AppColors.primary,
         );
       }).toList(),
-    );
-  }
-
-  IconData _getVehicleIcon(String tipo) {
-    switch (tipo.toLowerCase()) {
-      case 'moto':
-        return Icons.two_wheeler;
-      case 'motocarro':
-        return Icons.electric_rickshaw;
-      case 'taxi':
-        return Icons.local_taxi;
-      case 'carro':
-        return Icons.directions_car;
-      default:
-        return Icons.directions_car;
-    }
-  }
-
-  String _formatVehicleType(String tipo) {
-    return tipo[0].toUpperCase() + tipo.substring(1).toLowerCase();
-  }
-
-  Widget _buildNavigationButtons(bool isDark) {
-    final isLastPage = _currentPage == 3;
-    
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black26 : Colors.black12,
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            if (_currentPage > 0)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _previousPage,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: BorderSide(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.3) ?? Colors.grey,
-                    ),
-                  ),
-                  child: Text(
-                    'Anterior',
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            if (_currentPage > 0) const SizedBox(width: 16),
-            Expanded(
-              flex: _currentPage > 0 ? 1 : 2,
-              child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : (isLastPage ? _submitForm : _nextPage),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        isLastPage ? 'Registrar Empresa' : 'Siguiente',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
