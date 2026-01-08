@@ -9,6 +9,7 @@ import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
+import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
 
 /// Pantalla de registro de empresas de transporte
 /// UI optimizada para coincidir con el registro de usuarios
@@ -29,6 +30,15 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   bool _obscureConfirmPassword = true;
   File? _logoFile;
   
+  // Location Service
+  final _locationService = ColombiaLocationService();
+  List<Department> _departments = [];
+  List<City> _cities = [];
+  Department? _selectedDepartment;
+  City? _selectedCity;
+  bool _isLoadingDepartments = false;
+  bool _isLoadingCities = false;
+
   // Controladores - Información de la empresa
   final _nombreEmpresaController = TextEditingController();
   final _nitController = TextEditingController();
@@ -42,8 +52,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   
   // Controladores - Ubicación
   final _direccionController = TextEditingController();
-  final _municipioController = TextEditingController();
-  final _departamentoController = TextEditingController();
   
   // Controladores - Representante
   final _representanteNombreController = TextEditingController();
@@ -65,6 +73,48 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadDepartments();
+  }
+
+  Future<void> _loadDepartments() async {
+    setState(() => _isLoadingDepartments = true);
+    try {
+      final deps = await _locationService.getDepartments();
+      if (mounted) {
+        setState(() {
+          _departments = deps;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading departments: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingDepartments = false);
+    }
+  }
+
+  Future<void> _loadCities(int departmentId) async {
+    setState(() {
+      _isLoadingCities = true;
+      _cities = []; // Clear previous cities
+      _selectedCity = null; // Reset selected city
+    });
+    try {
+      final cities = await _locationService.getCitiesByDepartment(departmentId);
+      if (mounted) {
+        setState(() {
+          _cities = cities;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading cities: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingCities = false);
+    }
+  }
+
+  @override
   void dispose() {
     _nombreEmpresaController.dispose();
     _nitController.dispose();
@@ -74,8 +124,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     _telefonoController.dispose();
     _telefonoSecundarioController.dispose();
     _direccionController.dispose();
-    _municipioController.dispose();
-    _departamentoController.dispose();
     _representanteNombreController.dispose();
     _representanteTelefonoController.dispose();
     _representanteEmailController.dispose();
@@ -142,6 +190,18 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           _showError('El teléfono es requerido');
           return false;
         }
+        if (_direccionController.text.trim().isEmpty) {
+          _showError('La dirección es requerida');
+         return false;
+        }
+        if (_selectedDepartment == null) {
+          _showError('Selecciona un departamento');
+          return false;
+        }
+        if (_selectedCity == null) {
+          _showError('Selecciona un municipio');
+          return false;
+        }
         return true;
       case 2: // Representante
         if (_representanteNombreController.text.trim().isEmpty) {
@@ -185,8 +245,8 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         telefono: _telefonoController.text.trim(),
         telefonoSecundario: _telefonoSecundarioController.text.trim(),
         direccion: _direccionController.text.trim(),
-        municipio: _municipioController.text.trim(),
-        departamento: _departamentoController.text.trim(),
+        municipio: _selectedCity?.name ?? '', // Use selected city name
+        departamento: _selectedDepartment?.name ?? '', // Use selected department name
         representanteNombre: _representanteNombreController.text.trim(),
         representanteTelefono: _representanteTelefonoController.text.trim(),
         representanteEmail: _representanteEmailController.text.trim(),
@@ -652,27 +712,120 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           textCapitalization: TextCapitalization.sentences,
         ),
         const SizedBox(height: 16),
-        Row(
-           children: [
-             Expanded(
-               child: AuthTextField(
-                 controller: _municipioController,
-                 label: 'Municipio',
-                 icon: Icons.location_city_outlined,
-               ),
-             ),
-             const SizedBox(width: 12),
-             Expanded(
-               child: AuthTextField(
-                 controller: _departamentoController,
-                 label: 'Departamento',
-                 icon: Icons.map_outlined,
-               ),
-             ),
-           ],
+        
+        // Departments Dropdown
+        _buildDropdownHeader('Departamento'),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Department>(
+              value: _selectedDepartment,
+              hint: const Text('Seleccionar departamento'),
+              isExpanded: true,
+              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+              items: _departments.map((dep) {
+                return DropdownMenuItem(
+                  value: dep,
+                  child: Text(
+                    dep.name,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLoadingDepartments ? null : (Department? newValue) {
+                if (newValue != null && newValue != _selectedDepartment) {
+                  setState(() {
+                    _selectedDepartment = newValue;
+                  });
+                  _loadCities(newValue.id);
+                }
+              },
+              icon: _isLoadingDepartments 
+                  ? const SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.arrow_drop_down, color: AppColors.primary),
+            ),
+          ),
         ),
+        
+        const SizedBox(height: 16),
+
+        // Cities Dropdown
+        _buildDropdownHeader('Municipio'),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<City>(
+              value: _selectedCity,
+              hint: Text(_selectedDepartment == null 
+                  ? 'Selecciona un departamento primero' 
+                  : 'Seleccionar municipio'),
+              isExpanded: true,
+              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+              items: _cities.map((city) {
+                return DropdownMenuItem(
+                  value: city,
+                  child: Text(
+                    city.name,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLoadingCities || _cities.isEmpty ? null : (City? newValue) {
+                setState(() {
+                  _selectedCity = newValue;
+                });
+              },
+              icon: _isLoadingCities 
+                  ? const SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.arrow_drop_down, color: AppColors.primary),
+            ),
+          ),
+        ),
+
         const SizedBox(height: 20),
       ],
+    );
+  }
+
+  Widget _buildDropdownHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
+      ),
     );
   }
 
