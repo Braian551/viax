@@ -1,5 +1,6 @@
 // lib/src/features/auth/presentation/screens/empresa_register_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
@@ -24,7 +25,7 @@ class EmpresaRegisterScreen extends StatefulWidget {
 class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
-  final int _totalSteps = 4;
+  final int _totalSteps = 5;
   
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -178,7 +179,13 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           return false;
         }
         return true;
-      case 1: // Contacto
+      case 1: // Vehículos
+        if (_tiposVehiculoSeleccionados.isEmpty) {
+          _showError('Selecciona al menos un tipo de vehículo');
+          return false;
+        }
+        return true;
+      case 2: // Contacto & Ubicación
         if (_emailController.text.trim().isEmpty) {
           _showError('El email es requerido');
           return false;
@@ -204,13 +211,13 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           return false;
         }
         return true;
-      case 2: // Representante
+      case 3: // Representante
         if (_representanteNombreController.text.trim().isEmpty) {
           _showError('El nombre del representante es requerido');
           return false;
         }
         return true;
-      case 3: // Seguridad
+      case 4: // Seguridad
         return true;
       default:
         return true;
@@ -496,10 +503,12 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       case 0:
         return _buildEmpresaInfoContent(isDark, textColor);
       case 1:
-        return _buildContactoContent(isDark, textColor);
+        return _buildVehiculosContent(isDark, textColor);
       case 2:
-        return _buildRepresentanteContent(isDark, textColor);
+        return _buildContactoContent(isDark, textColor);
       case 3:
+        return _buildRepresentanteContent(isDark, textColor);
+      case 4:
         return _buildSeguridadContent(isDark, textColor);
       default:
         return const SizedBox.shrink();
@@ -646,18 +655,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           icon: Icons.description_outlined,
           textCapitalization: TextCapitalization.sentences,
         ),
-        const SizedBox(height: 24),
-        Text(
-          'Tipos de Vehículos',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildVehicleTypeSelector(isDark),
-         const SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -784,7 +782,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   Widget _buildContactoContent(bool isDark, Color textColor) {
     return Column(
-      key: const ValueKey(1),
+      key: const ValueKey(2),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderTitle(
@@ -878,7 +876,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   Widget _buildRepresentanteContent(bool isDark, Color textColor) {
     return Column(
-      key: const ValueKey(2),
+      key: const ValueKey(3),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderTitle(
@@ -941,7 +939,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   Widget _buildSeguridadContent(bool isDark, Color textColor) {
     return Column(
-      key: const ValueKey(3),
+      key: const ValueKey(4),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderTitle(
@@ -1043,52 +1041,144 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     }
   }
 
+  Widget _buildVehiculosContent(bool isDark, Color textColor) {
+    return Column(
+      key: const ValueKey(1), // Matches step index for switcher
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderTitle(
+          '¿Qué transportas?', 
+          'Selecciona los tipos de vehículos que opera tu empresa.', 
+          textColor, 
+          isDark
+        ),
+        
+        _buildVehicleTypeSelector(isDark),
+        
+        const SizedBox(height: 30),
+        
+        // Info Box
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_rounded, color: AppColors.primary.withValues(alpha: 0.5), size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Puedes seleccionar uno o varios tipos según tu flota disponible.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   Widget _buildVehicleTypeSelector(bool isDark) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: _tiposVehiculoDisponibles.map((tipo) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.1,
+      ),
+      itemCount: _tiposVehiculoDisponibles.length,
+      itemBuilder: (context, index) {
+        final tipo = _tiposVehiculoDisponibles[index];
         final isSelected = _tiposVehiculoSeleccionados.contains(tipo);
-            
-        return FilterChip(
-          label: Text(tipo.toUpperCase()),
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 13,
-          ),
-          avatar: Icon(
-             _getVehicleIcon(tipo),
-             size: 18,
-             color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.grey[600]),
-          ),
-          showCheckmark: false, // Hide default checkmark to keep the icon visible
-          labelPadding: const EdgeInsets.symmetric(horizontal: 8), // Add padding between icon and text
-          selected: isSelected,
-          onSelected: (selected) {
+        
+        return GestureDetector(
+          onTap: () {
             setState(() {
-              if (selected) {
-                _tiposVehiculoSeleccionados.add(tipo);
-              } else {
+              if (isSelected) {
                 _tiposVehiculoSeleccionados.remove(tipo);
+              } else {
+                _tiposVehiculoSeleccionados.add(tipo);
               }
             });
+            HapticFeedback.lightImpact();
           },
-          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          selectedColor: AppColors.primary,
-          elevation: isSelected ? 4 : 0,
-          pressElevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), // Increased internal padding
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
               color: isSelected 
                   ? AppColors.primary 
-                  : (isDark ? Colors.white12 : Colors.grey.shade300),
+                  : (isDark ? AppColors.darkSurface : Colors.white),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isSelected 
+                    ? AppColors.primaryLight 
+                    : (isDark ? Colors.white10 : Colors.grey.shade200),
+                width: 2,
+              ),
+              boxShadow: [
+                if (isSelected)
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  )
+                else
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? Colors.white.withValues(alpha: 0.2) 
+                        : AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getVehicleIcon(tipo),
+                    size: 32,
+                    color: isSelected ? Colors.white : AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  tipo.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                if (isSelected)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
+                  ),
+              ],
             ),
           ),
         );
-      }).toList(),
+      },
     );
   }
+
 }
