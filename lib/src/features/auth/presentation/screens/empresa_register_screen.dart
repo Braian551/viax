@@ -369,35 +369,34 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
                  // Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Stack(
-                    alignment: Alignment.center,
+                  child: Row(
                     children: [
-                       Align(
-                         alignment: Alignment.centerLeft,
-                         child: GestureDetector(
-                           onTap: _prevStep,
-                           child: Container(
-                             padding: const EdgeInsets.all(8),
-                             decoration: BoxDecoration(
-                               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                               shape: BoxShape.circle,
-                               border: Border.all(
-                                 color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                               ),
+                       GestureDetector(
+                         onTap: _prevStep,
+                         child: Container(
+                           padding: const EdgeInsets.all(8),
+                           decoration: BoxDecoration(
+                             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                             shape: BoxShape.circle,
+                             border: Border.all(
+                               color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                              ),
-                             child: Icon(
-                               Icons.arrow_back_ios_new_rounded, 
-                               size: 18,
-                               color: textColor,
-                             ),
+                           ),
+                           child: Icon(
+                             Icons.arrow_back_ios_new_rounded, 
+                             size: 18,
+                             color: textColor,
                            ),
                          ),
                        ),
-                       RegisterStepIndicator(
-                         currentStep: _currentStep, 
-                         totalSteps: _totalSteps,
-                         lineWidth: 40,
+                       Expanded(
+                         child: RegisterStepIndicator(
+                           currentStep: _currentStep, 
+                           totalSteps: _totalSteps,
+                           lineWidth: 25,
+                         ),
                        ),
+                       const SizedBox(width: 40), // Balance the back button space
                     ],
                   ),
                 ),
