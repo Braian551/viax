@@ -177,7 +177,7 @@ class _SearchableDropdownSheetState<T> extends State<SearchableDropdownSheet<T>>
                             leading: Icon(
                               Icons.location_on_outlined, 
                               size: 18, 
-                              color: isDark ? Colors.white38 : Colors.grey.shade400
+                              color: AppColors.primary.withValues(alpha: 0.7)
                             ),
                             title: Text(
                               widget.itemLabel(item),
