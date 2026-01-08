@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
@@ -46,162 +47,162 @@ class _SearchableDropdownSheetState<T> extends State<SearchableDropdownSheet<T>>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final backgroundColor = isDark 
+        ? AppColors.darkBackground.withValues(alpha: 0.85) 
+        : AppColors.lightBackground.withValues(alpha: 0.85);
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75, // Slightly taller
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 20),
-              width: 48,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2.5),
-              ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+              width: 1,
             ),
           ),
-          
-          // Header with Icon
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-            child: Row(
-              children: [
-                 Container(
-                   padding: const EdgeInsets.all(10),
-                   decoration: BoxDecoration(
-                     color: isDark ? AppColors.darkSurface : Colors.grey.shade100,
-                     borderRadius: BorderRadius.circular(12),
-                     border: Border.all(
-                        color: isDark ? AppColors.darkDivider : Colors.grey.shade200,
-                     )
-                   ),
-                   child: Icon(Icons.location_on_rounded, color: AppColors.primary, size: 24),
-                 ),
-                 const SizedBox(width: 16),
-                 Expanded(
-                   child: Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+          child: Column(
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 20),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              
+              // Header with Icon
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                     Container(
+                       padding: const EdgeInsets.all(10),
+                       decoration: BoxDecoration(
+                         gradient: LinearGradient(
+                           colors: [AppColors.primary, AppColors.primaryLight],
+                         ),
+                         borderRadius: BorderRadius.circular(12),
+                         boxShadow: [
+                           BoxShadow(
+                             color: AppColors.primary.withValues(alpha: 0.2),
+                             blurRadius: 8,
+                             offset: const Offset(0, 4),
+                           )
+                         ]
+                       ),
+                       child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 22),
+                     ),
+                     const SizedBox(width: 16),
+                     Expanded(
+                       child: Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                     ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+    
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white12 : Colors.grey.shade300,
                     ),
                   ),
-                 ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _filterItems,
-                style: TextStyle(color: textColor),
-                decoration: InputDecoration(
-                  hintText: widget.searchHint,
-                  hintStyle: TextStyle(color: Colors.grey.shade500),
-                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
-                  filled: false,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          Divider(height: 1, color: isDark ? AppColors.darkDivider : Colors.grey.shade200),
-
-          // List
-          Expanded(
-            child: _filteredItems.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No se encontraron resultados',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _filterItems,
+                    style: TextStyle(color: textColor, fontSize: 15),
+                    decoration: InputDecoration(
+                      hintText: widget.searchHint,
+                      hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                      prefixIcon: Icon(Icons.search_rounded, color: isDark ? Colors.white54 : Colors.grey.shade400),
+                      filled: false,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _filteredItems[index];
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            widget.onSelected(item);
-                            Navigator.pop(context);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined, 
-                                  size: 20, 
-                                  color: Colors.grey.shade400
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    widget.itemLabel(item),
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios_rounded, 
-                                  size: 14, 
-                                  color: Colors.grey.shade300
-                                ),
-                              ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+    
+              // List
+              Expanded(
+                child: _filteredItems.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.3)),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No se encontraron resultados',
+                              style: TextStyle(color: isDark ? Colors.white38 : Colors.grey.shade500),
                             ),
-                          ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(top: 8, bottom: 20),
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+                            leading: Icon(
+                              Icons.location_on_outlined, 
+                              size: 18, 
+                              color: isDark ? Colors.white38 : Colors.grey.shade400
+                            ),
+                            title: Text(
+                              widget.itemLabel(item),
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.arrow_forward_ios_rounded, 
+                              size: 12, 
+                              color: isDark ? Colors.white10 : Colors.grey.shade200
+                            ),
+                            onTap: () {
+                              widget.onSelected(item);
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

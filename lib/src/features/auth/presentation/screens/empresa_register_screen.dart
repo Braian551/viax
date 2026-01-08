@@ -874,19 +874,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     );
   }
 
-  Widget _buildDropdownHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey,
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildRepresentanteContent(bool isDark, Color textColor) {
     return Column(
