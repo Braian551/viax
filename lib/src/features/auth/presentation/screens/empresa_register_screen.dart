@@ -828,14 +828,42 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     );
   }
 
+  IconData _getVehicleIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'moto':
+        return Icons.two_wheeler_rounded;
+      case 'motocarro':
+        return Icons.delivery_dining_rounded;
+      case 'taxi':
+        return Icons.local_taxi_rounded;
+      case 'carro':
+        return Icons.directions_car_rounded;
+      default:
+        return Icons.directions_car_rounded;
+    }
+  }
+
   Widget _buildVehicleTypeSelector(bool isDark) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 12,
+      runSpacing: 12,
       children: _tiposVehiculoDisponibles.map((tipo) {
         final isSelected = _tiposVehiculoSeleccionados.contains(tipo);
+            
         return FilterChip(
           label: Text(tipo.toUpperCase()),
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
+          ),
+          avatar: Icon(
+             _getVehicleIcon(tipo),
+             size: 18,
+             color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.grey[600]),
+          ),
+          showCheckmark: false, // Hide default checkmark to keep the icon visible
+          labelPadding: const EdgeInsets.symmetric(horizontal: 8), // Add padding between icon and text
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -846,20 +874,19 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
               }
             });
           },
-          backgroundColor: isDark ? AppColors.darkSurface : Colors.grey[100],
-          selectedColor: AppColors.primary.withValues(alpha: 0.2),
-          labelStyle: TextStyle(
-            color: isSelected ? AppColors.primary : (isDark ? Colors.white70 : Colors.black87),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
-          ),
+          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+          selectedColor: AppColors.primary,
+          elevation: isSelected ? 4 : 0,
+          pressElevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), // Increased internal padding
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: isSelected ? AppColors.primary : Colors.transparent,
+              color: isSelected 
+                  ? AppColors.primary 
+                  : (isDark ? Colors.white12 : Colors.grey.shade300),
             ),
           ),
-          checkmarkColor: AppColors.primary,
         );
       }).toList(),
     );
