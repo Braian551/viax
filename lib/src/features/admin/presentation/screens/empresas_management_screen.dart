@@ -304,6 +304,12 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
             onDelete: () => _confirmDeleteEmpresa(empresa),
             onToggleStatus: () => _toggleEmpresaStatus(empresa),
             onSetCommission: () => _showCommissionDialog(empresa),
+            onApprove: empresa.estado == EmpresaEstado.pendiente 
+                ? () => _approveEmpresa(empresa) 
+                : null,
+            onReject: empresa.estado == EmpresaEstado.pendiente 
+                ? () => _showRejectDialog(empresa) 
+                : null,
           );
         },
       ),
@@ -816,6 +822,204 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
             : (_empresaProvider.errorMessage ?? 'Error al cambiar estado'),
         isSuccess: success,
       );
+    }
+  }
+
+  void _approveEmpresa(EmpresaTransporte empresa) async {
+    // Mostrar diálogo de confirmación
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: AppColors.success,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Aprobar Empresa'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('¿Deseas aprobar el registro de "${empresa.nombre}"?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: AppColors.success, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'La empresa recibirá un email de confirmación y podrá comenzar a operar.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.success.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.check_rounded, size: 18),
+            label: const Text('Aprobar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await _empresaProvider.approveEmpresa(empresa.id, _adminId);
+      if (mounted) {
+        _showSnackBar(
+          success
+              ? 'Empresa "${empresa.nombre}" aprobada exitosamente'
+              : (_empresaProvider.errorMessage ?? 'Error al aprobar empresa'),
+          isSuccess: success,
+        );
+      }
+    }
+  }
+
+  void _showRejectDialog(EmpresaTransporte empresa) async {
+    final motivoController = TextEditingController();
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.cancel_outlined,
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Rechazar Empresa'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('¿Deseas rechazar el registro de "${empresa.nombre}"?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: motivoController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Motivo del rechazo *',
+                hintText: 'Indica el motivo por el cual se rechaza el registro...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.error),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'La empresa recibirá un email con el motivo del rechazo.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.warning.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (motivoController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Debes indicar el motivo del rechazo'),
+                    backgroundColor: AppColors.warning,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context, motivoController.text.trim());
+            },
+            icon: const Icon(Icons.cancel_rounded, size: 18),
+            label: const Text('Rechazar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final success = await _empresaProvider.rejectEmpresa(empresa.id, _adminId, result);
+      if (mounted) {
+        _showSnackBar(
+          success
+              ? 'Empresa "${empresa.nombre}" rechazada'
+              : (_empresaProvider.errorMessage ?? 'Error al rechazar empresa'),
+          isSuccess: success,
+        );
+      }
     }
   }
 

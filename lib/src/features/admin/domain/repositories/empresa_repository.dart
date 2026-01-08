@@ -26,6 +26,12 @@ abstract class EmpresaRepository {
   /// Cambia el estado de una empresa
   Future<void> toggleEmpresaStatus(int id, String estado, int adminId);
 
+  /// Aprueba una empresa pendiente
+  Future<void> approveEmpresa(int id, int adminId);
+
+  /// Rechaza una empresa pendiente
+  Future<void> rejectEmpresa(int id, int adminId, String motivo);
+
   /// Obtiene estadísticas de empresas
   Future<EmpresaStats> getEmpresaStats();
 }

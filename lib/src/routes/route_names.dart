@@ -7,6 +7,7 @@
   static const String emailVerification = '/email-verification';
   static const String login = '/login';
   static const String register = '/register';
+  static const String empresaRegister = '/empresa-register';
   static const String welcomeSplash = '/welcome-splash';
   static const String phoneAuth = '/phone-auth';
   static const String phoneRequired = '/phone-required';

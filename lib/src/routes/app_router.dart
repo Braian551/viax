@@ -42,6 +42,7 @@ import 'package:viax/src/features/conductor/presentation/screens/driver_registra
 import 'package:viax/src/features/company/presentation/screens/company_home_screen.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_required_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/empresa_register_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -102,6 +103,8 @@ class AppRouter {
             settings: settings,
           );
         }
+      case RouteNames.empresaRegister:
+        return FadeSlidePageRoute(page: const EmpresaRegisterScreen(), settings: settings);
       case RouteNames.welcomeSplash:
         return FadeSlidePageRoute(page: const WelcomeSplashScreen(), settings: settings);
       case RouteNames.locationPicker:

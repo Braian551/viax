@@ -12,6 +12,8 @@ class EmpresaCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onToggleStatus;
   final VoidCallback? onSetCommission;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
 
   const EmpresaCard({
     super.key,
@@ -21,6 +23,8 @@ class EmpresaCard extends StatelessWidget {
     this.onDelete,
     this.onToggleStatus,
     this.onSetCommission,
+    this.onApprove,
+    this.onReject,
   });
 
   @override
@@ -332,6 +336,37 @@ class EmpresaCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    // Si la empresa está pendiente, mostrar botones de aprobar/rechazar
+    if (empresa.estado == EmpresaEstado.pendiente && (onApprove != null || onReject != null)) {
+      return Row(
+        children: [
+          if (onApprove != null)
+            Expanded(
+              child: _buildActionButton(
+                context,
+                icon: Icons.check_circle_outline,
+                label: 'Aprobar',
+                color: AppColors.success,
+                onTap: onApprove!,
+              ),
+            ),
+          if (onApprove != null && onReject != null)
+            const SizedBox(width: 8),
+          if (onReject != null)
+            Expanded(
+              child: _buildActionButton(
+                context,
+                icon: Icons.cancel_outlined,
+                label: 'Rechazar',
+                color: AppColors.error,
+                onTap: onReject!,
+              ),
+            ),
+        ],
+      );
+    }
+    
+    // Acciones normales para empresas no pendientes
     return Row(
       children: [
         if (onSetCommission != null)

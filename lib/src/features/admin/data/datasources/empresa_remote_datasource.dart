@@ -31,6 +31,12 @@ abstract class EmpresaRemoteDataSource {
   /// Cambia el estado de una empresa
   Future<void> toggleEmpresaStatus(int id, String estado, int adminId);
 
+  /// Aprueba una empresa pendiente
+  Future<void> approveEmpresa(int id, int adminId);
+
+  /// Rechaza una empresa pendiente
+  Future<void> rejectEmpresa(int id, int adminId, String motivo);
+
   /// Obtiene estadísticas de empresas
   Future<EmpresaStatsModel> getEmpresaStats();
 }
@@ -285,6 +291,65 @@ class EmpresaRemoteDataSourceImpl implements EmpresaRemoteDataSource {
         final data = json.decode(response.body);
         if (data['success'] != true) {
           throw ServerException(data['message'] ?? 'Error al cambiar estado');
+        }
+      } else {
+        throw ServerException('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw NetworkException('Error de conexión: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> approveEmpresa(int id, int adminId) async {
+    try {
+      final body = {
+        'action': 'approve',
+        'id': id,
+        'admin_id': adminId,
+      };
+
+      final response = await client.post(
+        Uri.parse('$baseUrl/empresas.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] != true) {
+          throw ServerException(data['message'] ?? 'Error al aprobar empresa');
+        }
+      } else {
+        throw ServerException('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw NetworkException('Error de conexión: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> rejectEmpresa(int id, int adminId, String motivo) async {
+    try {
+      final body = {
+        'action': 'reject',
+        'id': id,
+        'admin_id': adminId,
+        'motivo': motivo,
+      };
+
+      final response = await client.post(
+        Uri.parse('$baseUrl/empresas.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] != true) {
+          throw ServerException(data['message'] ?? 'Error al rechazar empresa');
         }
       } else {
         throw ServerException('Error del servidor: ${response.statusCode}');

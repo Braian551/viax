@@ -65,6 +65,12 @@ try {
         case 'toggle_status':
             toggleEmpresaStatus($db, $input);
             break;
+        case 'approve':
+            approveEmpresa($db, $input);
+            break;
+        case 'reject':
+            rejectEmpresa($db, $input);
+            break;
         case 'get_stats':
             getEmpresaStats($db);
             break;
@@ -518,6 +524,261 @@ function toggleEmpresaStatus($db, $input) {
         'success' => true,
         'message' => "Estado de la empresa cambiado a '$nuevoEstado'"
     ]);
+}
+
+/**
+ * Aprobar solicitud de empresa pendiente
+ */
+function approveEmpresa($db, $input) {
+    $empresaId = intval($input['id'] ?? 0);
+    $adminId = intval($input['admin_id'] ?? 0);
+    
+    if (!$empresaId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID de empresa requerido']);
+        return;
+    }
+    
+    // Obtener información de la empresa
+    $query = "SELECT e.*, u.email as usuario_email, u.nombre as usuario_nombre 
+              FROM empresas_transporte e
+              LEFT JOIN usuarios u ON u.empresa_id = e.id AND u.tipo_usuario = 'empresa'
+              WHERE e.id = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$empresaId]);
+    $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$empresa) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
+        return;
+    }
+    
+    if ($empresa['estado'] !== 'pendiente') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'La empresa no está en estado pendiente']);
+        return;
+    }
+    
+    // Actualizar estado a activo y marcar como verificada
+    $updateQuery = "UPDATE empresas_transporte 
+                    SET estado = 'activo', verificada = true, fecha_verificacion = NOW(), verificado_por = ?
+                    WHERE id = ?";
+    $updateStmt = $db->prepare($updateQuery);
+    $updateStmt->execute([$adminId, $empresaId]);
+    
+    // Log de auditoría
+    logAuditAction($db, $adminId, 'empresa_aprobada', 'empresas_transporte', $empresaId, [
+        'nombre' => $empresa['nombre'],
+        'email' => $empresa['email']
+    ]);
+    
+    // Enviar email de aprobación
+    sendApprovalEmail($empresa['email'] ?? $empresa['usuario_email'], $empresa['nombre'], $empresa['representante_nombre'] ?? $empresa['usuario_nombre']);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Empresa aprobada exitosamente. Se ha notificado al representante.'
+    ]);
+}
+
+/**
+ * Rechazar solicitud de empresa pendiente
+ */
+function rejectEmpresa($db, $input) {
+    $empresaId = intval($input['id'] ?? 0);
+    $adminId = intval($input['admin_id'] ?? 0);
+    $motivo = trim($input['motivo'] ?? 'No se especificó motivo');
+    
+    if (!$empresaId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID de empresa requerido']);
+        return;
+    }
+    
+    // Obtener información de la empresa
+    $query = "SELECT e.*, u.email as usuario_email, u.nombre as usuario_nombre, u.id as usuario_id
+              FROM empresas_transporte e
+              LEFT JOIN usuarios u ON u.empresa_id = e.id AND u.tipo_usuario = 'empresa'
+              WHERE e.id = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$empresaId]);
+    $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$empresa) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
+        return;
+    }
+    
+    if ($empresa['estado'] !== 'pendiente') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'La empresa no está en estado pendiente']);
+        return;
+    }
+    
+    // Actualizar estado a rechazado y guardar motivo
+    $updateQuery = "UPDATE empresas_transporte 
+                    SET estado = 'rechazado', notas_admin = COALESCE(notas_admin, '') || '\n[RECHAZADO] ' || ?
+                    WHERE id = ?";
+    $updateStmt = $db->prepare($updateQuery);
+    $updateStmt->execute([$motivo, $empresaId]);
+    
+    // Desactivar usuario asociado
+    if ($empresa['usuario_id']) {
+        $deactivateUser = $db->prepare("UPDATE usuarios SET activo = false WHERE id = ?");
+        $deactivateUser->execute([$empresa['usuario_id']]);
+    }
+    
+    // Log de auditoría
+    logAuditAction($db, $adminId, 'empresa_rechazada', 'empresas_transporte', $empresaId, [
+        'nombre' => $empresa['nombre'],
+        'email' => $empresa['email'],
+        'motivo' => $motivo
+    ]);
+    
+    // Enviar email de rechazo
+    sendRejectionEmail($empresa['email'] ?? $empresa['usuario_email'], $empresa['nombre'], $empresa['representante_nombre'] ?? $empresa['usuario_nombre'], $motivo);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Empresa rechazada. Se ha notificado al representante.'
+    ]);
+}
+
+/**
+ * Enviar email de aprobación de empresa
+ */
+function sendApprovalEmail($email, $nombreEmpresa, $representante) {
+    try {
+        $vendorPath = __DIR__ . '/../vendor/autoload.php';
+        if (!file_exists($vendorPath)) {
+            error_log("Vendor autoload no encontrado para enviar email de aprobación");
+            return;
+        }
+        require_once $vendorPath;
+        
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            error_log("PHPMailer no disponible");
+            return;
+        }
+        
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'viaxoficialcol@gmail.com';
+        $mail->Password = 'filz vqel gadn kugb';
+        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+        $mail->CharSet = 'UTF-8';
+        
+        $mail->setFrom('viaxoficialcol@gmail.com', 'Viax');
+        $mail->addAddress($email, $representante);
+        
+        $mail->isHTML(true);
+        $mail->Subject = "✅ ¡Tu empresa ha sido aprobada! - {$nombreEmpresa}";
+        
+        $mail->Body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                <h1 style='color: white; margin: 0;'>✅ ¡Felicidades!</h1>
+                <p style='color: white; margin: 10px 0 0 0;'>Tu empresa ha sido aprobada</p>
+            </div>
+            <div style='padding: 30px; background: #f9f9f9; border-radius: 0 0 10px 10px;'>
+                <p style='font-size: 16px;'>Hola <strong>{$representante}</strong>,</p>
+                <p>Nos complace informarte que <strong>{$nombreEmpresa}</strong> ha sido aprobada y verificada en Viax.</p>
+                <div style='background: #e8f5e9; border: 1px solid #4CAF50; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;'>
+                    <p style='margin: 0; color: #2e7d32; font-size: 18px;'><strong>¡Tu cuenta ya está activa!</strong></p>
+                </div>
+                <p>Ahora puedes:</p>
+                <ul style='line-height: 1.8;'>
+                    <li>✅ Iniciar sesión en la aplicación</li>
+                    <li>✅ Agregar y gestionar tus conductores</li>
+                    <li>✅ Ver estadísticas y reportes</li>
+                    <li>✅ Administrar tu flota de vehículos</li>
+                </ul>
+                <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+                <p style='color: #666; font-size: 12px; text-align: center;'>
+                    ¿Tienes preguntas? Contáctanos a viaxoficialcol@gmail.com<br>
+                    © 2026 Viax - Todos los derechos reservados
+                </p>
+            </div>
+        </div>";
+        
+        $mail->AltBody = "Hola {$representante},\n\n¡Felicidades! Tu empresa {$nombreEmpresa} ha sido aprobada en Viax.\n\nYa puedes iniciar sesión y comenzar a gestionar tu flota.\n\nSaludos,\nEquipo Viax";
+        
+        $mail->send();
+        error_log("Email de aprobación enviado a: {$email}");
+        
+    } catch (\Exception $e) {
+        error_log("Error enviando email de aprobación: " . $e->getMessage());
+    }
+}
+
+/**
+ * Enviar email de rechazo de empresa
+ */
+function sendRejectionEmail($email, $nombreEmpresa, $representante, $motivo) {
+    try {
+        $vendorPath = __DIR__ . '/../vendor/autoload.php';
+        if (!file_exists($vendorPath)) {
+            return;
+        }
+        require_once $vendorPath;
+        
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            return;
+        }
+        
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'viaxoficialcol@gmail.com';
+        $mail->Password = 'filz vqel gadn kugb';
+        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+        $mail->CharSet = 'UTF-8';
+        
+        $mail->setFrom('viaxoficialcol@gmail.com', 'Viax');
+        $mail->addAddress($email, $representante);
+        
+        $mail->isHTML(true);
+        $mail->Subject = "Información sobre tu solicitud - {$nombreEmpresa}";
+        
+        $mail->Body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #757575 0%, #616161 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                <h1 style='color: white; margin: 0;'>Actualización de tu Solicitud</h1>
+            </div>
+            <div style='padding: 30px; background: #f9f9f9; border-radius: 0 0 10px 10px;'>
+                <p style='font-size: 16px;'>Hola <strong>{$representante}</strong>,</p>
+                <p>Lamentamos informarte que después de revisar tu solicitud para <strong>{$nombreEmpresa}</strong>, no hemos podido aprobarla en este momento.</p>
+                <div style='background: #fff3e0; border: 1px solid #ff9800; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                    <p style='margin: 0; color: #e65100;'><strong>Motivo:</strong></p>
+                    <p style='margin: 10px 0 0 0; color: #333;'>{$motivo}</p>
+                </div>
+                <p>Si crees que esto es un error o deseas proporcionar información adicional, no dudes en contactarnos.</p>
+                <p>También puedes intentar registrarte nuevamente corrigiendo los aspectos mencionados.</p>
+                <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+                <p style='color: #666; font-size: 12px; text-align: center;'>
+                    Contáctanos a viaxoficialcol@gmail.com<br>
+                    © 2026 Viax - Todos los derechos reservados
+                </p>
+            </div>
+        </div>";
+        
+        $mail->AltBody = "Hola {$representante},\n\nLamentamos informarte que tu solicitud para {$nombreEmpresa} no ha sido aprobada.\n\nMotivo: {$motivo}\n\nPuedes contactarnos para más información.\n\nSaludos,\nEquipo Viax";
+        
+        $mail->send();
+        error_log("Email de rechazo enviado a: {$email}");
+        
+    } catch (\Exception $e) {
+        error_log("Error enviando email de rechazo: " . $e->getMessage());
+    }
 }
 
 /**

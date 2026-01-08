@@ -51,6 +51,16 @@ class EmpresaRepositoryImpl implements EmpresaRepository {
   }
 
   @override
+  Future<void> approveEmpresa(int id, int adminId) async {
+    await remoteDataSource.approveEmpresa(id, adminId);
+  }
+
+  @override
+  Future<void> rejectEmpresa(int id, int adminId, String motivo) async {
+    await remoteDataSource.rejectEmpresa(id, adminId, motivo);
+  }
+
+  @override
   Future<EmpresaStats> getEmpresaStats() async {
     return await remoteDataSource.getEmpresaStats();
   }

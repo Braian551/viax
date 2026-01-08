@@ -278,6 +278,54 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       },
                     ),
                     
+                    const SizedBox(height: 28),
+                    
+                    // Divider con texto
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            '¿Tienes una empresa?',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Botón de registro de empresa
+                    _buildSocialButton(
+                      icon: Icon(
+                        Icons.business_outlined,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        size: 24,
+                      ),
+                      text: 'Registrar empresa de transporte',
+                      backgroundColor: Colors.transparent,
+                      textColor: isDark ? Colors.white70 : Colors.black54,
+                      borderColor: isDark ? Colors.white24 : Colors.black26,
+                      onPressed: () {
+                        Navigator.pushNamed(context, RouteNames.empresaRegister);
+                      },
+                    ),
+                    
                     /*
                     const SizedBox(height: 14),
                     

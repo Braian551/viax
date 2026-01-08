@@ -233,6 +233,47 @@ class EmpresaProvider extends ChangeNotifier {
     }
   }
 
+  /// Aprueba una empresa pendiente
+  Future<bool> approveEmpresa(int id, int adminId) async {
+    try {
+      await _repository.approveEmpresa(id, adminId);
+      
+      // Actualizar localmente
+      final index = _empresas.indexWhere((e) => e.id == id);
+      if (index != -1) {
+        final empresa = _empresas[index];
+        _empresas[index] = empresa.copyWith(
+          estado: EmpresaEstado.activo,
+          verificada: true,
+        );
+        notifyListeners();
+      }
+      
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Rechaza una empresa pendiente
+  Future<bool> rejectEmpresa(int id, int adminId, String motivo) async {
+    try {
+      await _repository.rejectEmpresa(id, adminId, motivo);
+      
+      // Remover de la lista local o actualizar estado
+      _empresas.removeWhere((e) => e.id == id);
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Carga estadísticas de empresas
   Future<void> loadStats() async {
     try {
