@@ -242,10 +242,12 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 2),
 
                   // App name con animación de escala y fade in
-                  Transform.scale(
+                  Transform.translate(
+                    offset: const Offset(0, -15),
+                    child: Transform.scale(
                     scale: _textScaleAnim.value,
                     child: Opacity(
                       opacity: _slideAnim.value,
@@ -275,11 +277,14 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                   ),
+                  ),
 
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 0),
 
                   // Subtítulo con fade in independiente
-                  Opacity(
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: Opacity(
                     opacity: _subtitleSlideAnim.value,
                     child: Text(
                       'Viaja fácil, llega rápido',
@@ -289,6 +294,7 @@ class _SplashScreenState extends State<SplashScreen>
                         letterSpacing: 0.5,
                       ),
                     ),
+                  ),
                   ),
 
                   const SizedBox(height: 20),

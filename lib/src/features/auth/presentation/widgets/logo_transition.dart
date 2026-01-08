@@ -22,7 +22,7 @@ class AnimatedLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final containerSize = MediaQuery.of(context).size.width * 0.36;
+    final containerSize = size * 1.5;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Ajustar opacidad del glow según el tema
