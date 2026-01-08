@@ -624,7 +624,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Nombre de la Empresa *',
           icon: Icons.business_rounded,
           textCapitalization: TextCapitalization.words,
-          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+          validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
         Row(
@@ -632,17 +632,21 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
              Expanded(
                child: AuthTextField(
                  controller: _nitController,
-                 label: 'NIT',
+                 label: 'NIT *',
                  icon: Icons.badge_outlined,
+                 keyboardType: TextInputType.number,
+                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                 validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
                ),
              ),
              const SizedBox(width: 12),
              Expanded(
                child: AuthTextField(
                  controller: _razonSocialController,
-                 label: 'Razón Social',
+                 label: 'Razón Social *',
                  icon: Icons.article_outlined,
                  textCapitalization: TextCapitalization.words,
+                 validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
                ),
              ),
           ],
@@ -796,7 +800,13 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Email Corporativo *',
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
-          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Requerido';
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) {
+              return 'Email inválido';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         AuthTextField(
@@ -804,7 +814,12 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Teléfono Principal *',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
-          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Requerido';
+            if (v.length < 7) return 'Min 7 dígitos';
+            return null;
+          },
         ),
         const SizedBox(height: 16),
          AuthTextField(
@@ -812,6 +827,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Teléfono Secundario',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         const SizedBox(height: 24),
          Text(
@@ -825,9 +841,10 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         const SizedBox(height: 12),
         AuthTextField(
           controller: _direccionController,
-          label: 'Dirección',
+          label: 'Dirección *',
           icon: Icons.location_on_outlined,
           textCapitalization: TextCapitalization.sentences,
+          validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
         
@@ -890,7 +907,14 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Nombre Completo *',
           icon: Icons.person_outline,
           textCapitalization: TextCapitalization.words,
-          validator: (v) => v!.isEmpty ? 'Requerido' : null,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+          ],
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Requerido';
+            if (v.trim().split(' ').length < 2) return 'Nombre y apellido';
+            return null;
+          },
         ),
         const SizedBox(height: 16),
          AuthTextField(
@@ -898,6 +922,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Teléfono Directo',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         const SizedBox(height: 16),
         AuthTextField(
@@ -905,6 +930,12 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           label: 'Email Personal',
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
+          validator: (v) {
+             if (v != null && v.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+               return 'Email inválido';
+             }
+             return null;
+          },
         ),
         
         const SizedBox(height: 24),
