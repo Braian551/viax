@@ -10,6 +10,7 @@ import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
+import 'package:viax/src/features/auth/presentation/widgets/searchable_dropdown_sheet.dart';
 
 /// Pantalla de registro de empresas de transporte
 /// UI optimizada para coincidir con el registro de usuarios
@@ -661,6 +662,126 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     );
   }
 
+  Widget _buildSearchableSelector<T>({
+    required String label,
+    required String hint,
+    required T? value,
+    required List<T> items,
+    required String Function(T) itemLabel,
+    required void Function(T) onChanged,
+    required bool isLoading,
+    IconData icon = Icons.arrow_drop_down,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16), // Add bottom margin here instead of outside
+      decoration: BoxDecoration(
+        color: isDark 
+            ? AppColors.darkSurface.withValues(alpha: 0.8) 
+            : AppColors.lightSurface.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? AppColors.darkShadow : AppColors.lightShadow,
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: isLoading || items.isEmpty ? null : () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => SearchableDropdownSheet<T>(
+              title: 'Seleccionar $label',
+              items: items,
+              itemLabel: itemLabel,
+              onSelected: onChanged,
+              searchHint: 'Buscar $label...',
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+               // Prefix Icon Container (Matches AuthTextField)
+               Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  label == 'Departamento' ? Icons.map_outlined : Icons.location_city_outlined, 
+                  color: Colors.white, 
+                  size: 20
+                ),
+              ),
+              
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Label (mimics labelText)
+                    Text(
+                      label,
+                      style: TextStyle(
+                         color: isDark ? Colors.white54 : Colors.black54,
+                         fontSize: 13,
+                         fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Value or Hint
+                    Text(
+                       value != null ? itemLabel(value) : hint,
+                       style: TextStyle(
+                         color: value != null ? textColor : Colors.grey,
+                         fontSize: 16,
+                         fontWeight: FontWeight.w500,
+                       ),
+                       maxLines: 1,
+                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(icon, color: Colors.grey),
+              const SizedBox(width: 8), // Right padding
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildContactoContent(bool isDark, Color textColor) {
     return Column(
       key: const ValueKey(1),
@@ -713,101 +834,39 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         ),
         const SizedBox(height: 16),
         
-        // Departments Dropdown
-        _buildDropdownHeader('Departamento'),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<Department>(
-              value: _selectedDepartment,
-              hint: const Text('Seleccionar departamento'),
-              isExpanded: true,
-              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-              items: _departments.map((dep) {
-                return DropdownMenuItem(
-                  value: dep,
-                  child: Text(
-                    dep.name,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 16,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: _isLoadingDepartments ? null : (Department? newValue) {
-                if (newValue != null && newValue != _selectedDepartment) {
-                  setState(() {
-                    _selectedDepartment = newValue;
-                  });
-                  _loadCities(newValue.id);
-                }
-              },
-              icon: _isLoadingDepartments 
-                  ? const SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.arrow_drop_down, color: AppColors.primary),
-            ),
-          ),
+        // Departments Selector
+        _buildSearchableSelector<Department>(
+          label: 'Departamento',
+          hint: 'Seleccionar departamento',
+          value: _selectedDepartment,
+          items: _departments,
+          itemLabel: (dep) => dep.name,
+          isLoading: _isLoadingDepartments,
+          onChanged: (newValue) {
+             setState(() {
+               _selectedDepartment = newValue;
+             });
+             _loadCities(newValue.id);
+          },
         ),
         
         const SizedBox(height: 16),
 
-        // Cities Dropdown
-        _buildDropdownHeader('Municipio'),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<City>(
-              value: _selectedCity,
-              hint: Text(_selectedDepartment == null 
-                  ? 'Selecciona un departamento primero' 
-                  : 'Seleccionar municipio'),
-              isExpanded: true,
-              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-              items: _cities.map((city) {
-                return DropdownMenuItem(
-                  value: city,
-                  child: Text(
-                    city.name,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 16,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: _isLoadingCities || _cities.isEmpty ? null : (City? newValue) {
-                setState(() {
-                  _selectedCity = newValue;
-                });
-              },
-              icon: _isLoadingCities 
-                  ? const SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.arrow_drop_down, color: AppColors.primary),
-            ),
-          ),
+        // Cities Selector
+        _buildSearchableSelector<City>(
+          label: 'Municipio',
+          hint: _selectedDepartment == null 
+              ? 'Selecciona un departamento primero' 
+              : 'Seleccionar municipio',
+          value: _selectedCity,
+          items: _cities,
+          itemLabel: (city) => city.name,
+          isLoading: _isLoadingCities,
+          onChanged: (newValue) {
+            setState(() {
+              _selectedCity = newValue;
+            });
+          },
         ),
 
         const SizedBox(height: 20),
