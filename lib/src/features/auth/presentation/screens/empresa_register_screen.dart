@@ -57,6 +57,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   
   // Controladores - Representante
   final _representanteNombreController = TextEditingController();
+  final _representanteApellidoController = TextEditingController();
   final _representanteTelefonoController = TextEditingController();
   final _representanteEmailController = TextEditingController();
   
@@ -127,6 +128,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     _telefonoSecundarioController.dispose();
     _direccionController.dispose();
     _representanteNombreController.dispose();
+    _representanteApellidoController.dispose();
     _representanteTelefonoController.dispose();
     _representanteEmailController.dispose();
     _passwordController.dispose();
@@ -216,6 +218,10 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           _showError('El nombre del representante es requerido');
           return false;
         }
+        if (_representanteApellidoController.text.trim().isEmpty) {
+          _showError('El apellido del representante es requerido');
+          return false;
+        }
         return true;
       case 4: // Seguridad
         return true;
@@ -256,6 +262,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         municipio: _selectedCity?.name ?? '', // Use selected city name
         departamento: _selectedDepartment?.name ?? '', // Use selected department name
         representanteNombre: _representanteNombreController.text.trim(),
+        representanteApellido: _representanteApellidoController.text.trim(),
         representanteTelefono: _representanteTelefonoController.text.trim(),
         representanteEmail: _representanteEmailController.text.trim(),
         descripcion: _descripcionController.text.trim(),
@@ -265,18 +272,36 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         logoFile: _logoFile,
       );
 
+      // DEBUG: Log the full response
+      print('======== EMPRESA REGISTER RESPONSE ========');
+      print(result);
+      print('===========================================');
+
       if (result['success'] == true) {
         if (mounted) {
           _showRegistrationSuccessDialog();
         }
       } else {
+        print('======== EMPRESA REGISTER ERROR ========');
+        print('Message: ${result['message']}');
+        print('Debug Error: ${result['debug_error']}');
+        print('Debug File: ${result['debug_file']}');
+        print('Debug Line: ${result['debug_line']}');
+        print('Full result: $result');
+        print('========================================');
         _showError(result['message'] ?? 'Error al registrar la empresa');
       }
-    } catch (e) {
+
+    } catch (e, stackTrace) {
+      print('======== EMPRESA REGISTER EXCEPTION ========');
+      print('Error: $e');
+      print('StackTrace: $stackTrace');
+      print('============================================');
       _showError('Error de conexión. Verifica tu internet e intenta nuevamente.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+
   }
 
   void _showRegistrationSuccessDialog() {
@@ -627,29 +652,21 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-             Expanded(
-               child: AuthTextField(
-                 controller: _nitController,
-                 label: 'NIT *',
-                 icon: Icons.badge_outlined,
-                 keyboardType: TextInputType.number,
-                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                 validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
-               ),
-             ),
-             const SizedBox(width: 12),
-             Expanded(
-               child: AuthTextField(
-                 controller: _razonSocialController,
-                 label: 'Razón Social *',
-                 icon: Icons.article_outlined,
-                 textCapitalization: TextCapitalization.words,
-                 validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
-               ),
-             ),
-          ],
+        AuthTextField(
+          controller: _nitController,
+          label: 'NIT *',
+          icon: Icons.badge_outlined,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 16),
+        AuthTextField(
+          controller: _razonSocialController,
+          label: 'Razón Social *',
+          icon: Icons.article_outlined,
+          textCapitalization: TextCapitalization.words,
+          validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
         AuthTextField(
@@ -904,7 +921,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
         AuthTextField(
           controller: _representanteNombreController,
-          label: 'Nombre Completo *',
+          label: 'Nombres *',
           icon: Icons.person_outline,
           textCapitalization: TextCapitalization.words,
           inputFormatters: [
@@ -912,7 +929,20 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           ],
           validator: (v) {
             if (v == null || v.trim().isEmpty) return 'Requerido';
-            if (v.trim().split(' ').length < 2) return 'Nombre y apellido';
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        AuthTextField(
+          controller: _representanteApellidoController,
+          label: 'Apellidos *',
+          icon: Icons.person_outline,
+          textCapitalization: TextCapitalization.words,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+          ],
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Requerido';
             return null;
           },
         ),

@@ -63,18 +63,26 @@ try {
     
 } catch (Exception $e) {
     error_log("Error en empresa/register.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Error interno del servidor',
-        'error' => $e->getMessage()
+        'debug_error' => $e->getMessage(), // DEBUG: mostrar error real
+        'debug_line' => $e->getLine(),
+        'debug_file' => basename($e->getFile())
     ]);
 }
+
 
 /**
  * Registrar nueva empresa con usuario administrador
  */
 function registerEmpresa($db, $input) {
+    // DEBUG: Log al inicio
+    error_log("=== EMPRESA REGISTER START ===");
+    error_log("Input keys: " . implode(', ', array_keys($input)));
+    
     // Validar campos requeridos
     $requiredFields = [
         'nombre_empresa' => 'El nombre de la empresa es requerido',
@@ -83,6 +91,7 @@ function registerEmpresa($db, $input) {
         'telefono' => 'El teléfono es requerido',
         'representante_nombre' => 'El nombre del representante es requerido',
     ];
+
     
     foreach ($requiredFields as $field => $message) {
         if (empty($input[$field])) {
@@ -155,6 +164,23 @@ function registerEmpresa($db, $input) {
     $db->beginTransaction();
     
     try {
+        // Procesar nombre y apellido del representante ANTES del INSERT
+        $nombreCompleto = trim($input['representante_nombre']);
+        $nombre = trim($input['representante_nombre']);
+        $apellido = '';
+        
+        // Si se envió el apellido por separado (recomendado), usarlo
+        if (isset($input['representante_apellido']) && !empty($input['representante_apellido'])) {
+            $nombre = trim($input['representante_nombre']);
+            $apellido = trim($input['representante_apellido']);
+            $nombreCompleto = $nombre . ' ' . $apellido;
+        } else {
+            // Fallback: tratar de dividir el nombre completo
+            $nombreParts = explode(' ', $nombreCompleto, 2);
+            $nombre = $nombreParts[0];
+            $apellido = $nombreParts[1] ?? '';
+        }
+
         // 1. Crear la empresa con estado 'pendiente' (requiere aprobación)
         $empresaQuery = "INSERT INTO empresas_transporte (
             nombre, nit, razon_social, email, telefono, telefono_secundario,
@@ -175,7 +201,7 @@ function registerEmpresa($db, $input) {
             $input['direccion'] ?? null,
             $input['municipio'] ?? null,
             $input['departamento'] ?? null,
-            trim($input['representante_nombre']),
+            $nombreCompleto, // Usar el nombre completo procesado
             $input['representante_telefono'] ?? $input['telefono'],
             $input['representante_email'] ?? $email,
             $tiposVehiculo,
@@ -191,16 +217,11 @@ function registerEmpresa($db, $input) {
         $uuid = uniqid('empresa_', true);
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        // Separar nombre y apellido del representante
-        $nombreCompleto = trim($input['representante_nombre']);
-        $nombreParts = explode(' ', $nombreCompleto, 2);
-        $nombre = $nombreParts[0];
-        $apellido = $nombreParts[1] ?? '';
-        
+
         $usuarioQuery = "INSERT INTO usuarios (
             uuid, nombre, apellido, email, telefono, hash_contrasena, 
-            tipo_usuario, empresa_id, activo
-        ) VALUES (?, ?, ?, ?, ?, ?, 'empresa', ?, true)
+            tipo_usuario, empresa_id, es_activo
+        ) VALUES (?, ?, ?, ?, ?, ?, 'empresa', ?, 1)
         RETURNING id";
         
         $usuarioStmt = $db->prepare($usuarioQuery);
@@ -266,9 +287,24 @@ function registerEmpresa($db, $input) {
         ]);
         
     } catch (Exception $e) {
+        error_log("=== EMPRESA REGISTER ERROR ===");
+        error_log("Error: " . $e->getMessage());
+        error_log("Line: " . $e->getLine());
+        error_log("File: " . $e->getFile());
         $db->rollBack();
-        throw $e;
+        
+        // Devolver error con detalles
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error interno del servidor',
+            'debug_error' => $e->getMessage(),
+            'debug_line' => $e->getLine(),
+            'debug_file' => basename($e->getFile())
+        ]);
+        return;
     }
+
 }
 
 /**

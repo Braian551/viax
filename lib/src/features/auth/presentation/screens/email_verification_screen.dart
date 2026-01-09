@@ -172,6 +172,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
         email: widget.email,
         code: _verificationCode,
         userName: widget.userName,
+        useMock: false, // Force real email sending for testing
       );
 
       if (!mounted || _isDisposed) return;

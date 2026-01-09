@@ -17,6 +17,7 @@ class EmpresaRegisterService {
     String? municipio,
     String? departamento,
     required String representanteNombre,
+    required String representanteApellido, // New required parameter
     String? representanteTelefono,
     String? representanteEmail,
     String? descripcion,
@@ -37,41 +38,29 @@ class EmpresaRegisterService {
         request.fields['email'] = email;
         request.fields['telefono'] = telefono;
         request.fields['representante_nombre'] = representanteNombre;
+        request.fields['representante_apellido'] = representanteApellido; // Add to fields
         request.fields['password'] = password;
         request.fields['device_uuid'] = deviceUuid;
         
-        if (nit != null && nit.isNotEmpty) {
-          request.fields['nit'] = nit;
-        }
-        if (razonSocial != null && razonSocial.isNotEmpty) {
-          request.fields['razon_social'] = razonSocial;
-        }
+        if (nit != null && nit.isNotEmpty) request.fields['nit'] = nit;
+        if (razonSocial != null && razonSocial.isNotEmpty) request.fields['razon_social'] = razonSocial;
         if (telefonoSecundario != null && telefonoSecundario.isNotEmpty) {
           request.fields['telefono_secundario'] = telefonoSecundario;
         }
-        if (direccion != null && direccion.isNotEmpty) {
-          request.fields['direccion'] = direccion;
-        }
-        if (municipio != null && municipio.isNotEmpty) {
-          request.fields['municipio'] = municipio;
-        }
-        if (departamento != null && departamento.isNotEmpty) {
-          request.fields['departamento'] = departamento;
-        }
+        if (direccion != null && direccion.isNotEmpty) request.fields['direccion'] = direccion;
+        if (municipio != null && municipio.isNotEmpty) request.fields['municipio'] = municipio;
+        if (departamento != null && departamento.isNotEmpty) request.fields['departamento'] = departamento;
         if (representanteTelefono != null && representanteTelefono.isNotEmpty) {
           request.fields['representante_telefono'] = representanteTelefono;
         }
         if (representanteEmail != null && representanteEmail.isNotEmpty) {
           request.fields['representante_email'] = representanteEmail;
         }
-        if (descripcion != null && descripcion.isNotEmpty) {
-          request.fields['descripcion'] = descripcion;
-        }
+        if (descripcion != null && descripcion.isNotEmpty) request.fields['descripcion'] = descripcion;
         if (tiposVehiculo != null && tiposVehiculo.isNotEmpty) {
           request.fields['tipos_vehiculo'] = json.encode(tiposVehiculo);
         }
         
-        // Agregar el archivo de logo
         request.files.add(await http.MultipartFile.fromPath('logo', logoFile.path));
         
         final streamedResponse = await request.send();
@@ -83,7 +72,8 @@ class EmpresaRegisterService {
           final errorBody = json.decode(response.body);
           return {
             'success': false,
-            'message': errorBody['message'] ?? 'Error del servidor: ${response.statusCode}'
+            'message': errorBody['message'] ?? 'Error del servidor: ${response.statusCode}',
+            ...errorBody, // Pass through all other fields like debug_error
           };
         }
       } else {
@@ -94,6 +84,7 @@ class EmpresaRegisterService {
           'email': email,
           'telefono': telefono,
           'representante_nombre': representanteNombre,
+          'representante_apellido': representanteApellido,
           'password': password,
           'device_uuid': deviceUuid,
         };
@@ -130,7 +121,8 @@ class EmpresaRegisterService {
             final errorBody = json.decode(response.body);
             return {
               'success': false,
-              'message': errorBody['message'] ?? 'Error del servidor: ${response.statusCode}'
+              'message': errorBody['message'] ?? 'Error del servidor: ${response.statusCode}',
+              ...errorBody, // Pass through all other fields like debug_error
             };
           } catch (_) {
             return {
