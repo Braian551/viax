@@ -339,6 +339,11 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
             ),
             SizedBox(height: 12),
             Text(
+              'Hemos enviado un correo de confirmación con los detalles de tu registro.',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 12),
+            Text(
               'Nuestro equipo revisará tu información y te notificaremos por email cuando tu cuenta esté activa.',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),

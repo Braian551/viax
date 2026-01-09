@@ -61,6 +61,141 @@ class Mailer {
     }
 
     /**
+     * Envía un correo de bienvenida para empresa con todos los detalles del registro.
+     */
+    public static function sendCompanyWelcomeEmail($toEmail, $userName, $companyData) {
+        $subject = "Bienvenido a Viax - Registro de {$companyData['nombre_empresa']}";
+        
+        // Construir tabla de detalles
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #F8F9FA; border-radius: 8px; overflow: hidden;'>
+            <tr style='background: #E3F2FD;'>
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #1976D2;'>
+                    Detalles del Registro
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600; width: 40%;'>Empresa:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['nombre_empresa']}</td>
+            </tr>";
+        
+        if (!empty($companyData['nit'])) {
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>NIT:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['nit']}</td>
+            </tr>";
+        }
+        
+        if (!empty($companyData['razon_social'])) {
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Razón Social:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['razon_social']}</td>
+            </tr>";
+        }
+        
+        $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Email:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['email']}</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Teléfono:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['telefono']}</td>
+            </tr>";
+        
+        if (!empty($companyData['direccion'])) {
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Dirección:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['direccion']}</td>
+            </tr>";
+        }
+        
+        if (!empty($companyData['municipio']) && !empty($companyData['departamento'])) {
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Ubicación:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['municipio']}, {$companyData['departamento']}</td>
+            </tr>";
+        }
+        
+        if (!empty($companyData['tipos_vehiculo'])) {
+            $vehiculos = is_array($companyData['tipos_vehiculo']) 
+                ? implode(', ', array_map('ucfirst', $companyData['tipos_vehiculo']))
+                : ucfirst($companyData['tipos_vehiculo']);
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Tipos de Vehículo:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>$vehiculos</td>
+            </tr>";
+        }
+        
+        $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Representante:</td>
+                <td style='padding: 10px;'>{$companyData['representante_nombre']}</td>
+            </tr>
+        </table>";
+        
+        // Logo de la empresa (si existe)
+        $companyLogoHtml = '';
+        if (!empty($companyData['logo_url'])) {
+            $companyLogoHtml = "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='{$companyData['logo_url']}' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>";
+        }
+        
+        // Contenido del email
+        $bodyContent = "
+            <div class='greeting'>¡Bienvenido a Viax, $userName!</div>
+            $companyLogoHtml
+            <p class='message'>Gracias por registrar <strong>{$companyData['nombre_empresa']}</strong> en Viax.</p>
+            
+            <div style='background: #FFF3CD; border: 2px solid #FFC107; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;'>
+                <p style='margin: 0; color: #856404; font-weight: 600;'>
+                    ⏳ Estado: Pendiente de Aprobación
+                </p>
+                <p style='margin: 8px 0 0 0; color: #856404; font-size: 14px;'>
+                    Tu solicitud será revisada en las próximas 24-48 horas.
+                </p>
+            </div>
+            
+            $detailsTable
+            
+            <div style='background: #E8F5E9; padding: 16px; border-radius: 8px; margin: 20px 0;'>
+                <p style='margin: 0 0 10px 0; font-weight: 600; color: #2E7D32;'>Una vez aprobada tu empresa, podrás:</p>
+                <ul style='margin: 0; padding-left: 20px; color: #2E7D32;'>
+                    <li>✅ Gestionar tus conductores</li>
+                    <li>✅ Ver estadísticas de viajes</li>
+                    <li>✅ Administrar tu flota de vehículos</li>
+                    <li>✅ Acceder al panel de empresa</li>
+                </ul>
+            </div>
+            
+            <p class='note' style='font-weight: 600;'>Te notificaremos por email cuando tu cuenta esté activa.</p>
+        ";
+        
+        // Versión texto plano
+        $altBody = "¡Bienvenido a Viax, $userName!\n\n" .
+                   "Gracias por registrar {$companyData['nombre_empresa']} en Viax.\n\n" .
+                   "Estado: Pendiente de Aprobación\n" .
+                   "Tu solicitud será revisada en las próximas 24-48 horas.\n\n" .
+                   "DETALLES DEL REGISTRO:\n" .
+                   "Empresa: {$companyData['nombre_empresa']}\n" .
+                   "Email: {$companyData['email']}\n" .
+                   "Teléfono: {$companyData['telefono']}\n\n" .
+                   "Te notificaremos cuando tu cuenta esté activa.\n\n" .
+                   "Saludos,\nEl equipo de Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        return self::send($toEmail, $userName, $subject, $htmlBody, $altBody);
+    }
+
+
+    /**
      * Método base para enviar el correo usando PHPMailer.
      */
     private static function send($toEmail, $toName, $subject, $htmlBody, $altBody = null) {
@@ -133,6 +268,8 @@ class Mailer {
                 .code { font-size: 36px; font-weight: bold; color: #1967D2; margin: 0; font-family: monospace; }
                 .footer { padding: 24px; text-align: center; font-size: 12px; color: #9AA0A6; }
                 .note { font-size: 13px; color: #5F6368; margin-top: 0; }
+                table { font-size: 14px; }
+                table td { text-align: left; }
             </style>
         </head>
         <body>
