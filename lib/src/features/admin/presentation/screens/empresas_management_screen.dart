@@ -585,133 +585,347 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        
         return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
+          height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+              // Handle area
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2.5),
+                  ),
                 ),
               ),
+              
+              // Sticky Header with Close button
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                empresa.logoUrl!.startsWith('http') 
-                                    ? empresa.logoUrl!
-                                    : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.business_rounded,
-                                  color: AppColors.primary,
-                                  size: 32,
-                                ),
-                              ),
-                            )
-                          : const Icon(
-                              Icons.business_rounded,
-                              color: AppColors.primary,
-                              size: 32,
-                            ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            empresa.nombre,
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (empresa.nit != null)
-                            Text(
-                              'NIT: ${empresa.nit}',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                                fontSize: 14,
-                              ),
-                            ),
-                        ],
+                    Text(
+                      'Detalles de Empresa',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey.withValues(alpha: 0.1),
+                      ),
                       icon: const Icon(Icons.close_rounded),
                     ),
                   ],
                 ),
               ),
               const Divider(height: 1),
+              
+              // Scrollable Content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailSection(
-                        context,
-                        'Información de Contacto',
-                        [
-                          if (empresa.email != null)
-                            _buildDetailRow(context, 'Email', empresa.email!),
-                          if (empresa.telefono != null)
-                            _buildDetailRow(context, 'Teléfono', empresa.telefono!),
-                          if (empresa.direccion != null)
-                            _buildDetailRow(context, 'Dirección', empresa.direccion!),
-                          if (empresa.municipio != null || empresa.departamento != null)
-                            _buildDetailRow(
-                              context,
-                              'Ubicación',
-                              [empresa.municipio, empresa.departamento]
-                                  .where((e) => e != null)
-                                  .join(', '),
+                      // 1. Header Section (Logo + Name + Status)
+                      Center(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 10),
+                            // Large Logo
+                            Hero(
+                              tag: 'empresa_logo_${empresa.id}',
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.08),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Image.network(
+                                          empresa.logoUrl!.startsWith('http') 
+                                              ? empresa.logoUrl!
+                                              : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const Icon(
+                                            Icons.business_rounded,
+                                            color: AppColors.primary,
+                                            size: 48,
+                                          ),
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.business_rounded,
+                                        color: AppColors.primary,
+                                        size: 48,
+                                      ),
+                              ),
                             ),
-                        ],
-                      ),
-                      if (empresa.representanteNombre != null) ...[
-                        const SizedBox(height: 20),
-                        _buildDetailSection(
-                          context,
-                          'Representante Legal',
-                          [
-                            _buildDetailRow(context, 'Nombre', empresa.representanteNombre!),
-                            if (empresa.representanteTelefono != null)
-                              _buildDetailRow(context, 'Teléfono', empresa.representanteTelefono!),
-                            if (empresa.representanteEmail != null)
-                              _buildDetailRow(context, 'Email', empresa.representanteEmail!),
+                            const SizedBox(height: 16),
+                            // Name
+                            Text(
+                              empresa.nombre,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 6),
+                            // NIT & Verification Badge
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (empresa.nit != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'NIT: ${empresa.nit}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ),
+                                if (empresa.verificada) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.verified_rounded, color: AppColors.primary, size: 14),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Verificada',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Status Chips
+                            _buildInfoChip(
+                              context, 
+                              label: empresa.estado.displayName, 
+                              color: _getStatusColor(empresa.estado),
+                            ),
                           ],
                         ),
-                      ],
-                      if (empresa.descripcion != null) ...[
-                        const SizedBox(height: 20),
-                        _buildDetailSection(
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // 2. Overview Stats (Row)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              icon: Icons.people_alt_outlined,
+                              value: '${empresa.totalConductores}',
+                              label: 'Conductores',
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              icon: Icons.route_outlined,
+                              value: '${empresa.totalViajesCompletados}',
+                              label: 'Viajes',
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              icon: Icons.star_rounded,
+                              value: empresa.calificacionPromedio.toStringAsFixed(1),
+                              label: 'Calificación',
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // 3. Contact Info Section
+                      _buildSectionTitle(context, 'Contacto y Ubicación'),
+                      const SizedBox(height: 12),
+                      _buildModernInfoCard(
+                        context,
+                        children: [
+                          if (empresa.email != null)
+                            _buildModernRow(context, Icons.email_rounded, 'Email', empresa.email!, hasDivider: true),
+                          if (empresa.telefono != null)
+                            _buildModernRow(context, Icons.phone_rounded, 'Teléfono', empresa.telefono!, hasDivider: true),
+                          if (empresa.municipio != null || empresa.departamento != null)
+                             _buildModernRow(
+                              context, 
+                              Icons.location_on_rounded, 
+                              'Ubicación', 
+                              [empresa.municipio, empresa.departamento].where((e) => e != null).join(', '), 
+                              hasDivider: empresa.direccion != null
+                            ),
+                          if (empresa.direccion != null)
+                            _buildModernRow(context, Icons.map_rounded, 'Dirección', empresa.direccion!, hasDivider: false),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+
+                      // 4. Representative Section
+                      if (empresa.representanteNombre != null) ...[
+                        _buildSectionTitle(context, 'Representante Legal'),
+                        const SizedBox(height: 12),
+                        _buildModernInfoCard(
                           context,
-                          'Descripción',
-                          [_buildDetailRow(context, '', empresa.descripcion!)],
+                          children: [
+                            _buildModernRow(
+                              context, 
+                              Icons.person_rounded, 
+                              'Nombre', 
+                              empresa.representanteNombre!, 
+                              hasDivider: empresa.representanteTelefono != null || empresa.representanteEmail != null
+                            ),
+                            if (empresa.representanteTelefono != null)
+                              _buildModernRow(
+                                context, 
+                                Icons.phone_iphone_rounded, 
+                                'Móvil', 
+                                empresa.representanteTelefono!, 
+                                hasDivider: empresa.representanteEmail != null
+                              ),
+                            if (empresa.representanteEmail != null)
+                              _buildModernRow(
+                                context, 
+                                Icons.alternate_email_rounded, 
+                                'Email Personal', 
+                                empresa.representanteEmail!, 
+                                hasDivider: false
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // 5. Vehicle Types Section
+                      if (empresa.tiposVehiculo.isNotEmpty) ...[
+                        _buildSectionTitle(context, 'Flota Permitida'),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: empresa.tiposVehiculo.map((tipo) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _getVehicleIcon(tipo),
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  tipo[0].toUpperCase() + tipo.substring(1),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      
+                      // 6. Description
+                      if (empresa.descripcion != null && empresa.descripcion!.isNotEmpty) ...[
+                        _buildSectionTitle(context, 'Descripción'),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF252525) : const Color(0xFFF8F9FA),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            empresa.descripcion!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -725,53 +939,183 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
     );
   }
 
-  Widget _buildDetailSection(BuildContext context, String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...children,
-      ],
+  // --- Helper Widgets for New UI ---
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).textTheme.bodyLarge?.color,
+        letterSpacing: 0.5,
+      ),
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (label.isNotEmpty) ...[
-            SizedBox(
-              width: 100,
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-                fontSize: 14,
-              ),
-            ),
+  Widget _buildInfoChip(BuildContext context, {required String label, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(BuildContext context, {
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernInfoCard(BuildContext context, {required List<Widget> children}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildModernRow(
+    BuildContext context, 
+    IconData icon, 
+    String label, 
+    String value, 
+    {bool hasDivider = true}
+  ) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (hasDivider)
+          Divider(
+            height: 1, 
+            thickness: 1, 
+            indent: 60,
+            endIndent: 20,
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+          ),
+      ],
     );
   }
 
@@ -1073,5 +1417,35 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
         margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  Color _getStatusColor(EmpresaEstado estado) {
+    switch (estado) {
+      case EmpresaEstado.activo:
+        return AppColors.success;
+      case EmpresaEstado.inactivo:
+        return Colors.grey;
+      case EmpresaEstado.suspendido:
+        return AppColors.error;
+      case EmpresaEstado.pendiente:
+        return AppColors.warning;
+      case EmpresaEstado.eliminado:
+        return AppColors.error;
+    }
+  }
+
+  IconData _getVehicleIcon(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'moto':
+        return Icons.two_wheeler;
+      case 'motocarro':
+        return Icons.electric_rickshaw;
+      case 'taxi':
+        return Icons.local_taxi;
+      case 'carro':
+        return Icons.directions_car;
+      default:
+        return Icons.directions_car;
+    }
   }
 }
