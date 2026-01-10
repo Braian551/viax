@@ -356,73 +356,113 @@ class EmpresaCard extends StatelessWidget {
 
     // Si la empresa está pendiente, mostrar botones de aprobar/rechazar
     if (empresa.estado == EmpresaEstado.pendiente && (onApprove != null || onReject != null)) {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      return Row(
         children: [
-          if (onApprove != null)
-            _buildActionButton(
-              context,
-              icon: Icons.check_circle_outline,
-              label: 'Aprobar',
-              color: AppColors.success,
-              onTap: onApprove!,
-            ),
           if (onReject != null)
-            _buildActionButton(
-              context,
-              icon: Icons.cancel_outlined,
-              label: 'Rechazar',
-              color: AppColors.error,
-              onTap: onReject!,
+            Expanded(
+              child: _buildActionButton(
+                context,
+                icon: Icons.close_rounded,
+                label: 'Rechazar',
+                color: AppColors.error,
+                onTap: onReject!,
+                isOutlined: true,
+              ),
+            ),
+          if (onReject != null && onApprove != null)
+            const SizedBox(width: 8),
+          if (onApprove != null)
+            Expanded(
+              child: _buildActionButton(
+                context,
+                icon: Icons.check_rounded,
+                label: 'Aprobar',
+                color: AppColors.success,
+                onTap: onApprove!,
+                isFilled: true,
+              ),
             ),
         ],
       );
     }
     
     // Acciones normales para empresas no pendientes
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Column(
       children: [
-        if (onSetCommission != null)
-          _buildActionButton(
-            context,
-            icon: Icons.percent_rounded,
-            label: 'Comisión',
-            color: AppColors.primary,
-            onTap: onSetCommission!,
-          ),
-        if (onEdit != null)
-          _buildActionButton(
-            context,
-            icon: Icons.edit_outlined,
-            label: 'Editar',
-            color: AppColors.blue600,
-            onTap: onEdit!,
-          ),
-        if (onToggleStatus != null)
-          _buildActionButton(
-            context,
-            icon: empresa.estado == EmpresaEstado.activo 
-                ? Icons.pause_circle_outline 
-                : Icons.play_circle_outline,
-            label: empresa.estado == EmpresaEstado.activo ? 'Desactivar' : 'Activar',
-            color: empresa.estado == EmpresaEstado.activo 
-                ? AppColors.warning 
-                : AppColors.success,
-            onTap: onToggleStatus!,
-          ),
-        if (onDelete != null)
-          _buildActionButton(
-            context,
-            icon: Icons.delete_outline,
-            label: '',
-            color: AppColors.error,
-            onTap: onDelete!,
-            compact: true,
-          ),
+        Row(
+          children: [
+            if (onSetCommission != null)
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  icon: Icons.percent_rounded,
+                  label: 'Comisión',
+                  color: AppColors.primary,
+                  onTap: onSetCommission!,
+                ),
+              ),
+            if (onSetCommission != null && onEdit != null)
+              const SizedBox(width: 8),
+            if (onEdit != null)
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  icon: Icons.edit_rounded,
+                  label: 'Editar',
+                  color: AppColors.blue600,
+                  onTap: onEdit!,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            if (onToggleStatus != null)
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  icon: empresa.estado == EmpresaEstado.activo 
+                      ? Icons.pause_rounded 
+                      : Icons.play_arrow_rounded,
+                  label: empresa.estado == EmpresaEstado.activo ? 'Desactivar' : 'Activar',
+                  color: empresa.estado == EmpresaEstado.activo 
+                      ? AppColors.warning 
+                      : AppColors.success,
+                  onTap: onToggleStatus!,
+                  // Hacer este botón visualmente distinto si se desea, por ahora mantengo consistencia
+                ),
+              ),
+             if (onDelete != null) ...[
+               const SizedBox(width: 8),
+               _buildDeleteButton(),
+             ],
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onDelete,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.delete_outline_rounded,
+            color: AppColors.error,
+            size: 20,
+          ),
+        ),
+      ),
     );
   }
 
@@ -432,39 +472,43 @@ class EmpresaCard extends StatelessWidget {
     required String label,
     required Color color,
     required VoidCallback onTap,
-    bool compact = false,
+    bool isFilled = false,
+    bool isOutlined = false,
   }) {
+    // Tonal style by default: color with low alpha, no border
+    final backgroundColor = isFilled 
+        ? color 
+        : (isOutlined ? Colors.transparent : color.withValues(alpha: 0.1));
+        
+    final textColor = isFilled ? Colors.white : color;
+    final borderColor = isOutlined ? color.withValues(alpha: 0.5) : Colors.transparent;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(30), // Fully rounded
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 12 : 16,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(30),
+            border: isOutlined ? Border.all(color: borderColor) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
             children: [
-              Icon(icon, size: 16, color: color),
-              if (label.isNotEmpty) ...[
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Icon(icon, size: 18, color: textColor),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
                 ),
-              ],
+              ),
             ],
           ),
         ),
