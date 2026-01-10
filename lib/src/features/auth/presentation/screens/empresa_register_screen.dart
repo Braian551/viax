@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
+import 'package:viax/src/widgets/auth_text_area.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
@@ -674,11 +675,13 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
-        AuthTextField(
+        AuthTextArea(
           controller: _descripcionController,
           label: 'Descripción (Opcional)',
           icon: Icons.description_outlined,
           textCapitalization: TextCapitalization.sentences,
+          minLines: 3,
+          maxLines: 5,
         ),
         const SizedBox(height: 20),
       ],
