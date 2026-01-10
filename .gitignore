@@ -46,7 +46,7 @@ app.*.map.json
 /android/app/release
 
 # Ignore backend vendor directory
-pingo/backend/vendor/
+backend/vendor/
 
 # ============================================
 # Security - API Keys and Environment Config
