@@ -10,6 +10,8 @@ import 'package:viax/src/features/admin/presentation/widgets/empresa_form.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
 
+import 'package:viax/src/features/admin/presentation/widgets/empresa_card_shimmer.dart';
+
 /// Pantalla de gestión de empresas de transporte
 class EmpresasManagementScreen extends StatefulWidget {
   final Map<String, dynamic> adminUser;
@@ -320,10 +322,12 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: AppColors.primary,
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return const EmpresaCardShimmer();
+      },
     );
   }
 
