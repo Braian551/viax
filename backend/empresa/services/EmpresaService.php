@@ -118,17 +118,48 @@ class EmpresaService {
         $empresaId = $context['empresa_id'];
         $nombreEmpresa = $context['nombre_empresa'];
 
+        // --- Generate Registration PDF ---
+        $pdfPath = null;
+        try {
+            require_once __DIR__ . '/../../utils/PdfGenerator.php';
+            $pdfGen = new PdfGenerator();
+            
+            // Prepare data for PDF (merge input with computed fields)
+            $pdfData = $input;
+            $pdfData['logo_url'] = $logoUrl;
+            $pdfData['representante_nombre'] = $representante;
+            $pdfData['created_at'] = date('d/m/Y'); // fallback
+            
+            $pdfPath = $pdfGen->generateRegistrationPdf($pdfData);
+            
+            // Attach PDF path to input so Mailer can pick it up
+            if ($pdfPath && file_exists($pdfPath)) {
+                error_log("PDF Generated successfully at: $pdfPath");
+                $input['_pdf_path'] = $pdfPath;
+            } else {
+                error_log("PDF Generation returned null or file missing.");
+            }
+            
+        } catch (Exception $e) {
+            error_log("PDF Generation failed in sendNotifications: " . $e->getMessage());
+        }
+
         // 1. Send to Company Email (Main)
+        error_log("Sending welcome email to Company: $email");
         $this->sendWelcomeEmail($email, $input, $representante, $logoUrl);
         
         // 2. Send to Personal Email (if provided and different)
-        // Check if 'representante_email' is present and different from main email
         $personalEmail = $input['representante_email'] ?? null;
         if ($personalEmail && strtolower(trim($personalEmail)) !== strtolower(trim($email))) {
-            // Validate it's a valid email strictly before sending
             if (filter_var($personalEmail, FILTER_VALIDATE_EMAIL)) {
+                error_log("Sending welcome email to Representative: $personalEmail");
                 $this->sendWelcomeEmail($personalEmail, $input, $representante, $logoUrl);
             }
+        }
+        
+        // Cleanup PDF
+        if ($pdfPath && file_exists($pdfPath)) {
+            @unlink($pdfPath);
         }
         
         // Notify admins
@@ -309,6 +340,8 @@ class EmpresaService {
                     'tipos_vehiculo' => $input['tipos_vehiculo'] ?? [],
                     'representante_nombre' => $representante,
                     'logo_url' => $logoUrl,
+                    // Pass PDF path for attachment
+                    '_pdf_path' => $input['_pdf_path'] ?? null,
                 ]
             );
         } catch (Exception $e) {

@@ -2,7 +2,8 @@
     "name": "viax/email-service",
     "description": "Servicio de email para Viax",
     "require": {
-        "phpmailer/phpmailer": "^6.6"
+        "phpmailer/phpmailer": "^6.6",
+        "tecnickcom/tcpdf": "^6.10"
     },
     "autoload": {
         "psr-4": {

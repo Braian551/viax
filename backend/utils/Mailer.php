@@ -122,9 +122,22 @@ class Mailer {
         }
         
         if (!empty($companyData['tipos_vehiculo'])) {
-            $vehiculos = is_array($companyData['tipos_vehiculo']) 
-                ? implode(', ', array_map('ucfirst', $companyData['tipos_vehiculo']))
-                : ucfirst($companyData['tipos_vehiculo']);
+            $types = $companyData['tipos_vehiculo'];
+            // If it's a string, try to decode it if it looks like JSON
+            if (is_string($types)) {
+                $decoded = json_decode($types, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $types = $decoded;
+                } else {
+                    // Clean brackets if it's like ["a","b"] string but not valid JSON for some reason or just standard cleanup
+                    $types = explode(',', str_replace(['[',']','"'], '', $types)); 
+                }
+            }
+            
+            $vehiculos = is_array($types) 
+                ? implode(', ', array_map('ucfirst', $types))
+                : ucfirst($types);
+                
             $detailsTable .= "
             <tr>
                 <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Tipos de Vehículo:</td>
@@ -140,11 +153,17 @@ class Mailer {
         </table>";
         
         // Logo de la empresa (si existe)
+        // Logo de la empresa (si existe)
         $companyLogoHtml = '';
         if (!empty($companyData['logo_url'])) {
+            // Determine source: if valid URL use it, otherwise assume R2 key and use CID (embedded)
+            $imgSrc = filter_var($companyData['logo_url'], FILTER_VALIDATE_URL) 
+                ? $companyData['logo_url'] 
+                : 'cid:company_logo';
+                
             $companyLogoHtml = "
             <div style='text-align: center; margin: 20px 0;'>
-                <img src='{$companyData['logo_url']}' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+                <img src='$imgSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
             </div>";
         }
         
@@ -154,28 +173,43 @@ class Mailer {
             $companyLogoHtml
             <p class='message'>Gracias por registrar <strong>{$companyData['nombre_empresa']}</strong> en Viax.</p>
             
-            <div style='background: #FFF3CD; border: 2px solid #FFC107; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;'>
-                <p style='margin: 0; color: #856404; font-weight: 600;'>
-                    ⏳ Estado: Pendiente de Aprobación
-                </p>
-                <p style='margin: 8px 0 0 0; color: #856404; font-size: 14px;'>
-                    Tu solicitud será revisada en las próximas 24-48 horas.
+            <div style='background-color: #f8f9fa; border-left: 4px solid #0d6efd; padding: 16px; margin: 24px 0; border-radius: 4px;'>
+                <h3 style='margin: 0 0 8px 0; color: #0d6efd; font-size: 16px; font-weight: 700;'>Estado: Pendiente de Aprobación</h3>
+                <p style='margin: 0; color: #495057; font-size: 14px; line-height: 1.5;'>
+                    Tu solicitud ha sido recibida. Nuestro equipo revisará la documentación en un plazo de 24-48 horas.
                 </p>
             </div>
             
             $detailsTable
             
-            <div style='background: #E8F5E9; padding: 16px; border-radius: 8px; margin: 20px 0;'>
-                <p style='margin: 0 0 10px 0; font-weight: 600; color: #2E7D32;'>Una vez aprobada tu empresa, podrás:</p>
-                <ul style='margin: 0; padding-left: 20px; color: #2E7D32;'>
-                    <li>✅ Gestionar tus conductores</li>
-                    <li>✅ Ver estadísticas de viajes</li>
-                    <li>✅ Administrar tu flota de vehículos</li>
-                    <li>✅ Acceder al panel de empresa</li>
-                </ul>
+            <div style='margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;'>
+                <p style='font-size: 16px; font-weight: 600; color: #212529; margin-bottom: 20px;'>Próximos Pasos:</p>
+                
+                <table style='width: 100%; border-collapse: separate; border-spacing: 0 15px;'>
+                    <tr>
+                        <td style='width: 40px; vertical-align: top; padding-right: 15px;'>
+                            <div style='background-color: #e7f1ff; color: #0d6efd; width: 32px; height: 32px; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; font-size: 14px;'>1</div>
+                        </td>
+                        <td style='vertical-align: top;'>
+                            <strong style='color: #212529; display: block; margin-bottom: 4px; font-size: 14px;'>Revisión Administrativa</strong>
+                            <span style='color: #6c757d; font-size: 13px; line-height: 1.4; display: block;'>Verificamos la legalidad y documentos de tu empresa.</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='width: 40px; vertical-align: top; padding-right: 15px;'>
+                            <div style='background-color: #e7f1ff; color: #0d6efd; width: 32px; height: 32px; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; font-size: 14px;'>2</div>
+                        </td>
+                        <td style='vertical-align: top;'>
+                            <strong style='color: #212529; display: block; margin-bottom: 4px; font-size: 14px;'>Activación de Cuenta</strong>
+                            <span style='color: #6c757d; font-size: 13px; line-height: 1.4; display: block;'>Recibirás un email confirmando tu acceso total a la plataforma.</span>
+                        </td>
+                    </tr>
+                </table>
             </div>
             
-            <p class='note' style='font-weight: 600;'>Te notificaremos por email cuando tu cuenta esté activa.</p>
+            <p class='note' style='margin-top: 30px; color: #6c757d; font-size: 13px;'>
+                Una vez activo, podrás gestionar conductores, vehículos y ver estadísticas en tiempo real desde tu panel.
+            </p>
         ";
         
         // Versión texto plano
@@ -191,14 +225,56 @@ class Mailer {
                    "Saludos,\nEl equipo de Viax";
         
         $htmlBody = self::wrapLayout($bodyContent);
-        return self::send($toEmail, $userName, $subject, $htmlBody, $altBody);
+        
+        // Prepare attachments
+        $attachments = [];
+        
+        // 1. Company Logo from R2 (if needed)
+        if (!empty($companyData['logo_url']) && !filter_var($companyData['logo_url'], FILTER_VALIDATE_URL)) {
+             // It's likely an R2 key, fetch content
+             require_once __DIR__ . '/../config/R2Service.php';
+             try {
+                $r2 = new R2Service();
+                $fileData = $r2->getFile($companyData['logo_url']);
+                if ($fileData && !empty($fileData['content'])) {
+                     $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                     file_put_contents($tempFile, $fileData['content']);
+                     // Add as embedded image
+                     $attachments[] = [
+                         'path' => $tempFile,
+                         'name' => 'company_logo.png',
+                         'cid' => 'company_logo'
+                     ];
+                }
+             } catch (Exception $e) {
+                 error_log("Failed to fetch R2 logo for email: " . $e->getMessage());
+             }
+        }
+        
+        // 2. Registration PDF (passed as internal key)
+        if (!empty($companyData['_pdf_path']) && file_exists($companyData['_pdf_path'])) {
+            $attachments[] = [
+                'path' => $companyData['_pdf_path'],
+                'name' => 'Registro_Empresa_Viax.pdf'
+            ];
+        }
+
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        // Cleanup local logo temp file if created in this scope
+        if (isset($tempFile) && file_exists($tempFile)) {
+            @unlink($tempFile);
+        }
+        
+        return $result;
     }
 
 
     /**
      * Método base para enviar el correo usando PHPMailer.
+     * @param array $attachments Array of ['path' => string, 'name' => string, 'cid' => string|null]
      */
-    private static function send($toEmail, $toName, $subject, $htmlBody, $altBody = null) {
+    private static function send($toEmail, $toName, $subject, $htmlBody, $altBody = null, $attachments = []) {
         $mail = new PHPMailer(true);
 
         try {
@@ -220,10 +296,30 @@ class Mailer {
             $mail->isHTML(true);
             $mail->Subject = $subject;
             
-            // Embed Logo si existe
+            // Embed Viax Logo (standard)
             $logoPath = __DIR__ . '/../assets/images/logo.png';
             if (file_exists($logoPath)) {
                 $mail->addEmbeddedImage($logoPath, 'viax_logo', 'logo.png');
+            }
+            
+            // Handle custom attachments
+            if (!empty($attachments)) {
+                // If single path passed (backward compatibility or simple usage)
+                if (is_string($attachments)) {
+                    $attachments = [['path' => $attachments, 'name' => 'attachment', 'cid' => 'company_logo']];
+                }
+                
+                foreach ($attachments as $att) {
+                    if ( isset($att['path']) && file_exists($att['path']) ) {
+                        if (!empty($att['cid'])) {
+                            // Embedded Image (Inline)
+                            $mail->addEmbeddedImage($att['path'], $att['cid'], $att['name'] ?? '');
+                        } else {
+                            // Standard Attachment
+                            $mail->addAttachment($att['path'], $att['name'] ?? '');
+                        }
+                    }
+                }
             }
             
             $mail->Body = $htmlBody;
@@ -232,6 +328,11 @@ class Mailer {
             $mail->AltBody = $altBody ?? strip_tags($htmlBody);
 
             $mail->send();
+            
+            // NOTE: We do NOT delete attachments here anymore, because they might be reused 
+            // for multiple emails (e.g. company + representative).
+            // The caller is responsible for cleanup.
+            
             return true;
         } catch (Exception $e) {
             error_log("Mailer Error: {$mail->ErrorInfo}");
