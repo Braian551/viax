@@ -3,6 +3,7 @@ import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart'
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:shimmer/shimmer.dart';
 
 /// Card que muestra información resumida de una empresa
 class EmpresaCard extends StatelessWidget {
@@ -339,17 +340,35 @@ class EmpresaCard extends StatelessWidget {
 
   Widget _buildActions(BuildContext context) {
     if (isLoading) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Shimmer.fromColors(
+        baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+        highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildShimmerButton()),
+                const SizedBox(width: 8),
+                Expanded(child: _buildShimmerButton()),
+              ],
             ),
-          ),
+            const SizedBox(height: 8),
+             Row(
+               children: [
+                 Expanded(child: _buildShimmerButton()),
+                 const SizedBox(width: 8),
+                 Container(
+                   width: 40,
+                   height: 40,
+                   decoration: BoxDecoration(
+                     color: Colors.white,
+                     borderRadius: BorderRadius.circular(12),
+                   ),
+                 ),
+               ],
+             ),
+          ],
         ),
       );
     }
@@ -430,7 +449,6 @@ class EmpresaCard extends StatelessWidget {
                       ? AppColors.warning 
                       : AppColors.success,
                   onTap: onToggleStatus!,
-                  // Hacer este botón visualmente distinto si se desea, por ahora mantengo consistencia
                 ),
               ),
              if (onDelete != null) ...[
@@ -462,6 +480,16 @@ class EmpresaCard extends StatelessWidget {
             size: 20,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerButton() {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
       ),
     );
   }
