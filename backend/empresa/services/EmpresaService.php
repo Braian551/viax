@@ -57,6 +57,27 @@ class EmpresaService {
             // Update empresa with creator
             $this->repository->updateEmpresaCreador($empresaId, $userId);
             
+            // Create secondary user for representative if email is different
+            $representanteEmail = $input['representante_email'] ?? null;
+            if ($representanteEmail && strtolower(trim($representanteEmail)) !== strtolower(trim($email))) {
+                // Check if this email already exists
+                $existingCheck = $this->repository->checkEmailExists($representanteEmail);
+                if (!$existingCheck) {
+                    // Create user for representative personal email
+                    $repUsuarioData = [
+                        'uuid' => uniqid('empresa_rep_', true),
+                        'nombre' => $representante['nombre'],
+                        'apellido' => $representante['apellido'],
+                        'email' => $representanteEmail,
+                        'telefono' => $input['representante_telefono'] ?? null,
+                        'hash_contrasena' => password_hash($input['password'], PASSWORD_DEFAULT),
+                        'empresa_id' => $empresaId
+                    ];
+                    $this->repository->createUsuario($repUsuarioData);
+                    error_log("Created secondary empresa user for: $representanteEmail");
+                }
+            }
+            
             // Register device if provided
             $deviceRegistered = $this->repository->registerDevice($userId, $input['device_uuid'] ?? '');
             

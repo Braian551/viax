@@ -83,6 +83,15 @@ class EmpresaRepository {
     }
     
     /**
+     * Check if email already exists in usuarios table
+     */
+    public function checkEmailExists($email) {
+        $stmt = $this->db->prepare("SELECT id FROM usuarios WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
+    }
+    
+    /**
      * Register a device for a user
      */
     public function registerDevice($userId, $deviceUuid) {

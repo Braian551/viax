@@ -97,6 +97,24 @@ try {
     // No devolver hash
     unset($user['hash_contrasena']);
 
+    // ========== EMPRESA STATUS CHECK ==========
+    // If user is empresa type, check if empresa is approved
+    if ($user['tipo_usuario'] === 'empresa' && !empty($user['empresa_id'])) {
+        $empresaQuery = "SELECT estado FROM empresas_transporte WHERE id = ? LIMIT 1";
+        $empresaStmt = $db->prepare($empresaQuery);
+        $empresaStmt->execute([$user['empresa_id']]);
+        $empresa = $empresaStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$empresa || $empresa['estado'] !== 'aprobado') {
+            $estadoActual = $empresa['estado'] ?? 'desconocido';
+            sendJsonResponse(false, 'Tu empresa aún no ha sido aprobada', [
+                'empresa_pendiente' => true,
+                'estado' => $estadoActual,
+                'mensaje' => 'Tu solicitud de registro está en revisión. Te notificaremos cuando sea aprobada.'
+            ]);
+        }
+    }
+
     // Resetear intentos fallidos y actualizar last_seen si hay device
     // IMPORTANTE: Marcar este dispositivo como el único confiable (invalidar otros)
     if ($deviceUuid && isset($device['id'])) {
