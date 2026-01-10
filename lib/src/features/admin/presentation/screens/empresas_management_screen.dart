@@ -8,6 +8,7 @@ import 'package:viax/src/features/admin/presentation/widgets/empresa_card.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_commission_dialog.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_form.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/core/config/app_config.dart';
 
 /// Pantalla de gestión de empresas de transporte
 class EmpresasManagementScreen extends StatefulWidget {
@@ -612,11 +613,26 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
                         color: AppColors.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(
-                        Icons.business_rounded,
-                        color: AppColors.primary,
-                        size: 32,
-                      ),
+                      child: empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                empresa.logoUrl!.startsWith('http') 
+                                    ? empresa.logoUrl!
+                                    : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.business_rounded,
+                                  color: AppColors.primary,
+                                  size: 32,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.business_rounded,
+                              color: AppColors.primary,
+                              size: 32,
+                            ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(

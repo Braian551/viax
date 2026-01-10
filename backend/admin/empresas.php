@@ -157,12 +157,13 @@ function listEmpresas($db) {
             $empresa['tipos_vehiculo'] = [];
         }
         
-        // Convertir logo_url relativo a absoluto
+        // Convertir logo_url relativo a absoluto usando r2_proxy.php
         if (!empty($empresa['logo_url']) && strpos($empresa['logo_url'], 'http') !== 0) {
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'];
-            $baseDir = dirname($_SERVER['PHP_SELF'], 2);
-            $empresa['logo_url'] = "$protocol://$host$baseDir/" . $empresa['logo_url'];
+            // Asumiendo que r2_proxy.php está en la raíz de backend/
+            $baseDir = dirname($_SERVER['PHP_SELF'], 2); // /backend
+            $empresa['logo_url'] = "$protocol://$host$baseDir/r2_proxy.php?key=" . urlencode($empresa['logo_url']);
         }
     }
     
@@ -216,12 +217,12 @@ function getEmpresa($db) {
         $empresa['tipos_vehiculo'] = [];
     }
     
-    // Convertir logo_url relativo a absoluto si es necesario
+    // Convertir logo_url relativo a absoluto usando r2_proxy.php
     if (!empty($empresa['logo_url']) && strpos($empresa['logo_url'], 'http') !== 0) {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'];
-        $baseDir = dirname($_SERVER['PHP_SELF'], 2); // Subir 2 niveles desde /admin/ para llegar a /backend/
-        $empresa['logo_url'] = "$protocol://$host$baseDir/" . $empresa['logo_url'];
+        $baseDir = dirname($_SERVER['PHP_SELF'], 2); // /backend
+        $empresa['logo_url'] = "$protocol://$host$baseDir/r2_proxy.php?key=" . urlencode($empresa['logo_url']);
     }
     
     // Obtener conductores de la empresa
