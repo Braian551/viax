@@ -477,8 +477,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
-            bool isLoading = false;
+          builder: (context, _) {
             
             return Container(
               height: MediaQuery.of(context).size.height * 0.9,
@@ -537,11 +536,8 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
                   Expanded(
                     child: EmpresaForm(
                       empresa: empresa,
-                      isLoading: isLoading,
                       onCancel: () => Navigator.pop(context),
                       onSubmit: (formData) async {
-                        setSheetState(() => isLoading = true);
-                        
                         bool success;
                         if (isEditing) {
                           success = await _empresaProvider.updateEmpresa(
@@ -556,8 +552,6 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
                           );
                           success = empresaId != null;
                         }
-                        
-                        setSheetState(() => isLoading = false);
                         
                         if (success && mounted) {
                           Navigator.pop(context);

@@ -15,16 +15,14 @@ import 'package:viax/src/features/auth/data/services/colombia_location_service.d
 /// Alineado con la lógica de EmpresaRegisterScreen para consistencia.
 class EmpresaForm extends StatefulWidget {
   final EmpresaTransporte? empresa;
-  final Function(EmpresaFormData) onSubmit;
+  final Future<void> Function(EmpresaFormData) onSubmit;
   final VoidCallback? onCancel;
-  final bool isLoading;
 
   const EmpresaForm({
     super.key,
     this.empresa,
     required this.onSubmit,
     this.onCancel,
-    this.isLoading = false,
   });
 
   @override
@@ -64,6 +62,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
   City? _selectedCity;
   bool _isLoadingDepartments = false;
   bool _isLoadingCities = false;
+  bool _isLoading = false;
 
   // Tipos de vehículos disponibles
   final List<String> _tiposVehiculoDisponibles = [
@@ -227,13 +226,21 @@ class _EmpresaFormState extends State<EmpresaForm> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     debugPrint('Attempting to submit form...');
     if (_formKey.currentState!.validate()) {
       debugPrint('Form validation passed. Updating data...');
       _updateFormData();
       debugPrint('Calling onSubmit with data: ${_formData.toJson()}');
-      widget.onSubmit(_formData);
+      
+      setState(() => _isLoading = true);
+      try {
+        await widget.onSubmit(_formData);
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     } else {
       debugPrint('Form validation FAILED');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -250,9 +257,11 @@ class _EmpresaFormState extends State<EmpresaForm> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
+    return Stack(
+      children: [
+        Form(
+          key: _formKey,
+          child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -568,7 +577,53 @@ class _EmpresaFormState extends State<EmpresaForm> {
           ],
         ),
       ),
-    );
+    ),
+    if (_isLoading)
+      Container(
+        color: Colors.black54,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? AppColors.darkSurface 
+                  : AppColors.lightSurface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                 BoxShadow(
+                    color: Colors.black26, 
+                    blurRadius: 16,
+                    offset: Offset(0, 4)
+                 )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Procesando...',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ], 
+   );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
@@ -866,7 +921,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
         if (widget.onCancel != null)
           Expanded(
             child: OutlinedButton(
-              onPressed: widget.isLoading ? null : widget.onCancel,
+              onPressed: _isLoading ? null : widget.onCancel,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -889,7 +944,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
         Expanded(
           flex: widget.onCancel != null ? 1 : 2,
           child: ElevatedButton(
-            onPressed: widget.isLoading ? null : _submitForm,
+            onPressed: _isLoading ? null : _submitForm,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -897,7 +952,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: widget.isLoading
+            child: _isLoading
                 ? const SizedBox(
                     width: 20,
                     height: 20,
