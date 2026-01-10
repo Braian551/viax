@@ -49,14 +49,6 @@ class EmpresaController {
             // 3. Send Notifications (Slow - running in background)
             // This happens AFTER the user gets the response
             if (isset($result['notification_context'])) {
-                // Close session/connection if not already closed by jsonResponse
-                if (function_exists('fastcgi_finish_request')) {
-                    fastcgi_finish_request();
-                }
-                
-                // Increase time limit for email sending
-                set_time_limit(120); 
-                
                 $this->service->sendNotifications($result['notification_context']);
             }
             
@@ -98,29 +90,45 @@ class EmpresaController {
         }
         
         $json = json_encode($response);
+        $length = strlen($json);
         
-        // Clear all existing buffers
-        while (ob_get_level()) {
+        // Prevent any output buffering from interfering
+        while (ob_get_level() > 0) {
             ob_end_clean();
         }
         
-        // Headers to force connection close
-        header('Connection: close');
-        header('Content-Encoding: none');
-        header('Content-Length: ' . strlen($json));
+        // Start fresh buffer
+        ob_start();
         
-        // Send content
-        ignore_user_abort(true); // Continue setup even if user "disconnects"
+        // Output the JSON
         echo $json;
         
-        // Flush to client
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        } else {
-            flush();
+        // Set headers to close connection
+        header('Content-Type: application/json');
+        header('Content-Length: ' . $length);
+        header('Connection: close');
+        
+        // Flush the buffer to the client
+        ob_end_flush();
+        
+        // Flush system buffers
+        if (function_exists('ob_flush')) {
+            @ob_flush();
+        }
+        @flush();
+        
+        // Close session to release lock
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
         
-        // Note: Do NOT exit here if we want to continue execution in caller
-        // But for this helper, we usually want to return execution control
+        // For FastCGI (nginx, some Apache configs)
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // Continue running script
+        ignore_user_abort(true);
+        set_time_limit(120);
     }
 }
