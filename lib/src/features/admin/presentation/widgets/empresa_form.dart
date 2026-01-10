@@ -44,6 +44,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
   late TextEditingController _telefonoSecundarioController;
   late TextEditingController _direccionController;
   late TextEditingController _representanteNombreController;
+  late TextEditingController _representanteApellidoController;
   late TextEditingController _representanteTelefonoController;
   late TextEditingController _representanteEmailController;
   late TextEditingController _descripcionController;
@@ -175,6 +176,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _direccionController = TextEditingController(text: _formData.direccion ?? '');
     // Municipio/Departamento managed by selection state, not controllers
     _representanteNombreController = TextEditingController(text: _formData.representanteNombre ?? '');
+    _representanteApellidoController = TextEditingController(text: _formData.representanteApellido ?? '');
     _representanteTelefonoController = TextEditingController(text: _formData.representanteTelefono ?? '');
     _representanteEmailController = TextEditingController(text: _formData.representanteEmail ?? '');
     _descripcionController = TextEditingController(text: _formData.descripcion ?? '');
@@ -191,6 +193,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _telefonoSecundarioController.dispose();
     _direccionController.dispose();
     _representanteNombreController.dispose();
+    _representanteApellidoController.dispose();
     _representanteTelefonoController.dispose();
     _representanteEmailController.dispose();
     _descripcionController.dispose();
@@ -213,6 +216,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _formData.departamento = _selectedDepartment?.name;
     
     _formData.representanteNombre = _representanteNombreController.text.isEmpty ? null : _representanteNombreController.text;
+    _formData.representanteApellido = _representanteApellidoController.text.isEmpty ? null : _representanteApellidoController.text;
     _formData.representanteTelefono = _representanteTelefonoController.text.isEmpty ? null : _representanteTelefonoController.text;
     _formData.representanteEmail = _representanteEmailController.text.isEmpty ? null : _representanteEmailController.text;
     _formData.descripcion = _descripcionController.text.isEmpty ? null : _descripcionController.text;
@@ -224,9 +228,21 @@ class _EmpresaFormState extends State<EmpresaForm> {
   }
 
   void _submitForm() {
+    debugPrint('Attempting to submit form...');
     if (_formKey.currentState!.validate()) {
+      debugPrint('Form validation passed. Updating data...');
       _updateFormData();
+      debugPrint('Calling onSubmit with data: ${_formData.toJson()}');
       widget.onSubmit(_formData);
+    } else {
+      debugPrint('Form validation FAILED');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor corrige los errores en el formulario'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -437,9 +453,23 @@ class _EmpresaFormState extends State<EmpresaForm> {
             
             AuthTextField(
               controller: _representanteNombreController,
-              label: 'Nombre Completo del Representante *',
+              label: 'Nombres *',
               icon: Icons.person_outline,
               textCapitalization: TextCapitalization.words,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
+              ],
+              validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            AuthTextField(
+              controller: _representanteApellidoController,
+              label: 'Apellidos *',
+              icon: Icons.person_outline,
+              textCapitalization: TextCapitalization.words,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
+              ],
               validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
             ),
             const SizedBox(height: 16),

@@ -261,8 +261,113 @@ class EmpresaService {
     /**
      * Notify admins about new empresa registration
      */
+    /**
+     * Notify admins about new empresa registration
+     */
     private function notifyAdmins($empresaId, $nombreEmpresa, $email, $representante) {
         // Implementation would go here - keeping it simple for now
         error_log("New empresa registered: $nombreEmpresa (ID: $empresaId)");
+    }
+    
+    // --- Helper Methods ---
+    
+    private function processRepresentativeName($input) {
+        $nombre = $input['representante_nombre'] ?? '';
+        $apellido = $input['representante_apellido'] ?? '';
+        
+        // If legacy single field provided, try to split if apellido is empty
+        if (empty($apellido) && strpos($nombre, ' ') !== false) {
+            $parts = explode(' ', $nombre, 2);
+            $nombre = $parts[0];
+            $apellido = $parts[1] ?? '';
+        }
+        
+        return [
+            'nombre' => trim($nombre),
+            'apellido' => trim($apellido),
+            'nombre_completo' => trim("$nombre $apellido")
+        ];
+    }
+    
+    private function processVehicleTypes($types) {
+        if (is_string($types)) {
+            $decoded = json_decode($types, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $types = $decoded;
+            } else {
+                $types = explode(',', $types);
+            }
+        }
+        
+        if (!is_array($types)) {
+            return [];
+        }
+        
+        // PostgreSQL array format
+        $pgArray = '{' . implode(',', array_map(function($t) {
+            return '"' . trim($t) . '"'; 
+        }, $types)) . '}';
+        
+        return $pgArray;
+    }
+    
+    private function uploadLogo() {
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
+        
+        try {
+            require_once __DIR__ . '/../../config/R2Service.php';
+            $r2 = new R2Service();
+            
+            $file = $_FILES['logo'];
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'empresas/logos/' . uniqid('logo_') . '.' . $extension;
+            
+            // Upload to R2 and return the key
+            $r2Key = $r2->uploadFile($file['tmp_name'], $filename, $file['type']);
+            
+            error_log("Logo uploaded to R2: $r2Key");
+            return $r2Key;
+            
+        } catch (Exception $e) {
+            error_log("Error uploading logo to R2: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    private function prepareEmpresaData($input, $email, $tiposVehiculo, $logoUrl, $representanteNombreCompleto) {
+        return [
+            'nombre' => $input['nombre_empresa'],
+            'nit' => $input['nit'] ?? null,
+            'razon_social' => $input['razon_social'] ?? null,
+            'email' => $email,
+            'telefono' => $input['telefono'],
+            'telefono_secundario' => $input['telefono_secundario'] ?? null,
+            'direccion' => $input['direccion'],
+            'municipio' => $input['municipio'],
+            'departamento' => $input['departamento'],
+            'representante_nombre' => $representanteNombreCompleto,
+            'representante_telefono' => $input['representante_telefono'] ?? null,
+            'representante_email' => $input['representante_email'] ?? null,
+            'tipos_vehiculo' => $tiposVehiculo,
+            'logo_url' => $logoUrl,
+            'descripcion' => $input['descripcion'] ?? null,
+            'estado' => $input['estado'] ?? 'pendiente',
+            'notas_admin' => $input['notas_admin'] ?? null
+        ];
+    }
+    
+    private function prepareUsuarioData($input, $email, $representante, $empresaId) {
+        return [
+            'uuid' => uniqid('empresa_', true),
+            'nombre' => $representante['nombre'],
+            'apellido' => $representante['apellido'],
+            'email' => $email,
+            'telefono' => $input['telefono'],
+            'hash_contrasena' => password_hash($input['password'], PASSWORD_DEFAULT),
+            'tipo_usuario' => 'empresa',
+            'empresa_id' => $empresaId
+        ];
     }
 }

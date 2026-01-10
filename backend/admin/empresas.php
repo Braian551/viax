@@ -14,8 +14,25 @@
  */
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // Disable display_errors to return clean JSON
 ini_set('log_errors', 1);
+
+// Handle fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_COMPILE_ERROR)) {
+        if (ob_get_length()) ob_end_clean();
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error fatal: ' . $error['message'],
+            'debug_file' => basename($error['file']),
+            'debug_line' => $error['line']
+        ]);
+        exit;
+    }
+});
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -402,10 +419,14 @@ function updateEmpresa($db, $input) {
 }
 
 /**
- * Eliminar empresa (soft delete - cambiar estado a 'eliminado')
+ * Eliminar empresa DEFINITIVAMENTE (hard delete)
+ * - Elimina usuarios asociados (tipo 'empresa')
+ * - Elimina logo de R2 Cloudflare
+ * - Elimina registro de la base de datos
  */
 function deleteEmpresa($db, $input) {
     $empresaId = intval($input['id'] ?? 0);
+    $adminId = $input['admin_id'] ?? null;
     
     if (!$empresaId) {
         http_response_code(400);
@@ -413,8 +434,19 @@ function deleteEmpresa($db, $input) {
         return;
     }
     
-    // Verificar si hay conductores asociados
-    $checkConductores = $db->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa_id = ?");
+    // 1. Obtener datos de la empresa (para logo_url y auditoría)
+    $empresaQuery = $db->prepare("SELECT nombre, logo_url, email FROM empresas_transporte WHERE id = ?");
+    $empresaQuery->execute([$empresaId]);
+    $empresa = $empresaQuery->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$empresa) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
+        return;
+    }
+    
+    // 2. Verificar si hay CONDUCTORES asociados (los usuarios tipo 'empresa' SÍ se eliminan)
+    $checkConductores = $db->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa_id = ? AND tipo_usuario = 'conductor'");
     $checkConductores->execute([$empresaId]);
     $conductoresCount = $checkConductores->fetch(PDO::FETCH_ASSOC)['total'];
     
@@ -427,19 +459,82 @@ function deleteEmpresa($db, $input) {
         return;
     }
     
-    // Soft delete
-    $query = "UPDATE empresas_transporte SET estado = 'eliminado' WHERE id = ?";
-    $stmt = $db->prepare($query);
-    $stmt->execute([$empresaId]);
-    
-    // Log de auditoría
-    $adminId = $input['admin_id'] ?? null;
-    logAuditAction($db, $adminId, 'empresa_eliminada', 'empresas_transporte', $empresaId, null);
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Empresa eliminada exitosamente'
-    ]);
+    try {
+        $db->beginTransaction();
+        
+        // 3. PRIMERO: Desvincular usuarios creadores/verificadores para evitar error de llave foránea (circular)
+        $unlinkUsers = $db->prepare("UPDATE empresas_transporte SET creado_por = NULL, verificado_por = NULL WHERE id = ?");
+        $unlinkUsers->execute([$empresaId]);
+        
+        // 4. Eliminar usuarios de tipo 'empresa' asociados
+        $deleteUsers = $db->prepare("DELETE FROM usuarios WHERE empresa_id = ? AND tipo_usuario = 'empresa'");
+        $deleteUsers->execute([$empresaId]);
+        $deletedUsersCount = $deleteUsers->rowCount();
+        
+        // 4. Eliminar logo de R2 si existe
+        $logoDeleted = false;
+        if (!empty($empresa['logo_url'])) {
+            try {
+                require_once __DIR__ . '/../config/R2Service.php';
+                $r2 = new R2Service();
+                
+                // Extraer el key del logo_url (puede ser URL completa o solo el key)
+                $logoKey = $empresa['logo_url'];
+                
+                // Si el logo_url contiene r2_proxy.php?key=, extraer el key
+                if (strpos($logoKey, 'r2_proxy.php?key=') !== false) {
+                    parse_str(parse_url($logoKey, PHP_URL_QUERY), $params);
+                    $logoKey = $params['key'] ?? $logoKey;
+                }
+                
+                // Si es URL completa sin proxy, extraer solo el path
+                if (strpos($logoKey, 'http') === 0) {
+                    $parsed = parse_url($logoKey);
+                    $logoKey = ltrim($parsed['path'] ?? '', '/');
+                }
+                
+                if (!empty($logoKey)) {
+                    $logoDeleted = $r2->deleteFile($logoKey);
+                    error_log("R2 logo delete for empresa $empresaId: " . ($logoDeleted ? "SUCCESS" : "FAILED") . " - Key: $logoKey");
+                }
+            } catch (Exception $e) {
+                error_log("Error eliminando logo de R2: " . $e->getMessage());
+                // No fallar toda la operación si R2 falla
+            }
+        }
+        
+        // 5. Eliminar empresa de la base de datos (HARD DELETE)
+        $deleteEmpresa = $db->prepare("DELETE FROM empresas_transporte WHERE id = ?");
+        $deleteEmpresa->execute([$empresaId]);
+        
+        // 6. Log de auditoría
+        logAuditAction($db, $adminId, 'empresa_eliminada_permanente', 'empresas_transporte', $empresaId, [
+            'nombre' => $empresa['nombre'],
+            'email' => $empresa['email'],
+            'usuarios_eliminados' => $deletedUsersCount,
+            'logo_eliminado' => $logoDeleted
+        ]);
+        
+        $db->commit();
+        
+        echo json_encode([
+            'success' => true,
+            'message' => "Empresa '{$empresa['nombre']}' eliminada permanentemente. $deletedUsersCount usuario(s) eliminado(s)." . ($logoDeleted ? ' Logo eliminado de R2.' : '')
+        ]);
+        
+    } catch (Exception $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        error_log("Error en deleteEmpresa: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+        http_response_code(500);
+        // Returning the actual error for debugging
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Error backend: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
 }
 
 /**

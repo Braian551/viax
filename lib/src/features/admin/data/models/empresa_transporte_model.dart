@@ -179,6 +179,7 @@ class EmpresaFormData {
   String? municipio;
   String? departamento;
   String? representanteNombre;
+  String? representanteApellido;
   String? representanteTelefono;
   String? representanteEmail;
   List<String> tiposVehiculo;
@@ -200,6 +201,7 @@ class EmpresaFormData {
     this.municipio,
     this.departamento,
     this.representanteNombre,
+    this.representanteApellido,
     this.representanteTelefono,
     this.representanteEmail,
     this.tiposVehiculo = const [],
@@ -224,6 +226,7 @@ class EmpresaFormData {
       municipio: empresa.municipio,
       departamento: empresa.departamento,
       representanteNombre: empresa.representanteNombre,
+      representanteApellido: null, // Not stored separately in entity yet
       representanteTelefono: empresa.representanteTelefono,
       representanteEmail: empresa.representanteEmail,
       tiposVehiculo: List.from(empresa.tiposVehiculo),
@@ -246,6 +249,7 @@ class EmpresaFormData {
       if (municipio != null && municipio!.isNotEmpty) 'municipio': municipio,
       if (departamento != null && departamento!.isNotEmpty) 'departamento': departamento,
       if (representanteNombre != null && representanteNombre!.isNotEmpty) 'representante_nombre': representanteNombre,
+      if (representanteApellido != null && representanteApellido!.isNotEmpty) 'representante_apellido': representanteApellido,
       if (representanteTelefono != null && representanteTelefono!.isNotEmpty) 'representante_telefono': representanteTelefono,
       if (representanteEmail != null && representanteEmail!.isNotEmpty) 'representante_email': representanteEmail,
       if (tiposVehiculo.isNotEmpty) 'tipos_vehiculo': tiposVehiculo,
