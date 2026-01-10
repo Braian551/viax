@@ -215,6 +215,24 @@ class EmpresaFormData {
 
   /// Crea un formulario a partir de una empresa existente
   factory EmpresaFormData.fromEmpresa(EmpresaTransporte empresa) {
+    String? nombre;
+    String? apellido;
+    
+    // Heuristic for splitting full name
+    if (empresa.representanteNombre != null && empresa.representanteNombre!.isNotEmpty) {
+      final parts = empresa.representanteNombre!.trim().split(RegExp(r'\s+'));
+      if (parts.length >= 3) {
+        // Assume last 2 are surnames (common in Latam)
+        apellido = parts.sublist(parts.length - 2).join(' ');
+        nombre = parts.sublist(0, parts.length - 2).join(' ');
+      } else if (parts.length == 2) {
+        nombre = parts[0];
+        apellido = parts[1];
+      } else {
+        nombre = empresa.representanteNombre;
+      }
+    }
+
     return EmpresaFormData(
       nombre: empresa.nombre,
       nit: empresa.nit,
@@ -225,8 +243,8 @@ class EmpresaFormData {
       direccion: empresa.direccion,
       municipio: empresa.municipio,
       departamento: empresa.departamento,
-      representanteNombre: empresa.representanteNombre,
-      representanteApellido: null, // Not stored separately in entity yet
+      representanteNombre: nombre,
+      representanteApellido: apellido,
       representanteTelefono: empresa.representanteTelefono,
       representanteEmail: empresa.representanteEmail,
       tiposVehiculo: List.from(empresa.tiposVehiculo),
@@ -238,6 +256,12 @@ class EmpresaFormData {
   }
 
   Map<String, dynamic> toJson() {
+    // Merge name and surname for backend
+    final fullName = [representanteNombre, representanteApellido]
+        .where((s) => s != null && s.trim().isNotEmpty)
+        .join(' ')
+        .trim();
+
     return {
       'nombre': nombre,
       if (nit != null && nit!.isNotEmpty) 'nit': nit,
@@ -248,8 +272,7 @@ class EmpresaFormData {
       if (direccion != null && direccion!.isNotEmpty) 'direccion': direccion,
       if (municipio != null && municipio!.isNotEmpty) 'municipio': municipio,
       if (departamento != null && departamento!.isNotEmpty) 'departamento': departamento,
-      if (representanteNombre != null && representanteNombre!.isNotEmpty) 'representante_nombre': representanteNombre,
-      if (representanteApellido != null && representanteApellido!.isNotEmpty) 'representante_apellido': representanteApellido,
+      if (fullName.isNotEmpty) 'representante_nombre': fullName,
       if (representanteTelefono != null && representanteTelefono!.isNotEmpty) 'representante_telefono': representanteTelefono,
       if (representanteEmail != null && representanteEmail!.isNotEmpty) 'representante_email': representanteEmail,
       if (tiposVehiculo.isNotEmpty) 'tipos_vehiculo': tiposVehiculo,

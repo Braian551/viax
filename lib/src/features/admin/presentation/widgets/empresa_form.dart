@@ -31,6 +31,7 @@ class EmpresaForm extends StatefulWidget {
 
 class _EmpresaFormState extends State<EmpresaForm> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
   late EmpresaFormData _formData;
   
   // Controladores
@@ -184,6 +185,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _nombreController.dispose();
     _nitController.dispose();
     _razonSocialController.dispose();
@@ -243,6 +245,12 @@ class _EmpresaFormState extends State<EmpresaForm> {
       }
     } else {
       debugPrint('Form validation FAILED');
+      FocusScope.of(context).unfocus();
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Por favor corrige los errores en el formulario'),
@@ -262,6 +270,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
         Form(
           key: _formKey,
           child: SingleChildScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(20),
         child: Column(

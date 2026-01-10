@@ -366,7 +366,14 @@ class EmpresaRemoteDataSourceImpl implements EmpresaRemoteDataSource {
           throw ServerException(data['message'] ?? 'Error al rechazar empresa');
         }
       } else {
-        throw ServerException('Error del servidor: ${response.statusCode}');
+        String errorMessage = 'Error del servidor: ${response.statusCode}';
+        try {
+          final errorData = json.decode(response.body);
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          }
+        } catch (_) {}
+        throw ServerException(errorMessage);
       }
     } catch (e) {
       if (e is ServerException) rethrow;

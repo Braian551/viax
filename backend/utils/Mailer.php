@@ -480,6 +480,272 @@ class Mailer {
         return $result;
     }
 
+    /**
+     * Envía un correo de Rechazo para empresa (Diseño Profesional).
+     * Incluye logo y motivo.
+     */
+    public static function sendCompanyRejectedEmail($toEmail, $userName, $companyData, $reason) {
+        $subject = "⚠️ Actualización sobre tu registro en Viax - {$companyData['nombre_empresa']}";
+        
+        // --- Reutilización de Componentes (Tabla de Detalles) ---
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #FFF4F4; border-radius: 8px; overflow: hidden;'>
+            <tr style='background: #FFEBEE;'> <!-- Rojo suave -->
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #D32F2F;'>
+                    Detalles de la Solicitud
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #FFCDD2; font-weight: 600; width: 40%;'>Empresa:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #FFCDD2;'>{$companyData['nombre_empresa']}</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Representante:</td>
+                <td style='padding: 10px;'>{$companyData['representante_nombre']}</td>
+            </tr>
+        </table>";
+        
+        // Initialize attachments and temp files tracking
+        $attachments = [];
+        $tempFiles = [];
+        
+        // 1. Prepare Logo - Always embed to avoid email client blocking external images
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            // Try to fetch the image content
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                    
+                    if ($httpCode == 200 && $imageContent) {
+                        $mime = $contentType ?: 'image/png';
+                    } else {
+                        $imageContent = null;
+                    }
+                } catch (Exception $e) {}
+            } else {
+                // R2 Key
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {}
+            }
+            
+            // If we got image content, embed it
+            if ($imageContent) {
+                $ext = 'png';
+                if (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) $ext = 'jpg';
+                elseif (strpos($mime, 'gif') !== false) $ext = 'gif';
+                elseif (strpos($mime, 'webp') !== false) $ext = 'webp';
+                
+                $fileName = "company_logo.$ext";
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                
+                $attachments[] = [
+                    'path' => $tempFile,
+                    'name' => $fileName,
+                    'cid' => 'company_logo',
+                    'type' => $mime
+                ];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+
+        // Logo de la empresa (si existe)
+        $companyLogoHtml = '';
+        if (!empty($logoSrc)) {
+            $companyLogoHtml = "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>";
+        }
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            $companyLogoHtml
+            <div style='background-color: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #c62828; margin: 0 0 8px 0;'>Solicitud Rechazada</h2>
+                <p style='color: #b71c1c; margin: 0;'>No hemos podido aprobar tu registro en esta ocasión.</p>
+            </div>
+            
+            <p class='message'>Hemos revisado la documentación de <strong>{$companyData['nombre_empresa']}</strong> y hemos encontrado inconsistencias.</p>
+            
+            <div style='text-align: left; padding: 20px; background-color: #f8f9fa; border-left: 4px solid #d32f2f; margin: 20px 0;'>
+                <strong style='display: block; color: #d32f2f; margin-bottom: 8px;'>Motivo del rechazo:</strong>
+                <p style='margin: 0; color: #333; font-style: italic; white-space: pre-line;'>$reason</p>
+            </div>
+            
+            $detailsTable
+            
+            <p class='message'>
+                Esta decisión es definitiva y tus datos han sido eliminados del sistema por seguridad. 
+                Si deseas intentarlo nuevamente, por favor asegúrate de cumplir con todos los requisitos y realiza un nuevo registro.
+            </p>
+        ";
+        
+        // Texto plano
+        $altBody = "Hola, $userName.\n\n" .
+                   "Tu solicitud de registro para {$companyData['nombre_empresa']} ha sido RECHAZADA.\n\n" .
+                   "Motivo: $reason\n\n" .
+                   "Tus datos han sido eliminados de nuestro sistema.\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        // Cleanup temp files
+        foreach ($tempFiles as $tf) {
+            if (file_exists($tf)) @unlink($tf);
+        }
+        
+        // Cleanup temp files
+        foreach ($tempFiles as $tf) {
+            if (file_exists($tf)) @unlink($tf);
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Envía un correo de Eliminación para empresa.
+     * Notifica que la cuenta ha sido eliminada permanentemente.
+     */
+    public static function sendCompanyDeletedEmail($toEmail, $userName, $companyData) {
+        $subject = "⚠️ Cuenta eliminada - {$companyData['nombre_empresa']}";
+        
+        // --- Reutilización de Componentes (Tabla de Detalles) ---
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #FFF4F4; border-radius: 8px; overflow: hidden;'>
+            <tr style='background: #FFEBEE;'>
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #D32F2F;'>
+                    Detalles de la Cuenta Eliminada
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #FFCDD2; font-weight: 600; width: 40%;'>Empresa:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #FFCDD2;'>{$companyData['nombre_empresa']}</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Representante:</td>
+                <td style='padding: 10px;'>{$companyData['representante_nombre']}</td>
+            </tr>
+        </table>";
+        
+        // Initialize attachments
+        $attachments = [];
+        $tempFiles = [];
+        
+        // 1. Prepare Logo (Logic copied for consistency)
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                    if ($httpCode == 200 && $imageContent) $mime = $contentType ?: 'image/png';
+                    else $imageContent = null;
+                } catch (Exception $e) {}
+            } else {
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {}
+            }
+            
+            if ($imageContent) {
+                $ext = 'png';
+                if (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) $ext = 'jpg';
+                $fileName = "company_logo.$ext";
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                
+                $attachments[] = [
+                    'path' => $tempFile,
+                    'name' => $fileName,
+                    'cid' => 'company_logo',
+                    'type' => $mime
+                ];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+
+        $companyLogoHtml = '';
+        if (!empty($logoSrc)) {
+            $companyLogoHtml = "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>";
+        }
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            $companyLogoHtml
+            <div style='background-color: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #c62828; margin: 0 0 8px 0;'>Cuenta Eliminada</h2>
+                <p style='color: #b71c1c; margin: 0;'>Tu cuenta ha sido eliminada por un administrador.</p>
+            </div>
+            
+            <p class='message'>Te informamos que la cuenta de la empresa <strong>{$companyData['nombre_empresa']}</strong> y todos los datos asociados han sido eliminados de forma permanente de nuestros servidores.</p>
+            
+            $detailsTable
+            
+            <p class='message'>
+                Esta acción es irreversible. Si crees que esto es un error o deseas volver a registrarte, ponte en contacto con nuestro soporte.
+            </p>
+        ";
+        
+        $altBody = "Hola, $userName.\n\n" .
+                   "Tu cuenta de empresa {$companyData['nombre_empresa']} ha sido ELIMINADA por un administrador.\n" .
+                   "Todos tus datos han sido borrados permanentemente.\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        foreach ($tempFiles as $tf) {
+            if (file_exists($tf)) @unlink($tf);
+        }
+        
+        return $result;
+    }
 
     /**
      * Método base para enviar el correo usando PHPMailer.

@@ -76,6 +76,9 @@ try {
         case 'update':
             updateEmpresa($db, $input);
             break;
+        case 'reject':
+            rejectEmpresa($db, $input);
+            break;
         case 'delete':
             deleteEmpresa($db, $input);
             break;
@@ -419,10 +422,68 @@ function updateEmpresa($db, $input) {
 }
 
 /**
+ * Rechazar empresa: envía email con motivo y elimina definitivamente.
+ */
+function rejectEmpresa($db, $input) {
+    $empresaId = intval($input['id'] ?? 0);
+    $adminId = $input['admin_id'] ?? null;
+    $reason = trim($input['motivo'] ?? '');
+
+    if (!$empresaId || empty($reason)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID y motivo requeridos']);
+        return;
+    }
+
+    // 1. Obtener datos
+    $empresaQuery = $db->prepare("SELECT * FROM empresas_transporte WHERE id = ?");
+    $empresaQuery->execute([$empresaId]);
+    $empresa = $empresaQuery->fetch(PDO::FETCH_ASSOC);
+
+    if (!$empresa) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
+        return;
+    }
+
+    // 2. Verificar conductores (No se debe poder eliminar/rechazar si ya tiene operación)
+    if (checkConductores($db, $empresaId)) {
+        return; 
+    }
+
+    // 3. Enviar correo
+    // Intentar buscar email representante si el genérico no es específico
+    $toEmail = $empresa['representante_email'] ?: $empresa['email'];
+    $toName = $empresa['representante_nombre'];
+    
+    // Mapear nombre para el template de email (que espera nombre_empresa)
+    $empresa['nombre_empresa'] = $empresa['nombre'];
+    
+    try {
+        require_once __DIR__ . '/../utils/Mailer.php';
+        Mailer::sendCompanyRejectedEmail($toEmail, $toName, $empresa, $reason);
+    } catch (Exception $e) {
+        error_log("Error enviando email de rechazo: " . $e->getMessage());
+        // Continuamos con la eliminación aunque falle el email (o podríamos detenerlo)
+        // Decisión: Continuar para no bloquear al admin, pero loguear.
+    }
+
+    // 4. Ejecutar eliminación
+    try {
+        $result = executeEmpresaDeletion($db, $empresaId, $empresa, $adminId, 'empresa_rechazada');
+        
+        echo json_encode([
+            'success' => true,
+            'message' => "Empresa rechazada y eliminada. Email enviado."
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+/**
  * Eliminar empresa DEFINITIVAMENTE (hard delete)
- * - Elimina usuarios asociados (tipo 'empresa')
- * - Elimina logo de R2 Cloudflare
- * - Elimina registro de la base de datos
  */
 function deleteEmpresa($db, $input) {
     $empresaId = intval($input['id'] ?? 0);
@@ -434,8 +495,7 @@ function deleteEmpresa($db, $input) {
         return;
     }
     
-    // 1. Obtener datos de la empresa (para logo_url y auditoría)
-    $empresaQuery = $db->prepare("SELECT nombre, logo_url, email FROM empresas_transporte WHERE id = ?");
+    $empresaQuery = $db->prepare("SELECT * FROM empresas_transporte WHERE id = ?");
     $empresaQuery->execute([$empresaId]);
     $empresa = $empresaQuery->fetch(PDO::FETCH_ASSOC);
     
@@ -445,49 +505,81 @@ function deleteEmpresa($db, $input) {
         return;
     }
     
-    // 2. Verificar si hay CONDUCTORES asociados (los usuarios tipo 'empresa' SÍ se eliminan)
-    $checkConductores = $db->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa_id = ? AND tipo_usuario = 'conductor'");
-    $checkConductores->execute([$empresaId]);
-    $conductoresCount = $checkConductores->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    if ($conductoresCount > 0) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false, 
-            'message' => "No se puede eliminar la empresa porque tiene $conductoresCount conductor(es) asociado(s). Reasigne los conductores primero."
-        ]);
+    if (checkConductores($db, $empresaId)) {
         return;
     }
     
+    // Enviar correo de notificación antes de eliminar (Requisito UI/UX)
+    // Se realiza antes de borrar para tener acceso a los datos (logo, nombre, etc.)
+    $toEmail = $empresa['representante_email'] ?: $empresa['email'];
+    $toName = $empresa['representante_nombre'];
+    $empresa['nombre_empresa'] = $empresa['nombre']; // Fix for email template variable
+    
+    try {
+        require_once __DIR__ . '/../utils/Mailer.php';
+        Mailer::sendCompanyDeletedEmail($toEmail, $toName, $empresa);
+    } catch (Exception $e) {
+        error_log("Error enviando email de eliminación: " . $e->getMessage());
+        // Continuamos con la eliminación aunque falle el email
+    }
+    
+    try {
+        $result = executeEmpresaDeletion($db, $empresaId, $empresa, $adminId, 'empresa_eliminada_permanente');
+        
+        echo json_encode([
+            'success' => true,
+            'message' => "Empresa eliminada permanentemente. {$result['users']} usuario(s) eliminado(s)." . ($result['logo'] ? ' Logo borrado.' : '')
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+// Helper para verificar conductores
+function checkConductores($db, $empresaId) {
+    $check = $db->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa_id = ? AND tipo_usuario = 'conductor'");
+    $check->execute([$empresaId]);
+    $count = $check->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    if ($count > 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false, 
+            'message' => "No se puede eliminar la empresa porque tiene $count conductor(es) asociado(s)."
+        ]);
+        return true;
+    }
+    return false;
+}
+
+// Helper centralizado de eliminación
+function executeEmpresaDeletion($db, $empresaId, $empresa, $adminId, $auditAction) {
     try {
         $db->beginTransaction();
         
-        // 3. PRIMERO: Desvincular usuarios creadores/verificadores para evitar error de llave foránea (circular)
+        // Desvincular usuarios creadores/verificadores
         $unlinkUsers = $db->prepare("UPDATE empresas_transporte SET creado_por = NULL, verificado_por = NULL WHERE id = ?");
         $unlinkUsers->execute([$empresaId]);
         
-        // 4. Eliminar usuarios de tipo 'empresa' asociados
+        // Eliminar usuarios tipo 'empresa'
         $deleteUsers = $db->prepare("DELETE FROM usuarios WHERE empresa_id = ? AND tipo_usuario = 'empresa'");
         $deleteUsers->execute([$empresaId]);
         $deletedUsersCount = $deleteUsers->rowCount();
         
-        // 4. Eliminar logo de R2 si existe
+        // Eliminar logo R2
         $logoDeleted = false;
         if (!empty($empresa['logo_url'])) {
             try {
                 require_once __DIR__ . '/../config/R2Service.php';
                 $r2 = new R2Service();
-                
-                // Extraer el key del logo_url (puede ser URL completa o solo el key)
                 $logoKey = $empresa['logo_url'];
                 
-                // Si el logo_url contiene r2_proxy.php?key=, extraer el key
                 if (strpos($logoKey, 'r2_proxy.php?key=') !== false) {
                     parse_str(parse_url($logoKey, PHP_URL_QUERY), $params);
                     $logoKey = $params['key'] ?? $logoKey;
                 }
                 
-                // Si es URL completa sin proxy, extraer solo el path
                 if (strpos($logoKey, 'http') === 0) {
                     $parsed = parse_url($logoKey);
                     $logoKey = ltrim($parsed['path'] ?? '', '/');
@@ -495,47 +587,33 @@ function deleteEmpresa($db, $input) {
                 
                 if (!empty($logoKey)) {
                     $logoDeleted = $r2->deleteFile($logoKey);
-                    error_log("R2 logo delete for empresa $empresaId: " . ($logoDeleted ? "SUCCESS" : "FAILED") . " - Key: $logoKey");
                 }
             } catch (Exception $e) {
-                error_log("Error eliminando logo de R2: " . $e->getMessage());
-                // No fallar toda la operación si R2 falla
+                error_log("R2 delete warning: " . $e->getMessage());
             }
         }
         
-        // 5. Eliminar empresa de la base de datos (HARD DELETE)
+        // Eliminar empresa
         $deleteEmpresa = $db->prepare("DELETE FROM empresas_transporte WHERE id = ?");
         $deleteEmpresa->execute([$empresaId]);
         
-        // 6. Log de auditoría
-        logAuditAction($db, $adminId, 'empresa_eliminada_permanente', 'empresas_transporte', $empresaId, [
+        // Auditoría
+        logAuditAction($db, $adminId, $auditAction, 'empresas_transporte', $empresaId, [
             'nombre' => $empresa['nombre'],
-            'email' => $empresa['email'],
             'usuarios_eliminados' => $deletedUsersCount,
             'logo_eliminado' => $logoDeleted
         ]);
         
         $db->commit();
         
-        echo json_encode([
-            'success' => true,
-            'message' => "Empresa '{$empresa['nombre']}' eliminada permanentemente. $deletedUsersCount usuario(s) eliminado(s)." . ($logoDeleted ? ' Logo eliminado de R2.' : '')
-        ]);
+        return ['users' => $deletedUsersCount, 'logo' => $logoDeleted];
         
     } catch (Exception $e) {
-        if ($db->inTransaction()) {
-            $db->rollBack();
-        }
-        error_log("Error en deleteEmpresa: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
-        http_response_code(500);
-        // Returning the actual error for debugging
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error backend: ' . $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
+        if ($db->inTransaction()) $db->rollBack();
+        throw $e;
     }
 }
+
 
 /**
  * Cambiar estado de empresa (activar/desactivar)
@@ -652,69 +730,7 @@ function approveEmpresa($db, $input) {
     ]);
 }
 
-/**
- * Rechazar solicitud de empresa pendiente
- */
-function rejectEmpresa($db, $input) {
-    $empresaId = intval($input['id'] ?? 0);
-    $adminId = intval($input['admin_id'] ?? 0);
-    $motivo = trim($input['motivo'] ?? 'No se especificó motivo');
-    
-    if (!$empresaId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'ID de empresa requerido']);
-        return;
-    }
-    
-    // Obtener información de la empresa
-    $query = "SELECT e.*, u.email as usuario_email, u.nombre as usuario_nombre, u.id as usuario_id
-              FROM empresas_transporte e
-              LEFT JOIN usuarios u ON u.empresa_id = e.id AND u.tipo_usuario = 'empresa'
-              WHERE e.id = ?";
-    $stmt = $db->prepare($query);
-    $stmt->execute([$empresaId]);
-    $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$empresa) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
-        return;
-    }
-    
-    if ($empresa['estado'] !== 'pendiente') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'La empresa no está en estado pendiente']);
-        return;
-    }
-    
-    // Actualizar estado a rechazado y guardar motivo
-    $updateQuery = "UPDATE empresas_transporte 
-                    SET estado = 'rechazado', notas_admin = COALESCE(notas_admin, '') || '\n[RECHAZADO] ' || ?
-                    WHERE id = ?";
-    $updateStmt = $db->prepare($updateQuery);
-    $updateStmt->execute([$motivo, $empresaId]);
-    
-    // Desactivar usuario asociado
-    if ($empresa['usuario_id']) {
-        $deactivateUser = $db->prepare("UPDATE usuarios SET activo = false WHERE id = ?");
-        $deactivateUser->execute([$empresa['usuario_id']]);
-    }
-    
-    // Log de auditoría
-    logAuditAction($db, $adminId, 'empresa_rechazada', 'empresas_transporte', $empresaId, [
-        'nombre' => $empresa['nombre'],
-        'email' => $empresa['email'],
-        'motivo' => $motivo
-    ]);
-    
-    // Enviar email de rechazo
-    sendRejectionEmail($empresa['email'] ?? $empresa['usuario_email'], $empresa['nombre'], $empresa['representante_nombre'] ?? $empresa['usuario_nombre'], $motivo);
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Empresa rechazada. Se ha notificado al representante.'
-    ]);
-}
+
 
 /**
  * Enviar email de aprobación de empresa
