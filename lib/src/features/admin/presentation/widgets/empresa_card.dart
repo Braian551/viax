@@ -7,6 +7,7 @@ import 'package:viax/src/core/config/app_config.dart';
 /// Card que muestra información resumida de una empresa
 class EmpresaCard extends StatelessWidget {
   final EmpresaTransporte empresa;
+  final bool isLoading;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -25,6 +26,7 @@ class EmpresaCard extends StatelessWidget {
     this.onSetCommission,
     this.onApprove,
     this.onReject,
+    this.isLoading = false,
   });
 
   @override
@@ -336,79 +338,81 @@ class EmpresaCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    if (isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Si la empresa está pendiente, mostrar botones de aprobar/rechazar
     if (empresa.estado == EmpresaEstado.pendiente && (onApprove != null || onReject != null)) {
-      return Row(
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
           if (onApprove != null)
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.check_circle_outline,
-                label: 'Aprobar',
-                color: AppColors.success,
-                onTap: onApprove!,
-              ),
+            _buildActionButton(
+              context,
+              icon: Icons.check_circle_outline,
+              label: 'Aprobar',
+              color: AppColors.success,
+              onTap: onApprove!,
             ),
-          if (onApprove != null && onReject != null)
-            const SizedBox(width: 8),
           if (onReject != null)
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.cancel_outlined,
-                label: 'Rechazar',
-                color: AppColors.error,
-                onTap: onReject!,
-              ),
+            _buildActionButton(
+              context,
+              icon: Icons.cancel_outlined,
+              label: 'Rechazar',
+              color: AppColors.error,
+              onTap: onReject!,
             ),
         ],
       );
     }
     
     // Acciones normales para empresas no pendientes
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
         if (onSetCommission != null)
-          Expanded(
-            child: _buildActionButton(
-              context,
-              icon: Icons.percent_rounded,
-              label: 'Comisión',
-              color: AppColors.primary,
-              onTap: onSetCommission!,
-            ),
+          _buildActionButton(
+            context,
+            icon: Icons.percent_rounded,
+            label: 'Comisión',
+            color: AppColors.primary,
+            onTap: onSetCommission!,
           ),
-        if (onSetCommission != null && onEdit != null)
-          const SizedBox(width: 8),
         if (onEdit != null)
-          Expanded(
-            child: _buildActionButton(
-              context,
-              icon: Icons.edit_outlined,
-              label: 'Editar',
-              color: AppColors.blue600,
-              onTap: onEdit!,
-            ),
+          _buildActionButton(
+            context,
+            icon: Icons.edit_outlined,
+            label: 'Editar',
+            color: AppColors.blue600,
+            onTap: onEdit!,
           ),
-        if (onEdit != null && onToggleStatus != null)
-          const SizedBox(width: 8),
         if (onToggleStatus != null)
-          Expanded(
-            child: _buildActionButton(
-              context,
-              icon: empresa.estado == EmpresaEstado.activo 
-                  ? Icons.pause_circle_outline 
-                  : Icons.play_circle_outline,
-              label: empresa.estado == EmpresaEstado.activo ? 'Desactivar' : 'Activar',
-              color: empresa.estado == EmpresaEstado.activo 
-                  ? AppColors.warning 
-                  : AppColors.success,
-              onTap: onToggleStatus!,
-            ),
+          _buildActionButton(
+            context,
+            icon: empresa.estado == EmpresaEstado.activo 
+                ? Icons.pause_circle_outline 
+                : Icons.play_circle_outline,
+            label: empresa.estado == EmpresaEstado.activo ? 'Desactivar' : 'Activar',
+            color: empresa.estado == EmpresaEstado.activo 
+                ? AppColors.warning 
+                : AppColors.success,
+            onTap: onToggleStatus!,
           ),
-        if ((onEdit != null || onToggleStatus != null) && onDelete != null)
-          const SizedBox(width: 8),
         if (onDelete != null)
           _buildActionButton(
             context,

@@ -525,8 +525,31 @@ function approveEmpresa($db, $input) {
         'email' => $empresa['email']
     ]);
     
-    // Enviar email de aprobación
-    sendApprovalEmail($empresa['email'] ?? $empresa['usuario_email'], $empresa['nombre'], $empresa['representante_nombre'] ?? $empresa['usuario_nombre']);
+    // Enviar notificaciones de aprobación usando Servicio (Email con diseño + copia al personal)
+    try {
+        require_once __DIR__ . '/../empresa/services/EmpresaService.php';
+        $service = new EmpresaService($db);
+        
+        // Preparar datos para el servicio
+        $empresaData = $empresa;
+        // Fallbacks para email y representante si faltan en la tabla empresas pero están en usuarios
+        if (empty($empresaData['email']) && !empty($empresaData['usuario_email'])) {
+            $empresaData['email'] = $empresaData['usuario_email'];
+        }
+        if (empty($empresaData['representante_nombre']) && !empty($empresaData['usuario_nombre'])) {
+            $empresaData['representante_nombre'] = $empresaData['usuario_nombre'];
+        }
+        // Usuario email como personal email si es diferente
+        if (!empty($empresaData['usuario_email']) && $empresaData['usuario_email'] !== $empresaData['email']) {
+            $empresaData['representante_email'] = $empresaData['usuario_email'];
+        }
+
+        $service->sendApprovalNotifications($empresaData);
+        
+    } catch (Exception $e) {
+        // No fallar la aprobación si falla el email, solo loguear
+        error_log("Error enviando notificaciones de aprobación: " . $e->getMessage());
+    }
     
     echo json_encode([
         'success' => true,

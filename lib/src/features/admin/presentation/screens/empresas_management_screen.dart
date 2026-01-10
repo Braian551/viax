@@ -27,6 +27,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
   late EmpresaProvider _empresaProvider;
   final TextEditingController _searchController = TextEditingController();
   String? _estadoFilter;
+  final Set<int> _processingEmpresas = {};
 
   @override
   void initState() {
@@ -300,6 +301,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
           final empresa = provider.empresas[index];
           return EmpresaCard(
             empresa: empresa,
+            isLoading: _processingEmpresas.contains(empresa.id),
             onTap: () => _showEmpresaDetails(empresa),
             onEdit: () => _showEditEmpresaSheet(empresa),
             onDelete: () => _confirmDeleteEmpresa(empresa),
@@ -1152,8 +1154,12 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
+              
+              setState(() => _processingEmpresas.add(empresa.id));
               final success = await _empresaProvider.deleteEmpresa(empresa.id, _adminId);
+              
               if (mounted) {
+                setState(() => _processingEmpresas.remove(empresa.id));
                 _showSnackBar(
                   success ? 'Empresa eliminada' : (_empresaProvider.errorMessage ?? 'Error al eliminar'),
                   isSuccess: success,
@@ -1172,10 +1178,13 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
   }
 
   void _toggleEmpresaStatus(EmpresaTransporte empresa) async {
+    setState(() => _processingEmpresas.add(empresa.id));
+    
     final nuevoEstado = empresa.estado == EmpresaEstado.activo ? 'inactivo' : 'activo';
     final success = await _empresaProvider.toggleEmpresaStatus(empresa.id, nuevoEstado, _adminId);
     
     if (mounted) {
+      setState(() => _processingEmpresas.remove(empresa.id));
       _showSnackBar(
         success
             ? 'Estado cambiado a ${nuevoEstado == 'activo' ? 'Activo' : 'Inactivo'}'
@@ -1257,8 +1266,12 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
     );
 
     if (confirmed == true) {
+      setState(() => _processingEmpresas.add(empresa.id));
+      
       final success = await _empresaProvider.approveEmpresa(empresa.id, _adminId);
+      
       if (mounted) {
+        setState(() => _processingEmpresas.remove(empresa.id));
         _showSnackBar(
           success
               ? 'Empresa "${empresa.nombre}" aprobada exitosamente'
@@ -1371,8 +1384,12 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
     );
 
     if (result != null && result.isNotEmpty) {
+      setState(() => _processingEmpresas.add(empresa.id));
+      
       final success = await _empresaProvider.rejectEmpresa(empresa.id, _adminId, result);
+      
       if (mounted) {
+        setState(() => _processingEmpresas.remove(empresa.id));
         _showSnackBar(
           success
               ? 'Empresa "${empresa.nombre}" rechazada'

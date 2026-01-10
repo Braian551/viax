@@ -152,18 +152,12 @@ class Mailer {
             </tr>
         </table>";
         
-        // Logo de la empresa (si existe)
-        // Logo de la empresa (si existe)
+        // Logo de la empresa (si existe) - Always use CID for embedded images
         $companyLogoHtml = '';
         if (!empty($companyData['logo_url'])) {
-            // Determine source: if valid URL use it, otherwise assume R2 key and use CID (embedded)
-            $imgSrc = filter_var($companyData['logo_url'], FILTER_VALIDATE_URL) 
-                ? $companyData['logo_url'] 
-                : 'cid:company_logo';
-                
             $companyLogoHtml = "
             <div style='text-align: center; margin: 20px 0;'>
-                <img src='$imgSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+                <img src='cid:company_logo' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
             </div>";
         }
         
@@ -228,27 +222,67 @@ class Mailer {
         
         // Prepare attachments
         $attachments = [];
+        $tempFile = null;
         
-        // 1. Company Logo from R2 (if needed)
-        if (!empty($companyData['logo_url']) && !filter_var($companyData['logo_url'], FILTER_VALIDATE_URL)) {
-             // It's likely an R2 key, fetch content
-             require_once __DIR__ . '/../config/R2Service.php';
-             try {
-                $r2 = new R2Service();
-                $fileData = $r2->getFile($companyData['logo_url']);
-                if ($fileData && !empty($fileData['content'])) {
-                     $tempFile = tempnam(sys_get_temp_dir(), 'logo');
-                     file_put_contents($tempFile, $fileData['content']);
-                     // Add as embedded image
-                     $attachments[] = [
-                         'path' => $tempFile,
-                         'name' => 'company_logo.png',
-                         'cid' => 'company_logo'
-                     ];
+        // 1. Company Logo - Always embed to avoid email client blocking external images
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                // It's a full URL (e.g., Cloudflare R2 public URL) - download it
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                    
+                    if ($httpCode == 200 && $imageContent) {
+                        $mime = $contentType ?: 'image/png';
+                    } else {
+                        $imageContent = null;
+                        error_log("Failed to download logo from URL: $logoUrl - HTTP $httpCode");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error downloading logo from URL: " . $e->getMessage());
                 }
-             } catch (Exception $e) {
-                 error_log("Failed to fetch R2 logo for email: " . $e->getMessage());
-             }
+            } else {
+                // It's an R2 key - use R2Service to fetch
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {
+                    error_log("Failed to fetch R2 logo for email: " . $e->getMessage());
+                }
+            }
+            
+            // If we got image content, embed it
+            if ($imageContent) {
+                $ext = 'png';
+                if (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) $ext = 'jpg';
+                elseif (strpos($mime, 'gif') !== false) $ext = 'gif';
+                elseif (strpos($mime, 'webp') !== false) $ext = 'webp';
+                
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $attachments[] = [
+                    'path' => $tempFile,
+                    'name' => "company_logo.$ext",
+                    'cid' => 'company_logo',
+                    'type' => $mime
+                ];
+            }
         }
         
         // 2. Registration PDF (passed as internal key)
@@ -264,6 +298,183 @@ class Mailer {
         // Cleanup local logo temp file if created in this scope
         if (isset($tempFile) && file_exists($tempFile)) {
             @unlink($tempFile);
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Envía un correo de Aprobación para empresa (Diseño Premium).
+     * Reutiliza la estructura de detalles y estilo.
+     */
+    public static function sendCompanyApprovedEmail($toEmail, $userName, $companyData) {
+        $subject = "✅ ¡Tu empresa ha sido aprobada! - {$companyData['nombre_empresa']}";
+        
+        // --- Reutilización de Componentes (Tabla de Detalles) ---
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #F8F9FA; border-radius: 8px; overflow: hidden;'>
+            <tr style='background: #E8F5E9;'> <!-- Verde suave -->
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #2E7D32;'>
+                    Detalles de la Cuenta
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600; width: 40%;'>Empresa:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['nombre_empresa']}</td>
+            </tr>";
+        
+        if (!empty($companyData['nit'])) {
+            $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>NIT:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['nit']}</td>
+            </tr>";
+        }
+        
+        $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Email:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['email']}</td>
+            </tr>";
+            
+        if (!empty($companyData['razon_social'])) {
+             $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600;'>Razón Social:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$companyData['razon_social']}</td>
+            </tr>";
+        }
+
+        $detailsTable .= "
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Representante:</td>
+                <td style='padding: 10px;'>{$companyData['representante_nombre']}</td>
+            </tr>
+        </table>";
+        
+        // Initialize attachments and temp files tracking
+        $attachments = [];
+        $tempFiles = [];
+        
+        // 1. Prepare Logo - Always embed to avoid email client blocking external images
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            // Try to fetch the image content
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                // It's a full URL (e.g., Cloudflare R2 public URL) - download it
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                    
+                    if ($httpCode == 200 && $imageContent) {
+                        $mime = $contentType ?: 'image/png';
+                    } else {
+                        $imageContent = null;
+                        error_log("Failed to download logo from URL: $logoUrl - HTTP $httpCode");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error downloading logo from URL: " . $e->getMessage());
+                }
+            } else {
+                // It's an R2 key - use R2Service to fetch
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) { 
+                    error_log("Failed to download logo from R2: " . $e->getMessage());
+                }
+            }
+            
+            // If we got image content, embed it
+            if ($imageContent) {
+                $ext = 'png';
+                if (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) $ext = 'jpg';
+                elseif (strpos($mime, 'gif') !== false) $ext = 'gif';
+                elseif (strpos($mime, 'webp') !== false) $ext = 'webp';
+                
+                $fileName = "company_logo.$ext";
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                
+                $attachments[] = [
+                    'path' => $tempFile,
+                    'name' => $fileName,
+                    'cid' => 'company_logo',
+                    'type' => $mime
+                ];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+        
+        // 2. Prepare PDF Attachment
+        if (!empty($companyData['_pdf_path']) && file_exists($companyData['_pdf_path'])) {
+            $attachments[] = [
+                'path' => $companyData['_pdf_path'],
+                'name' => 'Credenciales_Viax.pdf'
+            ];
+        }
+
+        // Logo de la empresa (si existe)
+        $companyLogoHtml = '';
+        if (!empty($logoSrc)) {
+            $companyLogoHtml = "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>";
+        }
+        
+        $bodyContent = "
+            <div class='greeting'>¡Bienvenido a Viax, $userName!</div>
+            $companyLogoHtml
+            <div style='background-color: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #2e7d32; margin: 0 0 8px 0;'>¡Tu cuenta ha sido Aprobada!</h2>
+                <p style='color: #1b5e20; margin: 0;'>Ahora puedes gestionar tu flota de transporte.</p>
+            </div>
+            
+            <p class='message'>Nos complace informarte que la empresa <strong>{$companyData['nombre_empresa']}</strong> está activa en nuestra plataforma.</p>
+            
+            <p class='message'>Detalles del registro:</p>
+            $detailsTable
+            
+            <p class='message'>Pasos a seguir:</p>
+            <ul style='color: #555; line-height: 1.6;'>
+                <li>Inicia sesión en la aplicación Viax.</li>
+                <li>Registra tus vehículos y conductores.</li>
+                <li>Comienza a recibir viajes.</li>
+            </ul>
+        ";
+        
+        // Texto plano
+        $altBody = "¡Felicidades, $userName!\n\n" .
+                   "Tu empresa {$companyData['nombre_empresa']} ha sido APROBADA en Viax.\n\n" .
+                   "Estado: Activo\n" .
+                   "Ya puedes gestionar tu flota desde la aplicación.\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        // Cleanup temp files
+        foreach ($tempFiles as $tf) {
+            if (file_exists($tf)) @unlink($tf);
         }
         
         return $result;
@@ -313,7 +524,8 @@ class Mailer {
                     if ( isset($att['path']) && file_exists($att['path']) ) {
                         if (!empty($att['cid'])) {
                             // Embedded Image (Inline)
-                            $mail->addEmbeddedImage($att['path'], $att['cid'], $att['name'] ?? '');
+                            $mime = $att['type'] ?? '';
+                            $mail->addEmbeddedImage($att['path'], $att['cid'], $att['name'] ?? '', 'base64', $mime);
                         } else {
                             // Standard Attachment
                             $mail->addAttachment($att['path'], $att['name'] ?? '');

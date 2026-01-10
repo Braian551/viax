@@ -86,7 +86,7 @@ class EmpresaProvider extends ChangeNotifier {
         limit: _pageSize,
       );
 
-      _empresas = empresas;
+      _empresas = List<EmpresaTransporte>.from(empresas);
       _state = EmpresaProviderState.loaded;
     } catch (e) {
       _state = EmpresaProviderState.error;

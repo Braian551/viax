@@ -131,6 +131,10 @@ class EmpresaService {
      * Send notifications for a registration (Emails)
      * Should be called AFTER response is sent to client
      */
+    /**
+     * Send notifications for a registration (Emails)
+     * Should be called AFTER response is sent to client
+     */
     public function sendNotifications($context) {
         $email = $context['email']; // Company/Main Email
         $input = $context['input'];
@@ -155,26 +159,25 @@ class EmpresaService {
             
             // Attach PDF path to input so Mailer can pick it up
             if ($pdfPath && file_exists($pdfPath)) {
-                error_log("PDF Generated successfully at: $pdfPath");
                 $input['_pdf_path'] = $pdfPath;
-            } else {
-                error_log("PDF Generation returned null or file missing.");
             }
             
         } catch (Exception $e) {
             error_log("PDF Generation failed in sendNotifications: " . $e->getMessage());
         }
 
+        // Determine email type based on status
+        $status = $input['estado'] ?? 'pendiente';
+        $emailType = ($status === 'activo') ? 'approved' : 'welcome';
+
         // 1. Send to Company Email (Main)
-        error_log("Sending welcome email to Company: $email");
-        $this->sendWelcomeEmail($email, $input, $representante, $logoUrl);
+        $this->sendEmailSequence($email, $input, $representante, $logoUrl, $emailType);
         
         // 2. Send to Personal Email (if provided and different)
         $personalEmail = $input['representante_email'] ?? null;
         if ($personalEmail && strtolower(trim($personalEmail)) !== strtolower(trim($email))) {
             if (filter_var($personalEmail, FILTER_VALIDATE_EMAIL)) {
-                error_log("Sending welcome email to Representative: $personalEmail");
-                $this->sendWelcomeEmail($personalEmail, $input, $representante, $logoUrl);
+                $this->sendEmailSequence($personalEmail, $input, $representante, $logoUrl, $emailType);
             }
         }
         
@@ -183,192 +186,75 @@ class EmpresaService {
             @unlink($pdfPath);
         }
         
-        // Notify admins
-        $this->notifyAdmins($empresaId, $nombreEmpresa, $email, $representante);
+        // Notify admins if it was a public registration (pending)
+        if ($status === 'pendiente') {
+            $this->notifyAdmins($empresaId, $nombreEmpresa, $email, $representante);
+        }
     }
     
     /**
-     * Process vehicle types into PostgreSQL array format
+     * Send notifications for manual approval (Admin Button)
      */
-    private function processVehicleTypes($tiposVehiculo) {
-        if (empty($tiposVehiculo)) {
-            return '{}';
-        }
+    public function sendApprovalNotifications($empresaData) {
+        $email = $empresaData['email'];
+        $representante = $empresaData['representante_nombre'];
+        $logoUrl = $empresaData['logo_url'];
         
-        $vehiculos = $tiposVehiculo;
-        
-        // Handle JSON string
-        if (is_string($vehiculos)) {
-            $decoded = json_decode($vehiculos, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $vehiculos = $decoded;
-            } else {
-                $vehiculos = explode(',', $vehiculos);
+        // Map DB fields to Input format expected by Mailer/Service
+        $simulatedInput = [
+            'nombre_empresa' => $empresaData['nombre'], // DB: nombre -> Input: nombre_empresa
+            'nit' => $empresaData['nit'],
+            'razon_social' => $empresaData['razon_social'],
+            'email' => $empresaData['email'],
+            'telefono' => $empresaData['telefono'],
+            'direccion' => $empresaData['direccion'],
+            'municipio' => $empresaData['municipio'],
+            'departamento' => $empresaData['departamento'],
+            'tipos_vehiculo' => $empresaData['tipos_vehiculo'], // array or string from DB
+            'representante_nombre' => $representante,
+            // No PW/PDF for simple approval usually
+        ];
+
+        // 1. Company Email
+        $this->sendEmailSequence($email, $simulatedInput, $representante, $logoUrl, 'approved');
+
+        // 2. Personal Email (if different)
+        $personalEmail = $empresaData['representante_email'] ?? null;
+        if ($personalEmail && strtolower(trim($personalEmail)) !== strtolower(trim($email))) {
+            if (filter_var($personalEmail, FILTER_VALIDATE_EMAIL)) {
+                $this->sendEmailSequence($personalEmail, $simulatedInput, $representante, $logoUrl, 'approved');
             }
         }
-        
-        // Convert to PostgreSQL array
-        if (is_array($vehiculos)) {
-            return $this->phpArrayToPg($vehiculos);
-        }
-        
-        return '{}';
     }
-    
+
     /**
-     * Convert PHP array to PostgreSQL array format
+     * Helper to send the correct email type
      */
-    private function phpArrayToPg($phpArray) {
-        if (empty($phpArray)) {
-            return '{}';
-        }
-        
-        $escaped = array_map(function($item) {
-            return '"' . str_replace('"', '\\"', $item) . '"';
-        }, $phpArray);
-        
-        return '{' . implode(',', $escaped) . '}';
-    }
-    
-    /**
-     * Upload logo to R2 storage
-     */
-    private function uploadLogo() {
-        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] === UPLOAD_ERR_NO_FILE) {
-            return null;
-        }
-        
-        $file = $_FILES['logo'];
-        
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('Error en la subida del archivo: ' . $file['error']);
-        }
-        
-        // Validate size (5MB)
-        if ($file['size'] > 5 * 1024 * 1024) {
-            throw new Exception('El archivo excede el tamaño máximo permitido (5MB)');
-        }
-        
-        // Validate type
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $file['tmp_name']);
-        finfo_close($finfo);
-        
-        if (!in_array($mimeType, $allowedTypes)) {
-            throw new Exception('Tipo de archivo no permitido. Solo se permiten JPG, PNG y WEBP.');
-        }
-        
-        // Upload to R2
-        $year = date('Y');
-        $month = date('m');
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = "empresas/registros/$year/$month/logo_" . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
-        
+    private function sendEmailSequence($email, $inputData, $representante, $logoUrl, $type) {
         try {
-            require_once __DIR__ . '/../../config/R2Service.php';
-            $r2 = new R2Service();
-            return $r2->uploadFile($file['tmp_name'], $filename, $mimeType);
+            // Prepare data for Mailer
+            $mailData = [
+                'nombre_empresa' => $inputData['nombre_empresa'],
+                'nit' => $inputData['nit'] ?? null,
+                'razon_social' => $inputData['razon_social'] ?? null,
+                'email' => $inputData['email'] ?? $email, // Fallback
+                'telefono' => trim($inputData['telefono']),
+                'direccion' => $inputData['direccion'] ?? null,
+                'municipio' => $inputData['municipio'] ?? null,
+                'departamento' => $inputData['departamento'] ?? null,
+                'tipos_vehiculo' => $inputData['tipos_vehiculo'] ?? [],
+                'representante_nombre' => $representante,
+                'logo_url' => $logoUrl,
+                '_pdf_path' => $inputData['_pdf_path'] ?? null,
+            ];
+
+            if ($type === 'approved') {
+                Mailer::sendCompanyApprovedEmail($email, $representante, $mailData);
+            } else {
+                Mailer::sendCompanyWelcomeEmail($email, $representante, $mailData);
+            }
         } catch (Exception $e) {
-            error_log('Error subiendo logo a R2: ' . $e->getMessage());
-            return null; // Don't fail registration if logo upload fails
-        }
-    }
-    
-    /**
-     * Process representative name into nombre and apellido
-     */
-    private function processRepresentativeName($input) {
-        $nombreCompleto = trim($input['representante_nombre']);
-        $nombre = trim($input['representante_nombre']);
-        $apellido = '';
-        
-        // If apellido sent separately (recommended), use it
-        if (isset($input['representante_apellido']) && !empty($input['representante_apellido'])) {
-            $nombre = trim($input['representante_nombre']);
-            $apellido = trim($input['representante_apellido']);
-            $nombreCompleto = $nombre . ' ' . $apellido;
-        } else {
-            // Fallback: try to split full name
-            $nombreParts = explode(' ', $nombreCompleto, 2);
-            $nombre = $nombreParts[0];
-            $apellido = $nombreParts[1] ?? '';
-        }
-        
-        return [
-            'nombre' => $nombre,
-            'apellido' => $apellido,
-            'nombre_completo' => $nombreCompleto
-        ];
-    }
-    
-    /**
-     * Prepare empresa data for database insertion
-     */
-    private function prepareEmpresaData($input, $email, $tiposVehiculo, $logoUrl, $representanteNombre) {
-        return [
-            'nombre' => trim($input['nombre_empresa']),
-            'nit' => $input['nit'] ?? null,
-            'razon_social' => $input['razon_social'] ?? null,
-            'email' => $email,
-            'telefono' => trim($input['telefono']),
-            'telefono_secundario' => $input['telefono_secundario'] ?? null,
-            'direccion' => $input['direccion'] ?? null,
-            'municipio' => $input['municipio'] ?? null,
-            'departamento' => $input['departamento'] ?? null,
-            'representante_nombre' => $representanteNombre,
-            'representante_telefono' => $input['representante_telefono'] ?? $input['telefono'],
-            'representante_email' => $input['representante_email'] ?? $email,
-            'tipos_vehiculo' => $tiposVehiculo,
-            'logo_url' => $logoUrl,
-            'descripcion' => $input['descripcion'] ?? null,
-            'estado' => $input['estado'] ?? 'pendiente',
-            'notas_admin' => $input['notas_admin'] ?? 'Registro desde app móvil - pendiente de verificación'
-        ];
-    }
-    
-    /**
-     * Prepare usuario data for database insertion
-     */
-    private function prepareUsuarioData($input, $email, $representante, $empresaId) {
-        return [
-            'uuid' => uniqid('empresa_', true),
-            'nombre' => $representante['nombre'],
-            'apellido' => $representante['apellido'],
-            'email' => $email,
-            'telefono' => trim($input['telefono']),
-            'hash_contrasena' => password_hash($input['password'], PASSWORD_DEFAULT),
-            'empresa_id' => $empresaId
-        ];
-    }
-    
-    /**
-     * Send welcome email to empresa
-     */
-    private function sendWelcomeEmail($email, $input, $representante, $logoUrl) {
-        try {
-            Mailer::sendCompanyWelcomeEmail(
-                $email,
-                $representante,
-                [
-                    'nombre_empresa' => $input['nombre_empresa'],
-                    'nit' => $input['nit'] ?? null,
-                    'razon_social' => $input['razon_social'] ?? null,
-                    'email' => $email,
-                    'telefono' => trim($input['telefono']),
-                    'direccion' => $input['direccion'] ?? null,
-                    'municipio' => $input['municipio'] ?? null,
-                    'departamento' => $input['departamento'] ?? null,
-                    'tipos_vehiculo' => $input['tipos_vehiculo'] ?? [],
-                    'representante_nombre' => $representante,
-                    'logo_url' => $logoUrl,
-                    // Pass PDF path for attachment
-                    '_pdf_path' => $input['_pdf_path'] ?? null,
-                ]
-            );
-        } catch (Exception $e) {
-            error_log("Error sending welcome email: " . $e->getMessage());
-            // Don't fail registration if email fails
+            error_log("Error sending $type email to $email: " . $e->getMessage());
         }
     }
     
