@@ -322,7 +322,8 @@ class EmpresaService {
             'tipos_vehiculo' => $tiposVehiculo,
             'logo_url' => $logoUrl,
             'descripcion' => $input['descripcion'] ?? null,
-            'notas_admin' => 'Registro desde app móvil - pendiente de verificación'
+            'estado' => $input['estado'] ?? 'pendiente',
+            'notas_admin' => $input['notas_admin'] ?? 'Registro desde app móvil - pendiente de verificación'
         ];
     }
     

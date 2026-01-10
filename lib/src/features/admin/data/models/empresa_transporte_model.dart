@@ -187,6 +187,7 @@ class EmpresaFormData {
   String? descripcion;
   String estado;
   String? notasAdmin;
+  String? password;
 
   EmpresaFormData({
     this.nombre = '',
@@ -207,6 +208,7 @@ class EmpresaFormData {
     this.descripcion,
     this.estado = 'activo',
     this.notasAdmin,
+    this.password,
   });
 
   /// Crea un formulario a partir de una empresa existente
@@ -251,6 +253,7 @@ class EmpresaFormData {
       if (descripcion != null && descripcion!.isNotEmpty) 'descripcion': descripcion,
       'estado': estado,
       if (notasAdmin != null && notasAdmin!.isNotEmpty) 'notas_admin': notasAdmin,
+      if (password != null && password!.isNotEmpty) 'password': password,
     };
   }
 

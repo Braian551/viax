@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/admin/data/models/empresa_transporte_model.dart';
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/auth_text_field.dart';
+import 'package:viax/src/widgets/auth_text_area.dart';
+import 'package:viax/src/features/auth/presentation/widgets/searchable_dropdown_sheet.dart';
+import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
 
-/// Formulario para crear o editar una empresa de transporte
+/// Formulario para crear o editar una empresa de transporte.
+/// Alineado con la lógica de EmpresaRegisterScreen para consistencia.
 class EmpresaForm extends StatefulWidget {
   final EmpresaTransporte? empresa;
   final Function(EmpresaFormData) onSubmit;
@@ -29,7 +35,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
   final _formKey = GlobalKey<FormState>();
   late EmpresaFormData _formData;
   
-  // Controladores para campos de texto
+  // Controladores
   late TextEditingController _nombreController;
   late TextEditingController _nitController;
   late TextEditingController _razonSocialController;
@@ -37,13 +43,26 @@ class _EmpresaFormState extends State<EmpresaForm> {
   late TextEditingController _telefonoController;
   late TextEditingController _telefonoSecundarioController;
   late TextEditingController _direccionController;
-  late TextEditingController _municipioController;
-  late TextEditingController _departamentoController;
   late TextEditingController _representanteNombreController;
   late TextEditingController _representanteTelefonoController;
   late TextEditingController _representanteEmailController;
   late TextEditingController _descripcionController;
   late TextEditingController _notasAdminController;
+  
+  // Password controllers (Solo para creación)
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  // Location Service
+  final _locationService = ColombiaLocationService();
+  List<Department> _departments = [];
+  List<City> _cities = [];
+  Department? _selectedDepartment;
+  City? _selectedCity;
+  bool _isLoadingDepartments = false;
+  bool _isLoadingCities = false;
 
   // Tipos de vehículos disponibles
   final List<String> _tiposVehiculoDisponibles = [
@@ -61,6 +80,61 @@ class _EmpresaFormState extends State<EmpresaForm> {
         : EmpresaFormData();
     
     _initControllers();
+    _loadDepartments();
+  }
+  
+  Future<void> _loadDepartments() async {
+    setState(() => _isLoadingDepartments = true);
+    try {
+      final deps = await _locationService.getDepartments();
+      if (mounted) {
+        setState(() {
+          _departments = deps;
+          // Pre-select if editing
+          if (_formData.departamento != null) {
+            try {
+              final dep = deps.firstWhere((d) => d.name == _formData.departamento);
+              _selectedDepartment = dep;
+              _loadCities(dep.id);
+            } catch (_) {}
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading departments: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingDepartments = false);
+    }
+  }
+
+  Future<void> _loadCities(int departmentId) async {
+    setState(() {
+      _isLoadingCities = true;
+      _cities = []; 
+      // Don't reset selected city immediately if we are initializing form data
+      if (_formData.municipio == null) _selectedCity = null;
+    });
+    try {
+      final cities = await _locationService.getCitiesByDepartment(departmentId);
+      if (mounted) {
+        setState(() {
+          _cities = cities;
+          // Pre-select if editing and matches
+          if (_formData.municipio != null) {
+            try {
+              final city = cities.firstWhere((c) => c.name == _formData.municipio);
+              _selectedCity = city;
+            } catch (_) {
+              // If city not found in list (maybe name mismatch), keep selectedCity null or handle gracefully
+            }
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading cities: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingCities = false);
+    }
   }
 
   bool _isPickingImage = false;
@@ -99,8 +173,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _telefonoController = TextEditingController(text: _formData.telefono ?? '');
     _telefonoSecundarioController = TextEditingController(text: _formData.telefonoSecundario ?? '');
     _direccionController = TextEditingController(text: _formData.direccion ?? '');
-    _municipioController = TextEditingController(text: _formData.municipio ?? '');
-    _departamentoController = TextEditingController(text: _formData.departamento ?? '');
+    // Municipio/Departamento managed by selection state, not controllers
     _representanteNombreController = TextEditingController(text: _formData.representanteNombre ?? '');
     _representanteTelefonoController = TextEditingController(text: _formData.representanteTelefono ?? '');
     _representanteEmailController = TextEditingController(text: _formData.representanteEmail ?? '');
@@ -117,13 +190,13 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _telefonoController.dispose();
     _telefonoSecundarioController.dispose();
     _direccionController.dispose();
-    _municipioController.dispose();
-    _departamentoController.dispose();
     _representanteNombreController.dispose();
     _representanteTelefonoController.dispose();
     _representanteEmailController.dispose();
     _descripcionController.dispose();
     _notasAdminController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -135,13 +208,19 @@ class _EmpresaFormState extends State<EmpresaForm> {
     _formData.telefono = _telefonoController.text.isEmpty ? null : _telefonoController.text;
     _formData.telefonoSecundario = _telefonoSecundarioController.text.isEmpty ? null : _telefonoSecundarioController.text;
     _formData.direccion = _direccionController.text.isEmpty ? null : _direccionController.text;
-    _formData.municipio = _municipioController.text.isEmpty ? null : _municipioController.text;
-    _formData.departamento = _departamentoController.text.isEmpty ? null : _departamentoController.text;
+    
+    _formData.municipio = _selectedCity?.name;
+    _formData.departamento = _selectedDepartment?.name;
+    
     _formData.representanteNombre = _representanteNombreController.text.isEmpty ? null : _representanteNombreController.text;
     _formData.representanteTelefono = _representanteTelefonoController.text.isEmpty ? null : _representanteTelefonoController.text;
     _formData.representanteEmail = _representanteEmailController.text.isEmpty ? null : _representanteEmailController.text;
     _formData.descripcion = _descripcionController.text.isEmpty ? null : _descripcionController.text;
     _formData.notasAdmin = _notasAdminController.text.isEmpty ? null : _notasAdminController.text;
+    
+    if (widget.empresa == null) {
+      _formData.password = _passwordController.text;
+    }
   }
 
   void _submitForm() {
@@ -229,15 +308,46 @@ class _EmpresaFormState extends State<EmpresaForm> {
 
             _buildSectionTitle(context, 'Información Básica', Icons.business),
             const SizedBox(height: 16),
-            _buildTextField(
-              context,
+            
+            AuthTextField(
               controller: _nombreController,
               label: 'Nombre de la Empresa *',
-              hint: 'Ej: Transportes del Norte',
               icon: Icons.business_rounded,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre es requerido';
+              textCapitalization: TextCapitalization.words,
+              validator: (v) => v == null || v.trim().isEmpty ? 'El nombre es requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            AuthTextField(
+              controller: _nitController,
+              label: 'NIT *',
+              icon: Icons.badge_outlined,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (v) => v == null || v.trim().isEmpty ? 'El NIT es requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            AuthTextField(
+              controller: _razonSocialController,
+              label: 'Razón Social *',
+              icon: Icons.article_outlined,
+              textCapitalization: TextCapitalization.words,
+              validator: (v) => v == null || v.trim().isEmpty ? 'La razón social es requerida' : null,
+            ),
+
+            const SizedBox(height: 24),
+            
+            _buildSectionTitle(context, 'Contacto', Icons.contact_phone),
+            const SizedBox(height: 16),
+            
+            AuthTextField(
+              controller: _emailController,
+              label: 'Email Corporativo *',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'El email es requerido';
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+                  return 'Email inválido';
                 }
                 return null;
               },
@@ -246,145 +356,153 @@ class _EmpresaFormState extends State<EmpresaForm> {
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField(
-                    context,
-                    controller: _nitController,
-                    label: 'NIT',
-                    hint: 'Ej: 900123456-7',
-                    icon: Icons.badge_outlined,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    context,
-                    controller: _razonSocialController,
-                    label: 'Razón Social',
-                    hint: 'Nombre legal',
-                    icon: Icons.article_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            
-            _buildSectionTitle(context, 'Contacto', Icons.contact_phone),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    context,
-                    controller: _emailController,
-                    label: 'Email',
-                    hint: 'empresa@email.com',
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value != null && value.isNotEmpty) {
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                          return 'Email inválido';
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    context,
+                  child: AuthTextField(
                     controller: _telefonoController,
-                    label: 'Teléfono Principal',
-                    hint: '300 123 4567',
+                    label: 'Teléfono Principal *',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AuthTextField(
+                    controller: _telefonoSecundarioController,
+                    label: 'Teléfono Secundario',
+                    icon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              context,
-              controller: _telefonoSecundarioController,
-              label: 'Teléfono Secundario',
-              hint: 'Opcional',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
+            
             const SizedBox(height: 24),
             
             _buildSectionTitle(context, 'Ubicación', Icons.location_on),
             const SizedBox(height: 16),
-            _buildTextField(
-              context,
+            
+            AuthTextField(
               controller: _direccionController,
-              label: 'Dirección',
-              hint: 'Calle/Carrera, número, barrio',
+              label: 'Dirección *',
               icon: Icons.location_on_outlined,
-              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              validator: (v) => v!.trim().isEmpty ? 'La dirección es requerida' : null,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    context,
-                    controller: _municipioController,
-                    label: 'Municipio',
-                    hint: 'Ej: San Juan',
-                    icon: Icons.location_city_outlined,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    context,
-                    controller: _departamentoController,
-                    label: 'Departamento',
-                    hint: 'Ej: Cundinamarca',
-                    icon: Icons.map_outlined,
-                  ),
-                ),
-              ],
+            
+             // Departments Selector
+            _buildSearchableSelector<Department>(
+              context: context,
+              label: 'Departamento',
+              hint: 'Seleccionar departamento',
+              value: _selectedDepartment,
+              items: _departments,
+              itemLabel: (dep) => dep.name,
+              isLoading: _isLoadingDepartments,
+              onChanged: (newValue) {
+                 setState(() {
+                   _selectedDepartment = newValue;
+                   _selectedCity = null; // reset city
+                 });
+                 _loadCities(newValue.id);
+              },
             ),
+            
+            const SizedBox(height: 16),
+
+            // Cities Selector
+            _buildSearchableSelector<City>(
+              context: context,
+              label: 'Municipio',
+              hint: _selectedDepartment == null 
+                  ? 'Seleccionar departamento primero' 
+                  : 'Seleccionar municipio',
+              value: _selectedCity,
+              items: _cities,
+              itemLabel: (city) => city.name,
+              isLoading: _isLoadingCities,
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedCity = newValue;
+                });
+              },
+            ),
+
             const SizedBox(height: 24),
             
             _buildSectionTitle(context, 'Representante Legal', Icons.person),
             const SizedBox(height: 16),
-            _buildTextField(
-              context,
+            
+            AuthTextField(
               controller: _representanteNombreController,
-              label: 'Nombre del Representante',
-              hint: 'Nombre completo',
+              label: 'Nombre Completo del Representante *',
               icon: Icons.person_outline,
+              textCapitalization: TextCapitalization.words,
+              validator: (v) => v!.trim().isEmpty ? 'Requerido' : null,
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField(
-                    context,
+                  child: AuthTextField(
                     controller: _representanteTelefonoController,
-                    label: 'Teléfono',
-                    hint: '300 123 4567',
+                    label: 'Teléfono Directo',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildTextField(
-                    context,
+                  child: AuthTextField(
                     controller: _representanteEmailController,
-                    label: 'Email',
-                    hint: 'representante@email.com',
+                    label: 'Email Personal',
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                       if (v != null && v.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+                         return 'Email inválido';
+                       }
+                       return null;
+                    },
                   ),
                 ),
               ],
             ),
+            
+            if (widget.empresa == null) ...[
+              const SizedBox(height: 24),
+              _buildSectionTitle(context, 'Seguridad (Cuenta)', Icons.security),
+              const SizedBox(height: 16),
+              
+              AuthTextField(
+                controller: _passwordController,
+                label: 'Contraseña *',
+                icon: Icons.lock_rounded,
+                obscureText: _obscurePassword,
+                suffixIcon: GestureDetector(
+                  onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                  child: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
+                ),
+                validator: (v) => (v?.length ?? 0) < 6 ? 'Mínimo 6 caracteres' : null,
+              ),
+              const SizedBox(height: 16),
+               AuthTextField(
+                controller: _confirmPasswordController,
+                label: 'Confirmar Contraseña *',
+                icon: Icons.lock_rounded,
+                obscureText: _obscureConfirmPassword,
+                isLast: true,
+                suffixIcon: GestureDetector(
+                  onTap: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  child: Icon(_obscureConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded, color: Colors.grey),
+                ),
+                validator: (v) => v != _passwordController.text ? 'No coinciden' : null,
+              ),
+            ],
+
             const SizedBox(height: 24),
             
             _buildSectionTitle(context, 'Tipos de Vehículos', Icons.directions_car),
@@ -394,24 +512,24 @@ class _EmpresaFormState extends State<EmpresaForm> {
             
             _buildSectionTitle(context, 'Información Adicional', Icons.info),
             const SizedBox(height: 16),
-            _buildTextField(
-              context,
+            AuthTextArea(
               controller: _descripcionController,
-              label: 'Descripción',
-              hint: 'Descripción de la empresa...',
+              label: 'Descripción (Opcional)',
               icon: Icons.description_outlined,
-              maxLines: 3,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 3,
+              maxLines: 5,
             ),
             const SizedBox(height: 16),
             _buildEstadoSelector(context, isDark),
             const SizedBox(height: 16),
-            _buildTextField(
-              context,
+            AuthTextArea(
               controller: _notasAdminController,
               label: 'Notas del Administrador',
-              hint: 'Notas internas...',
               icon: Icons.note_outlined,
-              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 2,
+              maxLines: 4,
             ),
             const SizedBox(height: 32),
             
@@ -451,63 +569,119 @@ class _EmpresaFormState extends State<EmpresaForm> {
     );
   }
 
-  Widget _buildTextField(
-    BuildContext context, {
-    required TextEditingController controller,
+  Widget _buildSearchableSelector<T>({
+    required BuildContext context,
     required String label,
-    String? hint,
-    IconData? icon,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    int maxLines = 1,
+    required String hint,
+    required T? value,
+    required List<T> items,
+    required String Function(T) itemLabel,
+    required void Function(T) onChanged,
+    required bool isLoading,
+    IconData icon = Icons.arrow_drop_down,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
     
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      validator: validator,
-      style: TextStyle(
-        color: Theme.of(context).textTheme.bodyLarge?.color,
-        fontSize: 14,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark 
+            ? AppColors.darkSurface.withValues(alpha: 0.8) 
+            : AppColors.lightSurface.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? AppColors.darkShadow : AppColors.lightShadow,
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: icon != null
-            ? Icon(icon, size: 20, color: AppColors.primary.withValues(alpha: 0.7))
-            : null,
-        filled: true,
-        fillColor: isDark
-            ? AppColors.darkSurface.withValues(alpha: 0.5)
-            : AppColors.lightSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : Colors.black12,
+      child: GestureDetector(
+        onTap: isLoading || items.isEmpty ? null : () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => SearchableDropdownSheet<T>(
+              title: 'Seleccionar $label',
+              items: items,
+              itemLabel: itemLabel,
+              onSelected: onChanged,
+              searchHint: 'Buscar $label...',
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+               Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  label == 'Departamento' ? Icons.map_outlined : Icons.location_city_outlined, 
+                  color: Colors.white, 
+                  size: 20
+                ),
+              ),
+              
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                         color: isDark ? Colors.white54 : Colors.black54,
+                         fontSize: 13,
+                         fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                       value != null ? itemLabel(value) : hint,
+                       style: TextStyle(
+                         color: value != null ? textColor : Colors.grey,
+                         fontSize: 16,
+                         fontWeight: FontWeight.w500,
+                       ),
+                       maxLines: 1,
+                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(icon, color: Colors.grey),
+              const SizedBox(width: 8), 
+            ],
           ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : Colors.black12,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

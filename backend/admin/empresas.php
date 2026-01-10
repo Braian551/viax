@@ -243,14 +243,10 @@ function getEmpresa($db) {
 /**
  * Crear nueva empresa
  */
+/**
+ * Crear nueva empresa usando EmpresaService para consistencia
+ */
 function createEmpresa($db, $input) {
-    // Validar campos requeridos
-    if (empty($input['nombre'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'El nombre de la empresa es requerido']);
-        return;
-    }
-    
     // Verificar admin
     $adminId = $input['admin_id'] ?? null;
     if ($adminId) {
@@ -263,89 +259,44 @@ function createEmpresa($db, $input) {
         }
     }
     
-    // Verificar NIT único si se proporciona
-    if (!empty($input['nit'])) {
-        $checkNit = $db->prepare("SELECT id FROM empresas_transporte WHERE nit = ?");
-        $checkNit->execute([$input['nit']]);
-        if ($checkNit->fetch()) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Ya existe una empresa con este NIT']);
-            return;
-        }
-    }
-    
-    // Preparar tipos_vehiculo como array PostgreSQL
-    $tiposVehiculo = null;
-    if (!empty($input['tipos_vehiculo'])) {
-        // En multipart puede venir como string JSON o array directo
-        $vehiculos = $input['tipos_vehiculo'];
-        if (is_string($vehiculos)) {
-            // Intentar decodificar si es string JSON
-            $decoded = json_decode($vehiculos, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $vehiculos = $decoded;
-            } else {
-                // Si no es JSON, asumir CSV o un solo valor
-                $vehiculos = explode(',', $vehiculos);
-            }
+    try {
+        require_once __DIR__ . '/../empresa/services/EmpresaService.php';
+        $service = new EmpresaService($db);
+        
+        // Mapear campos del formulario de Admin a lo que espera el Servicio
+        $serviceInput = $input;
+        $serviceInput['nombre_empresa'] = $input['nombre']; // Servicio espera nombre_empresa
+        
+        // Generar contraseña si no se proporcionó (aunque el formulario debería obligarla)
+        if (empty($serviceInput['password'])) {
+            $serviceInput['password'] = bin2hex(random_bytes(8));
         }
         
-        if (is_array($vehiculos)) {
-            $tiposVehiculo = phpArrayToPg($vehiculos);
+        // Ejecutar registro
+        $result = $service->processRegistration($serviceInput);
+        
+        // Enviar notificaciones (PDF, Email)
+        if (isset($result['notification_context'])) {
+            // Nota: Esto puede tomar tiempo. En un entorno ideal, usar colas.
+            $service->sendNotifications($result['notification_context']);
         }
+        
+        // Log de auditoría adicional para Admin
+        logAuditAction($db, $adminId, 'empresa_creada_admin', 'empresas_transporte', $result['data']['empresa_id'], [
+            'nombre' => $input['nombre'],
+            'nit' => $input['nit'] ?? null
+        ]);
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Empresa creada exitosamente con credenciales y notificaciones enviadas.',
+            'empresa_id' => $result['data']['empresa_id']
+        ]);
+        
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-    
-    // Manejar subida de logo
-    $logoUrl = $input['logo_url'] ?? null;
-    $uploadedLogo = handleLogoUpload();
-    if ($uploadedLogo) {
-        $logoUrl = $uploadedLogo;
-    }
-    
-    $query = "INSERT INTO empresas_transporte (
-                nombre, nit, razon_social, email, telefono, telefono_secundario,
-                direccion, municipio, departamento, representante_nombre,
-                representante_telefono, representante_email, tipos_vehiculo,
-                logo_url, descripcion, estado, creado_por, notas_admin
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              RETURNING id, creado_en";
-    
-    $stmt = $db->prepare($query);
-    $stmt->execute([
-        trim($input['nombre']),
-        $input['nit'] ?? null,
-        $input['razon_social'] ?? null,
-        $input['email'] ?? null,
-        $input['telefono'] ?? null,
-        $input['telefono_secundario'] ?? null,
-        $input['direccion'] ?? null,
-        $input['ciudad'] ?? null,
-        $input['departamento'] ?? null,
-        $input['representante_nombre'] ?? null,
-        $input['representante_telefono'] ?? null,
-        $input['representante_email'] ?? null,
-        $tiposVehiculo,
-        $logoUrl,
-        $input['descripcion'] ?? null,
-        $input['estado'] ?? 'activo',
-        $adminId,
-        $input['notas_admin'] ?? null
-    ]);
-    
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Log de auditoría
-    logAuditAction($db, $adminId, 'empresa_creada', 'empresas_transporte', $result['id'], [
-        'nombre' => $input['nombre'],
-        'nit' => $input['nit'] ?? null
-    ]);
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Empresa creada exitosamente',
-        'empresa_id' => $result['id'],
-        'creado_en' => $result['creado_en']
-    ]);
 }
 
 /**

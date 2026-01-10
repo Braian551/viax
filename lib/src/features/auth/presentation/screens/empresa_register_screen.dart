@@ -274,30 +274,30 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       );
 
       // DEBUG: Log the full response
-      print('======== EMPRESA REGISTER RESPONSE ========');
-      print(result);
-      print('===========================================');
+      debugPrint('======== EMPRESA REGISTER RESPONSE ========');
+      debugPrint(result.toString());
+      debugPrint('===========================================');
 
       if (result['success'] == true) {
         if (mounted) {
           _showRegistrationSuccessDialog();
         }
       } else {
-        print('======== EMPRESA REGISTER ERROR ========');
-        print('Message: ${result['message']}');
-        print('Debug Error: ${result['debug_error']}');
-        print('Debug File: ${result['debug_file']}');
-        print('Debug Line: ${result['debug_line']}');
-        print('Full result: $result');
-        print('========================================');
+        debugPrint('======== EMPRESA REGISTER ERROR ========');
+        debugPrint('Message: ${result['message']}');
+        debugPrint('Debug Error: ${result['debug_error']}');
+        debugPrint('Debug File: ${result['debug_file']}');
+        debugPrint('Debug Line: ${result['debug_line']}');
+        debugPrint('Full result: $result');
+        debugPrint('========================================');
         _showError(result['message'] ?? 'Error al registrar la empresa');
       }
 
     } catch (e, stackTrace) {
-      print('======== EMPRESA REGISTER EXCEPTION ========');
-      print('Error: $e');
-      print('StackTrace: $stackTrace');
-      print('============================================');
+      debugPrint('======== EMPRESA REGISTER EXCEPTION ========');
+      debugPrint('Error: $e');
+      debugPrint('StackTrace: $stackTrace');
+      debugPrint('============================================');
       _showError('Error de conexión. Verifica tu internet e intenta nuevamente.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
