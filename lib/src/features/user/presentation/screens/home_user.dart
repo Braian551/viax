@@ -15,7 +15,7 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/notifications/notifications.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:viax/src/features/user/presentation/widgets/home/map_loading_shimmer.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -365,7 +365,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   Widget _buildMap(bool isDark) {
     if (_isLoadingLocation) {
-      return _buildMapShimmer(isDark);
+      return const MapLoadingShimmer();
     }
 
     if (_currentPosition == null) {
@@ -443,78 +443,6 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     );
   }
 
-  Widget _buildMapShimmer(bool isDark) {
-    final baseColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE0E0E0);
-    final highlightColor = isDark ? const Color(0xFF3D3D3D) : const Color(0xFFF5F5F5);
-
-    return Container(
-      color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      child: Shimmer.fromColors(
-        baseColor: baseColor,
-        highlightColor: highlightColor,
-        child: Stack(
-          children: [
-            // Fondo general (calles principales)
-            Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(flex: 2, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                      Expanded(flex: 3, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Row(
-                    children: [
-                      Expanded(flex: 3, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                      Expanded(flex: 2, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                    ],
-                  ),
-                ),
-                 Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(flex: 1, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                      Expanded(flex: 1, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                      Expanded(flex: 1, child: Container(margin: const EdgeInsets.all(8), color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            // Elementos superpuestos para dar "profundidad" de mapa
-            Positioned(
-              top: 150,
-              left: -50,
-              child: Transform.rotate(
-                angle: 0.5,
-                child: Container(
-                  width: 400,
-                  height: 40,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-             Positioned(
-              bottom: 200,
-              right: -50,
-              child: Transform.rotate(
-                angle: -0.3,
-                child: Container(
-                  width: 400,
-                  height: 30,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildHomeOverlay(bool isDark) {
     return Positioned(
