@@ -57,6 +57,12 @@ class EmpresaService {
             // Update empresa with creator
             $this->repository->updateEmpresaCreador($empresaId, $userId);
             
+            // Enable default vehicle types (moto, auto, motocarro)
+            $tiposHabilitados = $this->repository->enableDefaultVehicleTypes($empresaId, $userId);
+            if ($tiposHabilitados > 0) {
+                error_log("Habilitados $tiposHabilitados tipos de vehículo para empresa $empresaId");
+            }
+            
             // Create secondary user for representative if email is different
             $representanteEmail = $input['representante_email'] ?? null;
             if ($representanteEmail && strtolower(trim($representanteEmail)) !== strtolower(trim($email))) {

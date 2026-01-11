@@ -772,6 +772,9 @@ function approveEmpresa($db, $input) {
     $updateStmt = $db->prepare($updateQuery);
     $updateStmt->execute([$adminId, $empresaId]);
     
+    // Habilitar tipos de vehículo por defecto si no existen
+    enableDefaultVehicleTypesForEmpresa($db, $empresaId, $adminId);
+    
     // Log de auditoría
     logAuditAction($db, $adminId, 'empresa_aprobada', 'empresas_transporte', $empresaId, [
         'nombre' => $empresa['nombre'],
@@ -1040,6 +1043,59 @@ function logAuditAction($db, $adminId, $action, $tabla, $registroId, $detalles) 
         ]);
     } catch (Exception $e) {
         error_log("Error al registrar auditoría: " . $e->getMessage());
+    }
+}
+
+/**
+ * Habilitar tipos de vehículo por defecto para una empresa
+ */
+function enableDefaultVehicleTypesForEmpresa($db, $empresaId, $adminId = null) {
+    try {
+        // Verificar si existe la tabla normalizada
+        $checkTable = $db->query("SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' AND table_name = 'empresa_tipos_vehiculo'
+        )");
+        $tableExists = $checkTable->fetchColumn();
+        
+        if (!$tableExists) {
+            error_log("Tabla empresa_tipos_vehiculo no existe, saltando habilitación automática");
+            return 0;
+        }
+        
+        // Obtener todos los tipos de vehículo del catálogo
+        $stmt = $db->query("SELECT codigo FROM catalogo_tipos_vehiculo WHERE activo = true ORDER BY orden");
+        $tipos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        if (empty($tipos)) {
+            error_log("No hay tipos de vehículo en el catálogo");
+            return 0;
+        }
+        
+        // Habilitar cada tipo
+        $insertStmt = $db->prepare("
+            INSERT INTO empresa_tipos_vehiculo 
+                (empresa_id, tipo_vehiculo_codigo, activo, fecha_activacion, activado_por)
+            VALUES (?, ?, true, NOW(), ?)
+            ON CONFLICT (empresa_id, tipo_vehiculo_codigo) 
+            DO UPDATE SET 
+                activo = true, 
+                fecha_activacion = NOW(),
+                activado_por = COALESCE(EXCLUDED.activado_por, empresa_tipos_vehiculo.activado_por)
+        ");
+        
+        $count = 0;
+        foreach ($tipos as $tipo) {
+            $insertStmt->execute([$empresaId, $tipo, $adminId]);
+            $count++;
+        }
+        
+        error_log("Habilitados $count tipos de vehículo para empresa $empresaId");
+        return $count;
+        
+    } catch (Exception $e) {
+        error_log("Error habilitando tipos de vehículo: " . $e->getMessage());
+        return 0;
     }
 }
 

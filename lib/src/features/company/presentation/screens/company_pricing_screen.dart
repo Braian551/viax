@@ -26,8 +26,8 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  
-  // Note: vehicle names/icons are also in CompanyPricingCard, 
+
+  // Note: vehicle names/icons are also in CompanyPricingCard,
   // but we keep names here for passing to EditSheet if needed (or use static from Card if public)
   // Actually CompanyPricingCard handles presentation. EditSheet needs name string.
   final Map<String, String> _vehicleTypeNames = {
@@ -68,7 +68,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
 
     try {
       final empresaId = widget.user['empresa_id'] ?? widget.user['id'];
-      final url = Uri.parse('${AppConfig.baseUrl}/company/pricing.php?empresa_id=$empresaId');
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/pricing.php?empresa_id=$empresaId',
+      );
       final response = await http.get(url);
 
       if (!mounted) return;
@@ -77,7 +79,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
         final data = json.decode(response.body);
         if (data['success'] == true) {
           setState(() {
-            _pricingConfigs = List<Map<String, dynamic>>.from(data['data']['precios'] ?? []);
+            _pricingConfigs = List<Map<String, dynamic>>.from(
+              data['data']['precios'] ?? [],
+            );
             _empresaInfo = data['data']['empresa'];
             _isLoading = false;
           });
@@ -118,7 +122,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
         color: AppColors.primary,
         child: ListView(
           padding: const EdgeInsets.all(20),
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           children: [
             // Admin Commission Info Card
             // Summary Section (Commission & Balance)
@@ -128,7 +134,11 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             // Section Header
             Row(
               children: [
-                Icon(Icons.local_offer_rounded, color: AppColors.primary, size: 22),
+                Icon(
+                  Icons.local_offer_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: 10),
                 Text(
                   'Tus Tarifas',
@@ -187,7 +197,13 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
               child: Shimmer.fromColors(
                 baseColor: Colors.grey.withValues(alpha: 0.1),
                 highlightColor: Colors.grey.withValues(alpha: 0.05),
-                child: Container(height: 110, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+                child: Container(
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -195,21 +211,36 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
               child: Shimmer.fromColors(
                 baseColor: Colors.grey.withValues(alpha: 0.1),
                 highlightColor: Colors.grey.withValues(alpha: 0.05),
-                child: Container(height: 110, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+                child: Container(
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 30),
         // Shimmer for Pricing Cards
-         ...List.generate(3, (index) => Padding(
-           padding: const EdgeInsets.only(bottom: 16),
-           child: Shimmer.fromColors(
-             baseColor: Colors.grey.withValues(alpha: 0.1),
-             highlightColor: Colors.grey.withValues(alpha: 0.05),
-             child: Container(height: 180, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
-           ),
-         )),
+        ...List.generate(
+          3,
+          (index) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey.withValues(alpha: 0.1),
+              highlightColor: Colors.grey.withValues(alpha: 0.05),
+              child: Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -276,7 +307,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             title: hasDebt ? 'Pendiente' : 'Al día',
             value: '\$${saldo.toStringAsFixed(0)}',
             subtitle: hasDebt ? 'Saldo' : 'Cuenta',
-            icon: hasDebt ? Icons.priority_high_rounded : Icons.check_circle_outline_rounded,
+            icon: hasDebt
+                ? Icons.priority_high_rounded
+                : Icons.check_circle_outline_rounded,
             color: hasDebt ? AppColors.warning : AppColors.success,
             isDark: isDark,
           ),
@@ -330,7 +363,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             subtitle,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -339,7 +374,9 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             value,
             style: TextStyle(
               fontSize: 20,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -348,36 +385,71 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     );
   }
 
-
-
   Future<void> _showEditSheet(Map<String, dynamic> config) async {
     final controllers = {
-      'tarifa_base': TextEditingController(text: config['tarifa_base']?.toString() ?? '0'),
-      'tarifa_minima': TextEditingController(text: config['tarifa_minima']?.toString() ?? '0'),
-      'tarifa_maxima': TextEditingController(text: config['tarifa_maxima']?.toString() ?? ''),
-      'costo_por_km': TextEditingController(text: config['costo_por_km']?.toString() ?? '0'),
-      'costo_por_minuto': TextEditingController(text: config['costo_por_minuto']?.toString() ?? '0'),
-      'recargo_hora_pico': TextEditingController(text: config['recargo_hora_pico']?.toString() ?? '0'),
-      'recargo_nocturno': TextEditingController(text: config['recargo_nocturno']?.toString() ?? '0'),
-      'recargo_festivo': TextEditingController(text: config['recargo_festivo']?.toString() ?? '0'),
-      'descuento_distancia_larga': TextEditingController(text: config['descuento_distancia_larga']?.toString() ?? '0'),
-      'umbral_km_descuento': TextEditingController(text: config['umbral_km_descuento']?.toString() ?? '15'),
-      'comision_plataforma': TextEditingController(text: config['comision_plataforma']?.toString() ?? '0'),
-      'distancia_minima': TextEditingController(text: config['distancia_minima']?.toString() ?? '1'),
-      'distancia_maxima': TextEditingController(text: config['distancia_maxima']?.toString() ?? '50'),
-      'tiempo_espera_gratis': TextEditingController(text: config['tiempo_espera_gratis']?.toString() ?? '3'),
-      'costo_tiempo_espera': TextEditingController(text: config['costo_tiempo_espera']?.toString() ?? '0'),
+      'tarifa_base': TextEditingController(
+        text: config['tarifa_base']?.toString() ?? '0',
+      ),
+      'tarifa_minima': TextEditingController(
+        text: config['tarifa_minima']?.toString() ?? '0',
+      ),
+      'tarifa_maxima': TextEditingController(
+        text: config['tarifa_maxima']?.toString() ?? '',
+      ),
+      'costo_por_km': TextEditingController(
+        text: config['costo_por_km']?.toString() ?? '0',
+      ),
+      'costo_por_minuto': TextEditingController(
+        text: config['costo_por_minuto']?.toString() ?? '0',
+      ),
+      'recargo_hora_pico': TextEditingController(
+        text: config['recargo_hora_pico']?.toString() ?? '0',
+      ),
+      'recargo_nocturno': TextEditingController(
+        text: config['recargo_nocturno']?.toString() ?? '0',
+      ),
+      'recargo_festivo': TextEditingController(
+        text: config['recargo_festivo']?.toString() ?? '0',
+      ),
+      'descuento_distancia_larga': TextEditingController(
+        text: config['descuento_distancia_larga']?.toString() ?? '0',
+      ),
+      'umbral_km_descuento': TextEditingController(
+        text: config['umbral_km_descuento']?.toString() ?? '15',
+      ),
+      'comision_plataforma': TextEditingController(
+        text: config['comision_plataforma']?.toString() ?? '0',
+      ),
+      'distancia_minima': TextEditingController(
+        text: config['distancia_minima']?.toString() ?? '1',
+      ),
+      'distancia_maxima': TextEditingController(
+        text: config['distancia_maxima']?.toString() ?? '50',
+      ),
+      'tiempo_espera_gratis': TextEditingController(
+        text: config['tiempo_espera_gratis']?.toString() ?? '3',
+      ),
+      'costo_tiempo_espera': TextEditingController(
+        text: config['costo_tiempo_espera']?.toString() ?? '0',
+      ),
     };
 
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CompanyPricingSheet(
-        config: config,
-        controllers: controllers,
-        vehicleTypeName: _vehicleTypeNames[config['tipo_vehiculo']] ?? config['tipo_vehiculo'] ?? 'Vehículo',
-        empresaId: widget.user['empresa_id'] ?? widget.user['id'],
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        child: CompanyPricingSheet(
+          config: config,
+          controllers: controllers,
+          vehicleTypeName:
+              _vehicleTypeNames[config['tipo_vehiculo']] ??
+              config['tipo_vehiculo'] ??
+              'Vehículo',
+          empresaId: widget.user['empresa_id'] ?? widget.user['id'],
+        ),
       ),
     );
 

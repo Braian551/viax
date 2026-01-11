@@ -7,11 +7,13 @@ import 'package:viax/src/theme/app_colors.dart';
 class VehicleManagementSheet extends StatefulWidget {
   final dynamic empresaId;
   final List<String> currentVehicleTypes;
+  final int? usuarioId;
 
   const VehicleManagementSheet({
     super.key,
     required this.empresaId,
     required this.currentVehicleTypes,
+    this.usuarioId,
   });
 
   @override
@@ -19,7 +21,7 @@ class VehicleManagementSheet extends StatefulWidget {
 }
 
 class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
-  List<String> _enabledTypes = [];
+  Map<String, VehicleTypeInfo> _vehicleTypes = {};
   bool _isSaving = false;
   bool _isLoading = true;
 
@@ -32,8 +34,21 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
   @override
   void initState() {
     super.initState();
-    _enabledTypes = List<String>.from(widget.currentVehicleTypes);
+    _initializeVehicleTypes();
     _loadVehicles();
+  }
+
+  void _initializeVehicleTypes() {
+    for (var type in _allVehicleTypes) {
+      final key = type['key'] as String;
+      _vehicleTypes[key] = VehicleTypeInfo(
+        codigo: key,
+        nombre: type['name'] as String,
+        descripcion: type['description'] as String,
+        activo: widget.currentVehicleTypes.contains(key),
+        conductoresActivos: 0,
+      );
+    }
   }
 
   Future<void> _loadVehicles() async {
@@ -46,8 +61,30 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
+          final vehiculosActivos = List<String>.from(data['data']['vehiculos'] ?? []);
+          final tiposEmpresa = data['data']['tipos_empresa'] as List?;
+          
           setState(() {
-            _enabledTypes = List<String>.from(data['data']['vehiculos'] ?? []);
+            // Actualizar estado de cada tipo
+            for (var key in _vehicleTypes.keys) {
+              _vehicleTypes[key] = _vehicleTypes[key]!.copyWith(
+                activo: vehiculosActivos.contains(key),
+              );
+            }
+            
+            // Si hay info detallada de la tabla normalizada, usarla
+            if (tiposEmpresa != null) {
+              for (var tipo in tiposEmpresa) {
+                final codigo = tipo['codigo']?.toString() ?? '';
+                if (_vehicleTypes.containsKey(codigo)) {
+                  _vehicleTypes[codigo] = _vehicleTypes[codigo]!.copyWith(
+                    activo: tipo['activo'] == true || tipo['activo'] == 1,
+                    conductoresActivos: tipo['conductores_activos'] ?? 0,
+                  );
+                }
+              }
+            }
+            
             _isLoading = false;
           });
         }
@@ -60,6 +97,15 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
   }
 
   Future<void> _toggleVehicleType(String tipo, bool enable) async {
+    final info = _vehicleTypes[tipo];
+    if (info == null) return;
+    
+    // Si se va a desactivar y hay conductores, mostrar confirmación
+    if (!enable && info.conductoresActivos > 0) {
+      final confirmed = await _showDeactivateConfirmation(tipo, info);
+      if (confirmed != true) return;
+    }
+    
     setState(() => _isSaving = true);
     
     try {
@@ -71,6 +117,7 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
           'empresa_id': widget.empresaId,
           'tipo_vehiculo': tipo,
           'activo': enable ? 1 : 0,
+          'usuario_id': widget.usuarioId,
         }),
       );
 
@@ -80,16 +127,21 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           setState(() {
-            if (enable) {
-              if (!_enabledTypes.contains(tipo)) _enabledTypes.add(tipo);
-            } else {
-              _enabledTypes.remove(tipo);
-            }
+            _vehicleTypes[tipo] = _vehicleTypes[tipo]!.copyWith(activo: enable);
           });
+          
+          final conductoresAfectados = data['data']?['conductores_afectados'] ?? 0;
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(enable ? 'Vehículo habilitado' : 'Vehículo deshabilitado'),
-              backgroundColor: AppColors.success,
+              content: Text(
+                enable 
+                    ? 'Vehículo habilitado' 
+                    : conductoresAfectados > 0
+                        ? 'Vehículo deshabilitado. Se notificó a $conductoresAfectados conductor(es).'
+                        : 'Vehículo deshabilitado',
+              ),
+              backgroundColor: enable ? AppColors.success : AppColors.warning,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -105,6 +157,87 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<bool?> _showDeactivateConfirmation(String tipo, VehicleTypeInfo info) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Confirmar desactivación', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de desactivar "${info.nombre}"?',
+              style: const TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.people_outline, color: AppColors.error, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '${info.conductoresActivos} conductor(es) serán notificados',
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Los conductores con este tipo de vehículo recibirán un email informándoles del cambio.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Desactivar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showError(String msg) {
@@ -195,7 +328,10 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final vehicle = _allVehicleTypes[index];
-                final isEnabled = _enabledTypes.contains(vehicle['key']);
+                final key = vehicle['key'] as String;
+                final info = _vehicleTypes[key];
+                final isEnabled = info?.activo ?? false;
+                final conductores = info?.conductoresActivos ?? 0;
                 
                 return Container(
                   padding: const EdgeInsets.all(16),
@@ -244,6 +380,23 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
                                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                               ),
                             ),
+                            if (isEnabled && conductores > 0) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.people_outline, size: 14, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$conductores conductor(es)',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -255,7 +408,7 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
                       else
                         Switch(
                           value: isEnabled,
-                          onChanged: (value) => _toggleVehicleType(vehicle['key'] as String, value),
+                          onChanged: (value) => _toggleVehicleType(key, value),
                           activeColor: AppColors.primary,
                         ),
                     ],
@@ -292,6 +445,51 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
+    );
+  }
+}
+
+/// Modelo para información de tipo de vehículo
+class VehicleTypeInfo {
+  final String codigo;
+  final String nombre;
+  final String descripcion;
+  final bool activo;
+  final int conductoresActivos;
+  final DateTime? fechaActivacion;
+  final DateTime? fechaDesactivacion;
+  final String? motivoDesactivacion;
+
+  VehicleTypeInfo({
+    required this.codigo,
+    required this.nombre,
+    required this.descripcion,
+    required this.activo,
+    this.conductoresActivos = 0,
+    this.fechaActivacion,
+    this.fechaDesactivacion,
+    this.motivoDesactivacion,
+  });
+
+  VehicleTypeInfo copyWith({
+    String? codigo,
+    String? nombre,
+    String? descripcion,
+    bool? activo,
+    int? conductoresActivos,
+    DateTime? fechaActivacion,
+    DateTime? fechaDesactivacion,
+    String? motivoDesactivacion,
+  }) {
+    return VehicleTypeInfo(
+      codigo: codigo ?? this.codigo,
+      nombre: nombre ?? this.nombre,
+      descripcion: descripcion ?? this.descripcion,
+      activo: activo ?? this.activo,
+      conductoresActivos: conductoresActivos ?? this.conductoresActivos,
+      fechaActivacion: fechaActivacion ?? this.fechaActivacion,
+      fechaDesactivacion: fechaDesactivacion ?? this.fechaDesactivacion,
+      motivoDesactivacion: motivoDesactivacion ?? this.motivoDesactivacion,
     );
   }
 }

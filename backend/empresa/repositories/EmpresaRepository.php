@@ -141,6 +141,50 @@ class EmpresaRepository {
     }
     
     /**
+     * Enable default vehicle types for a new empresa
+     * Creates all vehicle types as active by default
+     */
+    public function enableDefaultVehicleTypes($empresaId, $userId = null) {
+        try {
+            // Verificar si existe la tabla normalizada
+            $checkTable = $this->db->query("SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' AND table_name = 'empresa_tipos_vehiculo'
+            )");
+            $tableExists = $checkTable->fetchColumn();
+            
+            if ($tableExists) {
+                // Obtener todos los tipos de vehículo del catálogo
+                $stmt = $this->db->query("SELECT codigo FROM catalogo_tipos_vehiculo WHERE activo = true ORDER BY orden");
+                $tipos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                // Habilitar cada tipo
+                $insertStmt = $this->db->prepare("
+                    INSERT INTO empresa_tipos_vehiculo 
+                        (empresa_id, tipo_vehiculo_codigo, activo, fecha_activacion, activado_por)
+                    VALUES (?, ?, true, NOW(), ?)
+                    ON CONFLICT (empresa_id, tipo_vehiculo_codigo) 
+                    DO UPDATE SET 
+                        activo = true, 
+                        fecha_activacion = NOW(),
+                        activado_por = EXCLUDED.activado_por
+                ");
+                
+                foreach ($tipos as $tipo) {
+                    $insertStmt->execute([$empresaId, $tipo, $userId]);
+                }
+                
+                return count($tipos);
+            }
+            
+            return 0;
+        } catch (Exception $e) {
+            error_log("Error habilitando tipos de vehículo por defecto: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
      * Begin database transaction
      */
     public function beginTransaction() {

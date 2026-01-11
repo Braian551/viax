@@ -61,7 +61,7 @@ class PromoBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -73,13 +73,16 @@ class PromoBanner extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
-                              'NOVEDAD',
+                              'NUEVO',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -90,7 +93,7 @@ class PromoBanner extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Optimiza tus Ganancias',
+                            'Reportes Avanzados',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -99,7 +102,7 @@ class PromoBanner extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Configura tarifas dinámicas',
+                            'Analiza el rendimiento de tu flota',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 13,
@@ -122,7 +125,7 @@ class PromoBanner extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.trending_up_rounded,
+                        Icons.analytics_rounded,
                         color: AppColors.primary,
                         size: 28,
                       ),

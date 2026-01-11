@@ -6,6 +6,7 @@ import 'package:viax/src/features/company/presentation/widgets/dashboard/dashboa
 import 'package:viax/src/features/company/presentation/widgets/dashboard/dashboard_menu_grid.dart';
 import 'package:viax/src/features/company/presentation/widgets/dashboard/promo_banner.dart';
 import 'package:viax/src/features/company/presentation/widgets/vehicles/vehicle_management_sheet.dart';
+import 'package:viax/src/features/company/presentation/screens/company_reports_screen.dart';
 
 class CompanyDashboardTab extends StatefulWidget {
   final VoidCallback? onNavigateToDrivers;
@@ -36,49 +37,31 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             // No AppBar here, Header provides the top section
-            const SliverToBoxAdapter(
-              child: DashboardHeader(),
-            ),
-            
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 24),
-            ),
-            
-            const SliverToBoxAdapter(
-              child: DashboardStats(),
-            ),
-            
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 32),
-            ),
-            
+            const SliverToBoxAdapter(child: DashboardHeader()),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            const SliverToBoxAdapter(child: DashboardStats()),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
             SliverToBoxAdapter(
               child: DashboardMenuGrid(
                 onDriversTap: widget.onNavigateToDrivers,
                 onDocumentsTap: widget.onNavigateToDocumentos,
                 onPricingTap: widget.onNavigateToPricing,
                 onVehiclesTap: () => _showVehicleManagement(context),
-                onReportsTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Próximamente: Reportes avanzados')),
-                  );
-                },
+                onReportsTap: () => _navigateToReports(context),
               ),
             ),
-            
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 24),
-            ),
-            
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
             SliverToBoxAdapter(
-              child: PromoBanner(
-                onTap: widget.onNavigateToPricing,
-              ),
+              child: PromoBanner(onTap: () => _navigateToReports(context)),
             ),
-            
-            const SliverPadding(
-              padding: EdgeInsets.only(bottom: 100),
-            ),
+
+            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
           ],
         );
       },
@@ -89,7 +72,7 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
     final provider = context.read<CompanyProvider>();
     // provider.company returns the company details map
     final empresaId = provider.company?['id'] ?? provider.empresaId;
-    
+
     // We will let the sheet load the enabled vehicles itself
     // or we could derive it from provider.pricing if loaded
     showModalBottomSheet(
@@ -99,6 +82,23 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
       builder: (_) => VehicleManagementSheet(
         empresaId: empresaId,
         currentVehicleTypes: const [], // Sheet will load this
+      ),
+    );
+  }
+
+  void _navigateToReports(BuildContext context) {
+    final provider = context.read<CompanyProvider>();
+    final empresaId = provider.empresaId;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider(
+          create: (_) => CompanyProvider(empresaId: empresaId),
+          child: CompanyReportsScreen(
+            user: {'id': empresaId, 'empresa_id': empresaId},
+          ),
+        ),
       ),
     );
   }

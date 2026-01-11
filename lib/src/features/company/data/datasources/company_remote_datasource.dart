@@ -39,6 +39,12 @@ abstract class CompanyRemoteDataSource {
     required int procesadoPor,
     String? razon,
   });
+
+  /// Obtener reportes avanzados de la empresa
+  Future<Map<String, dynamic>> getReports({
+    required dynamic empresaId,
+    String periodo = '7d',
+  });
 }
 
 class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
@@ -95,7 +101,9 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
         if (data['success'] == true) {
           return Map<String, dynamic>.from(data['data']);
         }
-        throw ServerException(data['message'] ?? 'Error al obtener estadísticas');
+        throw ServerException(
+          data['message'] ?? 'Error al obtener estadísticas',
+        );
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
     } catch (e) {
@@ -242,19 +250,48 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
         if (razon != null) 'razon': razon,
       };
       print('DEBUG: procesarSolicitudConductor sending: $requestBody');
-      
+
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody),
       );
-      
+
       print('DEBUG: Response status: ${response.statusCode}');
       print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['success'] == true;
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  /// Obtener reportes avanzados de la empresa
+  @override
+  Future<Map<String, dynamic>> getReports({
+    required dynamic empresaId,
+    String periodo = '7d',
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/reports.php?action=overview&empresa_id=$empresaId&periodo=$periodo',
+      );
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al obtener reportes');
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
     } catch (e) {

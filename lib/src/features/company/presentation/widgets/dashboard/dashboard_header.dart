@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
+import 'package:viax/src/features/user/presentation/providers/user_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 class DashboardHeader extends StatelessWidget {
@@ -9,11 +10,13 @@ class DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final userProvider = context.watch<UserProvider>();
     
     return Consumer<CompanyProvider>(
       builder: (context, provider, _) {
-        final companyName = provider.company?['nombre'] ?? 'Empresa';
-        
+        final userName = userProvider.currentUser?.nombre ?? 
+                        provider.company?['representante_nombre']?.toString().split(' ').first ??
+                        'Usuario';
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
@@ -45,7 +48,7 @@ class DashboardHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        companyName,
+                        userName,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
