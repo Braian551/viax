@@ -201,7 +201,52 @@ class EmpresaRepository {
     /**
      * Rollback database transaction
      */
+    /**
+     * Rollback database transaction
+     */
     public function rollback() {
         $this->db->rollBack();
+    }
+
+    /**
+     * Get empresa by ID
+     */
+    public function getEmpresaById($id) {
+        $query = "SELECT * FROM empresas_transporte WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Update empresa profile data
+     */
+    public function updateEmpresaProfile($id, $data) {
+        $fields = [];
+        $params = [];
+
+        // Allowlist of updatable fields
+        $allowedFields = [
+            'nit', 'razon_social', 'direccion', 'municipio', 
+            'departamento', 'telefono', 'telefono_secundario', 
+            'email', 'descripcion'
+        ];
+
+        foreach ($allowedFields as $field) {
+            if (isset($data[$field])) {
+                $fields[] = "$field = ?";
+                $params[] = $data[$field];
+            }
+        }
+
+        if (empty($fields)) {
+            return false;
+        }
+
+        $params[] = $id;
+        $query = "UPDATE empresas_transporte SET " . implode(', ', $fields) . " WHERE id = ?";
+        
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute($params);
     }
 }

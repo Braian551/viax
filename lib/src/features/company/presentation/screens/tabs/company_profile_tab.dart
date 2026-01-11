@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
 import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
 
 class CompanyProfileTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -65,7 +68,18 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                   title: 'Datos de Empresa',
                   subtitle: 'NIT, Dirección, Teléfono',
                   isDark: isDark,
-                  onTap: () {},
+                  onTap: () {
+                    final provider = context.read<CompanyProvider>();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider.value(
+                          value: provider,
+                          child: const CompanyDataScreen(),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                  _buildOptionTile(
                   icon: Icons.notifications_none_rounded,

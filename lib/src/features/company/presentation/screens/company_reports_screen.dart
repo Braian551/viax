@@ -7,6 +7,7 @@ import 'package:viax/src/features/company/presentation/widgets/reports/reports_c
 import 'package:viax/src/features/company/presentation/widgets/reports/reports_top_drivers.dart';
 import 'package:viax/src/features/company/presentation/widgets/reports/reports_vehicle_distribution.dart';
 import 'package:viax/src/features/company/presentation/widgets/reports/reports_peak_hours.dart';
+import 'package:viax/src/features/company/presentation/widgets/reports/reports_shimmer.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 class CompanyReportsScreen extends StatefulWidget {
@@ -58,12 +59,6 @@ class _CompanyReportsScreenState extends State<CompanyReportsScreen>
       appBar: _buildAppBar(context, isDark),
       body: Consumer<CompanyProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoadingReports && provider.reportsData == null) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
           if (provider.reportsError != null && provider.reportsData == null) {
             return _buildErrorState(context, provider);
           }
@@ -88,7 +83,11 @@ class _CompanyReportsScreenState extends State<CompanyReportsScreen>
                     ),
                   ),
 
-                  // Tarjetas de resumen
+                  // Animación de carga Shimmer
+                  if (provider.isLoadingReports && provider.reportsData == null)
+                    const ReportsShimmer(),
+
+                  // Contenido de los reportes
                   if (provider.reportsData != null) ...[
                     const SliverToBoxAdapter(child: ReportsSummaryCards()),
 

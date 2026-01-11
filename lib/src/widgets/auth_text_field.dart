@@ -17,6 +17,7 @@ class AuthTextField extends StatelessWidget {
   final bool readOnly;
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
+  final int maxLines;
 
   const AuthTextField({
     super.key,
@@ -32,6 +33,7 @@ class AuthTextField extends StatelessWidget {
     this.readOnly = false,
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
+    this.maxLines = 1,
   });
 
   @override
@@ -73,6 +75,7 @@ class AuthTextField extends StatelessWidget {
         obscureText: obscureText,
         enabled: enabled,
         readOnly: readOnly,
+        maxLines: maxLines,
         textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
         style: TextStyle(
           color: Theme.of(context).textTheme.bodyLarge?.color,

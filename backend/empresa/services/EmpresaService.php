@@ -376,4 +376,49 @@ class EmpresaService {
             'empresa_id' => $empresaId
         ];
     }
+
+    /**
+     * Get company profile details using clean architecture
+     */
+    public function getCompanyProfile($empresaId) {
+        $empresa = $this->repository->getEmpresaById($empresaId);
+        if (!$empresa) {
+            throw new Exception("Empresa no encontrada");
+        }
+        
+        // Remove internal fields
+        unset($empresa['creado_por'], $empresa['verificado_por'], $empresa['creado_en'], $empresa['actualizado_en']);
+        
+        return $empresa;
+    }
+
+    /**
+     * Update company profile details
+     */
+    public function updateCompanyProfile($empresaId, $data) {
+        $empresa = $this->repository->getEmpresaById($empresaId);
+        if (!$empresa) {
+            throw new Exception("Empresa no encontrada");
+        }
+
+        // Validate basic fields (email format, required fields if completely clearing them)
+        if (isset($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Email inválido");
+        }
+        
+        // Handle logo upload if present
+        $newLogoUrl = $this->uploadLogo();
+        if ($newLogoUrl) {
+            $data['logo_url'] = $newLogoUrl;
+        }
+
+        // Update database
+        $success = $this->repository->updateEmpresaProfile($empresaId, $data);
+        
+        if ($success) {
+            return $this->getCompanyProfile($empresaId);
+        }
+        
+        throw new Exception("No se pudo actualizar el perfil");
+    }
 }

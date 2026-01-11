@@ -1,6 +1,7 @@
 /// Company Provider
 /// Manages state for company-related screens
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../data/datasources/company_remote_datasource.dart';
@@ -101,6 +102,28 @@ class CompanyProvider extends ChangeNotifier {
 
     // Cargar estadísticas del dashboard después de los detalles
     await loadDashboardStats();
+  }
+
+  Future<bool> updateCompanyProfile(Map<String, dynamic> data, {File? logoFile}) async {
+    if (empresaId == null) return false;
+
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedData = await _dataSource.updateCompanyDetails(empresaId, data, logoFile: logoFile);
+      _company = updatedData;
+      _isSaving = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('CompanyProvider: Error updating company profile: $e');
+      _errorMessage = e.toString();
+      _isSaving = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> loadDashboardStats({String periodo = 'hoy'}) async {

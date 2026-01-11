@@ -2,6 +2,7 @@
 /// Handles HTTP requests to company-related backend endpoints
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/error/exceptions.dart';
@@ -14,6 +15,11 @@ abstract class CompanyRemoteDataSource {
     List<Map<String, dynamic>> precios,
   );
   Future<Map<String, dynamic>> getCompanyDetails(dynamic empresaId);
+  Future<Map<String, dynamic>> updateCompanyDetails(
+    dynamic empresaId,
+    Map<String, dynamic> data, {
+    File? logoFile,
+  });
 
   /// Obtener estadísticas del dashboard
   Future<Map<String, dynamic>> getDashboardStats({
@@ -56,26 +62,93 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   Future<Map<String, dynamic>> getCompanyDetails(dynamic empresaId) async {
     try {
       final url = Uri.parse(
-        '${AppConfig.baseUrl}/admin/empresas.php?action=get&id=$empresaId',
+        '${AppConfig.baseUrl}/empresa/profile.php?id=$empresaId',
       );
-      print('CompanyRemoteDataSource: Calling URL: $url');
+      print('DEBUG: Fetching company profile from $url');
       final response = await client.get(
         url,
         headers: {'Accept': 'application/json'},
       );
-      print('CompanyRemoteDataSource: Response status: ${response.statusCode}');
-      print('CompanyRemoteDataSource: Response body: ${response.body}');
-
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          return Map<String, dynamic>.from(data['empresa']);
+          // Si devuelve 'data', úsalo, si no, busca 'empresa' por compatibilidad
+          return Map<String, dynamic>.from(data['data'] ?? data['empresa']);
         }
         throw ServerException(
           data['message'] ?? 'Error al obtener detalles de la empresa',
         );
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateCompanyDetails(
+    dynamic empresaId,
+    Map<String, dynamic> data, {
+    File? logoFile,
+  }) async {
+    try {
+      final url = Uri.parse('${AppConfig.baseUrl}/empresa/profile.php');
+
+      if (logoFile != null) {
+        // Use MultipartRequest
+        final request = http.MultipartRequest('POST', url);
+        
+        // Add fields
+        data.forEach((key, value) {
+          request.fields[key] = value.toString();
+        });
+        request.fields['empresa_id'] = empresaId.toString();
+
+        // Add file
+        final stream = http.ByteStream(logoFile.openRead());
+        final length = await logoFile.length();
+        final multipartFile = http.MultipartFile(
+          'logo',
+          stream,
+          length,
+          filename: logoFile.path.split('/').last,
+        );
+        request.files.add(multipartFile);
+
+        final streamedResponse = await client.send(request);
+        final response = await http.Response.fromStream(streamedResponse);
+
+        if (response.statusCode == 200) {
+          final responseData = json.decode(response.body);
+          if (responseData['success'] == true) {
+            return Map<String, dynamic>.from(responseData['data']);
+          }
+          throw ServerException(responseData['message'] ?? 'Error al actualizar perfil');
+        }
+        throw ServerException('Error del servidor: ${response.statusCode}');
+
+      } else {
+        // Use existing JSON Post logic
+        final bodyData = Map<String, dynamic>.from(data);
+        bodyData['empresa_id'] = empresaId;
+        
+        final response = await client.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(bodyData),
+        );
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['success'] == true) {
+            return Map<String, dynamic>.from(data['data']);
+          }
+          throw ServerException(data['message'] ?? 'Error al actualizar perfil');
+        }
+        throw ServerException('Error del servidor: ${response.statusCode}');
+      }
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException('Error de conexión: $e');

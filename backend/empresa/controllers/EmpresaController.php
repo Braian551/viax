@@ -24,12 +24,55 @@ class EmpresaController {
         switch ($action) {
             case 'register':
                 return $this->register($input);
+            case 'get_profile':
+                return $this->getProfile($input);
+            case 'update_profile':
+                return $this->updateProfile($input);
             default:
                 http_response_code(400);
                 return $this->jsonResponse(false, 'Acción no válida');
         }
     }
     
+    /**
+     * Get company profile
+     */
+    private function getProfile($input) {
+        try {
+            if (!isset($input['empresa_id'])) {
+                throw new Exception("ID de empresa requerido");
+            }
+
+            $currentUserId = $input['current_user_id'] ?? null;
+            // Verify ownership logic would go here if not done in profile.php
+
+            $data = $this->service->getCompanyProfile($input['empresa_id']);
+            
+            return $this->jsonResponse(true, 'Perfil obtenido exitosamente', $data);
+        } catch (Exception $e) {
+            http_response_code(400);
+            return $this->jsonResponse(false, $e->getMessage());
+        }
+    }
+
+    /**
+     * Update company profile
+     */
+    private function updateProfile($input) {
+        try {
+            if (!isset($input['empresa_id'])) {
+                throw new Exception("ID de empresa requerido");
+            }
+            
+            $data = $this->service->updateCompanyProfile($input['empresa_id'], $input);
+            
+            return $this->jsonResponse(true, 'Perfil actualizado exitosamente', $data);
+        } catch (Exception $e) {
+            http_response_code(400);
+            return $this->jsonResponse(false, $e->getMessage());
+        }
+    }
+
     /**
      * Handle empresa registration
      */
