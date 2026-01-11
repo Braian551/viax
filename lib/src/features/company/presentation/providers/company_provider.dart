@@ -301,4 +301,71 @@ class CompanyProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // Security State
+  bool _isCheckingPassword = false;
+  bool _hasPassword = true;
+  String _authProvider = 'email';
+
+  bool get isCheckingPassword => _isCheckingPassword;
+  bool get hasPassword => _hasPassword;
+  String get authProvider => _authProvider;
+
+  /// Check if current user has a password set
+  Future<void> checkPasswordStatus(dynamic userId) async {
+    if (userId == null) return;
+
+    _isCheckingPassword = true;
+    notifyListeners();
+
+    try {
+      final status = await _dataSource.checkPasswordStatus(userId);
+      _hasPassword = status['has_password'] ?? true;
+      _authProvider = status['auth_provider'] ?? 'email';
+    } catch (e) {
+      print('CompanyProvider: Error checking password status: $e');
+      // Default to assuming password exists to show change form
+      _hasPassword = true;
+      _authProvider = 'email';
+    }
+
+    _isCheckingPassword = false;
+    notifyListeners();
+  }
+
+  /// Change or set password
+  Future<bool> changePassword({
+    required dynamic userId,
+    String? currentPassword,
+    required String newPassword,
+  }) async {
+    if (userId == null) return false;
+
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final success = await _dataSource.changePassword(
+        userId: userId,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        isSettingNew: !_hasPassword,
+      );
+      
+      if (success) {
+        _hasPassword = true; // Now user has a password
+      }
+      
+      _isSaving = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      print('CompanyProvider: Error changing password: $e');
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _isSaving = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

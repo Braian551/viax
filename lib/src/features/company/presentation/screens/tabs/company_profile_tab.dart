@@ -7,6 +7,7 @@ import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_notifications_screen.dart';
+import 'package:viax/src/features/company/presentation/screens/company_security_screen.dart';
 
 class CompanyProfileTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -105,7 +106,19 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                   title: 'Seguridad',
                   subtitle: 'Contraseña y accesos',
                   isDark: isDark,
-                  onTap: () {},
+                  onTap: () {
+                    final provider = context.read<CompanyProvider>();
+                    final userId = widget.user['id'];
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider.value(
+                          value: provider,
+                          child: CompanySecurityScreen(userId: userId),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                  _buildOptionTile(
                   icon: Icons.help_outline_rounded,

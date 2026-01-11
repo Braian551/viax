@@ -56,6 +56,17 @@ abstract class CompanyRemoteDataSource {
     dynamic empresaId,
     Map<String, dynamic> settings,
   );
+
+  /// Security: Check if user has password set
+  Future<Map<String, dynamic>> checkPasswordStatus(dynamic userId);
+  
+  /// Security: Change or set password
+  Future<bool> changePassword({
+    required dynamic userId,
+    String? currentPassword,
+    required String newPassword,
+    bool isSettingNew = false,
+  });
 }
 
 class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
@@ -428,6 +439,76 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
         throw ServerException(data['message'] ?? 'Error al actualizar configuración');
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  /// Check if user has password set (for Google OAuth users)
+  Future<Map<String, dynamic>> checkPasswordStatus(dynamic userId) async {
+    try {
+      final url = Uri.parse('${AppConfig.authServiceUrl}/change_password.php');
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'action': 'check_status',
+          'user_id': userId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al verificar estado');
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  /// Change or set password
+  Future<bool> changePassword({
+    required dynamic userId,
+    String? currentPassword,
+    required String newPassword,
+    bool isSettingNew = false,
+  }) async {
+    try {
+      final url = Uri.parse('${AppConfig.authServiceUrl}/change_password.php');
+      final body = {
+        'action': isSettingNew ? 'set_password' : 'change_password',
+        'user_id': userId,
+        'new_password': newPassword,
+      };
+      
+      if (!isSettingNew && currentPassword != null) {
+        body['current_password'] = currentPassword;
+      }
+
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      
+      // Try to extract error message
+      try {
+        final data = json.decode(response.body);
+        throw ServerException(data['message'] ?? 'Error al cambiar contraseña');
+      } catch (_) {
+        throw ServerException('Error del servidor: ${response.statusCode}');
+      }
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException('Error de conexión: $e');

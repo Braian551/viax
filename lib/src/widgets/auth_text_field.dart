@@ -18,6 +18,7 @@ class AuthTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
+  final String? hintText;
 
   const AuthTextField({
     super.key,
@@ -34,6 +35,7 @@ class AuthTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
     this.maxLines = 1,
+    this.hintText,
   });
 
   @override
@@ -109,6 +111,11 @@ class AuthTextField extends StatelessWidget {
             child: Icon(icon, color: Colors.white, size: 20),
           ),
           suffixIcon: suffixIcon,
+          hintText: hintText,
+          hintStyle: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
+            fontSize: 15,
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           floatingLabelBehavior: FloatingLabelBehavior.auto,
