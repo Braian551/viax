@@ -876,6 +876,215 @@ class Mailer {
     }
 
     /**
+     * Envía correo de Cambio de Comisión.
+     */
+    public static function sendCompanyCommissionChangedEmail($toEmail, $userName, $companyData, $oldCommission, $newCommission) {
+        $subject = "💰 Comisión actualizada - {$companyData['nombre_empresa']}";
+        
+        // Initialize attachments and temp files
+        $attachments = [];
+        $tempFiles = [];
+        
+        // Prepare Logo
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    if ($httpCode == 200 && $imageContent) $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'image/png';
+                    curl_close($ch);
+                } catch (Exception $e) {}
+            } else {
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {}
+            }
+            
+            if ($imageContent) {
+                $ext = (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) ? 'jpg' : 'png';
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                $attachments[] = ['path' => $tempFile, 'name' => "company_logo.$ext", 'cid' => 'company_logo', 'type' => $mime];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+
+        $companyLogoHtml = !empty($logoSrc) ? "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>" : '';
+        
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #FFFDE7; border-radius: 8px; overflow: hidden; border: 1px solid #FFF59D;'>
+            <tr style='background-color: #FFF9C4;'>
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #F57F17;'>Detalle del Cambio</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #FFF59D; font-weight: 600; width: 50%;'>Comisión Anterior:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #FFF59D; color: #757575;'>{$oldCommission}%</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Nueva Comisión:</td>
+                <td style='padding: 10px; color: #F57F17; font-weight: bold;'>{$newCommission}%</td>
+            </tr>
+        </table>";
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            $companyLogoHtml
+            <div style='background-color: #FFFDE7; border: 1px solid #FFF59D; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #F57F17; margin: 0 0 8px 0;'>Comisión Actualizada</h2>
+                <p style='color: #FF8F00; margin: 0;'>La comisión de administración de tu empresa ha sido modificada.</p>
+            </div>
+            
+            <p class='message'>Te informamos que la comisión que se aplica a tu empresa <strong>{$companyData['nombre_empresa']}</strong> ha sido actualizada por un administrador.</p>
+            
+            $detailsTable
+            
+            <p class='message'>Este cambio afectará los próximos pagos procesados. Si tienes alguna duda, contáctanos.</p>
+        ";
+        
+        $altBody = "Hola, $userName.\n\n" .
+                   "La comisión de tu empresa {$companyData['nombre_empresa']} ha sido actualizada.\n" .
+                   "Anterior: {$oldCommission}%\nNueva: {$newCommission}%\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        foreach ($tempFiles as $tf) { if (file_exists($tf)) @unlink($tf); }
+        return $result;
+    }
+
+    /**
+     * Envía correo de Edición de Datos.
+     * @param array $changes Array de ['campo' => 'Nombre Campo', 'anterior' => 'valor', 'nuevo' => 'valor']
+     */
+    public static function sendCompanyEditedEmail($toEmail, $userName, $companyData, $changes) {
+        if (empty($changes)) return true;
+        
+        $subject = "📝 Datos actualizados - {$companyData['nombre_empresa']}";
+        
+        // Initialize attachments and temp files
+        $attachments = [];
+        $tempFiles = [];
+        
+        // Prepare Logo
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    if ($httpCode == 200 && $imageContent) $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'image/png';
+                    curl_close($ch);
+                } catch (Exception $e) {}
+            } else {
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {}
+            }
+            
+            if ($imageContent) {
+                $ext = (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) ? 'jpg' : 'png';
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                $attachments[] = ['path' => $tempFile, 'name' => "company_logo.$ext", 'cid' => 'company_logo', 'type' => $mime];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+
+        $companyLogoHtml = !empty($logoSrc) ? "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>" : '';
+        
+        $changesRows = '';
+        foreach ($changes as $change) {
+            $changesRows .= "
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #E3F2FD; font-weight: 600;'>{$change['campo']}</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E3F2FD; color: #757575; text-decoration: line-through;'>{$change['anterior']}</td>
+                <td style='padding: 10px; border-bottom: 1px solid #E3F2FD; color: #1976D2; font-weight: 500;'>{$change['nuevo']}</td>
+            </tr>";
+        }
+        
+        $changesTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #E3F2FD; border-radius: 8px; overflow: hidden; border: 1px solid #90CAF9;'>
+            <tr style='background-color: #BBDEFB;'>
+                <td style='padding: 12px; font-weight: 600; color: #1565C0;'>Campo</td>
+                <td style='padding: 12px; font-weight: 600; color: #1565C0;'>Valor Anterior</td>
+                <td style='padding: 12px; font-weight: 600; color: #1565C0;'>Nuevo Valor</td>
+            </tr>
+            $changesRows
+        </table>";
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            $companyLogoHtml
+            <div style='background-color: #E3F2FD; border: 1px solid #90CAF9; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #1565C0; margin: 0 0 8px 0;'>Datos Actualizados</h2>
+                <p style='color: #1976D2; margin: 0;'>Los datos de tu empresa han sido modificados por un administrador.</p>
+            </div>
+            
+            <p class='message'>Se han realizado los siguientes cambios en la información de <strong>{$companyData['nombre_empresa']}</strong>:</p>
+            
+            $changesTable
+            
+            <p class='message'>Si no reconoces estos cambios o tienes dudas, por favor contáctanos de inmediato.</p>
+        ";
+        
+        $plainChanges = '';
+        foreach ($changes as $change) {
+            $plainChanges .= "- {$change['campo']}: {$change['anterior']} → {$change['nuevo']}\n";
+        }
+        
+        $altBody = "Hola, $userName.\n\n" .
+                   "Los datos de tu empresa {$companyData['nombre_empresa']} han sido actualizados.\n\n" .
+                   "Cambios:\n$plainChanges\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        foreach ($tempFiles as $tf) { if (file_exists($tf)) @unlink($tf); }
+        return $result;
+    }
+
+    /**
      * Método base para enviar el correo usando PHPMailer.
      * @param array $attachments Array of ['path' => string, 'name' => string, 'cid' => string|null]
      */

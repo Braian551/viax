@@ -92,6 +92,26 @@ try {
         error_log("Error en log auditoría: " . $e->getMessage());
     }
     
+    // Enviar correo de notificación
+    try {
+        // Obtener datos adicionales para email (incluir logo_url)
+        $emailQuery = "SELECT nombre, email, representante_nombre, representante_email, logo_url FROM empresas_transporte WHERE id = ?";
+        $emailStmt = $conn->prepare($emailQuery);
+        $emailStmt->execute([$empresaId]);
+        $empresaEmail = $emailStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($empresaEmail) {
+            $empresaEmail['nombre_empresa'] = $empresaEmail['nombre'];
+            $toEmail = $empresaEmail['representante_email'] ?: $empresaEmail['email'];
+            $toName = $empresaEmail['representante_nombre'];
+            
+            require_once __DIR__ . '/../utils/Mailer.php';
+            Mailer::sendCompanyCommissionChangedEmail($toEmail, $toName, $empresaEmail, $comisionAnterior, $comision);
+        }
+    } catch (Exception $e) {
+        error_log("Error enviando email de comisión: " . $e->getMessage());
+    }
+    
     http_response_code(200);
     echo json_encode([
         'success' => true,

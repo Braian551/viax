@@ -331,8 +331,8 @@ function updateEmpresa($db, $input) {
         return;
     }
     
-    // Verificar que la empresa existe y obtener datos actuales para notificaciones
-    $checkEmpresa = $db->prepare("SELECT id, estado, nombre, email, representante_nombre, representante_email, logo_url FROM empresas_transporte WHERE id = ?");
+    // Verificar que la empresa existe y obtener TODOS los datos actuales para comparación
+    $checkEmpresa = $db->prepare("SELECT * FROM empresas_transporte WHERE id = ?");
     $checkEmpresa->execute([$empresaId]);
     $currentEmpresa = $checkEmpresa->fetch(PDO::FETCH_ASSOC);
 
@@ -429,6 +429,47 @@ function updateEmpresa($db, $input) {
     $query = "UPDATE empresas_transporte SET " . implode(', ', $updates) . " WHERE id = ?";
     $stmt = $db->prepare($query);
     $stmt->execute($params);
+    
+    // --- Notificación de Edición (campos modificados) ---
+    $fieldLabels = [
+        'nombre' => 'Nombre',
+        'nit' => 'NIT',
+        'razon_social' => 'Razón Social',
+        'email' => 'Email Empresa',
+        'telefono' => 'Teléfono',
+        'telefono_secundario' => 'Teléfono Secundario',
+        'direccion' => 'Dirección',
+        'municipio' => 'Municipio',
+        'departamento' => 'Departamento',
+        'representante_nombre' => 'Representante Legal',
+        'representante_telefono' => 'Teléfono Representante',
+        'representante_email' => 'Email Representante',
+        'descripcion' => 'Descripción',
+    ];
+    
+    $changes = [];
+    foreach ($fieldLabels as $field => $label) {
+        if (isset($input[$field]) && $input[$field] != $currentEmpresa[$field]) {
+            $changes[] = [
+                'campo' => $label,
+                'anterior' => $currentEmpresa[$field] ?? '(vacío)',
+                'nuevo' => $input[$field] ?? '(vacío)'
+            ];
+        }
+    }
+    
+    if (!empty($changes)) {
+        try {
+            $toEmail = $currentEmpresa['representante_email'] ?: $currentEmpresa['email'];
+            $toName = $currentEmpresa['representante_nombre'];
+            $currentEmpresa['nombre_empresa'] = $currentEmpresa['nombre'];
+            
+            require_once __DIR__ . '/../utils/Mailer.php';
+            Mailer::sendCompanyEditedEmail($toEmail, $toName, $currentEmpresa, $changes);
+        } catch (Exception $e) {
+            error_log("Error enviando email de edición: " . $e->getMessage());
+        }
+    }
     
     // Log de auditoría
     $adminId = $input['admin_id'] ?? null;
