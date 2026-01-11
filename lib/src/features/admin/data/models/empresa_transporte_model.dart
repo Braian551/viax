@@ -30,6 +30,7 @@ class EmpresaTransporteModel extends EmpresaTransporte {
     super.totalConductores,
     super.totalViajesCompletados,
     super.calificacionPromedio,
+    super.comisionAdminPorcentaje,
     required super.creadoEn,
     super.actualizadoEn,
     super.creadoPor,
@@ -62,6 +63,7 @@ class EmpresaTransporteModel extends EmpresaTransporte {
       totalConductores: _parseInt(json['total_conductores']),
       totalViajesCompletados: _parseInt(json['total_viajes_completados']),
       calificacionPromedio: _parseDouble(json['calificacion_promedio']),
+      comisionAdminPorcentaje: _parseDouble(json['comision_admin_porcentaje']),
       creadoEn: _parseDateTime(json['creado_en']) ?? DateTime.now(),
       actualizadoEn: _parseDateTime(json['actualizado_en']),
       creadoPor: _parseNullableInt(json['creado_por']),
@@ -89,6 +91,7 @@ class EmpresaTransporteModel extends EmpresaTransporte {
       if (logoUrl != null) 'logo_url': logoUrl,
       if (descripcion != null) 'descripcion': descripcion,
       'estado': estado.value,
+      'comision_admin_porcentaje': comisionAdminPorcentaje,
       if (notasAdmin != null) 'notas_admin': notasAdmin,
     };
   }

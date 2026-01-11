@@ -1402,7 +1402,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
     final empresaMap = {
       'id': empresa.id,
       'nombre': empresa.nombre,
-      'comision_admin_porcentaje': 0.0, // Will be fetched by the dialog
+      'comision_admin_porcentaje': empresa.comisionAdminPorcentaje,
     };
     
     final result = await EmpresaCommissionDialog.show(context, empresaMap);

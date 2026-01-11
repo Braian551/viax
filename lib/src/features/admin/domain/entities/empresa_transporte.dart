@@ -27,6 +27,7 @@ class EmpresaTransporte {
   final int totalConductores;
   final int totalViajesCompletados;
   final double calificacionPromedio;
+  final double comisionAdminPorcentaje;
   final DateTime creadoEn;
   final DateTime? actualizadoEn;
   final int? creadoPor;
@@ -56,6 +57,7 @@ class EmpresaTransporte {
     this.totalConductores = 0,
     this.totalViajesCompletados = 0,
     this.calificacionPromedio = 0.0,
+    this.comisionAdminPorcentaje = 0.0,
     required this.creadoEn,
     this.actualizadoEn,
     this.creadoPor,
@@ -87,6 +89,7 @@ class EmpresaTransporte {
     int? totalConductores,
     int? totalViajesCompletados,
     double? calificacionPromedio,
+    double? comisionAdminPorcentaje,
     DateTime? creadoEn,
     DateTime? actualizadoEn,
     int? creadoPor,
@@ -116,6 +119,7 @@ class EmpresaTransporte {
       totalConductores: totalConductores ?? this.totalConductores,
       totalViajesCompletados: totalViajesCompletados ?? this.totalViajesCompletados,
       calificacionPromedio: calificacionPromedio ?? this.calificacionPromedio,
+      comisionAdminPorcentaje: comisionAdminPorcentaje ?? this.comisionAdminPorcentaje,
       creadoEn: creadoEn ?? this.creadoEn,
       actualizadoEn: actualizadoEn ?? this.actualizadoEn,
       creadoPor: creadoPor ?? this.creadoPor,
