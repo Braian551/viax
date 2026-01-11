@@ -4,7 +4,7 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/routes/route_names.dart';
-import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
+import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -119,13 +119,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
 
   Future<void> _confirmLogout() async {
     if (_isLoggingOut) return;
-    final confirmed = await DialogHelper.showConfirmation(
-      context,
-      title: 'Cerrar sesión',
-      message: '¿Estás seguro de que deseas cerrar sesión?',
-      confirmText: 'Sí, cerrar',
-      cancelText: 'Cancelar',
-    );
+    final confirmed = await LogoutDialog.show(context);
 
     if (confirmed == true) await _performLogout();
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/auth/user_service.dart';
 import '../../../../routes/route_names.dart';
+import '../../../../widgets/dialogs/logout_dialog.dart';
 
 /// Menú hamburguesa del conductor con diseño moderno
 class ConductorDrawer extends StatelessWidget {
@@ -168,8 +169,18 @@ class ConductorDrawer extends StatelessWidget {
                           icon: Icons.logout_rounded,
                           title: 'Cerrar Sesión',
                           isDestructive: true,
-                          onTap: () {
-                            _showLogoutDialog(context, isDark);
+                          onTap: () async {
+                            Navigator.pop(context); // Close drawer first
+                            final shouldLogout = await LogoutDialog.show(context);
+                            if (shouldLogout == true && context.mounted) {
+                              await UserService.clearSession();
+                              if (context.mounted) {
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  '/',
+                                  (route) => false,
+                                );
+                              }
+                            }
                           },
                           isDark: isDark,
                         ),
@@ -405,88 +416,4 @@ class ConductorDrawer extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, bool isDark) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.logout_rounded,
-                color: Colors.red,
-                size: 28,
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Cerrar Sesión',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            '¿Estás seguro que deseas cerrar sesión?',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.grey[700],
-              fontSize: 16,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(
-                'Cancelar',
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // Cerrar dialog
-                Navigator.of(dialogContext).pop();
-                // Cerrar drawer
-                Navigator.of(context).pop();
-                
-                // Cerrar sesión
-                await UserService.clearSession();
-                
-                // Navegar a login
-                if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/',
-                    (route) => false,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: const Text(
-                'Cerrar Sesión',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

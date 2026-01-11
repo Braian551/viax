@@ -144,6 +144,22 @@ try {
     $stmt->execute([$userId]);
     $location = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Enviar correo de bienvenida (solo si es cliente o si se desea para todos)
+    // Como la función es sendClientWelcomeEmail, la usamos aquí.
+    if (!empty($email) && !empty($name)) {
+        try {
+            require_once '../utils/Mailer.php';
+            // Ejecutar en "segundo plano" idealmente, pero aquí lo haremos directo
+            // Opcional: Verificar si Mailer existe para evitar error fatal si falta el archivo
+            if (class_exists('Mailer')) {
+                 Mailer::sendClientWelcomeEmail($email, $name);
+            }
+        } catch (Exception $e) {
+            // No interrumpir el registro si falla el correo
+            error_log("Error enviando email de bienvenida: " . $e->getMessage());
+        }
+    }
+
     sendJsonResponse(true, 'Usuario registrado correctamente', [
         'user' => $user,
         'location' => $location,

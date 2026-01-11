@@ -61,6 +61,48 @@ class Mailer {
     }
 
     /**
+     * Envía el correo de bienvenida para clientes (usuarios finales de la app).
+     */
+    public static function sendClientWelcomeEmail($toEmail, $userName) {
+        $subject = "¡Bienvenido a Viax! - Tu viaje comienza aquí";
+        
+        $bodyContent = "
+            <div class='greeting'>¡Hola, $userName!</div>
+            <p class='message'>
+                Bienvenido a <strong>Viax</strong>. Nos alegra mucho tenerte con nosotros.
+                Ahora eres parte de una comunidad que se mueve segura y rápido.
+            </p>
+            
+            <div style='background-color: #E3F2FD; border-left: 4px solid #1976D2; padding: 16px; margin: 24px 0; border-radius: 4px;'>
+                <h3 style='margin: 0 0 8px 0; color: #1565C0; font-size: 16px; font-weight: 700;'>¿Qué puedes hacer ahora?</h3>
+                <ul style='margin: 0; padding-left: 20px; color: #424242; font-size: 14px; line-height: 1.5;'>
+                    <li>Solicitar viajes seguros y confiables en segundos.</li>
+                    <li>Ver la información de tu conductor y vehículo en tiempo real.</li>
+                    <li>Compartir tu viaje con amigos y familiares.</li>
+                </ul>
+            </div>
+            
+            <p class='message'>
+                Si tienes alguna pregunta o necesitas ayuda, nuestro equipo de soporte está disponible para ti.
+            </p>
+            
+            <p class='message' style='margin-top: 30px; font-weight: bold;'>
+                ¡Disfruta el viaje!
+            </p>
+        ";
+
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        $altBody = "¡Hola, $userName!\n\n" .
+                   "Bienvenido a Viax. Nos alegra mucho tenerte con nosotros.\n\n" .
+                   "Ahora puedes solicitar viajes seguros, ver info en tiempo real y compartir tu ruta.\n\n" .
+                   "¡Disfruta el viaje!\n" .
+                   "El equipo de Viax";
+
+        return self::send($toEmail, $userName, $subject, $htmlBody, $altBody);
+    }
+
+    /**
      * Envía un correo de bienvenida para empresa con todos los detalles del registro.
      */
     public static function sendCompanyWelcomeEmail($toEmail, $userName, $companyData) {

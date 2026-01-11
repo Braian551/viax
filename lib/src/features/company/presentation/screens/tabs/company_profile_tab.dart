@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
-import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
+import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_notifications_screen.dart';
@@ -36,13 +36,7 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
 
   Future<void> _confirmLogout() async {
     if (_isLoggingOut) return;
-    final confirmed = await DialogHelper.showConfirmation(
-      context,
-      title: 'Cerrar sesión',
-      message: '¿Estás seguro de que deseas cerrar sesión?',
-      confirmText: 'Sí, cerrar',
-      cancelText: 'Cancelar',
-    );
+    final confirmed = await LogoutDialog.show(context);
 
     if (confirmed == true) await _performLogout();
   }

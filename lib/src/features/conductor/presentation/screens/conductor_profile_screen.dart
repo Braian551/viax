@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+﻿
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -8,6 +8,7 @@ import '../../models/conductor_profile_model.dart';
 import 'license_registration_screen.dart';
 import 'vehicle_only_registration_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 
 class ConductorProfileScreen extends StatefulWidget {
   final int conductorId;
@@ -809,10 +810,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
   Widget _buildLogoutButton(bool isDark) {
     return TextButton(
       onPressed: () async {
-        final shouldLogout = await showDialog<bool>(
-          context: context,
-          builder: (context) => _buildLogoutDialog(isDark),
-        );
+        final shouldLogout = await LogoutDialog.show(context);
 
         if (shouldLogout == true && mounted) {
           await UserService.clearSession();
@@ -841,30 +839,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     );
   }
 
-  Widget _buildLogoutDialog(bool isDark) {
-    return AlertDialog(
-      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        '¿Cerrar sesión?',
-        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-      ),
-      content: Text(
-        '¿Estás seguro de que deseas salir?',
-        style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text('Cancelar', style: TextStyle(color: isDark ? Colors.white60 : Colors.grey)),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Salir', style: TextStyle(color: AppColors.error)),
-        ),
-      ],
-    );
-  }
 
   Widget _buildShimmerLoading(bool isDark) {
     return Shimmer.fromColors(
