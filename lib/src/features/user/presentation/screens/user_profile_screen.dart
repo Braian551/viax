@@ -5,6 +5,7 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
+import 'package:viax/src/features/user/presentation/widgets/profile/user_profile_shimmer.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -58,14 +59,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         final userId = sess['id'];
         if (userId != null) {
           final driverProfile = await UserService.getDriverProfile(userId: userId);
-          print('DEBUG: driverProfile response = $driverProfile');
           if (driverProfile != null && driverProfile['success'] == true) {
             // The status is inside 'profile' object
             final profile = driverProfile['profile'];
             if (profile != null) {
               // Check estado_aprobacion: 'pendiente', 'aprobado', 'rechazado'
               _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
-              print('DEBUG: _driverStatus = $_driverStatus');
             }
           }
         }
@@ -152,7 +151,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
 
           SafeArea(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? const UserProfileShimmer()
                 : FadeTransition(
                     opacity: _fadeAnimation,
                     child: SlideTransition(
