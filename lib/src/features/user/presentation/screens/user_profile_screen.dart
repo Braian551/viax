@@ -205,13 +205,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               isDark: isDark,
                               onTap: () {},
                             ),
-                            _buildOptionTile(
+                            /* _buildOptionTile(
                               icon: Icons.location_on_outlined,
                               title: 'Mis Direcciones',
                               subtitle: 'Casa, trabajo y favoritos',
                               isDark: isDark,
                               onTap: () {},
-                            ),
+                            ), */
                             _buildInfoTile(
                               icon: Icons.payments_rounded,
                               title: 'Método de Pago',

@@ -305,9 +305,8 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
   }
 
   void _showDateFilter(BuildContext context, bool isDark) {
-    final backgroundColor = isDark ? AppColors.darkSurface : Colors.white;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final dividerColor = isDark ? AppColors.darkDivider : Colors.grey.shade300;
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white; // Darker surface
+    final textColor = isDark ? Colors.white : Colors.black87;
     
     // Capture the provider from the current context before showing the modal
     final provider = context.read<UserTripsProvider>();
@@ -315,122 +314,140 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true, // Allow it to take needed space and feel better
       builder: (modalContext) => ChangeNotifierProvider.value(
         value: provider,
         child: Container(
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: dividerColor,
-                borderRadius: BorderRadius.circular(2),
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Filtrar por fecha',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textColor,
+              
+              Text(
+                'Filtrar por fecha',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildDateOption(
-              context,
-              'Última semana',
-              Icons.calendar_today_rounded,
-              () {
-                final now = DateTime.now();
-                final start = now.subtract(const Duration(days: 7));
-                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
-              },
-              isDark,
-            ),
-            _buildDateOption(
-              context,
-              'Último mes',
-              Icons.date_range_rounded,
-              () {
-                final now = DateTime.now();
-                final start = now.subtract(const Duration(days: 30));
-                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
-              },
-              isDark,
-            ),
-            _buildDateOption(
-              context,
-              'Últimos 3 meses',
-              Icons.calendar_month_rounded,
-              () {
-                final now = DateTime.now();
-                final start = now.subtract(const Duration(days: 90));
-                context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
-              },
-              isDark,
-            ),
-            _buildDateOption(
-              context,
-              'Personalizado',
-              Icons.edit_calendar_rounded,
-              () async {
-                final result = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: ColorScheme.light(
-                          primary: AppColors.primary,
-                          onPrimary: Colors.black,
-                          surface: isDark ? AppColors.darkSurface : Colors.white,
-                          onSurface: isDark ? Colors.white : Colors.black,
+              const SizedBox(height: 24),
+              
+              _buildDateOption(
+                context,
+                'Última semana',
+                Icons.calendar_view_week_rounded,
+                () {
+                  final now = DateTime.now();
+                  final start = now.subtract(const Duration(days: 7));
+                  context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+                },
+                isDark,
+              ),
+              _buildDateOption(
+                context,
+                'Último mes',
+                Icons.calendar_view_month_rounded,
+                () {
+                  final now = DateTime.now();
+                  final start = now.subtract(const Duration(days: 30));
+                  context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+                },
+                isDark,
+              ),
+              _buildDateOption(
+                context,
+                'Últimos 3 meses',
+                Icons.history_rounded,
+                () {
+                  final now = DateTime.now();
+                  final start = now.subtract(const Duration(days: 90));
+                  context.read<UserTripsProvider>().setDateFilter(start, now, userId: widget.userId);
+                },
+                isDark,
+              ),
+              _buildDateOption(
+                context,
+                'Personalizado',
+                Icons.date_range_rounded,
+                () async {
+                  final result = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: AppColors.primary,
+                            onPrimary: Colors.black, // Text on primary
+                            surface: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                            onSurface: isDark ? Colors.white : Colors.black,
+                          ),
+                          dialogBackgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         ),
-                      ),
-                      child: child!,
-                    );
-                  },
-                );
-                
-                if (result != null && context.mounted) {
-                  context.read<UserTripsProvider>().setDateFilter(
-                    result.start, 
-                    result.end, 
-                    userId: widget.userId
+                        child: child!,
+                      );
+                    },
                   );
-                }
-              },
-              isDark,
-            ),
-            
+                  
+                  if (result != null && context.mounted) {
+                    context.read<UserTripsProvider>().setDateFilter(
+                      result.start, 
+                      result.end, 
+                      userId: widget.userId
+                    );
+                  }
+                },
+                isDark,
+              ),
+              
             // Opción para limpiar filtro
             if (context.read<UserTripsProvider>().startDate != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: TextButton(
+                padding: const EdgeInsets.only(top: 16),
+                child: TextButton.icon(
                   onPressed: () {
                      context.read<UserTripsProvider>().setDateFilter(null, null, userId: widget.userId);
                      Navigator.pop(context);
                   },
-                  child: const Text('Limpiar filtro', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  label: const Text('Limpiar filtro'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF5252),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
-              
-            const SizedBox(height: 16),
-          ],
-        ),
+            ],
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildDateOption(
@@ -440,42 +457,51 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     VoidCallback onTap,
     bool isDark,
   ) {
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final borderColor = isDark 
-        ? AppColors.primary.withOpacity(0.2) 
-        : AppColors.primary.withOpacity(0.1);
+    final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
+    final baseColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final iconColor = isDark ? const Color(0xFF64B5F6) : AppColors.primary; // Lighter blue for dark mode
     
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 22),
-            const SizedBox(width: 14),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: textColor,
-              ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: baseColor,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: textColor.withValues(alpha: 0.3),
+                  size: 16,
+                ),
+              ],
             ),
-            const Spacer(),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: textColor.withOpacity(0.3),
-            ),
-          ],
+          ),
         ),
       ),
     );
