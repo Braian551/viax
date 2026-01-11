@@ -14,7 +14,7 @@ class TripFilter {
   });
 }
 
-/// Filtros horizontales animados
+/// Filtros horizontales animados con diseño premium
 class TripHistoryFilters extends StatefulWidget {
   final String selectedFilter;
   final ValueChanged<String> onFilterChanged;
@@ -37,9 +37,9 @@ class _TripHistoryFiltersState extends State<TripHistoryFilters>
   late Animation<double> _fadeAnimation;
 
   final List<TripFilter> _filters = const [
-    TripFilter(id: 'all', label: 'Todos', icon: Icons.list_rounded),
+    TripFilter(id: 'all', label: 'Todos', icon: Icons.grid_view_rounded),
     TripFilter(id: 'completada', label: 'Completados', icon: Icons.check_circle_rounded),
-    TripFilter(id: 'en_curso', label: 'En curso', icon: Icons.pending_rounded),
+    TripFilter(id: 'en_curso', label: 'En curso', icon: Icons.directions_car_rounded),
     TripFilter(id: 'cancelada', label: 'Cancelados', icon: Icons.cancel_rounded),
   ];
 
@@ -47,7 +47,7 @@ class _TripHistoryFiltersState extends State<TripHistoryFilters>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
@@ -69,10 +69,11 @@ class _TripHistoryFiltersState extends State<TripHistoryFilters>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SizedBox(
-        height: 44,
+        height: 50, // Slightly taller
         child: ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           itemCount: _filters.length,
           itemBuilder: (context, index) {
             final filter = _filters[index];
@@ -91,7 +92,7 @@ class _TripHistoryFiltersState extends State<TripHistoryFilters>
   }
 }
 
-class _FilterChip extends StatefulWidget {
+class _FilterChip extends StatelessWidget {
   final TripFilter filter;
   final bool isSelected;
   final VoidCallback onTap;
@@ -103,47 +104,17 @@ class _FilterChip extends StatefulWidget {
     required this.isSelected,
     required this.onTap,
     required this.index,
-    this.isDark = false,
+    required this.isDark,
   });
 
-  @override
-  State<_FilterChip> createState() => _FilterChipState();
-}
-
-class _FilterChipState extends State<_FilterChip>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: Duration(milliseconds: 300 + (widget.index * 50)),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   Color _getFilterColor() {
-    switch (widget.filter.id) {
+    switch (filter.id) {
       case 'completada':
-        return AppColors.success;
+        return const Color(0xFF4CAF50);
       case 'cancelada':
-        return AppColors.error;
+        return const Color(0xFFF44336);
       case 'en_curso':
-        return AppColors.warning;
+        return const Color(0xFFFF9800);
       default:
         return AppColors.primary;
     }
@@ -151,55 +122,60 @@ class _FilterChipState extends State<_FilterChip>
 
   @override
   Widget build(BuildContext context) {
-    final color = _getFilterColor();
-    final isDark = widget.isDark;
-    final bgColor = isDark ? AppColors.darkCard : Colors.white;
+    final activeColor = _getFilterColor();
+    final inactiveBg = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final inactiveText = isDark ? Colors.white60 : Colors.black54;
 
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.only(right: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: widget.isSelected ? color : bgColor,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: widget.isSelected ? color : color.withOpacity(isDark ? 0.4 : 0.3),
-              width: 1.5,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : inactiveBg,
+          borderRadius: BorderRadius.circular(30), // Pill shape
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+          border: Border.all(
+            color: isSelected 
+                ? Colors.transparent 
+                : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              filter.icon,
+              size: 18,
+              color: isSelected ? Colors.white : inactiveText,
             ),
-            boxShadow: widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: color.withOpacity(isDark ? 0.4 : 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.filter.icon,
-                size: 16,
-                color: widget.isSelected ? Colors.white : color,
+            const SizedBox(width: 8),
+            Text(
+              filter.label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : inactiveText,
+                letterSpacing: 0.3,
               ),
-              const SizedBox(width: 6),
-              Text(
-                widget.filter.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: widget.isSelected ? Colors.white : color,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -32,24 +32,24 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
     super.initState();
     
     _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
 
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     )..forward();
 
-    _bounceAnimation = Tween<double>(begin: 0, end: 10).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    _bounceAnimation = Tween<double>(begin: 0, end: 12).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOutSine),
     );
 
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
+    _scaleAnimation = Tween<double>(begin: 0.9, end: 1).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.elasticOut),
     );
   }
@@ -63,9 +63,8 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
 
   @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
-        : AppColors.lightTextPrimary;
+    final isDark = widget.isDark;
+    final textColor = isDark ? Colors.white : const Color(0xFF2C3E50);
     
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -73,11 +72,11 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
         scale: _scaleAnimation,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icono animado
+                // Icono animado con Glow
                 AnimatedBuilder(
                   animation: _bounceAnimation,
                   builder: (context, child) {
@@ -86,104 +85,127 @@ class _TripHistoryEmptyStateState extends State<TripHistoryEmptyState>
                       child: child,
                     );
                   },
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withOpacity(widget.isDark ? 0.25 : 0.15),
-                          AppColors.accent.withOpacity(widget.isDark ? 0.15 : 0.1),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
-                          blurRadius: 30,
-                          spreadRadius: 5,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Glow
+                      Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary.withValues(alpha: isDark ? 0.1 : 0.05),
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.directions_car_rounded,
-                      size: 50,
-                      color: AppColors.primary.withOpacity(widget.isDark ? 0.8 : 0.6),
-                    ),
+                        child: ClipOval(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                            child: Container(color: Colors.transparent),
+                          ),
+                        ),
+                      ),
+                      // Circle
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.directions_car_filled_rounded,
+                          size: 45,
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 32),
+                
                 // Título
                 Text(
                   widget.filterText != null
-                      ? 'Sin viajes ${widget.filterText}'
+                      ? 'No hay viajes ${widget.filterText}'
                       : 'Aún no tienes viajes',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: textColor.withOpacity(0.8),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                    letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
+                
                 // Descripción
                 Text(
                   widget.filterText != null
-                      ? 'No encontramos viajes con el filtro seleccionado'
-                      : 'Cuando realices tu primer viaje,\naparecerá aquí',
+                      ? 'Prueba cambiando los filtros para ver otros resultados.'
+                      : 'Tus viajes realizados aparecerán aquí.\n¡Pide tu primer viaje hoy!',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: textColor.withOpacity(0.5),
+                    fontSize: 15,
+                    color: isDark ? Colors.white60 : Colors.black54,
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
+                
                 // Botón de refrescar
                 if (widget.onRefresh != null)
-                  GestureDetector(
-                    onTap: widget.onRefresh,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primary.withOpacity(0.8),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: widget.onRefresh,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              const Color(0xFF1976D2), // Darker blue
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
                           ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.refresh_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Actualizar',
-                            style: TextStyle(
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.refresh_rounded,
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              size: 20,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 10),
+                            Text(
+                              'Actualizar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

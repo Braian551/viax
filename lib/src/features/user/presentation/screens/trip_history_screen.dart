@@ -176,10 +176,20 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
       expandedHeight: 0,
       floating: true,
       pinned: true,
-      elevation: _isScrolled ? 4 : 0,
-      backgroundColor: _isScrolled ? surfaceColor : backgroundColor,
+      elevation: 0,
+      backgroundColor: _isScrolled ? surfaceColor.withValues(alpha: 0.9) : backgroundColor,
+      flexibleSpace: _isScrolled
+          ? ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(color: Colors.transparent),
+              ),
+            )
+          : null,
       leading: null,
-      automaticallyImplyLeading: false, // Don't show back button automatically
+      automaticallyImplyLeading: false, 
+      centerTitle: false,
+      titleSpacing: 20,
       title: AnimatedBuilder(
         animation: _headerAnimationController,
         builder: (context, child) {
@@ -192,11 +202,12 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
           );
         },
         child: Text(
-          'Mis viajes',
+          'Mis Viajes',
           style: TextStyle(
             color: textColor,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontSize: 28, // Bigger, bolder title
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
           ),
         ),
       ),
@@ -212,23 +223,26 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
               ),
             );
           },
-          child: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.calendar_month_rounded,
-                color: AppColors.primary,
-                size: 20,
+          child: Container(
+            margin: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
               ),
             ),
-            onPressed: () => _showDateFilter(context, isDark),
+            child: IconButton(
+              icon: Icon(
+                Icons.calendar_month_rounded,
+                color: isDark ? Colors.white : Colors.black87,
+                size: 22,
+              ),
+              tooltip: 'Filtrar por fecha',
+              onPressed: () => _showDateFilter(context, isDark),
+            ),
           ),
         ),
-        const SizedBox(width: 16),
       ],
     );
   }
