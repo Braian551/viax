@@ -331,10 +331,12 @@ function updateEmpresa($db, $input) {
         return;
     }
     
-    // Verificar que la empresa existe
-    $checkEmpresa = $db->prepare("SELECT id FROM empresas_transporte WHERE id = ?");
+    // Verificar que la empresa existe y obtener datos actuales para notificaciones
+    $checkEmpresa = $db->prepare("SELECT id, estado, nombre, email, representante_nombre, representante_email, logo_url FROM empresas_transporte WHERE id = ?");
     $checkEmpresa->execute([$empresaId]);
-    if (!$checkEmpresa->fetch()) {
+    $currentEmpresa = $checkEmpresa->fetch(PDO::FETCH_ASSOC);
+
+    if (!$currentEmpresa) {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Empresa no encontrada']);
         return;
@@ -405,6 +407,23 @@ function updateEmpresa($db, $input) {
         return;
     }
     
+    // Enviar correo si el estado cambia (activo/inactivo)
+    if (isset($input['estado']) && $input['estado'] !== $currentEmpresa['estado']) {
+        $newState = $input['estado'];
+        if ($newState === 'activo' || $newState === 'inactivo') {
+            $toEmail = $currentEmpresa['representante_email'] ?: $currentEmpresa['email'];
+            $toName = $currentEmpresa['representante_nombre'];
+            $currentEmpresa['nombre_empresa'] = $currentEmpresa['nombre'];
+            
+            try {
+                require_once __DIR__ . '/../utils/Mailer.php';
+                Mailer::sendCompanyStatusChangeEmail($toEmail, $toName, $currentEmpresa, $newState);
+            } catch (Exception $e) {
+                error_log("Error enviando email de cambio de estado: " . $e->getMessage());
+            }
+        }
+    }
+
     $params[] = $empresaId;
     
     $query = "UPDATE empresas_transporte SET " . implode(', ', $updates) . " WHERE id = ?";
@@ -638,6 +657,26 @@ function toggleEmpresaStatus($db, $input) {
     $query = "UPDATE empresas_transporte SET estado = ? WHERE id = ?";
     $stmt = $db->prepare($query);
     $stmt->execute([$nuevoEstado, $empresaId]);
+    
+    // Enviar notificación por correo
+    if ($nuevoEstado === 'activo' || $nuevoEstado === 'inactivo') {
+        try {
+            $empresaQuery = $db->prepare("SELECT nombre, email, representante_nombre, representante_email, logo_url FROM empresas_transporte WHERE id = ?");
+            $empresaQuery->execute([$empresaId]);
+            $empresaData = $empresaQuery->fetch(PDO::FETCH_ASSOC);
+            
+            if ($empresaData) {
+                $empresaData['nombre_empresa'] = $empresaData['nombre'];
+                $toEmail = $empresaData['representante_email'] ?: $empresaData['email'];
+                $toName = $empresaData['representante_nombre'];
+                
+                require_once __DIR__ . '/../utils/Mailer.php';
+                Mailer::sendCompanyStatusChangeEmail($toEmail, $toName, $empresaData, $nuevoEstado);
+            }
+        } catch (Exception $e) {
+            error_log("Error enviando email toggle status: " . $e->getMessage());
+        }
+    }
     
     // Log de auditoría
     $adminId = $input['admin_id'] ?? null;

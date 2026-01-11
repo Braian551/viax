@@ -748,6 +748,134 @@ class Mailer {
     }
 
     /**
+     * Envía correo de Cambio de Estado (Activado/Desactivado).
+     */
+    public static function sendCompanyStatusChangeEmail($toEmail, $userName, $companyData, $newStatus) {
+        $isActivated = $newStatus === 'activo';
+        $subject = $isActivated 
+            ? "🎉 ¡Tu cuenta ha sido activada! - {$companyData['nombre_empresa']}"
+            : "⚠️ Cuenta desactivada temporalmente - {$companyData['nombre_empresa']}";
+            
+        $color = $isActivated ? '#2E7D32' : '#EF6C00'; // Green vs Orange
+        $bgColor = $isActivated ? '#E8F5E9' : '#FFF3E0';
+        $borderColor = $isActivated ? '#A5D6A7' : '#FFCC80';
+        $title = $isActivated ? '¡Cuenta Activada!' : 'Cuenta Desactivada';
+        $mainMsg = $isActivated 
+            ? "Nos complace informarte que tu cuenta ha sido reactivada exitosamente. Ya puedes acceder nuevamente a todos los servicios de la plataforma."
+            : "Tu cuenta ha sido desactivada temporalmente por un administrador. Mientras esté inactiva, no podrás gestionar tus servicios.";
+
+        // --- Reutilización de Componentes (Tabla de Detalles) ---
+        $detailsTable = "
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #FAFAFA; border-radius: 8px; overflow: hidden; border: 1px solid #EEEEEE;'>
+            <tr style='background-color: $bgColor;'>
+                <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: $color;'>
+                    Detalles de la Cuenta
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; border-bottom: 1px solid #EEE; font-weight: 600; width: 40%;'>Empresa:</td>
+                <td style='padding: 10px; border-bottom: 1px solid #EEE;'>{$companyData['nombre_empresa']}</td>
+            </tr>
+            <tr>
+                <td style='padding: 10px; font-weight: 600;'>Estado Actual:</td>
+                <td style='padding: 10px; color: $color; font-weight: bold;'>" . ($isActivated ? 'ACTIVO' : 'INACTIVO') . "</td>
+            </tr>
+        </table>";
+        
+        // Initialize attachments
+        $attachments = [];
+        $tempFiles = [];
+        
+        // 1. Prepare Logo (Reusable logic)
+        $logoSrc = '';
+        if (!empty($companyData['logo_url'])) {
+            $logoUrl = $companyData['logo_url'];
+            $imageContent = null;
+            $mime = 'image/png';
+            
+            if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                try {
+                    $ch = curl_init($logoUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    $imageContent = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    if ($httpCode == 200 && $imageContent) $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'image/png';
+                    curl_close($ch);
+                } catch (Exception $e) {}
+            } else {
+                require_once __DIR__ . '/../config/R2Service.php';
+                try {
+                    $r2 = new R2Service();
+                    $fileData = $r2->getFile($logoUrl);
+                    if ($fileData && !empty($fileData['content'])) {
+                        $imageContent = $fileData['content'];
+                        $mime = $fileData['type'] ?? 'image/png';
+                    }
+                } catch (Exception $e) {}
+            }
+            
+            if ($imageContent) {
+                $ext = 'png';
+                if (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) $ext = 'jpg';
+                $fileName = "company_logo.$ext";
+                $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                file_put_contents($tempFile, $imageContent);
+                $tempFiles[] = $tempFile;
+                
+                $attachments[] = [
+                    'path' => $tempFile,
+                    'name' => $fileName,
+                    'cid' => 'company_logo',
+                    'type' => $mime
+                ];
+                $logoSrc = 'cid:company_logo';
+            }
+        }
+
+        $companyLogoHtml = '';
+        if (!empty($logoSrc)) {
+            $companyLogoHtml = "
+            <div style='text-align: center; margin: 20px 0;'>
+                <img src='$logoSrc' alt='Logo de {$companyData['nombre_empresa']}' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+            </div>";
+        }
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            $companyLogoHtml
+            <div style='background-color: $bgColor; border: 1px solid $borderColor; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: $color; margin: 0 0 8px 0;'>$title</h2>
+                <p style='color: $color; margin: 0;'>$mainMsg</p>
+            </div>
+            
+            $detailsTable
+            
+            <p class='message'>
+                Si tienes alguna duda sobre este cambio, por favor contáctanos.
+            </p>
+        ";
+        
+        $altBody = "Hola, $userName.\n\n" .
+                   "$mainMsg\n\n" .
+                   "Empresa: {$companyData['nombre_empresa']}\n" .
+                   "Nuevo Estado: " . ($isActivated ? 'ACTIVO' : 'INACTIVO') . "\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        $result = self::send($toEmail, $userName, $subject, $htmlBody, $altBody, $attachments);
+        
+        foreach ($tempFiles as $tf) {
+            if (file_exists($tf)) @unlink($tf);
+        }
+        
+        return $result;
+    }
+
+    /**
      * Método base para enviar el correo usando PHPMailer.
      * @param array $attachments Array of ['path' => string, 'name' => string, 'cid' => string|null]
      */
