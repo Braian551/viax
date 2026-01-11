@@ -124,7 +124,8 @@ try {
             $empresaStmt->execute([$existingUser['empresa_id']]);
             $empresa = $empresaStmt->fetch(PDO::FETCH_ASSOC);
             
-            if (!$empresa || $empresa['estado'] !== 'aprobado') {
+            // Estado 'activo' significa que la empresa fue aprobada
+            if (!$empresa || $empresa['estado'] !== 'activo') {
                 $estadoActual = $empresa['estado'] ?? 'desconocido';
                 sendJsonResponse(false, 'Tu empresa aún no ha sido aprobada', [
                     'empresa_pendiente' => true,
