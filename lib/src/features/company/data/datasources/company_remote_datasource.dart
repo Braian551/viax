@@ -46,11 +46,16 @@ abstract class CompanyRemoteDataSource {
     String? razon,
   });
 
-  /// Obtener reportes avanzados de la empresa
   Future<Map<String, dynamic>> getReports({
     required dynamic empresaId,
     String periodo = '7d',
   });
+  
+  Future<Map<String, dynamic>> getCompanySettings(dynamic empresaId);
+  Future<Map<String, dynamic>> updateCompanySettings(
+    dynamic empresaId,
+    Map<String, dynamic> settings,
+  );
 }
 
 class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
@@ -365,6 +370,62 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
           return Map<String, dynamic>.from(data['data']);
         }
         throw ServerException(data['message'] ?? 'Error al obtener reportes');
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getCompanySettings(dynamic empresaId) async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/empresa/settings.php?action=get_settings&empresa_id=$empresaId',
+      );
+      final response = await client.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al obtener configuración');
+      }
+      throw ServerException('Error del servidor: ${response.statusCode}');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Error de conexión: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateCompanySettings(
+    dynamic empresaId,
+    Map<String, dynamic> settings,
+  ) async {
+    try {
+      final url = Uri.parse('${AppConfig.baseUrl}/empresa/settings.php');
+      final bodyData = Map<String, dynamic>.from(settings);
+      bodyData['empresa_id'] = empresaId;
+      bodyData['action'] = 'update_settings';
+
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(bodyData),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+        throw ServerException(data['message'] ?? 'Error al actualizar configuración');
       }
       throw ServerException('Error del servidor: ${response.statusCode}');
     } catch (e) {

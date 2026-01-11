@@ -249,4 +249,56 @@ class CompanyProvider extends ChangeNotifier {
       loadReports(periodo: periodo);
     }
   }
+
+  // Settings State
+  bool _isLoadingSettings = false;
+  Map<String, dynamic> _settings = {};
+
+  bool get isLoadingSettings => _isLoadingSettings;
+  Map<String, dynamic> get settings => _settings;
+
+  Future<void> loadSettings() async {
+    if (empresaId == null) return;
+
+    _isLoadingSettings = true;
+    notifyListeners();
+
+    try {
+      final data = await _dataSource.getCompanySettings(empresaId);
+      _settings = data;
+    } catch (e) {
+      print('CompanyProvider: Error loading settings: $e');
+      // Set defaults on error
+      _settings = {
+        'notificaciones_email': true,
+        'notificaciones_push': true,
+      };
+    }
+
+    _isLoadingSettings = false;
+    notifyListeners();
+  }
+
+  Future<bool> updateSettings(Map<String, dynamic> newSettings) async {
+    if (empresaId == null) return false;
+
+    // Optimistic update
+    final oldSettings = Map<String, dynamic>.from(_settings);
+    _settings = {..._settings, ...newSettings};
+    notifyListeners();
+
+    try {
+      final updatedData = await _dataSource.updateCompanySettings(empresaId, newSettings);
+      _settings = updatedData;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('CompanyProvider: Error updating settings: $e');
+      // Revert on error
+      _settings = oldSettings;
+      _errorMessage = 'Error al guardar la configuración';
+      notifyListeners();
+      return false;
+    }
+  }
 }

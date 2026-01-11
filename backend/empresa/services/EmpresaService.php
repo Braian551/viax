@@ -419,6 +419,25 @@ class EmpresaService {
             return $this->getCompanyProfile($empresaId);
         }
         
+        
         throw new Exception("No se pudo actualizar el perfil");
+    }
+
+    /**
+     * Get company notification settings
+     */
+    public function getCompanySettings($empresaId) {
+        return $this->repository->getCompanySettings($empresaId);
+    }
+
+    /**
+     * Update company notification settings
+     */
+    public function updateCompanySettings($empresaId, $data) {
+        $success = $this->repository->updateCompanySettings($empresaId, $data);
+        if ($success) {
+            return $this->getCompanySettings($empresaId);
+        }
+        throw new Exception("No se pudo actualizar la configuración");
     }
 }

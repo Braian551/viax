@@ -28,9 +28,51 @@ class EmpresaController {
                 return $this->getProfile($input);
             case 'update_profile':
                 return $this->updateProfile($input);
+            case 'get_settings':
+                return $this->getSettings($input);
+            case 'update_settings':
+                return $this->updateSettings($input);
             default:
                 http_response_code(400);
                 return $this->jsonResponse(false, 'Acción no válida');
+        }
+    }
+    
+    /**
+     * Get company settings
+     */
+    private function getSettings($input) {
+        try {
+            if (!isset($input['empresa_id'])) {
+                throw new Exception("ID de empresa requerido");
+            }
+
+            $currentUserId = $input['current_user_id'] ?? null;
+            
+            $data = $this->service->getCompanySettings($input['empresa_id']);
+            
+            return $this->jsonResponse(true, 'Configuración obtenida', $data);
+        } catch (Exception $e) {
+            http_response_code(400);
+            return $this->jsonResponse(false, $e->getMessage());
+        }
+    }
+
+    /**
+     * Update company settings
+     */
+    private function updateSettings($input) {
+        try {
+            if (!isset($input['empresa_id'])) {
+                throw new Exception("ID de empresa requerido");
+            }
+            
+            $data = $this->service->updateCompanySettings($input['empresa_id'], $input);
+            
+            return $this->jsonResponse(true, 'Configuración actualizada', $data);
+        } catch (Exception $e) {
+            http_response_code(400);
+            return $this->jsonResponse(false, $e->getMessage());
         }
     }
     

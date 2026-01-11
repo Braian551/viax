@@ -249,4 +249,70 @@ class EmpresaRepository {
         $stmt = $this->db->prepare($query);
         return $stmt->execute($params);
     }
+
+    /**
+     * Get company configuration settings
+     */
+    public function getCompanySettings($empresaId) {
+        $query = "SELECT notificaciones_email, notificaciones_push 
+                  FROM empresas_configuracion 
+                  WHERE empresa_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$empresaId]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // If no settings exist yet, return defaults
+        if (!$result) {
+            return [
+                'notificaciones_email' => true,
+                'notificaciones_push' => true
+            ];
+        }
+        
+        return [
+            'notificaciones_email' => $result['notificaciones_email'] === true || $result['notificaciones_email'] === 't',
+            'notificaciones_push' => $result['notificaciones_push'] === true || $result['notificaciones_push'] === 't'
+        ];
+    }
+
+    /**
+     * Update company configuration settings
+     */
+    public function updateCompanySettings($empresaId, $data) {
+        // First ensure record exists
+        $check = $this->db->prepare("SELECT id FROM empresas_configuracion WHERE empresa_id = ?");
+        $check->execute([$empresaId]);
+        
+        if (!$check->fetch()) {
+            $init = $this->db->prepare("INSERT INTO empresas_configuracion (empresa_id) VALUES (?)");
+            $init->execute([$empresaId]);
+        }
+        
+        $fields = [];
+        $params = [];
+        
+        if (isset($data['notificaciones_email'])) {
+            $fields[] = "notificaciones_email = ?";
+            // Handle boolean or string 'true'/'false'
+            $val = $data['notificaciones_email'];
+            $params[] = ($val === true || $val === 'true' || $val === 1 || $val === '1') ? 't' : 'f';
+        }
+        
+        if (isset($data['notificaciones_push'])) {
+            $fields[] = "notificaciones_push = ?";
+            $val = $data['notificaciones_push'];
+            $params[] = ($val === true || $val === 'true' || $val === 1 || $val === '1') ? 't' : 'f';
+        }
+        
+        if (empty($fields)) {
+            return true; // Nothing to update
+        }
+        
+        $params[] = $empresaId;
+        $query = "UPDATE empresas_configuracion SET " . implode(', ', $fields) . ", actualizado_en = NOW() WHERE empresa_id = ?";
+        
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute($params);
+    }
 }
