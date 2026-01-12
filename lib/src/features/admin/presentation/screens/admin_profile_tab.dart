@@ -393,14 +393,14 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
           },
         ),
         const SizedBox(height: 12),
-        _buildSettingItem(
+/*         _buildSettingItem(
           icon: Icons.help_outline_rounded,
           title: 'Ayuda y soporte',
           onTap: () {
             _showComingSoon();
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 12), */
         _buildSettingItem(
           icon: Icons.info_outline_rounded,
           title: 'Acerca de',

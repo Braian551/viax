@@ -500,13 +500,13 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             showDivider: true,
             trailingText: 'Español',
           ),
-          _buildListItem(
-            title: 'Ayuda y Soporte',
-            icon: Icons.help_outline_rounded,
-            isDark: isDark,
-            onTap: () => _showComingSoon('Ayuda'),
-            showDivider: false,
-          ),
+/*           _buildListItem(
+             title: 'Ayuda y Soporte',
+             icon: Icons.help_outline_rounded,
+             isDark: isDark,
+             onTap: () => _showComingSoon('Ayuda'),
+             showDivider: false,
+           ), */
         ],
       ),
     );

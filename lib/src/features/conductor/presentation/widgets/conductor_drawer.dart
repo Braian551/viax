@@ -147,20 +147,20 @@ class ConductorDrawer extends StatelessWidget {
                           isDark: isDark,
                         ),
                         
-                        _buildMenuItem(
-                          context: context,
-                          icon: Icons.help_outline_rounded,
-                          title: 'Ayuda y Soporte',
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.pushNamed(
-                              context,
-                              RouteNames.conductorHelp,
-                              arguments: conductorUser,
-                            );
-                          },
-                          isDark: isDark,
-                        ),
+/*                         _buildMenuItem(
+                           context: context,
+                           icon: Icons.help_outline_rounded,
+                           title: 'Ayuda y Soporte',
+                           onTap: () {
+                             Navigator.pop(context);
+                             Navigator.pushNamed(
+                               context,
+                               RouteNames.conductorHelp,
+                               arguments: conductorUser,
+                             );
+                           },
+                           isDark: isDark,
+                         ), */
                         
                         _buildDivider(isDark),
                         
