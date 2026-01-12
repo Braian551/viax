@@ -1,35 +1,94 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../theme/app_colors.dart';
-import '../../../../widgets/help/help_widgets.dart';
-import '../widgets/conductor_drawer.dart';
+import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/help/help_widgets.dart';
+import 'package:viax/src/features/support/presentation/screens/support_tickets_screen.dart';
+import 'package:viax/src/features/support/services/support_service.dart';
 
-/// Pantalla de Ayuda y Soporte para conductores
-class ConductorHelpScreen extends StatefulWidget {
-  final int conductorId;
-  final Map<String, dynamic>? conductorUser;
+/// Tipos de usuario soportados
+enum HelpUserType { user, conductor, company }
 
-  const ConductorHelpScreen({
+/// Pantalla de Ayuda y Soporte compartida
+/// 
+/// Puede ser utilizada por usuarios, conductores y empresas.
+/// Las FAQs se adaptan según el tipo de usuario.
+class HelpScreen extends StatefulWidget {
+  final HelpUserType userType;
+  final String? userName;
+  final int? userId;
+
+  const HelpScreen({
     super.key,
-    required this.conductorId,
-    this.conductorUser,
+    this.userType = HelpUserType.user,
+    this.userName,
+    this.userId,
   });
 
   @override
-  State<ConductorHelpScreen> createState() => _ConductorHelpScreenState();
+  State<HelpScreen> createState() => _HelpScreenState();
 }
 
-class _ConductorHelpScreenState extends State<ConductorHelpScreen>
+class _HelpScreenState extends State<HelpScreen>
     with TickerProviderStateMixin {
   late AnimationController _headerController;
   late Animation<double> _headerFadeAnimation;
   late Animation<Offset> _headerSlideAnimation;
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedCategory = 'Todos';
 
-  final List<Map<String, String>> _faqs = [
+  // FAQs generales (aplicables a todos)
+  final List<Map<String, String>> _generalFaqs = [
+    {
+      'category': 'Cuenta',
+      'question': '¿Cómo cambio mi foto de perfil?',
+      'answer':
+          'Ve a tu Perfil > Editar Perfil. Toca en tu foto actual para seleccionar una nueva imagen desde tu galería o cámara.',
+    },
+    {
+      'category': 'Cuenta',
+      'question': '¿Cómo actualizo mis datos personales?',
+      'answer':
+          'Ve a tu Perfil > Editar Perfil. Desde ahí puedes modificar tu nombre, apellido y foto de perfil.',
+    },
+    {
+      'category': 'Seguridad',
+      'question': '¿Cómo cierro sesión?',
+      'answer':
+          'Ve a tu Perfil y toca el botón "Cerrar Sesión" al final de la pantalla.',
+    },
+  ];
+
+  // FAQs específicas para usuarios/clientes
+  final List<Map<String, String>> _userFaqs = [
+    {
+      'category': 'Viajes',
+      'question': '¿Cómo solicito un viaje?',
+      'answer':
+          'Desde la pantalla principal, ingresa tu destino en la barra de búsqueda. Selecciona el tipo de vehículo y confirma tu solicitud.',
+    },
+    {
+      'category': 'Viajes',
+      'question': '¿Cómo cancelo un viaje?',
+      'answer':
+          'Si el conductor aún no ha llegado, puedes cancelar desde la pantalla de espera tocando "Cancelar viaje". Ten en cuenta que cancelaciones frecuentes pueden afectar tu calificación.',
+    },
+    {
+      'category': 'Pagos',
+      'question': '¿Qué métodos de pago aceptan?',
+      'answer':
+          'Actualmente aceptamos pago en efectivo. Pronto agregaremos más métodos de pago.',
+    },
+    {
+      'category': 'Seguridad',
+      'question': '¿Cómo reporto un problema con mi viaje?',
+      'answer':
+          'Ve a tu historial de viajes, selecciona el viaje en cuestión y usa la opción "Reportar problema" para describir la situación.',
+    },
+  ];
+
+  // FAQs específicas para conductores
+  final List<Map<String, String>> _conductorFaqs = [
     {
       'category': 'Viajes',
       'question': '¿Cómo acepto un viaje?',
@@ -37,69 +96,64 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
           'Cuando recibas una solicitud de viaje, verás una notificación con los detalles. Toca "Aceptar" para confirmar el viaje. Asegúrate de estar en línea y con ubicación activa.',
     },
     {
-      'category': 'Viajes',
-      'question': '¿Cómo cancelo un viaje?',
-      'answer':
-          'Puedes cancelar un viaje desde la pantalla de viaje activo tocando el botón de cancelar. Ten en cuenta que cancelaciones frecuentes pueden afectar tu calificación.',
-    },
-    {
       'category': 'Pagos',
       'question': '¿Cuándo recibo mis pagos?',
       'answer':
-          'Los pagos se procesan semanalmente. Recibirás tu pago cada lunes por los viajes realizados la semana anterior. Puedes ver el estado de tus pagos en la sección de Ganancias.',
+          'Los pagos se procesan semanalmente. Recibirás tu pago cada lunes por los viajes realizados la semana anterior.',
     },
     {
-      'category': 'Pagos',
-      'question': '¿Cómo cambio mi método de pago?',
-      'answer':
-          'Ve a Configuración > Pagos > Método de cobro. Desde ahí puedes actualizar tu cuenta bancaria o agregar una nueva.',
-    },
-    {
-      'category': 'Cuenta',
+      'category': 'Documentos',
       'question': '¿Cómo actualizo mis documentos?',
       'answer':
           'Ve a Documentos desde el menú principal. Ahí podrás ver el estado de cada documento y subir nuevas versiones cuando sea necesario.',
     },
     {
-      'category': 'Cuenta',
-      'question': '¿Cómo cambio mi foto de perfil?',
-      'answer':
-          'Ve a Configuración > Mi cuenta > Editar perfil. Toca en tu foto actual para seleccionar una nueva imagen desde tu galería o cámara.',
-    },
-    {
       'category': 'Vehículo',
       'question': '¿Cómo registro un nuevo vehículo?',
       'answer':
-          'Ve a Mi Vehículo desde el menú. Si no tienes un vehículo registrado, verás la opción de registrar uno nuevo. Sigue los pasos y sube la documentación requerida.',
-    },
-    {
-      'category': 'Vehículo',
-      'question': '¿Puedo usar varios vehículos?',
-      'answer':
-          'Actualmente solo puedes tener un vehículo activo. Si necesitas cambiar de vehículo, contacta a soporte para actualizar tu registro.',
-    },
-    {
-      'category': 'Seguridad',
-      'question': '¿Qué hago en caso de accidente?',
-      'answer':
-          'Primero asegúrate de que todos estén bien. Luego contacta a emergencias si es necesario. Usa el botón de emergencia en la app para notificar a soporte inmediatamente.',
-    },
-    {
-      'category': 'Seguridad',
-      'question': '¿Cómo reporto un problema con un pasajero?',
-      'answer':
-          'Después de finalizar el viaje, ve a tu historial y selecciona el viaje. Usa la opción "Reportar problema" para describir la situación.',
+          'Ve a Mi Vehículo desde el menú. Si no tienes un vehículo registrado, verás la opción de registrar uno nuevo.',
     },
   ];
 
-  final List<String> _categories = [
-    'Todos',
-    'Viajes',
-    'Pagos',
-    'Cuenta',
-    'Vehículo',
-    'Seguridad'
+  // FAQs específicas para empresas
+  final List<Map<String, String>> _companyFaqs = [
+    {
+      'category': 'Conductores',
+      'question': '¿Cómo agrego conductores a mi empresa?',
+      'answer':
+          'Los conductores pueden registrarse y seleccionar tu empresa durante su proceso de registro. Luego aparecerán en tu lista de conductores.',
+    },
+    {
+      'category': 'Facturación',
+      'question': '¿Cómo veo los reportes de mi empresa?',
+      'answer':
+          'Desde el menú principal, ve a Reportes para ver estadísticas de viajes, ganancias y rendimiento de tus conductores.',
+    },
   ];
+
+  List<Map<String, String>> get _faqs {
+    List<Map<String, String>> faqs = [..._generalFaqs];
+    switch (widget.userType) {
+      case HelpUserType.user:
+        faqs.addAll(_userFaqs);
+        break;
+      case HelpUserType.conductor:
+        faqs.addAll(_conductorFaqs);
+        break;
+      case HelpUserType.company:
+        faqs.addAll(_companyFaqs);
+        break;
+    }
+    return faqs;
+  }
+
+  List<String> get _categories {
+    final cats = <String>{'Todos'};
+    for (var faq in _faqs) {
+      cats.add(faq['category']!);
+    }
+    return cats.toList();
+  }
 
   @override
   void initState() {
@@ -150,10 +204,15 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
   }
 
   Future<void> _launchEmail(String email) async {
+    final subject = switch (widget.userType) {
+      HelpUserType.user => 'Soporte VIAX Usuario',
+      HelpUserType.conductor => 'Soporte VIAX Conductor',
+      HelpUserType.company => 'Soporte VIAX Empresa',
+    };
     final uri = Uri(
       scheme: 'mailto',
       path: email,
-      queryParameters: {'subject': 'Soporte VIAX Conductor'},
+      queryParameters: {'subject': subject},
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -161,13 +220,172 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
   }
 
   void _openChat() {
-    // Aquí iría la lógica para abrir el chat de soporte
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Abriendo chat de soporte...'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    if (widget.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Inicia sesión para usar el chat'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SupportTicketsScreen(userId: widget.userId!),
+      ),
+    );
+  }
+
+  void _handleCallback() {
+    if (widget.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Inicia sesión para solicitar callback'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+    _showCallbackDialog();
+  }
+
+  void _showCallbackDialog() {
+    final phoneController = TextEditingController();
+    final reasonController = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Solicitar llamada',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Te contactaremos en las próximas horas',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Número de teléfono',
+                  prefixIcon: const Icon(Icons.phone_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Motivo (opcional)',
+                  prefixIcon: const Icon(Icons.notes_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final phone = phoneController.text.trim();
+                    if (phone.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Ingresa tu número de teléfono'),
+                          backgroundColor: AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final success = await SupportService.requestCallback(
+                      userId: widget.userId!,
+                      phone: phone,
+                      reason: reasonController.text.trim().isEmpty
+                          ? null
+                          : reasonController.text.trim(),
+                    );
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success
+                              ? 'Solicitud enviada. Te contactaremos pronto.'
+                              : 'Error al enviar solicitud'),
+                          backgroundColor: success ? AppColors.success : AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Solicitar llamada',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -214,10 +432,6 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      key: _scaffoldKey,
-      drawer: widget.conductorUser != null
-          ? ConductorDrawer(conductorUser: widget.conductorUser!)
-          : null,
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: CustomScrollView(
         slivers: [
@@ -231,7 +445,7 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
                 ? AppColors.darkBackground.withValues(alpha: 0.8)
                 : Colors.white.withValues(alpha: 0.8),
             leading: IconButton(
-              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              onPressed: () => Navigator.pop(context),
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -241,8 +455,9 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  Icons.menu_rounded,
+                  Icons.arrow_back_ios_new_rounded,
                   color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                  size: 18,
                 ),
               ),
             ),
@@ -345,7 +560,7 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
                           title: 'Teléfono',
                           subtitle: 'Lun-Sab 8am-8pm',
                           iconColor: AppColors.success,
-                          onTap: () => _launchPhone('+1234567890'),
+                          onTap: () => _launchPhone('+573001234567'),
                           animationIndex: 0,
                         ),
                       ),
@@ -382,18 +597,7 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
                           title: 'Callback',
                           subtitle: 'Te llamamos',
                           iconColor: Colors.orange,
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text('Solicitud de callback enviada'),
-                                backgroundColor: Colors.orange,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                          },
+                          onTap: _handleCallback,
                           animationIndex: 3,
                         ),
                       ),
@@ -419,7 +623,7 @@ class _ConductorHelpScreenState extends State<ConductorHelpScreen>
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length,
-                      separatorBuilder: (context2, index2) => const SizedBox(width: 8),
+                      separatorBuilder: (context, index) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final category = _categories[index];
                         final isSelected = category == _selectedCategory;

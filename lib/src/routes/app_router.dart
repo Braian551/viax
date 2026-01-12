@@ -44,6 +44,8 @@ import 'package:viax/src/features/company/presentation/providers/company_provide
 import 'package:viax/src/features/auth/presentation/screens/phone_required_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/empresa_register_screen.dart';
 import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:viax/src/widgets/help/help_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -191,9 +193,40 @@ class AppRouter {
       case RouteNames.editProfile:
         return FadeSlidePageRoute(page: const EditProfileScreen(), settings: settings);
       
+      case RouteNames.notifications:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => NotificationsScreen(
+              userId: args?['userId'] ?? 0,
+            ),
+          );
+        }
+      
+      case RouteNames.help:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final userTypeStr = args?['userType'] as String? ?? 'user';
+          final userId = args?['userId'] as int?;
+          HelpUserType userType;
+          switch (userTypeStr) {
+            case 'conductor':
+              userType = HelpUserType.conductor;
+              break;
+            case 'company':
+              userType = HelpUserType.company;
+              break;
+            default:
+              userType = HelpUserType.user;
+          }
+          return FadeSlidePageRoute(
+            page: HelpScreen(userType: userType, userId: userId),
+            settings: settings,
+          );
+        }
+      
       case RouteNames.favoritePlaces:
       case RouteNames.promotions:
-      case RouteNames.help:
       case RouteNames.about:
       case RouteNames.terms:
       case RouteNames.privacy:

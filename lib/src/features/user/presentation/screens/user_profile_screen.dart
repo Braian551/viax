@@ -22,6 +22,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   String? _lastName;
   String? _photoKey;
   String? _phone;
+  double _rating = 5.0; // Default rating
   bool _isLoading = true;
   bool _isLoggingOut = false;
   
@@ -82,6 +83,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 _lastName = userData['apellido'];
                 _photoKey = userData['foto_perfil'];
                 _phone = userData['telefono'];
+                // Parse rating safely
+                final rawRating = userData['calificacion_promedio'];
+                if (rawRating != null) {
+                  _rating = double.tryParse(rawRating.toString()) ?? 5.0;
+                }
                 _userName = '$_firstName $_lastName'.trim();
                 _userEmail = userData['email'] ?? sess['email'];
               }
@@ -257,19 +263,34 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               subtitle: 'Solo efectivo',
                               isDark: isDark,
                             ),
-                            _buildOptionTile(
+                              _buildOptionTile(
                               icon: Icons.notifications_none_rounded,
                               title: 'Notificaciones',
                               subtitle: 'Promociones, estado del viaje',
                               isDark: isDark,
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  RouteNames.notifications,
+                                  arguments: {'userId': _userId},
+                                );
+                              },
                             ),
                              _buildOptionTile(
                               icon: Icons.help_outline_rounded,
                               title: 'Ayuda y Soporte',
                               subtitle: 'Centro de ayuda, contactar',
                               isDark: isDark,
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  RouteNames.help,
+                                  arguments: {
+                                    'userType': 'user',
+                                    'userId': _userId,
+                                  },
+                                );
+                              },
                             ),
                             
                             const SizedBox(height: 24),
@@ -346,11 +367,40 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 width: 2,
               ),
             ),
-            child: Icon(
-              Icons.person_rounded,
-              size: 40,
-              color: AppColors.primary,
-            ),
+            child: _photoKey != null && _photoKey!.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      UserService.getR2ImageUrl(_photoKey!),
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.person_rounded,
+                          size: 40,
+                          color: AppColors.primary,
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Icon(
+                    Icons.person_rounded,
+                    size: 40,
+                    color: AppColors.primary,
+                  ),
           ),
           const SizedBox(width: 16),
           // Info
@@ -587,7 +637,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               Row(
                 children: [
                   Text(
-                    '4.95',
+                    _rating.toStringAsFixed(2),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
