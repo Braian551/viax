@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart' hide Path;
+import 'package:latlong2/latlong.dart';
 
 import '../../../../global/models/simple_location.dart';
 import '../../../../global/services/location_suggestion_service.dart';
-import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';
 import '../widgets/destination/enhanced/confirm_button.dart';
@@ -41,7 +41,7 @@ class EnhancedDestinationScreen extends StatefulWidget {
 class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     with TickerProviderStateMixin {
   // Controllers
-  final MapController _mapController = MapController();
+  // Controllers
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _originFocusNode = FocusNode();
@@ -55,8 +55,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   // State
   LatLng? _userLocation;
   bool _isGettingLocation = false;
-  bool _showMap = false;
-  List<LatLng> _routePoints = [];
   bool _hasOriginSelected = false;
   bool _hasDestinationSelected = false;
 
@@ -67,8 +65,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   late AnimationController _mainAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  late AnimationController _mapRevealController;
-  late Animation<double> _mapRevealAnimation;
 
   @override
   void initState() {
@@ -96,15 +92,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           ),
         );
 
-    _mapRevealController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    _mapRevealAnimation = CurvedAnimation(
-      parent: _mapRevealController,
-      curve: Curves.easeOutCubic,
-    );
 
     _mainAnimationController.forward();
   }
@@ -120,17 +107,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
       // Obtener dirección en paralelo
       _reverseGeocodeOrigin();
-
-      setState(() => _showMap = true);
-      _mapRevealController.forward();
       return;
     }
 
     // Si no hay posición precargada, obtenerla
     await _getCurrentLocation();
     if (_userLocation != null) {
-      setState(() => _showMap = true);
-      _mapRevealController.forward();
+      // Ubicación lista
     }
   }
 
@@ -241,7 +224,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _hasOriginSelected = true;
     });
     _originFocusNode.unfocus();
-    _updateRoute();
     _checkAutoNavigate();
   }
 
@@ -252,7 +234,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _hasDestinationSelected = true;
     });
     _destinationFocusNode.unfocus();
-    _updateRoute();
     _checkAutoNavigate();
   }
 
@@ -356,14 +337,12 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
     if (result != null && mounted) {
       setState(() => _stops[index] = result);
-      _updateRoute();
     }
   }
 
   void _removeStop(int index) {
     HapticFeedback.lightImpact();
     setState(() => _stops.removeAt(index));
-    _updateRoute();
   }
 
   /// Reordena todos los waypoints (origen, paradas, destino)
@@ -399,75 +378,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _destinationController.text = _selectedDestination?.address ?? '';
     });
 
-    _updateRoute();
   }
 
-  Future<void> _updateRoute() async {
-    // Construir lista de waypoints disponibles
-    final waypoints = <LatLng>[];
-
-    if (_selectedOrigin != null) {
-      waypoints.add(_selectedOrigin!.toLatLng());
-    }
-
-    for (final stop in _stops) {
-      if (stop != null) {
-        waypoints.add(stop.toLatLng());
-      }
-    }
-
-    if (_selectedDestination != null) {
-      waypoints.add(_selectedDestination!.toLatLng());
-    }
-
-    // Necesitamos al menos 2 puntos para una ruta
-    if (waypoints.length < 2) {
-      // Si hay al menos un punto, centrar el mapa en él
-      if (waypoints.isNotEmpty) {
-        _mapController.move(waypoints.first, 15);
-      }
-      setState(() => _routePoints = []);
-      return;
-    }
-
-    try {
-      final routeData = await MapboxService.getRoute(
-        waypoints: waypoints,
-        profile: 'driving',
-      );
-
-      if (routeData != null && mounted) {
-        setState(() => _routePoints = routeData.geometry);
-        _fitMapToRoute();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _routePoints = waypoints);
-        _fitMapToRoute();
-      }
-    }
-  }
-
-  void _fitMapToRoute() {
-    if (_routePoints.isEmpty) return;
-
-    double minLat = double.infinity;
-    double maxLat = double.negativeInfinity;
-    double minLng = double.infinity;
-    double maxLng = double.negativeInfinity;
-
-    for (var point in _routePoints) {
-      minLat = point.latitude < minLat ? point.latitude : minLat;
-      maxLat = point.latitude > maxLat ? point.latitude : maxLat;
-      minLng = point.longitude < minLng ? point.longitude : minLng;
-      maxLng = point.longitude > maxLng ? point.longitude : maxLng;
-    }
-
-    final bounds = LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng));
-    _mapController.fitCamera(
-      CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(80)),
-    );
-  }
 
   void _goToTripPreview() {
     if (_selectedOrigin == null || _selectedDestination == null) return;
@@ -514,7 +426,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   @override
   void dispose() {
     _mainAnimationController.dispose();
-    _mapRevealController.dispose();
     _originController.dispose();
     _destinationController.dispose();
     _originFocusNode.dispose();
@@ -606,21 +517,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         child: Stack(
           children: [
             // Mapa de fondo (interactivo)
-            if (_showMap)
-              Positioned.fill(
-                child: FadeTransition(
-                  opacity: _mapRevealAnimation,
-                  child: RouteMap(
-                    mapController: _mapController,
-                    userLocation: _userLocation,
-                    origin: _selectedOrigin,
-                    destination: _selectedDestination,
-                    stops: _stops,
-                    routePoints: _routePoints,
-                    isDark: isDark,
-                  ),
-                ),
-              ),
 
             // Gradiente superior (no bloquea gestos)
             Positioned(
