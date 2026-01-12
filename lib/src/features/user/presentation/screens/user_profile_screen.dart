@@ -21,6 +21,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   String? _firstName;
   String? _lastName;
   String? _photoKey;
+  String? _phone;
   bool _isLoading = true;
   bool _isLoggingOut = false;
   
@@ -77,12 +78,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
            if (userProfile != null && userProfile['success'] == true) {
              final userData = userProfile['user'] ?? userProfile['data']; // Adapt to backend response structure
              if (userData != null) {
-               _firstName = userData['nombre'];
-               _lastName = userData['apellido'];
-               _photoKey = userData['foto_perfil'];
-               _userName = '$_firstName $_lastName'.trim();
-               _userEmail = userData['email'] ?? sess['email'];
-             }
+                _firstName = userData['nombre'];
+                _lastName = userData['apellido'];
+                _photoKey = userData['foto_perfil'];
+                _phone = userData['telefono'];
+                _userName = '$_firstName $_lastName'.trim();
+                _userEmail = userData['email'] ?? sess['email'];
+              }
            } else {
              // Fallback to session data
              _userName = sess['nombre'] ?? 'Usuario';
@@ -232,6 +234,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                                     'apellido': _lastName,
                                     'email': _userEmail,
                                     'foto_perfil': _photoKey,
+                                    'telefono': _phone,
                                   },
                                 );
                                 

@@ -33,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   
   int? _userId;
   String? _email;
+  String? _phone;
   String? _currentFotoUrl;
   File? _selectedPhotoFile;
   bool _isLoading = false;
@@ -54,6 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() {
         _userId = args['userId'] as int?;
         _email = args['email'] as String?;
+        _phone = args['telefono'] as String?;
         _nombreController.text = args['nombre'] as String? ?? '';
         _apellidoController.text = args['apellido'] as String? ?? '';
         
@@ -257,6 +259,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     
                     const SizedBox(height: 20),
+
+                    // Teléfono (solo lectura)
+                    if (_phone != null && _phone!.isNotEmpty) ...[
+                      AuthTextField(
+                        controller: TextEditingController(text: _phone),
+                        label: 'Teléfono',
+                        icon: Icons.phone_outlined,
+                        enabled: true, // Enabled true for correct styling
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     
                     // Email (solo lectura)
                     if (_email != null && _email!.isNotEmpty)
@@ -264,7 +278,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         controller: TextEditingController(text: _email),
                         label: 'Correo electrónico',
                         icon: Icons.email_outlined,
-                        enabled: false,
+                        enabled: true, // Enabled true for correct styling
                         readOnly: true,
                       ),
                     
