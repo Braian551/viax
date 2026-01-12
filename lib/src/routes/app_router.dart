@@ -43,6 +43,7 @@ import 'package:viax/src/features/company/presentation/screens/company_home_scre
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_required_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/empresa_register_screen.dart';
+import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -187,13 +188,15 @@ class AppRouter {
         }
       case RouteNames.settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case RouteNames.editProfile:
+        return FadeSlidePageRoute(page: const EditProfileScreen(), settings: settings);
+      
       case RouteNames.favoritePlaces:
       case RouteNames.promotions:
       case RouteNames.help:
       case RouteNames.about:
       case RouteNames.terms:
       case RouteNames.privacy:
-      case RouteNames.editProfile:
       case RouteNames.trackingTrip:
         return MaterialPageRoute(
           builder: (context) => Scaffold(

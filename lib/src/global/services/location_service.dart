@@ -5,58 +5,78 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class LocationService {
-  /// Solicita permisos de ubicaciÃ³n
+  /// Solicita permisos de ubicación y verifica el servicio
   static Future<bool> requestLocationPermission() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print('Permisos de ubicaciÃ³n denegados por el usuario');
+          print('Permisos de ubicación denegados por el usuario');
           return false;
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
-        print('Permisos de ubicaciÃ³n denegados permanentemente');
+        print('Permisos de ubicación denegados permanentemente');
         return false;
       }
-      
+
       return true;
     } catch (e) {
-      print('Error solicitando permisos de ubicaciÃ³n: $e');
+      print('Error solicitando permisos de ubicación: $e');
       return false;
     }
   }
 
-  /// Obtiene la ubicaciÃ³n actual del usuario
+  /// Obtiene la ubicación actual del usuario
   static Future<Position?> getCurrentPosition() async {
-    try {
-      bool hasPermission = await requestLocationPermission();
-      if (!hasPermission) return null;
+    bool hasPermission = await requestLocationPermission();
+    if (!hasPermission) return null;
 
-      // Verificar si el servicio de ubicaciÃ³n estÃ¡ habilitado
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        print('Servicio de ubicaciÃ³n deshabilitado');
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Intenta solicitar que se active el servicio
+      bool requested = await Geolocator.openLocationSettings();
+      if (!requested) {
+        print('Servicio de ubicación deshabilitado');
         return null;
       }
+    }
 
-      // Usar timeout mÃ¡s largo para emuladores que pueden ser lentos
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Permisos de ubicación denegados por el usuario');
+        return null;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Permisos de ubicación denegados permanentemente');
+      return null;
+    }
+
+    // Configuración para mejor precisión
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    );
+
+    try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 30), // Aumentado para emuladores
+        locationSettings: locationSettings
       );
-      
       return position;
     } catch (e) {
-      print('Error obteniendo ubicaciÃ³n: $e');
+      print('Error obteniendo ubicación: $e');
       return null;
     }
   }
 
-  /// Convierte coordenadas a direcciÃ³n legible
+  /// Convierte coordenadas a dirección legible
   static Future<String?> getAddressFromCoordinates({
     required double latitude,
     required double longitude,

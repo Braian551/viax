@@ -11,42 +11,42 @@ class SoundService {
   static bool _hasError = false;
   static bool _isPlayingRequestLoop = false;
 
-  /// Reproduce el sonido de notificaciÃ³n de nueva solicitud en loop continuo
-  /// Similar a la notificaciÃ³n de Uber/DiDi cuando llega un viaje
+  /// Reproduce el sonido de notificación de nueva solicitud en loop continuo
+  /// Similar a la notificación de Uber/DiDi cuando llega un viaje
   /// Se repite hasta que se acepte o rechace la solicitud
   static Future<void> playRequestNotification() async {
-    print('ðŸ”Š [DEBUG] ==========================================');
-    print('ðŸ”Š [DEBUG] Iniciando loop continuo de sonido de solicitud...');
+    print('🔊 [DEBUG] ==========================================');
+    print('🔊 [DEBUG] Iniciando loop continuo de sonido de solicitud...');
 
-    // Si ya estÃ¡ reproduciendo, no hacer nada
+    // Si ya está reproduciendo, no hacer nada
     if (_isPlayingRequestLoop) {
-      print('ðŸ”Š [DEBUG] Loop ya estÃ¡ activo, omitiendo...');
+      print('🔊 [DEBUG] Loop ya está activo, omitiendo...');
       return;
     }
 
-    // Primero intentar vibraciÃ³n como feedback inmediato
+    // Primero intentar vibración como feedback inmediato
     try {
       HapticFeedback.heavyImpact();
       await Future.delayed(const Duration(milliseconds: 100));
       HapticFeedback.heavyImpact();
       await Future.delayed(const Duration(milliseconds: 100));
       HapticFeedback.heavyImpact();
-      print('ðŸ“³ [DEBUG] âœ… VibraciÃ³n ejecutada como feedback');
+      print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
     } catch (e) {
-      print('âŒ [ERROR] Error al vibrar: $e');
+      print('❌ [ERROR] Error al vibrar: $e');
     }
 
     if (_hasError) {
-      print('âš ï¸ [WARN] AudioPlayer no disponible, usando solo vibraciÃ³n');
+      print('⚠️ [WARN] AudioPlayer no disponible, usando solo vibración');
       return;
     }
 
     try {
-      // Detener cualquier reproducciÃ³n anterior
+      // Detener cualquier reproducción anterior
       await _requestPlayer.stop();
-      print('ðŸ”Š [DEBUG] Player detenido');
+      print('🔊 [DEBUG] Player detenido');
 
-      // Configurar el contexto de audio para notificaciÃ³n
+      // Configurar el contexto de audio para notificación
       await _requestPlayer.setAudioContext(
         AudioContext(
           iOS: AudioContextIOS(
@@ -64,22 +64,22 @@ class SoundService {
           ),
         ),
       );
-      print('ðŸ”Š [DEBUG] Contexto de audio configurado para Android');
+      print('🔊 [DEBUG] Contexto de audio configurado para Android');
 
-      // Configurar volumen al mÃ¡ximo
+      // Configurar volumen al máximo
       await _requestPlayer.setVolume(1.0);
-      print('ðŸ”Š [DEBUG] Volumen configurado a 1.0');
+      print('🔊 [DEBUG] Volumen configurado a 1.0');
 
-      // Configurar modo de liberaciÃ³n para loop continuo
+      // Configurar modo de liberación para loop continuo
       await _requestPlayer.setReleaseMode(ReleaseMode.loop);
-      print('ðŸ”Š [DEBUG] Release mode configurado para loop continuo');
+      print('🔊 [DEBUG] Release mode configurado para loop continuo');
 
-      // Configurar source con playerMode LOW_LATENCY para mejor reproducciÃ³n
+      // Configurar source con playerMode LOW_LATENCY para mejor reproducción
       await _requestPlayer.setPlayerMode(PlayerMode.lowLatency);
-      print('ðŸ”Š [DEBUG] Player mode LOW_LATENCY configurado');
+      print('🔊 [DEBUG] Player mode LOW_LATENCY configurado');
 
       // Intentar reproducir el archivo WAV en loop continuo
-      print('ðŸ”Š [DEBUG] Reproduciendo en loop: assets/sounds/request_notification.wav');
+      print('🔊 [DEBUG] Reproduciendo en loop: assets/sounds/request_notification.wav');
 
       final source = AssetSource('sounds/request_notification.wav');
 
@@ -88,68 +88,60 @@ class SoundService {
 
       // Escuchar eventos del player
       _requestPlayer.onPlayerComplete.listen((event) {
-        print('ðŸ”Š [DEBUG] âœ… Sonido completado (loop continuo)');
+        print('🔊 [DEBUG] ✅ Sonido completado (loop continuo)');
       });
 
       _requestPlayer.onPlayerStateChanged.listen((state) {
-        print('ðŸ”Š [DEBUG] Estado del player: $state');
+        print('🔊 [DEBUG] Estado del player: $state');
       });
 
-      // Iniciar reproducciÃ³n en loop
+      // Iniciar reproducción en loop
       await _requestPlayer.play(source);
-      print('ðŸ”Š [DEBUG] âœ… Â¡Loop continuo iniciado!');
+      print('🔊 [DEBUG] ✅ ¡Loop continuo iniciado!');
 
-      print('ðŸ”Š [DEBUG] ==========================================');
+      print('🔊 [DEBUG] ==========================================');
 
     } catch (e, stackTrace) {
-      print('âŒ [ERROR] Error al iniciar loop de sonido: $e');
-      print('âŒ [STACK] $stackTrace');
-      print('ðŸ”Š [DEBUG] ==========================================');
+      print('❌ [ERROR] Error al iniciar loop de sonido: $e');
+      print('❌ [STACK] $stackTrace');
+      print('🔊 [DEBUG] ==========================================');
 
-      // Marcar como error para no intentar mÃ¡s
+      // Marcar como error para no intentar más
       _hasError = true;
       _isPlayingRequestLoop = false;
     }
   }
 
-  /// Reproduce un sonido de confirmaciÃ³n al aceptar un viaje
+  /// Reproduce un sonido de confirmación al aceptar un viaje
   static Future<void> playAcceptSound() async {
-    // VibraciÃ³n como feedback inmediato
     try {
+      // Feedback táctil
       HapticFeedback.mediumImpact();
-    } catch (e) {
-      print('âŒ Error al vibrar: $e');
-    }
+      print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
 
-    if (_hasError) {
-      return;
-    }
-
-    try {
-      await _acceptPlayer.stop();
-      await _acceptPlayer.setVolume(0.7);
+      // Detener cualquier sonido que se esté reproduciendo (solicitud)
+      await stopSound();
+      
+      // Reproducir sonido de éxito una vez
       await _acceptPlayer.setReleaseMode(ReleaseMode.stop);
+      await _acceptPlayer.setSource(AssetSource('sounds/beep.wav'));
+      await _acceptPlayer.resume();
 
-      // Usar un tono simple
-      await _acceptPlayer.play(
-        AssetSource('sounds/beep.wav'),
-      );
-
-      print('ðŸ”Š Sonido de aceptaciÃ³n reproducido');
+      print('🔊 Sonido de aceptación reproducido');
     } catch (e) {
-      print('âŒ Error al reproducir sonido de aceptaciÃ³n: $e');
+      print('❌ Error al reproducir sonido de aceptación: $e');
     }
   }
 
-  /// Detiene cualquier sonido que se estÃ© reproduciendo
+  /// Detiene cualquier sonido que se esté reproduciendo
   static Future<void> stopSound() async {
     try {
       await _requestPlayer.stop();
       await _acceptPlayer.stop();
       _isPlayingRequestLoop = false; // Resetear el flag del loop
-      print('ðŸ”Š [DEBUG] Sonidos detenidos y loop reseteado');
+      print('🔊 [DEBUG] Sonidos detenidos y loop reseteado');
     } catch (e) {
-      print('âŒ Error al detener sonido: $e');
+      print('❌ Error al detener sonido: $e');
     }
   }
 
@@ -160,7 +152,7 @@ class SoundService {
       await _acceptPlayer.dispose();
       _hasError = false;
     } catch (e) {
-      print('âŒ Error al liberar reproductor de audio: $e');
+      print('❌ Error al liberar reproductor de audio: $e');
     }
   }
 }

@@ -61,13 +61,13 @@ class ApprovalNotificationService {
       if (lastStatus != null && 
           lastStatus != 'aprobado' && 
           (currentStatus == 'aprobado' || isApproved)) {
-        print('   âœ… Cambio de estado detectado ($lastStatus â†’ $currentStatus) - MOSTRAR ALERTA');
+        print('   ✅ Cambio de estado detectado ($lastStatus → $currentStatus) - MOSTRAR ALERTA');
         await prefs.setString(statusKey, currentStatus);
         return true;
       }
 
       // En cualquier otro caso, no mostrar
-      print('   âŒ No se cumple condiciÃ³n para mostrar alerta');
+      print('   ❌ No se cumple condición para mostrar alerta');
       await prefs.setString(statusKey, currentStatus);
       return false;
       
@@ -77,20 +77,20 @@ class ApprovalNotificationService {
     }
   }
 
-  /// Marca que se mostrÃ³ la alerta de aprobaciÃ³n
-  /// Una vez marcada, la alerta nunca se volverÃ¡ a mostrar para este conductor
+  /// Marca que se mostró la alerta de aprobación
+  /// Una vez marcada, la alerta nunca se volverá a mostrar para este conductor
   static Future<void> markApprovalAlertAsShown(int conductorId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final shownKey = '$_keyPrefix$conductorId';
       await prefs.setBool(shownKey, true);
-      print('âœ… Alerta de aprobaciÃ³n marcada como mostrada para conductor $conductorId');
+      print('✅ Alerta de aprobación marcada como mostrada para conductor $conductorId');
     } catch (e) {
       print('Error en markApprovalAlertAsShown: $e');
     }
   }
 
-  /// Resetea el estado (Ãºtil para testing o casos especiales)
+  /// Resetea el estado (útil para testing o casos especiales)
   static Future<void> resetApprovalStatus(int conductorId) async {
     try {
       final prefs = await SharedPreferences.getInstance();

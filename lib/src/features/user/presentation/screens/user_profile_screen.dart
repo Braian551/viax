@@ -17,6 +17,10 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
   String? _userName;
   String? _userEmail;
+  int? _userId;
+  String? _firstName;
+  String? _lastName;
+  String? _photoKey;
   bool _isLoading = true;
   bool _isLoggingOut = false;
   
@@ -55,24 +59,39 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     try {
       final sess = await UserService.getSavedSession();
       if (sess != null) {
-        // Check if user has pending driver registration
         final userId = sess['id'];
-        if (userId != null) {
-          final driverProfile = await UserService.getDriverProfile(userId: userId);
+        _userId = userId is int ? userId : int.tryParse(userId.toString());
+        
+        if (_userId != null) {
+          // 1. Check driver status
+          final driverProfile = await UserService.getDriverProfile(userId: _userId!);
           if (driverProfile != null && driverProfile['success'] == true) {
-            // The status is inside 'profile' object
             final profile = driverProfile['profile'];
             if (profile != null) {
-              // Check estado_aprobacion: 'pendiente', 'aprobado', 'rechazado'
               _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
             }
           }
+          
+          // 2. Fetch full user profile for editing (nombre, apellido, foto)
+           final userProfile = await UserService.getProfile(userId: _userId!);
+           if (userProfile != null && userProfile['success'] == true) {
+             final userData = userProfile['user'] ?? userProfile['data']; // Adapt to backend response structure
+             if (userData != null) {
+               _firstName = userData['nombre'];
+               _lastName = userData['apellido'];
+               _photoKey = userData['foto_perfil'];
+               _userName = '$_firstName $_lastName'.trim();
+               _userEmail = userData['email'] ?? sess['email'];
+             }
+           } else {
+             // Fallback to session data
+             _userName = sess['nombre'] ?? 'Usuario';
+             _userEmail = sess['email'] ?? 'usuario@viax.com';
+           }
         }
         
         if (mounted) {
           setState(() {
-            _userName = sess['nombre'] ?? 'Usuario';
-            _userEmail = sess['email'] ?? 'usuario@viax.com';
             _isLoading = false;
           });
           _animationController.forward();
@@ -203,7 +222,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               title: 'Editar Perfil',
                               subtitle: 'Nombre, teléfono, foto',
                               isDark: isDark,
-                              onTap: () {},
+                              onTap: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  RouteNames.editProfile,
+                                  arguments: {
+                                    'userId': _userId,
+                                    'nombre': _firstName,
+                                    'apellido': _lastName,
+                                    'email': _userEmail,
+                                    'foto_perfil': _photoKey,
+                                  },
+                                );
+                                
+                                if (result == true) {
+                                  setState(() => _isLoading = true);
+                                  _loadUserData();
+                                }
+                              },
                             ),
                             /* _buildOptionTile(
                               icon: Icons.location_on_outlined,

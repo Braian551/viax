@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/features/map/presentation/screens/location_picker_screen.dart';
+import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -88,6 +90,12 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildProfileCard(String? email) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fotoKey = _profileData?['foto_perfil'] as String?;
+    final fotoUrl = fotoKey != null && fotoKey.isNotEmpty 
+        ? UserService.getR2ImageUrl(fotoKey) 
+        : null;
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -104,20 +112,52 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           child: Row(
             children: [
+              // Foto de perfil
               Container(
-                padding: const EdgeInsets.all(14),
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFFF00),
-                  borderRadius: BorderRadius.circular(16),
+                  shape: BoxShape.circle,
+                  color: isDark ? AppColors.darkCard : AppColors.blue50,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFFF00).withValues(alpha: 0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.person, color: Colors.black, size: 28),
+                child: ClipOval(
+                  child: fotoUrl != null
+                      ? Image.network(
+                          fotoUrl,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                            size: 32,
+                          ),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded / 
+                                      loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -134,7 +174,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      email ?? 'No hay sesiÃ³n',
+                      email ?? 'No hay sesión',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 14,
@@ -144,7 +184,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     Text(
                       _location != null && (_location!['direccion'] ?? '').toString().isNotEmpty
                           ? (_location!['direccion'] ?? '')
-                          : (_profileData != null && (_profileData!['direccion'] ?? '').toString().isNotEmpty ? _profileData!['direccion'] : 'Sin direcciÃ³n'),
+                          : (_profileData != null && (_profileData!['direccion'] ?? '').toString().isNotEmpty ? _profileData!['direccion'] : 'Sin dirección'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
@@ -165,6 +205,63 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget _buildActionButtons() {
     return Column(
       children: [
+        // Botón Editar Perfil
+        GestureDetector(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (ctx) => const EditProfileScreen(),
+                settings: RouteSettings(
+                  arguments: {
+                    'userId': _session?['id'] as int?,
+                    'email': _session?['email'] as String?,
+                    'nombre': _profileData?['nombre'] as String? ?? '',
+                    'apellido': _profileData?['apellido'] as String? ?? '',
+                    'foto_perfil': _profileData?['foto_perfil'] as String?,
+                  },
+                ),
+              ),
+            );
+            // Si se actualizó el perfil, recargar datos
+            if (result == true) {
+              setState(() => _loading = true);
+              await _loadSession();
+            }
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryDark],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.edit, color: Colors.white, size: 24),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Editar perfil',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Botón Editar Dirección
         GestureDetector(
           onTap: () async {
             await Navigator.push(
@@ -173,7 +270,7 @@ class _ProfileTabState extends State<ProfileTab> {
             );
             setState(() => _loading = true);
             await _loadSession();
-            if (mounted) CustomSnackbar.showSuccess(context, message: 'DirecciÃ³n actualizada correctamente');
+            if (mounted) CustomSnackbar.showSuccess(context, message: 'Dirección actualizada correctamente');
           },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -191,7 +288,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     const Icon(Icons.location_on, color: Colors.black, size: 24),
                     const SizedBox(width: 12),
                     const Text(
-                      'Editar direcciÃ³n',
+                      'Editar dirección',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 16,
@@ -223,7 +320,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     const Icon(Icons.exit_to_app, color: Colors.white, size: 24),
                     const SizedBox(width: 12),
                     const Text(
-                      'Cerrar sesiÃ³n',
+                      'Cerrar sesión',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -339,6 +436,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final email = _session?['email'] as String?;
+    final fotoKey = _profileData?['foto_perfil'] as String?;
+    final fotoUrl = fotoKey != null && fotoKey.isNotEmpty 
+        ? UserService.getR2ImageUrl(fotoKey) 
+        : null;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -348,7 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Perfil', style: TextStyle(color: Colors.white)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00))))
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -360,10 +461,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          const CircleAvatar(
-                            radius: 28,
-                            backgroundColor: Color(0xFF1A1A1A),
-                            child: Icon(Icons.person, color: Color(0xFFFFFF00), size: 32),
+                          // Foto de perfil
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF1A1A1A),
+                            ),
+                            child: ClipOval(
+                              child: fotoUrl != null
+                                  ? Image.network(
+                                      fotoUrl,
+                                      width: 56,
+                                      height: 56,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                        size: 32,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      color: AppColors.primary,
+                                      size: 32,
+                                    ),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -376,7 +500,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  email ?? 'No hay sesiÃ³n',
+                                  email ?? 'No hay sesión',
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                                 const SizedBox(height: 6),
@@ -396,26 +520,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Botón Editar Perfil
                   ElevatedButton.icon(
                     onPressed: () async {
-                      // Abrir LocationPicker para editar direcciÃ³n; al volver recargar perfil
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (ctx) => const EditProfileScreen(),
+                          settings: RouteSettings(
+                            arguments: {
+                              'userId': _session?['id'] as int?,
+                              'email': _session?['email'] as String?,
+                              'nombre': _profileData?['nombre'] as String? ?? '',
+                              'apellido': _profileData?['apellido'] as String? ?? '',
+                              'foto_perfil': _profileData?['foto_perfil'] as String?,
+                            },
+                          ),
+                        ),
+                      );
+                      // Si se actualizó el perfil, recargar datos
+                      if (result == true) {
+                        setState(() => _loading = true);
+                        await _loadSession();
+                      }
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Editar perfil'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      // Abrir LocationPicker para editar dirección; al volver recargar perfil
                       await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (ctx) => const LocationPickerScreen()),
                       );
                       setState(() => _loading = true);
                       await _loadSession();
-                      if (mounted) CustomSnackbar.showSuccess(context, message: 'DirecciÃ³n actualizada correctamente');
+                      if (mounted) CustomSnackbar.showSuccess(context, message: 'Dirección actualizada correctamente');
                     },
                     icon: const Icon(Icons.location_on),
-                    label: const Text('Editar direcciÃ³n'),
+                    label: const Text('Editar dirección'),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFFF00), foregroundColor: Colors.black),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: _logout,
                     icon: const Icon(Icons.exit_to_app),
-                    label: const Text('Cerrar sesiÃ³n'),
+                    label: const Text('Cerrar sesión'),
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
                   ),
                 ],

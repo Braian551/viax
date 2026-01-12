@@ -13,7 +13,7 @@ class DatabaseProvider with ChangeNotifier {
 
   Future<void> initializeDatabase() async {
     try {
-      // Verificar conexiÃ³n con el backend de Railway
+      // Verificar conexión con el backend de Railway
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/verify_system_json.php'),
         headers: {'Content-Type': 'application/json'},
@@ -24,9 +24,9 @@ class DatabaseProvider with ChangeNotifier {
         if (data['status'] == 'success' && data['database'] == 'connected') {
           _isConnected = true;
           _errorMessage = '';
-          print('âœ… ConexiÃ³n con backend verificada correctamente');
+          print('✅ Conexión con backend verificada correctamente');
         } else {
-          throw Exception('Backend respondiÃ³ pero base de datos no conectada');
+          throw Exception('Backend respondió pero base de datos no conectada');
         }
       } else {
         throw Exception('Error HTTP: ${response.statusCode}');
@@ -36,14 +36,14 @@ class DatabaseProvider with ChangeNotifier {
     } catch (e) {
       _isConnected = false;
       _errorMessage = 'Error al conectar con el backend: $e';
-      print('âŒ Error al conectar con backend: $e');
+      print('❌ Error al conectar con backend: $e');
       notifyListeners();
       // Don't rethrow to prevent app crash
     }
   }
 
   Future<void> closeConnection() async {
-    // Para API REST, no hay conexiÃ³n que cerrar
+    // Para API REST, no hay conexión que cerrar
     _isConnected = false;
     _errorMessage = '';
     notifyListeners();

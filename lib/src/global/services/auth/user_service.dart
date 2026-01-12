@@ -32,12 +32,12 @@ class UserService {
         requestData['role'] = role;
       }
 
-      // Agregar direcciÃ³n si estÃ¡ disponible
+      // Agregar dirección si está disponible
       if (address != null && address.isNotEmpty) {
         requestData['address'] = address;
       }
 
-      // Agregar datos de ubicaciÃ³n si estÃ¡n disponibles
+      // Agregar datos de ubicación si están disponibles
       if (latitude != null && longitude != null) {
         // Enviar ambas variantes por compatibilidad con el backend
         requestData['latitude'] = latitude;
@@ -74,7 +74,7 @@ class UserService {
     }
   }
 
-  // MÃ©todo adicional para verificar si un usuario existe (Ãºtil para debugging)
+  // Método adicional para verificar si un usuario existe (útil para debugging)
   static Future<bool> checkUserExists(String email) async {
     try {
       final response = await http.post(
@@ -229,7 +229,7 @@ class UserService {
   static Future<void> saveSession(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Debug: verificar quÃ© estamos guardando
+    // Debug: verificar qué estamos guardando
     print('UserService.saveSession: Guardando usuario: $user');
     
     if (user.containsKey('email') && user['email'] != null) {
@@ -243,15 +243,15 @@ class UserService {
     if (user.containsKey('tipo_usuario') && user['tipo_usuario'] != null) {
       await prefs.setString(_kUserType, user['tipo_usuario'].toString());
     }
-    // Guardar nombre si estÃ¡ disponible (especialmente para administradores)
+    // Guardar nombre si está disponible (especialmente para administradores)
     if (user.containsKey('nombre') && user['nombre'] != null) {
       await prefs.setString(_kUserName, user['nombre'].toString());
     }
-    // Guardar telÃ©fono si estÃ¡ disponible
+    // Guardar teléfono si está disponible
     if (user.containsKey('telefono') && user['telefono'] != null) {
       await prefs.setString(_kUserPhone, user['telefono'].toString());
     }
-    // Guardar empresa_id si estÃ¡ disponible
+    // Guardar empresa_id si está disponible
     if (user.containsKey('empresa_id') && user['empresa_id'] != null) {
       final empresaId = int.tryParse(user['empresa_id'].toString());
       if (empresaId != null) {
@@ -269,7 +269,7 @@ class UserService {
     String? telefono = prefs.getString(_kUserPhone);
     int? empresaId = prefs.getInt(_kUserEmpresaId);
 
-    // MigraciÃ³n automÃ¡tica desde claves legacy (viax_*) si no existen las nuevas
+    // Migración automática desde claves legacy (viax_*) si no existen las nuevas
     if (email == null && id == null &&
         !prefs.containsKey(_kUserEmail) && !prefs.containsKey(_kUserId)) {
       final legacyEmail = prefs.getString(_legacyUserEmail);
@@ -321,8 +321,8 @@ class UserService {
       if (empresaId != null) 'empresa_id': empresaId,
     };
     
-    // Debug: verificar quÃ© estamos recuperando
-    print('UserService.getSavedSession: SesiÃ³n recuperada: $session');
+    // Debug: verificar qué estamos recuperando
+    print('UserService.getSavedSession: Sesión recuperada: $session');
     
     return session;
   }
@@ -335,7 +335,7 @@ class UserService {
     await prefs.remove(_kUserName);
     await prefs.remove(_kUserPhone);
     await prefs.remove(_kUserEmpresaId);
-    // TambiÃ©n eliminar claves legacy
+    // También eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
     await prefs.remove(_legacyUserId);
     await prefs.remove(_legacyUserType);
@@ -700,5 +700,122 @@ class UserService {
       print('getDriverProfile error: $e');
       return null;
     }
+  }
+
+  /// Actualizar perfil de usuario (nombre, apellido, foto)
+  /// 
+  /// [userId] - ID del usuario a actualizar
+  /// [nombre] - Nuevo nombre (opcional)
+  /// [apellido] - Nuevo apellido (opcional)
+  /// [fotoPath] - Ruta local del archivo de imagen (opcional)
+  /// 
+  /// Retorna un Map con 'success', 'message' y 'data' (usuario actualizado)
+  static Future<Map<String, dynamic>> updateProfile({
+    required int userId,
+    String? nombre,
+    String? apellido,
+    String? fotoPath,
+    bool? deletePhoto,
+  }) async {
+    try {
+      final uri = Uri.parse('${AppConfig.authServiceUrl}/update_profile.php');
+      
+      // Usar MultipartRequest para soportar envío de archivos
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Agregar campos de texto
+      request.fields['user_id'] = userId.toString();
+      
+      if (nombre != null && nombre.isNotEmpty) {
+        request.fields['nombre'] = nombre;
+      }
+      
+      if (apellido != null && apellido.isNotEmpty) {
+        request.fields['apellido'] = apellido;
+      }
+
+      if (deletePhoto == true) {
+        request.fields['delete_foto'] = 'true';
+      }
+      
+      // Agregar archivo de foto si se proporcionó y no se está eliminando
+      if (fotoPath != null && fotoPath.isNotEmpty && deletePhoto != true) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto',
+          fotoPath,
+        ));
+      }
+
+      print('updateProfile: Sending request to $uri with userId=$userId');
+
+      // Enviar request con timeout
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timed out after 30 seconds');
+        },
+      );
+      
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      print('updateProfile: Response (${response.statusCode}): ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        
+        // Si la actualización fue exitosa, actualizar también la sesión local
+        if (data['success'] == true && data['data']?['user'] != null) {
+          final updatedUser = data['data']['user'] as Map<String, dynamic>;
+          // Obtener sesión actual y merge con nuevos datos
+          final currentSession = await getSavedSession();
+          if (currentSession != null) {
+            final mergedSession = {
+              ...currentSession,
+              if (updatedUser['nombre'] != null) 'nombre': updatedUser['nombre'],
+              if (updatedUser['apellido'] != null) 'apellido': updatedUser['apellido'],
+            };
+            await saveSession(mergedSession);
+          }
+        }
+        
+        return data;
+      } else {
+        // Intentar parsear error del servidor
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          return {
+            'success': false,
+            'message': errorData['message'] ?? 'Error del servidor: ${response.statusCode}',
+          };
+        } catch (_) {
+          return {
+            'success': false,
+            'message': 'Error del servidor: ${response.statusCode}',
+          };
+        }
+      }
+    } catch (e) {
+      print('updateProfile error: $e');
+      return {
+        'success': false,
+        'message': 'Error de conexión: $e',
+      };
+    }
+  }
+
+  /// Construir URL completa para una imagen de R2
+  /// 
+  /// [r2Key] - Clave/path de la imagen en R2 (ej: "profile/123_1234567890.jpg")
+  /// Retorna la URL completa para acceder a la imagen via r2_proxy.php
+  static String getR2ImageUrl(String? r2Key) {
+    if (r2Key == null || r2Key.isEmpty) {
+      return '';
+    }
+    // Si ya es una URL completa, retornarla
+    if (r2Key.startsWith('http://') || r2Key.startsWith('https://')) {
+      return r2Key;
+    }
+    // Construir URL del proxy
+    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(r2Key)}';
   }
 }
