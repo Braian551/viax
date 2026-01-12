@@ -69,6 +69,7 @@ class VehicleInfo {
   final String description;
   final IconData icon;
   final String imagePath;
+  final String? pinIconPath;
   final Map<String, double> config;
 
   const VehicleInfo({
@@ -77,6 +78,7 @@ class VehicleInfo {
     required this.description,
     required this.icon,
     required this.imagePath,
+    this.pinIconPath,
     required this.config,
   });
 }

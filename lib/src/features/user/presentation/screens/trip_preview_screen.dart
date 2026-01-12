@@ -7,9 +7,13 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../theme/app_colors.dart';
 import '../../domain/models/trip_models.dart';
+import '../../domain/models/company_vehicle_models.dart';
+import '../../data/services/company_vehicle_service.dart';
 import '../widgets/trip_preview/trip_preview_top_overlay.dart';
 import '../widgets/trip_preview/trip_vehicle_bottom_sheet.dart';
+import '../widgets/trip_preview/company_picker_sheet.dart';
 import '../widgets/trip_preview/trip_vehicle_detail_sheet.dart';
+import '../widgets/trip_preview/company_selector_widget.dart';
 import 'pickup_selection_screen.dart';
 
 /// Segunda pantalla - Preview del viaje con mapa y cotización
@@ -42,59 +46,28 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   bool _isLoadingQuote = true;
   String? _errorMessage;
 
+  // Estado de carga y datos
+  bool _isLoading = true;
+  CompanyVehicleResponse? _companyResponse;
+
+  // Estado para indicar que no hay vehículos disponibles
+  bool _noVehiclesAvailable = false;
+  String? _noVehiclesMessage;
+
   // Vehículo seleccionado
-  late String _selectedVehicleType;
+  String? _selectedVehicleType;
 
-  // Lista de vehículos disponibles
-  final List<VehicleInfo> _vehicles = [
-    VehicleInfo(
-      type: 'moto',
-      name: 'Moto',
-      description: 'Rápido y económico',
-      icon: Icons.two_wheeler,
-      imagePath: 'assets/images/vehicles/moto3d.png',
-      config: {
-        'tarifa_base': 4000.0,
-        'costo_por_km': 2000.0,
-        'costo_por_minuto': 250.0,
-        'tarifa_minima': 6000.0,
-        'recargo_hora_pico': 15.0,
-        'recargo_nocturno': 20.0,
-      },
-    ),
-    VehicleInfo(
-      type: 'auto',
-      name: 'Auto',
-      description: 'Cómodo y espacioso',
-      icon: Icons.directions_car,
-      imagePath: 'assets/images/vehicles/auto3d.png',
-      config: {
-        'tarifa_base': 6000.0,
-        'costo_por_km': 3000.0,
-        'costo_por_minuto': 400.0,
-        'tarifa_minima': 9000.0,
-        'recargo_hora_pico': 20.0,
-        'recargo_nocturno': 25.0,
-      },
-    ),
-    VehicleInfo(
-      type: 'motocarro',
-      name: 'Motocarro',
-      description: 'Ideal para cargas',
-      icon: Icons.electric_moped,
-      imagePath: 'assets/images/vehicles/motocarro3d.png',
-      config: {
-        'tarifa_base': 5500.0,
-        'costo_por_km': 2500.0,
-        'costo_por_minuto': 350.0,
-        'tarifa_minima': 8000.0,
-        'recargo_hora_pico': 18.0,
-        'recargo_nocturno': 22.0,
-      },
-    ),
-  ];
+  // Lista de vehículos disponibles (cargada del backend)
+  List<VehicleInfo> _vehicles = [];
 
-  // Quotes por cada vehículo (para mostrar precios)
+  // Mapa para rastrear empresa seleccionada por tipo de vehículo
+  // Key: vehicleType, Value: empresaId
+  final Map<String, int> _selectedCompanyPerVehicle = {};
+
+  // Mapa de empresas disponibles por tipo de vehículo
+  Map<String, List<CompanyVehicleOption>> _companiesPerVehicle = {};
+
+  // Quotes calculados por tipo (para mostrar precios)
   final Map<String, TripQuote> _vehicleQuotes = {};
 
   late AnimationController _slideAnimationController;
@@ -115,8 +88,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   late Animation<double> _pulseAnimation;
 
   // Animación para cambio de vehículo
-  late AnimationController _vehicleChangeController;
-  late Animation<double> _vehicleChangeAnimation;
+  // ignore: unused_field
+  // late AnimationController _vehicleChangeController;
+  // late Animation<double> _vehicleChangeAnimation;
 
   // Animación para el precio
   late AnimationController _priceAnimationController;
@@ -133,23 +107,25 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   Timer? _sheetSizeDebounceTimer;
   bool _sheetListenerAttached = false;
 
-  List<LatLng> _animatedRoutePoints = []; 
+  List<LatLng> _animatedRoutePoints = [];
 
   // Valores animados del precio
   double _animatedPrice = 0;
   double _targetPrice = 0;
+  double _startPrice = 0;
+  bool _priceListenerAttached = false;
 
   @override
   void initState() {
     super.initState();
     _selectedVehicleType = widget.vehicleType;
-    
+
     try {
       _setupAnimations();
     } catch (e) {
       debugPrint('Error setting up animations: $e');
     }
-    
+
     // Defer listener setup and route loading to after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -173,13 +149,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     if (_sheetListenerAttached) {
       _draggableController.removeListener(_handleSheetSizeChange);
     }
+    if (_priceListenerAttached) {
+      _priceAnimationController.removeListener(_onPriceAnimationTick);
+    }
     _draggableController.dispose();
     _slideAnimationController.dispose();
     _routeAnimationController.dispose();
     _topPanelAnimationController.dispose();
     _markerAnimationController.dispose();
     _pulseAnimationController.dispose();
-    _vehicleChangeController.dispose();
+    // _vehicleChangeController.dispose();
     _priceAnimationController.dispose();
     _shimmerController.dispose();
     super.dispose();
@@ -279,17 +258,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     );
 
     // Animación para cambio de vehículo
-    _vehicleChangeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
+  // _vehicleChangeController = AnimationController(
+  //   duration: const Duration(milliseconds: 400),
+  //   vsync: this,
+  // );
 
-    _vehicleChangeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _vehicleChangeController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+  // _vehicleChangeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+  //   CurvedAnimation(
+  //     parent: _vehicleChangeController,
+  //     curve: Curves.easeOutCubic,
+  //   ),
+  // );
 
     // Animación para el precio
     _priceAnimationController = AnimationController(
@@ -303,6 +282,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         curve: Curves.easeOutCubic,
       ),
     );
+    
+    // Listener único para animación de precio
+    _priceAnimationController.addListener(_onPriceAnimationTick);
+    _priceListenerAttached = true;
 
     // Animación shimmer
     _shimmerController = AnimationController(
@@ -331,12 +314,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       ];
 
       // Obtener ruta de Mapbox con timeout para evitar spinner infinito
-      final route = await MapboxService
-          .getRoute(waypoints: waypoints)
-          .timeout(const Duration(seconds: 12), onTimeout: () {
-        debugPrint('Mapbox routing timeout after 12s');
-        return null;
-      });
+      final route = await MapboxService.getRoute(waypoints: waypoints).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          debugPrint('Mapbox routing timeout after 12s');
+          return null;
+        },
+      );
 
       if (route == null) {
         throw Exception('No se pudo calcular la ruta');
@@ -366,8 +350,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       if (!mounted) return;
       _routeAnimationController.forward();
 
-      // Calcular cotización para todos los vehículos
-      _calculateAllQuotes(route);
+      // Calcular cotización para todos los vehículos (Backend)
+      await _loadCompanyVehicles(route);
 
       if (!mounted) return;
       setState(() {
@@ -388,7 +372,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       debugPrint('Stack trace: $stackTrace');
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'No se pudo calcular la ruta (timeout). Intenta de nuevo.';
+        _errorMessage =
+            'No se pudo calcular la ruta (timeout). Intenta de nuevo.';
         _isLoadingRoute = false;
         _isLoadingQuote = false;
       });
@@ -404,93 +389,256 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     }
   }
 
-  /// Calcula las cotizaciones para todos los vehículos
-  void _calculateAllQuotes(MapboxRoute route) {
-    for (var vehicle in _vehicles) {
-      final quote = _calculateQuoteForVehicle(route, vehicle);
-      _vehicleQuotes[vehicle.type] = quote;
+  Future<void> _loadCompanyVehicles(MapboxRoute route) async {
+    final start = widget.origin;
+
+    // Calor estimado
+    final double distanciaKm = route.distanceKm;
+    final int duracionMin = route.durationMinutes.ceil();
+
+    // Extraer municipio
+    String municipio =
+        CompanyVehicleService.extractMunicipalityFromAddress(
+          widget.origin.address,
+        ) ??
+        'Medellín';
+
+    try {
+      final response = await CompanyVehicleService.getCompaniesByMunicipality(
+        latitud: start.latitude,
+        longitud: start.longitude,
+        municipio: municipio,
+        distanciaKm: distanciaKm,
+        duracionMinutos: duracionMin,
+      );
+
+      if (!mounted) return;
+
+      if (response.success && response.vehiculosDisponibles.isNotEmpty) {
+        _companyResponse = response;
+        // Actualizar lista de vehículos
+        _vehicles = _mapToVehicleInfo(response.vehiculosDisponibles);
+
+        debugPrint('🚗 Vehículos mapeados: ${_vehicles.length}');
+        for (var v in _vehicles) {
+          debugPrint('   - ${v.type}: ${v.name}');
+        }
+
+        _companiesPerVehicle = {};
+
+        // Limpiar quotes anteriores
+        _vehicleQuotes.clear();
+
+        // Pre-seleccionar empresas y llenar mapa
+        for (var v in response.vehiculosDisponibles) {
+          _companiesPerVehicle[v.tipo] = v.empresas;
+
+          if (v.empresaRecomendada != null) {
+            _selectedCompanyPerVehicle[v.tipo] = v.empresaRecomendada!.id;
+            _updateQuoteForVehicle(v.tipo, v.empresaRecomendada!);
+            debugPrint(
+              '💰 Quote para ${v.tipo}: \$${v.empresaRecomendada!.tarifaTotal}',
+            );
+          }
+        }
+
+        debugPrint(
+          '📊 VehicleQuotes generados: ${_vehicleQuotes.keys.toList()}',
+        );
+        debugPrint(
+          '👥 Total conductores cerca: ${response.totalConductoresCerca}',
+        );
+
+        // Verificar si el vehículo seleccionado está disponible
+        if (_vehicles.isNotEmpty &&
+            !_vehicles.any((v) => v.type == _selectedVehicleType)) {
+          debugPrint(
+            '⚠️ Vehículo seleccionado $_selectedVehicleType no disponible, cambiando a ${_vehicles.first.type}',
+          );
+          _selectedVehicleType = _vehicles.first.type;
+        }
+
+        setState(() {
+          _noVehiclesAvailable = false;
+          _noVehiclesMessage = null;
+        });
+      } else {
+        // No hay vehículos disponibles - determinar mensaje según la situación
+        String message;
+        if (!response.hasEmpresas) {
+          // No hay empresas en el municipio
+          message = 'No hay empresas de transporte en esta zona';
+        } else if (!response.hasVehicles) {
+          // Hay empresas pero no tienen vehículos configurados
+          message = 'No hay vehículos disponibles en esta zona';
+        } else {
+          // Fallback
+          message =
+              response.message ?? 'No hay conductores disponibles en esta zona';
+        }
+
+        setState(() {
+          _noVehiclesAvailable = true;
+          _noVehiclesMessage = message;
+          _vehicles = [];
+          _vehicleQuotes.clear();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading company vehicles: $e');
+      // Marcar como sin vehículos en caso de error
+      setState(() {
+        _noVehiclesAvailable = true;
+        _noVehiclesMessage = 'Error al buscar vehículos disponibles';
+        _vehicles = [];
+      });
     }
   }
 
-  /// Calcula la cotización para un vehículo específico
-  TripQuote _calculateQuoteForVehicle(MapboxRoute route, VehicleInfo vehicle) {
-    final hour = DateTime.now().hour;
-    final distanceKm = route.distanceKm;
-    final durationMinutes = route.durationMinutes.ceil();
+  List<VehicleInfo> _mapToVehicleInfo(List<AvailableVehicleType> types) {
+    return types.map((t) {
+      IconData icon;
+      String imagePath;
+      String desc;
+      String? pinPath;
 
-    final config = vehicle.config;
+      switch (t.tipo) {
+        case 'moto':
+          icon = Icons.two_wheeler;
+          imagePath = 'assets/images/vehicles/moto3d.png';
+          desc = 'Rápido y económico';
+          break;
+        case 'auto':
+          icon = Icons.directions_car;
+          imagePath = 'assets/images/vehicles/auto3d.png';
+          desc = 'Cómodo y seguro';
+          break;
+        case 'motocarro':
+          icon = Icons.electric_moped;
+          imagePath = 'assets/images/vehicles/motocarro3d.png';
+          desc = 'Ideal para cargas';
+          break;
+        case 'taxi':
+          icon = Icons.local_taxi;
+          imagePath = 'assets/images/vehicles/taxi3d.png';
+          desc = 'Tradicional y confiable';
+          pinPath = 'assets/images/vehicles/iconvehicles/taxiicon.png';
+          break;
+        default:
+          icon = Icons.directions_car;
+          imagePath = 'assets/images/vehicles/auto3d.png';
+          desc = 'Servicio de transporte';
+      }
 
-    // Precios base
-    final basePrice = config['tarifa_base']!;
-    final distancePrice = distanceKm * config['costo_por_km']!;
-    final timePrice = durationMinutes * config['costo_por_minuto']!;
+      return VehicleInfo(
+        type: t.tipo,
+        name: t.nombre,
+        description: desc,
+        icon: icon,
+        imagePath: imagePath,
+        pinIconPath: pinPath,
+        config: {},
+      );
+    }).toList();
+  }
 
-    // Determinar período y recargo
-    String periodType = 'normal';
-    double surchargePercentage = 0.0;
+  void _updateQuoteForVehicle(String type, CompanyVehicleOption option) {
+    // Usar datos de la ruta si está disponible
+    final distKm = _route?.distanceKm ?? 0;
+    final durMin = _route?.durationMinutes.ceil() ?? 0;
 
-    if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
-      periodType = 'hora_pico';
-      surchargePercentage = config['recargo_hora_pico']!;
-    } else if (hour >= 22 || hour <= 6) {
-      periodType = 'nocturno';
-      surchargePercentage = config['recargo_nocturno']!;
-    }
-
-    final subtotal = basePrice + distancePrice + timePrice;
-    final surchargePrice = subtotal * (surchargePercentage / 100);
-    final total = subtotal + surchargePrice;
-
-    // Aplicar tarifa mínima
-    final finalTotal = total < config['tarifa_minima']!
-        ? config['tarifa_minima']!
-        : total;
-
-    return TripQuote(
-      distanceKm: distanceKm,
-      durationMinutes: durationMinutes,
-      basePrice: basePrice,
-      distancePrice: distancePrice,
-      timePrice: timePrice,
-      surchargePrice: surchargePrice,
-      totalPrice: finalTotal,
-      periodType: periodType,
-      surchargePercentage: surchargePercentage,
+    _vehicleQuotes[type] = TripQuote(
+      distanceKm: distKm,
+      durationMinutes: durMin,
+      basePrice: 0,
+      distancePrice: 0,
+      timePrice: 0,
+      surchargePrice: 0,
+      totalPrice: option.tarifaTotal,
+      periodType: option.periodo,
+      surchargePercentage: option.recargoPorcentaje,
     );
+  }
+
+  void _onCompanyChanged(String vehicleType, int newCompanyId) {
+    final typeData = _companyResponse?.vehiculosDisponibles.firstWhere(
+      (v) => v.tipo == vehicleType,
+    );
+    if (typeData == null) return;
+
+    final newOption = typeData.empresas.firstWhere((e) => e.id == newCompanyId);
+
+    setState(() {
+      _selectedCompanyPerVehicle[vehicleType] = newCompanyId;
+      _updateQuoteForVehicle(vehicleType, newOption);
+
+      if (_selectedVehicleType == vehicleType) {
+        _quote = _vehicleQuotes[vehicleType];
+        if (_quote != null) {
+          _targetPrice = _quote!.totalPrice;
+          _animatePriceChange();
+        }
+      }
+    });
   }
 
   /// Cambia el vehículo seleccionado con animación
   void _selectVehicle(String vehicleType) {
     if (vehicleType == _selectedVehicleType) return;
+    
+    // Check if the current price is valid before setting it as start
+    if (_quote != null) {
+      _startPrice = _animatedPrice;
+    }
 
-    _vehicleChangeController.forward(from: 0);
+    // _vehicleChangeController.forward(from: 0); // Commented out to debug freeze
 
     setState(() {
       _selectedVehicleType = vehicleType;
       _quote = _vehicleQuotes[vehicleType];
       if (_quote != null) {
         _targetPrice = _quote!.totalPrice;
+        
+        // Removed aggressive map manipulation here if any
       }
+      
+      // Reset selected company for this type if necessary (cleaner logic)
+      // _selectedCompanyPerVehicle.remove(vehicleType); // Is this needed? 
     });
 
     // Animar el precio
     _animatePriceChange();
   }
 
+  /// Muestra el selector de empresas en un bottom sheet
+  void _showCompanyPicker(BuildContext context, String vehicleType, List<CompanyVehicleOption> companies) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => CompanyPickerSheet(
+        companies: companies,
+        selectedCompanyId: _selectedCompanyPerVehicle[vehicleType],
+        isDark: Theme.of(context).brightness == Brightness.dark,
+        onCompanySelected: (newId) {
+          _onCompanyChanged(vehicleType, newId);
+        },
+      ),
+    );
+  }
+
   /// Anima el cambio de precio
   void _animatePriceChange() {
-    final startPrice = _animatedPrice;
-    final endPrice = _targetPrice;
-
+    _startPrice = _animatedPrice;
     _priceAnimationController.reset();
     _priceAnimationController.forward();
-
-    _priceAnimationController.addListener(() {
-      if (!mounted) return;
-      setState(() {
-        _animatedPrice =
-            startPrice + (endPrice - startPrice) * _priceAnimation.value;
-      });
+  }
+  
+  /// Callback para la animación de precio (listener único)
+  void _onPriceAnimationTick() {
+    if (!mounted) return;
+    setState(() {
+      _animatedPrice = _startPrice + (_targetPrice - _startPrice) * _priceAnimation.value;
     });
   }
 
@@ -531,6 +679,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   String _getVehicleName(String type) {
+    if (_vehicles.isEmpty) return '';
+
     final vehicle = _vehicles.firstWhere(
       (v) => v.type == type,
       orElse: () => _vehicles.first,
@@ -573,8 +723,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
             },
           ),
 
-          // Panel inferior con detalles y precio
-          if (_quote != null)
+          // Panel inferior con detalles y precio (siempre mostrar después de cargar)
+          if (!_isLoadingRoute && !_isLoadingQuote)
             AnimatedSlide(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
@@ -585,39 +735,52 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                 opacity: _isSheetHidden ? 0.0 : 1.0,
                 child: IgnorePointer(
                   ignoring: _isSheetHidden,
-                  child: Builder(builder: (context) {
-                    // Attach listener once the sheet is built and controller is ready
-                    if (_draggableController.isAttached && !_sheetListenerAttached) {
-                      _draggableController.addListener(_handleSheetSizeChange);
-                      _sheetListenerAttached = true;
-                    }
-
-                    return TripVehicleBottomSheet(
-                    controller: _draggableController,
-                    slideAnimation: _slideAnimation,
-                    isDark: isDark,
-                    vehicles: _vehicles,
-                    vehicleQuotes: _vehicleQuotes,
-                    selectedVehicleType: _selectedVehicleType,
-                    selectedQuote: _quote,
-                    selectedVehicleName: _getVehicleName(_selectedVehicleType),
-                    onVehicleTap: (vehicle, quote, isSelected) {
-                      if (!isSelected) {
-                        _selectVehicle(vehicle.type);
-                        return;
-                      }
-                      if (quote != null) {
-                        showTripVehicleDetailSheet(
-                          context: context,
-                          vehicle: vehicle,
-                          quote: quote,
-                          isDark: isDark,
+                  child: Builder(
+                    builder: (context) {
+                      // Attach listener once the sheet is built and controller is ready
+                      if (_draggableController.isAttached &&
+                          !_sheetListenerAttached) {
+                        _draggableController.addListener(
+                          _handleSheetSizeChange,
                         );
+                        _sheetListenerAttached = true;
                       }
+
+                      return TripVehicleBottomSheet(
+                        controller: _draggableController,
+                        slideAnimation: _slideAnimation,
+                        isDark: isDark,
+                        vehicles: _vehicles,
+                        vehicleQuotes: _vehicleQuotes,
+                        selectedVehicleType: _selectedVehicleType ?? '',
+                        selectedQuote: _quote,
+                        selectedVehicleName: _selectedVehicleType != null
+                            ? _getVehicleName(_selectedVehicleType!)
+                            : '',
+                        onVehicleTap: (vehicle, quote, isSelected) {
+                          if (!isSelected) {
+                            _selectVehicle(vehicle.type);
+                            return;
+                          }
+                          if (quote != null) {
+                            showTripVehicleDetailSheet(
+                              context: context,
+                              vehicle: vehicle,
+                              quote: quote,
+                              isDark: isDark,
+                            );
+                          }
+                        },
+                        onConfirm: _confirmTrip,
+                        companiesPerVehicle: _companiesPerVehicle,
+                        selectedCompanyIds: _selectedCompanyPerVehicle,
+                        onCompanyChanged: _onCompanyChanged,
+                        onOpenCompanyPicker: (type, companies) => _showCompanyPicker(context, type, companies),
+                        noVehiclesAvailable: _noVehiclesAvailable,
+                        noVehiclesMessage: _noVehiclesMessage,
+                      );
                     },
-                    onConfirm: _confirmTrip,
-                    );
-                  }),
+                  ),
                 ),
               ),
             ),
@@ -644,10 +807,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                     final scale = (0.9 + (0.15 * value)).clamp(0.9, 1.15);
                     return Transform.scale(
                       scale: scale,
-                      child: Opacity(
-                        opacity: opacity,
-                        child: child,
-                      ),
+                      child: Opacity(opacity: opacity, child: child),
                     );
                   },
                   child: _HiddenSheetHandle(
@@ -893,7 +1053,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     );
   }
 
-
   Widget _buildLoadingOverlay(bool isDark) {
     return Container(
       color: Colors.black.withValues(alpha: 0.5),
@@ -1003,7 +1162,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -1046,7 +1205,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                          side: BorderSide(
+                            color: Colors.red.withValues(alpha: 0.3),
+                          ),
                         ),
                       ),
                       child: const Text(
@@ -1079,7 +1240,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               origin: widget.origin,
               destination: widget.destination,
               stops: widget.stops,
-              vehicleType: _selectedVehicleType,
+              vehicleType: _selectedVehicleType ?? '',
               quote: _quote!,
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -1100,16 +1261,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
   void _handleSheetSizeChange() {
     if (!mounted || !_draggableController.isAttached) return;
-    
+
     // Debounce to avoid excessive rebuilds during drag
     _sheetSizeDebounceTimer?.cancel();
     _sheetSizeDebounceTimer = Timer(const Duration(milliseconds: 50), () {
       if (!mounted || !_draggableController.isAttached) return;
-      
+
       try {
         final currentSize = _draggableController.size;
         final shouldBeHidden = currentSize <= 0.24;
-        
+
         // Only update when crossing the visibility threshold
         if (shouldBeHidden != _isSheetHidden) {
           if (mounted) {
@@ -1127,15 +1288,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
   void _openSheet([double size = 0.42]) {
     if (!mounted || !_draggableController.isAttached) return;
-    
+
     try {
       if (_isSheetHidden && mounted) {
         setState(() {
           _isSheetHidden = false;
         });
       }
-      _draggableController.animateTo(size,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _draggableController.animateTo(
+        size,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     } catch (e) {
       debugPrint('Error opening sheet: $e');
     }
@@ -1143,7 +1307,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 }
 
 class _HiddenSheetHandle extends StatelessWidget {
-  const _HiddenSheetHandle({required this.onTap, required this.controller, required this.isDark});
+  const _HiddenSheetHandle({
+    required this.onTap,
+    required this.controller,
+    required this.isDark,
+  });
   final VoidCallback onTap;
   final DraggableScrollableController controller;
   final bool isDark;
@@ -1178,7 +1346,11 @@ class _HiddenSheetHandle extends StatelessWidget {
           } else {
             target = 0.42;
           }
-          controller.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+          controller.animateTo(
+            target,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
         } catch (e) {
           // Ignore if controller not ready
         }

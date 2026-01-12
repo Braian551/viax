@@ -7,7 +7,9 @@
   // static const String baseUrl = 'http://192.168.18.68/viax/backend';
 
   // Para emulador Android, cambiar a:
-  static const String baseUrl = 'http://10.0.2.2/viax/backend';
+  // Para emulador Android, cambiar a:
+  // static const String baseUrl = 'http://10.0.2.2/viax/backend';
+  static const String baseUrl = 'http://192.168.18.68/viax/backend';
   
   // Para producciÃ³n Railway, cambiar a:
   // static const String baseUrl = 'https://viax-backend-production.up.railway.app';
