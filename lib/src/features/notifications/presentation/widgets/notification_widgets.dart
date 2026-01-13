@@ -31,19 +31,19 @@ class NotificationCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: notification.leida
                 ? Colors.transparent
                 : (isDark
                     ? AppColors.primary.withValues(alpha: 0.08)
-                    : AppColors.primary.withValues(alpha: 0.05)),
+                    : AppColors.primary.withValues(alpha: 0.04)),
             border: showDivider
                 ? Border(
                     bottom: BorderSide(
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.05),
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.08),
                     ),
                   )
                 : null,
@@ -53,28 +53,28 @@ class NotificationCard extends StatelessWidget {
             children: [
               // Icono de notificación
               _buildIcon(isDark),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               // Contenido
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             notification.titulo,
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: notification.leida
-                                  ? FontWeight.w500
-                                  : FontWeight.w600,
+                                  ? FontWeight.w600
+                                  : FontWeight.w700,
                               color: isDark
                                   ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                                  : const Color(0xFF1A1A1A),
+                              height: 1.2,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -82,6 +82,7 @@ class NotificationCard extends StatelessWidget {
                           notification.tiempoRelativo,
                           style: TextStyle(
                             fontSize: 12,
+                            fontWeight: FontWeight.w500,
                             color: isDark
                                 ? AppColors.darkTextSecondary
                                 : AppColors.lightTextSecondary,
@@ -89,36 +90,37 @@ class NotificationCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       notification.mensaje,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: isDark
                             ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                        height: 1.3,
+                            : Colors.grey[700],
+                        height: 1.4,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (!notification.leida) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
+                          horizontal: 10,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Nueva',
                           style: TextStyle(
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
@@ -135,16 +137,16 @@ class NotificationCard extends StatelessWidget {
 
   Widget _buildIcon(bool isDark) {
     return Container(
-      width: 44,
-      height: 44,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
-        color: notification.color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        color: notification.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16), // Softer squircle
       ),
       child: Icon(
         notification.icon,
         color: notification.color,
-        size: 22,
+        size: 24,
       ),
     );
   }
@@ -152,12 +154,12 @@ class NotificationCard extends StatelessWidget {
   Widget _buildDismissBackground() {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 20),
+      padding: const EdgeInsets.only(right: 24),
       color: AppColors.error.withValues(alpha: 0.1),
       child: Icon(
         Icons.delete_outline_rounded,
         color: AppColors.error,
-        size: 24,
+        size: 26,
       ),
     );
   }
@@ -328,45 +330,43 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.grey.withValues(alpha: 0.1)),
-          borderRadius: BorderRadius.circular(20),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : const Color(0xFFF5F7FA)), // Light background for unselected
+          borderRadius: BorderRadius.circular(30), // Full Pill
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.grey.withValues(alpha: 0.2)),
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.transparent),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary),
-            ),
-            const SizedBox(width: 6),
+            if (isSelected) ...[
+              Icon(
+                icon,
+                size: 16,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+            ],
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: isSelected
                     ? Colors.white
                     : (isDark
                         ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+                        : AppColors.primary.withValues(alpha: 0.8)),
               ),
             ),
           ],
@@ -402,7 +402,7 @@ class NotificationEmptyState extends StatelessWidget {
       default:
         title = 'Sin notificaciones';
         subtitle = 'Cuando tengas actividad, aparecerá aquí';
-        icon = Icons.notifications_off_outlined;
+        icon = Icons.notifications_none_rounded;
     }
 
     return Center(
@@ -412,37 +412,39 @@ class NotificationEmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100,
-              height: 100,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 48,
-                color: AppColors.primary.withValues(alpha: 0.5),
+                size: 56,
+                color: AppColors.primary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
             Text(
               title,
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 color: isDark
                     ? AppColors.darkTextSecondary
                     : AppColors.lightTextSecondary,
+                height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
