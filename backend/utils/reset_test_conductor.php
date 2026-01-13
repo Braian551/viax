@@ -39,10 +39,10 @@ try {
     $stmt2 = $db->prepare($query2);
     $stmt2->execute([':cid' => $conductor_id]);
 
-    // 3. Resetear usuario (es_verificado)
+    // 3. Resetear usuario (es_verificado, es_activo)
     echo "3. Reseteando usuario...\n";
     $query3 = "UPDATE usuarios 
-               SET es_verificado = 0
+               SET es_verificado = 0, es_activo = 0
                WHERE id = :cid";
     $stmt3 = $db->prepare($query3);
     $stmt3->execute([':cid' => $conductor_id]);

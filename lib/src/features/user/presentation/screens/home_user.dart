@@ -317,28 +317,32 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                               Expanded(
                                 child: FadeTransition(
                                   opacity: _fadeAnimation,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Hola,',
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white70 : Colors.black54,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
+                                  child: Flexible(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Hola,',
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white70 : Colors.black54,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        _userName ?? 'Usuario',
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white : Colors.black87,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
+                                        Flexible(
+                                          child: Text(
+                                            _userName ?? 'Usuario',
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white : Colors.black87,
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

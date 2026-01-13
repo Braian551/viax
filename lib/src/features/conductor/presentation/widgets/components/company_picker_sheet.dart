@@ -71,12 +71,14 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Seleccionar Empresa',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: widget.isDark ? Colors.white : Colors.black87,
+              Expanded(
+                child: Text(
+                  'Seleccionar Empresa',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: widget.isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
               ),
               IconButton(

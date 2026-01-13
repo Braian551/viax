@@ -855,75 +855,77 @@ class _DocumentPickerBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Título
-              Text(
-                'Seleccionar documento',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 24),
+                
+                // Título
+                Text(
+                  'Seleccionar documento',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Elige cómo quieres subir tu documento',
-                style: TextStyle(
-                  color: isDark ? Colors.white54 : Colors.black54,
-                  fontSize: 14,
+                const SizedBox(height: 8),
+                Text(
+                  'Elige cómo quieres subir tu documento',
+                  style: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Opciones según el tipo de documento aceptado
-              if (documentType == DocumentType.image || documentType == DocumentType.any)
-                _buildPickerOption(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.camera_alt_rounded,
-                  title: 'Tomar foto',
-                  subtitle: 'Usa la cámara del dispositivo',
-                  color: AppColors.primary,
-                  onTap: () => _handleCameraOption(context),
-                ),
-              
-              if (allowGallery && (documentType == DocumentType.image || documentType == DocumentType.any))
-                _buildPickerOption(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.photo_library_rounded,
-                  title: 'Galería de fotos',
-                  subtitle: 'Selecciona una imagen existente',
-                  color: Colors.purple,
-                  onTap: () => Navigator.pop(context, 'gallery'),
-                ),
-              
-              if (documentType == DocumentType.pdf || documentType == DocumentType.any)
-                _buildPickerOption(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.picture_as_pdf_rounded,
-                  title: 'Archivo PDF',
-                  subtitle: 'Selecciona un documento PDF',
-                  color: Colors.red,
-                  onTap: () => _handlePdfOption(context),
-                ),
-              
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 24),
+                
+                // Opciones según el tipo de documento aceptado
+                if (documentType == DocumentType.image || documentType == DocumentType.any)
+                  _buildPickerOption(
+                    context: context,
+                    isDark: isDark,
+                    icon: Icons.camera_alt_rounded,
+                    title: 'Tomar foto',
+                    subtitle: 'Usa la cámara del dispositivo',
+                    color: AppColors.primary,
+                    onTap: () => _handleCameraOption(context),
+                  ),
+                
+                if (allowGallery && (documentType == DocumentType.image || documentType == DocumentType.any))
+                  _buildPickerOption(
+                    context: context,
+                    isDark: isDark,
+                    icon: Icons.photo_library_rounded,
+                    title: 'Galería de fotos',
+                    subtitle: 'Selecciona una imagen existente',
+                    color: Colors.purple,
+                    onTap: () => Navigator.pop(context, 'gallery'),
+                  ),
+                
+                if (documentType == DocumentType.pdf || documentType == DocumentType.any)
+                  _buildPickerOption(
+                    context: context,
+                    isDark: isDark,
+                    icon: Icons.picture_as_pdf_rounded,
+                    title: 'Archivo PDF',
+                    subtitle: 'Selecciona un documento PDF',
+                    color: Colors.red,
+                    onTap: () => _handlePdfOption(context),
+                  ),
+                
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),

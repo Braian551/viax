@@ -434,6 +434,7 @@ function handlePost($db) {
                 }
             }
             
+            // 1. Aprobar la solicitud de vinculación
             // Usar función SQL para aprobar
             $query = "SELECT aprobar_vinculacion_conductor(:solicitud_id, :procesado_por) as resultado";
             $stmt = $db->prepare($query);
@@ -446,42 +447,85 @@ function handlePost($db) {
             if (!$resultado['success']) {
                 throw new Exception($resultado['message']);
             }
+
+            // 2. ACTUALIZAR ESTADO DE VERIFICACIÓN DEL CONDUCTOR (CRITICAL FIX)
+            // Si la empresa aprueba la vinculación, asumimos que verificó manual o visualmente al conductor
+            $checkQuery = "SELECT COUNT(*) FROM detalles_conductor WHERE usuario_id = :conductor_id";
+            $checkStmt = $db->prepare($checkQuery);
+            $checkStmt->execute([':conductor_id' => $conductor_id]);
             
+            if ($checkStmt->fetchColumn() > 0) {
+                 $updateCond = "UPDATE detalles_conductor 
+                               SET estado_verificacion = 'aprobado', 
+                                   estado_aprobacion = 'aprobado',
+                                   aprobado = 1,
+                                   fecha_ultima_verificacion = NOW(),
+                                   actualizado_en = NOW()
+                               WHERE usuario_id = :conductor_id";
+                 $db->prepare($updateCond)->execute([':conductor_id' => $conductor_id]);
+            } else {
+                 // Si no existe, crearlo como aprobado
+                 $insertCond = "INSERT INTO detalles_conductor (
+                                    usuario_id, estado_verificacion, estado_aprobacion, aprobado, 
+                                    fecha_ultima_verificacion, creado_en, actualizado_en
+                                ) VALUES (
+                                    :conductor_id, 'aprobado', 'aprobado', 1,
+                                    NOW(), NOW(), NOW()
+                                )";
+                 $db->prepare($insertCond)->execute([':conductor_id' => $conductor_id]);
+            }
+
+            // 3. ACTUALIZAR USUARIO A VERIFICADO Y ACTIVO
+            $updateUser = "UPDATE usuarios SET es_verificado = 1, es_activo = 1 WHERE id = :conductor_id";
+            $db->prepare($updateUser)->execute([':conductor_id' => $conductor_id]);
             
-            // Enviar correo de aprobación de vinculación
+            // 4. PREPARAR DATOS PARA EMAIL (CRITICAL FIX: Fetch real data)
             try {
-                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
-                $stmt->bindParam(':id', $conductor_id);
-                $stmt->execute();
+                // Obtener datos del conductor y sus documentos
+                $stmt = $db->prepare("
+                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, dc.vehiculo_placa 
+                    FROM usuarios u
+                    LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
+                    WHERE u.id = :id
+                ");
+                $stmt->execute([':id' => $conductor_id]);
                 $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                if ($conductorData) {
-                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
-                    require_once __DIR__ . '/../utils/Mailer.php';
-                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, ['licencia' => 'En proceso', 'placa' => 'En proceso']);
-                }
-            } catch (Exception $mailError) {}
+                // Obtener datos de la empresa para el logo/nombre
+                $stmtEmp = $db->prepare("SELECT nombre AS nombre_empresa, logo_url FROM empresas_transporte WHERE id = :id");
+                $stmtEmp->execute([':id' => $empresa_id]);
+                $empresaData = $stmtEmp->fetch(PDO::FETCH_ASSOC);
 
-            
-            // Enviar correo de aprobación de vinculación
-            try {
-                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
-                $stmt->bindParam(':id', $conductor_id);
-                $stmt->execute();
-                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($conductorData) {
+                if ($conductorData && $empresaData) {
                     $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    $documentos = [
+                        'licencia' => $conductorData['licencia_conduccion'] ?: 'Verificada',
+                        'placa' => $conductorData['vehiculo_placa'] ?: 'Verificada'
+                    ];
+
                     require_once __DIR__ . '/../utils/Mailer.php';
-                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, ['licencia' => 'En proceso', 'placa' => 'En proceso']);
+                    
+                    // Asegurarnos de usar una función que acepte detalles de empresa si Mailer la tiene, 
+                    // o inyectarlos en el cuerpo. Por ahora usamos la standard pero con datos reales.
+                    // TODO: Si sendConductorApprovedEmail no soporta logo de empresa, deberíamos actualizar Mailer.php también.
+                    // Asumiremos que Mailer.php necesita update o ya lo tiene.
+                    Mailer::sendConductorApprovedEmail(
+                        $conductorData['email'], 
+                        $nombreCompleto, 
+                        $documentos,
+                        $empresaData // Passing company data array
+                    );
                 }
-            } catch (Exception $mailError) {}
+            } catch (Exception $mailError) {
+                // Log error but don't fail transaction
+                error_log("Error enviando email conductor: " . $mailError->getMessage());
+            }
 
             $db->commit();
             
             echo json_encode([
                 'success' => true,
-                'message' => 'Conductor vinculado exitosamente a tu empresa'
+                'message' => 'Conductor aprobado y vinculado exitosamente'
             ]);
             
         } elseif ($accion === 'rechazar_solicitud') {
@@ -555,33 +599,31 @@ function handlePost($db) {
                 // Create detalles_conductor record
                 $insertQuery = "INSERT INTO detalles_conductor (
                                     usuario_id, 
-                                    estado_verificacion, 
+                                    estado_verificacion,
+                                    estado_aprobacion,
+                                    aprobado,
                                     fecha_ultima_verificacion, 
                                     creado_en, 
-                                    actualizado_en,
-                                    licencia_conduccion,
-                                    licencia_vencimiento,
-                                    vehiculo_tipo,
-                                    vehiculo_placa
+                                    actualizado_en
                                 ) 
                                VALUES (
                                     :conductor_id, 
-                                    'aprobado', 
+                                    'aprobado',
+                                    'aprobado',
+                                    1,
                                     NOW(), 
                                     NOW(), 
-                                    NOW(),
-                                    'PENDIENTE',
-                                    '2030-01-01',
-                                    'auto',
-                                    'PENDIENTE'
+                                    NOW()
                                 )";
                 $insertStmt = $db->prepare($insertQuery);
                 $insertStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
                 $insertStmt->execute();
             } else {
-                // Update existing record
+                // Update existing record with all approval flags
                 $updateQuery = "UPDATE detalles_conductor 
                                SET estado_verificacion = 'aprobado',
+                                   estado_aprobacion = 'aprobado',
+                                   aprobado = 1,
                                    fecha_ultima_verificacion = NOW(),
                                    actualizado_en = NOW()
                                WHERE usuario_id = :conductor_id";
@@ -596,59 +638,33 @@ function handlePost($db) {
             $activarStmt->bindParam(':id', $conductor_id, PDO::PARAM_INT);
             $activarStmt->execute();
             
-            
-            // Enviar correo de aprobación
+            // Enviar correo de aprobación con branding de empresa
             try {
+                // Fetch conductor data with correct fields
                 $stmt = $db->prepare("
-                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, v.placa
+                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, dc.vehiculo_placa
                     FROM usuarios u
                     LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
-                    LEFT JOIN vehiculos v ON dc.vehiculo_id = v.id
                     WHERE u.id = :id
                 ");
-                $stmt->bindParam(':id', $conductor_id);
-                $stmt->execute();
+                $stmt->execute([':id' => $conductor_id]);
                 $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                // Fetch company data for branding
+                $stmtEmp = $db->prepare("SELECT nombre AS nombre_empresa, logo_url FROM empresas_transporte WHERE id = :id");
+                $stmtEmp->execute([':id' => $empresa_id]);
+                $empresaData = $stmtEmp->fetch(PDO::FETCH_ASSOC);
 
                 if ($conductorData) {
                     $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
                     require_once __DIR__ . '/../utils/Mailer.php';
                     
                     $mailData = [
-                        'licencia' => $conductorData['licencia_conduccion'] ?? 'N/A',
-                        'placa' => $conductorData['placa'] ?? 'N/A'
+                        'licencia' => $conductorData['licencia_conduccion'] ?: 'Verificada',
+                        'placa' => $conductorData['vehiculo_placa'] ?: 'Verificada'
                     ];
                     
-                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData);
-                }
-            } catch (Exception $mailError) {
-                error_log("Error enviando email de aprobación: " . $mailError->getMessage());
-            }
-
-            
-            // Enviar correo de aprobación
-            try {
-                $stmt = $db->prepare("
-                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, v.placa
-                    FROM usuarios u
-                    LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
-                    LEFT JOIN vehiculos v ON dc.vehiculo_id = v.id
-                    WHERE u.id = :id
-                ");
-                $stmt->bindParam(':id', $conductor_id);
-                $stmt->execute();
-                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($conductorData) {
-                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
-                    require_once __DIR__ . '/../utils/Mailer.php';
-                    
-                    $mailData = [
-                        'licencia' => $conductorData['licencia_conduccion'] ?? 'N/A',
-                        'placa' => $conductorData['placa'] ?? 'N/A'
-                    ];
-                    
-                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData);
+                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData, $empresaData);
                 }
             } catch (Exception $mailError) {
                 error_log("Error enviando email de aprobación: " . $mailError->getMessage());

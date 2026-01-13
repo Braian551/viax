@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:shimmer/shimmer.dart';
 import 'conductor_card_shimmer.dart';
 
 /// Card que muestra información resumida de un conductor pendiente de verificación
@@ -26,9 +27,7 @@ class ConductorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const ConductorCardShimmer();
-    }
+    // We removed the global early return to allow granular shimmer like in EmpresaCard
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final estadoVerificacion = conductor['estado_verificacion'] ?? 'pendiente';
@@ -155,6 +154,21 @@ class ConductorCard extends StatelessWidget {
         ),
         _buildStatusBadge(context, statusColor),
       ],
+    );
+  }
+
+  Widget _buildShimmerContainer({required double width, required double height, double borderRadius = 8}) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+      ),
     );
   }
 
@@ -346,6 +360,21 @@ class ConductorCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    if (isLoading) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Shimmer.fromColors(
+        baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+        highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+        child: Row(
+          children: [
+            Expanded(child: _buildShimmerButton()),
+            const SizedBox(width: 8),
+            Expanded(child: _buildShimmerButton()),
+          ],
+        ),
+      );
+    }
+
     final estado = conductor['estado_verificacion'] ?? 'pendiente';
     
     if (estado == 'aprobado') {
@@ -358,8 +387,25 @@ class ConductorCard extends StatelessWidget {
       return _buildRejectedStatus(context);
     }
     
+    return _buildPendingActions(context);
+  }
+
+  Widget _buildPendingActions(BuildContext context) {
     return Row(
       children: [
+        if (onRechazar != null)
+          Expanded(
+            child: _buildActionButton(
+              context,
+              icon: Icons.close_rounded,
+              label: 'Rechazar',
+              color: AppColors.error,
+              onTap: onRechazar!,
+              isOutlined: true,
+            ),
+          ),
+        if (onRechazar != null && onAprobar != null)
+          const SizedBox(width: 8),
         if (onAprobar != null)
           Expanded(
             child: _buildActionButton(
@@ -371,90 +417,102 @@ class ConductorCard extends StatelessWidget {
               isFilled: true,
             ),
           ),
-        if (onAprobar != null && onRechazar != null)
-          const SizedBox(width: 8),
-        if (onRechazar != null)
-          Expanded(
-            child: _buildActionButton(
-              context,
-              icon: Icons.cancel_outlined,
-              label: 'Rechazar',
-              color: AppColors.error,
-              onTap: onRechazar!,
-              isOutlined: true,
-            ),
-          ),
       ],
     );
   }
 
   Widget _buildApprovedActions(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.success.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.verified_rounded, color: AppColors.success, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            'Conductor verificado',
-            style: TextStyle(
-              color: AppColors.success,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+    if (isLoading) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Shimmer.fromColors(
+        baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+        highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildShimmerButton()),
+                const SizedBox(width: 8),
+                Expanded(child: _buildShimmerButton()),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildShimmerButton(),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Botón de estado principal (Desactivar/Activar)
+        Row(
+          children: [
+            if (onDesactivar != null)
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  icon: Icons.block_rounded,
+                  label: 'Desactivar',
+                  color: AppColors.warning,
+                  onTap: onDesactivar!,
+                  isFilled: false,
+                ),
+              ),
+            if (onDesvincular != null) ...[
+              const SizedBox(width: 8),
+              _buildIconActionButton(
+                context,
+                icon: Icons.link_off_rounded,
+                color: AppColors.error,
+                onTap: onDesvincular!,
+                tooltip: 'Desvincular',
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    String? tooltip,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Tooltip(
+          message: tooltip ?? '',
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
             ),
           ),
-          if (onDesactivar != null || onDesvincular != null) ...[
-            const Spacer(),
-            SizedBox(
-              height: 24,
-              width: 24,
-              child: PopupMenuButton<String>(
-                padding: EdgeInsets.zero,
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  size: 18,
-                  color: AppColors.success.withValues(alpha: 0.8),
-                ),
-                onSelected: (value) {
-                  if (value == 'desactivar') {
-                    onDesactivar?.call();
-                  } else if (value == 'desvincular') {
-                    onDesvincular?.call();
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  if (onDesactivar != null)
-                   PopupMenuItem<String>(
-                      value: 'desactivar',
-                      child: Row(
-                        children: [
-                          Icon(Icons.block_rounded, color: AppColors.error, size: 18),
-                          SizedBox(width: 8),
-                          Text('Desactivar cuenta'),
-                        ],
-                      ),
-                    ),
-                  if (onDesvincular != null)
-                    PopupMenuItem<String>(
-                      value: 'desvincular',
-                      child: Row(
-                        children: [
-                          Icon(Icons.link_off_rounded, color: AppColors.primary, size: 18),
-                          SizedBox(width: 8),
-                          Text('Desvincular de empresa'),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerButton() {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
       ),
     );
   }
@@ -503,7 +561,7 @@ class ConductorCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         borderRadius: BorderRadius.circular(30), // Pill shape
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -515,16 +573,27 @@ class ConductorCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 16, color: textColor),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              if (isLoading)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                )
+              else ...[
+                Icon(icon, size: 16, color: textColor),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

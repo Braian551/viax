@@ -422,12 +422,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           children: [
             icon,
             const SizedBox(width: 12),
-            Text(
-              text,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: textColor,
-                fontSize: 15,
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                  fontSize: 15,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

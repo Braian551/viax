@@ -440,12 +440,15 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Row(
             children: [
-              Text(
-                'Empresa de Transporte',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: widget.isDark ? Colors.white70 : Colors.black87,
+              Flexible(
+                child: Text(
+                  'Empresa de Transporte',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: widget.isDark ? Colors.white70 : Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),

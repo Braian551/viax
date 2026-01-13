@@ -922,14 +922,72 @@ class Mailer {
     /**
      * Envía un correo de Aprobación para CONDUCTOR (Diseño Premium).
      */
-    public static function sendConductorApprovedEmail($toEmail, $userName, $conductorData) {
+    /**
+     * Envía un correo de Aprobación para CONDUCTOR (Diseño Premium con Branding de Empresa).
+     */
+    public static function sendConductorApprovedEmail($toEmail, $userName, $conductorData, $empresaData = null) {
         $subject = "✅ ¡Bienvenido al equipo! - Tu cuenta de conductor ha sido aprobada";
         
+        // 1. Prepare Logo if company data is provided
+        $companyLogoHtml = '';
+        $companyName = 'Viax';
+        $attachments = [];
+        
+        if ($empresaData) {
+            $companyName = $empresaData['nombre_empresa'] ?? 'Tu Empresa';
+            $logoSrc = '';
+            
+            if (!empty($empresaData['logo_url'])) {
+                // Reuse logic similar to sendCompanyStatusChangeEmail for logo embedding
+                $logoUrl = $empresaData['logo_url'];
+                $imageContent = null;
+                $mime = 'image/png';
+                
+                // Attempt to fetch logo
+                if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                    try {
+                        $ch = curl_init($logoUrl);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                        $imageContent = curl_exec($ch);
+                        if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200 && $imageContent) $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'image/png';
+                        curl_close($ch);
+                    } catch (Exception $e) {}
+                }
+                
+                if ($imageContent) {
+                    $ext = (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) ? 'jpg' : 'png';
+                    $tempFile = tempnam(sys_get_temp_dir(), 'logo');
+                    file_put_contents($tempFile, $imageContent);
+                    
+                    $attachments[] = [
+                        'path' => $tempFile,
+                        'name' => "company_logo.$ext",
+                        'cid' => 'company_logo',
+                        'type' => $mime
+                    ];
+                    $logoSrc = 'cid:company_logo';
+                }
+            }
+            
+            if (!empty($logoSrc)) {
+                $companyLogoHtml = "
+                <div style='text-align: center; margin: 20px 0;'>
+                    <img src='$logoSrc' alt='Logo de $companyName' style='max-width: 150px; height: auto; border-radius: 8px; border: 2px solid #E0E0E0;'>
+                    <p style='color: #666; margin-top: 5px; font-size: 14px;'>$companyName</p>
+                </div>";
+            }
+        }
+
         $bodyContent = "
             <div class='greeting'>¡Felicidades, $userName!</div>
             
+            $companyLogoHtml
+            
             <div style='background-color: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
-                <h2 style='color: #2e7d32; margin: 0 0 8px 0;'>¡Eres oficialmente un conductor Viax!</h2>
+                <h2 style='color: #2e7d32; margin: 0 0 8px 0;'>¡Eres oficialmente un conductor de $companyName!</h2>
                 <p style='color: #1b5e20; margin: 0;'>Tu documentación ha sido verificada y aprobada.</p>
             </div>
             
@@ -941,7 +999,7 @@ class Mailer {
             <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #F8F9FA; border-radius: 8px; overflow: hidden;'>
                 <tr style='background: #E8F5E9;'>
                     <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #2E7D32;'>
-                        Tus Datos
+                        Tus Datos Verificados
                     </td>
                 </tr>
                 <tr>
@@ -967,11 +1025,18 @@ class Mailer {
         ";
         
         $altBody = "¡Felicidades, $userName!\n\n" .
-                   "Tu cuenta de conductor ha sido APROBADA.\n\n" .
+                   "Tu cuenta de conductor en $companyName ha sido APROBADA.\n\n" .
                    "Ya puedes conectarte y recibir viajes.\n\n" .
                    "Saludos,\nEquipo Viax";
         
-        return self::send($toEmail, $userName, $subject, self::wrapLayout($bodyContent), $altBody);
+        $result = self::send($toEmail, $userName, $subject, self::wrapLayout($bodyContent), $altBody, $attachments);
+        
+        // Clean up temp files
+        foreach ($attachments as $att) {
+            if (file_exists($att['path'])) @unlink($att['path']);
+        }
+        
+        return $result;
     }
 
     /**
