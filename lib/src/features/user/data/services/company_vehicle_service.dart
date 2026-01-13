@@ -113,4 +113,34 @@ class CompanyVehicleService {
 
     return null;
   }
+
+  /// Obtiene información detallada de una empresa por su ID
+  static Future<CompanyDetails?> getCompanyDetails(int empresaId) async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/user/get_company_details.php',
+      );
+
+      debugPrint('🏢 CompanyVehicleService: Obteniendo detalles empresa $empresaId');
+
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'empresa_id': empresaId}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['empresa'] != null) {
+          return CompanyDetails.fromJson(data['empresa']);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error obteniendo detalles de empresa: $e');
+      return null;
+    }
+  }
 }

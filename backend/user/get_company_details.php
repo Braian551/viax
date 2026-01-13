@@ -1,0 +1,117 @@
+<?php
+/**
+ * API: Obtener Información Detallada de una Empresa para Clientes
+ * Endpoint: user/get_company_details.php
+ */
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+require_once __DIR__ . '/../config/database.php';
+
+try {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($data['empresa_id'])) {
+        throw new Exception('empresa_id es requerido');
+    }
+    
+    $empresaId = intval($data['empresa_id']);
+    
+    $db = new Database();
+    $conn = $db->getConnection();
+    
+    // Query with correct column names
+    $empresaQuery = "
+        SELECT 
+            e.id,
+            e.nombre,
+            e.logo_url,
+            e.verificada,
+            e.descripcion,
+            e.creado_en,
+            ec.telefono,
+            ec.email,
+            ec.municipio,
+            ec.departamento,
+            em.total_conductores,
+            em.conductores_activos,
+            em.total_viajes_completados,
+            em.calificacion_promedio,
+            em.total_calificaciones
+        FROM empresas_transporte e
+        LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
+        LEFT JOIN empresas_metricas em ON e.id = em.empresa_id
+        WHERE e.id = :empresa_id
+    ";
+    
+    $stmt = $conn->prepare($empresaQuery);
+    $stmt->execute(['empresa_id' => $empresaId]);
+    $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$empresa) {
+        throw new Exception('Empresa no encontrada');
+    }
+    
+    // Get vehicle types
+    $vehiculosQuery = "
+        SELECT 
+            etv.tipo_vehiculo_codigo as codigo,
+            ctv.nombre
+        FROM empresa_tipos_vehiculo etv
+        INNER JOIN catalogo_tipos_vehiculo ctv ON etv.tipo_vehiculo_codigo = ctv.codigo
+        WHERE etv.empresa_id = :empresa_id
+        AND etv.activo = true
+        ORDER BY ctv.orden
+    ";
+    $stmt = $conn->prepare($vehiculosQuery);
+    $stmt->execute(['empresa_id' => $empresaId]);
+    $tiposVehiculo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calculate year from creado_en
+    $anioRegistro = null;
+    if ($empresa['creado_en']) {
+        $anioRegistro = (int) date('Y', strtotime($empresa['creado_en']));
+    }
+    
+    // Build response
+    $response = [
+        'success' => true,
+        'empresa' => [
+            'id' => intval($empresa['id']),
+            'nombre' => $empresa['nombre'],
+            'logo_url' => $empresa['logo_url'],
+            'verificada' => (bool)$empresa['verificada'],
+            'descripcion' => $empresa['descripcion'],
+            'telefono' => $empresa['telefono'],
+            'email' => $empresa['email'],
+            'website' => null,
+            'municipio' => $empresa['municipio'],
+            'departamento' => $empresa['departamento'],
+            'anio_fundacion' => null,
+            'anio_registro' => $anioRegistro,
+            'total_conductores' => intval($empresa['total_conductores'] ?? 0),
+            'viajes_completados' => intval($empresa['total_viajes_completados'] ?? 0),
+            'calificacion_promedio' => $empresa['calificacion_promedio'] ? round(floatval($empresa['calificacion_promedio']), 1) : null,
+            'total_calificaciones' => intval($empresa['total_calificaciones'] ?? 0),
+            'tipos_vehiculo' => $tiposVehiculo
+        ]
+    ];
+    
+    echo json_encode($response);
+    
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
+}
+?>

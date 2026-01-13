@@ -175,3 +175,85 @@ class CompanyVehicleResponse {
     return CompanyVehicleResponse(success: false, message: message);
   }
 }
+
+/// Información detallada de una empresa (para el Sheet de detalles)
+class CompanyDetails {
+  final int id;
+  final String nombre;
+  final String? logoUrl;
+  final bool verificada;
+  final String? descripcion;
+  final String? telefono;
+  final String? email;
+  final String? website;
+  final String? municipio;
+  final String? departamento;
+  final int? anioFundacion;
+  final int? anioRegistro;
+  final int totalConductores;
+  final int viajesCompletados;
+  final double? calificacionPromedio;
+  final int totalCalificaciones;
+  final List<VehicleTypeInfo> tiposVehiculo;
+
+  CompanyDetails({
+    required this.id,
+    required this.nombre,
+    this.logoUrl,
+    this.verificada = false,
+    this.descripcion,
+    this.telefono,
+    this.email,
+    this.website,
+    this.municipio,
+    this.departamento,
+    this.anioFundacion,
+    this.anioRegistro,
+    this.totalConductores = 0,
+    this.viajesCompletados = 0,
+    this.calificacionPromedio,
+    this.totalCalificaciones = 0,
+    this.tiposVehiculo = const [],
+  });
+
+  factory CompanyDetails.fromJson(Map<String, dynamic> json) {
+    return CompanyDetails(
+      id: json['id'] ?? 0,
+      nombre: json['nombre'] ?? '',
+      logoUrl: json['logo_url'],
+      verificada: json['verificada'] ?? false,
+      descripcion: json['descripcion'],
+      telefono: json['telefono'],
+      email: json['email'],
+      website: json['website'],
+      municipio: json['municipio'],
+      departamento: json['departamento'],
+      anioFundacion: json['anio_fundacion'],
+      anioRegistro: json['anio_registro'],
+      totalConductores: json['total_conductores'] ?? 0,
+      viajesCompletados: json['viajes_completados'] ?? 0,
+      calificacionPromedio: json['calificacion_promedio']?.toDouble(),
+      totalCalificaciones: json['total_calificaciones'] ?? 0,
+      tiposVehiculo: (json['tipos_vehiculo'] as List<dynamic>?)
+              ?.map((e) => VehicleTypeInfo.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+/// Info básica de un tipo de vehículo
+class VehicleTypeInfo {
+  final String codigo;
+  final String nombre;
+
+  VehicleTypeInfo({required this.codigo, required this.nombre});
+
+  factory VehicleTypeInfo.fromJson(Map<String, dynamic> json) {
+    return VehicleTypeInfo(
+      codigo: json['codigo'] ?? '',
+      nombre: json['nombre'] ?? '',
+    );
+  }
+}
+

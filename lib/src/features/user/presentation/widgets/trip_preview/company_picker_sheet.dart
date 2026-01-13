@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
+import 'company_details_sheet.dart';
 
 class CompanyPickerSheet extends StatefulWidget {
   const CompanyPickerSheet({
@@ -211,6 +212,17 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                                   widget.onCompanySelected(company.id);
                                   Navigator.pop(context);
                                 },
+                                onLogoTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: Colors.transparent,
+                                    isScrollControlled: true,
+                                    builder: (_) => CompanyDetailsSheet(
+                                      empresaId: company.id,
+                                      isDark: widget.isDark,
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -262,12 +274,14 @@ class _CompanyItem extends StatelessWidget {
     required this.isSelected,
     required this.isDark,
     required this.onTap,
+    required this.onLogoTap,
   });
 
   final CompanyVehicleOption company;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
+  final VoidCallback onLogoTap;
 
   @override
   Widget build(BuildContext context) {
@@ -308,42 +322,45 @@ class _CompanyItem extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Logo
-                Hero(
-                  tag: 'company_logo_${company.id}',
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
-                      ),
-                    ),
-                    child: company.logoUrl != null && company.logoUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              company.logoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
-                                Icons.business_rounded,
-                                color: isDark ? Colors.white24 : Colors.grey.shade300,
-                              ),
-                            ),
-                          )
-                        : Icon(
-                            Icons.business_rounded,
-                            color: isDark ? Colors.white24 : Colors.grey.shade300,
+                // Logo (Tappable for details)
+                GestureDetector(
+                  onTap: onLogoTap,
+                  child: Hero(
+                    tag: 'company_logo_${company.id}',
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
+                        ],
+                        border: Border.all(
+                          color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: company.logoUrl != null && company.logoUrl!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                company.logoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.business_rounded,
+                                  color: isDark ? Colors.white24 : Colors.grey.shade300,
+                                ),
+                              ),
+                            )
+                          : Icon(
+                              Icons.business_rounded,
+                              color: isDark ? Colors.white24 : Colors.grey.shade300,
+                            ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
