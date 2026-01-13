@@ -4,7 +4,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept');
 
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -65,7 +65,8 @@ try {
                 dc.estado_verificacion,
                 dc.fecha_ultima_verificacion,
                 dc.aprobado,
-                dc.estado_aprobacion
+                dc.estado_aprobacion,
+                dc.razon_rechazo
               FROM usuarios u
               INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
               WHERE u.id = :conductor_id";
@@ -99,6 +100,7 @@ try {
         'fecha_ultima_verificacion' => $conductor['fecha_ultima_verificacion'],
         'aprobado' => (int)($conductor['aprobado'] ?? 0),
         'estado_aprobacion' => $conductor['estado_aprobacion'] ?? 'pendiente',
+        'razon_rechazo' => $conductor['razon_rechazo'],
         
         // License information
         'licencia' => null,

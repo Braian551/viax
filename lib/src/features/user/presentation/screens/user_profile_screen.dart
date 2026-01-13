@@ -27,7 +27,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   bool _isLoggingOut = false;
   
   // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
+  // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
   String? _driverStatus;
+  String? _rejectionReason;
   
   // Animaciones
   late AnimationController _animationController;
@@ -71,6 +73,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             final profile = driverProfile['profile'];
             if (profile != null) {
               _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
+              _rejectionReason = profile['razon_rechazo'];
             }
           }
           
@@ -433,9 +436,76 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     );
   }
 
+  void _showRejectionDetails() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            const Text('Solicitud Rechazada'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tu solicitud para ser conductor ha sido rechazada por el siguiente motivo:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                _rejectionReason ?? 'No se especificó un motivo.',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Puedes corregir tu información y enviar la solicitud nuevamente.',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await Navigator.pushNamed(context, RouteNames.driverRegistration);
+              _loadUserData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Corregir'),
+          ),
+        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+
   Widget _buildBecomeDriverCard(bool isDark) {
     // Check if user has pending/approved driver registration
     final bool hasPendingRequest = _driverStatus == 'pendiente';
+    final bool isRejected = _driverStatus == 'rechazado';
     final bool isApproved = _driverStatus == 'aprobado' || _driverStatus == 'activo';
     
     // If approved, show switch to driver mode
@@ -443,21 +513,34 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
       return _buildSwitchToDriverCard(isDark);
     }
     
-    // Pending or new registration
+    // Helper to configure card appearance
+    Color getStartColor() {
+      if (isRejected) return AppColors.error;
+      if (hasPendingRequest) return Colors.orange;
+      return AppColors.primary;
+    }
+
+    Color getEndColor() {
+      if (isRejected) return AppColors.error.withValues(alpha: 0.8);
+      if (hasPendingRequest) return Colors.orange.shade700;
+      return AppColors.primary.withValues(alpha: 0.8);
+    }
+    
+    final startColor = getStartColor();
+    final endColor = getEndColor();
+    // Pending or new registration or rejected
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: hasPendingRequest 
-            ? [Colors.orange, Colors.orange.shade700]
-            : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+          colors: [startColor, endColor],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (hasPendingRequest ? Colors.orange : AppColors.primary).withValues(alpha: 0.3),
+            color: startColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -466,10 +549,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-            onTap: hasPendingRequest ? null : () async {
+            onTap: isRejected ? () => _showRejectionDetails() : (hasPendingRequest ? null : () async {
             await Navigator.pushNamed(context, RouteNames.driverRegistration);
             _loadUserData(); // Refresh profile after return
-          },
+          }),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -483,7 +566,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    hasPendingRequest ? Icons.hourglass_top_rounded : Icons.directions_car_filled_rounded,
+                    isRejected ? Icons.warning_amber_rounded : (hasPendingRequest ? Icons.hourglass_top_rounded : Icons.directions_car_filled_rounded),
                     color: Colors.white,
                     size: 28,
                   ),
@@ -495,7 +578,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasPendingRequest ? 'Solicitud en Proceso' : 'Genera Ingresos Extra',
+                        isRejected ? 'Solicitud Rechazada' : (hasPendingRequest ? 'Solicitud en Proceso' : 'Genera Ingresos Extra'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -505,9 +588,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        hasPendingRequest 
-                          ? 'Tu solicitud está siendo revisada. Te notificaremos cuando sea aprobada.'
-                          : 'Conviértete en conductor de Viax y maneja tu propio tiempo.',
+                        isRejected 
+                          ? 'Tu solicitud ha sido rechazada. Toca para ver los detalles.'
+                          : (hasPendingRequest 
+                            ? 'Tu solicitud está siendo revisada. Te notificaremos cuando sea aprobada.'
+                            : 'Conviértete en conductor de Viax y maneja tu propio tiempo.'),
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 13,
@@ -517,7 +602,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                     ],
                   ),
                 ),
-                if (!hasPendingRequest)
+                if (!hasPendingRequest || isRejected)
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
                     color: Colors.white70,

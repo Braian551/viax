@@ -76,11 +76,12 @@ try {
             SET estado_verificacion = 'rechazado',
                 estado_aprobacion = 'rechazado',
                 aprobado = 0,
+                razon_rechazo = ?,
                 fecha_ultima_verificacion = CURRENT_TIMESTAMP,
                 actualizado_en = CURRENT_TIMESTAMP
             WHERE usuario_id = ?
         ");
-        $stmt->execute([$conductor_id]);
+        $stmt->execute([$motivo, $conductor_id]);
 
         // Registrar en logs de auditoría (opcional)
         try {

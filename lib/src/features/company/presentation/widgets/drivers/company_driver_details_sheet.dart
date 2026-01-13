@@ -18,7 +18,18 @@ class CompanyDriverDetailsSheet extends StatelessWidget {
     final email = driver['email'] ?? 'Sin email';
     final telefono = driver['telefono'] ?? 'Sin teléfono';
     final estado = driver['estado_verificacion'] ?? 'pendiente';
-    final fechaRegistro = driver['created_at'] ?? 'Fecha desconocida';
+    final rawDate = driver['fecha_registro'] ?? driver['created_at'];
+    String fechaRegistro;
+    if (rawDate != null) {
+      try {
+        final date = DateTime.parse(rawDate.toString());
+        fechaRegistro = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+      } catch (e) {
+        fechaRegistro = rawDate.toString();
+      }
+    } else {
+      fechaRegistro = 'Fecha desconocida';
+    }
 
     return Container(
       decoration: BoxDecoration(

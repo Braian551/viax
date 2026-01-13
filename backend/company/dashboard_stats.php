@@ -86,14 +86,14 @@ try {
     $stmt->execute();
     $viajes_stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // 2. Total de conductores de la empresa
+    // 2. Total de conductores de la empresa (Solo conductores aprobados y vinculados)
     $conductores_sql = "SELECT 
-                         COUNT(*) as total,
-                         COUNT(CASE WHEN es_activo = 1 THEN 1 END) as activos,
-                         COUNT(CASE WHEN es_activo = 0 THEN 1 END) as inactivos
-                        FROM usuarios 
-                        WHERE tipo_usuario = 'conductor' 
-                        AND empresa_id = :empresa_id";
+                         COUNT(DISTINCT u.id) as total,
+                         COUNT(DISTINCT CASE WHEN u.es_activo = 1 THEN u.id END) as activos,
+                         COUNT(DISTINCT CASE WHEN u.es_activo = 0 THEN u.id END) as inactivos
+                        FROM usuarios u
+                        WHERE u.tipo_usuario = 'conductor' 
+                        AND u.empresa_id = :empresa_id";
     
     $stmt = $db->prepare($conductores_sql);
     $stmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);

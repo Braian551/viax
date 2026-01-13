@@ -475,8 +475,8 @@ function handlePost($db) {
                  $db->prepare($insertCond)->execute([':conductor_id' => $conductor_id]);
             }
 
-            // 3. ACTUALIZAR USUARIO A VERIFICADO Y ACTIVO
-            $updateUser = "UPDATE usuarios SET es_verificado = 1, es_activo = 1 WHERE id = :conductor_id";
+            // 3. ACTUALIZAR USUARIO A VERIFICADO, ACTIVO Y TIPO CONDUCTOR
+            $updateUser = "UPDATE usuarios SET es_verificado = 1, es_activo = 1, tipo_usuario = 'conductor' WHERE id = :conductor_id";
             $db->prepare($updateUser)->execute([':conductor_id' => $conductor_id]);
             
             // 4. PREPARAR DATOS PARA EMAIL (CRITICAL FIX: Fetch real data)
@@ -549,21 +549,19 @@ function handlePost($db) {
             $stmt->bindParam(':razon', $razon, PDO::PARAM_STR);
             $stmt->execute();
             
-            
-            // Enviar correo de rechazo de vinculación
-            try {
-                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
-                $stmt->bindParam(':id', $conductor_id);
-                $stmt->execute();
-                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($conductorData) {
-                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
-                    require_once __DIR__ . '/../utils/Mailer.php';
-                    Mailer::sendConductorRejectedEmail($conductorData['email'], $nombreCompleto, [], $razon);
-                }
-            } catch (Exception $mailError) {}
-            
+            // ACTUALIZAR ESTADO DEL CONDUCTOR EN detalles_conductor
+            $updateCond = "UPDATE detalles_conductor 
+                           SET estado_verificacion = 'rechazado',
+                               estado_aprobacion = 'rechazado',
+                               aprobado = 0,
+                               razon_rechazo = :razon,
+                               fecha_ultima_verificacion = NOW(),
+                               actualizado_en = NOW()
+                           WHERE usuario_id = :conductor_id";
+            $updateStmt = $db->prepare($updateCond);
+            $updateStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+            $updateStmt->bindParam(':razon', $razon, PDO::PARAM_STR);
+            $updateStmt->execute();
             
             // Enviar correo de rechazo de vinculación
             try {
@@ -632,11 +630,19 @@ function handlePost($db) {
                 $updateStmt->execute();
             }
             
-            // Activar conductor
-            $activarQuery = "UPDATE usuarios SET es_activo = 1, es_verificado = 1 WHERE id = :id";
+            // Activar conductor, vincular a la empresa, y asegurar tipo_usuario correcto
+            $activarQuery = "UPDATE usuarios SET es_activo = 1, es_verificado = 1, empresa_id = :empresa_id, tipo_usuario = 'conductor' WHERE id = :id";
             $activarStmt = $db->prepare($activarQuery);
             $activarStmt->bindParam(':id', $conductor_id, PDO::PARAM_INT);
+            $activarStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
             $activarStmt->execute();
+
+            // También aprobar cualquier solicitud pendiente para mantener consistencia
+            $approveReqQuery = "UPDATE solicitudes_vinculacion_conductor 
+                               SET estado = 'aprobada', actualizado_en = NOW() 
+                               WHERE conductor_id = :conductor_id AND empresa_id = :empresa_id AND estado = 'pendiente'";
+            $approveReqStmt = $db->prepare($approveReqQuery);
+            $approveReqStmt->execute([':conductor_id' => $conductor_id, ':empresa_id' => $empresa_id]);
             
             // Enviar correo de aprobación con branding de empresa
             try {
@@ -690,7 +696,9 @@ function handlePost($db) {
                 // Create detalles_conductor record with rejected status
                 $insertQuery = "INSERT INTO detalles_conductor (
                                     usuario_id, 
-                                    estado_verificacion, 
+                                    estado_verificacion,
+                                    estado_aprobacion,
+                                    aprobado, 
                                     razon_rechazo, 
                                     fecha_ultima_verificacion, 
                                     creado_en, 
@@ -702,7 +710,9 @@ function handlePost($db) {
                                 ) 
                                VALUES (
                                     :conductor_id, 
-                                    'rechazado', 
+                                    'rechazado',
+                                    'rechazado',
+                                    0, 
                                     :razon, 
                                     NOW(), 
                                     NOW(), 
@@ -720,6 +730,8 @@ function handlePost($db) {
                 // Update existing record
                 $updateQuery = "UPDATE detalles_conductor 
                                SET estado_verificacion = 'rechazado',
+                                   estado_aprobacion = 'rechazado',
+                                   aprobado = 0,
                                    fecha_ultima_verificacion = NOW(),
                                    razon_rechazo = :razon,
                                    actualizado_en = NOW()

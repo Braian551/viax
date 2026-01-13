@@ -52,6 +52,11 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    
+    // Refresh stats if navigating to dashboard tab
+    if (index == 0) {
+      context.read<CompanyProvider>().loadDashboardStats();
+    }
   }
 
   void _navigateToDocumentos() {
@@ -64,7 +69,12 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           empresaId: empresaId,
         ),
       ),
-    );
+    ).then((_) {
+      // Refresh stats when returning from documentos screen
+      if (mounted) {
+        context.read<CompanyProvider>().loadDashboardStats();
+      }
+    });
   }
 
   @override

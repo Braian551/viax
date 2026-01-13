@@ -57,7 +57,7 @@ class CompanyProvider extends ChangeNotifier {
 
   // Dashboard stats getters
   int get viajesHoy => _dashboardStats?['viajes']?['hoy'] ?? 0;
-  int get totalConductores => _dashboardStats?['conductores']?['activos'] ?? 0;
+  int get totalConductores => _dashboardStats?['conductores']?['total'] ?? 0;
   String get gananciasDisplay =>
       _dashboardStats?['ganancias']?['display'] ?? '\$0';
   int get solicitudesPendientes =>
