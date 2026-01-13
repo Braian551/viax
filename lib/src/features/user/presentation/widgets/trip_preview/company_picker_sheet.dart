@@ -24,6 +24,7 @@ class CompanyPickerSheet extends StatefulWidget {
 class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
   late List<CompanyVehicleOption> _filteredCompanies;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -50,61 +52,71 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: widget.isDark 
-            ? const Color(0xFF1A1A1A).withValues(alpha: 0.8) 
-            : Colors.white.withValues(alpha: 0.8),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(
-          color: widget.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-          width: 0.5,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Column(
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: widget.isDark ? Colors.white24 : Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+    // Draggable Sheet for better "Drag" experience
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75, // Altura inicial (75% de la pantalla)
+      minChildSize: 0.5,      // Altura mínima (50%)
+      maxChildSize: 0.95,     // Altura máxima (95%)
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: widget.isDark 
+                ? const Color(0xFF1A1A1A).withValues(alpha: 0.85) 
+                : Colors.white.withValues(alpha: 0.85),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(
+              color: widget.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 30,
+                offset: const Offset(0, -5),
               ),
-              
-              // Header & Search
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                child: Column(
-                  children: [
-                    Row(
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              child: Column(
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: widget.isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2.5),
+                      ),
+                    ),
+                  ),
+                  
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
+                            color: AppColors.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.business_rounded, 
                             color: AppColors.primary,
-                            size: 20,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Text(
                           'Elige la empresa',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.5,
                             color: widget.isDark ? Colors.white : Colors.black87,
@@ -112,95 +124,134 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    
-                    // Glass Search Bar
-                    Container(
+                  ),
+
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Container(
                       decoration: BoxDecoration(
                         color: widget.isDark 
-                            ? Colors.white.withValues(alpha: 0.05) 
-                            : Colors.black.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(16),
+                            ? Colors.white.withValues(alpha: 0.08) 
+                            : Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                          color: _searchFocusNode.hasFocus 
+                              ? AppColors.primary.withValues(alpha: 0.5) 
+                              : (widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.transparent),
+                          width: 1.5,
                         ),
                       ),
                       child: TextField(
                         controller: _searchController,
+                        focusNode: _searchFocusNode,
                         style: TextStyle(
                           color: widget.isDark ? Colors.white : Colors.black87,
-                          fontSize: 15,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
+                        onTap: () {
+                          // Ensure focus causes build to update border
+                          setState(() {});
+                        },
                         decoration: InputDecoration(
                           hintText: 'Buscar por nombre...',
                           hintStyle: TextStyle(
-                            color: widget.isDark ? Colors.white38 : Colors.black38,
-                            fontSize: 15,
+                            color: widget.isDark ? Colors.white38 : Colors.grey[500],
+                            fontSize: 16,
                           ),
                           prefixIcon: Icon(
                             Icons.search_rounded,
-                            color: widget.isDark ? Colors.white54 : Colors.black45,
-                            size: 20,
+                            color: _searchFocusNode.hasFocus 
+                                ? AppColors.primary
+                                : (widget.isDark ? Colors.white54 : Colors.grey[500]),
+                            size: 22,
                           ),
+                          suffixIcon: _searchController.text.isNotEmpty 
+                            ? GestureDetector(
+                                onTap: () {
+                                  _searchController.clear();
+                                  // remove focus
+                                  _searchFocusNode.unfocus();
+                                  setState(() {});
+                                },
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: widget.isDark ? Colors.white54 : Colors.grey[500],
+                                  size: 20,
+                                ),
+                              )
+                            : null,
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // List
-              Expanded(
-                child: _filteredCompanies.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                        itemCount: _filteredCompanies.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final company = _filteredCompanies[index];
-                          final isSelected = company.id == widget.selectedCompanyId;
-                          
-                          return _CompanyItem(
-                            company: company,
-                            isSelected: isSelected,
-                            isDark: widget.isDark,
-                            onTap: () {
-                              widget.onCompanySelected(company.id);
-                              Navigator.pop(context);
+                  // List
+                  Expanded(
+                    child: _filteredCompanies.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.separated(
+                            controller: scrollController, // Vital for DraggableScrollableSheet
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                            itemCount: _filteredCompanies.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              final company = _filteredCompanies[index];
+                              final isSelected = company.id == widget.selectedCompanyId;
+                              
+                              return _CompanyItem(
+                                company: company,
+                                isSelected: isSelected,
+                                isDark: widget.isDark,
+                                onTap: () {
+                                  widget.onCompanySelected(company.id);
+                                  Navigator.pop(context);
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
+                          ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 
   Widget _buildEmptyState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.search_off_rounded,
-          size: 64,
-          color: widget.isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No se encontraron empresas',
-          style: TextStyle(
-            color: widget.isDark ? Colors.white38 : Colors.black38,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.search_off_rounded,
+              size: 48,
+              color: widget.isDark ? Colors.white24 : Colors.grey[400],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            'No encontramos esa empresa',
+            style: TextStyle(
+              color: widget.isDark ? Colors.white54 : Colors.black54,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -222,142 +273,171 @@ class _CompanyItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
+      curve: Curves.fastOutSlowIn,
       decoration: BoxDecoration(
         color: isSelected 
-            ? AppColors.primary.withValues(alpha: 0.1)
-            : (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02)),
-        borderRadius: BorderRadius.circular(20),
+            ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+            : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isSelected 
-              ? AppColors.primary.withValues(alpha: 0.3)
-              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
-          width: isSelected ? 1.5 : 1,
+              ? AppColors.primary
+              : (isDark ? Colors.transparent : Colors.grey.withValues(alpha: 0.15)),
+          width: isSelected ? 2 : 1,
         ),
+        boxShadow: isSelected || !isDark
+            ? [
+                BoxShadow(
+                  color: isSelected 
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Logo
-              Hero(
-                tag: 'company_logo_${company.id}',
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          highlightColor: AppColors.primary.withValues(alpha: 0.1),
+          splashColor: AppColors.primary.withValues(alpha: 0.1),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Logo
+                Hero(
+                  tag: 'company_logo_${company.id}',
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: company.logoUrl != null && company.logoUrl!.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.network(
+                              company.logoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Icon(
+                                Icons.business_rounded,
+                                color: isDark ? Colors.white24 : Colors.grey.shade300,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            Icons.business_rounded,
+                            color: isDark ? Colors.white24 : Colors.grey.shade300,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        company.nombre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : Colors.black87,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: company.hasConductores 
+                              ? (isDark ? Colors.green.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.1))
+                              : (isDark ? Colors.grey.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.directions_car_filled_rounded, 
+                              size: 14, 
+                              color: company.hasConductores ? AppColors.success : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              company.hasConductores 
+                                  ? '${company.conductores} conductores'
+                                  : 'Sin conductores',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: company.hasConductores 
+                                    ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
+                                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  child: company.logoUrl != null && company.logoUrl!.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.network(
-                            company.logoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.business_rounded,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        )
-                      : Icon(
-                          Icons.business_rounded,
-                          color: Colors.grey.shade400,
-                        ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                
+                // Price & Selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      company.nombre,
+                      '\$${company.tarifaTotal.round()}',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: company.hasConductores 
-                            ? Colors.green.withValues(alpha: 0.1) 
-                            : Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    if (isSelected)
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check, 
+                          color: Colors.white, 
+                          size: 16,
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        size: 24,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.directions_car_filled_rounded, 
-                            size: 12, 
-                            color: company.hasConductores ? Colors.green : Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            company.hasConductores 
-                                ? '${company.conductores} cerca'
-                                : 'Sin conductores',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: company.hasConductores 
-                                  ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
-                                  : (isDark ? Colors.white38 : Colors.black38),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
-              ),
-              
-              // Price & Selection
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '\$${company.tarifaTotal.toInt()}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (isSelected)
-                    Icon(
-                      Icons.check_circle_rounded, 
-                      color: AppColors.primary, 
-                      size: 22,
-                    )
-                  else
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: isDark ? Colors.white10 : Colors.black12,
-                      size: 14,
-                    ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
