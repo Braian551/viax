@@ -257,6 +257,10 @@ class CompanyService {
                     'conductores' => $numConductores,
                     'distancia_conductor_km' => $distanciaConductor !== null ? round($distanciaConductor, 2) : null,
                     'tarifa_total' => $precio['total'],
+                    'tarifa_base' => $precio['tarifa_base'],
+                    'costo_distancia' => $precio['costo_distancia'],
+                    'costo_tiempo' => $precio['costo_tiempo'],
+                    'recargo_precio' => $precio['recargo_precio'],
                     'periodo' => $precio['periodo'],
                     'recargo_porcentaje' => $precio['recargo_porcentaje']
                 ];
@@ -350,9 +354,12 @@ class CompanyService {
         if ($total < $tarifaMinima) $total = $tarifaMinima;
         
         return [
+            'tarifa_base' => round($tarifaBase, 0),
+            'costo_distancia' => round($precioDistancia, 0),
+            'costo_tiempo' => round($precioTiempo, 0),
             'subtotal' => round($subtotal, 2),
             'recargo_porcentaje' => round($recargoPorcentaje, 2),
-            'recargo_precio' => round($recargoPrecio, 2),
+            'recargo_precio' => round($recargoPrecio, 0),
             'total' => round($total, 0),
             'periodo' => $periodo
         ];

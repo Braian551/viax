@@ -10,6 +10,10 @@ class CompanyVehicleOption {
   final double?
   distanciaConductorKm; // Nullable: null si no hay conductores cerca
   final double tarifaTotal;
+  final double tarifaBase;
+  final double costoDistancia;
+  final double costoTiempo;
+  final double recargoPrecio;
   final String periodo;
   final double recargoPorcentaje;
 
@@ -20,6 +24,10 @@ class CompanyVehicleOption {
     required this.conductores,
     this.distanciaConductorKm,
     required this.tarifaTotal,
+    required this.tarifaBase,
+    required this.costoDistancia,
+    required this.costoTiempo,
+    required this.recargoPrecio,
     required this.periodo,
     required this.recargoPorcentaje,
   });
@@ -35,6 +43,10 @@ class CompanyVehicleOption {
       conductores: json['conductores'] ?? 0,
       distanciaConductorKm: json['distancia_conductor_km']?.toDouble(),
       tarifaTotal: (json['tarifa_total'] ?? 0).toDouble(),
+      tarifaBase: (json['tarifa_base'] ?? 0).toDouble(),
+      costoDistancia: (json['costo_distancia'] ?? 0).toDouble(),
+      costoTiempo: (json['costo_tiempo'] ?? 0).toDouble(),
+      recargoPrecio: (json['recargo_precio'] ?? 0).toDouble(),
       periodo: json['periodo'] ?? 'normal',
       recargoPorcentaje: (json['recargo_porcentaje'] ?? 0).toDouble(),
     );
