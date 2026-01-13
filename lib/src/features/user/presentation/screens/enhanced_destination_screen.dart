@@ -519,31 +519,50 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             // Mapa de fondo (interactivo)
 
             // Gradiente superior (no bloquea gestos)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        isDark ? Colors.black : Colors.white,
-                        isDark
-                          ? Colors.black.withValues(alpha: 0.6)
-                          : Colors.white.withValues(alpha: 0.7),
-                        Colors.transparent,
-                      ],
-                    ),
+            // Fondo con gradiente premium
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            AppColors.darkBackground,
+                            AppColors.darkSurface,
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ]
+                        : [
+                            AppColors.lightBackground,
+                            Colors.white,
+                            AppColors.primary.withValues(alpha: 0.03),
+                          ],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
                 ),
               ),
             ),
 
-            // Contenido superior (no ocupa todo el stack)
+            // Elementos decorativos de fondo (Círculos sutiles)
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.05),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Contenido superior
             Positioned(
               top: MediaQuery.of(context).padding.top,
               left: 0,
@@ -563,13 +582,10 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                   const SizedBox(height: 12),
                   FadeTransition(
                     opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: _buildWaypointsSection(
-                        isDark: isDark,
-                        useDragMode: useDragMode,
-                        maxSuggestionsHeight: maxSuggestionsHeight,
-                      ),
+                    child: _buildWaypointsSection(
+                      isDark: isDark,
+                      useDragMode: useDragMode,
+                      maxSuggestionsHeight: maxSuggestionsHeight,
                     ),
                   ),
                 ],

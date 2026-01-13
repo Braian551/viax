@@ -43,22 +43,18 @@ class LocationInput extends StatelessWidget {
     final borderDefault = AppColors.primary.withValues(alpha: 0.06);
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isDark ? bgColor.withValues(alpha: 0.06) : bgColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isEditing
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : borderDefault,
-                width: isEditing ? 1.5 : 1,
-              ),
-            ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.grey.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isEditing
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.2)),
+            width: isEditing ? 1.5 : 1,
+          ),
+        ),
             child: Row(
               children: [
                 if (isEditing) ...[
@@ -144,8 +140,6 @@ class LocationInput extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 }

@@ -24,6 +24,7 @@ class InlineSuggestions extends StatefulWidget {
   final VoidCallback onTextChanged;
   final VoidCallback? onUseCurrentLocation;
   final VoidCallback? onOpenMap;
+  final String? heroTag;
 
   const InlineSuggestions({
     super.key,
@@ -40,6 +41,7 @@ class InlineSuggestions extends StatefulWidget {
     required this.onTextChanged,
     this.onUseCurrentLocation,
     this.onOpenMap,
+    this.heroTag,
   });
 
   @override
@@ -119,116 +121,109 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Campo de búsqueda con diseño glass
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: widget.focusNode.hasFocus
-                  ? [
-                    widget.accentColor.withValues(alpha: 0.08),
-                    widget.accentColor.withValues(alpha: 0.04),
-                    ]
-                  : [
-                      widget.isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.grey.withValues(alpha: 0.08),
-                      widget.isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.grey.withValues(alpha: 0.04),
-                    ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.focusNode.hasFocus
-                  ? widget.accentColor.withValues(alpha: 0.4)
-                  : widget.isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.05),
-              width: widget.focusNode.hasFocus ? 1.5 : 1,
-            ),
-            boxShadow: widget.focusNode.hasFocus
-                ? [
-                    BoxShadow(
-                      color: widget.accentColor.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: widget.focusNode,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: widget.isDark ? Colors.white : Colors.grey[900],
-              letterSpacing: -0.2,
-            ),
-            decoration: InputDecoration(
-              hintText: widget.placeholder,
-              hintStyle: TextStyle(
-                color: widget.isDark ? Colors.white38 : Colors.grey[400],
-                fontWeight: FontWeight.w400,
+        heroWrapper(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                color: widget.isDark
+                    ? AppColors.darkCard
+                    : Colors.grey.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: widget.focusNode.hasFocus
+                      ? widget.accentColor
+                      : widget.isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.2),
+                  width: widget.focusNode.hasFocus ? 1.5 : 1,
+                ),
+                boxShadow: widget.focusNode.hasFocus
+                    ? [
+                        BoxShadow(
+                          color: widget.accentColor.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
-              prefixIcon: Container(
-                padding: const EdgeInsets.all(12),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: widget.accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+            child: Material(
+              type: MaterialType.transparency,
+              child: TextField(
+                controller: widget.controller,
+                focusNode: widget.focusNode,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: widget.isDark ? Colors.white : Colors.grey[900],
+                  letterSpacing: -0.2,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.placeholder,
+                  hintStyle: TextStyle(
+                    color: widget.isDark ? Colors.white38 : Colors.grey[400],
+                    fontWeight: FontWeight.w400,
                   ),
-                  child: Icon(
-                    widget.isOrigin
-                        ? Icons.circle_outlined
-                        : Icons.search_rounded,
-                    color: widget.accentColor,
-                    size: 16,
+                  prefixIcon: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: widget.accentColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        widget.isOrigin
+                            ? Icons.circle_outlined
+                            : Icons.search_rounded,
+                        color: widget.accentColor,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                  suffixIcon: widget.controller.text.isNotEmpty
+                      ? GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            // Notify parent that the text changed (selection cleared)
+                            widget.onTextChanged();
+                            widget.controller.clear();
+                            setState(() => _suggestions = []);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: widget.isDark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: widget.isDark
+                                    ? Colors.white54
+                                    : Colors.grey[600],
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
                   ),
                 ),
-              ),
-              suffixIcon: widget.controller.text.isNotEmpty
-                  ? GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        // Notify parent that the text changed (selection cleared)
-                        widget.onTextChanged();
-                        widget.controller.clear();
-                        setState(() => _suggestions = []);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: widget.isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.close_rounded,
-                            color: widget.isDark
-                                ? Colors.white54
-                                : Colors.grey[600],
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
               ),
             ),
           ),
         ),
+
+
 
         // Lugares guardados (solo cuando no hay texto escrito y tiene focus)
         if (false && widget.focusNode.hasFocus && // Temporarily disabled
@@ -455,6 +450,18 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
       ],
     );
   }
+  Widget heroWrapper({required Widget child}) {
+    if (widget.heroTag != null) {
+      return Hero(
+        tag: widget.heroTag!,
+        child: Material(
+          type: MaterialType.transparency,
+          child: child,
+        ),
+      );
+    }
+    return child;
+  }
 }
 
 class _SavedPlaceChip extends StatelessWidget {
@@ -658,6 +665,7 @@ class _SuggestionTile extends StatelessWidget {
         return Icons.location_on_rounded;
     }
   }
+
 }
 
 
@@ -680,30 +688,12 @@ class _QuickOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: 0.12),
-                    color.withValues(alpha: 0.06),
-                  ],
-              ),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: color.withValues(alpha: 0.2)),
-              boxShadow: [
-                BoxShadow(
-                    color: color.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: Border.all(color: color.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -742,8 +732,6 @@ class _QuickOptionTile extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 }

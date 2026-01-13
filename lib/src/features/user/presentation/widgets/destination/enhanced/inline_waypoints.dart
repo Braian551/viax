@@ -94,6 +94,7 @@ class InlineWaypoints extends StatelessWidget {
             onLocationSelected: onDestinationSelected,
             onTextChanged: onDestinationChanged,
             onOpenMap: openDestinationMap,
+            heroTag: 'search_destination_box',
           ),
         ),
       ],
