@@ -4,7 +4,7 @@ import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import '../../../data/services/company_vehicle_service.dart';
 
-/// Sheet para mostrar información detallada de una empresa
+/// Sheet para mostrar información detallada de una empresa - Rediseño Final Vibrant
 class CompanyDetailsSheet extends StatefulWidget {
   const CompanyDetailsSheet({
     super.key,
@@ -54,46 +54,63 @@ class _CompanyDetailsSheetState extends State<CompanyDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    
+    // Background con gradiente muy sutil y glass
+    final bgGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: isDark 
+          ? [const Color(0xFF252525).withValues(alpha: 0.95), const Color(0xFF151515).withValues(alpha: 0.98)]
+          : [const Color(0xFFFFFFFF).withValues(alpha: 0.95), const Color(0xFFF8F9FA).withValues(alpha: 0.98)],
+    );
+
+    final borderColor = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05);
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subTextColor = isDark ? Colors.white60 : Colors.grey.shade600;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: widget.isDark 
-                ? const Color(0xFF1A1A1A).withValues(alpha: 0.9) 
-                : Colors.white.withValues(alpha: 0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-              color: widget.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: bgGradient,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border.all(color: borderColor),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 40,
+                    offset: const Offset(0, -10),
+                  ),
+                ],
+              ),
               child: Column(
                 children: [
-                  // Handle
+                  // Handle Premium
                   Center(
                     child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      width: 40,
-                      height: 5,
+                      margin: const EdgeInsets.only(top: 16, bottom: 8),
+                      width: 48,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: widget.isDark ? Colors.white24 : Colors.black12,
-                        borderRadius: BorderRadius.circular(2.5),
+                        gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.5), AppColors.primary]),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  // Content
                   Expanded(
                     child: _isLoading
                         ? _buildLoading()
                         : _error != null
-                            ? _buildError()
-                            : _buildContent(scrollController),
+                            ? _buildError(textColor)
+                            : _buildContent(scrollController, textColor, subTextColor, isDark),
                   ),
                 ],
               ),
@@ -106,403 +123,454 @@ class _CompanyDetailsSheetState extends State<CompanyDetailsSheet> {
 
   Widget _buildLoading() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Cargando información...',
-            style: TextStyle(
-              color: widget.isDark ? Colors.white54 : Colors.black54,
-            ),
-          ),
-        ],
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        strokeWidth: 3,
       ),
     );
   }
 
-  Widget _buildError() {
+  Widget _buildError(Color textColor) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
           const SizedBox(height: 16),
           Text(
             _error!,
-            style: TextStyle(
-              color: widget.isDark ? Colors.white54 : Colors.black54,
-            ),
+            style: TextStyle(color: textColor.withValues(alpha: 0.7)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(ScrollController scrollController) {
+  Widget _buildContent(
+    ScrollController scrollController,
+    Color textColor,
+    Color subTextColor,
+    bool isDark,
+  ) {
     final details = _details!;
     
     return ListView(
       controller: scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+      padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
       children: [
-        // Header with Logo and Name
-        _buildHeader(details),
-        const SizedBox(height: 24),
-        
-        // Rating Card
-        if (details.calificacionPromedio != null)
-          _buildRatingCard(details),
-        
-        const SizedBox(height: 16),
-        
-        // Stats Grid
-        _buildStatsGrid(details),
-        const SizedBox(height: 24),
-        
-        // Description
-        if (details.descripcion != null && details.descripcion!.isNotEmpty)
-          _buildSection(
-            icon: Icons.info_outline_rounded,
-            title: 'Acerca de',
-            child: Text(
-              details.descripcion!,
-              style: TextStyle(
-                color: widget.isDark ? Colors.white70 : Colors.black87,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-          ),
-        
-        // Vehicle Types
-        if (details.tiposVehiculo.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildSection(
-            icon: Icons.directions_car_rounded,
-            title: 'Tipos de vehículo',
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: details.tiposVehiculo.map((tipo) {
-                return Chip(
-                  label: Text(tipo.nombre),
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+        // 1. Header con Logo Cuadrado (Rounded)
+        Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-        
-        // Contact Info
-        if (details.telefono != null || details.email != null) ...[
-          const SizedBox(height: 16),
-          _buildSection(
-            icon: Icons.contact_phone_rounded,
-            title: 'Contacto',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (details.telefono != null)
-                  _buildContactRow(Icons.phone, details.telefono!),
-                if (details.email != null)
-                  _buildContactRow(Icons.email_outlined, details.email!),
-                if (details.website != null)
-                  _buildContactRow(Icons.language, details.website!),
-              ],
-            ),
-          ),
-        ],
-        
-        // Location
-        if (details.municipio != null) ...[
-          const SizedBox(height: 16),
-          _buildSection(
-            icon: Icons.location_on_outlined,
-            title: 'Ubicación',
-            child: Text(
-              '${details.municipio}${details.departamento != null ? ', ${details.departamento}' : ''}',
-              style: TextStyle(
-                color: widget.isDark ? Colors.white70 : Colors.black87,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildHeader(CompanyDetails details) {
-    return Row(
-      children: [
-        Hero(
-          tag: 'company_logo_${details.id}',
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+                ],
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.grey.shade100,
+                  width: 1,
                 ),
-              ],
+              ),
+              padding: const EdgeInsets.all(8),
+              child: details.logoUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(details.logoUrl!, fit: BoxFit.contain),
+                    )
+                  : Icon(Icons.business_rounded, color: Colors.grey.shade400, size: 40),
             ),
-            child: details.logoUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.network(details.logoUrl!, fit: BoxFit.cover),
-                  )
-                : Icon(Icons.business_rounded, size: 36, color: Colors.grey.shade400),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: Text(
-                      details.nombre,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: widget.isDark ? Colors.white : Colors.black87,
-                        letterSpacing: -0.5,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          details.nombre,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      if (details.verificada) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.verified_rounded, color: AppColors.primary, size: 24),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Rating Badge Elegante
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.star_rounded, size: 18, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Text(
+                          details.calificacionPromedio?.toStringAsFixed(1) ?? 'N/A',
+                          style: TextStyle(
+                            color: textColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: subTextColor.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Text(
+                          '${details.totalCalificaciones} reseñas',
+                          style: TextStyle(
+                            color: subTextColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  if (details.verificada) ...[
-                    const SizedBox(width: 8),
-                    Icon(Icons.verified_rounded, color: AppColors.primary, size: 22),
-                  ],
                 ],
               ),
-              if (details.anioFundacion != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Desde ${details.anioFundacion}',
-                  style: TextStyle(
-                    color: widget.isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 14,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 32),
+
+        // 2. Stats Section - Estilo Bloque Premium con Color Sólido
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: isDark 
+                ? Colors.white.withValues(alpha: 0.05) 
+                : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark 
+                  ? Colors.white.withValues(alpha: 0.06) 
+                  : Colors.grey.withValues(alpha: 0.08),
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildElegantStat(
+                    'Viajes',
+                    '${details.viajesCompletados}',
+                    Icons.route_outlined,
+                    Colors.purpleAccent,
+                    textColor,
+                    subTextColor,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
+                ),
+                Expanded(
+                  child: _buildElegantStat(
+                    'Conductores',
+                    '${details.totalConductores}',
+                    Icons.people_outline_rounded,
+                    AppColors.primary,
+                    textColor,
+                    subTextColor,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
+                ),
+                Expanded(
+                  child: _buildElegantStat(
+                    'Rating',
+                    details.calificacionPromedio?.toStringAsFixed(1) ?? '-',
+                    Icons.star_outline_rounded,
+                    AppColors.warning,
+                    textColor,
+                    subTextColor,
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // 3. Flota Disponible - Pills con Gradiente Vivo
+        if (details.tiposVehiculo.isNotEmpty) ...[
+          _buildSectionHeader('FLOTA DISPONIBLE', subTextColor),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: details.tiposVehiculo.map((tipo) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.1),
+                      AppColors.primary.withValues(alpha: 0.02),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(50), // Pill shape
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                     BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getVehicleIcon(tipo.nombre),
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      tipo.nombre,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 32),
+        ],
+
+        // 4. Acerca de - Diseño limpio sin caja gris
+        if (details.descripcion != null && details.descripcion!.isNotEmpty) ...[
+          _buildSectionHeader('ACERCA DE', subTextColor),
+          const SizedBox(height: 12),
+          Text(
+            details.descripcion!,
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.8),
+              fontSize: 15,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+
+        // 5. Contacto - Action Box Cards (Grid de opciones coloridas)
+        if (details.telefono != null || details.email != null || details.municipio != null) ...[
+          _buildSectionHeader('CONTACTO', subTextColor),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Columna principal con info
+              Expanded(
+                child: Column(
+                  children: [
+                    if (details.municipio != null)
+                      _buildContactRowModern(
+                        Icons.map_outlined, 
+                        'Ubicación',
+                        '${details.municipio}, ${details.departamento ?? ""}',
+                        Colors.blue,
+                        isDark,
+                        textColor,
+                      ),
+                    const SizedBox(height: 16),
+                    if (details.telefono != null)
+                      _buildContactRowModern(
+                        Icons.phone_in_talk, 
+                        'Teléfono',
+                        details.telefono!,
+                        Colors.green,
+                        isDark,
+                        textColor,
+                      ),
+                    const SizedBox(height: 16),
+                    if (details.email != null)
+                      _buildContactRowModern(
+                        Icons.email_outlined, 
+                        'Email',
+                        details.email!,
+                        Colors.orangeAccent,
+                        isDark,
+                        textColor,
+                      ),
+                  ],
+                ),
+              ),
             ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color color) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: color,
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
+  Widget _buildElegantStat(
+    String label,
+    String value,
+    IconData icon,
+    Color accentColor,
+    Color textColor,
+    Color subTextColor,
+  ) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: accentColor, size: 24),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: textColor,
+          ),
+        ),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: subTextColor,
+            letterSpacing: 0.5,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildRatingCard(CompanyDetails details) {
+  Widget _buildContactRowModern(
+    IconData icon,
+    String label,
+    String value,
+    Color iconColor,
+    bool isDark,
+    Color textColor,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.primary.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.03),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+        ],
       ),
       child: Row(
         children: [
-          // Big Star + Rating
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(Icons.star_rounded, color: AppColors.warning, size: 32),
+            child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      details.calificacionPromedio!.toStringAsFixed(1),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: widget.isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      ' / 5',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: widget.isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  '${details.totalCalificaciones} calificaciones',
+                  label,
                   style: TextStyle(
-                    color: widget.isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 13,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-          // Stars
-          Column(
-            children: List.generate(5, (index) {
-              final starValue = 5 - index;
-              final isFilled = details.calificacionPromedio! >= starValue - 0.5;
-              return Icon(
-                isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
-                color: isFilled ? AppColors.warning : (widget.isDark ? Colors.white24 : Colors.black12),
-                size: 16,
-              );
-            }),
-          ),
+          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? Colors.white24 : Colors.black12),
         ],
       ),
     );
   }
-
-  Widget _buildStatsGrid(CompanyDetails details) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            icon: Icons.directions_car_filled_rounded,
-            value: '${details.totalConductores}',
-            label: 'Conductores',
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            icon: Icons.route_rounded,
-            value: '${details.viajesCompletados}',
-            label: 'Viajes',
-            color: AppColors.success,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: widget.isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: widget.isDark ? Colors.white54 : Colors.black54,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection({
-    required IconData icon,
-    required String title,
-    required Widget child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: widget.isDark ? Colors.white54 : Colors.black54, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: widget.isDark ? Colors.white54 : Colors.black54,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactRow(IconData icon, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: widget.isDark ? Colors.white70 : Colors.black87,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  
+  IconData _getVehicleIcon(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('moto') && !lower.contains('carro')) return Icons.two_wheeler_rounded;
+    if (lower.contains('auto') || lower.contains('carro')) return Icons.directions_car_rounded;
+    if (lower.contains('taxi')) return Icons.local_taxi_rounded;
+    return Icons.directions_transit_rounded;
   }
 }
