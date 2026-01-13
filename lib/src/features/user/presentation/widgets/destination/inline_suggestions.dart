@@ -155,23 +155,29 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                 focusNode: widget.focusNode,
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: widget.isDark ? Colors.white : Colors.grey[900],
                   letterSpacing: -0.2,
                 ),
                 decoration: InputDecoration(
+                  filled: true,
+                  fillColor: widget.isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF5F7FA), // Subtle fill for contrast
                   hintText: widget.placeholder,
                   hintStyle: TextStyle(
                     color: widget.isDark ? Colors.white38 : Colors.grey[400],
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                   ),
                   prefixIcon: Container(
                     padding: const EdgeInsets.all(12),
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: widget.accentColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        shape: ContinuousRectangleBorder(
+                          borderRadius: BorderRadius.circular(20), // Squircle
+                        ),
                       ),
                       child: Icon(
                         widget.isOrigin
@@ -186,33 +192,37 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                       ? GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            // Notify parent that the text changed (selection cleared)
                             widget.onTextChanged();
                             widget.controller.clear();
                             setState(() => _suggestions = []);
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(12),
                             child: Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
+                              decoration: ShapeDecoration(
                                 color: widget.isDark
                                     ? Colors.white.withValues(alpha: 0.1)
                                     : Colors.grey.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                               ),
                               child: Icon(
                                 Icons.close_rounded,
                                 color: widget.isDark
                                     ? Colors.white54
                                     : Colors.grey[600],
-                                size: 16,
+                                size: 14,
                               ),
                             ),
                           ),
                         )
                       : null,
-                  border: InputBorder.none,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none, // Remove inner border
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 16,
