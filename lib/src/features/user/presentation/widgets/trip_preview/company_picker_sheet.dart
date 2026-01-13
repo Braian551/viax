@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import 'company_details_sheet.dart';
+import 'trip_price_formatter.dart';
 
 class CompanyPickerSheet extends StatefulWidget {
   const CompanyPickerSheet({
@@ -423,7 +424,7 @@ class _CompanyItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\$${company.tarifaTotal.round()}',
+                      formatCurrency(company.tarifaTotal),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
