@@ -15,6 +15,7 @@ class CompanyVehicleService {
     double distanciaKm = 0,
     int duracionMinutos = 0,
     double radioKm = 10,
+    String search = '',
   }) async {
     try {
       final url = Uri.parse(
@@ -39,6 +40,7 @@ class CompanyVehicleService {
               'distancia_km': distanciaKm,
               'duracion_minutos': duracionMinutos,
               'radio_km': radioKm,
+              'search': search,
             }),
           )
           .timeout(const Duration(seconds: 15));

@@ -13,8 +13,8 @@ class CompanyService {
     /**
      * Obtiene empresas, vehículos disponibles y tarifas para un municipio
      */
-    public function getCompaniesByMunicipality($municipio, $latitud, $longitud, $distanciaKm, $duracionMinutos, $radioKm = 10) {
-        $empresas = $this->findOperatingCompanies($municipio);
+    public function getCompaniesByMunicipality($municipio, $latitud, $longitud, $distanciaKm, $duracionMinutos, $radioKm = 10, $search = '') {
+        $empresas = $this->findOperatingCompanies($municipio, $search);
         
         if (empty($empresas)) {
             return [
@@ -42,7 +42,12 @@ class CompanyService {
         );
     }
 
-    private function findOperatingCompanies($municipio) {
+    private function findOperatingCompanies($municipio, $search = '') {
+        $searchQuery = "";
+        if (!empty($search)) {
+            $searchQuery = " AND (e.nombre ILIKE :search OR e.id::text ILIKE :search) ";
+        }
+
         // Buscar por empresas_contacto.municipio O empresas_configuracion.zona_operacion
         $query = "
             SELECT DISTINCT
@@ -61,10 +66,15 @@ class CompanyService {
                 LOWER(ec.municipio) = LOWER(:municipio)
                 OR LOWER(:municipio) = ANY(SELECT LOWER(unnest(ecf.zona_operacion)))
             )
+            $searchQuery
         ";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':municipio', $municipio);
+        if (!empty($search)) {
+            $searchTerm = "%$search%";
+            $stmt->bindParam(':search', $searchTerm);
+        }
         $stmt->execute();
         $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

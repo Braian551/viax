@@ -30,6 +30,7 @@ try {
     $radioKm = floatval($data['radio_km'] ?? 10.0);
     $distanciaKm = floatval($data['distancia_km'] ?? 0);
     $duracionMinutos = intval($data['duracion_minutos'] ?? 0);
+    $search = trim($data['search'] ?? '');
     
     $service = new CompanyService();
     $response = $service->getCompaniesByMunicipality(
@@ -38,7 +39,8 @@ try {
         $longitud, 
         $distanciaKm, 
         $duracionMinutos, 
-        $radioKm
+        $radioKm,
+        $search
     );
     
     echo json_encode($response);
