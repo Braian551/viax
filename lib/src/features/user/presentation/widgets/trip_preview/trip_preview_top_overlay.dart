@@ -203,6 +203,7 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                                             text: widget.origin.address,
                                             isOrigin: true,
                                             isDark: widget.isDark,
+                                            onTap: widget.onLocationTap,
                                           ),
                                           _DashedLine(isDark: widget.isDark),
                                           for (final stop in widget.stops) ...[
@@ -212,6 +213,7 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                                               text: stop.address,
                                               isOrigin: false,
                                               isDark: widget.isDark,
+                                              onTap: widget.onLocationTap,
                                             ),
                                             _DashedLine(isDark: widget.isDark),
                                           ],
@@ -221,6 +223,7 @@ class _TripPreviewTopOverlayState extends State<TripPreviewTopOverlay>
                                             text: widget.destination.address,
                                             isOrigin: false,
                                             isDark: widget.isDark,
+                                            onTap: widget.onLocationTap,
                                           ),
                                         ],
                                       ),
@@ -360,6 +363,7 @@ class _LocationRow extends StatelessWidget {
     required this.text,
     required this.isOrigin,
     required this.isDark,
+    required this.onTap,
   });
 
   final IconData icon;
@@ -367,56 +371,64 @@ class _LocationRow extends StatelessWidget {
   final String text;
   final bool isOrigin;
   final bool isDark;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 16, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-                if (isOrigin) // Subtext only for origin to balance visual
-                  Text(
-                    'Punto de partida',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.black45,
+                child: Icon(icon, size: 16, color: iconColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    if (isOrigin) // Subtext only for origin to balance visual
+                      Text(
+                        'Punto de partida',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Edit icon
+              Icon(
+                Icons.edit_rounded,
+                size: 16,
+                color: isDark ? Colors.white30 : Colors.black26,
+              ),
+            ],
           ),
-          // Edit icon
-          Icon(
-            Icons.edit_rounded,
-            size: 16,
-            color: isDark ? Colors.white30 : Colors.black26,
-          ),
-        ],
+        ),
       ),
     );
   }
