@@ -103,6 +103,33 @@ try {
         // Confirmar transacción
         $conn->commit();
 
+        // Enviar correo de aprobación
+        try {
+            $stmt = $conn->prepare("
+                SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, v.placa
+                FROM usuarios u
+                JOIN detalles_conductor dc ON u.id = dc.usuario_id
+                LEFT JOIN vehiculos v ON dc.vehiculo_id = v.id
+                WHERE u.id = ?
+            ");
+            $stmt->execute([$conductor_id]);
+            $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($conductorData) {
+                $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                require_once __DIR__ . '/../utils/Mailer.php';
+                
+                $mailData = [
+                    'licencia' => $conductorData['licencia_conduccion'] ?? 'N/A',
+                    'placa' => $conductorData['placa'] ?? 'N/A'
+                ];
+                
+                Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData);
+            }
+        } catch (Exception $mailError) {
+            error_log("Error enviando email de aprobación a conductor $conductor_id: " . $mailError->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode([
             'success' => true,

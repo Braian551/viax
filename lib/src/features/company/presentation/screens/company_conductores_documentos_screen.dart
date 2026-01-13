@@ -573,6 +573,8 @@ class _CompanyConductoresDocumentosScreenState
             onTap: () => _showConductorDetails(conductor),
             onAprobar: () => _aprobarConductor(conductor),
             onRechazar: () => _rechazarConductor(conductor),
+            onDesactivar: () => _desactivarConductor(conductor),
+            onDesvincular: () => _desvincularConductor(conductor),
           );
         }, childCount: _conductores.length),
       ),
@@ -736,6 +738,68 @@ class _CompanyConductoresDocumentosScreenState
     }
   }
 
+  Future<void> _desactivarConductor(Map<String, dynamic> conductor) async {
+    final confirm = await _showConfirmationDialog(
+      title: 'Desactivar Conductor',
+      message: '¿Estás seguro de desactivar a ${conductor['nombre_completo']}?\n\nEl conductor no podrá acceder a la app ni recibir viajes.',
+      isDestructive: true,
+    );
+
+    if (confirm == true) {
+      _procesarAccion(conductor, 'desactivar', 'Conductor desactivado');
+    }
+  }
+
+  Future<void> _desvincularConductor(Map<String, dynamic> conductor) async {
+    final confirm = await _showConfirmationDialog(
+      title: 'Desvincular Conductor',
+      message: '¿Estás seguro de desvincular a ${conductor['nombre_completo']}?\n\nEl conductor dejará de pertenecer a tu empresa.',
+      isDestructive: true,
+    );
+
+    if (confirm == true) {
+      _procesarAccion(conductor, 'desvincular', 'Conductor desvinculado');
+    }
+  }
+
+  Future<void> _procesarAccion(
+      Map<String, dynamic> conductor, String accion, String successMessage) async {
+      // Safely parse IDs
+      final conductorIdParsed = int.tryParse(conductor['usuario_id']?.toString() ?? '');
+      final procesadoPorParsed = int.tryParse(widget.user['id']?.toString() ?? '');
+      
+      if (conductorIdParsed == null || procesadoPorParsed == null) {
+        CustomSnackbar.showError(context, message: 'Error: ID inválido');
+        return;
+      }
+
+      _showLoadingDialog('Procesando...');
+
+      try {
+        final success = await _dataSource.procesarSolicitudConductor(
+          empresaId: widget.empresaId,
+          conductorId: conductorIdParsed,
+          accion: accion,
+          procesadoPor: procesadoPorParsed,
+        );
+
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        if (!mounted) return;
+
+        if (success) {
+          CustomSnackbar.showSuccess(context, message: successMessage);
+          _loadDocumentos();
+        } else {
+          CustomSnackbar.showError(context, message: 'Error al procesar acción');
+        }
+      } catch (e) {
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        CustomSnackbar.showError(context, message: 'Error: $e');
+      }
+  }
+
   Future<String?> _showRejectionDialog(String conductorName) async {
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -896,6 +960,7 @@ class _CompanyConductoresDocumentosScreenState
   Future<bool?> _showConfirmationDialog({
     required String title,
     required String message,
+    bool isDestructive = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -911,12 +976,12 @@ class _CompanyConductoresDocumentosScreenState
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
+                color: isDestructive ? AppColors.error.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.check_circle_outline,
-                color: AppColors.success,
+              child: Icon(
+                isDestructive ? Icons.warning_rounded : Icons.check_circle_outline,
+                color: isDestructive ? AppColors.error : AppColors.success,
                 size: 24,
               ),
             ),
@@ -936,10 +1001,9 @@ class _CompanyConductoresDocumentosScreenState
         content: Text(
           message,
           style: TextStyle(
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
             fontSize: 14,
+            height: 1.5,
           ),
         ),
         actions: [
@@ -948,17 +1012,17 @@ class _CompanyConductoresDocumentosScreenState
             child: Text(
               'Cancelar',
               style: TextStyle(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
+              backgroundColor: isDestructive ? AppColors.error : AppColors.success,
               foregroundColor: Colors.white,
+              elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

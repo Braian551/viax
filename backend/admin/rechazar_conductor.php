@@ -99,6 +99,22 @@ try {
         // Confirmar transacción
         $conn->commit();
 
+        // Enviar correo de rechazo
+        try {
+            $stmt = $conn->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = ?");
+            $stmt->execute([$conductor_id]);
+            $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($conductorData) {
+                $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                require_once __DIR__ . '/../utils/Mailer.php';
+                
+                Mailer::sendConductorRejectedEmail($conductorData['email'], $nombreCompleto, [], $motivo);
+            }
+        } catch (Exception $mailError) {
+            error_log("Error enviando email de rechazo a conductor $conductor_id: " . $mailError->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode([
             'success' => true,

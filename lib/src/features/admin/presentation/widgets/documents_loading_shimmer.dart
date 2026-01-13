@@ -117,44 +117,118 @@ class DocumentsLoadingShimmer extends StatelessWidget {
 
   Widget _buildDriverCardPlaceholder() {
     return Container(
-      height: 200, // Approx height of driver card
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: Avatar + Name + Badge
           Row(
             children: [
-              // Circle Avatar
               Container(
                 width: 50,
                 height: 50,
-                decoration: const BoxDecoration(
-                  color: Colors.white, // In shimmer, inner color doesn't matter much if parent is white, but for structure
-                  shape: BoxShape.circle,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                 ),
               ),
               const SizedBox(width: 12),
-              // Name and lines
-               Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(width: double.infinity, height: 16, color: Colors.black),
-                    const SizedBox(height: 8),
-                    Container(width: 100, height: 12, color: Colors.black),
+                    Container(width: 120, height: 14, color: Colors.black),
+                    const SizedBox(height: 6),
+                    Container(width: 150, height: 10, color: Colors.black),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 70,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Info Rows (License/Plate)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(width: 40, height: 8, color: Colors.black),
+                    const SizedBox(height: 4),
+                    Container(width: 80, height: 10, color: Colors.black),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(width: 40, height: 8, color: Colors.black),
+                    const SizedBox(height: 4),
+                    Container(width: 80, height: 10, color: Colors.black),
                   ],
                 ),
               ),
             ],
           ),
-          // More lines
-          const SizedBox(height: 20),
-          Container(width: double.infinity, height: 10, color: Colors.black),
-          const SizedBox(height: 10),
-          Container(width: double.infinity, height: 10, color: Colors.black),
+          const SizedBox(height: 16),
+
+          // Progress Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(width: 60, height: 8, color: Colors.black),
+              Container(width: 30, height: 8, color: Colors.black),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(width: double.infinity, height: 6, color: Colors.black),
+          
+          const SizedBox(height: 16),
+          
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

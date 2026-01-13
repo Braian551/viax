@@ -287,7 +287,8 @@ function handleGet($db) {
         }
 
         // Determinar si es solicitud pendiente o conductor vinculado
-        $esSolicitud = !empty($row['solicitud_id']);
+        // Only mark as pending if the state is actually 'pendiente'
+        $esSolicitudPendiente = !empty($row['solicitud_id']) && $row['estado_solicitud'] === 'pendiente';
         $estaVinculado = $row['empresa_id'] == $empresa_id;
 
         $conductores[] = [
@@ -295,7 +296,7 @@ function handleGet($db) {
             'usuario_id' => intval($row['usuario_id']),
             
             // Estado de vinculación
-            'es_solicitud_pendiente' => $esSolicitud,
+            'es_solicitud_pendiente' => $esSolicitudPendiente,
             'esta_vinculado' => $estaVinculado,
             'solicitud_id' => $row['solicitud_id'],
             'estado_solicitud' => $row['estado_solicitud'],
@@ -392,7 +393,7 @@ function handlePost($db) {
         throw new Exception('IDs inválidos');
     }
     
-    if (!in_array($accion, ['aprobar', 'rechazar', 'aprobar_solicitud', 'rechazar_solicitud', 'aprobar_documentos', 'rechazar_documentos'])) {
+    if (!in_array($accion, ['aprobar', 'rechazar', 'aprobar_solicitud', 'rechazar_solicitud', 'aprobar_documentos', 'rechazar_documentos', 'desactivar', 'desvincular'])) {
         throw new Exception('Acción inválida');
     }
     
@@ -417,7 +418,20 @@ function handlePost($db) {
             $solicitudId = $solicitudStmt->fetchColumn();
             
             if (!$solicitudId) {
-                throw new Exception('No hay solicitud pendiente para este conductor');
+                // Debugging: Check if a request exists in ANY state
+                $debugQuery = "SELECT estado FROM solicitudes_vinculacion_conductor 
+                               WHERE conductor_id = :conductor_id AND empresa_id = :empresa_id";
+                $debugStmt = $db->prepare($debugQuery);
+                $debugStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+                $debugStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
+                $debugStmt->execute();
+                $estadoActual = $debugStmt->fetchColumn();
+
+                if ($estadoActual) {
+                    throw new Exception("La solicitud no está pendiente. Estado actual: $estadoActual");
+                } else {
+                    throw new Exception("No existe ninguna solicitud para este conductor (ID: $conductor_id, Empresa: $empresa_id)");
+                }
             }
             
             // Usar función SQL para aprobar
@@ -433,6 +447,36 @@ function handlePost($db) {
                 throw new Exception($resultado['message']);
             }
             
+            
+            // Enviar correo de aprobación de vinculación
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, ['licencia' => 'En proceso', 'placa' => 'En proceso']);
+                }
+            } catch (Exception $mailError) {}
+
+            
+            // Enviar correo de aprobación de vinculación
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, ['licencia' => 'En proceso', 'placa' => 'En proceso']);
+                }
+            } catch (Exception $mailError) {}
+
             $db->commit();
             
             echo json_encode([
@@ -460,6 +504,36 @@ function handlePost($db) {
             $stmt->bindParam(':procesado_por', $procesado_por, PDO::PARAM_INT);
             $stmt->bindParam(':razon', $razon, PDO::PARAM_STR);
             $stmt->execute();
+            
+            
+            // Enviar correo de rechazo de vinculación
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendConductorRejectedEmail($conductorData['email'], $nombreCompleto, [], $razon);
+                }
+            } catch (Exception $mailError) {}
+            
+            
+            // Enviar correo de rechazo de vinculación
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendConductorRejectedEmail($conductorData['email'], $nombreCompleto, [], $razon);
+                }
+            } catch (Exception $mailError) {}
             
             $db->commit();
             
@@ -522,6 +596,64 @@ function handlePost($db) {
             $activarStmt->bindParam(':id', $conductor_id, PDO::PARAM_INT);
             $activarStmt->execute();
             
+            
+            // Enviar correo de aprobación
+            try {
+                $stmt = $db->prepare("
+                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, v.placa
+                    FROM usuarios u
+                    LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
+                    LEFT JOIN vehiculos v ON dc.vehiculo_id = v.id
+                    WHERE u.id = :id
+                ");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    
+                    $mailData = [
+                        'licencia' => $conductorData['licencia_conduccion'] ?? 'N/A',
+                        'placa' => $conductorData['placa'] ?? 'N/A'
+                    ];
+                    
+                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData);
+                }
+            } catch (Exception $mailError) {
+                error_log("Error enviando email de aprobación: " . $mailError->getMessage());
+            }
+
+            
+            // Enviar correo de aprobación
+            try {
+                $stmt = $db->prepare("
+                    SELECT u.email, u.nombre, u.apellido, dc.licencia_conduccion, v.placa
+                    FROM usuarios u
+                    LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
+                    LEFT JOIN vehiculos v ON dc.vehiculo_id = v.id
+                    WHERE u.id = :id
+                ");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    
+                    $mailData = [
+                        'licencia' => $conductorData['licencia_conduccion'] ?? 'N/A',
+                        'placa' => $conductorData['placa'] ?? 'N/A'
+                    ];
+                    
+                    Mailer::sendConductorApprovedEmail($conductorData['email'], $nombreCompleto, $mailData);
+                }
+            } catch (Exception $mailError) {
+                error_log("Error enviando email de aprobación: " . $mailError->getMessage());
+            }
+
             $db->commit();
             
             echo json_encode([
@@ -582,11 +714,94 @@ function handlePost($db) {
                 $updateStmt->execute();
             }
             
+            
+            // Enviar correo de rechazo
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendConductorRejectedEmail($conductorData['email'], $nombreCompleto, [], $razon);
+                }
+            } catch (Exception $mailError) {
+                // Log error but don't fail transaction
+                error_log("Error enviando email de rechazo: " . $mailError->getMessage());
+            }
+
             $db->commit();
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Documentos rechazados'
+            ]);
+        } elseif ($accion === 'desactivar') {
+            // Desactivar conductor
+            $updateQuery = "UPDATE usuarios SET es_activo = 0 WHERE id = :conductor_id AND empresa_id = :empresa_id";
+            $updateStmt = $db->prepare($updateQuery);
+            $updateStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+            $updateStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
+            $updateStmt->execute();
+            
+            if ($updateStmt->rowCount() === 0) {
+                 throw new Exception("No se pudo desactivar. Verifica que el conductor pertenezca a tu empresa.");
+            }
+
+            // Enviar correo de desactivación
+            try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendCompanyStatusChangeEmail($conductorData['email'], $nombreCompleto, 'Desactivado');
+                }
+            } catch (Exception $mailError) {}
+
+            $db->commit();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Conductor desactivado exitosamente'
+            ]);
+
+        } elseif ($accion === 'desvincular') {
+            // Desvincular conductor (quitar empresa_id)
+            $updateQuery = "UPDATE usuarios SET empresa_id = NULL WHERE id = :conductor_id AND empresa_id = :empresa_id";
+            $updateStmt = $db->prepare($updateQuery);
+            $updateStmt->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+            $updateStmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
+            $updateStmt->execute();
+
+             if ($updateStmt->rowCount() === 0) {
+                 throw new Exception("No se pudo desvincular. Verifica que el conductor pertenezca a tu empresa.");
+            }
+
+            // Enviar correo de desvinculación
+             try {
+                $stmt = $db->prepare("SELECT email, nombre, apellido FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $conductor_id);
+                $stmt->execute();
+                $conductorData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($conductorData) {
+                    $nombreCompleto = trim($conductorData['nombre'] . ' ' . $conductorData['apellido']);
+                    require_once __DIR__ . '/../utils/Mailer.php';
+                    Mailer::sendCompanyStatusChangeEmail($conductorData['email'], $nombreCompleto, 'Desvinculado');
+                }
+            } catch (Exception $mailError) {}
+
+            $db->commit();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Conductor desvinculado exitosamente'
             ]);
         }
         

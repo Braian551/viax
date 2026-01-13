@@ -798,6 +798,8 @@ class Mailer {
             ? "🎉 ¡Tu cuenta ha sido activada! - {$companyData['nombre_empresa']}"
             : "⚠️ Cuenta desactivada temporalmente - {$companyData['nombre_empresa']}";
             
+        // ... (resto del método sin cambios) ...
+
         $color = $isActivated ? '#2E7D32' : '#EF6C00'; // Green vs Orange
         $bgColor = $isActivated ? '#E8F5E9' : '#FFF3E0';
         $borderColor = $isActivated ? '#A5D6A7' : '#FFCC80';
@@ -915,6 +917,96 @@ class Mailer {
         }
         
         return $result;
+    }
+
+    /**
+     * Envía un correo de Aprobación para CONDUCTOR (Diseño Premium).
+     */
+    public static function sendConductorApprovedEmail($toEmail, $userName, $conductorData) {
+        $subject = "✅ ¡Bienvenido al equipo! - Tu cuenta de conductor ha sido aprobada";
+        
+        $bodyContent = "
+            <div class='greeting'>¡Felicidades, $userName!</div>
+            
+            <div style='background-color: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #2e7d32; margin: 0 0 8px 0;'>¡Eres oficialmente un conductor Viax!</h2>
+                <p style='color: #1b5e20; margin: 0;'>Tu documentación ha sido verificada y aprobada.</p>
+            </div>
+            
+            <p class='message'>
+                Nos alegra mucho informarte que has superado exitosamente el proceso de verificación. 
+                Ahora formas parte de nuestra comunidad de conductores confiables.
+            </p>
+            
+            <table style='width: 100%; border-collapse: collapse; margin: 20px 0; background: #F8F9FA; border-radius: 8px; overflow: hidden;'>
+                <tr style='background: #E8F5E9;'>
+                    <td colspan='2' style='padding: 12px; text-align: center; font-weight: 600; color: #2E7D32;'>
+                        Tus Datos
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding: 10px; border-bottom: 1px solid #E0E0E0; font-weight: 600; width: 40%;'>Licencia:</td>
+                    <td style='padding: 10px; border-bottom: 1px solid #E0E0E0;'>{$conductorData['licencia']}</td>
+                </tr>
+                <tr>
+                    <td style='padding: 10px; font-weight: 600;'>Placa Vehículo:</td>
+                    <td style='padding: 10px;'>{$conductorData['placa']}</td>
+                </tr>
+            </table>
+            
+            <p class='message'>¿Qué sigue?</p>
+            <ul style='color: #555; line-height: 1.6;'>
+                <li>Abre la aplicación y ponte 'En Línea'.</li>
+                <li>Activa tu ubicación para recibir solicitudes cercanas.</li>
+                <li>¡Empieza a ganar dinero con cada viaje!</li>
+            </ul>
+            
+            <p class='note' style='margin-top: 30px; color: #6c757d; font-size: 13px;'>
+                Recuerda mantener tus documentos al día para evitar interrupciones en el servicio.
+            </p>
+        ";
+        
+        $altBody = "¡Felicidades, $userName!\n\n" .
+                   "Tu cuenta de conductor ha sido APROBADA.\n\n" .
+                   "Ya puedes conectarte y recibir viajes.\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        return self::send($toEmail, $userName, $subject, self::wrapLayout($bodyContent), $altBody);
+    }
+
+    /**
+     * Envía un correo de Rechazo para CONDUCTOR.
+     */
+    public static function sendConductorRejectedEmail($toEmail, $userName, $conductorData, $reason) {
+        $subject = "⚠️ Actualización sobre tu solicitud de conductor";
+        
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            
+            <div style='background-color: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>
+                <h2 style='color: #c62828; margin: 0 0 8px 0;'>Solicitud Rechazada</h2>
+                <p style='color: #b71c1c; margin: 0;'>No hemos podido aprobar tu cuenta de conductor.</p>
+            </div>
+            
+            <p class='message'>Hemos revisado tu documentación y hemos encontrado algunos problemas que impiden tu activación en este momento.</p>
+            
+            <div style='text-align: left; padding: 20px; background-color: #f8f9fa; border-left: 4px solid #d32f2f; margin: 20px 0;'>
+                <strong style='display: block; color: #d32f2f; margin-bottom: 8px;'>Motivo del rechazo:</strong>
+                <p style='margin: 0; color: #333; font-style: italic; white-space: pre-line;'>$reason</p>
+            </div>
+            
+            <p class='message'>
+                Si crees que esto es un error o si puedes corregir la información, por favor actualiza tus documentos en la aplicación y solicita una nueva revisión.
+            </p>
+        ";
+        
+        $altBody = "Hola, $userName.\n\n" .
+                   "Tu solicitud de conductor ha sido RECHAZADA.\n\n" .
+                   "Motivo: $reason\n\n" .
+                   "Por favor, revisa tus documentos y vuelve a intentarlo.\n\n" .
+                   "Saludos,\nEquipo Viax";
+        
+        return self::send($toEmail, $userName, $subject, self::wrapLayout($bodyContent), $altBody);
     }
 
     /**
