@@ -1054,70 +1054,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Widget _buildLoadingOverlay(bool isDark) {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.5),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Center(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Transform.scale(
-                scale: 0.8 + (0.2 * value),
-                child: Opacity(opacity: value, child: child),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(36),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.8)
-                    : Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Calculando ruta...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return _RouteLoader(isDark: isDark);
   }
 
   Widget _buildErrorOverlay(bool isDark) {
@@ -1405,4 +1342,175 @@ class _HiddenSheetHandle extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RouteLoader extends StatefulWidget {
+  final bool isDark;
+
+  const _RouteLoader({super.key, required this.isDark});
+
+  @override
+  State<_RouteLoader> createState() => _RouteLoaderState();
+}
+
+class _RouteLoaderState extends State<_RouteLoader>
+    with TickerProviderStateMixin {
+  late AnimationController _radarController;
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _radarController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3), // Slower, more elegant rotation
+    )..repeat();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _radarController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Elegant Glass Card Design
+    return Container(
+      color: Colors.black.withValues(alpha: 0.3), // Clearer background
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2), // Subtle blur
+        child: Center(
+          child: RepaintBoundary(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              decoration: BoxDecoration(
+                color: widget.isDark 
+                    ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) 
+                    : Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: widget.isDark 
+                      ? Colors.white.withValues(alpha: 0.1) 
+                      : Colors.black.withValues(alpha: 0.05),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animation Container
+                  SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Subtle breathing glow
+                        AnimatedBuilder(
+                          animation: _pulseController,
+                          builder: (context, child) {
+                            return Container(
+                              width: 60 + (_pulseController.value * 20),
+                              height: 60 + (_pulseController.value * 20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15 * (1 - _pulseController.value),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        
+                        // Thin Radar Ring
+                        RotationTransition(
+                          turns: _radarController,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: SweepGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  AppColors.primary.withValues(alpha: 0.1),
+                                  AppColors.primary,
+                                ],
+                                stops: const [0.0, 0.7, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        // Center Icon
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.directions_car_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // App-consistent Typography
+                  Text(
+                    'Calculando ruta...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: widget.isDark ? Colors.white : AppColors.lightTextPrimary,
+                      letterSpacing: -0.2, // Matches app standard
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Buscando las mejores opciones',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: widget.isDark 
+                          ? Colors.white.withValues(alpha: 0.6) 
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Removed _buildRipple as we switched to a simpler breathing effect
 }
