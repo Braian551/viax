@@ -77,8 +77,8 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: () => onIndexChanged(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutQuart,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
           horizontal: isSelected ? 20 : 12, 
           vertical: 12
@@ -98,7 +98,7 @@ class CustomBottomNavBar extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (context, value, child) {
                 return Transform.scale(
-                  scale: 1.0 + (value * 0.1),
+                  scale: 1.0 + (value * 0.15),
                   child: Icon(
                     item.icon,
                     color: isSelected 
@@ -114,8 +114,8 @@ class CustomBottomNavBar extends StatelessWidget {
               Flexible(
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
                   builder: (context, value, child) {
                     return Opacity(
                       opacity: value,

@@ -305,83 +305,121 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   Widget _buildInputs(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Hero(
-        tag: 'search_destination_box',
-        child: Material(
-          type: MaterialType.transparency,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildInputField(
-                      controller: _originController,
-                      focusNode: _originFocusNode,
-                      hint: 'Tu ubicación actual',
-                      icon: Icons.my_location_rounded,
-                      iconColor: AppColors.primary,
-                      targetField: 'origin',
-                      isDark: isDark,
-                    ),
-                    
-                    // Render stops
-                    for (int i = 0; i < _stopControllers.length; i++) ...[
-                      Container(
-                        height: 1,
-                        margin: const EdgeInsets.only(left: 70),
-                        color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                      ),
-                      _buildInputField(
-                        controller: _stopControllers[i],
-                        focusNode: _stopFocusNodes[i],
-                        hint: 'Parada ${i + 1}',
-                        icon: Icons.stop_circle_outlined,
-                        iconColor: AppColors.warning,
-                        targetField: 'stop_$i',
-                        isDark: isDark,
-                        onRemove: () => _removeStop(i),
-                      ),
-                    ],
-
-                    Container(
-                      height: 1,
-                      margin: const EdgeInsets.only(left: 70),
-                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                    ),
-                    _buildInputField(
-                      controller: _destinationController,
-                      focusNode: _destinationFocusNode,
-                      hint: '¿A dónde quieres ir?',
-                      icon: Icons.location_on_rounded,
-                      iconColor: AppColors.error,
-                      targetField: 'destination',
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
+      child: Column(
+        children: [
+          // Origin (Fixed)
+          Hero(
+            tag: 'search_destination_box',
+            child: Material(
+              type: MaterialType.transparency,
+              child: _buildLocationCard(
+                controller: _originController,
+                focusNode: _originFocusNode,
+                hint: 'Tu ubicación actual',
+                icon: Icons.my_location_rounded,
+                iconColor: Colors.blueAccent,
+                targetField: 'origin',
+                isDark: isDark,
+                isFirst: true,
+                isLast: false,
+                showConnector: true,
               ),
             ),
           ),
-        ),
+          
+          // Stops (Draggable)
+          if (_stopControllers.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8), // Gap for visuals
+              // Use explicit Container constraints or shrinkWrap in a column
+              child: ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _stopControllers.length,
+                onReorder: _onReorderStops,
+                proxyDecorator: (child, index, animation) {
+                  return AnimatedBuilder(
+                    animation: animation,
+                    builder: (BuildContext context, Widget? child) {
+                      return Material(
+                        elevation: 10,
+                        color: Colors.transparent,
+                        shadowColor: Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        child: child,
+                      );
+                    },
+                    child: child,
+                  );
+                },
+                itemBuilder: (context, index) {
+                  // Key is crucial for ReorderableListView
+                  return Container(
+                    key: ValueKey('stop_${_stopControllers[index].hashCode}'),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: _buildLocationCard(
+                      controller: _stopControllers[index],
+                      focusNode: _stopFocusNodes[index],
+                      hint: 'Parada ${index + 1}',
+                      icon: Icons.stop_circle_outlined,
+                      iconColor: Colors.orangeAccent,
+                      targetField: 'stop_$index',
+                      isDark: isDark,
+                      isFirst: false,
+                      isLast: false,
+                      showConnector: true,
+                      isDraggable: true,
+                      onRemove: () => _removeStop(index),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          // Destination (Fixed)
+          // Add margin/connector gap
+          Container(
+            margin: EdgeInsets.only(top: _stops.isEmpty ? 8 : 0),
+            child: _buildLocationCard(
+              controller: _destinationController,
+              focusNode: _destinationFocusNode,
+              hint: '¿A dónde quieres ir?',
+              icon: Icons.location_on_rounded,
+              iconColor: AppColors.primary,
+              targetField: 'destination',
+              isDark: isDark,
+              isFirst: false,
+              isLast: true,
+              showConnector: false, // Last one doesn't need downwards connector
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInputField({
+  void _onReorderStops(int oldIndex, int newIndex) {
+    setState(() {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final stop = _stops.removeAt(oldIndex);
+      _stops.insert(newIndex, stop);
+
+      final controller = _stopControllers.removeAt(oldIndex);
+      _stopControllers.insert(newIndex, controller);
+
+      final node = _stopFocusNodes.removeAt(oldIndex);
+      _stopFocusNodes.insert(newIndex, node);
+      
+      // Update listeners logic if strictly bound to index (usually closures capture refs, but index calculation might be stale)
+      // Since _onTextChanged parses the targetField 'stop_X', we might need to handle that carefully.
+      // Actually, standard Controller listeners might bind to closure-based index. 
+      // Safest is to rebuild listeners or rely on rebuilding the UI which assigns 'stop_$index' correctly in _buildLocationCard.
+    });
+  }
+
+  Widget _buildLocationCard({
     required TextEditingController controller,
     required FocusNode focusNode,
     required String hint,
@@ -389,115 +427,166 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     required Color iconColor,
     required String targetField,
     required bool isDark,
+    required bool isFirst,
+    required bool isLast,
+    bool showConnector = false,
+    bool isDraggable = false,
     VoidCallback? onRemove,
   }) {
-    final hasFocus = focusNode.hasFocus;
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 22,
-              color: iconColor,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: TextFormField(
-              focusNode: focusNode,
-              controller: controller,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                letterSpacing: -0.3,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Glass Card
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: isDark 
+                    ? AppColors.darkCard.withValues(alpha: 0.6) 
+                    : AppColors.lightCard.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark 
+                      ? Colors.white.withValues(alpha: 0.1) 
+                      : Colors.white.withValues(alpha: 0.5),
+                  width: 1,
                 ),
-                border: InputBorder.none,
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (controller.text.isNotEmpty)
-                      GestureDetector(
-                        onTap: () => setState(() {
-                          controller.clear();
-                          _suggestions = [];
-                          if (targetField == 'origin') {
-                            _selectedOrigin = null;
-                          } else if (targetField == 'destination') {
-                            _selectedDestination = null;
-                          } else if (targetField.startsWith('stop_')) {
-                             // Keep the stop in list but clear data
-                             final index = int.parse(targetField.split('_')[1]);
-                             _stops[index] = SimpleLocation(latitude: 0, longitude: 0, address: '');
-                          }
-                        }),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          margin: const EdgeInsets.only(right: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Icon Column (Icon + Connector)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: iconColor.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 18, color: iconColor),
+                      ),
+                      if (showConnector)
+                        Container(
+                          width: 2,
+                          height: 24, // Visual connector extending down
+                          margin: const EdgeInsets.only(top: 8),
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkDivider : Colors.grey[300],
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: isDark ? AppColors.darkTextSecondary : Colors.grey[600],
+                            color: iconColor.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(1),
                           ),
                         ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Drag Handle (if draggable)
+                  if (isDraggable)
+                     Padding(
+                       padding: const EdgeInsets.only(right: 12),
+                       child: Icon(
+                         Icons.drag_indicator_rounded,
+                         color: isDark ? Colors.white24 : Colors.black26,
+                         size: 20,
+                       ),
+                     ),
+
+                  // Input Field
+                  Expanded(
+                    child: TextFormField(
+                      focusNode: focusNode,
+                      controller: controller,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                       ),
-                    
-                    if (onRemove != null)
-                       GestureDetector(
+                      decoration: InputDecoration(
+                        hintText: hint,
+                        hintStyle: TextStyle(
+                          color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        suffixIcon: ((_isLoadingSuggestions && focusNode.hasFocus) || (targetField == 'origin' && _isGettingLocation))
+                          ? Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                                ),
+                              ),
+                            )
+                          : null,
+                      ),
+                      onTap: () => _onInputTap(targetField: targetField),
+                    ),
+                  ),
+                  
+                  // Clear/Remove Buttons
+                  if (controller.text.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        controller.clear();
+                        if (targetField == 'origin') _selectedOrigin = null;
+                        if (targetField == 'destination') _selectedDestination = null;
+                        if (targetField.startsWith('stop_')) {
+                           int idx = int.parse(targetField.split('_')[1]);
+                           _stops[idx] = SimpleLocation(latitude: 0, longitude: 0, address: '');
+                        }
+                        _suggestions = [];
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close, size: 14, color: isDark ? Colors.white54 : Colors.black45),
+                      ),
+                    ),
+
+                  if (onRemove != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: GestureDetector(
                         onTap: onRemove,
                         child: Container(
-                          width: 24,
-                          height: 24,
-                          margin: const EdgeInsets.only(left: 8),
-                          child: Icon(
-                            Icons.remove_circle_outline,
-                            size: 20,
-                            color: isDark ? AppColors.darkTextHint : Colors.grey[400],
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: AppColors.error,
                           ),
                         ),
                       ),
-
-                    if ((_isLoadingSuggestions && hasFocus) || (targetField == 'origin' && _isGettingLocation))
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8, right: 8),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-              onTap: () => _onInputTap(targetField: targetField),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
