@@ -6,6 +6,7 @@ import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/features/user/presentation/widgets/profile/user_profile_shimmer.dart';
+import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -30,6 +31,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
   String? _driverStatus;
   String? _rejectionReason;
+  Map<String, dynamic>? _driverProfileData; // Full driver profile for correction flow
   
   // Animaciones
   late AnimationController _animationController;
@@ -74,6 +76,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             if (profile != null) {
               _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
               _rejectionReason = profile['razon_rechazo'];
+              _driverProfileData = profile; // Store full profile for correction flow
             }
           }
           
@@ -487,7 +490,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              await Navigator.pushNamed(context, RouteNames.driverRegistration);
+              // Navigate passing initialData for correction
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DriverRegistrationScreen(
+                    initialData: _driverProfileData,
+                  ),
+                ),
+              );
               _loadUserData();
             },
             style: ElevatedButton.styleFrom(

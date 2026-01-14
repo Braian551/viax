@@ -171,7 +171,10 @@ try {
             UPDATE detalles_conductor SET 
                 estado_biometrico = :status,
                 plantilla_biometrica = :plantilla,
-                fecha_verificacion_biometrica = NOW()
+                fecha_verificacion_biometrica = NOW(),
+                estado_aprobacion = 'pendiente',
+                estado_verificacion = 'pendiente',
+                razon_rechazo = NULL
             WHERE usuario_id = :uid
         ");
         $stmt->execute([
@@ -179,6 +182,37 @@ try {
             ':plantilla' => $encoding_json,
             ':uid' => $conductor_id
         ]);
+        
+        // También resetear solicitud de vinculación si existe y estaba rechazada
+        // Primero, eliminar cualquier solicitud rechazada existente
+        $stmt = $db->prepare("
+            DELETE FROM solicitudes_vinculacion_conductor 
+            WHERE conductor_id = :uid AND estado = 'rechazada'
+        ");
+        $stmt->execute([':uid' => $conductor_id]);
+        
+        // Luego, verificar si ya existe una solicitud pendiente, si no, crear una nueva
+        $stmt = $db->prepare("
+            SELECT id FROM solicitudes_vinculacion_conductor 
+            WHERE conductor_id = :uid AND estado = 'pendiente'
+        ");
+        $stmt->execute([':uid' => $conductor_id]);
+        $existingPending = $stmt->fetch();
+        
+        if (!$existingPending) {
+            // Obtener el empresa_id del conductor
+            $stmt = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = :uid");
+            $stmt->execute([':uid' => $conductor_id]);
+            $empresa_id = $stmt->fetchColumn();
+            
+            if ($empresa_id) {
+                $stmt = $db->prepare("
+                    INSERT INTO solicitudes_vinculacion_conductor (conductor_id, empresa_id, estado, creado_en)
+                    VALUES (:uid, :eid, 'pendiente', NOW())
+                ");
+                $stmt->execute([':uid' => $conductor_id, ':eid' => $empresa_id]);
+            }
+        }
         
     } elseif ($status === 'blocked') {
         // Agregar a lista de bloqueados si tiene encoding

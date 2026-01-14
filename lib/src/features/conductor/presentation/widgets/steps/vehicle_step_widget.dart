@@ -16,6 +16,7 @@ class VehicleStepWidget extends StatefulWidget {
   final TextEditingController colorController;
   final TextEditingController plateController;
   final File? vehiclePhoto;
+  final String? vehiclePhotoUrl; // Network URL for existing photo
   final VoidCallback onPickPhoto;
   final Map<String, dynamic>? selectedCompany;
   final TextEditingController companyController;
@@ -32,6 +33,7 @@ class VehicleStepWidget extends StatefulWidget {
     required this.colorController,
     required this.plateController,
     required this.vehiclePhoto,
+    this.vehiclePhotoUrl,
     required this.onPickPhoto,
     required this.selectedCompany,
     required this.companyController,
@@ -424,6 +426,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
     return ImageUploadCard(
       label: 'Foto del Vehículo',
       file: widget.vehiclePhoto,
+      networkUrl: widget.vehiclePhotoUrl,
       onTap: widget.onPickPhoto,
       isDark: widget.isDark,
       placeholderText: 'Toca para subir foto',

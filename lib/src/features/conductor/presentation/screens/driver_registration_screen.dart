@@ -16,7 +16,10 @@ import 'package:viax/src/features/conductor/presentation/widgets/components/imag
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
-  const DriverRegistrationScreen({super.key});
+  /// Optional initial data to pre-fill the form (used when correcting rejected application)
+  final Map<String, dynamic>? initialData;
+  
+  const DriverRegistrationScreen({super.key, this.initialData});
 
   @override
   State<DriverRegistrationScreen> createState() => _DriverRegistrationScreenState();
@@ -61,6 +64,80 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   // Dates
   DateTime? _soatDate;
   DateTime? _tecnoDate;
+
+  // Network URLs for existing images (display only, user must re-upload)
+  String? _vehiclePhotoUrl;
+  String? _licensePhotoUrl;
+  String? _soatPhotoUrl;
+  String? _tecnoPhotoUrl;
+  String? _propertyPhotoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  void _loadInitialData() {
+    final data = widget.initialData;
+    if (data == null) return;
+
+    // Vehicle info
+    final vehiculo = data['vehiculo'] as Map<String, dynamic>?;
+    if (vehiculo != null) {
+      _brandController.text = vehiculo['vehiculo_marca'] ?? '';
+      _modelController.text = vehiculo['vehiculo_modelo'] ?? '';
+      _yearController.text = vehiculo['vehiculo_anio']?.toString() ?? '';
+      _colorController.text = vehiculo['vehiculo_color'] ?? '';
+      _plateController.text = vehiculo['vehiculo_placa'] ?? '';
+      _vehiclePhotoUrl = UserService.getR2ImageUrl(vehiculo['foto_vehiculo']);
+      
+      // Map vehicle type
+      final tipo = vehiculo['vehiculo_tipo']?.toString().toLowerCase() ?? '';
+      if (tipo.contains('carro') || tipo.contains('auto')) {
+        _selectedVehicleType = 'carro';
+      } else if (tipo.contains('taxi')) {
+        _selectedVehicleType = 'taxi';
+      } else if (tipo.contains('motocarro')) {
+        _selectedVehicleType = 'motocarro';
+      } else {
+        _selectedVehicleType = 'moto';
+      }
+      
+      // Document numbers and dates
+      _soatController.text = vehiculo['soat_numero'] ?? '';
+      _tecnomechanicController.text = vehiculo['tecnomecanica_numero'] ?? '';
+      _propertyCardController.text = vehiculo['tarjeta_propiedad_numero'] ?? '';
+      
+      // Parse dates
+      if (vehiculo['soat_vencimiento'] != null) {
+        _soatDate = DateTime.tryParse(vehiculo['soat_vencimiento'].toString());
+      }
+      if (vehiculo['tecnomecanica_vencimiento'] != null) {
+        _tecnoDate = DateTime.tryParse(vehiculo['tecnomecanica_vencimiento'].toString());
+      }
+      
+      // Document photo URLs
+      _soatPhotoUrl = UserService.getR2ImageUrl(vehiculo['soat_foto_url']);
+      _tecnoPhotoUrl = UserService.getR2ImageUrl(vehiculo['tecnomecanica_foto_url']);
+      _propertyPhotoUrl = UserService.getR2ImageUrl(vehiculo['tarjeta_propiedad_foto_url']);
+    }
+
+    // License info
+    final licencia = data['licencia'] as Map<String, dynamic>?;
+    if (licencia != null) {
+      _licenseNumberController.text = licencia['licencia_conduccion'] ?? '';
+      _selectedCategory = licencia['licencia_categoria'] ?? 'A2';
+      _licensePhotoUrl = UserService.getR2ImageUrl(licencia['licencia_foto_url']);
+    }
+    
+    // Company info - we'll need to fetch this separately or it comes in data
+    // For now, we just show the name if available
+    if (data['empresa_nombre'] != null) {
+      _companyController.text = data['empresa_nombre'];
+      _selectedCompany = {'id': data['empresa_id'], 'nombre': data['empresa_nombre']};
+    }
+  }
 
   Future<void> _pickDate(Function(DateTime) onPicked) async {
     final now = DateTime.now();
@@ -111,7 +188,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         CustomSnackbar.showError(context, message: 'Completa todos los datos del vehículo.');
         return false;
       }
-      if (_vehiclePhoto == null) {
+      if (_vehiclePhoto == null && _vehiclePhotoUrl == null) {
         CustomSnackbar.showError(context, message: 'Debes subir una foto del vehículo.');
         return false;
       }
@@ -125,7 +202,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
          CustomSnackbar.showError(context, message: 'Ingresa el número de tu licencia.');
          return false;
       }
-      if (_licensePhoto == null) {
+      if (_licensePhoto == null && _licensePhotoUrl == null) {
         CustomSnackbar.showError(context, message: 'Debes subir la foto de tu licencia.');
         return false;
       }
@@ -138,7 +215,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
          CustomSnackbar.showError(context, message: 'Selecciona las fechas de vencimiento.');
          return false;
       }
-      if (_soatPhoto == null || _tecnoPhoto == null || _propertyPhoto == null) {
+      // Check individual document photos
+      if ((_soatPhoto == null && _soatPhotoUrl == null) || 
+          (_tecnoPhoto == null && _tecnoPhotoUrl == null) || 
+          (_propertyPhoto == null && _propertyPhotoUrl == null)) {
          CustomSnackbar.showError(context, message: 'Faltan fotos de los documentos.');
          return false;
       }
@@ -474,6 +554,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       colorController: _colorController,
       plateController: _plateController,
       vehiclePhoto: _vehiclePhoto,
+      vehiclePhotoUrl: _vehiclePhotoUrl,
       onPickPhoto: () => _pickSecurePhoto((file) => setState(() => _vehiclePhoto = file)),
       selectedCompany: _selectedCompany,
       companyController: _companyController,
@@ -549,6 +630,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         ImageUploadCard(
           label: 'Foto de la Licencia',
           file: _licensePhoto,
+          networkUrl: _licensePhotoUrl,
           onTap: () => _pickDocumentPhoto((file) => setState(() => _licensePhoto = file)),
           isDark: isDark,
         ),
@@ -587,6 +669,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto del SOAT',
             file: _soatPhoto,
+            networkUrl: _soatPhotoUrl,
             onTap: () => _pickDocumentPhoto((file) => setState(() => _soatPhoto = file)),
             isDark: isDark,
           ),
@@ -612,6 +695,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tecnomecánica',
             file: _tecnoPhoto,
+            networkUrl: _tecnoPhotoUrl,
             onTap: () => _pickDocumentPhoto((file) => setState(() => _tecnoPhoto = file)),
             isDark: isDark,
           ),
@@ -630,6 +714,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ImageUploadCard(
             label: 'Foto Tarjeta Propiedad',
             file: _propertyPhoto,
+            networkUrl: _propertyPhotoUrl,
             onTap: () => _pickDocumentPhoto((file) => setState(() => _propertyPhoto = file)),
             isDark: isDark,
           ),

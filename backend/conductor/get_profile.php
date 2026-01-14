@@ -66,9 +66,12 @@ try {
                 dc.fecha_ultima_verificacion,
                 dc.aprobado,
                 dc.estado_aprobacion,
-                dc.razon_rechazo
+                dc.razon_rechazo,
+                et.id as empresa_id,
+                et.nombre as empresa_nombre
               FROM usuarios u
               INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
+              LEFT JOIN empresas_transporte et ON u.empresa_id = et.id
               WHERE u.id = :conductor_id";
     
     $stmt = $db->prepare($query);
@@ -101,6 +104,8 @@ try {
         'aprobado' => (int)($conductor['aprobado'] ?? 0),
         'estado_aprobacion' => $conductor['estado_aprobacion'] ?? 'pendiente',
         'razon_rechazo' => $conductor['razon_rechazo'],
+        'empresa_id' => $conductor['empresa_id'],
+        'empresa_nombre' => $conductor['empresa_nombre'],
         
         // License information
         'licencia' => null,
