@@ -1180,426 +1180,216 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       child: SlideTransition(
         position: _slideAnimation,
         child: Container(
-          margin: const EdgeInsets.all(16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: (isDark
-                      ? Colors.black.withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.85)),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: (isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.6)),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Status y estadísticas
-                    _buildStatusSection(),
-
-                    // Divisor con gradiente
-                    Container(
-                      height: 1,
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            (isDark ? Colors.white : Colors.black).withValues(
-                              alpha: 0.1,
-                            ),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Botón de conexión
-                    _buildConnectionButton(),
-                  ],
-                ),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          decoration: BoxDecoration(
+            color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 25,
+                offset: const Offset(0, 8),
               ),
+            ],
+            border: Border.all(
+              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+              width: 1,
             ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Combined Status & Stats Row
+              _buildCompactInfoRow(theme, isDark),
+
+              // Connection Button
+              _buildConnectionButton(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatusSection() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
+  Widget _buildCompactInfoRow(ThemeData theme, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      child: Row(
         children: [
-          // Estado actual con animación mejorada
-          Row(
-            children: [
-              // Icono de estado con efecto glass
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: _isOnline
-                      ? LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.success.withValues(alpha: 0.2),
-                            AppColors.success.withValues(alpha: 0.1),
-                          ],
-                        )
-                      : null,
-                  color: _isOnline ? null : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _isOnline
-                        ? AppColors.success.withValues(alpha: 0.3)
-                        : Colors.grey.withValues(alpha: 0.2),
-                    width: 1,
+          // Status Indicator
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _isOnline 
+                  ? AppColors.success.withValues(alpha: 0.1) 
+                  : Colors.grey.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                _isOnline ? Icons.radar_rounded : Icons.wifi_off_rounded,
+                key: ValueKey(_isOnline),
+                color: _isOnline ? AppColors.success : Colors.grey,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          
+          // Status Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    _isOnline ? 'En línea' : 'Desconectado',
+                    key: ValueKey(_isOnline ? 'online_title' : 'offline_title'),
+                    style: TextStyle(
+                      color: theme.textTheme.titleMedium?.color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _isOnline && _isSearchingRequests
-                      ? AnimatedBuilder(
-                          animation: _rotateAnimation,
-                          builder: (context, child) {
-                            return Transform.rotate(
-                              angle: _rotateAnimation.value,
-                              child: Icon(
-                                Icons.radar_rounded,
-                                color: AppColors.success,
-                                size: 26,
-                                key: const ValueKey('radar'),
-                              ),
-                            );
-                          },
-                        )
-                      : Icon(
-                          _isOnline
-                              ? Icons.wifi_rounded
-                              : Icons.wifi_off_rounded,
-                          color: _isOnline ? AppColors.success : Colors.grey,
-                          size: 26,
-                          key: ValueKey(_isOnline ? 'online' : 'offline'),
-                        ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Text(
-                        _isOnline ? 'En línea' : 'Desconectado',
-                        key: ValueKey(_isOnline),
-                        style: TextStyle(
-                          color: theme.textTheme.titleLarge?.color,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    _isOnline ? 'Buscando pasajes...' : 'Conéctate para viajar',
+                    key: ValueKey(_isOnline ? 'online_sub' : 'offline_sub'),
+                    style: TextStyle(
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                      fontSize: 12,
                     ),
-                    const SizedBox(height: 4),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Text(
-                        _isOnline
-                            ? (_isSearchingRequests
-                                  ? _searchStatus
-                                  : 'Listo para recibir viajes')
-                            : 'Conéctate para recibir viajes',
-                        key: ValueKey(
-                          '$_isOnline-$_isSearchingRequests-$_searchStatus',
-                        ),
-                        style: TextStyle(
-                          color: theme.textTheme.bodyMedium?.color?.withValues(
-                            alpha: 0.6,
-                          ),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              // Indicador de pulso animado
-              if (_isOnline)
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Halo exterior animado
-                          Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                          // Punto central
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.success.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-            ],
+              ],
+            ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Estadísticas rápidas con efecto glass mejorado
-          Consumer<ConductorProvider>(
-            builder: (context, provider, child) {
-              return Row(
-                children: [
-                  _buildStatItem(
-                    icon: Icons.schedule_rounded,
-                    label: 'Hoy',
-                    value: '0h',
-                    color: AppColors.primary,
-                    isDark: isDark,
-                  ),
-                  _buildStatItem(
-                    icon: Icons.local_taxi_rounded,
-                    label: 'Viajes',
-                    value: '0',
-                    color: AppColors.accent,
-                    isDark: isDark,
-                  ),
-                  _buildStatItem(
-                    icon: Icons.account_balance_wallet_rounded,
-                    label: 'Ganado',
-                    value: '\$0',
-                    color: AppColors.success,
-                    isDark: isDark,
-                  ),
-                ],
-              );
-            },
+          // Mini Stats
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Consumer<ConductorProvider>(
+              builder: (context, provider, child) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildMiniStat(theme, Icons.local_taxi_rounded, "0"),
+                    Container(
+                      height: 16,
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      color: theme.dividerColor.withValues(alpha: 0.5),
+                    ),
+                    _buildMiniStat(theme, Icons.attach_money_rounded, "\$0"),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    required bool isDark,
-  }) {
-    final theme = Theme.of(context);
-
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => HapticFeedback.selectionClick(),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: isDark ? 0.15 : 0.1),
-                    color.withValues(alpha: isDark ? 0.08 : 0.05),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: color, size: 20),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: theme.textTheme.titleLarge?.color,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.6,
-                      ),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildMiniStat(ThemeData theme, IconData icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon, 
+          size: 14, 
+          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: theme.textTheme.titleMedium?.color,
           ),
         ),
-      ),
+      ],
     );
   }
 
+
+
   Widget _buildConnectionButton() {
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.95, end: 1.0),
-            duration: const Duration(milliseconds: 200),
-            builder: (context, scale, child) {
-              return Transform.scale(
-                scale: scale,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _toggleOnlineStatus,
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        gradient: _isOnline
-                            ? LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.red.shade400,
-                                  Colors.red.shade600,
-                                ],
-                              )
-                            : LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.success,
-                                  AppColors.success.withGreen(180),
-                                ],
-                              ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (_isOnline ? Colors.red : AppColors.success)
-                                .withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                            spreadRadius: -2,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            transitionBuilder: (child, animation) {
-                              return ScaleTransition(
-                                scale: animation,
-                                child: child,
-                              );
-                            },
-                            child: Icon(
-                              _isOnline
-                                  ? Icons.power_settings_new_rounded
-                                  : Icons.play_arrow_rounded,
-                              key: ValueKey(_isOnline),
-                              color: Colors.white,
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: Text(
-                              _isOnline ? 'Desconectar' : 'Empezar a trabajar',
-                              key: ValueKey(_isOnline),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _toggleOnlineStatus,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: _isOnline
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.red.shade400,
+                        Colors.red.shade600,
+                      ],
+                    )
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.success,
+                        AppColors.success.withGreen(180),
+                      ],
                     ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: (_isOnline ? Colors.red : AppColors.success)
+                      .withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _isOnline
+                      ? Icons.power_settings_new_rounded
+                      : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _isOnline ? 'Desconectar' : 'Empezar a trabajar',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              );
-            },
-          );
-        },
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
