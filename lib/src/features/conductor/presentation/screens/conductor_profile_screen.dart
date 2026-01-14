@@ -5,7 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../theme/app_colors.dart';
 import '../../providers/conductor_profile_provider.dart';
 import '../../models/conductor_profile_model.dart';
-import 'license_registration_screen.dart';
+// import 'license_registration_screen.dart';
 import 'vehicle_only_registration_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
@@ -421,7 +421,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
           icon: Icons.folder_rounded,
           isCompleted: profile.vehiculo?.isDocumentsComplete == true,
           isDark: isDark,
-          onTap: () => _editVehicle(profile.vehiculo), // Assuming same screen for now
+          onTap: () => _editVehicle(profile.vehiculo, initialStep: 2),
         ),
         
         const SizedBox(height: 32),
@@ -543,7 +543,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             subtitle: profile.vehiculo?.fotoSoat != null ? 'Subido' : 'Pendiente',
             icon: Icons.description_rounded,
             isDark: isDark,
-            onTap: () => _editVehicle(profile.vehiculo),
+            onTap: () => _editVehicle(profile.vehiculo, initialStep: 2),
             showDivider: true,
             statusColor: profile.vehiculo?.fotoSoat != null ? AppColors.success : AppColors.warning,
           ),
@@ -552,7 +552,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
             subtitle: profile.vehiculo?.fotoTarjetaPropiedad != null ? 'Subido' : 'Pendiente',
             icon: Icons.credit_card_rounded,
             isDark: isDark,
-            onTap: () => _editVehicle(profile.vehiculo),
+            onTap: () => _editVehicle(profile.vehiculo, initialStep: 2),
             showDivider: false,
             statusColor: profile.vehiculo?.fotoTarjetaPropiedad != null ? AppColors.success : AppColors.warning,
           ),
@@ -997,9 +997,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LicenseRegistrationScreen(
+        builder: (context) => VehicleOnlyRegistrationScreen(
           conductorId: widget.conductorId,
+          existingVehicle: Provider.of<ConductorProfileProvider>(context, listen: false).profile?.vehiculo,
           existingLicense: license,
+          conductorUser: widget.conductorUser,
+          initialStep: 1, // Step 1 is License
         ),
       ),
     );
@@ -1009,7 +1012,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     }
   }
 
-  void _editVehicle(vehicle) async {
+  void _editVehicle(vehicle, {int initialStep = 0}) async {
     if (!mounted) return;
     final result = await Navigator.push(
       context,
@@ -1019,6 +1022,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
           existingVehicle: vehicle,
           existingLicense: Provider.of<ConductorProfileProvider>(context, listen: false).profile?.licencia,
           conductorUser: widget.conductorUser,
+          initialStep: initialStep,
         ),
       ),
     );

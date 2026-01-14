@@ -22,12 +22,15 @@ class VehicleOnlyRegistrationScreen extends StatefulWidget {
   final DriverLicenseModel? existingLicense; // Add license
   final Map<String, dynamic>? conductorUser;
 
+  final int initialStep;
+
   const VehicleOnlyRegistrationScreen({
     super.key,
     required this.conductorId,
     this.existingVehicle,
     this.existingLicense,
     this.conductorUser,
+    this.initialStep = 0,
   });
 
   @override
@@ -35,7 +38,7 @@ class VehicleOnlyRegistrationScreen extends StatefulWidget {
 }
 
 class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationScreen> {
-  int _currentStep = 0;
+  late int _currentStep;
   final int _totalSteps = 3; // Vehicle, License, Documents
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -78,6 +81,7 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
   @override
   void initState() {
     super.initState();
+    _currentStep = widget.initialStep;
     _loadExistingData();
   }
 
