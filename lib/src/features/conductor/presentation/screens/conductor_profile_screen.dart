@@ -1024,6 +1024,8 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         builder: (context) => VehicleOnlyRegistrationScreen(
           conductorId: widget.conductorId,
           existingVehicle: vehicle,
+          existingLicense: Provider.of<ConductorProfileProvider>(context, listen: false).profile?.licencia,
+          conductorUser: widget.conductorUser,
         ),
       ),
     );

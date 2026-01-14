@@ -248,15 +248,21 @@ class ConductorDrawer extends StatelessWidget {
                 width: 3,
               ),
             ),
-            child: Center(
-              child: Text(
-                nombre.isNotEmpty ? nombre[0].toUpperCase() : 'C',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            child: CircleAvatar(
+              backgroundColor: Colors.transparent,
+              backgroundImage: conductorUser['foto_perfil'] != null 
+                  ? NetworkImage(UserService.getR2ImageUrl(conductorUser['foto_perfil'].toString()))
+                  : null,
+              child: conductorUser['foto_perfil'] == null 
+                  ? Text(
+                      nombre.isNotEmpty ? nombre[0].toUpperCase() : 'C',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
             ),
           ),
           

@@ -1,20 +1,33 @@
-﻿import 'dart:ui';
+﻿import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/auth_text_field.dart';
+import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/steps/vehicle_step_widget.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart'; // Helper for picking documents
+import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 import '../../models/vehicle_model.dart';
+import '../../models/driver_license_model.dart';
 import '../../providers/conductor_profile_provider.dart';
-import '../../../../core/config/app_config.dart';
-import 'license_registration_screen.dart';
-import '../widgets/document_upload_widget.dart';
 
 class VehicleOnlyRegistrationScreen extends StatefulWidget {
   final int conductorId;
   final VehicleModel? existingVehicle;
+  final DriverLicenseModel? existingLicense; // Add license
+  final Map<String, dynamic>? conductorUser;
 
   const VehicleOnlyRegistrationScreen({
     super.key,
     required this.conductorId,
     this.existingVehicle,
+    this.existingLicense,
+    this.conductorUser,
   });
 
   @override
@@ -23,27 +36,44 @@ class VehicleOnlyRegistrationScreen extends StatefulWidget {
 
 class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationScreen> {
   int _currentStep = 0;
+  final int _totalSteps = 3; // Vehicle, License, Documents
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
-  // Vehicle data
+  // --- Step 1: Vehicle Data ---
   final _placaController = TextEditingController();
   final _marcaController = TextEditingController();
   final _modeloController = TextEditingController();
   final _anioController = TextEditingController();
   final _colorController = TextEditingController();
-  VehicleType _selectedType = VehicleType.moto;
+  String _selectedType = 'moto';
+  // Company
+  final _companyController = TextEditingController();
+  Map<String, dynamic>? _selectedCompany;
+  // Photo
+  File? _vehiclePhoto;
+  String? _vehiclePhotoUrl;
 
-  // Document data
+  // --- Step 2: License Data ---
+  final _licenseNumberController = TextEditingController();
+  String _selectedCategory = 'A2';
+  File? _licensePhoto;
+  String? _licensePhotoUrl;
+  
+  // --- Step 3: Documents Data ---
   final _soatNumberController = TextEditingController();
   DateTime? _soatVencimiento;
+  File? _soatPhoto;
+  String? _soatPhotoUrl;
+
   final _tecnomecanicaNumberController = TextEditingController();
   DateTime? _tecnomecanicaVencimiento;
-  final _tarjetaPropiedadController = TextEditingController();
+  File? _tecnomecanicaPhoto;
+  String? _tecnomecanicaPhotoUrl;
 
-  // Photos
-  String? _soatFotoPath;
-  String? _tecnomecanicaFotoPath;
-  String? _tarjetaPropiedadFotoPath;
+  final _tarjetaPropiedadController = TextEditingController();
+  File? _tarjetaPropiedadPhoto;
+  String? _tarjetaPropiedadPhotoUrl;
 
   @override
   void initState() {
@@ -52,56 +82,60 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
   }
 
   void _loadExistingData() {
+    // 1. Load Vehicle Data
     if (widget.existingVehicle != null) {
       final vehicle = widget.existingVehicle!;
       _placaController.text = vehicle.placa;
-      _selectedType = vehicle.tipo;
+      _selectedType = vehicle.tipo.value;
       _marcaController.text = vehicle.marca ?? '';
       _modeloController.text = vehicle.modelo ?? '';
       _anioController.text = vehicle.anio?.toString() ?? '';
       _colorController.text = vehicle.color ?? '';
+      
       _soatNumberController.text = vehicle.soatNumero ?? '';
       _soatVencimiento = vehicle.soatVencimiento;
       _tecnomecanicaNumberController.text = vehicle.tecnomecanicaNumero ?? '';
       _tecnomecanicaVencimiento = vehicle.tecnomecanicaVencimiento;
       _tarjetaPropiedadController.text = vehicle.tarjetaPropiedadNumero ?? '';
       
-      // Cargar las URLs de las fotos si existen
-      if (vehicle.fotoSoat != null && vehicle.fotoSoat!.isNotEmpty) {
-        _soatFotoPath = _buildFullUrl(vehicle.fotoSoat!);
-      }
-      if (vehicle.fotoTecnomecanica != null && vehicle.fotoTecnomecanica!.isNotEmpty) {
-        _tecnomecanicaFotoPath = _buildFullUrl(vehicle.fotoTecnomecanica!);
-      }
-      if (vehicle.fotoTarjetaPropiedad != null && vehicle.fotoTarjetaPropiedad!.isNotEmpty) {
-        _tarjetaPropiedadFotoPath = _buildFullUrl(vehicle.fotoTarjetaPropiedad!);
+      _vehiclePhotoUrl = UserService.getR2ImageUrl(vehicle.fotoVehiculo);
+      _soatPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoSoat);
+      _tecnomecanicaPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoTecnomecanica);
+      _tarjetaPropiedadPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoTarjetaPropiedad);
+    }
+
+    // 2. Load License Data
+    if (widget.existingLicense != null) {
+      final license = widget.existingLicense!;
+      _licenseNumberController.text = license.numero;
+      _selectedCategory = license.categoria.value;
+      _licensePhotoUrl = UserService.getR2ImageUrl(license.foto);
+    }
+
+    // 3. Load Company Info
+    if (widget.conductorUser != null) {
+      if (widget.conductorUser!['empresa_id'] != null) {
+        _selectedCompany = {
+          'id': widget.conductorUser!['empresa_id'],
+          'nombre': widget.conductorUser!['empresa_nombre'] ?? 'Empresa Actual'
+        };
+        _companyController.text = _selectedCompany!['nombre'];
       }
     }
-  }
-
-  /// Construye la URL completa del documento
-  String _buildFullUrl(String relativeUrl) {
-    if (relativeUrl.startsWith('http://') || relativeUrl.startsWith('https://')) {
-      return relativeUrl;
-    }
-    // Las URLs relativas vienen como 'uploads/documentos/...'
-    // Necesitamos construir la URL base sin el '/backend' del path
-  final baseUrlWithoutPath = AppConfig.baseUrl.replaceAll('/viax/backend', '');
-    return '$baseUrlWithoutPath/$relativeUrl';
-  }
-
-  /// Verifica si una ruta es una URL remota
-  bool _isRemoteUrl(String path) {
-    return path.startsWith('http://') || path.startsWith('https://');
   }
 
   @override
   void dispose() {
+    // Step 1
     _placaController.dispose();
     _marcaController.dispose();
     _modeloController.dispose();
     _anioController.dispose();
     _colorController.dispose();
+    _companyController.dispose();
+    // Step 2
+    _licenseNumberController.dispose();
+    // Step 3
     _soatNumberController.dispose();
     _tecnomecanicaNumberController.dispose();
     _tarjetaPropiedadController.dispose();
@@ -110,119 +144,378 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.existingVehicle != null;
+    // Instead of reusing VehicleOnlyRegistrationScreen logic, I am implementing
+    // a multi-step editing screen similar to DriverRegistrationScreen
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(isEditing),
-      body: Consumer<ConductorProfileProvider>(
-        builder: (context, provider, child) {
-          return SafeArea(
-            child: Column(
-              children: [
-                _buildStepIndicator(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Form(
-                      key: _formKey,
-                      child: _buildCurrentStep(),
-                    ),
-                  ),
-                ),
-                _buildNavigationButtons(provider),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(bool isEditing) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: ClipRect(
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.8),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      appBar: AppBar(
+        title: Text(
+          'Editar Mis Documentos', // Changed Title
+          style: TextStyle(
+             color: isDark ? Colors.white : Colors.black87,
+             fontWeight: FontWeight.bold,
           ),
+        ), 
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Text(
-        isEditing ? 'Editar VehÃ­culo' : 'Registrar VehÃ­culo',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          _buildStepCircle(0, 'VehÃ­culo'),
-          _buildStepLine(0),
-          _buildStepCircle(1, 'Documentos'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepCircle(int step, String label) {
-    final isActive = step == _currentStep;
-    final isCompleted = step < _currentStep;
-    
-    return Expanded(
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? const Color(0xFFFFFF00)
-                  : isActive
-                      ? const Color(0xFFFFFF00).withValues(alpha: 0.15)
-                      : Colors.white.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isActive || isCompleted 
-                    ? const Color(0xFFFFFF00) 
-                    : Colors.white.withValues(alpha: 0.2),
-                width: 2,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Reused Step Indicator
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: RegisterStepIndicator(
+                currentStep: _currentStep,
+                totalSteps: _totalSteps,
+                lineWidth: 40,
               ),
             ),
-            child: Center(
-              child: isCompleted
-                  ? const Icon(Icons.check, color: Colors.black, size: 20)
-                  : Text(
-                      '${step + 1}',
-                      style: TextStyle(
-                        color: isActive ? const Color(0xFFFFFF00) : Colors.white54,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildCurrentStep(isDark),
+                ),
+              ),
+            ),
+
+            _buildBottomBar(isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep(bool isDark) {
+    switch (_currentStep) {
+      case 0:
+        return VehicleStepWidget(
+          isDark: isDark,
+          selectedVehicleType: _selectedType,
+          onTypeSelected: (val) => setState(() => _selectedType = val),
+          brandController: _marcaController,
+          modelController: _modeloController,
+          yearController: _anioController,
+          colorController: _colorController,
+          plateController: _placaController,
+          vehiclePhoto: _vehiclePhoto,
+          vehiclePhotoUrl: _vehiclePhotoUrl,
+          onPickPhoto: () => _pickSecurePhoto((file) => setState(() => _vehiclePhoto = file)),
+          selectedCompany: _selectedCompany,
+          companyController: _companyController,
+          onShowCompanyPicker: () => _showCompanyPicker(isDark),
+        );
+      case 1:
+        return _buildLicenseStep(isDark);
+      case 2:
+        return _buildDocumentsStep(isDark);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // --- Step 2: License UI ---
+  Widget _buildLicenseStep(bool isDark) {
+    return Form(
+      key: ValueKey('license_form'),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Licencia de Conducción',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            label,
+            'Actualiza los datos de tu licencia.',
             style: TextStyle(
-              color: isActive ? Colors.white : Colors.white54,
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              fontSize: 16,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          AuthTextField(
+            controller: _licenseNumberController, 
+            label: 'Número de Licencia', 
+            icon: Icons.card_membership_rounded,
+            keyboardType: TextInputType.number,
+            validator: (value) => value == null || value.isEmpty ? 'El número de licencia es requerido' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+          const SizedBox(height: 24),
+        
+          Text(
+            'Categoría',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 120, // Approximate height for grid
+            child: GridView.count(
+              crossAxisCount: 4,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: ['A1', 'A2', 'B1', 'C1'].map((cat) => _buildCategoryChip(cat, isDark)).toList(),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          ImageUploadCard(
+            label: 'Foto de la Licencia',
+            file: _licensePhoto,
+            networkUrl: _licensePhotoUrl,
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _licensePhoto = file)),
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String category, bool isDark) {
+    final isSelected = _selectedCategory == category;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = category),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : (isDark ? Colors.white10 : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : (isDark ? Colors.white12 : Colors.grey.shade300),
+            width: 1.5
+          ),
+        ),
+        child: Center(
+          child: Text(
+            category,
+            style: TextStyle(
+              color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.grey.shade700),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Step 3: Documents UI ---
+  Widget _buildDocumentsStep(bool isDark) {
+    return Form(
+      key: ValueKey('docs_form'),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Documentos del Vehículo',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Asegúrate de que toda la documentación esté vigente.',
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // SOAT
+          AuthTextField(
+            controller: _soatNumberController,
+            label: 'Número del SOAT',
+            icon: Icons.health_and_safety_rounded,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: 12),
+          _buildDatePickerField(
+            label: 'Vencimiento SOAT',
+            selectedDate: _soatVencimiento,
+            onTap: () => _pickDate((date) => setState(() => _soatVencimiento = date)),
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto del SOAT',
+            file: _soatPhoto,
+            networkUrl: _soatPhotoUrl,
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _soatPhoto = file)),
+            isDark: isDark,
+          ),
+          
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 24),
+
+          // Tecnomecanica
+          AuthTextField(
+            controller: _tecnomecanicaNumberController,
+            label: 'N° Tecnomecánica',
+            icon: Icons.build_circle_rounded,
+            keyboardType: TextInputType.number,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+          const SizedBox(height: 12),
+          _buildDatePickerField(
+            label: 'Vencimiento Tecnomecánica',
+            selectedDate: _tecnomecanicaVencimiento,
+            onTap: () => _pickDate((date) => setState(() => _tecnomecanicaVencimiento = date)),
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto Tecnomecánica',
+            file: _tecnomecanicaPhoto,
+            networkUrl: _tecnomecanicaPhotoUrl,
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _tecnomecanicaPhoto = file)),
+            isDark: isDark,
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 24),
+
+          // Tarjeta Propiedad
+          AuthTextField(
+            controller: _tarjetaPropiedadController,
+            label: 'N° Tarjeta Propiedad',
+            icon: Icons.folder_shared_rounded,
+            keyboardType: TextInputType.number,
+            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+          const SizedBox(height: 12),
+          ImageUploadCard(
+            label: 'Foto Tarjeta Propiedad',
+            file: _tarjetaPropiedadPhoto,
+            networkUrl: _tarjetaPropiedadPhotoUrl,
+            onTap: () => _pickDocumentPhoto((file) => setState(() => _tarjetaPropiedadPhoto = file)),
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required String label,
+    required DateTime? selectedDate,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface.withOpacity(0.5) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.grey.shade200,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today_rounded, 
+              color: selectedDate == null 
+                  ? (isDark ? Colors.white38 : Colors.grey) 
+                  : AppColors.primary
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    selectedDate != null
+                        ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                        : 'Seleccionar fecha',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? Colors.white24 : Colors.grey[300]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        border: Border(top: BorderSide(color: isDark ? Colors.white10 : Colors.grey.shade200)),
+      ),
+      child: Row(
+        children: [
+          if (_currentStep > 0)
+            Expanded(
+              child: TextButton(
+                onPressed: _isLoading ? null : () => setState(() => _currentStep--),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text('Atrás', style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontSize: 16)),
+              ),
+            ),
+          if (_currentStep > 0) const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleNextStep,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: _isLoading 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text(_currentStep == _totalSteps - 1 ? 'Guardar Todo' : 'Siguiente', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
         ],
@@ -230,914 +523,185 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
     );
   }
 
-  Widget _buildStepLine(int step) {
-    return Expanded(
-      flex: 1,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 30),
-        color: step < _currentStep
-            ? const Color(0xFFFFFF00)
-            : Colors.white.withValues(alpha: 0.1),
-      ),
-    );
-  }
+  void _handleNextStep() async {
+    // 1. Validate Step
+    if (!_validateCurrentStep()) return;
 
-  Widget _buildCurrentStep() {
-    switch (_currentStep) {
-      case 0:
-        return _buildVehicleStep();
-      case 1:
-        return _buildDocumentsStep();
-      default:
-        return Container();
-    }
-  }
-
-  Widget _buildVehicleStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        _buildSectionHeader(
-          'InformaciÃ³n del VehÃ­culo',
-          Icons.directions_car_rounded,
-        ),
-        const SizedBox(height: 24),
-        _buildVehicleTypeSelector(),
-        const SizedBox(height: 16),
-        _buildTextField(
-          controller: _placaController,
-          label: 'Placa',
-          hint: 'Ej: ABC123',
-          icon: Icons.pin_rounded,
-          textCapitalization: TextCapitalization.characters,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa la placa';
-            }
-            if (value.length < 6) {
-              return 'La placa debe tener al menos 6 caracteres';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _marcaController,
-                label: 'Marca',
-                hint: 'Ej: Toyota',
-                icon: Icons.branding_watermark_rounded,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Requerido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _modeloController,
-                label: 'Modelo',
-                hint: 'Ej: Corolla',
-                icon: Icons.description_rounded,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Requerido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _anioController,
-                label: 'AÃ±o',
-                hint: '2020',
-                icon: Icons.calendar_today_rounded,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Requerido';
-                  }
-                  final year = int.tryParse(value);
-                  if (year == null || year < 1900 || year > DateTime.now().year + 1) {
-                    return 'AÃ±o invÃ¡lido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _colorController,
-                label: 'Color',
-                hint: 'Ej: Blanco',
-                icon: Icons.palette_rounded,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Requerido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDocumentsStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        _buildSectionHeader(
-          'Documentos del VehÃ­culo',
-          Icons.description_rounded,
-        ),
-        const SizedBox(height: 24),
-        
-        // SOAT
-        _buildTextField(
-          controller: _soatNumberController,
-          label: 'NÃºmero SOAT',
-          hint: 'NÃºmero de pÃ³liza SOAT',
-          icon: Icons.shield_rounded,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa el nÃºmero SOAT';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        _buildDateField(
-          label: 'Vencimiento SOAT',
-          selectedDate: _soatVencimiento,
-          onTap: () => _selectSOATDate(context),
-        ),
-        const SizedBox(height: 16),
-        DocumentUploadWidget(
-          label: 'Documento SOAT',
-          subtitle: 'Foto o PDF del SOAT',
-          filePath: _soatFotoPath,
-          icon: Icons.shield_rounded,
-          acceptedType: DocumentType.any,
-          isRequired: false,
-          allowGallery: false,
-          onTap: () async {
-            final path = await DocumentPickerHelper.pickDocument(
-              context: context,
-              documentType: DocumentType.any,
-              allowGallery: false,
-            );
-            if (path != null) {
-              setState(() {
-                _soatFotoPath = path;
-              });
-            }
-          },
-          onRemove: () {
-            setState(() {
-              _soatFotoPath = null;
-            });
-          },
-        ),
-        
-        const SizedBox(height: 24),
-        const Divider(color: Colors.white24, thickness: 1),
-        const SizedBox(height: 24),
-        
-        // TecnomecÃ¡nica
-        _buildTextField(
-          controller: _tecnomecanicaNumberController,
-          label: 'NÃºmero TecnomecÃ¡nica',
-          hint: 'NÃºmero de certificado',
-          icon: Icons.build_rounded,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa el nÃºmero de tecnomecÃ¡nica';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        _buildDateField(
-          label: 'Vencimiento TecnomecÃ¡nica',
-          selectedDate: _tecnomecanicaVencimiento,
-          onTap: () => _selectTecnomecanicaDate(context),
-        ),
-        const SizedBox(height: 16),
-        DocumentUploadWidget(
-          label: 'Certificado TecnomecÃ¡nica',
-          subtitle: 'Foto o PDF del certificado',
-          filePath: _tecnomecanicaFotoPath,
-          icon: Icons.build_rounded,
-          acceptedType: DocumentType.any,
-          isRequired: false,
-          allowGallery: false,
-          onTap: () async {
-            final path = await DocumentPickerHelper.pickDocument(
-              context: context,
-              documentType: DocumentType.any,
-              allowGallery: false,
-            );
-            if (path != null) {
-              setState(() {
-                _tecnomecanicaFotoPath = path;
-              });
-            }
-          },
-          onRemove: () {
-            setState(() {
-              _tecnomecanicaFotoPath = null;
-            });
-          },
-        ),
-        
-        const SizedBox(height: 24),
-        const Divider(color: Colors.white24, thickness: 1),
-        const SizedBox(height: 24),
-        
-        // Tarjeta de propiedad
-        _buildTextField(
-          controller: _tarjetaPropiedadController,
-          label: 'Tarjeta de Propiedad',
-          hint: 'NÃºmero de tarjeta',
-          icon: Icons.credit_card_rounded,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa el nÃºmero de tarjeta de propiedad';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        DocumentUploadWidget(
-          label: 'Tarjeta de Propiedad',
-          subtitle: 'Foto o PDF de la tarjeta',
-          filePath: _tarjetaPropiedadFotoPath,
-          icon: Icons.credit_card_rounded,
-          acceptedType: DocumentType.any,
-          isRequired: false,
-          allowGallery: false,
-          onTap: () async {
-            final path = await DocumentPickerHelper.pickDocument(
-              context: context,
-              documentType: DocumentType.any,
-              allowGallery: false,
-            );
-            if (path != null) {
-              setState(() {
-                _tarjetaPropiedadFotoPath = path;
-              });
-            }
-          },
-          onRemove: () {
-            setState(() {
-              _tarjetaPropiedadFotoPath = null;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: const Color(0xFFFFFF00), size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    TextInputType? keyboardType,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-    String? Function(String?)? validator,
-  }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-              width: 1.5,
-            ),
-          ),
-          child: TextFormField(
-            controller: controller,
-            style: const TextStyle(color: Colors.white),
-            keyboardType: keyboardType,
-            textCapitalization: textCapitalization,
-            decoration: InputDecoration(
-              labelText: label,
-              hintText: hint,
-              labelStyle: const TextStyle(color: Colors.white70),
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-              prefixIcon: Icon(icon, color: const Color(0xFFFFFF00)),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(20),
-              errorStyle: const TextStyle(color: Colors.redAccent),
-            ),
-            validator: validator,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVehicleTypeSelector() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-              width: 1.5,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Tipo de VehÃ­culo',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: VehicleType.values.map((type) {
-                  final isSelected = _selectedType == type;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedType = type),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFFFFF00).withValues(alpha: 0.15)
-                            : Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFFFFF00).withValues(alpha: 0.5)
-                              : Colors.white.withValues(alpha: 0.1),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            type.icon,
-                            size: 20,
-                            color: isSelected ? const Color(0xFFFFFF00) : Colors.white70,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            type.label,
-                            style: TextStyle(
-                              color: isSelected ? const Color(0xFFFFFF00) : Colors.white70,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateField({
-    required String label,
-    required DateTime? selectedDate,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded, color: Color(0xFFFFFF00)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        selectedDate != null
-                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
-                            : 'Seleccionar fecha',
-                        style: TextStyle(
-                          color: selectedDate != null ? Colors.white : Colors.white54,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white.withValues(alpha: 0.3),
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavigationButtons(ConductorProfileProvider provider) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
-            border: Border(
-              top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Row(
-              children: [
-                if (_currentStep > 0)
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => setState(() => _currentStep--),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.white.withValues(alpha: 0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'AtrÃ¡s',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_currentStep > 0) const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: provider.isLoading ? null : () => _handleNext(provider),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: const Color(0xFFFFFF00),
-                      disabledBackgroundColor: Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: provider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                            ),
-                          )
-                        : Text(
-                            _currentStep < 1 ? 'Siguiente' : 'Guardar',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectSOATDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _soatVencimiento ?? DateTime.now().add(const Duration(days: 365)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFFFFF00),
-              onPrimary: Colors.black,
-              surface: Color(0xFF1A1A1A),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() => _soatVencimiento = picked);
-    }
-  }
-
-  Future<void> _selectTecnomecanicaDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _tecnomecanicaVencimiento ?? DateTime.now().add(const Duration(days: 365)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFFFFF00),
-              onPrimary: Colors.black,
-              surface: Color(0xFF1A1A1A),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() => _tecnomecanicaVencimiento = picked);
-    }
-  }
-
-  Future<void> _handleNext(ConductorProfileProvider provider) async {
-    if (_currentStep < 1) {
-      if (_validateCurrentStep()) {
-        setState(() => _currentStep++);
-      }
+    // 2. Proceed or Save
+    if (_currentStep < _totalSteps - 1) {
+      setState(() => _currentStep++);
     } else {
-      // Save all vehicle data
-      await _saveData(provider);
+      await _saveAllData();
     }
   }
 
   bool _validateCurrentStep() {
-    switch (_currentStep) {
-      case 0:
-        return _formKey.currentState?.validate() ?? false;
-      case 1:
-        return _soatNumberController.text.isNotEmpty &&
-            _soatVencimiento != null &&
-            _tecnomecanicaNumberController.text.isNotEmpty &&
-            _tecnomecanicaVencimiento != null &&
-            _tarjetaPropiedadController.text.isNotEmpty;
-      default:
+    if (_currentStep == 0) { // Vehicle
+      if (_marcaController.text.isEmpty || _modeloController.text.isEmpty || 
+          _anioController.text.isEmpty || _colorController.text.isEmpty || 
+          _placaController.text.isEmpty) {
+        CustomSnackbar.showError(context, message: 'Completa los datos del vehículo');
         return false;
+      }
+      if (_selectedCompany == null) {
+        CustomSnackbar.showError(context, message: 'Selecciona una empresa');
+        return false;
+      }
+    } else if (_currentStep == 1) { // License
+      if (_licenseNumberController.text.isEmpty) {
+        CustomSnackbar.showError(context, message: 'Ingresa tu número de licencia');
+        return false;
+      }
+    } else if (_currentStep == 2) { // Documents
+      if (_soatNumberController.text.isEmpty || _soatVencimiento == null ||
+          _tecnomecanicaNumberController.text.isEmpty || _tecnomecanicaVencimiento == null ||
+          _tarjetaPropiedadController.text.isEmpty) {
+        CustomSnackbar.showError(context, message: 'Completa la información de documentos');
+        return false;
+      }
     }
+    return true;
   }
 
-  Future<void> _saveData(ConductorProfileProvider provider) async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveAllData() async {
+    setState(() => _isLoading = true);
+    final provider = Provider.of<ConductorProfileProvider>(context, listen: false);
 
-    if (_soatVencimiento == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor selecciona la fecha de vencimiento del SOAT'),
-          backgroundColor: Colors.red,
-        ),
+    try {
+      // --- Save Vehicle Info ---
+      final vehicle = VehicleModel(
+        placa: _placaController.text,
+        tipo: VehicleType.fromString(_selectedType),
+        marca: _marcaController.text,
+        modelo: _modeloController.text,
+        anio: int.tryParse(_anioController.text),
+        color: _colorController.text,
+        soatNumero: _soatNumberController.text,
+        soatVencimiento: _soatVencimiento,
+        tecnomecanicaNumero: _tecnomecanicaNumberController.text,
+        tecnomecanicaVencimiento: _tecnomecanicaVencimiento,
+        tarjetaPropiedadNumero: _tarjetaPropiedadController.text,
       );
-      return;
-    }
 
-    if (_tecnomecanicaVencimiento == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor selecciona la fecha de vencimiento de la tecnomecÃ¡nica'),
-          backgroundColor: Colors.red,
-        ),
+      // This provider method likely updates basic info + doc info in database
+      final vehicleSuccess = await provider.updateVehicle(
+        conductorId: widget.conductorId,
+        vehicle: vehicle,
       );
-      return;
-    }
-
-    // Primero subir las fotos si existen
-    if (_soatFotoPath != null || _tecnomecanicaFotoPath != null || _tarjetaPropiedadFotoPath != null) {
-      // Filtrar solo las fotos que son archivos locales (no URLs remotas)
-      final Map<String, String> documentsToUpload = {};
       
-      if (_soatFotoPath != null && !_isRemoteUrl(_soatFotoPath!)) {
-        documentsToUpload['soat'] = _soatFotoPath!;
-      }
-      if (_tecnomecanicaFotoPath != null && !_isRemoteUrl(_tecnomecanicaFotoPath!)) {
-        documentsToUpload['tecnomecanica'] = _tecnomecanicaFotoPath!;
-      }
-      if (_tarjetaPropiedadFotoPath != null && !_isRemoteUrl(_tarjetaPropiedadFotoPath!)) {
-        documentsToUpload['tarjeta_propiedad'] = _tarjetaPropiedadFotoPath!;
+      if (!vehicleSuccess) throw Exception(provider.errorMessage ?? 'Error al vehículo');
+
+      // --- Save License Info ---
+      // We use RegisterDriverLicense to update (it is likely an upsert or we just recall it)
+      final licenseResult = await UserService.registerDriverLicense(
+        userId: widget.conductorId,
+        licenseNumber: _licenseNumberController.text,
+        category: _selectedCategory,
+      );
+      
+      if (licenseResult['success'] != true) {
+         throw Exception('Error licencia: ${licenseResult['message']}');
       }
 
-      // Solo subir si hay documentos nuevos
-      if (documentsToUpload.isNotEmpty) {
-        final uploadResults = await provider.uploadVehicleDocuments(
+      // --- Upload Photos ---
+      // 1. Vehicle Photo
+      if (_vehiclePhoto != null) {
+         await UserService.uploadVehiclePhoto(conductorId: widget.conductorId, filePath: _vehiclePhoto!.path);
+      }
+      
+      // 2. License Photo
+      if (_licensePhoto != null) {
+        await UserService.uploadDriverDocument(userId: widget.conductorId, docType: 'licencia_conduccion', filePath: _licensePhoto!.path);
+      }
+
+      // 3. Vehicle Documents
+      Map<String, String> docsToUpload = {};
+      if (_soatPhoto != null) docsToUpload['soat'] = _soatPhoto!.path;
+      if (_tecnomecanicaPhoto != null) docsToUpload['tecnomecanica'] = _tecnomecanicaPhoto!.path;
+      if (_tarjetaPropiedadPhoto != null) docsToUpload['tarjeta_propiedad'] = _tarjetaPropiedadPhoto!.path;
+
+      if (docsToUpload.isNotEmpty) {
+        await provider.uploadVehicleDocuments(
           conductorId: widget.conductorId,
-          soatFotoPath: documentsToUpload['soat'],
-          tecnomecanicaFotoPath: documentsToUpload['tecnomecanica'],
-          tarjetaPropiedadFotoPath: documentsToUpload['tarjeta_propiedad'],
+          soatFotoPath: docsToUpload['soat'],
+          tecnomecanicaFotoPath: docsToUpload['tecnomecanica'],
+          tarjetaPropiedadFotoPath: docsToUpload['tarjeta_propiedad'],
         );
-
-        // Verificar si algÃºn upload fallÃ³
-        final failedUploads = uploadResults.entries.where((e) => e.value == null).toList();
-        if (failedUploads.isNotEmpty && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Advertencia: No se pudieron subir algunas fotos: ${failedUploads.map((e) => e.key).join(", ")}',
-              ),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
       }
-    }
-
-    final vehicle = VehicleModel(
-      placa: _placaController.text,
-      tipo: _selectedType,
-      marca: _marcaController.text,
-      modelo: _modeloController.text,
-      anio: int.parse(_anioController.text),
-      color: _colorController.text,
-      soatNumero: _soatNumberController.text,
-      soatVencimiento: _soatVencimiento,
-      tecnomecanicaNumero: _tecnomecanicaNumberController.text,
-      tecnomecanicaVencimiento: _tecnomecanicaVencimiento,
-      tarjetaPropiedadNumero: _tarjetaPropiedadController.text,
-    );
-
-    final vehicleSuccess = await provider.updateVehicle(
-      conductorId: widget.conductorId,
-      vehicle: vehicle,
-    );
-
-    if (mounted) {
-      if (vehicleSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.existingVehicle != null 
-                  ? 'VehÃ­culo actualizado exitosamente' 
-                  : 'VehÃ­culo guardado exitosamente',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Si es registro nuevo (no ediciÃ³n), verificar si falta la licencia
-        final isEditing = widget.existingVehicle != null;
-        if (!isEditing && provider.profile != null) {
-          final hasLicense = provider.profile!.licencia != null && 
-                             provider.profile!.licencia!.isComplete;
-          
-          if (!hasLicense) {
-            // Mostrar diÃ¡logo para ir a registrar licencia
-            final goToLicense = await showDialog<bool>(
-              context: context,
-              builder: (context) => _buildNavigationDialog(
-                icon: Icons.badge_rounded,
-                title: 'Registrar Licencia',
-                message: 'Â¡VehÃ­culo guardado! Â¿Deseas continuar registrando tu licencia de conducciÃ³n ahora?',
-              ),
-            );
-
-            if (goToLicense == true && mounted) {
-              // Ir a la pantalla de registro de licencia
-              final licenseResult = await Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LicenseRegistrationScreen(
-                    conductorId: widget.conductorId,
-                  ),
-                ),
-              );
-              // Si guardÃ³ la licencia, retornar true
-              if (licenseResult == true) {
-                return;
-              }
-            }
-          }
-        }
-        
+      
+      if (mounted) {
+        CustomSnackbar.showSuccess(context, message: '¡Información actualizada correctamente!');
         Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(provider.errorMessage ?? 'Error al guardar vehÃ­culo'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
+
+    } catch (e) {
+      if (mounted) {
+        CustomSnackbar.showError(context, message: 'Error: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
-
-  Widget _buildNavigationDialog({
-    required IconData icon,
-    required String title,
-    required String message,
-  }) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFF00).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: const Color(0xFFFFFF00),
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'DespuÃ©s',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFFFFFF00),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Continuar',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+  
+  // Helpers
+  Future<void> _pickDate(Function(DateTime) onPicked) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 90)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 5)),
+      locale: const Locale('es', 'ES'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.darkSurface,
+              onSurface: Colors.white,
             ),
           ),
-        ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) onPicked(picked);
+  }
+
+  Future<void> _pickSecurePhoto(Function(File) onPicked) async {
+     final path = await DocumentPickerHelper.pickDocument(
+        context: context,
+        documentType: DocumentType.image,
+        allowGallery: false, 
+      );
+      if (path != null) onPicked(File(path));
+  }
+
+  Future<void> _pickDocumentPhoto(Function(File) onPicked) async {
+      final path = await DocumentPickerHelper.pickDocument(
+        context: context,
+        documentType: DocumentType.any, // Allows PDF or Image
+        allowGallery: false,
+      );
+      if (path != null) onPicked(File(path));
+  }
+
+  void _showCompanyPicker(bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CompanyPickerSheet(
+        isDark: isDark, 
+        onSelected: (company) {
+           if (company != null) {
+             setState(() {
+               _selectedCompany = company;
+               _companyController.text = company['nombre'];
+             });
+           }
+        }
       ),
     );
   }
