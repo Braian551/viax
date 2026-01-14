@@ -41,17 +41,44 @@ try {
             ec.email,
             ec.municipio,
             ec.departamento,
-            em.total_conductores,
-            em.conductores_activos,
-            em.total_viajes_completados,
-            em.calificacion_promedio,
-            em.total_calificaciones
+            (
+                SELECT COUNT(*) 
+                FROM usuarios u 
+                WHERE u.tipo_usuario = 'conductor' 
+                AND u.empresa_id = e.id 
+                AND u.es_activo = 1
+            ) as total_conductores,
+            (
+                SELECT COUNT(*) 
+                FROM usuarios u 
+                WHERE u.tipo_usuario = 'conductor' 
+                AND u.empresa_id = e.id 
+                AND u.es_activo = 1
+            ) as conductores_activos,
+            (
+                SELECT COUNT(ss.id) 
+                FROM solicitudes_servicio ss
+                JOIN asignaciones_conductor ac ON ss.id = ac.solicitud_id
+                JOIN usuarios u ON ac.conductor_id = u.id
+                WHERE u.empresa_id = e.id
+                AND ss.estado = 'completada'
+            ) as total_viajes_completados,
+            (
+                SELECT COALESCE(AVG(c.calificacion), 0)
+                FROM calificaciones c
+                JOIN usuarios u ON c.usuario_calificado_id = u.id
+                WHERE u.empresa_id = e.id
+            ) as calificacion_promedio,
+            (
+                SELECT COUNT(c.id)
+                FROM calificaciones c
+                JOIN usuarios u ON c.usuario_calificado_id = u.id
+                WHERE u.empresa_id = e.id
+            ) as total_calificaciones
         FROM empresas_transporte e
         LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
-        LEFT JOIN empresas_metricas em ON e.id = em.empresa_id
         WHERE e.id = :empresa_id
     ";
-    
     $stmt = $conn->prepare($empresaQuery);
     $stmt->execute(['empresa_id' => $empresaId]);
     $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
