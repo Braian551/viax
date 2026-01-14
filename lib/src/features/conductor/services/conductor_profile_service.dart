@@ -5,6 +5,7 @@ import '../models/conductor_profile_model.dart';
 import '../models/driver_license_model.dart';
 import '../models/vehicle_model.dart';
 import '../../../core/config/app_config.dart';
+import '../../../global/services/auth/user_service.dart';
 
 /// Servicio para gestiÃ³n de perfil de conductor
 /// 
@@ -97,16 +98,31 @@ class ConductorProfileService {
     required VehicleModel vehicle,
   }) async {
     try {
+      final rawEmpresaId = vehicle.empresaId ?? await UserService.getCurrentEmpresaId();
+      final empresaId = rawEmpresaId is int
+          ? rawEmpresaId
+          : int.tryParse(rawEmpresaId?.toString() ?? '');
+
+      if (empresaId == null || empresaId <= 0) {
+        return {
+          'success': false,
+          'message': 'Debes seleccionar una empresa de transporte'
+        };
+      }
+
+      final payload = {
+        'conductor_id': conductorId,
+        ...vehicle.toJson(),
+        'empresa_id': empresaId,
+      };
+
       final response = await http.post(
         Uri.parse('$baseUrl/update_vehicle.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'conductor_id': conductorId,
-          ...vehicle.toJson(),
-        }),
+        body: jsonEncode(payload),
       );
 
       print('Update vehicle response (${response.statusCode}): ${response.body}');
@@ -226,6 +242,29 @@ class ConductorProfileService {
     } catch (e) {
       print('Error obteniendo documentos pendientes: $e');
       return [];
+    }
+  }
+
+  /// Obtener detalles de la empresa vinculada
+  static Future<Map<String, dynamic>?> getCompanyDetails(int empresaId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/empresa/profile.php?id=$empresaId'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      print('Company details response (${response.statusCode}): ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        if (data['success'] == true) {
+          return Map<String, dynamic>.from(data['data'] ?? data['empresa']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error obteniendo detalles de empresa: $e');
+      return null;
     }
   }
 }

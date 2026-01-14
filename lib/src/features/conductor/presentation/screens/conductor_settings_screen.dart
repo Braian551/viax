@@ -101,10 +101,6 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final userName = widget.conductorUser?['nombre'] ?? 'Conductor';
-    final userEmail = widget.conductorUser?['email'] ?? 'conductor@viax.com';
-    final userPhone = widget.conductorUser?['telefono'];
-
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -121,16 +117,8 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Información de cuenta
-                  AccountInfoCard(
-                    name: userName,
-                    email: userEmail,
-                    phone: userPhone,
-                    onEditProfile: () {
-                      _showSnackbar('Editar perfil próximamente');
-                    },
-                  ),
-                  const SizedBox(height: 28),
+                  // Información de cuenta (removida - ya se muestra en Perfil)
+                  const SizedBox.shrink(),
 
                   // Notificaciones
                   SettingsSection(

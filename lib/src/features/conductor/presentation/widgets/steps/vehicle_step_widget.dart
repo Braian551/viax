@@ -16,11 +16,12 @@ class VehicleStepWidget extends StatefulWidget {
   final TextEditingController colorController;
   final TextEditingController plateController;
   final File? vehiclePhoto;
-  final String? vehiclePhotoUrl; // Network URL for existing photo
+  final String? vehiclePhotoUrl;
   final VoidCallback onPickPhoto;
   final Map<String, dynamic>? selectedCompany;
   final TextEditingController companyController;
   final VoidCallback onShowCompanyPicker;
+  final bool isEditing;
 
   const VehicleStepWidget({
     super.key,
@@ -38,6 +39,7 @@ class VehicleStepWidget extends StatefulWidget {
     required this.selectedCompany,
     required this.companyController,
     required this.onShowCompanyPicker,
+    this.isEditing = false,
   });
 
   @override
@@ -94,17 +96,19 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         _buildHeader(context),
         const SizedBox(height: 24),
         
-        Text(
-          'Tipo de Vehículo',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: widget.isDark ? Colors.white70 : Colors.black87,
+        if (!widget.isEditing) ...[
+          Text(
+            'Tipo de Vehículo',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: widget.isDark ? Colors.white70 : Colors.black87,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _buildVehicleTypeSelector(context),
-        const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          _buildVehicleTypeSelector(context),
+          const SizedBox(height: 24),
+        ],
 
         _buildVehicleDetailsForm(context),
         const SizedBox(height: 32),
@@ -124,7 +128,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tu Vehículo',
+          widget.isEditing ? 'Editar Información' : 'Tu Vehículo',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -134,7 +138,9 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Selecciona el tipo de vehículo y completa los detalles para comenzar.',
+          widget.isEditing 
+              ? 'Actualiza los datos de tu vehículo.'
+              : 'Selecciona el tipo de vehículo y completa los detalles para comenzar.',
           style: TextStyle(
             fontSize: 16,
             color: widget.isDark ? Colors.white60 : Colors.black54,

@@ -59,12 +59,12 @@ class _VehicleInfoCardState extends State<VehicleInfoCard>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final marca = widget.vehicleData?['marca'] ?? 'Sin registrar';
-    final modelo = widget.vehicleData?['modelo'] ?? '';
-    final anio = widget.vehicleData?['anio']?.toString() ?? '';
-    final placa = widget.vehicleData?['placa'] ?? 'Sin placa';
-    final color = widget.vehicleData?['color'] ?? 'No especificado';
-    final tipoVehiculo = widget.vehicleData?['tipo_vehiculo'] ?? 'auto';
+    final marca = widget.vehicleData?['vehiculo_marca'] ?? widget.vehicleData?['marca'] ?? 'Marca';
+    final modelo = widget.vehicleData?['vehiculo_modelo'] ?? widget.vehicleData?['modelo'] ?? 'Modelo';
+    final anio = widget.vehicleData?['vehiculo_anio']?.toString() ?? widget.vehicleData?['anio']?.toString() ?? '';
+    final placa = widget.vehicleData?['vehiculo_placa'] ?? widget.vehicleData?['placa'] ?? '--- ---';
+    final color = widget.vehicleData?['vehiculo_color'] ?? widget.vehicleData?['color'] ?? 'Color';
+    final tipoVehiculo = widget.vehicleData?['vehiculo_tipo'] ?? widget.vehicleData?['tipo_vehiculo'] ?? 'auto';
 
     return AnimatedBuilder(
       animation: _controller,
@@ -73,168 +73,140 @@ class _VehicleInfoCardState extends State<VehicleInfoCard>
           opacity: _fadeAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isDark
-                          ? [
-                              AppColors.primary.withValues(alpha: 0.15),
-                              AppColors.darkCard.withValues(alpha: 0.8),
-                            ]
-                          : [
-                              AppColors.primary.withValues(alpha: 0.08),
-                              Colors.white.withValues(alpha: 0.9),
-                            ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : AppColors.primary.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFE0F2FE), // SkyBlue 100
+                    const Color(0xFFBAE6FD), // SkyBlue 200
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0EA5E9).withValues(alpha: 0.15), // SkyBlue 500
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
-                  child: Column(
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          // Icono del vehículo
-                          Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              _getVehicleIcon(tipoVehiculo),
-                              size: 38,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // Info del vehículo
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '$marca $modelo',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.lightTextPrimary,
-                                  ),
-                                ),
-                                if (anio.isNotEmpty)
-                                  Text(
-                                    anio,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.lightTextSecondary,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          // Botón editar
-                          if (widget.onEdit != null)
-                            IconButton(
-                              onPressed: widget.onEdit,
-                              icon: Icon(
-                                Icons.edit_rounded,
-                                color: AppColors.primary,
-                              ),
-                              tooltip: 'Editar vehículo',
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      // Placa destacada
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 20,
-                        ),
+                        width: 60,
+                        height: 60,
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.grey.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.grey.withValues(alpha: 0.2),
-                          ),
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Icon(
+                          _getVehicleIcon(tipoVehiculo),
+                          size: 32,
+                          color: const Color(0xFF0284C7), // SkyBlue 600
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.confirmation_number_rounded,
-                              color: AppColors.primary,
-                              size: 22,
-                            ),
-                            const SizedBox(width: 10),
                             Text(
-                              placa.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 22,
+                              '$marca $modelo',
+                              style: const TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 3,
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.lightTextPrimary,
+                                color: Color(0xFF0C4A6E), // SkyBlue 900
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              anio,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: const Color(0xFF0C4A6E).withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Color
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.palette_rounded,
-                            size: 18,
-                            color: isDark
-                                ? Colors.white54
-                                : AppColors.lightTextSecondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Color: $color',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark
-                                  ? Colors.white70
-                                  : AppColors.lightTextSecondary,
+                      if (widget.onEdit != null)
+                        InkWell(
+                          onTap: widget.onEdit,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Icons.edit_rounded,
+                              color: Color(0xFF0284C7), // SkyBlue 600
+                              size: 20,
                             ),
                           ),
-                        ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.grid_3x3_rounded,
+                          color: Color(0xFF0284C7), // SkyBlue 600
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          placa.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4,
+                            color: Color(0xFF0C4A6E), // SkyBlue 900
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.palette_rounded,
+                        size: 16,
+                        color: const Color(0xFF0C4A6E).withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Color: $color',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: const Color(0xFF0C4A6E).withValues(alpha: 0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -252,7 +224,7 @@ class _VehicleInfoCardState extends State<VehicleInfoCard>
       case 'van':
         return Icons.airport_shuttle_rounded;
       default:
-        return Icons.directions_car_rounded;
+        return Icons.directions_car_filled_rounded;
     }
   }
 }

@@ -9,6 +9,7 @@ class VehicleModel {
   final String? color;
   final String placa;
   final VehicleType tipo;
+  final int? empresaId;
   // final String? aseguradora; // REMOVED
   // final String? numeroPoliza; // REMOVED 
   // final DateTime? vencimientoSeguro; // REMOVED
@@ -29,6 +30,7 @@ class VehicleModel {
     this.color,
     required this.placa,
     required this.tipo,
+    this.empresaId,
     // this.aseguradora,
     // this.numeroPoliza,
     // this.vencimientoSeguro,
@@ -51,6 +53,9 @@ class VehicleModel {
       color: json['vehiculo_color']?.toString(),
       placa: json['vehiculo_placa']?.toString() ?? '',
       tipo: VehicleType.fromString(json['vehiculo_tipo']?.toString() ?? 'moto'),
+        empresaId: json['empresa_id'] != null
+          ? int.tryParse(json['empresa_id'].toString())
+          : null,
       // aseguradora: json['aseguradora']?.toString(),
       // numeroPoliza: json['numero_poliza_seguro']?.toString(),
       // vencimientoSeguro: json['vencimiento_seguro'] != null
@@ -80,6 +85,7 @@ class VehicleModel {
       'vehiculo_color': color,
       'vehiculo_placa': placa,
       'vehiculo_tipo': tipo.value,
+      'empresa_id': empresaId,
       // 'aseguradora': aseguradora,
       // 'numero_poliza_seguro': numeroPoliza,
       // 'vencimiento_seguro': vencimientoSeguro?.toIso8601String(),
@@ -141,6 +147,7 @@ class VehicleModel {
     String? color,
     String? placa,
     VehicleType? tipo,
+    int? empresaId,
     // String? aseguradora,
     // String? numeroPoliza,
     // DateTime? vencimientoSeguro,
@@ -161,6 +168,7 @@ class VehicleModel {
       color: color ?? this.color,
       placa: placa ?? this.placa,
       tipo: tipo ?? this.tipo,
+      empresaId: empresaId ?? this.empresaId,
       // aseguradora: aseguradora ?? this.aseguradora,
       // numeroPoliza: numeroPoliza ?? this.numeroPoliza,
       // vencimientoSeguro: vencimientoSeguro ?? this.vencimientoSeguro,

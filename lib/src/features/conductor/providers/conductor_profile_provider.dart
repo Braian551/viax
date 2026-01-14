@@ -11,11 +11,13 @@ class ConductorProfileProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   double _uploadProgress = 0.0;
+  Map<String, dynamic>? _companyInfo;
 
   ConductorProfileModel? get profile => _profile;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   double get uploadProgress => _uploadProgress;
+  Map<String, dynamic>? get companyInfo => _companyInfo;
 
   /// Cargar perfil del conductor
   Future<void> loadProfile(int conductorId) async {
@@ -30,7 +32,7 @@ class ConductorProfileProvider with ChangeNotifier {
         _errorMessage = null;
       } else {
         _errorMessage = 'No se pudo cargar el perfil';
-        // Inicializar perfil vacÃ­o
+        // Inicializar perfil vacío
         _profile = ConductorProfileModel();
       }
     } catch (e) {
@@ -39,6 +41,20 @@ class ConductorProfileProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Cargar información de la empresa
+  Future<void> loadCompanyInfo(int empresaId) async {
+    // No set loading to true to avoid full screen loader if this is secondary
+    try {
+      final company = await ConductorProfileService.getCompanyDetails(empresaId);
+      if (company != null) {
+        _companyInfo = company;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error cargando info empresa: $e');
     }
   }
 

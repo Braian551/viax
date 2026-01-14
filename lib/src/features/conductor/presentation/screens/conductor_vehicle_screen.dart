@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/vehicle/vehicle_widgets.dart';
+import '../../providers/conductor_profile_provider.dart';
+import '../../models/conductor_profile_model.dart';
+import '../../models/vehicle_model.dart';
+import './documents_management_screen.dart';
 
 /// Pantalla Mi Vehículo del Conductor
 /// 
@@ -27,11 +32,6 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
   late AnimationController _headerController;
   late Animation<double> _headerFadeAnimation;
   late Animation<Offset> _headerSlideAnimation;
-
-  bool _isLoading = true;
-  bool _hasError = false;
-  String? _errorMessage;
-  Map<String, dynamic>? _vehicleData;
 
   @override
   void initState() {
@@ -76,44 +76,10 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
 
   Future<void> _loadVehicleData() async {
     if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _hasError = false;
-      _errorMessage = null;
-    });
-
-    try {
-      // Simular carga - En producción usar el provider/service real
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      if (!mounted) return;
-
-      // Obtener datos del vehículo desde conductorUser o backend
-      final vehiculo = widget.conductorUser?['vehiculo'] as Map<String, dynamic>?;
-      
-      setState(() {
-        _vehicleData = vehiculo ?? {
-          'marca': widget.conductorUser?['vehiculo_marca'] ?? 'Toyota',
-          'modelo': widget.conductorUser?['vehiculo_modelo'] ?? 'Corolla',
-          'anio': widget.conductorUser?['vehiculo_anio'] ?? 2022,
-          'placa': widget.conductorUser?['placa'] ?? 'ABC-123',
-          'color': widget.conductorUser?['vehiculo_color'] ?? 'Blanco',
-          'tipo_vehiculo': widget.conductorUser?['tipo_vehiculo'] ?? 'auto',
-          'capacidad_pasajeros': widget.conductorUser?['capacidad_pasajeros'] ?? 4,
-          'combustible': 'Gasolina',
-          'aire_acondicionado': true,
-          'verificado': widget.conductorUser?['vehiculo_verificado'] ?? false,
-        };
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _hasError = true;
-        _errorMessage = 'Error al cargar la información del vehículo';
-        _isLoading = false;
-      });
+    
+    final conductorId = widget.conductorId;
+    if (conductorId > 0) {
+      context.read<ConductorProfileProvider>().loadProfile(conductorId);
     }
   }
 
@@ -129,7 +95,6 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
   }
 
   void _handleRegisterVehicle() {
-    // Navegar a registro de vehículo
     Navigator.pushNamed(context, '/conductor/vehicle-registration');
   }
 
@@ -239,100 +204,135 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
   }
 
   Widget _buildContent(bool isDark) {
-    if (_isLoading) {
-      return const VehicleShimmer();
-    }
+    return Consumer<ConductorProfileProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const VehicleShimmer();
+        }
 
-    if (_hasError) {
-      return VehicleEmptyState(
-        errorMessage: _errorMessage,
-        onRetry: _loadVehicleData,
-      );
-    }
+        if (provider.errorMessage != null) {
+          return VehicleEmptyState(
+            errorMessage: provider.errorMessage,
+            onRetry: _loadVehicleData,
+          );
+        }
 
-    if (_vehicleData == null) {
-      return VehicleEmptyState(
-        onRegister: _handleRegisterVehicle,
-      );
-    }
+        final profile = provider.profile;
+        final vehicle = profile?.vehiculo;
+        final vehicleData = vehicle?.toJson(); 
 
-    final isVerified = _vehicleData?['verificado'] == true;
+        if (vehicle == null) {
+          return VehicleEmptyState(
+            onRegister: _handleRegisterVehicle,
+          );
+        }
 
-    return RefreshIndicator(
-      onRefresh: _loadVehicleData,
-      color: AppColors.primary,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            VehicleInfoCard(
-              vehicleData: _vehicleData,
-              onEdit: _handleEditVehicle,
+        final isVerified = profile?.estadoVerificacion == VerificationStatus.aprobado;
+
+        return RefreshIndicator(
+          onRefresh: _loadVehicleData,
+          color: AppColors.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                VehicleInfoCard(
+                  vehicleData: vehicleData,
+                  onEdit: _handleEditVehicle,
+                ),
+                const SizedBox(height: 20),
+                VehicleStatusCard(
+                  isVerified: isVerified,
+                  statusMessage: isVerified
+                      ? 'Tu vehículo está verificado y listo para operar'
+                      : 'Completa la verificación para comenzar',
+                  onVerify: isVerified ? null : _handleRegisterVehicle,
+                ),
+                const SizedBox(height: 24),
+                _buildDocumentsSection(isDark, vehicle),
+                const SizedBox(height: 40),
+              ],
             ),
-            const SizedBox(height: 20),
-            VehicleStatusCard(
-              isVerified: isVerified,
-              statusMessage: isVerified
-                  ? 'Tu vehículo está verificado y listo para operar'
-                  : 'Completa la verificación para comenzar',
-              onVerify: isVerified ? null : _handleRegisterVehicle,
-            ),
-            const SizedBox(height: 24),
-            VehicleDetailsSection(vehicleData: _vehicleData),
-            const SizedBox(height: 24),
-            _buildDocumentsSection(isDark),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildDocumentsSection(bool isDark) {
+  Widget _buildDocumentsSection(bool isDark, VehicleModel vehicle) {
+    // Calculate document validity
+    final now = DateTime.now();
+    final soatValid = vehicle.soatVencimiento != null && vehicle.soatVencimiento!.isAfter(now);
+    final tecnomecanicaValid = vehicle.tecnomecanicaVencimiento != null && vehicle.tecnomecanicaVencimiento!.isAfter(now);
+    final tarjetaPropiedadValid = vehicle.tarjetaPropiedadNumero != null && vehicle.tarjetaPropiedadNumero!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Documentos del Vehículo',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.lightTextPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: _buildDocumentCard(
-                icon: Icons.description_rounded,
-                title: 'Tarjeta de Circulación',
-                isValid: true,
-                isDark: isDark,
+            Text(
+              'Documentos del Vehículo',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _handleEditDocuments(vehicle),
+              icon: const Icon(Icons.edit_rounded, size: 16),
+              label: const Text('Gestionar'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                visualDensity: VisualDensity.compact,
               ),
             ),
           ],
         ),
-        // const SizedBox(height: 12), // Adjusted spacing
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => _handleEditDocuments(vehicle),
+          child: _buildDocumentCard(
+            icon: Icons.health_and_safety_rounded,
+            title: 'SOAT',
+            subtitle: vehicle.soatNumero ?? 'No registrado',
+            expiryDate: vehicle.soatVencimiento,
+            isValid: soatValid,
+            isDark: isDark,
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _buildDocumentCard(
-                icon: Icons.verified_rounded,
-                title: 'Verificación Vehicular',
-                isValid: false,
-                isDark: isDark,
+              child: GestureDetector(
+                onTap: () => _handleEditDocuments(vehicle),
+                child: _buildDocumentCard(
+                  icon: Icons.build_circle_rounded,
+                  title: 'Tecnomecánica',
+                  subtitle: vehicle.tecnomecanicaNumero ?? 'No registrado',
+                  expiryDate: vehicle.tecnomecanicaVencimiento,
+                  isValid: tecnomecanicaValid,
+                  isDark: isDark,
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildDocumentCard(
-                icon: Icons.local_taxi_rounded,
-                title: 'Permiso de Taxi',
-                isValid: true,
-                isDark: isDark,
+              child: GestureDetector(
+                onTap: () => _handleEditDocuments(vehicle),
+                child: _buildDocumentCard(
+                  icon: Icons.card_membership_rounded,
+                  title: 'Tarjeta Propiedad',
+                  subtitle: vehicle.tarjetaPropiedadNumero ?? 'No registrado',
+                  expiryDate: null, // No tiene vencimiento
+                  isValid: tarjetaPropiedadValid,
+                  isDark: isDark,
+                ),
               ),
             ),
           ],
@@ -341,13 +341,34 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
     );
   }
 
+  void _handleEditDocuments(VehicleModel vehicle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentsManagementScreen(
+          conductorId: widget.conductorId,
+          vehicle: vehicle,
+        ),
+      ),
+    ).then((changed) {
+      if (changed == true) {
+        _loadVehicleData();
+      }
+    });
+  }
+
   Widget _buildDocumentCard({
     required IconData icon,
     required String title,
+    String? subtitle,
+    DateTime? expiryDate,
     required bool isValid,
     required bool isDark,
   }) {
     final color = isValid ? AppColors.success : AppColors.warning;
+    final expiryText = expiryDate != null
+        ? 'Vence: ${expiryDate.day}/${expiryDate.month}/${expiryDate.year}'
+        : (isValid ? 'Registrado' : 'No registrado');
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -393,7 +414,7 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            isValid ? 'Vigente' : 'Por vencer',
+            expiryText,
             style: TextStyle(
               fontSize: 11,
               color: color,

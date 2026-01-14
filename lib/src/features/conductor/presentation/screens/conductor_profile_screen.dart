@@ -43,10 +43,16 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     );
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ConductorProfileProvider>(
+      final provider = Provider.of<ConductorProfileProvider>(
         context,
         listen: false,
-      ).loadProfile(widget.conductorId);
+      );
+      provider.loadProfile(widget.conductorId).then((_) {
+        final empresaId = widget.conductorUser?['empresa_id'];
+        if (empresaId != null) {
+          provider.loadCompanyInfo(int.parse(empresaId.toString()));
+        }
+      });
       _animationController.forward();
     });
   }
@@ -325,8 +331,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                       _buildStatItem('Viajes', '$trips'),
                       _buildVerticalDivider(),
                       _buildStatItem(timeLabel, timeOnPlatform),
-                      _buildVerticalDivider(),
-                      _buildStatItem('Tasa', '98%'), // Placeholder as requested, or can be dynamic if data exists
                     ],
                   ),
                 ],
@@ -449,67 +453,171 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final vehicle = profile.vehiculo;
     if (vehicle == null) return const SizedBox.shrink();
 
+    final vehiclePhotoUrl = vehicle.fotoVehiculo != null 
+        ? UserService.getR2ImageUrl(vehicle.fotoVehiculo) 
+        : null;
+
+    final provider = Provider.of<ConductorProfileProvider>(context);
+    final companyInfo = provider.companyInfo;
+    
+    final empresaName = companyInfo?['nombre'] ?? _conductorUser?['empresa_nombre'] ?? 'Empresa';
+    final empresaLogo = companyInfo?['logo_url'];
+    final empresaLogoUrl = empresaLogo != null ? UserService.getR2ImageUrl(empresaLogo) : null;
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.directions_car_filled_rounded, color: AppColors.primary, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${vehicle.marca} ${vehicle.modelo}',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            if (vehiclePhotoUrl != null)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.1,
+                  child: Image.network(
+                    vehiclePhotoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          image: vehiclePhotoUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(vehiclePhotoUrl),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: vehiclePhotoUrl == null
+                            ? const Icon(Icons.directions_car_filled_rounded, color: AppColors.primary, size: 32)
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${vehicle.marca} ${vehicle.modelo}',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black87,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isDark ? Colors.white24 : Colors.grey[300]!,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                vehicle.placa.toUpperCase(),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.grey[800],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _editVehicle(vehicle),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          padding: const EdgeInsets.all(12),
+                        ),
+                        icon: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 22),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    vehicle.placa.toUpperCase(),
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.grey[800],
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.black26 : Colors.grey[50], // Inner container
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                         Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                            image: empresaLogoUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(empresaLogoUrl),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: empresaLogoUrl == null
+                              ? const Icon(Icons.business_rounded, color: Colors.blue, size: 18)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Empresa Vinculada',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white54 : Colors.grey[600],
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                empresaName, // Dynamic or default
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.edit_rounded, color: AppColors.primary),
-            onPressed: () => _editVehicle(vehicle),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -518,12 +626,12 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -561,46 +669,9 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     );
   }
 
-  Widget _buildSettingsList(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildListItem(
-            title: 'Notificaciones',
-            icon: Icons.notifications_rounded,
-            isDark: isDark,
-            onTap: () => _showComingSoon('Notificaciones'),
-            showDivider: true,
-          ),
-          _buildListItem(
-            title: 'Idioma',
-            icon: Icons.language_rounded,
-            isDark: isDark,
-            onTap: () => _showComingSoon('Idioma'),
-            showDivider: true,
-            trailingText: 'Español',
-          ),
-/*           _buildListItem(
-             title: 'Ayuda y Soporte',
-             icon: Icons.help_outline_rounded,
-             isDark: isDark,
-             onTap: () => _showComingSoon('Ayuda'),
-             showDivider: false,
-           ), */
-        ],
-      ),
-    );
+  Widget _buildSettingsList_Old(bool isDark) { // Renamed or removed later, ensuring we fix formatting
+    return const SizedBox.shrink(); // Previously removed in Step 392, but referenced in original file range.
+    // The previous tool usage might have left some structure. I'll focus on replacing _buildVehicleCard and DocumentsList logic.
   }
 
   Widget _buildListItem({

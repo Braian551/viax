@@ -6,6 +6,7 @@ import '../../models/driver_license_model.dart';
 import '../../providers/conductor_profile_provider.dart';
 import '../../../../core/config/app_config.dart';
 import '../widgets/document_upload_widget.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final int conductorId;
@@ -1087,6 +1088,19 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       }
     }
 
+    final empresaId = await UserService.getCurrentEmpresaId();
+    if (empresaId == null || empresaId <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debes seleccionar una empresa de transporte'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     // Save vehicle
     final vehicle = VehicleModel(
       placa: _placaController.text,
@@ -1100,6 +1114,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       tecnomecanicaNumero: _tecnomecanicaNumberController.text,
       tecnomecanicaVencimiento: _tecnomecanicaVencimiento,
       tarjetaPropiedadNumero: _tarjetaPropiedadController.text,
+      empresaId: empresaId,
     );
 
     final vehicleSuccess = await provider.updateVehicle(

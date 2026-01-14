@@ -348,6 +348,11 @@ class UserService {
     return session;
   }
 
+  static Future<int?> getCurrentEmpresaId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kUserEmpresaId);
+  }
+
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kUserEmail);

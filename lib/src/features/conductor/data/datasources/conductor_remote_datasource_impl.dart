@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'conductor_remote_datasource.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../global/services/auth/user_service.dart';
 
 /// ImplementaciÃ³n concreta del data source remoto
 /// 
@@ -123,16 +124,28 @@ class ConductorRemoteDataSourceImpl implements ConductorRemoteDataSource {
     Map<String, dynamic> vehicleData,
   ) async {
     try {
+      final rawEmpresaId = vehicleData['empresa_id'] ?? await UserService.getCurrentEmpresaId();
+      final empresaId = rawEmpresaId is int
+          ? rawEmpresaId
+          : int.tryParse(rawEmpresaId?.toString() ?? '');
+
+      if (empresaId == null || empresaId <= 0) {
+        throw ServerException('Debes seleccionar una empresa de transporte');
+      }
+
+      final payload = {
+        'conductor_id': conductorId,
+        ...vehicleData,
+        'empresa_id': empresaId,
+      };
+
       final response = await client.post(
         Uri.parse('$baseUrl/update_vehicle.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'conductor_id': conductorId,
-          ...vehicleData,
-        }),
+        body: jsonEncode(payload),
       );
 
       print('[HTTP] POST update_vehicle (${response.statusCode}): ${response.body}');

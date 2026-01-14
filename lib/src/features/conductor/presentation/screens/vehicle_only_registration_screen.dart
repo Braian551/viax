@@ -106,6 +106,14 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
       _soatPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoSoat);
       _tecnomecanicaPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoTecnomecanica);
       _tarjetaPropiedadPhotoUrl = UserService.getR2ImageUrl(vehicle.fotoTarjetaPropiedad);
+
+      if (_selectedCompany == null && vehicle.empresaId != null) {
+        _selectedCompany = {
+          'id': vehicle.empresaId,
+          'nombre': 'Empresa seleccionada'
+        };
+        _companyController.text = _selectedCompany!['nombre'];
+      }
     }
 
     // 2. Load License Data
@@ -218,6 +226,7 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
           selectedCompany: _selectedCompany,
           companyController: _companyController,
           onShowCompanyPicker: () => _showCompanyPicker(isDark),
+          isEditing: widget.existingVehicle != null,
         );
       case 1:
         return _buildLicenseStep(isDark);
@@ -585,6 +594,9 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
         tecnomecanicaNumero: _tecnomecanicaNumberController.text,
         tecnomecanicaVencimiento: _tecnomecanicaVencimiento,
         tarjetaPropiedadNumero: _tarjetaPropiedadController.text,
+        empresaId: _selectedCompany?['id'] != null
+            ? int.tryParse(_selectedCompany!['id'].toString())
+            : null,
       );
 
       // This provider method likely updates basic info + doc info in database

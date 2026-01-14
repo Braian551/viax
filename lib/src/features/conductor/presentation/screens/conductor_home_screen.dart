@@ -1,4 +1,7 @@
 import 'dart:async';
+import '../../services/conductor_profile_service.dart';
+import '../../../../global/services/auth/user_service.dart';
+
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -67,6 +70,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   // Variables para disputa activa
   bool _hasActiveDispute = false;
   DisputaData? _activeDispute;
+  
+  // Info Empresa
+  Map<String, dynamic>? _companyInfo;
 
   late AnimationController _pulseController;
   late AnimationController _connectionController;
@@ -96,8 +102,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
         // Verificar onboarding del conductor
         _checkDriverOnboarding();
+        _loadCompanyInfo();
       }
     });
+  }
+
+  Future<void> _loadCompanyInfo() async {
+    try {
+      final empresaId = widget.conductorUser['empresa_id'];
+      if (empresaId != null) {
+        final info = await ConductorProfileService.getCompanyDetails(int.parse(empresaId.toString()));
+        if (info != null && mounted) {
+          _safeSetState(() {
+            _companyInfo = info;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading company info: $e');
+    }
   }
 
   /// Verifica si el conductor ha visto el onboarding
@@ -680,30 +703,70 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           child: Row(
                             children: [
                               // Logo con efecto glass
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: (isDark
-                                      ? Colors.white.withValues(alpha: 0.15)
-                                      : AppColors.primary.withValues(
-                                          alpha: 0.1,
-                                        )),
-                                  shape: BoxShape.circle,
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: (isDark
+                                        ? Colors.white.withValues(alpha: 0.15)
+                                        : AppColors.primary.withValues(
+                                            alpha: 0.1,
+                                          )),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                                      width: 1,
+                                    ),
+                                    image: _companyInfo?['logo_url'] != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(UserService.getR2ImageUrl(_companyInfo!['logo_url']) ?? ''),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: _companyInfo?['logo_url'] != null
+                                      ? null
+                                      : Center(
+                                          child: Image.asset(
+                                            'assets/images/logo.png',
+                                            width: 24,
+                                            height: 24,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Icon(Icons.business, size: 24);
+                                            },
+                                          ),
+                                        ),
                                 ),
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  width: 24,
-                                  height: 24,
-                                ),
-                              ),
                               const SizedBox(width: 10),
                               // Saludo con nombre del conductor
-                              Expanded(
+                                Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
+                                    if (_companyInfo != null) ...[
+                                      Text(
+                                        _conductorName,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.black54,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        _companyInfo!['nombre'] ?? 'Mi Empresa',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: -0.3,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ] else ...[
+                                      Text(
                                       'Hola,',
                                       style: TextStyle(
                                         color: isDark
@@ -726,6 +789,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     ),
+                                    ],
                                   ],
                                 ),
                               ),
