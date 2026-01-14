@@ -59,7 +59,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   // Variables para zonas de demanda (surge pricing)
   List<DemandZone> _demandZones = [];
-  bool _showDemandZones = true;
+  bool _showDemandZones = false;
   bool _showDemandLegend = false;
   DemandZone? _selectedZone;
 
@@ -1180,15 +1180,22 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       child: SlideTransition(
         position: _slideAnimation,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 40),
           decoration: BoxDecoration(
             color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 25,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: (isDark ? Colors.black : Colors.grey.shade300).withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+                spreadRadius: 0,
               ),
             ],
             border: Border.all(
@@ -1196,15 +1203,30 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               width: 1,
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Combined Status & Stats Row
-              _buildCompactInfoRow(theme, isDark),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Estado y Estadísticas
+                  _buildCompactInfoRow(theme, isDark),
 
-              // Connection Button
-              _buildConnectionButton(),
-            ],
+                  // Divisor sutil
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Divider(
+                      height: 1,
+                      color: theme.dividerColor.withValues(alpha: 0.05),
+                    ),
+                  ),
+
+                  // Botón de conexión animado
+                  _buildConnectionButton(),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -1212,58 +1234,69 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   }
 
   Widget _buildCompactInfoRow(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
       child: Row(
         children: [
-          // Status Indicator
+          // Indicador de Estado Animado
           AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.all(10),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: _isOnline 
                   ? AppColors.success.withValues(alpha: 0.1) 
-                  : Colors.grey.withValues(alpha: 0.1),
+                  : theme.dividerColor.withValues(alpha: 0.05),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: _isOnline 
+                  ? AppColors.success.withValues(alpha: 0.2) 
+                  : Colors.transparent,
+                width: 1.5,
+              ),
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
               child: Icon(
                 _isOnline ? Icons.radar_rounded : Icons.wifi_off_rounded,
                 key: ValueKey(_isOnline),
-                color: _isOnline ? AppColors.success : Colors.grey,
-                size: 24,
+                color: _isOnline ? AppColors.success : theme.iconTheme.color?.withValues(alpha: 0.3),
+                size: 26,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           
-          // Status Text
+          // Texto de Estado
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 300),
                   child: Text(
                     _isOnline ? 'En línea' : 'Desconectado',
-                    key: ValueKey(_isOnline ? 'online_title' : 'offline_title'),
+                    key: ValueKey(_isOnline),
                     style: TextStyle(
                       color: theme.textTheme.titleMedium?.color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
+                const SizedBox(height: 4),
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 300),
                   child: Text(
-                    _isOnline ? 'Buscando pasajes...' : 'Conéctate para viajar',
-                    key: ValueKey(_isOnline ? 'online_sub' : 'offline_sub'),
+                    _isOnline ? 'Buscando pasajes...' : 'Conéctate para trabajar',
+                    key: ValueKey(_isOnline),
                     style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                      fontSize: 12,
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -1271,29 +1304,28 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             ),
           ),
 
-          // Mini Stats
+          // Mini Estadísticas (Glass Pill)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(12),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.05),
+              ),
             ),
-            child: Consumer<ConductorProvider>(
-              builder: (context, provider, child) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildMiniStat(theme, Icons.local_taxi_rounded, "0"),
-                    Container(
-                      height: 16,
-                      width: 1,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      color: theme.dividerColor.withValues(alpha: 0.5),
-                    ),
-                    _buildMiniStat(theme, Icons.attach_money_rounded, "\$0"),
-                  ],
-                );
-              },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMiniStat(theme, Icons.local_taxi_rounded, "0"),
+                Container(
+                  height: 14,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  color: theme.dividerColor.withValues(alpha: 0.2),
+                ),
+                _buildMiniStat(theme, Icons.attach_money_rounded, "\$0"),
+              ],
             ),
           ),
         ],
@@ -1304,86 +1336,90 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   Widget _buildMiniStat(ThemeData theme, IconData icon, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
           icon, 
           size: 14, 
-          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
           value,
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
             color: theme.textTheme.titleMedium?.color,
+            fontFamily: 'Monospace', // Estilo numérico
           ),
         ),
       ],
     );
   }
 
-
-
   Widget _buildConnectionButton() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _toggleOnlineStatus,
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: _isOnline
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.red.shade400,
-                        Colors.red.shade600,
-                      ],
-                    )
-                  : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.success,
-                        AppColors.success.withGreen(180),
-                      ],
-                    ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: (_isOnline ? Colors.red : AppColors.success)
-                      .withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+        height: 60, // Ligeramente más alto para mejor tacto
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: (_isOnline ? AppColors.error : AppColors.success).withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
             ),
+          ],
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _isOnline
+                ? [
+                    const Color(0xFFEF4444), // Red 500
+                    const Color(0xFFDC2626), // Red 600
+                  ]
+                : [
+                    AppColors.success,
+                    const Color(0xFF039855), // Green 700 (Adjusted darker tone for depth) (approx)
+                  ],
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _toggleOnlineStatus,
+            borderRadius: BorderRadius.circular(20),
+            splashColor: Colors.white.withValues(alpha: 0.2),
+            highlightColor: Colors.white.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  _isOnline
-                      ? Icons.power_settings_new_rounded
-                      : Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  _isOnline ? 'Desconectar' : 'Empezar a trabajar',
-                  style: const TextStyle(
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                  child: Icon(
+                    _isOnline ? Icons.power_settings_new_rounded : Icons.rocket_launch_rounded,
+                    key: ValueKey(_isOnline),
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    _isOnline ? 'Desconectar' : 'Empezar a trabajar',
+                    key: ValueKey(_isOnline),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
               ],
