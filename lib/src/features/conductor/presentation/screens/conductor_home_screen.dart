@@ -19,6 +19,7 @@ import 'conductor_searching_passengers_screen.dart';
 import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/demand_zones_overlay.dart';
+import '../widgets/common/radar_indicator.dart';
 import '../../../user/presentation/widgets/home/map_loading_shimmer.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
@@ -92,7 +93,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           _isMapReady = true;
         });
         debugPrint('✅ Mapa listo');
-        
+
         // Verificar onboarding del conductor
         _checkDriverOnboarding();
       }
@@ -103,22 +104,31 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   Future<void> _checkDriverOnboarding() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final bool onboardingSeen = prefs.getBool('driver_onboarding_seen_v1') ?? false;
-      
+      final bool onboardingSeen =
+          prefs.getBool('driver_onboarding_seen_v1') ?? false;
+
       if (!onboardingSeen && mounted) {
         debugPrint('🆕 Nuevo conductor detectado, mostrando onboarding...');
         // Mostrar onboarding encima el home
         Navigator.of(context).push(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const DriverOnboardingScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              const curve = Curves.easeOutQuart;
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              var offsetAnimation = animation.drive(tween);
-              return SlideTransition(position: offsetAnimation, child: child);
-            },
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const DriverOnboardingScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeOutQuart;
+                  var tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
             transitionDuration: const Duration(milliseconds: 600),
           ),
         );
@@ -1182,7 +1192,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 40),
           decoration: BoxDecoration(
-            color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withValues(alpha: 0.95),
+            color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withValues(
+              alpha: 0.95,
+            ),
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
@@ -1192,14 +1204,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: (isDark ? Colors.black : Colors.grey.shade300).withValues(alpha: 0.2),
+                color: (isDark ? Colors.black : Colors.grey.shade300)
+                    .withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
                 spreadRadius: 0,
               ),
             ],
             border: Border.all(
-              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: 0.05,
+              ),
               width: 1,
             ),
           ),
@@ -1244,30 +1259,38 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _isOnline 
-                  ? AppColors.success.withValues(alpha: 0.1) 
+              color: _isOnline
+                  ? AppColors.success.withValues(alpha: 0.1)
                   : theme.dividerColor.withValues(alpha: 0.05),
               shape: BoxShape.circle,
               border: Border.all(
-                color: _isOnline 
-                  ? AppColors.success.withValues(alpha: 0.2) 
-                  : Colors.transparent,
+                color: _isOnline
+                    ? AppColors.success.withValues(alpha: 0.2)
+                    : Colors.transparent,
                 width: 1.5,
               ),
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-              child: Icon(
-                _isOnline ? Icons.radar_rounded : Icons.wifi_off_rounded,
-                key: ValueKey(_isOnline),
-                color: _isOnline ? AppColors.success : theme.iconTheme.color?.withValues(alpha: 0.3),
-                size: 26,
-              ),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: _isOnline
+                  ? RadarIndicator(
+                      key: ValueKey(_isOnline),
+                      active: true,
+                      size: 26,
+                      color: AppColors.success,
+                    )
+                  : Icon(
+                      Icons.wifi_off_rounded,
+                      key: ValueKey(_isOnline),
+                      color: theme.iconTheme.color?.withValues(alpha: 0.3),
+                      size: 26,
+                    ),
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // Texto de Estado
           Expanded(
             child: Column(
@@ -1291,10 +1314,14 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: Text(
-                    _isOnline ? 'Buscando pasajes...' : 'Conéctate para trabajar',
+                    _isOnline
+                        ? 'Buscando pasajes...'
+                        : 'Conéctate para trabajar',
                     key: ValueKey(_isOnline),
                     style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.5,
+                      ),
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1308,7 +1335,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: theme.dividerColor.withValues(alpha: 0.05),
@@ -1339,8 +1368,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
-          icon, 
-          size: 14, 
+          icon,
+          size: 14,
           color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
         ),
         const SizedBox(width: 6),
@@ -1368,7 +1397,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: (_isOnline ? AppColors.error : AppColors.success).withValues(alpha: 0.35),
+              color: (_isOnline ? AppColors.error : AppColors.success)
+                  .withValues(alpha: 0.35),
               blurRadius: 20,
               offset: const Offset(0, 8),
               spreadRadius: -4,
@@ -1384,7 +1414,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                   ]
                 : [
                     AppColors.success,
-                    const Color(0xFF039855), // Green 700 (Adjusted darker tone for depth) (approx)
+                    const Color(
+                      0xFF039855,
+                    ), // Green 700 (Adjusted darker tone for depth) (approx)
                   ],
           ),
         ),
@@ -1400,9 +1432,12 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               children: [
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                  transitionBuilder: (child, anim) =>
+                      ScaleTransition(scale: anim, child: child),
                   child: Icon(
-                    _isOnline ? Icons.power_settings_new_rounded : Icons.rocket_launch_rounded,
+                    _isOnline
+                        ? Icons.power_settings_new_rounded
+                        : Icons.rocket_launch_rounded,
                     key: ValueKey(_isOnline),
                     color: Colors.white,
                     size: 24,

@@ -9,6 +9,8 @@ import 'license_registration_screen.dart';
 import 'vehicle_only_registration_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
+import 'package:viax/src/routes/route_names.dart';
+import '../../../profile/presentation/screens/edit_profile_screen.dart';
 
 class ConductorProfileScreen extends StatefulWidget {
   final int conductorId;
@@ -28,10 +30,13 @@ class ConductorProfileScreen extends StatefulWidget {
 
 class _ConductorProfileScreenState extends State<ConductorProfileScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  Map<String, dynamic>? _conductorUser;
 
   @override
   void initState() {
     super.initState();
+    _conductorUser = widget.conductorUser;
+    
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -44,6 +49,43 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
       ).loadProfile(widget.conductorId);
       _animationController.forward();
     });
+  }
+
+  Future<void> _editProfile() async {
+    if (_conductorUser == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(),
+        settings: RouteSettings(
+          arguments: {
+            'userId': widget.conductorId,
+            'nombre': _conductorUser!['nombre'],
+            'apellido': _conductorUser!['apellido'],
+            'email': _conductorUser!['email'],
+            'telefono': _conductorUser!['telefono'],
+            'foto_perfil': _conductorUser!['foto_perfil'],
+          },
+        ),
+      ),
+    );
+
+    if (result == true) {
+      // Recargar datos del usuario
+      final updatedSession = await UserService.getSavedSession();
+      if (updatedSession != null && mounted) {
+        setState(() {
+          _conductorUser = updatedSession;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil actualizado'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -100,9 +142,41 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
   }
 
   Widget _buildSliverAppBar(bool isDark, ConductorProfileModel profile) {
-    final name = widget.conductorUser?['nombre'] ?? 'Conductor';
-    final rating = widget.conductorUser?['calificacion'] ?? 5.0;
-    final trips = widget.conductorUser?['viajes'] ?? 0;
+    final name = _conductorUser?['nombre'] ?? 'Conductor';
+    final lastName = _conductorUser?['apellido'] ?? '';
+    final fullName = '$name $lastName'.trim();
+    final rating = double.tryParse(_conductorUser?['calificacion']?.toString() ?? '5.0') ?? 5.0;
+    final trips = _conductorUser?['viajes'] ?? 0;
+    final photoKey = _conductorUser?['foto_perfil'];
+    final photoUrl = photoKey != null ? UserService.getR2ImageUrl(photoKey) : null;
+    
+    // Calcular tiempo en la plataforma
+    String timeOnPlatform = '0 días';
+    String timeLabel = 'Tiempo';
+    
+    if (_conductorUser?['fecha_registro'] != null) {
+      try {
+        final registrationDate = DateTime.parse(_conductorUser!['fecha_registro']);
+        final now = DateTime.now();
+        final difference = now.difference(registrationDate);
+        final days = difference.inDays;
+        
+        if (days < 30) {
+          timeOnPlatform = '$days';
+          timeLabel = 'Días';
+        } else if (days < 365) {
+          final months = (days / 30).floor();
+          timeOnPlatform = '$months';
+          timeLabel = months == 1 ? 'Mes' : 'Meses';
+        } else {
+          final years = (days / 365).toStringAsFixed(1);
+          timeOnPlatform = years;
+          timeLabel = 'Años';
+        }
+      } catch (e) {
+        debugPrint('Error parsing date: $e');
+      }
+    }
     
     return SliverAppBar(
       expandedHeight: 280.0,
@@ -123,6 +197,22 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
               onPressed: () => Navigator.pop(context),
             )
           : null,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+            ),
+            onPressed: _editProfile,
+          ),
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -159,21 +249,29 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                       child: CircleAvatar(
                         radius: 45,
                         backgroundColor: Colors.white,
-                        child: Text(
-                          name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'C',
-                          style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                        backgroundImage: photoUrl != null 
+                            ? NetworkImage(photoUrl) 
+                            : null,
+                        child: photoUrl == null 
+                            ? Text(
+                                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'C',
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   // Name
                   Text(
-                    name,
+                    fullName.isNotEmpty ? fullName : name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -228,9 +326,9 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                     children: [
                       _buildStatItem('Viajes', '$trips'),
                       _buildVerticalDivider(),
-                      _buildStatItem('Años', '1.2'), // Placeholder
+                      _buildStatItem(timeLabel, timeOnPlatform),
                       _buildVerticalDivider(),
-                      _buildStatItem('Tasa', '98%'), // Placeholder
+                      _buildStatItem('Tasa', '98%'), // Placeholder as requested, or can be dynamic if data exists
                     ],
                   ),
                 ],
@@ -810,12 +908,16 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
   Widget _buildLogoutButton(bool isDark) {
     return TextButton(
       onPressed: () async {
+        print('DEBUG: ProfileScreen - Mostrando diálogo de logout');
         final shouldLogout = await LogoutDialog.show(context);
+        print('DEBUG: ProfileScreen - Logout confirmado? $shouldLogout');
 
         if (shouldLogout == true && mounted) {
+          print('DEBUG: ProfileScreen - Limpiando sesión...');
           await UserService.clearSession();
+          print('DEBUG: ProfileScreen - Sesión limpiada. Navegando a welcome...');
           if (!mounted) return;
-          Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil(RouteNames.welcome, (route) => false);
         }
       },
       style: TextButton.styleFrom(

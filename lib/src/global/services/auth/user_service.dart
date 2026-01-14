@@ -224,6 +224,9 @@ class UserService {
   static const String _kUserType = 'viax_user_type';
   static const String _kUserName = 'viax_user_name';
   static const String _kUserPhone = 'viax_user_phone';
+  static const String _kUserLastName = 'viax_user_lastname';
+  static const String _kUserPhoto = 'viax_user_photo';
+  static const String _kUserRegistrationDate = 'viax_user_registration_date';
   static const String _kUserEmpresaId = 'viax_user_empresa_id';
 
   static Future<void> saveSession(Map<String, dynamic> user) async {
@@ -243,15 +246,27 @@ class UserService {
     if (user.containsKey('tipo_usuario') && user['tipo_usuario'] != null) {
       await prefs.setString(_kUserType, user['tipo_usuario'].toString());
     }
-    // Guardar nombre si está disponible (especialmente para administradores)
+    // Guardar nombre
     if (user.containsKey('nombre') && user['nombre'] != null) {
       await prefs.setString(_kUserName, user['nombre'].toString());
     }
-    // Guardar teléfono si está disponible
+    // Guardar apellido
+    if (user.containsKey('apellido') && user['apellido'] != null) {
+      await prefs.setString(_kUserLastName, user['apellido'].toString());
+    }
+    // Guardar teléfono
     if (user.containsKey('telefono') && user['telefono'] != null) {
       await prefs.setString(_kUserPhone, user['telefono'].toString());
     }
-    // Guardar empresa_id si está disponible
+    // Guardar foto perfil
+    if (user.containsKey('foto_perfil') && user['foto_perfil'] != null) {
+      await prefs.setString(_kUserPhoto, user['foto_perfil'].toString());
+    }
+    // Guardar fecha registro
+    if (user.containsKey('fecha_registro') && user['fecha_registro'] != null) {
+      await prefs.setString(_kUserRegistrationDate, user['fecha_registro'].toString());
+    }
+    // Guardar empresa_id
     if (user.containsKey('empresa_id') && user['empresa_id'] != null) {
       final empresaId = int.tryParse(user['empresa_id'].toString());
       if (empresaId != null) {
@@ -266,7 +281,10 @@ class UserService {
     int? id = prefs.getInt(_kUserId);
     String? tipoUsuario = prefs.getString(_kUserType);
     String? nombre = prefs.getString(_kUserName);
+    String? apellido = prefs.getString(_kUserLastName);
     String? telefono = prefs.getString(_kUserPhone);
+    String? fotoPerfil = prefs.getString(_kUserPhoto);
+    String? fechaRegistro = prefs.getString(_kUserRegistrationDate);
     int? empresaId = prefs.getInt(_kUserEmpresaId);
 
     // Migración automática desde claves legacy (viax_*) si no existen las nuevas
@@ -317,7 +335,10 @@ class UserService {
       if (email != null) 'email': email,
       if (tipoUsuario != null) 'tipo_usuario': tipoUsuario,
       if (nombre != null) 'nombre': nombre,
+      if (apellido != null) 'apellido': apellido,
       if (telefono != null) 'telefono': telefono,
+      if (fotoPerfil != null) 'foto_perfil': fotoPerfil,
+      if (fechaRegistro != null) 'fecha_registro': fechaRegistro,
       if (empresaId != null) 'empresa_id': empresaId,
     };
     

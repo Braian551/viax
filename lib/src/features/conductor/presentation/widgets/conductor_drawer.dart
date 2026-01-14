@@ -170,16 +170,26 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Cerrar Sesión',
                           isDestructive: true,
                           onTap: () async {
-                            Navigator.pop(context); // Close drawer first
+                            // Capturar el navigator antes de cerrar el drawer (que desmonta el widget)
+                            final navigator = Navigator.of(context);
+                            navigator.pop(); 
+                            
+                            print('DEBUG: Mostrando diálogo de logout');
+                            // Usamos el contexto original para el diálogo (funciona aunque se desmonte el widget)
                             final shouldLogout = await LogoutDialog.show(context);
-                            if (shouldLogout == true && context.mounted) {
+                            print('DEBUG: Logout confirmado? $shouldLogout');
+                            
+                            // Ya no verificamos context.mounted porque sabemos que el drawer fue cerrado
+                            if (shouldLogout == true) {
+                              print('DEBUG: Limpiando sesión...');
                               await UserService.clearSession();
-                              if (context.mounted) {
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                  '/',
-                                  (route) => false,
-                                );
-                              }
+                              print('DEBUG: Sesión limpiada. Navegando a welcome...');
+                              
+                              navigator.pushNamedAndRemoveUntil(
+                                RouteNames.welcome,
+                                (route) => false,
+                              );
+                              print('DEBUG: Navegación solicitada');
                             }
                           },
                           isDark: isDark,
