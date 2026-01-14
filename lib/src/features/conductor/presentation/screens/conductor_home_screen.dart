@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/dispute_service.dart';
@@ -15,6 +16,7 @@ import '../../services/trip_request_search_service.dart';
 import '../../services/demand_zone_service.dart';
 import '../../models/demand_zone_model.dart';
 import 'conductor_searching_passengers_screen.dart';
+import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/demand_zones_overlay.dart';
 
@@ -89,8 +91,40 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           _isMapReady = true;
         });
         debugPrint('✅ Mapa listo');
+        
+        // Verificar onboarding del conductor
+        _checkDriverOnboarding();
       }
     });
+  }
+
+  /// Verifica si el conductor ha visto el onboarding
+  Future<void> _checkDriverOnboarding() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bool onboardingSeen = prefs.getBool('driver_onboarding_seen_v1') ?? false;
+      
+      if (!onboardingSeen && mounted) {
+        debugPrint('🆕 Nuevo conductor detectado, mostrando onboarding...');
+        // Mostrar onboarding encima el home
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const DriverOnboardingScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              const curve = Curves.easeOutQuart;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error verificando onboarding: $e');
+    }
   }
 
   /// Verifica si el conductor tiene una disputa activa
