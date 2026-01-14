@@ -81,13 +81,33 @@ try {
         $anioRegistro = (int) date('Y', strtotime($empresa['creado_en']));
     }
     
+    // Convert logo URL to proxy URL
+    $logoUrl = $empresa['logo_url'];
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    
+    if (!empty($logoUrl)) {
+        if (strpos($logoUrl, 'r2_proxy.php') !== false) {
+            // Ya es una URL del proxy, retornar como está
+            // No hacer nada
+        } elseif (strpos($logoUrl, 'r2.dev/') !== false) {
+            // Extract key from R2 direct URL
+            $parts = explode('r2.dev/', $logoUrl);
+            $key = end($parts);
+            $logoUrl = "$protocol://$host/viax/backend/r2_proxy.php?key=" . urlencode($key);
+        } elseif (strpos($logoUrl, 'http') !== 0) {
+            // Relative path - convert to proxy URL
+            $logoUrl = "$protocol://$host/viax/backend/r2_proxy.php?key=" . urlencode($logoUrl);
+        }
+    }
+    
     // Build response
     $response = [
         'success' => true,
         'empresa' => [
             'id' => intval($empresa['id']),
             'nombre' => $empresa['nombre'],
-            'logo_url' => $empresa['logo_url'],
+            'logo_url' => $logoUrl,
             'verificada' => (bool)$empresa['verificada'],
             'descripcion' => $empresa['descripcion'],
             'telefono' => $empresa['telefono'],

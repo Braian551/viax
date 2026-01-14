@@ -88,9 +88,6 @@ try {
         case 'approve':
             approveEmpresa($db, $input);
             break;
-        case 'reject':
-            rejectEmpresa($db, $input);
-            break;
         case 'get_stats':
             getEmpresaStats($db);
             break;
@@ -471,6 +468,35 @@ function updateEmpresa($db, $input) {
         }
     }
     
+    // Si se actualizó el municipio, sincronizar con empresas_contacto y zona_operacion
+    if (isset($input['municipio']) || isset($input['departamento'])) {
+        $nuevoMunicipio = $input['municipio'] ?? $currentEmpresa['municipio'];
+        $nuevoDepartamento = $input['departamento'] ?? $currentEmpresa['departamento'];
+        
+        // Actualizar empresas_contacto
+        $checkContacto = $db->prepare("SELECT id FROM empresas_contacto WHERE empresa_id = ?");
+        $checkContacto->execute([$empresaId]);
+        
+        if ($checkContacto->fetch()) {
+            $updateContacto = $db->prepare("
+                UPDATE empresas_contacto 
+                SET municipio = ?, departamento = ?, actualizado_en = NOW() 
+                WHERE empresa_id = ?
+            ");
+            $updateContacto->execute([$nuevoMunicipio, $nuevoDepartamento, $empresaId]);
+        } else {
+            // Crear registro de contacto si no existe
+            $insertContacto = $db->prepare("
+                INSERT INTO empresas_contacto (empresa_id, municipio, departamento, creado_en) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            $insertContacto->execute([$empresaId, $nuevoMunicipio, $nuevoDepartamento]);
+        }
+        
+        // Sincronizar zona de operación
+        configureZonaOperacionEmpresa($db, $empresaId, $nuevoMunicipio, $nuevoDepartamento);
+    }
+    
     // Log de auditoría
     $adminId = $input['admin_id'] ?? null;
     logAuditAction($db, $adminId, 'empresa_actualizada', 'empresas_transporte', $empresaId, $input);
@@ -744,9 +770,14 @@ function approveEmpresa($db, $input) {
         return;
     }
     
-    // Obtener información de la empresa
-    $query = "SELECT e.*, u.email as usuario_email, u.nombre as usuario_nombre 
+    // Obtener información de la empresa incluyendo el municipio de contacto
+    $query = "SELECT e.*, 
+                     ec.municipio as contacto_municipio,
+                     ec.departamento as contacto_departamento,
+                     u.email as usuario_email, 
+                     u.nombre as usuario_nombre 
               FROM empresas_transporte e
+              LEFT JOIN empresas_contacto ec ON ec.empresa_id = e.id
               LEFT JOIN usuarios u ON u.empresa_id = e.id AND u.tipo_usuario = 'empresa'
               WHERE e.id = ?";
     $stmt = $db->prepare($query);
@@ -775,10 +806,14 @@ function approveEmpresa($db, $input) {
     // Habilitar tipos de vehículo por defecto si no existen
     enableDefaultVehicleTypesForEmpresa($db, $empresaId, $adminId);
     
+    // Configurar zona de operación automáticamente basada en el municipio de la empresa
+    configureZonaOperacionEmpresa($db, $empresaId, $empresa['contacto_municipio'], $empresa['contacto_departamento']);
+    
     // Log de auditoría
     logAuditAction($db, $adminId, 'empresa_aprobada', 'empresas_transporte', $empresaId, [
         'nombre' => $empresa['nombre'],
-        'email' => $empresa['email']
+        'email' => $empresa['email'],
+        'municipio' => $empresa['contacto_municipio']
     ]);
     
     // Enviar notificaciones de aprobación usando Servicio (Email con diseño + copia al personal)
@@ -1144,5 +1179,121 @@ function handleLogoUpload() {
         return $url;
     } catch (Exception $e) {
         throw new Exception('Error subiendo a R2: ' . $e->getMessage());
+    }
+}
+/**
+ * Configura la zona de operación de una empresa basada en su municipio
+ * Esta función se llama automáticamente al aprobar una empresa
+ */
+function configureZonaOperacionEmpresa($db, $empresaId, $municipio, $departamento = null) {
+    try {
+        if (empty($municipio)) {
+            error_log("configureZonaOperacionEmpresa: Municipio vacío para empresa $empresaId");
+            return false;
+        }
+        
+        // Normalizar municipio (quitar espacios extra)
+        $municipio = trim($municipio);
+        
+        // Verificar si ya existe configuración
+        $checkQuery = "SELECT id, zona_operacion FROM empresas_configuracion WHERE empresa_id = ?";
+        $checkStmt = $db->prepare($checkQuery);
+        $checkStmt->execute([$empresaId]);
+        $config = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Parsear zona actual si existe
+        $zonaActual = [];
+        if ($config && $config['zona_operacion']) {
+            $zonaStr = trim($config['zona_operacion'], '{}');
+            if (!empty($zonaStr)) {
+                $zonaActual = array_map(function($z) {
+                    return trim(trim($z), '"\'');
+                }, explode(',', $zonaStr));
+            }
+        }
+        
+        // Agregar municipio si no existe ya
+        $municipioLower = strtolower($municipio);
+        $yaExiste = false;
+        foreach ($zonaActual as $zona) {
+            if (strtolower(trim($zona)) === $municipioLower) {
+                $yaExiste = true;
+                break;
+            }
+        }
+        
+        if (!$yaExiste) {
+            $zonaActual[] = $municipio;
+        }
+        
+        // Opcionalmente agregar el departamento como zona de cobertura amplia
+        if ($departamento && !empty($departamento)) {
+            $departamento = trim($departamento);
+            $depLower = strtolower($departamento);
+            $depExiste = false;
+            foreach ($zonaActual as $zona) {
+                if (strtolower(trim($zona)) === $depLower) {
+                    $depExiste = true;
+                    break;
+                }
+            }
+            if (!$depExiste) {
+                $zonaActual[] = $departamento;
+            }
+        }
+        
+        // Formatear para PostgreSQL array
+        $zonaPostgres = '{' . implode(',', array_map(function($m) {
+            return '"' . str_replace('"', '\"', trim($m)) . '"';
+        }, array_unique(array_filter($zonaActual)))) . '}';
+        
+        if ($config) {
+            // Actualizar existente
+            $updateQuery = "UPDATE empresas_configuracion 
+                           SET zona_operacion = :zona, actualizado_en = NOW() 
+                           WHERE empresa_id = :empresa_id";
+            $updateStmt = $db->prepare($updateQuery);
+            $updateStmt->bindParam(':zona', $zonaPostgres);
+            $updateStmt->bindParam(':empresa_id', $empresaId, PDO::PARAM_INT);
+            $updateStmt->execute();
+        } else {
+            // Crear nueva configuración
+            $insertQuery = "INSERT INTO empresas_configuracion (empresa_id, zona_operacion, creado_en) 
+                           VALUES (:empresa_id, :zona, NOW())";
+            $insertStmt = $db->prepare($insertQuery);
+            $insertStmt->bindParam(':empresa_id', $empresaId, PDO::PARAM_INT);
+            $insertStmt->bindParam(':zona', $zonaPostgres);
+            $insertStmt->execute();
+        }
+        
+        error_log("configureZonaOperacionEmpresa: Zona configurada para empresa $empresaId: " . implode(', ', $zonaActual));
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("Error configurando zona de operación: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Actualiza la zona de operación cuando se edita una empresa
+ * Sincroniza el municipio de contacto con la zona de operación
+ */
+function syncZonaOperacionConMunicipio($db, $empresaId) {
+    try {
+        // Obtener municipio actual de contacto
+        $query = "SELECT municipio, departamento FROM empresas_contacto WHERE empresa_id = ?";
+        $stmt = $db->prepare($query);
+        $stmt->execute([$empresaId]);
+        $contacto = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($contacto && !empty($contacto['municipio'])) {
+            return configureZonaOperacionEmpresa($db, $empresaId, $contacto['municipio'], $contacto['departamento']);
+        }
+        
+        return false;
+    } catch (Exception $e) {
+        error_log("Error sincronizando zona de operación: " . $e->getMessage());
+        return false;
     }
 }

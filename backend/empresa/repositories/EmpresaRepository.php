@@ -46,7 +46,118 @@ class EmpresaRepository {
             $empresaData['notas_admin']
         ]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $empresaId = $result['id'];
+        
+        // Crear registro en empresas_contacto (tabla normalizada)
+        $this->createEmpresaContacto($empresaId, $empresaData);
+        
+        // Configurar zona de operación inicial basada en el municipio
+        $this->initializeZonaOperacion($empresaId, $empresaData['municipio'], $empresaData['departamento']);
+        
+        return $result;
+    }
+    
+    /**
+     * Crear registro de contacto para la empresa (tabla normalizada)
+     */
+    private function createEmpresaContacto($empresaId, $empresaData) {
+        try {
+            // Verificar si la tabla existe
+            $checkTable = $this->db->query("SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' AND table_name = 'empresas_contacto'
+            )");
+            
+            if (!$checkTable->fetchColumn()) {
+                return; // Tabla no existe, salir silenciosamente
+            }
+            
+            $query = "INSERT INTO empresas_contacto (
+                empresa_id, email, telefono, telefono_secundario, 
+                direccion, municipio, departamento, creado_en
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            ON CONFLICT (empresa_id) DO UPDATE SET
+                email = EXCLUDED.email,
+                telefono = EXCLUDED.telefono,
+                telefono_secundario = EXCLUDED.telefono_secundario,
+                direccion = EXCLUDED.direccion,
+                municipio = EXCLUDED.municipio,
+                departamento = EXCLUDED.departamento,
+                actualizado_en = NOW()";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                $empresaId,
+                $empresaData['email'] ?? null,
+                $empresaData['telefono'] ?? null,
+                $empresaData['telefono_secundario'] ?? null,
+                $empresaData['direccion'] ?? null,
+                $empresaData['municipio'] ?? null,
+                $empresaData['departamento'] ?? null
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error creando empresas_contacto: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Inicializar zona de operación basada en el municipio de la empresa
+     */
+    private function initializeZonaOperacion($empresaId, $municipio, $departamento = null) {
+        try {
+            if (empty($municipio)) {
+                return;
+            }
+            
+            // Verificar si la tabla existe
+            $checkTable = $this->db->query("SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' AND table_name = 'empresas_configuracion'
+            )");
+            
+            if (!$checkTable->fetchColumn()) {
+                return; // Tabla no existe
+            }
+            
+            // Construir array de zona de operación
+            $zonas = [trim($municipio)];
+            if (!empty($departamento)) {
+                $zonas[] = trim($departamento);
+            }
+            
+            // Formatear para PostgreSQL array
+            $zonaPostgres = '{' . implode(',', array_map(function($m) {
+                return '"' . str_replace('"', '\"', $m) . '"';
+            }, array_unique(array_filter($zonas)))) . '}';
+            
+            // Verificar si ya existe configuración
+            $check = $this->db->prepare("SELECT id FROM empresas_configuracion WHERE empresa_id = ?");
+            $check->execute([$empresaId]);
+            
+            if ($check->fetch()) {
+                // Actualizar existente
+                $update = $this->db->prepare("
+                    UPDATE empresas_configuracion 
+                    SET zona_operacion = ?, actualizado_en = NOW() 
+                    WHERE empresa_id = ?
+                ");
+                $update->execute([$zonaPostgres, $empresaId]);
+            } else {
+                // Crear nueva configuración
+                $insert = $this->db->prepare("
+                    INSERT INTO empresas_configuracion (empresa_id, zona_operacion, creado_en) 
+                    VALUES (?, ?, NOW())
+                ");
+                $insert->execute([$empresaId, $zonaPostgres]);
+            }
+            
+            error_log("Zona de operación inicializada para empresa $empresaId: " . implode(', ', $zonas));
+            
+        } catch (Exception $e) {
+            error_log("Error inicializando zona de operación: " . $e->getMessage());
+        }
     }
     
     /**

@@ -4,10 +4,53 @@ require_once __DIR__ . '/../../config/database.php';
 class CompanyService {
     private $db;
     private $conn;
+    private $baseUrl;
 
     public function __construct() {
         $this->db = new Database();
         $this->conn = $this->db->getConnection();
+        $this->baseUrl = $this->getBaseUrl();
+    }
+    
+    /**
+     * Obtiene la URL base del servidor
+     */
+    private function getBaseUrl() {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return "$protocol://$host";
+    }
+    
+    /**
+     * Convierte una URL de logo almacenada en R2 a una URL accesible via proxy
+     * Las URLs pueden estar en formato:
+     * - Relativo: "empresas/2024/01/logo_xxx.jpg"
+     * - R2 directo: "https://pub-xxx.r2.dev/empresas/..."
+     * - Ya procesada: "https://servidor/backend/r2_proxy.php?key=..."
+     */
+    private function convertLogoUrl($logoUrl) {
+        if (empty($logoUrl)) {
+            return null;
+        }
+        
+        // Si ya es una URL del proxy, retornar como está
+        if (strpos($logoUrl, 'r2_proxy.php') !== false) {
+            return $logoUrl;
+        }
+        
+        // Si es una URL de R2 directa, extraer la key
+        if (strpos($logoUrl, 'r2.dev/') !== false) {
+            $parts = explode('r2.dev/', $logoUrl);
+            $logoUrl = end($parts);
+        }
+        
+        // Si es una URL completa de otro dominio, retornar como está
+        if (strpos($logoUrl, 'http://') === 0 || strpos($logoUrl, 'https://') === 0) {
+            return $logoUrl;
+        }
+        
+        // Convertir path relativo a URL del proxy (Laragon)
+        return $this->baseUrl . "/viax/backend/r2_proxy.php?key=" . urlencode($logoUrl);
     }
 
     /**
@@ -48,7 +91,14 @@ class CompanyService {
             $searchQuery = " AND (e.nombre ILIKE :search OR e.id::text ILIKE :search) ";
         }
 
+        // Normalizar municipio para búsqueda (quitar tildes y convertir a minúsculas)
+        $municipioNormalizado = $this->normalizeMunicipio($municipio);
+        
+        // Log para debug
+        error_log("CompanyService: Buscando empresas para municipio: '$municipio' (normalizado: '$municipioNormalizado')");
+
         // Buscar por empresas_contacto.municipio O empresas_configuracion.zona_operacion
+        // Usamos ILIKE para búsqueda parcial y tolerancia a tildes
         $query = "
             SELECT DISTINCT
                 e.id,
@@ -63,27 +113,87 @@ class CompanyService {
             WHERE e.estado = 'activo'
             AND e.verificada = true
             AND (
+                -- Comparación exacta case-insensitive
                 LOWER(ec.municipio) = LOWER(:municipio)
+                -- O comparación parcial con ILIKE
+                OR ec.municipio ILIKE :municipio_like
+                -- O normalizado sin tildes
+                OR LOWER(unaccent(ec.municipio)) = LOWER(unaccent(:municipio))
+                -- O el municipio está en la zona de operación
                 OR LOWER(:municipio) = ANY(SELECT LOWER(unnest(ecf.zona_operacion)))
+                -- O búsqueda parcial en zona de operación
+                OR EXISTS (
+                    SELECT 1 FROM unnest(ecf.zona_operacion) AS zona 
+                    WHERE LOWER(zona) LIKE LOWER(:municipio_partial)
+                    OR LOWER(unaccent(zona)) LIKE LOWER(unaccent(:municipio_partial))
+                )
             )
             $searchQuery
         ";
         
         $stmt = $this->conn->prepare($query);
+        $municipioLike = '%' . $municipio . '%';
+        $municipioPartial = '%' . $municipioNormalizado . '%';
+        
         $stmt->bindParam(':municipio', $municipio);
+        $stmt->bindParam(':municipio_like', $municipioLike);
+        $stmt->bindParam(':municipio_partial', $municipioPartial);
+        
         if (!empty($search)) {
             $searchTerm = "%$search%";
             $stmt->bindParam(':search', $searchTerm);
         }
-        $stmt->execute();
-        $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        try {
+            $stmt->execute();
+            $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            // Si falla (ej: unaccent no instalado), usar consulta simplificada
+            error_log("CompanyService: Error en consulta avanzada: " . $e->getMessage());
+            $empresas = $this->findOperatingCompaniesSimple($municipio, $search);
+        }
 
-        // Fallback para desarrollo si no hay coincidencias exactas y hay pocas empresas
+        error_log("CompanyService: Empresas encontradas con match exacto: " . count($empresas));
+
+        // Si no hay match exacto, buscar empresas que cubran "toda la región" o tengan cobertura amplia
         if (empty($empresas)) {
-             $queryFallback = "
-                SELECT e.id, e.nombre, e.logo_url, e.verificada, ec.municipio
+            error_log("CompanyService: No hay match exacto, buscando empresas con cobertura regional...");
+            
+            $queryRegional = "
+                SELECT DISTINCT e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
+                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
                 FROM empresas_transporte e
                 LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
+                LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
+                WHERE e.estado = 'activo' 
+                AND e.verificada = true
+                AND (
+                    -- Empresas con zona de operación que incluya 'todos' o 'antioquia' o 'regional'
+                    EXISTS (
+                        SELECT 1 FROM unnest(ecf.zona_operacion) AS zona 
+                        WHERE LOWER(zona) IN ('todos', 'all', 'antioquia', 'regional', 'toda la region')
+                    )
+                    -- O empresas en el mismo departamento (Antioquia)
+                    OR LOWER(ec.departamento) = 'antioquia'
+                )
+                LIMIT 10
+            ";
+            $stmt = $this->conn->prepare($queryRegional);
+            $stmt->execute();
+            $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("CompanyService: Empresas encontradas con cobertura regional: " . count($empresas));
+        }
+
+        // Solo usar fallback si está en modo desarrollo y no hay ninguna empresa
+        if (empty($empresas) && $this->isDevMode()) {
+            error_log("CompanyService: FALLBACK - Modo desarrollo, mostrando todas las empresas");
+            $queryFallback = "
+                SELECT e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
+                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+                FROM empresas_transporte e
+                LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
+                LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
                 WHERE e.estado = 'activo' AND e.verificada = true
                 LIMIT 10
             ";
@@ -93,6 +203,74 @@ class CompanyService {
         }
         
         return $empresas;
+    }
+    
+    /**
+     * Búsqueda simplificada sin unaccent (fallback)
+     */
+    private function findOperatingCompaniesSimple($municipio, $search = '') {
+        $searchQuery = "";
+        if (!empty($search)) {
+            $searchQuery = " AND (e.nombre ILIKE :search OR e.id::text ILIKE :search) ";
+        }
+        
+        $query = "
+            SELECT DISTINCT
+                e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
+                COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+            FROM empresas_transporte e
+            LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
+            LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
+            WHERE e.estado = 'activo'
+            AND e.verificada = true
+            AND (
+                LOWER(ec.municipio) = LOWER(:municipio)
+                OR ec.municipio ILIKE :municipio_like
+                OR LOWER(:municipio) = ANY(SELECT LOWER(unnest(ecf.zona_operacion)))
+            )
+            $searchQuery
+        ";
+        
+        $stmt = $this->conn->prepare($query);
+        $municipioLike = '%' . $municipio . '%';
+        $stmt->bindParam(':municipio', $municipio);
+        $stmt->bindParam(':municipio_like', $municipioLike);
+        
+        if (!empty($search)) {
+            $searchTerm = "%$search%";
+            $stmt->bindParam(':search', $searchTerm);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Normaliza el nombre del municipio (quita tildes, espacios extra, etc.)
+     */
+    private function normalizeMunicipio($municipio) {
+        // Quitar tildes manualmente
+        $tildes = ['á'=>'a', 'é'=>'e', 'í'=>'i', 'ó'=>'o', 'ú'=>'u', 
+                   'Á'=>'A', 'É'=>'E', 'Í'=>'I', 'Ó'=>'O', 'Ú'=>'U',
+                   'ñ'=>'n', 'Ñ'=>'N'];
+        $normalizado = strtr($municipio, $tildes);
+        $normalizado = trim($normalizado);
+        return $normalizado;
+    }
+    
+    /**
+     * Verifica si estamos en modo desarrollo
+     */
+    private function isDevMode() {
+        $env = getenv('APP_ENV');
+        if ($env === 'development' || $env === 'dev') {
+            return true;
+        }
+        // Solo verificar constante si está definida
+        if (defined('APP_ENV')) {
+            return constant('APP_ENV') === 'development';
+        }
+        return false;
     }
 
     private function getVehicleTypesByCompanies($empresaIds) {
@@ -253,7 +431,7 @@ class CompanyService {
                 $vehiculosDisponibles[$tipoVehiculo]['empresas'][] = [
                     'id' => $empresaId,
                     'nombre' => $empresa['nombre'],
-                    'logo_url' => $empresa['logo_url'],
+                    'logo_url' => $this->convertLogoUrl($empresa['logo_url']),
                     'conductores' => $numConductores,
                     'distancia_conductor_km' => $distanciaConductor !== null ? round($distanciaConductor, 2) : null,
                     'tarifa_total' => $precio['total'],
@@ -270,7 +448,7 @@ class CompanyService {
             $empresasEnriquecidas[] = [
                 'id' => $empresaId,
                 'nombre' => $empresa['nombre'],
-                'logo_url' => $empresa['logo_url'],
+                'logo_url' => $this->convertLogoUrl($empresa['logo_url']),
                 'municipio' => $empresa['municipio'],
                 'tipos_vehiculo' => $tiposEmpresa,
                 'conductores_cercanos' => $totalConductoresEmpresa,

@@ -389,7 +389,42 @@ class EmpresaService {
         // Remove internal fields
         unset($empresa['creado_por'], $empresa['verificado_por'], $empresa['creado_en'], $empresa['actualizado_en']);
         
+        // Convert logo URL to proxy URL
+        if (!empty($empresa['logo_url'])) {
+            $empresa['logo_url'] = $this->convertLogoUrl($empresa['logo_url']);
+        }
+        
         return $empresa;
+    }
+    
+    /**
+     * Convert logo URL to accessible proxy URL
+     */
+    private function convertLogoUrl($logoUrl) {
+        if (empty($logoUrl)) {
+            return null;
+        }
+        
+        // If already a proxy URL, return as is
+        if (strpos($logoUrl, 'r2_proxy.php') !== false) {
+            return $logoUrl;
+        }
+        
+        // If direct R2 URL, extract the key
+        if (strpos($logoUrl, 'r2.dev/') !== false) {
+            $parts = explode('r2.dev/', $logoUrl);
+            $logoUrl = end($parts);
+        }
+        
+        // If already a complete URL from another domain, return as is
+        if (strpos($logoUrl, 'http://') === 0 || strpos($logoUrl, 'https://') === 0) {
+            return $logoUrl;
+        }
+        
+        // Convert relative path to proxy URL
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return "$protocol://$host/backend/r2_proxy.php?key=" . urlencode($logoUrl);
     }
 
     /**
