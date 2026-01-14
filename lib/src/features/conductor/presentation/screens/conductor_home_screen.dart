@@ -19,6 +19,7 @@ import 'conductor_searching_passengers_screen.dart';
 import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/demand_zones_overlay.dart';
+import '../../../user/presentation/widgets/home/map_loading_shimmer.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -814,31 +815,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Si no hay ubicación, mostrar pantalla de carga
+    // Si no hay ubicación, mostrar shimmer de mapa como en cliente pasajero
     if (_isLoadingLocation) {
-      return Container(
-        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: AppColors.primary,
-                strokeWidth: 3,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Obteniendo ubicación...',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const MapLoadingShimmer();
     }
 
     // Si no hay posición, mostrar error
