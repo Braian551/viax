@@ -49,6 +49,12 @@ class ConductorDrawer extends StatelessWidget {
                           title: 'Inicio',
                           onTap: () {
                             Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(
+                              context, 
+                              RouteNames.conductorHome,
+                              (route) => false,
+                              arguments: {'conductor_user': conductorUser},
+                            );
                           },
                           isDark: isDark,
                         ),
