@@ -128,8 +128,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                         _buildVerificationContent(profile, isDark),
                       
                       const SizedBox(height: 24),
-                      _buildLogoutButton(isDark),
-                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -382,11 +380,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         _buildSectionTitle('Documentos', isDark),
         const SizedBox(height: 12),
         _buildDocumentsList(profile, isDark),
-        
-        const SizedBox(height: 24),
-        _buildSectionTitle('Cuenta', isDark),
-        const SizedBox(height: 12),
-        _buildSettingsList(isDark),
       ],
     );
   }
