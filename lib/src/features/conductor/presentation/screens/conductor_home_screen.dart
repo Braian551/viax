@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../../services/conductor_profile_service.dart';
+import '../../services/conductor_service.dart';
 import '../../../../global/services/auth/user_service.dart';
 
 import 'dart:ui';
@@ -543,42 +544,80 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     );
   }
 
-  void _toggleOnlineStatus() {
+  void _toggleOnlineStatus() async {
+    final conductorId = widget.conductorUser['id'] as int;
+    
     if (!_isOnline) {
-      // Conectarse: Iniciar búsqueda de solicitudes
-      _safeSetState(() => _isOnline = true);
-      _connectionController.forward();
-      HapticFeedback.mediumImpact();
+      // Conectarse: Actualizar en backend y luego iniciar búsqueda
+      try {
+        // Primero actualizar en el backend
+        final success = await ConductorService.actualizarDisponibilidad(
+          conductorId: conductorId,
+          disponible: true,
+          latitud: _currentPosition?.latitude,
+          longitud: _currentPosition?.longitude,
+        );
+        
+        if (!success) {
+          _showStatusSnackbar('Error al conectarse. Intenta de nuevo.', Colors.red);
+          return;
+        }
+        
+        _safeSetState(() => _isOnline = true);
+        _connectionController.forward();
+        HapticFeedback.mediumImpact();
 
-      // Limpiar caché de solicitudes procesadas (para permitir ver solicitudes que antes rechazó)
-      TripRequestSearchService.clearProcessedRequests();
+        // Limpiar caché de solicitudes procesadas (para permitir ver solicitudes que antes rechazó)
+        TripRequestSearchService.clearProcessedRequests();
 
-      // Iniciar búsqueda continua de solicitudes
-      _startSearchingRequests();
+        // Iniciar búsqueda continua de solicitudes
+        _startSearchingRequests();
 
-      // Refrescar zonas de demanda al conectarse
-      _startDemandZonesUpdates();
+        // Refrescar zonas de demanda al conectarse
+        _startDemandZonesUpdates();
 
-      _showStatusSnackbar(
-        '¡Conectado! Buscando pasajeros...',
-        AppColors.success,
-      );
+        _showStatusSnackbar(
+          '¡Conectado! Buscando pasajeros...',
+          AppColors.success,
+        );
+      } catch (e) {
+        debugPrint('❌ Error al conectarse: $e');
+        _showStatusSnackbar('Error de conexión: $e', Colors.red);
+      }
     } else {
-      // Desconectarse: Detener búsqueda
-      _safeSetState(() => _isOnline = false);
-      _connectionController.reverse();
-      HapticFeedback.lightImpact();
+      // Desconectarse: Actualizar en backend y detener búsqueda
+      try {
+        // Primero actualizar en el backend
+        final success = await ConductorService.actualizarDisponibilidad(
+          conductorId: conductorId,
+          disponible: false,
+          latitud: _currentPosition?.latitude,
+          longitud: _currentPosition?.longitude,
+        );
+        
+        if (!success) {
+          _showStatusSnackbar('Error al desconectarse. Intenta de nuevo.', Colors.red);
+          return;
+        }
+        
+        _safeSetState(() => _isOnline = false);
+        _connectionController.reverse();
+        HapticFeedback.lightImpact();
 
-      // Detener búsqueda de solicitudes
-      _stopSearchingRequests();
+        // Detener búsqueda de solicitudes
+        _stopSearchingRequests();
 
-      // Las zonas de demanda siguen visibles cuando está offline para consistencia
-      // No detenemos DemandZoneService.stopAutoRefresh() aquí
+        // Las zonas de demanda siguen visibles cuando está offline para consistencia
+        // No detenemos DemandZoneService.stopAutoRefresh() aquí
 
-      // Limpiar caché de solicitudes procesadas
-      TripRequestSearchService.clearProcessedRequests();
+        // Limpiar caché de solicitudes procesadas
+        TripRequestSearchService.clearProcessedRequests();
 
-      _showStatusSnackbar('Estás fuera de línea', Colors.grey);
+        _showStatusSnackbar('Estás fuera de línea', Colors.grey);
+      } catch (e) {
+        debugPrint('❌ Error al desconectarse: $e');
+        _showStatusSnackbar('Error de conexión: $e', Colors.red);
+      }
     }
   }
 

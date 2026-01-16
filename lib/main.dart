@@ -17,6 +17,7 @@ import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
+import 'package:viax/src/global/services/local_notification_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
@@ -120,6 +121,18 @@ void main() async {
       }
     } catch (e) {
       debugPrint('⚠️ Error inicializando Mapbox: $e');
+    }
+
+    // ============================================
+    // INICIALIZAR NOTIFICACIONES LOCALES
+    // ============================================
+    try {
+      await LocalNotificationService.initialize();
+      // Solicitar permisos explícitamente al iniciar
+      await LocalNotificationService.requestPermission();
+      debugPrint('✅ Notificaciones locales inicializadas y permisos solicitados');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando notificaciones: $e');
     }
 
     // Inicializar Service Locator (Inyección de Dependencias)

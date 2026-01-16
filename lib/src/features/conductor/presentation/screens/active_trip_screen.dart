@@ -7,6 +7,10 @@ import 'package:viax/src/features/conductor/services/conductor_service.dart';
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
+import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/chat_service.dart';
+import '../../../../global/services/sound_service.dart';
+import '../../../../global/services/local_notification_service.dart';
 import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
@@ -59,10 +63,21 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Color? _statusColor;
   Timer? _statusTimer;
 
+  late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
+  late final StreamSubscription<int> _unreadSubscription;
+  int _unreadCount = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (widget.solicitudId != null && widget.clienteId != null) {
+      ChatService.startPolling(
+        solicitudId: widget.solicitudId!,
+        usuarioId: widget.conductorId,
+      );
+      _setupChatListeners();
+    }
     _initController();
   }
 
@@ -80,7 +95,40 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
+    _messagesSubscription.cancel();
+    _unreadSubscription.cancel();
+    ChatService.stopPolling();
     super.dispose();
+  }
+
+  void _setupChatListeners() {
+    // Escuchar mensajes nuevos
+    _messagesSubscription = ChatService.messagesStream.listen((messages) {
+      if (messages.isEmpty) return;
+
+      final lastMsg = messages.last;
+      // Si el mensaje es del cliente y es reciente (menos de 10s)
+      if (lastMsg.remitenteId != widget.conductorId &&
+          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+        
+        // Reproducir sonido
+        SoundService.playMessageSound();
+        
+        // Mostrar notificación del dispositivo
+        LocalNotificationService.showMessageNotification(
+          title: lastMsg.remitenteNombre ?? 'Cliente',
+          body: lastMsg.mensaje,
+          solicitudId: widget.solicitudId,
+        );
+      }
+    });
+
+    // Escuchar conteo de no leídos
+    _unreadSubscription = ChatService.unreadCountStream.listen((count) {
+      if (mounted) {
+        setState(() => _unreadCount = count);
+      }
+    });
   }
 
   @override
@@ -582,6 +630,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       toPickup: _controller.toPickup,
       arrivedAtPickup: _controller.arrivedAtPickup,
       passengerName: widget.clienteNombre ?? '',
+      passengerPhoto: widget.clienteFoto,
       pickupAddress: widget.direccionOrigen,
       destinationAddress: widget.direccionDestino,
       etaMinutes: _controller.etaMinutes,
@@ -599,6 +648,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       destinationLng: widget.destinoLng,
       currentLat: currentLat,
       currentLng: currentLng,
+      unreadCount: _unreadCount,
     );
   }
   Widget _buildStatusMessage() {

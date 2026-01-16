@@ -145,6 +145,20 @@ class SoundService {
     }
   }
 
+  /// Reproduce el sonido de mensaje nuevo
+  static Future<void> playMessageSound() async {
+    try {
+      final player = AudioPlayer();
+      await player.setSource(AssetSource('sounds/notificacion/notification.mp3'));
+      await player.setVolume(1.0);
+      await player.resume();
+      // Dispose de forma segura después de que termine
+      player.onPlayerComplete.listen((_) => player.dispose());
+    } catch (e) {
+      print('❌ Error al reproducir sonido de mensaje: $e');
+    }
+  }
+
   /// Libera los recursos del reproductor de audio
   static Future<void> dispose() async {
     try {

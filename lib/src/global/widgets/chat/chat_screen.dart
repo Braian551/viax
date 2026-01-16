@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 import '../../services/chat_service.dart';
+import '../../../features/conductor/services/document_upload_service.dart';
 import 'chat_bubble.dart';
 import 'chat_input_field.dart';
 import 'quick_messages.dart';
@@ -53,6 +54,12 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadMessages();
     _subscribeToMessages();
+    
+    // Marcar todos los mensajes como leídos al abrir el chat
+    ChatService.markAsRead(
+      solicitudId: widget.solicitudId,
+      usuarioId: widget.miUsuarioId,
+    );
     
     // Iniciar polling
     ChatService.startPolling(
@@ -223,7 +230,7 @@ class _ChatScreenState extends State<ChatScreen> {
             radius: 18,
             backgroundColor: AppColors.primary.withValues(alpha: 0.2),
             backgroundImage: widget.otroFoto != null && widget.otroFoto!.isNotEmpty
-                ? NetworkImage(widget.otroFoto!)
+                ? NetworkImage(DocumentUploadService.getDocumentUrl(widget.otroFoto!))
                 : null,
             child: widget.otroFoto == null || widget.otroFoto!.isEmpty
                 ? Text(
@@ -349,7 +356,7 @@ class _ChatScreenState extends State<ChatScreen> {
               message: message,
               esMio: esMio,
               showAvatar: !esMio,
-              avatarUrl: esMio ? null : widget.otroFoto,
+              avatarUrl: esMio ? null : (widget.otroFoto != null ? DocumentUploadService.getDocumentUrl(widget.otroFoto!) : null),
               avatarInitial: esMio ? null : widget.otroNombre[0],
             ),
           ],

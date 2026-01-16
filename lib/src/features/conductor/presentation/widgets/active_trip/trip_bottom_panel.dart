@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/conductor/services/navigation_launcher_service.dart';
+import 'package:viax/src/features/conductor/services/document_upload_service.dart';
 import '../common/pulsing_dot.dart';
 
 /// Panel inferior deslizable para viaje activo.
@@ -13,6 +14,7 @@ class TripBottomPanel extends StatefulWidget {
   final bool toPickup;
   final bool arrivedAtPickup;  // NUEVO: esperando iniciar viaje
   final String passengerName;
+  final String? passengerPhoto;
   final String pickupAddress;
   final String destinationAddress;
   final int etaMinutes;
@@ -29,8 +31,10 @@ class TripBottomPanel extends StatefulWidget {
   final double? pickupLng;
   final double? destinationLat;
   final double? destinationLng;
+
   final double? currentLat;
   final double? currentLng;
+  final int unreadCount;
 
   const TripBottomPanel({
     super.key,
@@ -38,6 +42,7 @@ class TripBottomPanel extends StatefulWidget {
     required this.toPickup,
     required this.arrivedAtPickup,
     required this.passengerName,
+    this.passengerPhoto,
     required this.pickupAddress,
     required this.destinationAddress,
     required this.etaMinutes,
@@ -55,6 +60,7 @@ class TripBottomPanel extends StatefulWidget {
     this.destinationLng,
     this.currentLat,
     this.currentLng,
+    this.unreadCount = 0,
   });
 
   @override
@@ -197,7 +203,20 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(Icons.person_rounded, color: AppColors.primary, size: 26),
+      child: widget.passengerPhoto != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                DocumentUploadService.getDocumentUrl(widget.passengerPhoto!),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
+                  size: 26,
+                ),
+              ),
+            )
+          : Icon(Icons.person_rounded, color: AppColors.primary, size: 26),
     );
   }
 
@@ -269,6 +288,7 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
           color: AppColors.primary,
           isDark: widget.isDark,
           onTap: widget.onMessage ?? () {},
+          badgeCount: widget.unreadCount,
         ),
       ],
     );
@@ -640,12 +660,14 @@ class _QuickActionButton extends StatelessWidget {
   final Color color;
   final bool isDark;
   final VoidCallback onTap;
+  final int badgeCount;
 
   const _QuickActionButton({
     required this.icon,
     required this.color,
     required this.isDark,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -665,7 +687,33 @@ class _QuickActionButton extends StatelessWidget {
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, color: color, size: 22),
+              if (badgeCount > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                        width: 1.5,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

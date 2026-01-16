@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/rating_service.dart';
+import '../../../../global/services/chat_service.dart';
+import '../../../../global/services/local_notification_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../global/widgets/trip_completion/trip_completion_widgets.dart';
 import '../../../../theme/app_colors.dart';
@@ -54,6 +56,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
   // Estado del viaje
   String _tripState = 'en_curso';
+  late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
+  late final StreamSubscription<int> _unreadSubscription;
+  int _unreadCount = 0;
+  
   LatLng? _conductorLocation;
   double _conductorHeading = 0;
   LatLng? _clientLocation;
@@ -86,6 +92,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   @override
   void dispose() {
     _pulseController.dispose();
+    _messagesSubscription.cancel();
+    _unreadSubscription.cancel();
     _statusTimer?.cancel();
     _routeAnimationTimer?.cancel();
     _locationTimer?.cancel();
@@ -115,6 +123,14 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     
     // Iniciar polling de estado
     _startStatusPolling();
+    
+    // Iniciar polling de chat
+    ChatService.startPolling(
+      solicitudId: widget.solicitudId,
+      usuarioId: widget.clienteId,
+    );
+
+    _setupChatListeners();
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -180,6 +196,36 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       _checkTripStatus();
     });
     _checkTripStatus();
+  }
+
+  void _setupChatListeners() {
+    // Escuchar mensajes nuevos
+    _messagesSubscription = ChatService.messagesStream.listen((messages) {
+      if (messages.isEmpty) return;
+
+      final lastMsg = messages.last;
+      // Si el mensaje es del otro usuario y es reciente (menos de 10s)
+      if (lastMsg.remitenteId != widget.clienteId &&
+          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+        
+        // Reproducir sonido
+        SoundService.playMessageSound();
+        
+        // Mostrar notificación del dispositivo
+        LocalNotificationService.showMessageNotification(
+          title: lastMsg.remitenteNombre ?? 'Conductor',
+          body: lastMsg.mensaje,
+          solicitudId: widget.solicitudId,
+        );
+      }
+    });
+
+    // Escuchar conteo de no leídos
+    _unreadSubscription = ChatService.unreadCountStream.listen((count) {
+      if (mounted) {
+        setState(() => _unreadCount = count);
+      }
+    });
   }
 
   Future<void> _checkTripStatus() async {
@@ -306,6 +352,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     if (_tripCompleted) return;
     _tripCompleted = true;
     _statusTimer?.cancel();
+    ChatService.stopPolling();
 
     HapticFeedback.heavyImpact();
     SoundService.playAcceptSound();
@@ -317,6 +364,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void _onTripCancelled() {
     _tripCompleted = true;
     _statusTimer?.cancel();
+    ChatService.stopPolling();
 
     showDialog(
       context: context,
@@ -421,7 +469,15 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           otroSubtitle: 'Tu conductor',
         ),
       ),
-    );
+    ).then((_) {
+      // Al volver del chat, actualizar conteo
+      ChatService.getUnreadCount(
+        solicitudId: widget.solicitudId,
+        usuarioId: widget.clienteId,
+      ).then((count) {
+        if (mounted) setState(() => _unreadCount = count);
+      });
+    });
   }
 
   @override
@@ -627,6 +683,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                           label: 'Mensaje',
                           onTap: _openChat,
                           isDark: isDark,
+                          badgeCount: _unreadCount,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -807,25 +864,23 @@ class _MapButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            color: isDark ? Colors.white : Colors.grey[800],
-            size: 22,
+        elevation: 4,
+        shadowColor: Colors.black12,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(
+              icon,
+              color: isDark ? Colors.white : Colors.grey[800],
+              size: 24,
+            ),
           ),
         ),
       ),
@@ -838,44 +893,86 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool isDark;
+  final int badgeCount;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
     required this.isDark,
+    this.badgeCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.grey.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(12),
+      color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.grey.withValues(alpha: 0.1),
+            ),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: isDark ? Colors.white : Colors.grey[800],
-                size: 24,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    icon,
+                    color: isDark ? Colors.white : AppColors.primary,
+                    size: 24,
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                            width: 1.5,
+                          ),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Center(
+                          child: Text(
+                            badgeCount > 9 ? '9+' : badgeCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.grey[700],
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.grey[700],
                 ),
               ),
             ],
@@ -885,3 +982,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+

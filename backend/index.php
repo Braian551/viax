@@ -35,6 +35,10 @@ if ($path === '') {
 } elseif (strpos($path, 'conductor/') === 0) {
     $endpoint = substr($path, 10); // Remove 'conductor/'
     $endpoint = preg_replace('/\.php$/', '', $endpoint); // Strip .php if present
+    // Fix: Validar si la ruta venía duplicada (backend/conductor/conductor/...)
+    if (strpos($endpoint, 'conductor/') === 0) {
+        $endpoint = substr($endpoint, 10);
+    }
     require_once __DIR__ . '/conductor/' . $endpoint . '.php';
 } elseif (strpos($path, 'admin/') === 0) {
     $endpoint = substr($path, 6); // Remove 'admin/'

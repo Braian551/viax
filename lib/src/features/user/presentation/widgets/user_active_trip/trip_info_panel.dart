@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 
+import 'package:viax/src/features/conductor/services/document_upload_service.dart';
+
 /// Panel con información del viaje y conductor.
 class TripInfoPanel extends StatelessWidget {
   final String direccionDestino;
@@ -27,6 +29,8 @@ class TripInfoPanel extends StatelessWidget {
         : null;
     final placa = vehiculo?['placa'] as String?;
     final calificacion = (conductor?['calificacion_promedio'] as num?)?.toDouble();
+
+    final conductorFoto = conductor?['foto'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -79,11 +83,11 @@ class TripInfoPanel extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: conductor?['foto'] != null
+                child: conductorFoto != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: Image.network(
-                          conductor!['foto'],
+                          DocumentUploadService.getDocumentUrl(conductorFoto),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.person_rounded,

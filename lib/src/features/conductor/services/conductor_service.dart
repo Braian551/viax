@@ -116,8 +116,10 @@ class ConductorService {
         if (longitud != null) 'longitud': longitud,
       };
 
+      print('📡 Actualizando disponibilidad: conductorId=$conductorId, disponible=$disponible');
+      
       final response = await http.post(
-        Uri.parse('$baseUrl/actualizar_disponibilidad.php'),
+        Uri.parse('$baseUrl/conductor/actualizar_disponibilidad.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -125,20 +127,22 @@ class ConductorService {
         body: jsonEncode(body),
       );
 
+      print('📥 Respuesta disponibilidad: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         if (data['success'] == true) {
           return true;
         } else {
-          // Lanzar excepciÃ³n con el mensaje del servidor
+          // Lanzar excepción con el mensaje del servidor
           throw Exception(data['message'] ?? 'Error desconocido del servidor');
         }
       } else {
         throw Exception('Error del servidor: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error actualizando disponibilidad: $e');
-      rethrow; // Re-lanzar la excepciÃ³n para que el provider la maneje
+      print('❌ Error actualizando disponibilidad: $e');
+      rethrow; // Re-lanzar la excepción para que el provider la maneje
     }
   }
 

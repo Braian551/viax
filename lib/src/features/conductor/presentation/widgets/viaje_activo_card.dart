@@ -1,6 +1,8 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../screens/conductor_active_trip_screen.dart';
+import '../../services/document_upload_service.dart';
+import '../../../../theme/app_colors.dart';
 
 class ViajeActivoCard extends StatelessWidget {
   final Map<String, dynamic> viaje;
@@ -102,13 +104,22 @@ class ViajeActivoCard extends StatelessWidget {
                   CircleAvatar(
                     backgroundColor: const Color(0xFFFFFF00),
                     radius: 20,
-                      child: Text(
-                        (clienteNombre.isNotEmpty ? clienteNombre[0].toUpperCase() : '?'),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    backgroundImage: viaje['cliente_foto'] != null
+                        ? NetworkImage(
+                            DocumentUploadService.getDocumentUrl(viaje['cliente_foto']),
+                          )
+                        : null,
+                    child: viaje['cliente_foto'] == null
+                        ? Text(
+                            (clienteNombre.isNotEmpty
+                                ? clienteNombre[0].toUpperCase()
+                                : '?'),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
