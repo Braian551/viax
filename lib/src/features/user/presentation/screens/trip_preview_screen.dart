@@ -130,6 +130,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
+      debugPrint('🔍 TripPreviewScreen: initState started');
+      
+      // Intentar cerrar teclado inmediatamente para evitar loop de foco IME
+      debugPrint('🔍 TripPreviewScreen: Forcing unfocus in initState');
+      FocusManager.instance.primaryFocus?.unfocus();
+
       try {
         if (_draggableController.isAttached && !_sheetListenerAttached) {
           _draggableController.addListener(_handleSheetSizeChange);
@@ -137,6 +143,39 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         }
       } catch (e) {
         debugPrint('Error adding sheet listener: $e');
+      }
+
+      // FAILSAFE: Validar que origen y destino no sean el mismo lugar
+      final distanceBetween = const Distance().as(
+        LengthUnit.Meter,
+        LatLng(widget.origin.latitude, widget.origin.longitude),
+        LatLng(widget.destination.latitude, widget.destination.longitude),
+      );
+      
+      debugPrint('🚨 TripPreview: Distancia entre origen/destino: ${distanceBetween}m');
+      
+      if (distanceBetween < 50) {
+        debugPrint('🚨 FAILSAFE: Origen y destino son el mismo lugar!');
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Ubicaciones inválidas'),
+            content: const Text(
+              'El punto de origen y destino son prácticamente el mismo lugar. Por favor selecciona ubicaciones diferentes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx); // Close dialog
+                  Navigator.pop(context); // Go back to request screen
+                },
+                child: const Text('Volver'),
+              ),
+            ],
+          ),
+        );
+        return; // Don't load route
       }
 
       _loadRouteAndQuote();
@@ -299,6 +338,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Future<void> _loadRouteAndQuote() async {
+    debugPrint('🔍 TripPreviewScreen: _loadRouteAndQuote called');
+    // Asegurar que el teclado esté cerrado antes de iniciar cálculos pesados
+    FocusManager.instance.primaryFocus?.unfocus();
+    
     setState(() {
       _isLoadingRoute = true;
       _isLoadingQuote = true;
@@ -326,7 +369,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         throw Exception('No se pudo calcular la ruta');
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('🔍 TripPreviewScreen: aborted - not mounted after routing');
+        return;
+      }
+      debugPrint('🔍 TripPreviewScreen: Route calculated successfully');
       setState(() {
         _route = route;
         _isLoadingRoute = false;
@@ -352,8 +399,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
       // Calcular cotización para todos los vehículos (Backend)
       await _loadCompanyVehicles(route);
+      
+      debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles completed');
 
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('🔍 TripPreviewScreen: Widget no longer mounted after _loadCompanyVehicles');
+        return;
+      }
+      
+      debugPrint('🔍 TripPreviewScreen: About to call setState for quote update');
+      debugPrint('🔍 TripPreviewScreen: _selectedVehicleType = $_selectedVehicleType');
+      debugPrint('🔍 TripPreviewScreen: _vehicleQuotes.keys = ${_vehicleQuotes.keys.toList()}');
+      
       setState(() {
         _quote = _vehicleQuotes[_selectedVehicleType];
         _isLoadingQuote = false;
@@ -362,10 +419,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           _animatedPrice = _quote!.totalPrice;
         }
       });
+      
+      debugPrint('🔍 TripPreviewScreen: setState completed, starting slide animation delay');
 
       // Animar la aparición del panel de detalles
       await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
+      debugPrint('🔍 TripPreviewScreen: Starting slide animation');
       _slideAnimationController.forward();
     } on TimeoutException catch (e, stackTrace) {
       debugPrint('Timeout loading route/quote: $e');
@@ -402,6 +462,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         CompanyVehicleService.findNearestMunicipality(start.latitude, start.longitude) ??
         'Medellín';
         
+    debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles started');
     debugPrint('🏘️ Municipio resuelto para cotización: $municipio');
 
     try {
@@ -416,6 +477,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       if (!mounted) return;
 
       if (response.success && response.vehiculosDisponibles.isNotEmpty) {
+        debugPrint('🔍 TripPreviewScreen: Got valid vehicle response');
         _companyResponse = response;
         
         // Normalizar texto para comparación robusta (sin tildes, minúsculas)
@@ -611,9 +673,15 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   void _updateQuoteForVehicle(String type, CompanyVehicleOption option) {
-    // Usar datos de la ruta si está disponible
-    final distKm = _route?.distanceKm ?? 0;
-    final durMin = _route?.durationMinutes.ceil() ?? 0;
+    // Usar datos de la ruta si está disponible, con safety checks
+    double distKm = _route?.distanceKm ?? 0;
+    double durMinRaw = _route?.durationMinutes ?? 0;
+    
+    // Safety check: ensure values are finite before using
+    if (!distKm.isFinite) distKm = 0;
+    if (!durMinRaw.isFinite) durMinRaw = 0;
+    
+    final durMin = durMinRaw.ceil();
 
     _vehicleQuotes[type] = TripQuote(
       distanceKm: distKm,
@@ -760,6 +828,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    // Debounce log to avoid spamming console on every frame
+    // debugPrint('🔍 TripPreviewScreen: build called');
 
     return Scaffold(
       backgroundColor: isDark

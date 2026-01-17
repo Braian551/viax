@@ -43,6 +43,9 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   bool _isGettingLocation = false;
   bool _isProgrammaticChange = false;
   
+  // Track which field was last focused (for validation when focus is lost)
+  String _lastFocusedField = 'origin';
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -58,8 +61,20 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
     _originController.addListener(() => _onTextChanged(targetField: 'origin'));
     _destinationController.addListener(() => _onTextChanged(targetField: 'destination'));
-    _originFocusNode.addListener(() => setState(() {}));
-    _destinationFocusNode.addListener(() => setState(() {}));
+    
+    // Track focus changes to remember last focused field
+    _originFocusNode.addListener(() {
+      if (_originFocusNode.hasFocus) {
+        _lastFocusedField = 'origin';
+      }
+      setState(() {});
+    });
+    _destinationFocusNode.addListener(() {
+      if (_destinationFocusNode.hasFocus) {
+        _lastFocusedField = 'destination';
+      }
+      setState(() {});
+    });
   }
   
   void _setupAnimations() {
@@ -634,21 +649,29 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                 );
 
                 if (result != null && mounted) {
+                  // Use _lastFocusedField ya que el foco se pierde al navegar
+                  final targetField = _lastFocusedField;
+                  
+                  debugPrint('🗺️ Ubicación desde mapa para campo: $targetField');
+                  debugPrint('🗺️ Resultado: ${result.address}');
+                  
+                  if (_isLocationDuplicate(result, targetField)) {
+                    debugPrint('🚫 Validación bloqueó la selección desde mapa');
+                    return;
+                  }
+
                   setState(() {
-                    if (_originFocusNode.hasFocus || (!_destinationFocusNode.hasFocus && _stopFocusNodes.every((n) => !n.hasFocus) && _selectedOrigin == null)) {
+                    if (targetField == 'origin') {
                       _selectedOrigin = result;
                       _originController.text = result.address;
-                    } else if (_destinationFocusNode.hasFocus) {
+                    } else if (targetField == 'destination') {
                       _selectedDestination = result;
                       _destinationController.text = result.address;
-                    } else {
-                      // Check stops
-                      for (int i = 0; i < _stopFocusNodes.length; i++) {
-                        if (_stopFocusNodes[i].hasFocus) {
-                          _stops[i] = result;
-                          _stopControllers[i].text = result.address;
-                          break;
-                        }
+                    } else if (targetField.startsWith('stop_')) {
+                      final i = int.parse(targetField.split('_')[1]);
+                      if (i < _stops.length) {
+                        _stops[i] = result;
+                        _stopControllers[i].text = result.address;
                       }
                     }
                     _suggestions = [];
@@ -744,21 +767,31 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 onTap: () {
+                  // Use _lastFocusedField porque al tocar la sugerencia el foco ya se perdió
+                  final targetField = _lastFocusedField;
+                  
+                  debugPrint('📍 Seleccionando sugerencia para campo: $targetField');
+                  debugPrint('📍 Sugerencia: ${suggestion.address}');
+                  
+                  // Validar duplicado antes de asignar
+                  if (_isLocationDuplicate(suggestion, targetField)) {
+                    debugPrint('🚫 Validación bloqueó la selección');
+                    return;
+                  }
+
                   setState(() {
-                    if (_originFocusNode.hasFocus) {
+                    if (targetField == 'origin') {
                       _selectedOrigin = suggestion;
                       _originController.text = _formatAddressForDisplay(suggestion.address);
-                    } else if (_destinationFocusNode.hasFocus) {
+                    } else if (targetField == 'destination') {
                       _selectedDestination = suggestion;
                       _destinationController.text = _formatAddressForDisplay(suggestion.address);
-                    } else {
-                       for (int i = 0; i < _stopFocusNodes.length; i++) {
-                        if (_stopFocusNodes[i].hasFocus) {
-                          _stops[i] = suggestion;
-                          _stopControllers[i].text = _formatAddressForDisplay(suggestion.address);
-                          break;
-                        }
-                      }
+                    } else if (targetField.startsWith('stop_')) {
+                       final i = int.parse(targetField.split('_')[1]);
+                       if (i < _stops.length) {
+                         _stops[i] = suggestion;
+                         _stopControllers[i].text = _formatAddressForDisplay(suggestion.address);
+                       }
                     }
                     _suggestions = [];
                     FocusScope.of(context).unfocus();
@@ -857,6 +890,15 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             ),
             child: ElevatedButton(
               onPressed: () {
+                // Validación final: Origen y Destino
+                if (_selectedOrigin != null && _selectedDestination != null) {
+                  // Usamos el helper que ya tiene la lógica de 200m y Strings
+                  // Pasamos 'destination' para que compare contra origin
+                  if (_isLocationDuplicate(_selectedDestination!, 'destination')) {
+                    return; 
+                  }
+                }
+
                 // Filter out empty stops just in case
                 final validStops = _stops.where((s) => s.latitude != 0 && s.longitude != 0).toList();
                 
@@ -977,6 +1019,11 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       );
       
       if (mounted) {
+        // Validar duplicado ANTES de actualizar el estado
+        if (_isLocationDuplicate(location, targetField)) {
+          return;
+        }
+
         setState(() {
           if (targetField == 'origin') {
             _selectedOrigin = location;
@@ -1060,6 +1107,77 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     
     // Unir las partes filtradas
     return limitedParts.join(', ');
+  }
+
+  bool _isLocationDuplicate(SimpleLocation newLoc, String targetField) {
+    debugPrint('🔍 _isLocationDuplicate llamada: targetField=$targetField');
+    debugPrint('🔍 newLoc: ${newLoc.address} (${newLoc.latitude}, ${newLoc.longitude})');
+    debugPrint('🔍 _selectedOrigin: ${_selectedOrigin?.address}');
+    debugPrint('🔍 _selectedDestination: ${_selectedDestination?.address}');
+    
+    SimpleLocation? otherLoc;
+    String otherName = '';
+
+    if (targetField == 'origin') {
+      otherLoc = _selectedDestination;
+      otherName = 'destino';
+    } else if (targetField == 'destination') {
+      otherLoc = _selectedOrigin;
+      otherName = 'origen';
+    } else {
+      debugPrint('⚠️ targetField no reconocido: $targetField');
+      return false;
+    }
+
+    if (otherLoc == null) {
+      debugPrint('⚠️ otherLoc es null - no hay comparación posible');
+      return false;
+    }
+    
+    debugPrint('🔍 Comparando contra: ${otherLoc.address} (${otherLoc.latitude}, ${otherLoc.longitude})');
+
+    // 1. Check Address Equality (exact match)
+    if (newLoc.address.trim() == otherLoc.address.trim()) {
+      debugPrint('🚫 Ubicación duplicada por dirección exacta: ${newLoc.address}');
+      _showDuplicateAlert(otherName);
+      return true;
+    }
+
+    // 2. Check Distance
+    final distance = const Distance().as(
+      LengthUnit.Meter,
+      LatLng(newLoc.latitude, newLoc.longitude),
+      LatLng(otherLoc.latitude, otherLoc.longitude),
+    );
+      
+    debugPrint('📏 Distancia entre puntos: ${distance}m (Umbral: 50m)');
+
+    if (distance < 50) {
+      debugPrint('🚫 Ubicación duplicada por distancia (<50m)');
+      _showDuplicateAlert(otherName);
+      return true;
+    }
+    
+    debugPrint('✅ Validación pasada - ubicaciones diferentes');
+    return false;
+  }
+
+  void _showDuplicateAlert(String otherName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ubicación duplicada'),
+        content: Text(
+          'La ubicación seleccionada es muy cercana al $otherName. Por favor elige un punto diferente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _searchLocation(String query, String targetField) async {

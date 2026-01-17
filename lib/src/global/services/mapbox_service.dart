@@ -505,11 +505,21 @@ class MapboxRoute {
     );
   }
 
-  /// Distancia en kilÃ³metros
-  double get distanceKm => distance / 1000;
+  /// Distancia en kilómetros (safe getter that handles non-finite values)
+  double get distanceKm {
+    final km = distance / 1000;
+    // Safety check: if result is not finite, return 0
+    if (!km.isFinite) return 0.0;
+    return km;
+  }
 
-  /// DuraciÃ³n en minutos
-  double get durationMinutes => duration / 60;
+  /// Duración en minutos (safe getter that handles non-finite values)
+  double get durationMinutes {
+    final mins = duration / 60;
+    // Safety check: if result is not finite, return 0
+    if (!mins.isFinite) return 0.0;
+    return mins;
+  }
 
   /// Formato legible de distancia
   String get formattedDistance {

@@ -53,6 +53,9 @@ class TripVehicleBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check for potential rebuild loops
+    // debugPrint('🔍 TripVehicleBottomSheet: build called with ${vehicles.length} vehicles');
+    
     return DraggableScrollableSheet(
       controller: controller,
       initialChildSize: 0.42,

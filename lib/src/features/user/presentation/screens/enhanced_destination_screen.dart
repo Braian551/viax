@@ -309,6 +309,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: true,
+      otherLocation: _selectedDestination, // Para validación de duplicados
     );
 
     if (result != null && mounted) {
@@ -326,6 +327,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: false,
+      otherLocation: _selectedOrigin, // Para validación de duplicados
     );
 
     if (result != null && mounted) {

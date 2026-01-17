@@ -17,6 +17,8 @@ class LocationSearchSheet extends StatefulWidget {
   final LatLng? userLocation;
   final LocationSuggestionService suggestionService;
   final bool isOrigin;
+  /// Ubicación del otro campo (origen si esto es destino, y viceversa) para validar duplicados
+  final SimpleLocation? otherLocation;
 
   const LocationSearchSheet({
     super.key,
@@ -27,6 +29,7 @@ class LocationSearchSheet extends StatefulWidget {
     this.userLocation,
     required this.suggestionService,
     this.isOrigin = false,
+    this.otherLocation,
   });
 
   @override
@@ -93,15 +96,56 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     HapticFeedback.selectionClick();
     
     // Si el lugar necesita obtener detalles (coordenadas), hacerlo ahora
+    SimpleLocation finalLocation = location;
     if (location.needsDetails) {
       final detailedLocation = await widget.suggestionService.getPlaceDetails(location);
-      if (detailedLocation != null && mounted) {
-        Navigator.pop(context, detailedLocation);
-        return;
+      if (detailedLocation != null) {
+        finalLocation = detailedLocation;
+      } else {
+        return; // No se pudieron obtener detalles
       }
     }
     
-    Navigator.pop(context, location);
+    // VALIDACIÓN: Verificar que no sea igual al otro campo
+    if (widget.otherLocation != null && mounted) {
+      final distance = const Distance().as(
+        LengthUnit.Meter,
+        LatLng(finalLocation.latitude, finalLocation.longitude),
+        LatLng(widget.otherLocation!.latitude, widget.otherLocation!.longitude),
+      );
+      
+      debugPrint('📍 LocationSearchSheet: Distancia al otro punto: ${distance}m');
+      
+      // Check dirección exacta o distancia menor a 50m
+      if (finalLocation.address.trim() == widget.otherLocation!.address.trim() || distance < 50) {
+        debugPrint('🚫 Ubicación duplicada detectada en LocationSearchSheet');
+        _showDuplicateAlert();
+        return; // No cerrar el sheet
+      }
+    }
+    
+    if (mounted) {
+      Navigator.pop(context, finalLocation);
+    }
+  }
+  
+  void _showDuplicateAlert() {
+    final otherName = widget.isOrigin ? 'destino' : 'origen';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ubicación duplicada'),
+        content: Text(
+          'Esta ubicación es muy cercana al $otherName. Por favor selecciona un punto diferente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _useCurrentLocation() async {
@@ -563,6 +607,7 @@ Future<SimpleLocation?> showLocationSearchSheet({
   LatLng? userLocation,
   required LocationSuggestionService suggestionService,
   bool isOrigin = false,
+  SimpleLocation? otherLocation,
 }) {
   return showModalBottomSheet<SimpleLocation>(
     context: context,
@@ -576,6 +621,7 @@ Future<SimpleLocation?> showLocationSearchSheet({
       userLocation: userLocation,
       suggestionService: suggestionService,
       isOrigin: isOrigin,
+      otherLocation: otherLocation,
     ),
   );
 }
