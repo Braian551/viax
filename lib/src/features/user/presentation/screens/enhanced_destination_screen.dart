@@ -146,10 +146,21 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
   Future<void> _getCurrentLocation() async {
     if (_isGettingLocation) return;
+    if (!mounted) return;
+    
     setState(() => _isGettingLocation = true);
 
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      bool serviceEnabled = false;
+      try {
+        serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => false,
+        );
+      } catch (e) {
+        debugPrint('Error checking location service: $e');
+      }
+
       if (!serviceEnabled) {
         _showError('Habilita la ubicación');
         return;
@@ -169,11 +180,19 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         return;
       }
 
+      // Add timeout to position fetch
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
+          accuracy: LocationAccuracy.medium, // Reduce accuracy for speed/stability
         ),
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw TimeoutException('Timeout getting location');
+        },
       );
+      
+      if (!mounted) return;
 
       _userLocation = LatLng(position.latitude, position.longitude);
       _suggestionService.setUserContext(location: _userLocation);
@@ -197,6 +216,10 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       }
     } catch (e) {
       debugPrint('Error getting location: $e');
+      // Optionally show error for timeout
+      if (mounted && e is TimeoutException) {
+         // _showError('Tiempo de espera agotado al obtener ubicación');
+      }
     } finally {
       if (mounted) setState(() => _isGettingLocation = false);
     }

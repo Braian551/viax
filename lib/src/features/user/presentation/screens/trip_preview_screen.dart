@@ -396,12 +396,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     final double distanciaKm = route.distanceKm;
     final int duracionMin = route.durationMinutes.ceil();
 
-    // Extraer municipio
-    String municipio =
-        CompanyVehicleService.extractMunicipalityFromAddress(
-          widget.origin.address,
-        ) ??
+    // Extraer municipio con fallback robusto
+    String municipio = widget.origin.municipality ?? 
+        CompanyVehicleService.extractMunicipalityFromAddress(widget.origin.address) ??
+        CompanyVehicleService.findNearestMunicipality(start.latitude, start.longitude) ??
         'Medellín';
+        
+    debugPrint('🏘️ Municipio resuelto para cotización: $municipio');
 
     try {
       final response = await CompanyVehicleService.getCompaniesByMunicipality(
@@ -416,10 +417,77 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
       if (response.success && response.vehiculosDisponibles.isNotEmpty) {
         _companyResponse = response;
-        // Actualizar lista de vehículos
-        _vehicles = _mapToVehicleInfo(response.vehiculosDisponibles);
+        
+        // Normalizar texto para comparación robusta (sin tildes, minúsculas)
+        String normalize(String? text) {
+          if (text == null) return '';
+          return text.toLowerCase()
+            .replaceAll(RegExp(r'[áàäâ]'), 'a')
+            .replaceAll(RegExp(r'[éèëê]'), 'e')
+            .replaceAll(RegExp(r'[íìïî]'), 'i')
+            .replaceAll(RegExp(r'[óòöô]'), 'o')
+            .replaceAll(RegExp(r'[úùüû]'), 'u')
+            .replaceAll('ñ', 'n');
+        }
 
-        debugPrint('🚗 Vehículos mapeados: ${_vehicles.length}');
+        final normalizedMunicipio = normalize(municipio);
+
+        // Crear mapa de detalles de empresas para búsqueda rápida
+        final companyDetailsMap = {
+          for (var e in response.empresas) e.id: e
+        };
+
+        // Filtrar empresas con conductores > 0 Y que pertenezcan al municipio correcto
+        final filteredVehicles = <AvailableVehicleType>[];
+        for (var v in response.vehiculosDisponibles) {
+          final availableCompanies = v.empresas.where((e) {
+             // 1. Filtro de municipio estricto (PRIORIDAD)
+             final details = companyDetailsMap[e.id];
+             if (details != null && details.municipio != null) {
+               final companyMun = normalize(details.municipio);
+               // Si el municipio de la empresa es diferente al de la zona, filtrar
+               if (companyMun != normalizedMunicipio) {
+                 debugPrint('🚫 Filtrando empresa ${e.nombre} (${details.municipio}) por no coincidir con zona ($municipio)');
+                 return false;
+               }
+             }
+             
+             // NOTA: Se eliminó el filtro de conductores > 0 para permitir ver empresas 
+             // que operan en la zona aunque no tengan conductores activos en este momento.
+             
+             return true;
+          }).toList();
+          
+          if (availableCompanies.isNotEmpty) {
+            // Asegurar que la empresa recomendada original esté de primera si aún está disponible
+            if (v.empresaRecomendada != null && availableCompanies.contains(v.empresaRecomendada)) {
+              availableCompanies.remove(v.empresaRecomendada);
+              availableCompanies.insert(0, v.empresaRecomendada!);
+            }
+
+            filteredVehicles.add(AvailableVehicleType(
+              tipo: v.tipo,
+              nombre: v.nombre,
+              empresas: availableCompanies,
+            ));
+          }
+        }
+        
+        // Si después del filtro no quedan vehículos, mostrar mensaje
+        if (filteredVehicles.isEmpty) {
+          setState(() {
+            _noVehiclesAvailable = true;
+            _noVehiclesMessage = 'No hay conductores disponibles cerca de tu ubicación';
+            _vehicles = [];
+            _vehicleQuotes.clear();
+          });
+          return;
+        }
+        
+        // Actualizar lista de vehículos con los filtrados
+        _vehicles = _mapToVehicleInfo(filteredVehicles);
+
+        debugPrint('🚗 Vehículos mapeados (con conductores): ${_vehicles.length}');
         for (var v in _vehicles) {
           debugPrint('   - ${v.type}: ${v.name}');
         }
@@ -430,7 +498,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         _vehicleQuotes.clear();
 
         // Pre-seleccionar empresas y llenar mapa
-        for (var v in response.vehiculosDisponibles) {
+        for (var v in filteredVehicles) {
           _companiesPerVehicle[v.tipo] = v.empresas;
 
           if (v.empresaRecomendada != null) {

@@ -22,6 +22,9 @@ class SimpleLocation {
   /// ID del lugar de Google Places (para obtener detalles después)
   final String? placeId;
 
+  /// Municipio al que pertenece (ej: "Medellín", "Bello")
+  final String? municipality;
+
   const SimpleLocation({
     required this.latitude,
     required this.longitude,
@@ -31,6 +34,7 @@ class SimpleLocation {
     this.distanceKm,
     this.placeType,
     this.placeId,
+    this.municipality,
   });
 
   LatLng toLatLng() => LatLng(latitude, longitude);
@@ -85,6 +89,7 @@ class SimpleLocation {
     double? distanceKm,
     String? placeType,
     String? placeId,
+    String? municipality,
   }) {
     return SimpleLocation(
       latitude: latitude ?? this.latitude,
@@ -95,6 +100,7 @@ class SimpleLocation {
       distanceKm: distanceKm ?? this.distanceKm,
       placeType: placeType ?? this.placeType,
       placeId: placeId ?? this.placeId,
+      municipality: municipality ?? this.municipality,
     );
   }
   

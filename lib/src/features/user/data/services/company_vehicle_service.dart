@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import '../../../../core/config/app_config.dart';
 import '../../domain/models/company_vehicle_models.dart';
 
@@ -200,5 +202,54 @@ class CompanyVehicleService {
       debugPrint('❌ Error obteniendo detalles de empresa: $e');
       return null;
     }
+  }
+
+  /// Mapa de coordenadas centrales de municipios soportados
+  static final Map<String, LatLng> _municipalityCenters = {
+    'Medellín': const LatLng(6.2476, -75.5658),
+    'Bello': const LatLng(6.3373, -75.5579),
+    'Envigado': const LatLng(6.1673, -75.5833),
+    'Itagüí': const LatLng(6.1846, -75.5991),
+    'Sabaneta': const LatLng(6.1515, -75.6166),
+    'La Estrella': const LatLng(6.1578, -75.6432),
+    'Copacabana': const LatLng(6.3467, -75.5089),
+    'Girardota': const LatLng(6.3789, -75.4464),
+    'Barbosa': const LatLng(6.4386, -75.3314),
+    'Caldas': const LatLng(6.0911, -75.6356),
+    'Cañasgordas': const LatLng(6.7523, -76.0261),
+    'Santa Fe de Antioquia': const LatLng(6.5564, -75.8277),
+    'San Jerónimo': const LatLng(6.4422, -75.7289),
+    'Sopetrán': const LatLng(6.5028, -75.7444),
+  };
+
+  /// Encuentra el municipio soportado más cercano dado unas coordenadas
+  /// Retorna el nombre del municipio (ej: 'Medellín')
+  /// Si está a más de 30km de cualquier municipio, retorna null
+  static String? findNearestMunicipality(double lat, double lng) {
+    String? closest;
+    double minDistance = double.infinity;
+
+    _municipalityCenters.forEach((name, center) {
+      final distance = const Distance().as(
+        LengthUnit.Kilometer,
+        LatLng(lat, lng),
+        center,
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = name;
+      }
+    });
+
+    // Si el más cercano está a más de 30km, asumimos que está fuera de cobertura operativa
+    // (Aunque podríamos ser más permisivos dependiendo del negocio)
+    if (minDistance > 30) {
+      debugPrint('📍 Ubicación fuera de rango operativo: ${minDistance.toStringAsFixed(1)}km de $closest');
+      return null;
+    }
+
+    debugPrint('📍 Municipio más cercano (coord): $closest a ${minDistance.toStringAsFixed(1)}km');
+    return closest;
   }
 }

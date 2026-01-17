@@ -897,52 +897,79 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
   Future<void> _setCurrentLocation({required String targetField}) async {
     if (_isGettingLocation) return;
+    if (!mounted) return;
 
     setState(() {
       _isGettingLocation = true;
     });
 
-    bool serviceEnabled;
-    LocationPermission permission;
+    try {
+      bool serviceEnabled;
+      LocationPermission permission;
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Habilita la ubicación en el dispositivo')),
+      // Wrap Geolocator calls in try-catch to avoid uncaught exceptions pausing the debugger
+      try {
+        serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => false,
         );
-        setState(() => _isGettingLocation = false);
+      } catch (e) {
+        debugPrint('Error checking location service: $e');
+        serviceEnabled = false;
       }
-      return;
-    }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+      if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permiso de ubicación denegado')),
+            const SnackBar(content: Text('Habilita la ubicación en el dispositivo')),
           );
-          setState(() => _isGettingLocation = false);
+        }
+        return; // Finally block will handle state reset
+      }
+
+      try {
+        permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Permiso de ubicación denegado')),
+              );
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error checking permissions: $e');
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permiso de ubicación denegado permanentemente')),
+          );
         }
         return;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permiso de ubicación denegado permanentemente')),
-        );
-        setState(() => _isGettingLocation = false);
-      }
-      return;
-    }
+      // Safe position fetch with timeout
+      final Position position = await Geolocator.getCurrentPosition(
+        // Use default accuracy to be safe, or specify if needed
+        desiredAccuracy: LocationAccuracy.high, 
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw TimeoutException('Timeout getting location');
+        },
+      );
 
-    try {
-      final position = await Geolocator.getCurrentPosition();
+      // Verify widget is still mounted after async gap before using context or setState
+      if (!mounted) return;
+
       final address = await _reverseGeocode(position.latitude, position.longitude);
+      
       final location = SimpleLocation(
         latitude: position.latitude,
         longitude: position.longitude,
@@ -963,15 +990,21 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             _isProgrammaticChange = false;
           } else if (targetField.startsWith('stop_')) {
              final index = int.parse(targetField.split('_')[1]);
-             _stops[index] = location;
-             _isProgrammaticChange = true;
-             _stopControllers[index].text = location.address;
-             _isProgrammaticChange = false;
+             if (index < _stops.length) {
+               _stops[index] = location;
+               _isProgrammaticChange = true;
+               _stopControllers[index].text = location.address;
+               _isProgrammaticChange = false;
+             }
           }
         });
       }
     } catch (e) {
-      debugPrint('Error getting location: $e');
+      debugPrint('Error or timeout getting location: $e');
+      if (mounted) {
+        // Optional: show error to user
+        // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo obtener la ubicación')));
+      }
     } finally {
       if (mounted) {
         setState(() => _isGettingLocation = false);
