@@ -62,18 +62,19 @@ class _ChatScreenState extends State<ChatScreen> {
       usuarioId: widget.miUsuarioId,
     );
     
-    // Iniciar polling
-    ChatService.startPolling(
-      solicitudId: widget.solicitudId,
-      usuarioId: widget.miUsuarioId,
-    );
+    // NOTA: No iniciamos polling aquí porque ya se maneja en la pantalla
+    // del viaje activo (UserActiveTripScreen o ConductorActiveTripScreen).
+    // Si se inicia aquí, al cerrar el chat se detendría todo el polling
+    // y el usuario dejaría de recibir notificaciones.
   }
 
   @override
   void dispose() {
     ChatService.isChatOpen = false; // Indicar que el chat se cerró
     _messagesSubscription?.cancel();
-    ChatService.stopPolling();
+    // NOTA: No detenemos el polling aquí porque se maneja en la pantalla padre.
+    // Detenerlo aquí causaba que el cliente dejara de recibir notificaciones
+    // después de cerrar el chat por primera vez.
     _scrollController.dispose();
     _inputFocusNode.dispose();
     super.dispose();
