@@ -89,8 +89,18 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     }
   }
 
-  void _selectLocation(SimpleLocation location) {
+  void _selectLocation(SimpleLocation location) async {
     HapticFeedback.selectionClick();
+    
+    // Si el lugar necesita obtener detalles (coordenadas), hacerlo ahora
+    if (location.needsDetails) {
+      final detailedLocation = await widget.suggestionService.getPlaceDetails(location);
+      if (detailedLocation != null && mounted) {
+        Navigator.pop(context, detailedLocation);
+        return;
+      }
+    }
+    
     Navigator.pop(context, location);
   }
 

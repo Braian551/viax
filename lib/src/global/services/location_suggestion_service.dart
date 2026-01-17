@@ -1,18 +1,21 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/simple_location.dart';
+import 'google_places_service.dart';
 import 'mapbox_service.dart';
 
-/// Servicio potenciado para sugerencias de ubicación usando Mapbox
-/// Usa estrategia de búsqueda local-first con bounding box + POI priority (estilo DiDi)
+/// Servicio potenciado para sugerencias de ubicación usando Google Places
+/// Usa estrategia de búsqueda local-first con Google Places Autocomplete para mayor precisión
 class LocationSuggestionService {
   static final Map<String, List<SimpleLocation>> _cache = {};
   static const int _cacheMaxSize = 50;
   
-  /// Tipos de lugares a buscar: POIs primero (escuelas, negocios), luego direcciones
-  static const List<String> poiTypes = ['poi', 'poi.landmark', 'address', 'place', 'neighborhood'];
+  // UUID generator para session tokens de Google Places
+  static final Uuid _uuid = Uuid();
+  String? _currentSessionToken;
   
   LatLng? userLocation;
   String countryCode;
@@ -25,6 +28,12 @@ class LocationSuggestionService {
     this.userCity,
     this.referencePoint,
   });
+  
+  /// Genera un nuevo session token para agrupar requests de autocomplete
+  /// Esto optimiza los costos de Google Places API
+  void _refreshSessionToken() {
+    _currentSessionToken = _uuid.v4();
+  }
   
   void setUserContext({
     LatLng? location,
@@ -42,7 +51,7 @@ class LocationSuggestionService {
     referencePoint = point;
   }
   
-  /// Busca sugerencias con estrategia LOCAL-FIRST + POI PRIORITY (como DiDi)
+  /// Busca sugerencias usando Google Places Autocomplete para mayor precisión
   Future<List<SimpleLocation>> searchSuggestions({
     required String query,
     int limit = 8,
@@ -59,61 +68,31 @@ class LocationSuggestionService {
       return _cache[cacheKey]!;
     }
     
+    // Generar session token si no existe
+    _currentSessionToken ??= _uuid.v4();
+    
     try {
-      List<MapboxPlace> places = [];
+      // Usar Google Places Autocomplete
+      final places = await GooglePlacesService.searchPlaces(
+        query: query,
+        location: distanceRef,
+        radius: localFirst ? 50000 : 100000, // 50km local, 100km expandido
+        language: 'es',
+        country: countryCode,
+        sessionToken: _currentSessionToken,
+      );
       
-      // ESTRATEGIA LOCAL-FIRST + POI PRIORITY (como DiDi)
-      if (localFirst && distanceRef != null) {
-        // Paso 1: Buscar POIs en ~50km
-        final bbox50km = _createBoundingBox(distanceRef, 0.45);
-        
-        places = await MapboxService.searchPlaces(
-          query: query,
-          limit: 10,
-          proximity: distanceRef,
-          country: countryCode,
-          bbox: bbox50km,
-          types: poiTypes, // ¡CLAVE: Incluir POIs!
-          fuzzyMatch: true,
-        );
-        
-        // Paso 2: Si < 3 resultados, expandir a ~100km
-        if (places.length < 3) {
-          final bbox100km = _createBoundingBox(distanceRef, 0.9);
-          
-          final morePlaces = await MapboxService.searchPlaces(
-            query: query,
-            limit: 10,
-            proximity: distanceRef,
-            country: countryCode,
-            bbox: bbox100km,
-            types: poiTypes,
-            fuzzyMatch: true,
-          );
-          
-          final existingIds = places.map((p) => p.id).toSet();
-          for (var p in morePlaces) {
-            if (!existingIds.contains(p.id)) {
-              places.add(p);
-            }
-          }
-        }
-      }
+      debugPrint('GooglePlaces returned ${places.length} results for "$query"');
       
-      // Paso 3: Fallback nacional con POIs
       if (places.isEmpty) {
-        places = await MapboxService.searchPlaces(
-          query: query,
-          limit: limit,
-          proximity: distanceRef,
-          country: countryCode,
-          types: poiTypes,
-          fuzzyMatch: true,
-        );
+        return [];
       }
       
-      final results = _convertPlacesToLocations(places, distanceRef);
+      // Convertir GooglePlace a SimpleLocation SIN obtener detalles (más rápido)
+      // Los detalles se obtienen cuando el usuario selecciona
+      final results = _convertGooglePlacesToLocationsQuick(places, distanceRef);
       
+      // Ordenar por distancia si hay punto de referencia
       if (distanceRef != null && results.isNotEmpty) {
         results.sort((a, b) {
           final distA = a.distanceKm ?? double.infinity;
@@ -132,63 +111,58 @@ class LocationSuggestionService {
     }
   }
   
-  List<double> _createBoundingBox(LatLng center, double radiusDegrees) {
-    return [
-      center.longitude - radiusDegrees,
-      center.latitude - radiusDegrees,
-      center.longitude + radiusDegrees,
-      center.latitude + radiusDegrees,
-    ];
-  }
-  
-  List<SimpleLocation> _convertPlacesToLocations(
-    List<MapboxPlace> places, 
+  /// Convierte los resultados de Google Places a SimpleLocation rápidamente
+  /// Sin hacer llamadas adicionales a la API (los detalles se obtienen al seleccionar)
+  List<SimpleLocation> _convertGooglePlacesToLocationsQuick(
+    List<GooglePlace> places, 
     LatLng? referencePoint,
   ) {
-    final Distance distanceCalculator = const Distance();
-    
     return places.map((place) {
-      double? distanceKm;
-      if (referencePoint != null) {
-        distanceKm = distanceCalculator.as(
-          LengthUnit.Kilometer,
-          referencePoint,
-          place.coordinates,
-        );
-      }
-      
-      final placeInfo = _extractPlaceInfo(place);
-      
       return SimpleLocation(
-        latitude: place.coordinates.latitude,
-        longitude: place.coordinates.longitude,
-        address: place.placeName,
-        placeName: placeInfo.name,
-        subtitle: placeInfo.subtitle,
-        distanceKm: distanceKm,
-        placeType: place.placeType,
+        latitude: 0, // Se llenará cuando el usuario seleccione
+        longitude: 0, // Se llenará cuando el usuario seleccione
+        address: place.description,
+        placeName: place.mainText,
+        subtitle: place.secondaryText,
+        distanceKm: place.distanceKm,
+        placeType: place.isPoi ? 'poi' : 'address',
+        placeId: place.placeId, // Guardar el placeId para obtener detalles después
       );
     }).toList();
   }
   
-  _PlaceInfo _extractPlaceInfo(MapboxPlace place) {
-    String name = place.text;
-    String subtitle = '';
+  /// Obtener los detalles completos (coordenadas) de un lugar seleccionado
+  Future<SimpleLocation?> getPlaceDetails(SimpleLocation place) async {
+    if (place.placeId == null || place.placeId!.isEmpty) {
+      return place; // Ya tiene coordenadas
+    }
     
-    final fullName = place.placeName;
-    if (fullName.contains(',')) {
-      final parts = fullName.split(',').map((e) => e.trim()).toList();
-      if (parts.length > 1) {
-        final startIndex = parts[0] == name ? 1 : 0;
-        subtitle = parts.sublist(startIndex).take(3).join(', ');
+    try {
+      final details = await GooglePlacesService.getPlaceDetails(
+        placeId: place.placeId!,
+        language: 'es',
+        sessionToken: _currentSessionToken,
+      );
+      
+      // Refrescar session token después de obtener detalles
+      _refreshSessionToken();
+      
+      if (details != null) {
+        return SimpleLocation(
+          latitude: details.coordinates.latitude,
+          longitude: details.coordinates.longitude,
+          address: details.formattedAddress,
+          placeName: place.placeName,
+          subtitle: place.subtitle,
+          distanceKm: place.distanceKm,
+          placeType: place.placeType,
+        );
       }
+    } catch (e) {
+      debugPrint('Error getting place details: $e');
     }
     
-    if (subtitle.isEmpty && place.address != null) {
-      subtitle = place.address!;
-    }
-    
-    return _PlaceInfo(name: name, subtitle: subtitle);
+    return null;
   }
   
   void _addToCache(String key, List<SimpleLocation> results) {
@@ -202,8 +176,26 @@ class LocationSuggestionService {
     _cache.clear();
   }
   
+  /// Notificar que el usuario seleccionó un lugar
+  /// Esto refresca el session token para la próxima búsqueda
+  void onPlaceSelected() {
+    _refreshSessionToken();
+  }
+  
+  /// Geocodificación inversa usando Google Places
   Future<String?> reverseGeocode(double lat, double lon) async {
     try {
+      // Primero intentar con Google Places
+      final details = await GooglePlacesService.reverseGeocode(
+        position: LatLng(lat, lon),
+        language: 'es',
+      );
+      
+      if (details != null) {
+        return details.formattedAddress;
+      }
+      
+      // Fallback a Mapbox si Google falla
       final place = await MapboxService.reverseGeocode(position: LatLng(lat, lon));
       return place?.placeName;
     } catch (e) {
@@ -232,10 +224,4 @@ class LocationInfo {
     required this.subtitle,
     required this.fullAddress,
   });
-}
-
-class _PlaceInfo {
-  final String name;
-  final String subtitle;
-  const _PlaceInfo({required this.name, required this.subtitle});
 }

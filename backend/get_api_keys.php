@@ -54,6 +54,7 @@ try {
     $mapboxToken = getenv('MAPBOX_PUBLIC_TOKEN') ?: $_ENV['MAPBOX_PUBLIC_TOKEN'] ?? '';
     $mapboxSecretToken = getenv('MAPBOX_SECRET_TOKEN') ?: $_ENV['MAPBOX_SECRET_TOKEN'] ?? '';
     $tomtomApiKey = getenv('TOMTOM_API_KEY') ?: $_ENV['TOMTOM_API_KEY'] ?? '';
+    $googlePlacesApiKey = getenv('GOOGLE_PLACES_API_KEY') ?: $_ENV['GOOGLE_PLACES_API_KEY'] ?? '';
     $nominatimUserAgent = getenv('NOMINATIM_USER_AGENT') ?: $_ENV['NOMINATIM_USER_AGENT'] ?? 'Viax App';
     $nominatimEmail = getenv('NOMINATIM_EMAIL') ?: $_ENV['NOMINATIM_EMAIL'] ?? '';
 
@@ -71,6 +72,7 @@ try {
         'data' => [
             'mapbox_public_token' => $mapboxToken,
             'tomtom_api_key' => $tomtomApiKey,
+            'google_places_api_key' => $googlePlacesApiKey,
             'nominatim_user_agent' => $nominatimUserAgent,
             'nominatim_email' => $nominatimEmail,
             // Quota limits (can also be configured via env)

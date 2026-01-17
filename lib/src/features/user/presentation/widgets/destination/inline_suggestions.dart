@@ -106,12 +106,22 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
     }
   }
 
-  void _selectLocation(SimpleLocation location) {
+  void _selectLocation(SimpleLocation location) async {
     HapticFeedback.selectionClick();
     widget.controller.text = location.address;
     widget.focusNode.unfocus();
-    widget.onLocationSelected(location);
     setState(() => _suggestions = []);
+    
+    // Si el lugar necesita obtener detalles (coordenadas), hacerlo ahora
+    if (location.needsDetails) {
+      final detailedLocation = await widget.suggestionService.getPlaceDetails(location);
+      if (detailedLocation != null) {
+        widget.onLocationSelected(detailedLocation);
+        return;
+      }
+    }
+    
+    widget.onLocationSelected(location);
   }
 
   @override

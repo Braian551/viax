@@ -104,6 +104,7 @@ void main() async {
     try {
       await AppSecretsService.instance.initialize();
       debugPrint('✅ API Keys cargadas desde backend');
+      debugPrint('   - Google Places API: ${AppSecretsService.instance.googlePlacesApiKey.isNotEmpty ? "✓" : "✗"}');
     } catch (e) {
       debugPrint('⚠️ Error cargando API Keys: $e');
     }

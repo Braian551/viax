@@ -315,9 +315,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                             // Saludo
                             if (!_loadingUser)
                               Expanded(
-                                child: FadeTransition(
-                                  opacity: _fadeAnimation,
-                                  child: Flexible(
+                                  child: FadeTransition(
+                                    opacity: _fadeAnimation,
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
@@ -330,21 +329,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        Flexible(
-                                          child: Text(
-                                            _userName ?? 'Usuario',
-                                            style: TextStyle(
-                                              color: isDark ? Colors.white : Colors.black87,
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
+                                        Text(
+                                          _userName ?? 'Usuario',
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white : Colors.black87,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
                                           ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
                                   ),
-                                ),
                               ),
                           ],
                         ),

@@ -52,6 +52,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    ChatService.isChatOpen = true; // Indicar que el chat está abierto
     _loadMessages();
     _subscribeToMessages();
     
@@ -70,6 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    ChatService.isChatOpen = false; // Indicar que el chat se cerró
     _messagesSubscription?.cancel();
     ChatService.stopPolling();
     _scrollController.dispose();
@@ -356,8 +358,12 @@ class _ChatScreenState extends State<ChatScreen> {
               message: message,
               esMio: esMio,
               showAvatar: !esMio,
-              avatarUrl: esMio ? null : (widget.otroFoto != null ? DocumentUploadService.getDocumentUrl(widget.otroFoto!) : null),
-              avatarInitial: esMio ? null : widget.otroNombre[0],
+              avatarUrl: esMio 
+                  ? null 
+                  : (message.remitenteFoto != null && message.remitenteFoto!.isNotEmpty
+                      ? DocumentUploadService.getDocumentUrl(message.remitenteFoto!)
+                      : null),
+              avatarInitial: esMio ? null : (message.remitenteNombre?.isNotEmpty == true ? message.remitenteNombre![0] : '?'),
             ),
           ],
         );

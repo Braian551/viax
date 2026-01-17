@@ -107,19 +107,33 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       if (messages.isEmpty) return;
 
       final lastMsg = messages.last;
+
+      // Si el chat está abierto, no hacer nada
+      if (ChatService.isChatOpen) return;
+
       // Si el mensaje es del cliente y es reciente (menos de 10s)
       if (lastMsg.remitenteId != widget.conductorId &&
           DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
         
-        // Reproducir sonido
+        // Reproducir sonido de mensaje
         SoundService.playMessageSound();
         
-        // Mostrar notificación del dispositivo
         LocalNotificationService.showMessageNotification(
           title: lastMsg.remitenteNombre ?? 'Cliente',
           body: lastMsg.mensaje,
           solicitudId: widget.solicitudId,
         );
+      }
+    });
+
+    // Escuchar clics en notificaciones
+    LocalNotificationService.onNotificationClick.listen((payload) {
+      if (payload != null && int.tryParse(payload) == widget.solicitudId) {
+        // Navegar al chat si estamos en la misma solicitud
+        // Verificar si el chat ya está abierto para no abrirlo doble
+        if (!ChatService.isChatOpen && mounted) {
+          _openChat();
+        }
       }
     });
 

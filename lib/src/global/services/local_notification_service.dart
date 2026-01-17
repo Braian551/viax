@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -9,6 +10,12 @@ class LocalNotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  // Stream para manejar clics en notificaciones
+  static final StreamController<String?> _onNotificationClick =
+      StreamController<String?>.broadcast();
+
+  static Stream<String?> get onNotificationClick => _onNotificationClick.stream;
+
   static bool _isInitialized = false;
 
   /// Inicializa el servicio de notificaciones.
@@ -16,7 +23,7 @@ class LocalNotificationService {
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
     
     const initSettings = InitializationSettings(
       android: androidSettings,
@@ -70,7 +77,7 @@ class LocalNotificationService {
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       // Vibración
       enableVibration: true,
       // Sonido (usa el del canal)
@@ -98,7 +105,7 @@ class LocalNotificationService {
   /// Callback cuando el usuario toca la notificación.
   static void _onNotificationTap(NotificationResponse response) {
     debugPrint('🔔 [LocalNotificationService] Notificación tocada: ${response.payload}');
-    // TODO: Navegar al chat correspondiente usando el payload (solicitudId)
+    _onNotificationClick.add(response.payload);
   }
 
   /// Cancela todas las notificaciones activas.

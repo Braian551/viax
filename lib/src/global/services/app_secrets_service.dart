@@ -23,6 +23,7 @@ class AppSecretsService {
   // Cached API keys
   String _mapboxToken = '';
   String _tomtomApiKey = '';
+  String _googlePlacesApiKey = '';
   String _nominatimUserAgent = 'Viax App';
   String _nominatimEmail = '';
 
@@ -38,6 +39,7 @@ class AppSecretsService {
   // Getters
   String get mapboxToken => _mapboxToken;
   String get tomtomApiKey => _tomtomApiKey;
+  String get googlePlacesApiKey => _googlePlacesApiKey;
   String get nominatimUserAgent => _nominatimUserAgent;
   String get nominatimEmail => _nominatimEmail;
 
@@ -70,6 +72,7 @@ class AppSecretsService {
 
           _mapboxToken = keys['mapbox_public_token'] ?? '';
           _tomtomApiKey = keys['tomtom_api_key'] ?? '';
+          _googlePlacesApiKey = keys['google_places_api_key'] ?? '';
           _nominatimUserAgent = keys['nominatim_user_agent'] ?? 'Viax App';
           _nominatimEmail = keys['nominatim_email'] ?? '';
 

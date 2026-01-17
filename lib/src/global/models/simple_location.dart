@@ -18,6 +18,9 @@ class SimpleLocation {
   
   /// Tipo de lugar: poi, address, place, neighborhood, etc.
   final String? placeType;
+  
+  /// ID del lugar de Google Places (para obtener detalles después)
+  final String? placeId;
 
   const SimpleLocation({
     required this.latitude,
@@ -27,6 +30,7 @@ class SimpleLocation {
     this.subtitle,
     this.distanceKm,
     this.placeType,
+    this.placeId,
   });
 
   LatLng toLatLng() => LatLng(latitude, longitude);
@@ -80,6 +84,7 @@ class SimpleLocation {
     String? subtitle,
     double? distanceKm,
     String? placeType,
+    String? placeId,
   }) {
     return SimpleLocation(
       latitude: latitude ?? this.latitude,
@@ -89,7 +94,14 @@ class SimpleLocation {
       subtitle: subtitle ?? this.subtitle,
       distanceKm: distanceKm ?? this.distanceKm,
       placeType: placeType ?? this.placeType,
+      placeId: placeId ?? this.placeId,
     );
   }
+  
+  /// Verificar si el lugar tiene coordenadas válidas
+  bool get hasValidCoordinates => latitude != 0 && longitude != 0;
+  
+  /// Verificar si necesita obtener detalles (tiene placeId pero no coordenadas)
+  bool get needsDetails => placeId != null && placeId!.isNotEmpty && !hasValidCoordinates;
 }
 

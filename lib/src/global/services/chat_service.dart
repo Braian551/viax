@@ -75,6 +75,9 @@ class ChatMessage {
 /// Maneja la comunicación en tiempo real (con polling) durante un viaje activo.
 class ChatService {
   static String get baseUrl => AppConfig.baseUrl;
+
+  /// Estado global para saber si el chat está abierto
+  static bool isChatOpen = false;
   
   // Stream controller para emitir nuevos mensajes
   static final StreamController<List<ChatMessage>> _messagesController =
