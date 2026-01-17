@@ -153,21 +153,63 @@ class CompanyVehicleService {
           }
         }
         
+        // Validar que el candidato NO sea una dirección
+        final candidateLower = candidate.toLowerCase();
+        if (candidateLower.startsWith('calle') || 
+            candidateLower.startsWith('carrera') ||
+            candidateLower.startsWith('cra') ||
+            candidateLower.startsWith('cl ') ||
+            candidateLower.startsWith('kr ') ||
+            candidateLower.startsWith('av') ||
+            candidateLower.startsWith('diagonal') ||
+            candidateLower.startsWith('transversal') ||
+            candidateLower.startsWith('circular') ||
+            RegExp(r'^#?\d').hasMatch(candidateLower)) {
+           debugPrint('⚠️ Candidato rechazado por parecer dirección: $candidate');
+           return null;
+        }
+        
         debugPrint('🏘️ Municipio extraído: $candidate (de ${parts.length} partes)');
         return candidate;
       }
     }
-
-    // Fallback: si solo hay una parte, es el municipio
+    
+    // Si solo hay una parte, verificar también
     if (parts.length == 1 && parts.first.isNotEmpty) {
-      debugPrint('🏘️ Municipio extraído (único): ${parts.first}');
-      return parts.first;
+       final candidate = parts.first;
+       final candidateLower = candidate.toLowerCase();
+       if (candidateLower.startsWith('calle') || 
+            candidateLower.startsWith('carrera') ||
+            candidateLower.startsWith('cra') ||
+            candidateLower.startsWith('cl ') ||
+            candidateLower.startsWith('kr ') ||
+            candidateLower.startsWith('av') ||
+            candidateLower.startsWith('diagonal') ||
+            candidateLower.startsWith('transversal') ||
+            candidateLower.startsWith('circular') ||
+            RegExp(r'^#?\d').hasMatch(candidateLower)) {
+           debugPrint('⚠️ Candidato único rechazado por parecer dirección: $candidate');
+           return null;
+       }
+       
+      debugPrint('🏘️ Municipio extraído (único): $candidate');
+      return candidate;
     }
 
     // Último fallback: segundo elemento si hay más de uno
     if (parts.length >= 2) {
-      debugPrint('🏘️ Municipio extraído (fallback): ${parts[1]}');
-      return parts[1];
+      // Validar también el fallback
+      final candidate = parts[1];
+       final candidateLower = candidate.toLowerCase();
+       if (candidateLower.startsWith('calle') || 
+            candidateLower.startsWith('carrera') ||
+            candidateLower.startsWith('cra') ||
+            RegExp(r'^#?\d').hasMatch(candidateLower)) {
+           return null;
+       }
+      
+      debugPrint('🏘️ Municipio extraído (fallback): $candidate');
+      return candidate;
     }
 
     debugPrint('⚠️ No se pudo extraer municipio de: $address');
