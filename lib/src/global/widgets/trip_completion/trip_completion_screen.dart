@@ -86,22 +86,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   bool get _isEfectivo => true;
 
   bool get _canComplete {
-    // CONDUCTOR: Solo necesita reportar el pago (sí o no), puede continuar aunque haya disputa
-    // La confirmación del conductor es la más importante
-    if (_isConductor) {
-      if (_isEfectivo && !_paymentReported) {
-        return false;
-      }
-      return true; // Puede continuar incluso con disputa
-    }
-
-    // CLIENTE: Si hay disputa, no puede continuar (debe esperar resolución)
-    if (_hasDispute) return false;
-
-    // Cliente debe confirmar que pagó en efectivo
-    if (_isCliente && _isEfectivo && !_clientPaymentConfirmed) {
-      return false;
-    }
+    // SIMPLIFICACIÓN: Siempre permitir completar, ignorando estados de pago
     return true;
   }
 
@@ -109,11 +94,15 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _checkActiveDispute(); // Verificar si ya hay disputa activa
+    // SIMPLIFICACIÓN: Desactivar verificación de disputas
+    // _checkActiveDispute(); 
   }
 
   /// Verifica si el usuario ya tiene una disputa activa al abrir la pantalla
   Future<void> _checkActiveDispute() async {
+    // SIMPLIFICACIÓN: Lógica de disputas desactivada
+    return;
+    /*
     try {
       final result = await DisputeService().checkDisputeStatus(
         widget.miUsuarioId,
@@ -135,6 +124,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
     } catch (e) {
       debugPrint('❌ Error verificando disputa: $e');
     }
+    */
   }
 
   void _setupAnimations() {
@@ -229,101 +219,71 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
 
                     const SizedBox(height: 24),
 
-                    // Resumen del viaje
-                    TripSummaryCard(
-                      origen: widget.tripData.origen,
-                      destino: widget.tripData.destino,
-                      distanciaKm: widget.tripData.distanciaKm,
-                      duracionMinutos: widget.tripData.duracionMinutos,
-                      precio: widget.tripData.precio,
-                      metodoPago: widget.tripData.metodoPago,
-                      isDark: isDark,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Card de pago para CONDUCTOR (confirmación de recibo)
-                    if (_isConductor && _isEfectivo && !_paymentReported)
+                    // SIMPLIFICACIÓN: Valor grande para Conductor (Efectivo)
+                    if (_isConductor && _isEfectivo)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: PaymentStatusCard(
-                          status: PaymentStatus.cash,
-                          monto: widget.tripData.precio,
-                          metodoPago: widget.tripData.metodoPago,
-                          isDark: isDark,
-                          isLoading: _isReportingPayment,
-                          onPaymentConfirmed: (confirmed) =>
-                              _handleConductorPaymentConfirm(confirmed),
-                          onPaymentNotReceived: () =>
-                              _handleConductorPaymentNotReceived(),
-                        ),
-                      ),
-
-                    // Mensaje de pago confirmado
-                    if (_isConductor &&
-                        _isEfectivo &&
-                        _paymentReported &&
-                        !_hasDispute)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.only(bottom: 24),
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24,
+                            horizontal: 20,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                (_paymentConfirmed
-                                        ? AppColors.success
-                                        : AppColors.warning)
-                                    .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
+                            color: isDark
+                                ? const Color(0xFF1E1E1E)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.15),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                             border: Border.all(
-                              color:
-                                  (_paymentConfirmed
-                                          ? AppColors.success
-                                          : AppColors.warning)
-                                      .withValues(alpha: 0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              width: 1.5,
                             ),
                           ),
-                          child: Row(
+                          child: Column(
                             children: [
-                              Icon(
-                                _paymentConfirmed
-                                    ? Icons.check_circle
-                                    : Icons.hourglass_empty,
-                                color: _paymentConfirmed
-                                    ? AppColors.success
-                                    : AppColors.warning,
-                                size: 28,
+                              Text(
+                                'TOTAL A COBRAR',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white54 : Colors.grey[600],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _paymentConfirmed
-                                          ? '¡Pago confirmado!'
-                                          : 'Reporte enviado',
-                                      style: TextStyle(
-                                        color: _paymentConfirmed
-                                            ? AppColors.success
-                                            : AppColors.warning,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _paymentConfirmed
-                                          ? 'Monto: \$${widget.tripData.precio.toStringAsFixed(0)}'
-                                          : 'Esperando confirmación del cliente',
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white54
-                                            : Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(height: 8),
+                              Text(
+                                '\$${_formatCurrency(_getFinalPrice())}',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Efectivo',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ],
@@ -331,17 +291,61 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                         ),
                       ),
 
-                    // Card de pago para CLIENTE (confirmación de pago)
-                    if (_isCliente && _isEfectivo && !_clientPaymentConfirmed)
+                    // Resumen del viaje
+                    TripSummaryCard(
+                      origen: widget.tripData.origen,
+                      destino: widget.tripData.destino,
+                      distanciaKm: widget.tripData.distanciaKm,
+                      duracionMinutos: widget.tripData.duracionMinutos,
+                      precio: _getFinalPrice(), // Usar precio redondeado si aplica
+                      metodoPago: widget.tripData.metodoPago,
+                      isDark: isDark,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // SIMPLIFICACIÓN: Mensaje informativo para Cliente
+                    if (_isCliente && _isEfectivo)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: ClientPaymentConfirmCard(
-                          monto: widget.tripData.precio,
-                          metodoPago: widget.tripData.metodoPago,
-                          isDark: isDark,
-                          isLoading: _isReportingPayment,
-                          onPaymentConfirmed: (didPay) =>
-                              _handleClientPaymentConfirm(didPay),
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.blue.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark ? Colors.white12 : Colors.blue.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: isDark ? Colors.white70 : Colors.blue,
+                                size: 28,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Pago realizado directamente al conductor',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.blue.shade800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Este viaje no requiere confirmación en la app',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? Colors.white54 : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
@@ -669,7 +673,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                         Text(
                           _selectedRating > 0
                               ? 'Enviar calificación'
-                              : 'Continuar sin calificar',
+                              : (_isConductor ? 'Finalizar viaje' : 'Continuar sin calificar'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -681,24 +685,8 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
           ),
 
         // Mensaje de pago pendiente
-        if (_isConductor && _isEfectivo && !_paymentReported) ...[
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                color: AppColors.warning,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Confirma el pago para continuar',
-                style: TextStyle(color: AppColors.warning, fontSize: 13),
-              ),
-            ],
-          ),
-        ],
+        if (_isConductor && _isEfectivo && !_paymentReported)
+          const SizedBox.shrink(),
       ],
     );
   }
@@ -1319,5 +1307,25 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  /// Calcula el precio final aplicando redondeo si es efectivo
+  double _getFinalPrice() {
+    if (_isEfectivo) {
+      return _roundPrice(widget.tripData.precio);
+    }
+    return widget.tripData.precio;
+  }
+
+  /// Redondea el precio al múltiplo de 100 más cercano
+  double _roundPrice(double price) {
+    return (price / 100).round() * 100.0;
+  }
+
+  /// Formatea la moneda con separadores de miles
+  String _formatCurrency(double amount) {
+    return amount
+        .toStringAsFixed(0)
+        .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
   }
 }

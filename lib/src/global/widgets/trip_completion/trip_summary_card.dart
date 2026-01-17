@@ -94,7 +94,7 @@ class TripSummaryCard extends StatelessWidget {
                 ),
                 Expanded(child: _buildStatItem(
                   Icons.attach_money_rounded,
-                  '\$${precio.toStringAsFixed(0)}',
+                  '\$${_formatCurrency(precio)}',
                   'Total',
                   highlight: true,
                 )),
@@ -234,5 +234,12 @@ class TripSummaryCard extends StatelessWidget {
   IconData _getPaymentIcon(String metodo) {
     // Solo efectivo soportado
     return Icons.money_rounded;
+  }
+
+  /// Formatea la moneda con separadores de miles
+  String _formatCurrency(double amount) {
+    return amount
+        .toStringAsFixed(0)
+        .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
   }
 }

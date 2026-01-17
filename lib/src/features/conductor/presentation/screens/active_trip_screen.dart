@@ -62,6 +62,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   String? _statusMessage;
   Color? _statusColor;
   Timer? _statusTimer;
+  DateTime? _tripStartTime; // Para calcular duración real
 
   late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
   late final StreamSubscription<int> _unreadSubscription;
@@ -205,6 +206,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await _controller.onStartTrip();
     if (!mounted || _controller.isDisposed) return;
 
+    // Registrar tiempo de inicio
+    _tripStartTime = DateTime.now();
+
     _showStatus('¡Viaje iniciado! Navegando al destino', AppColors.success);
   }
 
@@ -239,9 +243,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final distanciaKm = _controller.distanceKm > 0 
         ? _controller.distanceKm 
         : 5.0; // Fallback
-    final duracionMin = _controller.etaMinutes > 0 
-        ? _controller.etaMinutes 
-        : 15; // Fallback
+    // Calcular duración real del viaje
+    // Si no hay hora de inicio registrada, usar fallback de 15 min
+    final duracionMin = _tripStartTime != null
+        ? DateTime.now().difference(_tripStartTime!).inMinutes
+        : (_controller.etaMinutes > 0 ? _controller.etaMinutes : 15);
     
     // TODO: Obtener precio real del backend
     final precio = distanciaKm * 2500; // Estimado
