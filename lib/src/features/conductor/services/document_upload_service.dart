@@ -136,10 +136,22 @@ class DocumentUploadService {
   }
 
   /// Obtiene la URL completa del documento
+  /// Obtiene la URL completa del documento
   static String getDocumentUrl(String relativeUrl) {
     if (relativeUrl.startsWith('http')) {
       return relativeUrl;
     }
+
+    // Si parece ser un archivo de R2 (profile/, imagenes/, pdfs/), usar el proxy
+    if (relativeUrl.startsWith('profile/') || 
+        relativeUrl.startsWith('imagenes/') || 
+        relativeUrl.startsWith('pdfs/')) {
+       // Asegurarse de que no estamos duplicando la query del proxy si ya viene
+       if (relativeUrl.contains('r2_proxy.php')) return '${AppConfig.baseUrl}/$relativeUrl';
+       
+       return '${AppConfig.baseUrl}/r2_proxy.php?key=$relativeUrl';
+    }
+
     return '${AppConfig.baseUrl}/$relativeUrl';
   }
 

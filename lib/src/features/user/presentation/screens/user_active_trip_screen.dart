@@ -110,6 +110,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void dispose() {
     _disposed = true;
     _tripCompleted = true; // Prevent any further status checks
+    SoundService.stopDriverArrivedSound();
     _statusTimer?.cancel();
     _statusTimer = null;
     _routeAnimationTimer?.cancel();
@@ -417,6 +418,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
         // Solo actualizar UI si seguimos activos
         if (mounted && !_tripCompleted) {
+          final previousState = _tripState;
           setState(() {
             _tripState = estado ?? 'en_curso';
             if (conductor != null) {
@@ -426,6 +428,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               _conductorLocation = newConductorLocation;
             }
           });
+
+          // LÃ³gica de sonido de llegada
+          if (_tripState == 'conductor_llego' && previousState != 'conductor_llego') {
+            SoundService.playDriverArrivedSound();
+          } else if (_tripState == 'en_curso' && previousState == 'conductor_llego') {
+            SoundService.stopDriverArrivedSound();
+          }
         }
       }
     } catch (e) {

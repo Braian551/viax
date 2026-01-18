@@ -2,6 +2,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/trip_request_service.dart';
+import '../../../../global/services/chat_service.dart';
+import '../../../../global/services/sound_service.dart';
+import '../../../../global/services/local_notification_service.dart';
 
 /// Pantalla de espera mientras se busca un conductor
 /// Estilo Uber/DiDi con animaciÃ³n de bÃºsqueda y polling de estado
@@ -44,19 +47,26 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
     _setupAnimations();
     _startStatusPolling();
     _startDurationTimer();
+    // Iniciar polling de chat
+    ChatService.startPolling(
+      solicitudId: widget.solicitudId,
+      usuarioId: widget.clienteId,
+    );
+    _setupChatListeners();
   }
 
   @override
   void dispose() {
+    ChatService.stopPolling();
     _statusTimer?.cancel();
     _durationTimer?.cancel();
     _pulseController.dispose();
     _waveController.dispose();
     super.dispose();
   }
-
+  
   void _setupAnimations() {
-    // AnimaciÃ³n de pulso para el icono central
+    // Animación de pulso para el icono central
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -70,7 +80,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
       curve: Curves.easeInOut,
     ));
 
-    // AnimaciÃ³n de ondas expansivas
+    // Animación de ondas expansivas
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
@@ -116,7 +126,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
       final trip = result['trip'];
       final estado = trip['estado'];
 
-      // Si el conductor aceptÃ³, navegar a pantalla de tracking
+      // Si el conductor aceptó, navegar a pantalla de tracking
       if (estado == 'aceptada' || estado == 'conductor_asignado') {
         _statusTimer?.cancel();
         _durationTimer?.cancel();
@@ -126,7 +136,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
           _conductorInfo = trip['conductor'];
         });
 
-        // Navegar a pantalla de tracking despuÃ©s de mostrar info del conductor
+        // Navegar a pantalla de tracking después de mostrar info del conductor
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.pushReplacementNamed(
@@ -198,8 +208,8 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
+                        Navigator.pop(context); // Close dialog
+                        Navigator.pop(context); // Go back
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFFF00),
@@ -256,7 +266,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Â¿Cancelar Solicitud?',
+                    '¿Cancelar Solicitud?',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -265,7 +275,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Â¿EstÃ¡s seguro de que deseas cancelar tu solicitud de viaje?',
+                    '¿Estás seguro de que deseas cancelar tu solicitud de viaje?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -305,7 +315,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
                             ),
                           ),
                           child: const Text(
-                            'SÃ­, Cancelar',
+                            'Sí, Cancelar',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -321,6 +331,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
     );
 
     if (confirm == true) {
+      if (!mounted) return;
       // Mostrar loading
       showDialog(
         context: context,
@@ -335,7 +346,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
       final result = await TripRequestService.cancelTripRequestWithReason(
         solicitudId: widget.solicitudId,
         clienteId: widget.clienteId,
-        motivo: 'Cliente cancelÃ³ durante bÃºsqueda',
+        motivo: 'Cliente canceló durante búsqueda',
       );
 
       if (!mounted) return;
@@ -354,6 +365,32 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
     }
   }
 
+  void _setupChatListeners() {
+    // Escuchar mensajes nuevos
+    ChatService.messagesStream.listen((messages) {
+      if (messages.isEmpty) return;
+
+      final lastMsg = messages.last;
+      
+      // Si el chat está abierto, no hacer nada
+      if (ChatService.isChatOpen) return;
+
+      // Si el mensaje es del otro usuario y es reciente (menos de 10s)
+      if (lastMsg.remitenteId != widget.clienteId &&
+          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+        
+        // Reproducir sonido de mensaje
+        SoundService.playMessageSound();
+        
+        LocalNotificationService.showMessageNotification(
+          title: lastMsg.remitenteNombre ?? 'Conductor',
+          body: lastMsg.mensaje,
+          solicitudId: widget.solicitudId,
+        );
+      }
+    });
+  }
+
   String _formatDuration() {
     final minutes = _searchDuration ~/ 60;
     final seconds = _searchDuration % 60;
@@ -362,11 +399,17 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        _cancelTrip();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Column(
+            children: [
             // Header con botÃ³n de cancelar
             Padding(
               padding: const EdgeInsets.all(20),
@@ -422,7 +465,8 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
 
             // Info del viaje en la parte inferior
             _buildTripInfoPanel(),
-          ],
+            ],
+          ),
         ),
       ),
     );

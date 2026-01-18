@@ -106,7 +106,13 @@ class CompanyService {
                 e.logo_url,
                 e.verificada,
                 ec.municipio,
-                COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+                COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion,
+                (
+                    SELECT COALESCE(AVG(cal.calificacion), 0)
+                    FROM calificaciones cal
+                    JOIN usuarios u ON cal.usuario_calificado_id = u.id
+                    WHERE u.empresa_id = e.id
+                ) as calificacion_promedio
             FROM empresas_transporte e
             LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
             LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
@@ -161,7 +167,13 @@ class CompanyService {
             
             $queryRegional = "
                 SELECT DISTINCT e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
-                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion,
+                       (
+                           SELECT COALESCE(AVG(cal.calificacion), 0)
+                           FROM calificaciones cal
+                           JOIN usuarios u ON cal.usuario_calificado_id = u.id
+                           WHERE u.empresa_id = e.id
+                       ) as calificacion_promedio
                 FROM empresas_transporte e
                 LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
                 LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
@@ -190,7 +202,13 @@ class CompanyService {
             error_log("CompanyService: FALLBACK - Modo desarrollo, mostrando todas las empresas");
             $queryFallback = "
                 SELECT e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
-                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+                       COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion,
+                       (
+                           SELECT COALESCE(AVG(cal.calificacion), 0)
+                           FROM calificaciones cal
+                           JOIN usuarios u ON cal.usuario_calificado_id = u.id
+                           WHERE u.empresa_id = e.id
+                       ) as calificacion_promedio
                 FROM empresas_transporte e
                 LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
                 LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
@@ -217,7 +235,13 @@ class CompanyService {
         $query = "
             SELECT DISTINCT
                 e.id, e.nombre, e.logo_url, e.verificada, ec.municipio,
-                COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion
+                COALESCE(ecf.zona_operacion, ARRAY[]::TEXT[]) as zona_operacion,
+                (
+                    SELECT COALESCE(AVG(cal.calificacion), 0)
+                    FROM calificaciones cal
+                    JOIN usuarios u ON cal.usuario_calificado_id = u.id
+                    WHERE u.empresa_id = e.id
+                ) as calificacion_promedio
             FROM empresas_transporte e
             LEFT JOIN empresas_contacto ec ON e.id = ec.empresa_id
             LEFT JOIN empresas_configuracion ecf ON e.id = ecf.empresa_id
@@ -440,7 +464,9 @@ class CompanyService {
                     'costo_tiempo' => $precio['costo_tiempo'],
                     'recargo_precio' => $precio['recargo_precio'],
                     'periodo' => $precio['periodo'],
-                    'recargo_porcentaje' => $precio['recargo_porcentaje']
+                    'periodo' => $precio['periodo'],
+                    'recargo_porcentaje' => $precio['recargo_porcentaje'],
+                    'calificacion' => isset($empresa['calificacion_promedio']) ? floatval($empresa['calificacion_promedio']) : 0.0
                 ];
             }
 

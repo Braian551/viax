@@ -77,6 +77,7 @@ class DriverInfoCard extends StatelessWidget {
   final VoidCallback? onCall;
   final VoidCallback? onMessage;
   final bool isDark;
+  final int unreadCount;
 
   const DriverInfoCard({
     super.key,
@@ -89,6 +90,7 @@ class DriverInfoCard extends StatelessWidget {
     this.onCall,
     this.onMessage,
     this.isDark = false,
+    this.unreadCount = 0,
   });
 
   @override
@@ -247,11 +249,46 @@ class DriverInfoCard extends StatelessWidget {
           onTap: onCall,
         ),
         const SizedBox(width: 10),
-        // Botón mensaje
-        _buildActionButton(
-          icon: Icons.chat_bubble_rounded,
-          color: AppColors.primary,
-          onTap: onMessage,
+        // Botón mensaje con badge de no leídos
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            _buildActionButton(
+              icon: Icons.chat_bubble_rounded,
+              color: AppColors.primary,
+              onTap: onMessage,
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: -5,
+                right: -5,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 9 ? '9+' : unreadCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ],
     );
@@ -362,7 +399,9 @@ class DriverInfoCard extends StatelessWidget {
         color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey[300]!,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.grey[300]!,
           width: 1.5,
         ),
       ),
@@ -391,7 +430,10 @@ class DriverInfoCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -564,7 +606,10 @@ class GlassHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 1),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

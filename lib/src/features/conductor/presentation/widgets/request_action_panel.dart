@@ -49,9 +49,11 @@ class _RequestActionPanelState extends State<RequestActionPanel>
   bool _panelCollapsed = false;
   double _dragStartPosition = 0;
   double _currentDragOffset = 0;
-  static const double _maxDragOffset = 50;
-  static const double _collapsedOffset = 42;
-  static const double _minOpacity = 0.9;
+  static const double _maxDragOffset = 100;
+  static const double _collapsedOffset = 350; // Oculta la mayor parte del panel
+  static const double _minOpacity = 0.85;
+  // Para el indicador de drag
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -78,15 +80,10 @@ class _RequestActionPanelState extends State<RequestActionPanel>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _panelSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _panelController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _panelSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _panelController, curve: Curves.easeOutCubic),
+        );
     _panelFadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _panelController,
@@ -99,26 +96,21 @@ class _RequestActionPanelState extends State<RequestActionPanel>
       vsync: this,
     )..repeat(reverse: true);
     _acceptButtonScale = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(
-        parent: _acceptButtonController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _acceptButtonController, curve: Curves.easeInOut),
     );
 
     _timerController = AnimationController(
       duration: const Duration(seconds: 30),
       vsync: this,
     );
-    _timerAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _timerController,
-        curve: Curves.linear,
-      ),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          widget.onTimeout();
-        }
-      });
+    _timerAnimation =
+        Tween<double>(begin: 1.0, end: 0.0).animate(
+          CurvedAnimation(parent: _timerController, curve: Curves.linear),
+        )..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            widget.onTimeout();
+          }
+        });
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 2000),
@@ -177,54 +169,78 @@ class _RequestActionPanelState extends State<RequestActionPanel>
               begin: 0,
               end: _panelCollapsed
                   ? _collapsedOffset
-                  : _currentDragOffset.clamp(-_maxDragOffset, _maxDragOffset),
+                  : _currentDragOffset.clamp(-_maxDragOffset, _collapsedOffset),
             ),
-            duration: const Duration(milliseconds: 140),
+            duration: _isDragging
+                ? Duration.zero
+                : const Duration(milliseconds: 250),
             curve: Curves.easeOutCubic,
             builder: (context, animatedOffset, child) {
-              final contentOpacity =
-                  (1 - (animatedOffset.abs() / (_maxDragOffset * 2))).clamp(_minOpacity, 1.0);
+              // Calcular opacidad basada en qué tan colapsado está
+              final collapseProgress = animatedOffset / _collapsedOffset;
+              final contentOpacity = (1 - collapseProgress * 0.3).clamp(
+                _minOpacity,
+                1.0,
+              );
               return Transform.translate(
                 offset: Offset(0, animatedOffset),
                 child: Opacity(opacity: contentOpacity, child: child),
               );
             },
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(36),
+              ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                 child: GestureDetector(
                   onVerticalDragStart: (details) {
-                    setState(() => _dragStartPosition = details.localPosition.dy);
+                    setState(() {
+                      _dragStartPosition = details.localPosition.dy;
+                      _isDragging = true;
+                    });
                   },
                   onVerticalDragUpdate: (details) {
                     setState(() {
+                      // Permitir drag más amplio
                       _currentDragOffset =
-                          (details.localPosition.dy - _dragStartPosition)
-                              .clamp(-_maxDragOffset, _maxDragOffset);
+                          (details.localPosition.dy - _dragStartPosition).clamp(
+                            -_maxDragOffset,
+                            _collapsedOffset,
+                          );
                     });
                   },
                   onVerticalDragEnd: (details) {
                     final v = details.primaryVelocity;
+                    setState(() => _isDragging = false);
                     if (v != null) {
-                      if (v < -300 || _currentDragOffset < -50) {
+                      if (v < -400 || _currentDragOffset < -60) {
+                        // Deslizar hacia arriba - expandir
                         setState(() {
                           _panelExpanded = true;
                           _panelCollapsed = false;
                           _currentDragOffset = 0;
                         });
-                      } else if (v > 300 || _currentDragOffset > 50) {
+                      } else if (v > 400 || _currentDragOffset > 100) {
+                        // Deslizar hacia abajo - colapsar
                         setState(() {
                           _panelExpanded = false;
                           _panelCollapsed = true;
                           _currentDragOffset = _collapsedOffset;
                         });
                       } else {
-                        setState(() => _currentDragOffset = 0);
+                        // Regresar a estado normal
+                        setState(() {
+                          _currentDragOffset = _panelCollapsed
+                              ? _collapsedOffset
+                              : 0;
+                        });
                       }
                     } else {
                       setState(
-                        () => _currentDragOffset = _panelCollapsed ? _collapsedOffset : 0,
+                        () => _currentDragOffset = _panelCollapsed
+                            ? _collapsedOffset
+                            : 0,
                       );
                     }
                   },
@@ -245,7 +261,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                                 Colors.white.withValues(alpha: 0.98),
                               ],
                       ),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(36),
+                      ),
                       border: Border.all(
                         color: AppColors.primary.withValues(alpha: 0.25),
                         width: 1.5,
@@ -258,7 +276,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                           spreadRadius: 5,
                         ),
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.2),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.5 : 0.2,
+                          ),
                           blurRadius: 30,
                           offset: const Offset(0, -10),
                         ),
@@ -279,7 +299,21 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                               opacity: 1,
                               child: Column(
                                 children: [
-                                  _buildPriceCard(isDark, distanciaConductorCliente, etaMinutos),
+                                  // Mostrar precio solo si está expandido o parcialmente visible
+                                  if (!_panelCollapsed)
+                                    _buildPriceCard(
+                                      isDark,
+                                      distanciaConductorCliente,
+                                      etaMinutos,
+                                    )
+                                  else
+                                    // Versión compacta para cuando está colapsado
+                                    _buildCompactInfo(
+                                      isDark,
+                                      distanciaConductorCliente,
+                                      etaMinutos,
+                                    ),
+
                                   const SizedBox(height: 18),
                                   if (!_panelCollapsed) ...[
                                     _buildRouteSummary(isDark),
@@ -296,9 +330,7 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                                   : CrossFadeState.showFirst,
                               firstChild: const SizedBox.shrink(),
                               secondChild: Column(
-                                children: const [
-                                  SizedBox(height: 32),
-                                ],
+                                children: const [SizedBox(height: 32)],
                               ),
                             ),
                           ],
@@ -330,7 +362,10 @@ class _RequestActionPanelState extends State<RequestActionPanel>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [timerColor.withValues(alpha: 0.15), Colors.transparent],
+                  colors: [
+                    timerColor.withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
                 ),
                 border: Border.all(
                   color: timerColor.withValues(alpha: 0.4),
@@ -439,8 +474,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary
-                              .withValues(alpha: 0.6 * (2 - _pulseAnimation.value)),
+                          color: AppColors.primary.withValues(
+                            alpha: 0.6 * (2 - _pulseAnimation.value),
+                          ),
                           blurRadius: 6 * _pulseAnimation.value,
                           spreadRadius: 1,
                         ),
@@ -466,7 +502,11 @@ class _RequestActionPanelState extends State<RequestActionPanel>
     );
   }
 
-  Widget _buildPriceCard(bool isDark, double distanciaConductorCliente, int etaMinutos) {
+  Widget _buildPriceCard(
+    bool isDark,
+    double distanciaConductorCliente,
+    int etaMinutos,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -611,8 +651,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-              isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.25),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.grey.withValues(alpha: 0.25),
           width: 1.2,
         ),
       ),
@@ -622,7 +663,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
           Text(
             'Ruta rápida',
             style: TextStyle(
-              color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.grey[800],
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.7)
+                  : Colors.grey[800],
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -788,7 +831,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             Text(
               value,
               style: TextStyle(
-                color: isDark ? Colors.white.withValues(alpha: 0.95) : Colors.grey[800],
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.95)
+                    : Colors.grey[800],
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
@@ -837,7 +882,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
               Text(
                 label,
                 style: TextStyle(
-                  color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.grey[600],
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.5)
+                      : Colors.grey[600],
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -858,6 +905,81 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  /// Método para expandir el panel cuando está colapsado
+  void _expandPanel() {
+    setState(() {
+      _panelExpanded = false;
+      _panelCollapsed = false;
+      _currentDragOffset = 0;
+    });
+  }
+
+  Widget _buildCompactInfo(bool isDark, double distancia, int eta) {
+    return Column(
+      children: [
+        // Info compacta con precio y tiempo - TOCABLE para expandir
+        GestureDetector(
+          onTap: _expandPanel,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _infoChip(
+                  icon: Icons.attach_money,
+                  value: _formatPrice(widget.request.precioEstimado),
+                  color: AppColors.primary,
+                  isDark: isDark,
+                ),
+                Container(
+                  height: 20,
+                  width: 1,
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+                _infoChip(
+                  icon: Icons.navigation_rounded,
+                  value: '$eta min',
+                  color: Colors.green,
+                  isDark: isDark,
+                ),
+                // Flecha indicando que puede expandir
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.keyboard_arrow_up_rounded,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        // Botones de acción siempre visibles
+        _buildActions(isDark),
       ],
     );
   }

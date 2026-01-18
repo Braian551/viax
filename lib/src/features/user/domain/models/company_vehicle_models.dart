@@ -16,6 +16,7 @@ class CompanyVehicleOption {
   final double recargoPrecio;
   final String periodo;
   final double recargoPorcentaje;
+  final double calificacion;
 
   CompanyVehicleOption({
     required this.id,
@@ -30,6 +31,7 @@ class CompanyVehicleOption {
     required this.recargoPrecio,
     required this.periodo,
     required this.recargoPorcentaje,
+    this.calificacion = 0.0,
   });
 
   /// Indica si hay conductores disponibles para esta empresa/vehículo
@@ -49,6 +51,7 @@ class CompanyVehicleOption {
       recargoPrecio: (json['recargo_precio'] ?? 0).toDouble(),
       periodo: json['periodo'] ?? 'normal',
       recargoPorcentaje: (json['recargo_porcentaje'] ?? 0).toDouble(),
+      calificacion: (json['calificacion'] ?? 0).toDouble(),
     );
   }
 }

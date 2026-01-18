@@ -8,6 +8,7 @@ class UserTripAcceptedDriverPanel extends StatelessWidget {
   final VoidCallback onCall;
   final VoidCallback onCancelChat;
   final bool isDark;
+  final int unreadCount;
 
   const UserTripAcceptedDriverPanel({
     super.key,
@@ -17,6 +18,7 @@ class UserTripAcceptedDriverPanel extends StatelessWidget {
     required this.onCall,
     required this.onCancelChat,
     required this.isDark,
+    this.unreadCount = 0,
   });
 
   @override
@@ -27,7 +29,8 @@ class UserTripAcceptedDriverPanel extends StatelessWidget {
 
     final nombre = conductor!['nombre'] as String? ?? 'Conductor';
     final foto = conductor!['foto'] as String?;
-    final calificacion = (conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
+    final calificacion =
+        (conductor!['calificacion'] as num?)?.toDouble() ?? 4.5;
     final vehiculo = conductor!['vehiculo'] as Map<String, dynamic>?;
 
     return DriverInfoCard(
@@ -40,6 +43,7 @@ class UserTripAcceptedDriverPanel extends StatelessWidget {
       onCall: onCall,
       onMessage: onCancelChat,
       isDark: isDark,
+      unreadCount: unreadCount,
     );
   }
 }

@@ -326,4 +326,27 @@ class ConductorService {
     );
     return result['success'] == true;
   }
+
+  /// Consultar el estado actual de un viaje (Polling)
+  static Future<Map<String, dynamic>?> checkTripStatus(int solicitudId) async {
+    try {
+      // Usamos el endpoint de user/get_trip_status.php ya que es la fuente de verdad
+      // y parece ser público/accesible
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/user/get_trip_status.php?solicitud_id=$solicitudId'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        if (data['success'] == true && data['trip'] != null) {
+          return data['trip'] as Map<String, dynamic>;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error checking trip status: $e');
+      return null;
+    }
+  }
 }

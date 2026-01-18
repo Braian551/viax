@@ -11,11 +11,13 @@ import 'package:viax/src/global/services/rating_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/sound_service.dart';
+import '../../../../global/services/auth/user_service.dart';
 import '../../../../global/services/local_notification_service.dart';
 import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
+import 'conductor_home_screen.dart';
 
 /// Pantalla de viaje activo para el conductor.
 ///
@@ -59,11 +61,12 @@ class ConductorActiveTripScreen extends StatefulWidget {
 class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     with WidgetsBindingObserver {
   late final ActiveTripController _controller;
-  
+
   // Estado para mensajes flotantes
   String? _statusMessage;
   Color? _statusColor;
   Timer? _statusTimer;
+  Timer? _pollingTimer; // Timer para polling
   DateTime? _tripStartTime; // Para calcular duración real
   DateTime _lastBackendUpdate = DateTime.now(); // Rate limiting para backend
 
@@ -84,6 +87,81 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     }
     _initController();
     _checkRecovery();
+    _startTripStatusPolling();
+  }
+
+  void _startTripStatusPolling() {
+    // Polling cada 5 segundos para verificar estado
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _checkTripStatus();
+    });
+  }
+
+  Future<void> _checkTripStatus() async {
+    if (widget.solicitudId == null || !mounted) return;
+
+    final tripData = await ConductorService.checkTripStatus(
+      widget.solicitudId!,
+    );
+
+    if (tripData != null && mounted) {
+      final estado = tripData['estado'] as String?;
+
+      // Si el usuario canceló
+      if (estado == 'cancelada' || estado == 'cancelada_por_usuario') {
+        _pollingTimer?.cancel();
+        _handleUserCancellation();
+      }
+    }
+  }
+
+  void _handleUserCancellation() {
+    if (!mounted) return;
+
+    // Detener tracking
+    TripTrackingService().stopTracking();
+    TripPersistenceService().clearActiveTrip();
+
+    // Reproducir sonido de cancelación si existe
+    // SoundService.playCancelSound();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Viaje cancelado'),
+        content: const Text('El usuario ha cancelado el viaje.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx); // Cerrar diálogo
+              _navigateToHome(); // Ir al home
+            },
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToHome() async {
+    final session = await UserService.getSavedSession();
+
+    if (!mounted) return;
+
+    if (session != null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConductorHomeScreen(conductorUser: session),
+        ),
+        (route) => false,
+      );
+    } else {
+      // Si no hay sesión (muy raro), volver al inicio de la app
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    }
   }
 
   Future<void> _checkRecovery() async {
@@ -114,6 +192,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _messagesSubscription.cancel();
     _unreadSubscription.cancel();
     ChatService.stopPolling();
+    _pollingTimer?.cancel(); // Cancelar polling
     super.dispose();
   }
 
@@ -130,10 +209,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       // Si el mensaje es del cliente y es reciente (menos de 10s)
       if (lastMsg.remitenteId != widget.conductorId &&
           DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
-        
         // Reproducir sonido de mensaje
         SoundService.playMessageSound();
-        
+
         LocalNotificationService.showMessageNotification(
           title: lastMsg.remitenteNombre ?? 'Cliente',
           body: lastMsg.mensaje,
@@ -180,24 +258,26 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   /// Sincroniza la ubicación y datos del viaje con el backend con throttling
   void _checkAndSyncBackend() {
     if (_controller.driverLocation == null) return;
-    
+
     final now = DateTime.now();
     if (now.difference(_lastBackendUpdate).inSeconds < 10) return;
-    
+
     _lastBackendUpdate = now;
-    
+
     // Preparar datos
     final lat = _controller.driverLocation!.coordinates.lat.toDouble();
     final lng = _controller.driverLocation!.coordinates.lng.toDouble();
     double? distance;
     int? elapsed;
-    
+
     // Si el viaje está en curso (llevando al pasajero)
-    if (!_controller.toPickup && !_controller.arrivedAtPickup && _tripStartTime != null) {
+    if (!_controller.toPickup &&
+        !_controller.arrivedAtPickup &&
+        _tripStartTime != null) {
       distance = _controller.distanceKm;
       elapsed = now.difference(_tripStartTime!).inMinutes;
     }
-    
+
     // Enviar al backend (fire and forget)
     ConductorService.actualizarUbicacion(
       conductorId: widget.conductorId,
@@ -282,17 +362,24 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final tiempoRealSeg = _tripStartTime != null
         ? DateTime.now().difference(_tripStartTime!).inSeconds
         : 0;
-    
-    debugPrint('⏱️ [Conductor] Tiempo real cronómetro: ${tiempoRealSeg}s (${(tiempoRealSeg / 60).toStringAsFixed(2)} min)');
-    
+
+    debugPrint(
+      '⏱️ [Conductor] Tiempo real cronómetro: ${tiempoRealSeg}s (${(tiempoRealSeg / 60).toStringAsFixed(2)} min)',
+    );
+
     // Finalizar tracking y obtener precio real - enviando el tiempo del cronómetro
-    final trackingResult = await _controller.finalizeTracking(tiempoRealSegundos: tiempoRealSeg);
-    
+    final trackingResult = await _controller.finalizeTracking(
+      tiempoRealSegundos: tiempoRealSeg,
+    );
+
     // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
     // Si no hay tracking, usar 0 (no se movió)
-    final distanciaKm = trackingResult?.distanciaRealKm ?? 
-        (_controller.distanciaRecorridaKm > 0 ? _controller.distanciaRecorridaKm : 0.0);
-    
+    final distanciaKm =
+        trackingResult?.distanciaRealKm ??
+        (_controller.distanciaRecorridaKm > 0
+            ? _controller.distanciaRecorridaKm
+            : 0.0);
+
     // Usar el tiempo del cronómetro (ya se envió al backend)
     final duracionMin = (tiempoRealSeg / 60).ceil();
 
@@ -319,7 +406,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await TripPersistenceService().clearActiveTrip();
 
     if (!mounted) return;
-    
+
     // Navegar a pantalla de completación con datos del tracking
     _navigateToTripCompletion(trackingResult: trackingResult);
   }
@@ -327,9 +414,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   /// Navega a la pantalla de completación del viaje.
   void _navigateToTripCompletion({TrackingFinalResult? trackingResult}) {
     // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
-    final distanciaKm = trackingResult?.distanciaRealKm ?? 
-        (_controller.distanciaRecorridaKm > 0 ? _controller.distanciaRecorridaKm : 0.0);
-    
+    final distanciaKm =
+        trackingResult?.distanciaRealKm ??
+        (_controller.distanciaRecorridaKm > 0
+            ? _controller.distanciaRecorridaKm
+            : 0.0);
+
     // ========== TIEMPO DEL CRONÓMETRO DEL CONDUCTOR ==========
     // El tiempo se envió al backend y vuelve en trackingResult.tiempoRealSeg
     // Este es el tiempo REAL medido desde "comenzar viaje" hasta "finalizar"
@@ -343,17 +433,20 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     } else {
       duracionSeg = 0;
     }
-    
+
     // Usar precio real del tracking si está disponible
-    final precio = trackingResult?.precioFinal ?? 
+    final precio =
+        trackingResult?.precioFinal ??
         (_controller.precioActual > 0 ? _controller.precioActual : 0.0);
-    
+
     debugPrint('📊 [ConductorTracking] Finalizando viaje:');
     debugPrint('   - Precio real tracking: ${trackingResult?.precioFinal}');
     debugPrint('   - Precio usado: $precio');
     debugPrint('   - Distancia real: $distanciaKm km');
-    debugPrint('   - Tiempo real: ${duracionSeg}s (${(duracionSeg / 60).toStringAsFixed(1)} min)');
-    
+    debugPrint(
+      '   - Tiempo real: ${duracionSeg}s (${(duracionSeg / 60).toStringAsFixed(1)} min)',
+    );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -395,7 +488,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           },
           onComplete: () {
             // Volver a la pantalla principal del conductor
-            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/', (route) => false);
           },
         ),
       ),
@@ -423,7 +518,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     debugPrint('   solicitudId: ${widget.solicitudId}');
     debugPrint('   clienteId: ${widget.clienteId}');
     debugPrint('   conductorId: ${widget.conductorId}');
-    
+
     if (widget.solicitudId == null) {
       debugPrint('❌ [Chat] No hay solicitudId');
       _showStatus('No hay información del viaje', AppColors.error);
@@ -431,9 +526,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     }
 
     final clienteIdToUse = widget.clienteId;
-    
+
     if (clienteIdToUse == null) {
-      debugPrint('⚠️ [Chat] clienteId es null, mostrando diálogo de información');
+      debugPrint(
+        '⚠️ [Chat] clienteId es null, mostrando diálogo de información',
+      );
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -454,7 +551,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     }
 
     debugPrint('✅ [Chat] Navegando a ChatScreen...');
-    
+
     try {
       Navigator.push(
         context,
@@ -487,10 +584,44 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           Navigator.pop(ctx);
           _showCancelDialog(isDark);
         },
-        onSupport: () => Navigator.pop(ctx),
-        onReport: () => Navigator.pop(ctx),
+        onSupport: () {
+          Navigator.pop(ctx);
+          // TODO: Implementar soporte
+        },
+        onReport: () {
+          Navigator.pop(ctx);
+          // TODO: Implementar reporte
+        },
       ),
     );
+  }
+
+  Future<void> _onCancelTrip() async {
+    if (widget.solicitudId == null) return;
+
+    _showStatus('Cancelando viaje...', AppColors.primary);
+
+    final result = await ConductorService.actualizarEstadoViaje(
+      conductorId: widget.conductorId,
+      solicitudId: widget.solicitudId!,
+      nuevoEstado: 'cancelada',
+      motivoCancelacion: 'Cancelado por el conductor',
+    );
+
+    if (result['success'] == true) {
+      // Limpiar estado
+      TripTrackingService().stopTracking();
+      TripPersistenceService().clearActiveTrip();
+
+      if (mounted) {
+        _navigateToHome(); // Ir al home
+      }
+    } else {
+      _showStatus(
+        result['message'] ?? 'Error al cancelar viaje',
+        AppColors.error,
+      );
+    }
   }
 
   void _showCancelDialog(bool isDark) {
@@ -522,8 +653,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context, false);
+              Navigator.pop(ctx); // Cerrar diálogo
+              _onCancelTrip(); // Ejecutar cancelación real
             },
             child: Text(
               'Cancelar viaje',
@@ -657,8 +788,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     return Row(
       children: [
         FloatingButton(
-          icon: Icons.arrow_back_ios_new_rounded,
-          onTap: () => Navigator.pop(context, true),
+          icon: Icons.close_rounded,
+          onTap: () => _showCancelDialog(isDark),
           isDark: isDark,
           size: 44,
         ),
@@ -773,6 +904,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       unreadCount: _unreadCount,
     );
   }
+
   Widget _buildStatusMessage() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -795,7 +927,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
               color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -858,6 +994,7 @@ class _OptionsSheet extends StatelessWidget {
             isDark: isDark,
             onTap: onCancel,
           ),
+          /* // Funcionalidades a implementar próximamente
           const SizedBox(height: 8),
           _OptionItem(
             icon: Icons.support_agent_rounded,
@@ -872,6 +1009,7 @@ class _OptionsSheet extends StatelessWidget {
             isDark: isDark,
             onTap: onReport,
           ),
+          */
         ],
       ),
     );

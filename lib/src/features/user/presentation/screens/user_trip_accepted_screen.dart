@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart' as geo;
+import '../../../../global/services/chat_service.dart';
+import '../../../../global/services/local_notification_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
@@ -93,6 +95,12 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   bool _driverArrivedDialogShown = false;
   bool _driverArrivedDialogShowing = false;
   bool _navigatedToActiveTrip = false; // Evitar navegaciones duplicadas
+  bool _driverArrivedSoundPlayed = false; // Evitar repetir sonido de llegada
+
+  // Chat y notificaciones
+  StreamSubscription<List<ChatMessage>>? _messagesSubscription;
+  StreamSubscription<int>? _unreadSubscription;
+  int _unreadCount = 0;
 
   // Key y altura del panel para posicionar botones flotantes
   final GlobalKey _driverPanelKey = GlobalKey();
@@ -108,7 +116,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         final box = ctx.findRenderObject() as RenderBox?;
         if (box == null) return;
         final h = box.size.height;
-        if (mounted && (_driverPanelHeight == null || (_driverPanelHeight! - h).abs() > 1)) {
+        if (mounted &&
+            (_driverPanelHeight == null ||
+                (_driverPanelHeight! - h).abs() > 1)) {
           setState(() {
             _driverPanelHeight = h;
           });
@@ -126,10 +136,66 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _conductor = widget.conductorInfo;
     _startLocationTracking();
     _startStatusPolling();
-    _playAcceptedSound();
+    _startChatPolling(); // Iniciar polling del chat
 
     // Medir panel después del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureDriverPanel());
+  }
+
+  /// Iniciar el polling del chat para recibir mensajes
+  void _startChatPolling() {
+    final conductorId = _conductor?['id'] as int?;
+    if (conductorId != null) {
+      ChatService.startPolling(
+        solicitudId: widget.solicitudId,
+        usuarioId: widget.clienteId,
+      );
+      _setupChatListeners();
+    }
+  }
+
+  /// Configurar listeners del chat para mensajes y notificaciones
+  void _setupChatListeners() {
+    // Escuchar mensajes nuevos
+    _messagesSubscription = ChatService.messagesStream.listen((messages) {
+      if (messages.isEmpty) return;
+
+      final lastMsg = messages.last;
+
+      // Si el chat está abierto, no hacer nada
+      if (ChatService.isChatOpen) return;
+
+      // Si el mensaje es del conductor y es reciente (menos de 10s)
+      if (lastMsg.remitenteId != widget.clienteId &&
+          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+        // Reproducir sonido de mensaje
+        SoundService.playMessageSound();
+
+        // Mostrar notificación local
+        LocalNotificationService.showMessageNotification(
+          title: lastMsg.remitenteNombre ?? 'Conductor',
+          body: lastMsg.mensaje,
+          solicitudId: widget.solicitudId,
+        );
+      }
+    });
+
+    // Escuchar clics en notificaciones
+    LocalNotificationService.onNotificationClick.listen((payload) {
+      if (payload != null && int.tryParse(payload) == widget.solicitudId) {
+        // Navegar al chat si estamos en la misma solicitud
+        if (!ChatService.isChatOpen && mounted) {
+          _openChat();
+        }
+      }
+    });
+
+    // Escuchar conteo de no leídos
+    _unreadSubscription = ChatService.unreadCountStream.listen((count) {
+      if (mounted) {
+        setState(() => _unreadCount = count);
+      }
+    });
   }
 
   void _initAnimations() {
@@ -176,12 +242,21 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     }
   }
 
-  Future<void> _playAcceptedSound() async {
+  /// Reproducir sonido cuando el conductor llegó al punto de encuentro
+  Future<void> _playDriverArrivedSound() async {
+    if (_driverArrivedSoundPlayed) return; // Solo reproducir una vez
+    _driverArrivedSoundPlayed = true;
+
     try {
       await SoundService.playRequestNotification();
     } catch (e) {
-      debugPrint('Error playing sound: $e');
+      debugPrint('Error playing driver arrived sound: $e');
     }
+  }
+
+  /// Detener el sonido de llegada (cuando cambia de vista)
+  void _stopDriverArrivedSound() {
+    SoundService.stopSound();
   }
 
   Future<void> _startLocationTracking() async {
@@ -279,7 +354,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     final dLon = _toRadians(to.longitude - from.longitude);
 
     final y = math.sin(dLon) * math.cos(lat2);
-    final x = math.cos(lat1) * math.sin(lat2) -
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
         math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
 
     final bearing = math.atan2(y, x);
@@ -541,11 +617,16 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         // Verificar cambios de estado importantes
         if (estado == 'conductor_llego') {
+          // Reproducir sonido cuando el conductor llegue al punto de encuentro
+          _playDriverArrivedSound();
           unawaited(_showDriverArrivedDialog());
         } else if (estado == 'en_curso' && !_navigatedToActiveTrip) {
+          // Detener el sonido antes de navegar
+          _stopDriverArrivedSound();
           // Navegar a pantalla de viaje en curso (solo una vez)
           _navigateToActiveTrip();
         } else if (estado == 'cancelada') {
+          _stopDriverArrivedSound();
           _showCancelledDialog();
         }
       }
@@ -566,50 +647,55 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         context: context,
         barrierDismissible: true,
         builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E1E1E)
+              : Colors.white,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                  size: 28,
+                ),
               ),
-              child: const Icon(
-                Icons.check_circle,
-                color: AppColors.success,
-                size: 28,
+              const SizedBox(width: 12),
+              const Expanded(child: Text('¡Tu conductor llegó!')),
+            ],
+          ),
+          content: const Text(
+            'Tu conductor está esperándote en el punto de encuentro.',
+            style: TextStyle(fontSize: 15),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(width: 12),
-            const Expanded(child: Text('¡Tu conductor llegó!')),
           ],
         ),
-        content: const Text(
-          'Tu conductor está esperándote en el punto de encuentro.',
-          style: TextStyle(fontSize: 15),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Entendido',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
       );
     } catch (e) {
       debugPrint('Error showing driver arrived dialog: $e');
@@ -623,11 +709,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     // Evitar navegaciones duplicadas
     if (_navigatedToActiveTrip || !mounted) return;
     _navigatedToActiveTrip = true;
-    
+
     // Cancelar timer ANTES de navegar para evitar llamadas adicionales
     _statusTimer?.cancel();
     _statusTimer = null;
-    
+
     Navigator.pushReplacementNamed(
       context,
       '/user/active_trip',
@@ -654,7 +740,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     final conductorId = _conductor?['id'] as int?;
     if (conductorId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Información del conductor no disponible')),
+        const SnackBar(
+          content: Text('Información del conductor no disponible'),
+        ),
       );
       return;
     }
@@ -785,6 +873,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     );
 
     if (confirm == true) {
+      // Detener sonido si está reproduciéndose
+      _stopDriverArrivedSound();
+
       final success = await TripRequestService.cancelTripRequest(
         widget.solicitudId,
       );
@@ -796,8 +887,19 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   @override
   void dispose() {
+    // Detener sonido si está reproduciéndose
+    _stopDriverArrivedSound();
+
+    // Cancelar subscripciones de chat
+    _messagesSubscription?.cancel();
+    _unreadSubscription?.cancel();
+    ChatService.stopPolling();
+
+    // Cancelar otros streams y timers
     _positionStream?.cancel();
     _statusTimer?.cancel();
+
+    // Dispose de animaciones
     _pulseController.dispose();
     _waveController.dispose();
     _panelController.dispose();
@@ -860,6 +962,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
                 onCall: _callDriver,
                 onCancelChat: _openChat,
                 isDark: isDark,
+                unreadCount: _unreadCount,
               ),
             ),
           ),
@@ -867,7 +970,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           // BOTÓN DE ENFOQUE (toggle) - arriba del panel (posicionado dinámicamente según altura del panel)
           Positioned(
             right: 16,
-            bottom: bottomPadding + (_driverPanelHeight ?? 220) + _focusButtonExtraOffset,
+            bottom:
+                bottomPadding +
+                (_driverPanelHeight ?? 220) +
+                _focusButtonExtraOffset,
             child: UserTripAcceptedFocusButton(
               isDark: isDark,
               isFocusedOnClient: _isFocusedOnClient,
@@ -898,5 +1004,4 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         return 'Conductor en camino';
     }
   }
-
 }

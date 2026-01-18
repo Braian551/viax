@@ -112,6 +112,17 @@ class SoundService {
     }
   }
 
+  /// Reproduce sonido de que el conductor llegÃ³ (loop)
+  static Future<void> playDriverArrivedSound() async {
+    // Reutilizamos el player de request para el loop
+    await playRequestNotification();
+  }
+
+  /// Detiene el sonido de llegada
+  static Future<void> stopDriverArrivedSound() async {
+    await stopSound();
+  }
+
   /// Reproduce un sonido de confirmación al aceptar un viaje
   static Future<void> playAcceptSound() async {
     try {
