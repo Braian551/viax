@@ -1499,162 +1499,200 @@ class _RouteLoader extends StatefulWidget {
 
 class _RouteLoaderState extends State<_RouteLoader>
     with TickerProviderStateMixin {
-  late AnimationController _radarController;
-  late AnimationController _pulseController;
+  late AnimationController _rippleController;
+  late AnimationController _carController;
 
   @override
   void initState() {
     super.initState();
-    _radarController = AnimationController(
+    _rippleController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Slower, more elegant rotation
+      duration: const Duration(milliseconds: 2000),
     )..repeat();
 
-    _pulseController = AnimationController(
+    _carController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _radarController.dispose();
-    _pulseController.dispose();
+    _rippleController.dispose();
+    _carController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Elegant Glass Card Design
+    final primaryColor = AppColors.primary;
+    final backgroundColor = widget.isDark 
+        ? const Color(0xFF1E1E1E) 
+        : Colors.white;
+    final textColor = widget.isDark ? Colors.white : AppColors.lightTextPrimary;
+    final subtextColor = widget.isDark 
+        ? Colors.white.withValues(alpha: 0.6) 
+        : AppColors.lightTextSecondary;
+
     return Container(
-      color: Colors.black.withValues(alpha: 0.3), // Clearer background
+      color: Colors.black.withValues(alpha: 0.4),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2), // Subtle blur
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Center(
-          child: RepaintBoundary(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 40),
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-              decoration: BoxDecoration(
-                color: widget.isDark 
-                    ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) 
-                    : Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: widget.isDark 
-                      ? Colors.white.withValues(alpha: 0.1) 
-                      : Colors.black.withValues(alpha: 0.05),
-                  width: 1,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
+            decoration: BoxDecoration(
+              color: backgroundColor.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                  offset: const Offset(0, 10),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Animation Container
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Subtle breathing glow
-                        AnimatedBuilder(
-                          animation: _pulseController,
-                          builder: (context, child) {
-                            return Container(
-                              width: 60 + (_pulseController.value * 20),
-                              height: 60 + (_pulseController.value * 20),
+                BoxShadow(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 0),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Animated Icon Area
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Ripples
+                      AnimatedBuilder(
+                        animation: _rippleController,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            painter: _RipplePainter(
+                              animationValue: _rippleController.value,
+                              color: primaryColor,
+                            ),
+                            size: const Size(120, 120),
+                          );
+                        },
+                      ),
+                      
+                      // Car Icon with float/bounce
+                      AnimatedBuilder(
+                        animation: _carController,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, -4 * _carController.value),
+                            child: Container(
+                              width: 56,
+                              height: 56,
                               decoration: BoxDecoration(
+                                color: primaryColor,
                                 shape: BoxShape.circle,
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.15 * (1 - _pulseController.value),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        
-                        // Thin Radar Ring
-                        RotationTransition(
-                          turns: _radarController,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: SweepGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  AppColors.primary.withValues(alpha: 0.1),
-                                  AppColors.primary,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: primaryColor.withValues(alpha: 0.4),
+                                    blurRadius: 15,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 4),
+                                  ),
                                 ],
-                                stops: const [0.0, 0.7, 1.0],
+                              ),
+                              child: const Icon(
+                                Icons.directions_car_rounded,
+                                color: Colors.white,
+                                size: 28,
                               ),
                             ),
-                          ),
-                        ),
-                        
-                        // Center Icon
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.4),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.directions_car_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  // App-consistent Typography
-                  Text(
-                    'Calculando ruta...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark ? Colors.white : AppColors.lightTextPrimary,
-                      letterSpacing: -0.2, // Matches app standard
-                    ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Titles
+                Text(
+                  'Calculando ruta...',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Buscando las mejores opciones',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: widget.isDark 
-                          ? Colors.white.withValues(alpha: 0.6) 
-                          : AppColors.lightTextSecondary,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Buscando las mejores opciones',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: subtextColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
+                ),
+                
+                // Optional: Loading bar or dots (keeping it clean for now)
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  // Removed _buildRipple as we switched to a simpler breathing effect
+class _RipplePainter extends CustomPainter {
+  final double animationValue;
+  final Color color;
+
+  _RipplePainter({
+    required this.animationValue,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2;
+    
+    // Draw 3 ripples
+    for (int i = 0; i < 3; i++) {
+      final delay = i * 0.35;
+      double value = (animationValue - delay) % 1.0;
+      if (value < 0) value += 1.0;
+      
+      final radius = maxRadius * value;
+      final opacity = (1.0 - value).clamp(0.0, 1.0);
+      
+      final paint = Paint()
+        ..color = color.withValues(alpha: opacity * 0.3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2; // Thin sleek lines
+        
+      canvas.drawCircle(center, radius, paint);
+      
+      // Fill
+      final fillPaint = Paint()
+        ..color = color.withValues(alpha: opacity * 0.05)
+        ..style = PaintingStyle.fill;
+        
+      canvas.drawCircle(center, radius, fillPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RipplePainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+           oldDelegate.color != color;
+  }
 }
