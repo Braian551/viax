@@ -20,6 +20,7 @@ class TripRequestService {
     required double distanciaKm,
     required int duracionMinutos,
     required double precioEstimado,
+    int? empresaId, // ID de la empresa seleccionada para las tarifas
     List<SimpleLocation>? stops, // Paradas intermedias
   }) async {
     try {
@@ -39,6 +40,7 @@ class TripRequestService {
         'distancia_km': distanciaKm,
         'duracion_minutos': duracionMinutos,
         'precio_estimado': precioEstimado,
+        if (empresaId != null) 'empresa_id': empresaId,
       };
 
       // Agregar paradas si existen
@@ -246,6 +248,36 @@ class TripRequestService {
       }
     } catch (e) {
       print('❌ Error cancelando solicitud: $e');
+      return {
+        'success': false,
+        'message': 'Error de conexión: $e',
+      };
+    }
+  }
+  /// Verificar si el usuario tiene un viaje activo
+  static Future<Map<String, dynamic>> checkActiveTrip({
+    required int userId,
+    required String role,
+  }) async {
+    try {
+      final url = '$baseUrl/user/check_active_trip.php?user_id=$userId&role=$role';
+      print('查询 [TripRequestService] check active: $url');
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Accept': 'application/json'},
+      );
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Error del servidor: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('❌ Error check active trip: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',

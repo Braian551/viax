@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/auth/presentation/widgets/logo_transition.dart';
+import 'package:viax/src/global/services/trip_persistence_service.dart';
+import 'package:viax/src/features/user/services/trip_request_service.dart';
+import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/active_trip_screen.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
 
 /// Indicador de carga minimalista inspirado en TikTok
 class MinimalLoadingIndicator extends StatefulWidget {
@@ -196,6 +201,107 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateAfterDelay() async {
     // Wait for animation to complete
     await Future.delayed(const Duration(milliseconds: 3000));
+
+    if (!mounted) return;
+
+    // --- LOGICA DE RECUPERACIÓN DE VIAJE ---
+    try {
+      Map<String, dynamic>? tripToRecover;
+      Map<String, dynamic>? conductorInfo;
+      String? userRole;
+
+      // 1. Intentar recuperación local
+      final savedTrip = await TripPersistenceService().getActiveTrip();
+      
+      if (savedTrip != null) {
+        debugPrint('♻️ Intentando recuperar viaje local ${savedTrip.tripId}...');
+        userRole = savedTrip.userRole;
+        final tripStatus = await TripRequestService.getTripStatus(
+          solicitudId: savedTrip.tripId,
+        );
+        if (tripStatus['success'] == true) {
+          tripToRecover = tripStatus['trip'];
+          // El conductor viene dentro de trip, no en la raíz
+          conductorInfo = tripStatus['trip']?['conductor'] as Map<String, dynamic>?;
+        }
+      } 
+      // 2. Si no hay local, consultar backend (Fallback)
+      else {
+        final session = await UserService.getSavedSession();
+        if (session != null) {
+          final userId = session['id'];
+          final role = session['tipo_usuario'];
+          userRole = role;
+          
+          if (userId != null) {
+            final activeCheck = await TripRequestService.checkActiveTrip(
+              userId: userId,
+              role: role,
+            );
+            
+            if (activeCheck['success'] == true) {
+               debugPrint('🌐 Viaje activo encontrado en backend: ${activeCheck['trip']['id']}');
+               tripToRecover = activeCheck['trip'];
+               // El conductor viene dentro de trip, no en la raíz
+               conductorInfo = activeCheck['trip']?['conductor'] as Map<String, dynamic>?;
+            }
+          }
+        }
+      }
+
+      // 3. Procesar redirección si se encontró un viaje
+      if (tripToRecover != null && userRole != null) {
+          final estado = tripToRecover['estado'];
+          if (estado == 'en_curso' || estado == 'conductor_llego' || estado == 'recogido' || estado == 'aceptada' || estado == 'en_camino') {
+            debugPrint('✅ Viaje activo validado ($estado). Redirigiendo como $userRole...');
+            
+            if (mounted) {
+              if (userRole == 'conductor') {
+                 // Recuperar datos para conductor
+                 Navigator.of(context).pushReplacement(
+                   MaterialPageRoute(
+                     builder: (context) => ConductorActiveTripScreen(
+                       conductorId: int.tryParse(tripToRecover!['conductor_id']?.toString() ?? '') ?? 0,
+                       solicitudId: int.tryParse(tripToRecover!['id']?.toString() ?? '') ?? 0,
+                       clienteId: int.tryParse(tripToRecover!['cliente_id']?.toString() ?? '') ?? 0,
+                       origenLat: double.tryParse(tripToRecover!['origen']?['latitud']?.toString() ?? '') ?? 0.0,
+                       origenLng: double.tryParse(tripToRecover!['origen']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionOrigen: tripToRecover!['origen']?['direccion']?.toString() ?? '',
+                       destinoLat: double.tryParse(tripToRecover!['destino']?['latitud']?.toString() ?? '') ?? 0.0,
+                       destinoLng: double.tryParse(tripToRecover!['destino']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionDestino: tripToRecover!['destino']?['direccion']?.toString() ?? '',
+                     ),
+                   ),
+                 );
+                 return;
+              } else {
+                // Recuperar datos para cliente
+                Navigator.of(context).pushReplacement(
+                   MaterialPageRoute(
+                     builder: (context) => UserActiveTripScreen(
+                       solicitudId: int.tryParse(tripToRecover!['id']?.toString() ?? '') ?? 0,
+                       clienteId: int.tryParse(tripToRecover!['cliente_id']?.toString() ?? '') ?? 0,
+                       origenLat: double.tryParse(tripToRecover!['origen']?['latitud']?.toString() ?? '') ?? 0.0,
+                       origenLng: double.tryParse(tripToRecover!['origen']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionOrigen: tripToRecover!['origen']?['direccion']?.toString() ?? '',
+                       destinoLat: double.tryParse(tripToRecover!['destino']?['latitud']?.toString() ?? '') ?? 0.0,
+                       destinoLng: double.tryParse(tripToRecover!['destino']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionDestino: tripToRecover!['destino']?['direccion']?.toString() ?? '',
+                       conductorInfo: conductorInfo,
+                     ),
+                   ),
+                 );
+                 return;
+              }
+            }
+          } else {
+             // Viaje completado/cancelado
+             await TripPersistenceService().clearActiveTrip();
+          }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error en recuperación de viaje: $e');
+    }
 
     if (mounted) {
       Navigator.of(context).pushReplacementNamed(RouteNames.authWrapper);

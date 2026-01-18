@@ -9,6 +9,9 @@ class TripSummaryCard extends StatelessWidget {
   final String origen;
   final String destino;
   final double distanciaKm;
+  /// Duración en segundos (para formato flexible)
+  final int duracionSegundos;
+  /// Duración en minutos (legacy, se ignora si duracionSegundos > 0)
   final int duracionMinutos;
   final double precio;
   final String? metodoPago;
@@ -20,12 +23,33 @@ class TripSummaryCard extends StatelessWidget {
     required this.origen,
     required this.destino,
     required this.distanciaKm,
-    required this.duracionMinutos,
+    this.duracionSegundos = 0,
+    this.duracionMinutos = 0,
     required this.precio,
     this.metodoPago,
     this.mostrarPrecio = true,
     required this.isDark,
   });
+  
+  /// Formatea la duración en formato legible (seg/min/horas)
+  String get _duracionFormateada {
+    // Usar segundos si está disponible, sino convertir minutos a segundos
+    final totalSeg = duracionSegundos > 0 ? duracionSegundos : (duracionMinutos * 60);
+    
+    if (totalSeg < 60) {
+      return '$totalSeg seg';
+    } else if (totalSeg < 3600) {
+      final min = totalSeg ~/ 60;
+      final seg = totalSeg % 60;
+      if (seg == 0) return '$min min';
+      return '$min min $seg seg';
+    } else {
+      final hours = totalSeg ~/ 3600;
+      final mins = (totalSeg % 3600) ~/ 60;
+      if (mins == 0) return '${hours}h';
+      return '${hours}h ${mins}m';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +107,7 @@ class TripSummaryCard extends StatelessWidget {
               ),
               Expanded(child: _buildStatItem(
                 Icons.schedule_rounded,
-                '$duracionMinutos min',
+                _duracionFormateada,
                 'Duración',
               )),
               if (mostrarPrecio) ...[

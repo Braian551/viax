@@ -175,23 +175,32 @@ class ConductorService {
   }
 
   /// Actualizar ubicaciÃ³n del conductor
+  /// Actualizar ubicaciÃ³n del conductor y datos del viaje en curso
   static Future<bool> actualizarUbicacion({
     required int conductorId,
     required double latitud,
     required double longitud,
+    double? distanceKm,
+    int? elapsedMinutes,
+    int? solicitudId,
   }) async {
     try {
+      final body = {
+        'conductor_id': conductorId,
+        'latitud': latitud,
+        'longitud': longitud,
+        if (distanceKm != null) 'distancia_recorrida': distanceKm,
+        if (elapsedMinutes != null) 'tiempo_transcurrido': elapsedMinutes,
+        if (solicitudId != null) 'solicitud_id': solicitudId,
+      };
+
       final response = await http.post(
         Uri.parse('$baseUrl/actualizar_ubicacion.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'conductor_id': conductorId,
-          'latitud': latitud,
-          'longitud': longitud,
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
@@ -241,6 +250,8 @@ class ConductorService {
     required int solicitudId,
     required String nuevoEstado,
     String? motivoCancelacion,
+    double? distanceKm,
+    int? elapsedMinutes,
   }) async {
     try {
       final body = {
@@ -248,6 +259,8 @@ class ConductorService {
         'solicitud_id': solicitudId,
         'nuevo_estado': nuevoEstado,
         if (motivoCancelacion != null) 'motivo_cancelacion': motivoCancelacion,
+        if (distanceKm != null) 'distancia_recorrida': distanceKm,
+        if (elapsedMinutes != null) 'tiempo_transcurrido': elapsedMinutes,
       };
 
       final response = await http.post(
@@ -301,11 +314,15 @@ class ConductorService {
   static Future<bool> completarViaje({
     required int conductorId,
     required int solicitudId,
+    double? distanceKm,
+    int? elapsedMinutes,
   }) async {
     final result = await actualizarEstadoViaje(
       conductorId: conductorId,
       solicitudId: solicitudId,
       nuevoEstado: 'completada',
+      distanceKm: distanceKm,
+      elapsedMinutes: elapsedMinutes,
     );
     return result['success'] == true;
   }

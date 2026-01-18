@@ -92,6 +92,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Evitar repetir alertas
   bool _driverArrivedDialogShown = false;
   bool _driverArrivedDialogShowing = false;
+  bool _navigatedToActiveTrip = false; // Evitar navegaciones duplicadas
 
   // Key y altura del panel para posicionar botones flotantes
   final GlobalKey _driverPanelKey = GlobalKey();
@@ -541,8 +542,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         // Verificar cambios de estado importantes
         if (estado == 'conductor_llego') {
           unawaited(_showDriverArrivedDialog());
-        } else if (estado == 'en_curso') {
-          // Navegar a pantalla de viaje en curso
+        } else if (estado == 'en_curso' && !_navigatedToActiveTrip) {
+          // Navegar a pantalla de viaje en curso (solo una vez)
           _navigateToActiveTrip();
         } else if (estado == 'cancelada') {
           _showCancelledDialog();
@@ -619,7 +620,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 
   void _navigateToActiveTrip() {
-    // TODO: Navegar a pantalla de viaje activo para el cliente
+    // Evitar navegaciones duplicadas
+    if (_navigatedToActiveTrip || !mounted) return;
+    _navigatedToActiveTrip = true;
+    
+    // Cancelar timer ANTES de navegar para evitar llamadas adicionales
+    _statusTimer?.cancel();
+    _statusTimer = null;
+    
     Navigator.pushReplacementNamed(
       context,
       '/user/active_trip',

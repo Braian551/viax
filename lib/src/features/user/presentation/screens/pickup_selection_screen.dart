@@ -30,6 +30,7 @@ class PickupSelectionScreen extends StatefulWidget {
   final List<SimpleLocation> stops;
   final String vehicleType;
   final TripQuote quote;
+  final int? empresaId; // ID de la empresa seleccionada para las tarifas
 
   const PickupSelectionScreen({
     super.key,
@@ -38,6 +39,7 @@ class PickupSelectionScreen extends StatefulWidget {
     this.stops = const [],
     required this.vehicleType,
     required this.quote,
+    this.empresaId,
   });
 
   @override
@@ -380,6 +382,7 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
         distanciaKm: widget.quote.distanceKm,
         duracionMinutos: widget.quote.durationMinutes,
         precioEstimado: widget.quote.totalPrice,
+        empresaId: widget.empresaId,
         stops: widget.stops,
       );
 

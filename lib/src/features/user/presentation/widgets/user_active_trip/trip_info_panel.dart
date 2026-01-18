@@ -10,6 +10,15 @@ class TripInfoPanel extends StatelessWidget {
   final double distanceKm;
   final int etaMinutes;
   final bool isDark;
+  
+  /// Precio en tiempo real del tracking (opcional)
+  final double? precioActual;
+  
+  /// Distancia recorrida real del tracking (opcional)
+  final double? distanciaRecorrida;
+  
+  /// Tiempo transcurrido real en segundos del tracking (opcional)
+  final int? tiempoTranscurrido;
 
   const TripInfoPanel({
     super.key,
@@ -18,7 +27,27 @@ class TripInfoPanel extends StatelessWidget {
     required this.distanceKm,
     required this.etaMinutes,
     required this.isDark,
+    this.precioActual,
+    this.distanciaRecorrida,
+    this.tiempoTranscurrido,
   });
+  
+  /// Formatea segundos en formato legible (seg/min/horas)
+  String _formatearTiempo(int totalSeg) {
+    if (totalSeg < 60) {
+      return '$totalSeg seg';
+    } else if (totalSeg < 3600) {
+      final min = totalSeg ~/ 60;
+      final seg = totalSeg % 60;
+      if (seg == 0) return '$min min';
+      return '$min:${seg.toString().padLeft(2, '0')}';
+    } else {
+      final hours = totalSeg ~/ 3600;
+      final mins = (totalSeg % 3600) ~/ 60;
+      if (mins == 0) return '${hours}h';
+      return '${hours}h ${mins}m';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,8 +227,122 @@ class TripInfoPanel extends StatelessWidget {
                 ),
             ],
           ),
+          
+          // Tracking en tiempo real
+          if (precioActual != null && precioActual! > 0) ...[
+            const SizedBox(height: 16),
+            Divider(
+              color: isDark ? Colors.white12 : Colors.grey[200],
+              height: 1,
+            ),
+            const SizedBox(height: 16),
+            _buildTrackingInfo(isDark),
+          ],
         ],
       ),
+    );
+  }
+  
+  /// Construye la información de tracking en tiempo real
+  Widget _buildTrackingInfo(bool isDark) {
+    final distancia = distanciaRecorrida ?? 0.0;
+    final tiempo = tiempoTranscurrido ?? 0;
+    final precio = precioActual ?? 0.0;
+    
+    // Formatear tiempo de manera flexible
+    final tiempoFormateado = _formatearTiempo(tiempo);
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // Distancia recorrida
+          _buildTrackingStat(
+            icon: Icons.route_rounded,
+            label: 'Recorrido',
+            value: '${distancia.toStringAsFixed(2)} km',
+            isDark: isDark,
+          ),
+          
+          // Separador
+          Container(
+            width: 1,
+            height: 40,
+            color: isDark ? Colors.white12 : Colors.grey[300],
+          ),
+          
+          // Tiempo transcurrido
+          _buildTrackingStat(
+            icon: Icons.timer_rounded,
+            label: 'Tiempo',
+            value: tiempoFormateado,
+            isDark: isDark,
+          ),
+          
+          // Separador
+          Container(
+            width: 1,
+            height: 40,
+            color: isDark ? Colors.white12 : Colors.grey[300],
+          ),
+          
+          // Precio actual
+          _buildTrackingStat(
+            icon: Icons.attach_money_rounded,
+            label: 'Precio',
+            value: '\$${precio.toStringAsFixed(0)}',
+            isDark: isDark,
+            isHighlighted: true,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTrackingStat({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    bool isHighlighted = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: isHighlighted 
+              ? AppColors.primary 
+              : (isDark ? Colors.white60 : Colors.grey[600]),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: isHighlighted 
+                ? AppColors.primary 
+                : (isDark ? Colors.white : Colors.grey[900]),
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? Colors.white38 : Colors.grey[500],
+            fontSize: 11,
+          ),
+        ),
+      ],
     );
   }
 }

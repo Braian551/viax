@@ -6,6 +6,8 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/global/services/app_secrets_service.dart';
+import 'package:viax/src/global/services/trip_persistence_service.dart';
+import 'package:viax/src/features/conductor/services/trip_tracking_service.dart';
 
 /// Controlador para la lógica de negocio del viaje activo.
 /// 
@@ -39,10 +41,16 @@ class ActiveTripController {
   String? error;
 
   // Datos de navegación
-  double distanceKm = 0;
+  double distanceKm = 0;          // Distancia ESTIMADA de la ruta
+  double distanciaRecorridaKm = 0; // Distancia REAL recorrida (tracking)
   int etaMinutes = 0;
   double currentSpeed = 0;
   double currentBearing = 0;
+  
+  // Datos de tracking en tiempo real
+  double precioActual = 0;
+  int tiempoTranscurridoSeg = 0;
+  bool trackingActivo = false;
 
   // Ubicaciones
   Point? driverLocation;
@@ -56,6 +64,14 @@ class ActiveTripController {
   // Managers separados para cada marcador (permite control individual)
   CircleAnnotationManager? _pickupAnnotationManager;
   CircleAnnotationManager? _dropoffAnnotationManager;
+
+  // Persistencia y GPS acumulativo
+  double _accumulatedDistance = 0.0;
+  Point? _lastSavedLocation;
+  DateTime? _startTime;
+  
+  // Servicio de tracking en tiempo real
+  final TripTrackingService _trackingService = TripTrackingService();
 
   // Throttling
   DateTime _lastCameraUpdate = DateTime.now();
@@ -88,6 +104,7 @@ class ActiveTripController {
     isDisposed = true;
     _stopLocationTracking();
     _cleanupMapResources();
+    _cleanupTrackingService();
     mapboxMap = null;
   }
 
@@ -95,6 +112,14 @@ class ActiveTripController {
     positionStream?.pause();
     positionStream?.cancel();
     positionStream = null;
+  }
+  
+  void _cleanupTrackingService() {
+    _trackingService.onTrackingUpdate = null;
+    _trackingService.onError = null;
+    // No detenemos el tracking aquí porque puede ser que el usuario
+    // esté navegando fuera temporalmente. El tracking se detiene
+    // explícitamente al finalizar o cancelar el viaje.
   }
 
   void _cleanupMapResources() {
@@ -402,6 +427,12 @@ class ActiveTripController {
     if (!_shouldUpdateCamera) return;
 
     final now = DateTime.now();
+    
+    // --- LÓGICA DE ACUMULACIÓN GPS (Durante el viaje) ---
+    if (!toPickup && !arrivedAtPickup) {
+      _processGpsAccumulation(pos, now);
+    }
+
     if (now.difference(_lastCameraUpdate) < _cameraUpdateThrottle) return;
 
     if (is3DMode && toPickup && mapboxMap != null && mapReady) {
@@ -413,6 +444,36 @@ class ActiveTripController {
       Future.delayed(const Duration(milliseconds: 2000), () {
         _shouldUpdateCamera = true;
       });
+    }
+  }
+
+  void _processGpsAccumulation(geo.Position pos, DateTime now) {
+    // Si es la primera vez
+    if (_lastSavedLocation == null) {
+      _lastSavedLocation = Point(coordinates: Position(pos.longitude, pos.latitude));
+      return;
+    }
+
+    if (_lastSavedLocation == null) return; // Paranoia check
+
+    // Calcular distancia desde último punto guardado
+    final currentPoint = Point(coordinates: Position(pos.longitude, pos.latitude));
+    final dist = calculateDistance(_lastSavedLocation!, currentPoint);
+
+    // Filtrar jitter: Solo acumular si se movió > 30 metros
+    if (dist > 30) {
+      _accumulatedDistance += (dist / 1000.0); // Convertir a KM
+      _lastSavedLocation = currentPoint;
+
+      // Actualizar UI
+      distanceKm = _accumulatedDistance;
+      
+      // Persistir progreso
+      TripPersistenceService().updateTripProgress(
+        distanceKm: _accumulatedDistance,
+      );
+      
+      onStateChanged();
     }
   }
 
@@ -734,7 +795,7 @@ class ActiveTripController {
   }
 
   /// Inicia el viaje una vez que el cliente se subió.
-  /// Recalcula la ruta hacia el destino.
+  /// Recalcula la ruta hacia el destino e inicia tracking en tiempo real.
   Future<void> onStartTrip() async {
     if (!arrivedAtPickup || isDisposed) return;
     
@@ -745,6 +806,122 @@ class ActiveTripController {
     // Recalcular ruta hacia el destino
     await loadRoute();
     await fitRouteInView();
+
+    // INICIAR PERSISTENCIA LOCAL
+    _startTime = DateTime.now();
+    _accumulatedDistance = 0.0;
+    _lastSavedLocation = driverLocation;
+  }
+  
+  /// Inicia el tracking en tiempo real hacia el servidor
+  /// Llamar desde la pantalla con los IDs del viaje
+  /// [startTime] - Tiempo de inicio del viaje (para sincronizar cronómetro)
+  Future<void> startRealTimeTracking({
+    required int solicitudId,
+    required int conductorId,
+    DateTime? startTime,
+  }) async {
+    debugPrint('🚀 [Controller] Iniciando tracking en tiempo real para viaje $solicitudId');
+    
+    // Usar el tiempo proporcionado o crear uno nuevo
+    _startTime = startTime ?? DateTime.now();
+    trackingActivo = true;
+    
+    // Configurar callbacks del servicio de tracking
+    _trackingService.onTrackingUpdate = (data) {
+      distanciaRecorridaKm = data.distanciaKm; // Distancia REAL recorrida
+      tiempoTranscurridoSeg = data.tiempoSegundos;
+      precioActual = data.precioActual;
+      currentSpeed = data.velocidadKmh;
+      onStateChanged();
+    };
+    
+    _trackingService.onError = (error) {
+      debugPrint('⚠️ [Controller] Error de tracking: $error');
+    };
+    
+    // Iniciar tracking con el servicio - SINCRONIZADO con el tiempo de la pantalla
+    await _trackingService.startTracking(
+      solicitudId: solicitudId,
+      conductorId: conductorId,
+      faseViaje: 'hacia_destino',
+      startTime: _startTime,
+    );
+    
+    // También guardar en persistencia local
+    await TripPersistenceService().saveActiveTrip(
+      tripId: solicitudId,
+      role: 'conductor',
+      startTime: _startTime!,
+      initialDistance: 0.0,
+    );
+    
+    onStateChanged();
+  }
+  
+  /// Finaliza el tracking y obtiene el precio final
+  /// [tiempoRealSegundos] - Tiempo real medido desde inicio hasta fin del viaje
+  Future<TrackingFinalResult?> finalizeTracking({int? tiempoRealSegundos}) async {
+    if (!trackingActivo) {
+      debugPrint('⚠️ [Controller] Tracking no estaba activo al finalizar');
+      // Retornar resultado con la distancia acumulada local
+      final tiempoFinal = tiempoRealSegundos ?? tiempoTranscurridoSeg;
+      return TrackingFinalResult(
+        success: true,
+        precioFinal: precioActual,
+        distanciaRealKm: distanciaRecorridaKm,
+        tiempoRealMin: (tiempoFinal / 60).ceil(),
+        tiempoRealSeg: tiempoFinal,
+        diferenciaPrecio: 0,
+        mensaje: 'Datos locales (tracking no activo)',
+      );
+    }
+    
+    debugPrint('📊 [Controller] Finalizando tracking con tiempo real: ${tiempoRealSegundos}s');
+    
+    final result = await _trackingService.finalizeTracking(tiempoRealSegundos: tiempoRealSegundos);
+    
+    if (result != null && result.success) {
+      precioActual = result.precioFinal;
+      distanciaRecorridaKm = result.distanciaRealKm;
+      trackingActivo = false;
+      onStateChanged();
+      
+      // Limpiar persistencia local
+      await TripPersistenceService().clearActiveTrip();
+    }
+    
+    return result;
+  }
+  
+  /// Detiene el tracking sin finalizar (para cancelaciones)
+  Future<void> stopTracking() async {
+    await _trackingService.stopTracking();
+    trackingActivo = false;
+    await TripPersistenceService().clearActiveTrip();
+    onStateChanged();
+  }
+  
+  /// Inicia el rastreo persistente (llamado desde la pantalla con los IDs)
+  /// @deprecated Usar startRealTimeTracking en su lugar
+  Future<void> startPersistentTracking({
+    required int tripId,
+    required String role,
+  }) async {
+    _startTime = DateTime.now();
+    await TripPersistenceService().saveActiveTrip(
+      tripId: tripId,
+      role: role,
+      startTime: _startTime!,
+      initialDistance: 0.0,
+    );
+  }
+
+  /// Restaura estado desde persistencia
+  void restoreState(double restoredDistance) {
+    _accumulatedDistance = restoredDistance;
+    distanceKm = restoredDistance;
+    onStateChanged();
   }
 
   // =========================================================================

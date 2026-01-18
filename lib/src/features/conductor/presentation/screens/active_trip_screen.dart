@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/conductor/services/conductor_service.dart';
+import 'package:viax/src/features/conductor/services/trip_tracking_service.dart';
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
@@ -14,6 +15,7 @@ import '../../../../global/services/local_notification_service.dart';
 import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
+import 'package:viax/src/global/services/trip_persistence_service.dart';
 
 /// Pantalla de viaje activo para el conductor.
 ///
@@ -63,6 +65,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Color? _statusColor;
   Timer? _statusTimer;
   DateTime? _tripStartTime; // Para calcular duración real
+  DateTime _lastBackendUpdate = DateTime.now(); // Rate limiting para backend
 
   late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
   late final StreamSubscription<int> _unreadSubscription;
@@ -80,6 +83,18 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _setupChatListeners();
     }
     _initController();
+    _checkRecovery();
+  }
+
+  Future<void> _checkRecovery() async {
+    final savedTrip = await TripPersistenceService().getActiveTrip();
+    if (savedTrip != null && savedTrip.tripId == widget.solicitudId) {
+      setState(() {
+        _tripStartTime = savedTrip.startTime;
+      });
+      _controller.restoreState(savedTrip.accumulatedDistance);
+      debugPrint('🔄 Viaje recuperado en pantalla activa');
+    }
   }
 
   void _initController() {
@@ -158,7 +173,44 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   void _onControllerStateChanged() {
     if (mounted && !_controller.isDisposed) {
       setState(() {});
+      _checkAndSyncBackend();
     }
+  }
+
+  /// Sincroniza la ubicación y datos del viaje con el backend con throttling
+  void _checkAndSyncBackend() {
+    if (_controller.driverLocation == null) return;
+    
+    final now = DateTime.now();
+    if (now.difference(_lastBackendUpdate).inSeconds < 10) return;
+    
+    _lastBackendUpdate = now;
+    
+    // Preparar datos
+    final lat = _controller.driverLocation!.coordinates.lat.toDouble();
+    final lng = _controller.driverLocation!.coordinates.lng.toDouble();
+    double? distance;
+    int? elapsed;
+    
+    // Si el viaje está en curso (llevando al pasajero)
+    if (!_controller.toPickup && !_controller.arrivedAtPickup && _tripStartTime != null) {
+      distance = _controller.distanceKm;
+      elapsed = now.difference(_tripStartTime!).inMinutes;
+    }
+    
+    // Enviar al backend (fire and forget)
+    ConductorService.actualizarUbicacion(
+      conductorId: widget.conductorId,
+      latitud: lat,
+      longitud: lng,
+      distanceKm: distance,
+      elapsedMinutes: elapsed,
+      solicitudId: widget.solicitudId,
+    ).then((success) {
+      if (!success) {
+        debugPrint('⚠️ Falló actualización de ubicación al backend');
+      }
+    });
   }
 
   // ===========================================================================
@@ -206,19 +258,51 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     await _controller.onStartTrip();
     if (!mounted || _controller.isDisposed) return;
 
-    // Registrar tiempo de inicio
+    // Registrar tiempo de inicio - ESTE ES EL CRONÓMETRO OFICIAL
     _tripStartTime = DateTime.now();
+
+    // Iniciar tracking en tiempo real - SINCRONIZADO con el cronómetro
+    // El mismo _tripStartTime se usa para tracking y para el cálculo final
+    if (widget.solicitudId != null) {
+      await _controller.startRealTimeTracking(
+        solicitudId: widget.solicitudId!,
+        conductorId: widget.conductorId,
+        startTime: _tripStartTime, // Sincronizar con cronómetro del conductor
+      );
+    }
 
     _showStatus('¡Viaje iniciado! Navegando al destino', AppColors.success);
   }
 
   /// Finaliza el viaje cuando se llega al destino.
   Future<void> _onFinishTrip() async {
+    // ========== CALCULAR TIEMPO REAL DEL CRONÓMETRO ==========
+    // El tiempo se mide desde "comenzar viaje" hasta "finalizar viaje"
+    // Este es el tiempo REAL que el conductor usó para el viaje
+    final tiempoRealSeg = _tripStartTime != null
+        ? DateTime.now().difference(_tripStartTime!).inSeconds
+        : 0;
+    
+    debugPrint('⏱️ [Conductor] Tiempo real cronómetro: ${tiempoRealSeg}s (${(tiempoRealSeg / 60).toStringAsFixed(2)} min)');
+    
+    // Finalizar tracking y obtener precio real - enviando el tiempo del cronómetro
+    final trackingResult = await _controller.finalizeTracking(tiempoRealSegundos: tiempoRealSeg);
+    
+    // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
+    // Si no hay tracking, usar 0 (no se movió)
+    final distanciaKm = trackingResult?.distanciaRealKm ?? 
+        (_controller.distanciaRecorridaKm > 0 ? _controller.distanciaRecorridaKm : 0.0);
+    
+    // Usar el tiempo del cronómetro (ya se envió al backend)
+    final duracionMin = (tiempoRealSeg / 60).ceil();
+
     if (widget.solicitudId != null) {
       try {
         final success = await ConductorService.completarViaje(
           conductorId: widget.conductorId,
           solicitudId: widget.solicitudId!,
+          distanceKm: distanciaKm,
+          elapsedMinutes: duracionMin,
         );
         if (!success) {
           _showStatus('Error al finalizar el viaje', AppColors.error);
@@ -231,26 +315,44 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       }
     }
 
+    // Limpiar persistencia
+    await TripPersistenceService().clearActiveTrip();
+
     if (!mounted) return;
     
-    // Navegar a pantalla de completación
-    _navigateToTripCompletion();
+    // Navegar a pantalla de completación con datos del tracking
+    _navigateToTripCompletion(trackingResult: trackingResult);
   }
 
   /// Navega a la pantalla de completación del viaje.
-  void _navigateToTripCompletion() {
-    // Calcular datos del viaje
-    final distanciaKm = _controller.distanceKm > 0 
-        ? _controller.distanceKm 
-        : 5.0; // Fallback
-    // Calcular duración real del viaje
-    // Si no hay hora de inicio registrada, usar fallback de 15 min
-    final duracionMin = _tripStartTime != null
-        ? DateTime.now().difference(_tripStartTime!).inMinutes
-        : (_controller.etaMinutes > 0 ? _controller.etaMinutes : 15);
+  void _navigateToTripCompletion({TrackingFinalResult? trackingResult}) {
+    // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
+    final distanciaKm = trackingResult?.distanciaRealKm ?? 
+        (_controller.distanciaRecorridaKm > 0 ? _controller.distanciaRecorridaKm : 0.0);
     
-    // TODO: Obtener precio real del backend
-    final precio = distanciaKm * 2500; // Estimado
+    // ========== TIEMPO DEL CRONÓMETRO DEL CONDUCTOR ==========
+    // El tiempo se envió al backend y vuelve en trackingResult.tiempoRealSeg
+    // Este es el tiempo REAL medido desde "comenzar viaje" hasta "finalizar"
+    int duracionSeg;
+    if (trackingResult != null && trackingResult.tiempoRealSeg > 0) {
+      // Tiempo del cronómetro del conductor (el más preciso)
+      duracionSeg = trackingResult.tiempoRealSeg;
+    } else if (_tripStartTime != null) {
+      // Fallback: calcular localmente
+      duracionSeg = DateTime.now().difference(_tripStartTime!).inSeconds;
+    } else {
+      duracionSeg = 0;
+    }
+    
+    // Usar precio real del tracking si está disponible
+    final precio = trackingResult?.precioFinal ?? 
+        (_controller.precioActual > 0 ? _controller.precioActual : 0.0);
+    
+    debugPrint('📊 [ConductorTracking] Finalizando viaje:');
+    debugPrint('   - Precio real tracking: ${trackingResult?.precioFinal}');
+    debugPrint('   - Precio usado: $precio');
+    debugPrint('   - Distancia real: $distanciaKm km');
+    debugPrint('   - Tiempo real: ${duracionSeg}s (${(duracionSeg / 60).toStringAsFixed(1)} min)');
     
     Navigator.pushReplacement(
       context,
@@ -262,7 +364,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             origen: widget.direccionOrigen,
             destino: widget.direccionDestino,
             distanciaKm: distanciaKm,
-            duracionMinutos: duracionMin,
+            duracionSegundos: duracionSeg,
             precio: precio,
             metodoPago: 'Efectivo', // TODO: Obtener del backend
             otroUsuarioNombre: widget.clienteNombre ?? 'Pasajero',

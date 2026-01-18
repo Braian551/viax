@@ -1306,6 +1306,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   Future<void> _confirmTrip() async {
     if (_quote == null) return;
 
+    // Obtener empresa seleccionada para el vehículo actual
+    final empresaId = _selectedVehicleType != null 
+        ? _selectedCompanyPerVehicle[_selectedVehicleType!] 
+        : null;
+
     // Navegar a pantalla de selección de punto de encuentro con el vehículo seleccionado
     Navigator.push(
       context,
@@ -1317,6 +1322,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               stops: widget.stops,
               vehicleType: _selectedVehicleType ?? '',
               quote: _quote!,
+              empresaId: empresaId,
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);

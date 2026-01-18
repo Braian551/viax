@@ -54,7 +54,7 @@ try {
             dc.latitud_actual as conductor_latitud,
             dc.longitud_actual as conductor_longitud
         FROM solicitudes_servicio s
-        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado IN ('asignado', 'llegado')
+        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado IN ('asignado', 'llegado', 'en_curso', 'completado')
         LEFT JOIN usuarios u ON ac.conductor_id = u.id
         LEFT JOIN detalles_conductor dc ON u.id = dc.usuario_id
         WHERE s.id = ?
@@ -105,6 +105,15 @@ try {
             'distancia_km' => (float)($trip['distancia_estimada'] ?? 0),
             'tiempo_estimado_min' => (int)($trip['tiempo_estimado'] ?? 0),
             'fecha_creacion' => $trip['fecha_creacion'],
+            // Datos de tracking en tiempo real
+            'distancia_recorrida' => isset($trip['distancia_recorrida']) ? (float)$trip['distancia_recorrida'] : null,
+            'tiempo_transcurrido' => isset($trip['tiempo_transcurrido']) ? (int)$trip['tiempo_transcurrido'] : null,
+            'precio_estimado' => (float)($trip['precio_estimado'] ?? 0),
+            'precio_final' => isset($trip['precio_final']) ? (float)$trip['precio_final'] : null,
+            // precio_en_tracking es el precio parcial calculado durante el viaje
+            'precio_en_tracking' => isset($trip['precio_en_tracking']) ? (float)$trip['precio_en_tracking'] : null,
+            // precio_ajustado_por_tracking es un boolean, indica si el precio fue calculado con tracking real
+            'precio_ajustado_por_tracking' => isset($trip['precio_ajustado_por_tracking']) ? (bool)$trip['precio_ajustado_por_tracking'] : false,
             'conductor' => $trip['conductor_id'] ? [
                 'id' => (int)$trip['conductor_id'],
                 'nombre' => trim($trip['conductor_nombre'] . ' ' . $trip['conductor_apellido']),

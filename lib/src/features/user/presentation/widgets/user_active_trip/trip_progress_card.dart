@@ -5,6 +5,7 @@ import '../../../../../theme/app_colors.dart';
 class TripProgressCard extends StatelessWidget {
   final double distanceKm;
   final int etaMinutes;
+  final int? elapsedMinutes; // Tiempo transcurrido
   final double progress;
   final bool isDark;
 
@@ -12,6 +13,7 @@ class TripProgressCard extends StatelessWidget {
     super.key,
     required this.distanceKm,
     required this.etaMinutes,
+    this.elapsedMinutes,
     required this.progress,
     required this.isDark,
   });
@@ -94,32 +96,68 @@ class TripProgressCard extends StatelessWidget {
                 ),
               ),
 
-              // ETA
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.access_time_rounded,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _etaText,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+              // Tiempos (ETA y Transcurrido)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Tiempo transcurrido (si existe)
+                  if (elapsedMinutes != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.timer_outlined,
+                            color: Colors.orange,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$elapsedMinutes min',
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+
+                  // ETA
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.access_time_rounded,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _etaText,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

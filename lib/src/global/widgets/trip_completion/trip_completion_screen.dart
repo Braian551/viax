@@ -16,6 +16,9 @@ class TripCompletionData {
   final String origen;
   final String destino;
   final double distanciaKm;
+  /// Duración en segundos (preferido para formato flexible)
+  final int duracionSegundos;
+  /// Duración en minutos (legacy, se usa si duracionSegundos = 0)
   final int duracionMinutos;
   final double precio;
   final String metodoPago;
@@ -28,7 +31,8 @@ class TripCompletionData {
     required this.origen,
     required this.destino,
     required this.distanciaKm,
-    required this.duracionMinutos,
+    this.duracionSegundos = 0,
+    this.duracionMinutos = 0,
     required this.precio,
     required this.metodoPago,
     required this.otroUsuarioNombre,
@@ -296,6 +300,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                       origen: widget.tripData.origen,
                       destino: widget.tripData.destino,
                       distanciaKm: widget.tripData.distanciaKm,
+                      duracionSegundos: widget.tripData.duracionSegundos,
                       duracionMinutos: widget.tripData.duracionMinutos,
                       precio: _getFinalPrice(), // Usar precio redondeado si aplica
                       metodoPago: widget.tripData.metodoPago,

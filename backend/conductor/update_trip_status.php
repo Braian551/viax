@@ -12,22 +12,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 
 try {
-    $data = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true);
     
-    $solicitudId = $data['solicitud_id'] ?? null;
-    $conductorId = $data['conductor_id'] ?? null;
-    $nuevoEstado = $data['nuevo_estado'] ?? null;
+    $solicitud_id = $input['solicitud_id'] ?? null;
+    $conductor_id = $input['conductor_id'] ?? null;
+    $nuevo_estado = $input['nuevo_estado'] ?? null;
     
-    if (!$solicitudId || !$conductorId || !$nuevoEstado) {
+    if (!$solicitud_id || !$conductor_id || !$nuevo_estado) {
         throw new Exception('solicitud_id, conductor_id y nuevo_estado son requeridos');
     }
     
     // Validar estados permitidos
-    $estadosPermitidos = ['aceptada', 'conductor_asignado', 'conductor_llego', 'recogido', 'en_transito', 'en_curso', 'entregado', 'completada', 'cancelada'];
-    if (!in_array($nuevoEstado, $estadosPermitidos)) {
+    $estados_validos = ['conductor_llego', 'recogido', 'en_curso', 'completada', 'cancelada'];
+    if (!in_array($nuevo_estado, $estados_validos)) {
         throw new Exception('Estado no válido');
     }
-    
+
+    // Preparar campos opcionales
+    $distancia_recorrida = isset($input['distancia_recorrida']) ? floatval($input['distancia_recorrida']) : null;
+    $tiempo_transcurrido = isset($input['tiempo_transcurrido']) ? intval($input['tiempo_transcurrido']) : null;
+    $motivo_cancelacion = isset($input['motivo_cancelacion']) ? $input['motivo_cancelacion'] : null;
+    $precio_final = isset($input['precio_final']) ? floatval($input['precio_final']) : null;
+
     $database = new Database();
     $db = $database->getConnection();
     
@@ -35,110 +41,104 @@ try {
     $stmt = $db->prepare("
         SELECT s.*, ac.conductor_id 
         FROM solicitudes_servicio s
-        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
+        LEFT JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id AND ac.estado IN ('asignado', 'llegado', 'en_curso', 'completado')
         WHERE s.id = ?
     ");
-    $stmt->execute([$solicitudId]);
+    $stmt->execute([$solicitud_id]);
     $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$solicitud) {
         throw new Exception('Solicitud no encontrada');
     }
     
-    if ($solicitud['conductor_id'] && $solicitud['conductor_id'] != $conductorId) {
+    if ($solicitud['conductor_id'] && $solicitud['conductor_id'] != $conductor_id) {
         throw new Exception('No tienes permiso para actualizar esta solicitud');
     }
     
-    // Actualizar estado y timestamps correspondientes
-    $updates = ['estado = ?'];
-    $params = [$nuevoEstado];
-    
-    switch ($nuevoEstado) {
-        case 'aceptada':
-        case 'conductor_asignado':
-            $updates[] = 'aceptado_en = NOW()';
-            break;
-        case 'conductor_llego':
-            // Actualizar también la asignación a estado 'llegado'
-            $stmtAsig = $db->prepare("
-                UPDATE asignaciones_conductor 
-                SET estado = 'llegado'
-                WHERE solicitud_id = ? AND conductor_id = ?
-            ");
-            $stmtAsig->execute([$solicitudId, $conductorId]);
-            break;
-        case 'recogido':
-        case 'en_transito':
-        case 'en_curso':
-            $updates[] = 'recogido_en = NOW()';
-            break;
-        case 'entregado':
-            $updates[] = 'entregado_en = NOW()';
-            // Guardar precio final si se proporciona
-            if (isset($data['precio_final']) && $data['precio_final'] > 0) {
-                $updates[] = 'precio_final = ?';
-                $params[] = $data['precio_final'];
-            }
-            break;
-        case 'completada':
-            $updates[] = 'completado_en = NOW()';
-            // Guardar precio final si se proporciona
-            if (isset($data['precio_final']) && $data['precio_final'] > 0) {
-                $updates[] = 'precio_final = ?';
-                $params[] = $data['precio_final'];
-            }
-            break;
-        case 'cancelada':
-            $updates[] = 'cancelado_en = NOW()';
-            if (isset($data['motivo_cancelacion'])) {
-                $updates[] = 'motivo_cancelacion = ?';
-                $params[] = $data['motivo_cancelacion'];
-            }
-            break;
+    // Construir QUERY dinámico
+    $update_fields = ["estado = :estado"];
+    $params = [
+        ':estado' => $nuevo_estado,
+        ':solicitud_id' => $solicitud_id
+    ];
+
+    // Actualizar timestamps y estados
+    if ($nuevo_estado === 'conductor_llego') {
+        $update_fields[] = "conductor_llego_en = NOW()";
+        
+        // Actualizar asignación
+        $stmtAsig = $db->prepare("UPDATE asignaciones_conductor SET estado = 'llegado' WHERE solicitud_id = ? AND conductor_id = ?");
+        $stmtAsig->execute([$solicitud_id, $conductor_id]);
+        
+    } elseif ($nuevo_estado === 'recogido' || $nuevo_estado === 'en_curso') {
+        $update_fields[] = "recogido_en = NOW()";
+        
+        // Actualizar asignación a 'en_curso'
+        $stmtAsig = $db->prepare("UPDATE asignaciones_conductor SET estado = 'en_curso' WHERE solicitud_id = ? AND conductor_id = ?");
+        $stmtAsig->execute([$solicitud_id, $conductor_id]);
+        
+    } elseif ($nuevo_estado === 'completada') {
+        $update_fields[] = "completado_en = NOW()";
+        $update_fields[] = "entregado_en = NOW()";
+        
+        if ($precio_final !== null) {
+            $update_fields[] = "precio_final = :precio";
+            $params[':precio'] = $precio_final;
+        }
+    } elseif ($nuevo_estado === 'cancelada') {
+        $update_fields[] = "cancelado_en = NOW()";
+        if ($motivo_cancelacion) {
+            $update_fields[] = "motivo_cancelacion = :motivo";
+            $params[':motivo'] = $motivo_cancelacion;
+        }
     }
-    
-    $params[] = $solicitudId;
-    
-    $stmt = $db->prepare("
-        UPDATE solicitudes_servicio 
-        SET " . implode(', ', $updates) . "
-        WHERE id = ?
-    ");
+
+    // --- GUARDAR DATOS FINALES DEL VIAJE ---
+    // NOTA: Si el estado es 'completada', finalize.php ya guardó los datos correctos
+    // con el precio calculado. No sobrescribimos para evitar perder esos datos.
+    if ($nuevo_estado !== 'completada') {
+        if ($distancia_recorrida !== null) {
+            $update_fields[] = "distancia_recorrida = :distancia";
+            $params[':distancia'] = $distancia_recorrida;
+        }
+        if ($tiempo_transcurrido !== null) {
+            $update_fields[] = "tiempo_transcurrido = :tiempo";
+            $params[':tiempo'] = $tiempo_transcurrido;
+        }
+    }
+
+    $query = "UPDATE solicitudes_servicio SET " . implode(', ', $update_fields) . " WHERE id = :solicitud_id";
+    $stmt = $db->prepare($query);
     $stmt->execute($params);
-    
-    // Si se completó el viaje, actualizar disponibilidad del conductor
-    if ($nuevoEstado === 'completada') {
+
+    // Si se completó el viaje, actualizar disponibilidad del conductor y asignación
+    if ($nuevo_estado === 'completada') {
         $stmt = $db->prepare("
             UPDATE detalles_conductor 
             SET disponible = 1,
                 total_viajes = COALESCE(total_viajes, 0) + 1
             WHERE usuario_id = ?
         ");
-        $stmt->execute([$conductorId]);
+        $stmt->execute([$conductor_id]);
+        
+        // Actualizar estado de la asignación a 'completado'
+        $stmt = $db->prepare("UPDATE asignaciones_conductor SET estado = 'completado' WHERE solicitud_id = ? AND conductor_id = ?");
+        $stmt->execute([$solicitud_id, $conductor_id]);
     }
     
     // Si se canceló, liberar al conductor
-    if ($nuevoEstado === 'cancelada') {
-        $stmt = $db->prepare("
-            UPDATE detalles_conductor 
-            SET disponible = 1
-            WHERE usuario_id = ?
-        ");
-        $stmt->execute([$conductorId]);
+    if ($nuevo_estado === 'cancelada') {
+        $stmt = $db->prepare("UPDATE detalles_conductor SET disponible = 1 WHERE usuario_id = ?");
+        $stmt->execute([$conductor_id]);
         
-        // Actualizar estado de asignación
-        $stmt = $db->prepare("
-            UPDATE asignaciones_conductor 
-            SET estado = 'cancelado'
-            WHERE solicitud_id = ? AND conductor_id = ?
-        ");
-        $stmt->execute([$solicitudId, $conductorId]);
+        $stmt = $db->prepare("UPDATE asignaciones_conductor SET estado = 'cancelado' WHERE solicitud_id = ? AND conductor_id = ?");
+        $stmt->execute([$solicitud_id, $conductor_id]);
     }
     
     echo json_encode([
         'success' => true,
         'message' => 'Estado actualizado correctamente',
-        'nuevo_estado' => $nuevoEstado
+        'nuevo_estado' => $nuevo_estado
     ]);
     
 } catch (Exception $e) {
@@ -148,3 +148,4 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+?>
