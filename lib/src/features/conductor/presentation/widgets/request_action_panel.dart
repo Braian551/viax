@@ -168,7 +168,7 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             tween: Tween<double>(
               begin: 0,
               end: _panelCollapsed
-                  ? _collapsedOffset
+                  ? 0
                   : _currentDragOffset.clamp(-_maxDragOffset, _collapsedOffset),
             ),
             duration: _isDragging
@@ -226,21 +226,17 @@ class _RequestActionPanelState extends State<RequestActionPanel>
                         setState(() {
                           _panelExpanded = false;
                           _panelCollapsed = true;
-                          _currentDragOffset = _collapsedOffset;
+                          _currentDragOffset = 0; // Fix: Offset 0 para mostrar la info compacta
                         });
                       } else {
                         // Regresar a estado normal
                         setState(() {
-                          _currentDragOffset = _panelCollapsed
-                              ? _collapsedOffset
-                              : 0;
+                          _currentDragOffset = _panelCollapsed ? 0 : 0;
                         });
                       }
                     } else {
                       setState(
-                        () => _currentDragOffset = _panelCollapsed
-                            ? _collapsedOffset
-                            : 0,
+                        () => _currentDragOffset = _panelCollapsed ? 0 : 0,
                       );
                     }
                   },
