@@ -45,6 +45,8 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   
   // Track which field was last focused (for validation when focus is lost)
   String _lastFocusedField = 'origin';
+  // Track which field is currently focused (for showing default options)
+  String? _currentlyFocusedField;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -62,18 +64,32 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     _originController.addListener(() => _onTextChanged(targetField: 'origin'));
     _destinationController.addListener(() => _onTextChanged(targetField: 'destination'));
     
-    // Track focus changes to remember last focused field
+    // Track focus changes - handle both gained and lost focus
     _originFocusNode.addListener(() {
       if (_originFocusNode.hasFocus) {
-        _lastFocusedField = 'origin';
+        // Gained focus - trigger field focused logic
+        _onFieldFocused('origin');
+      } else {
+        // Lost focus - delay to allow new field to gain focus first
+        Future.microtask(() {
+          if (mounted && _currentlyFocusedField == 'origin') {
+            setState(() => _currentlyFocusedField = null);
+          }
+        });
       }
-      setState(() {});
     });
     _destinationFocusNode.addListener(() {
       if (_destinationFocusNode.hasFocus) {
-        _lastFocusedField = 'destination';
+        // Gained focus - trigger field focused logic
+        _onFieldFocused('destination');
+      } else {
+        // Lost focus - delay to allow new field to gain focus first
+        Future.microtask(() {
+          if (mounted && _currentlyFocusedField == 'destination') {
+            setState(() => _currentlyFocusedField = null);
+          }
+        });
       }
-      setState(() {});
     });
   }
   
@@ -122,7 +138,24 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       final focusNode = FocusNode();
       
       controller.addListener(() => _onTextChanged(targetField: 'stop_${_stops.length - 1}'));
-      focusNode.addListener(() => setState(() {}));
+      // Handle both gained and lost focus
+      focusNode.addListener(() {
+         final index = _stopFocusNodes.indexOf(focusNode);
+         if (index != -1) {
+           if (focusNode.hasFocus) {
+             // Gained focus
+             _onFieldFocused('stop_$index');
+           } else {
+             // Lost focus - delay to allow new field to gain focus first
+             final fieldName = 'stop_$index';
+             Future.microtask(() {
+               if (mounted && _currentlyFocusedField == fieldName) {
+                 setState(() => _currentlyFocusedField = null);
+               }
+             });
+           }
+         }
+      });
       
       _stopControllers.add(controller);
       _stopFocusNodes.add(focusNode);
@@ -255,11 +288,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     );
   }
 
-  Future<void> _onInputTap({required String targetField}) async {
+  void _onFieldFocused(String targetField) {
+    _lastFocusedField = targetField;
+    _currentlyFocusedField = targetField;
+    
+    // Clear suggestions initially and trigger rebuild
     setState(() {
       _suggestions = [];
     });
     
+    // Check if there is text to search
     String query = '';
     if (targetField == 'origin') {
       query = _originController.text.trim();
@@ -267,11 +305,14 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       query = _destinationController.text.trim();
     } else if (targetField.startsWith('stop_')) {
       final index = int.parse(targetField.split('_')[1]);
-      query = _stopControllers[index].text.trim();
+      if (index < _stopControllers.length) {
+        query = _stopControllers[index].text.trim();
+      }
     }
 
+    // Only search if there is text. If empty, the UI automatically shows default options
+    // because _suggestions is empty and we have focus.
     if (query.isNotEmpty) {
-      // Don't await here - let it run asynchronously to avoid blocking UI
       _searchLocation(query, targetField);
     }
   }
@@ -448,6 +489,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     bool isDraggable = false,
     VoidCallback? onRemove,
   }) {
+
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -517,7 +559,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                        ),
                      ),
 
-                  // Input Field
+                  // Input Field - focus listener handles showing options
                   Expanded(
                     child: TextFormField(
                       focusNode: focusNode,
@@ -550,14 +592,13 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                             )
                           : null,
                       ),
-                      onTap: () => _onInputTap(targetField: targetField),
                     ),
                   ),
                   
                   // Clear/Remove Buttons
                   if (controller.text.isNotEmpty)
                     GestureDetector(
-                      onTap: () => setState(() {
+                      onTap: () {
                         controller.clear();
                         if (targetField == 'origin') _selectedOrigin = null;
                         if (targetField == 'destination') _selectedDestination = null;
@@ -565,8 +606,10 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                            int idx = int.parse(targetField.split('_')[1]);
                            _stops[idx] = SimpleLocation(latitude: 0, longitude: 0, address: '');
                         }
-                        _suggestions = [];
-                      }),
+                        setState(() => _suggestions = []);
+                        // Request focus will trigger the listener which shows options
+                        focusNode.requestFocus();
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
@@ -632,52 +675,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
             child: _buildActionButton(
               icon: Icons.map_rounded,
               label: 'Mapa',
-              onTap: () async {
-                LatLng? initialPos;
-                // Try to get position from currently selected field or origin
-                if (_selectedOrigin != null) {
-                  initialPos = LatLng(_selectedOrigin!.latitude, _selectedOrigin!.longitude);
-                }
-                
-                final result = await Navigator.push<SimpleLocation>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => LocationPickerScreen(
-                      initialPosition: initialPos,
-                    ),
-                  ),
-                );
-
-                if (result != null && mounted) {
-                  // Use _lastFocusedField ya que el foco se pierde al navegar
-                  final targetField = _lastFocusedField;
-                  
-                  debugPrint('🗺️ Ubicación desde mapa para campo: $targetField');
-                  debugPrint('🗺️ Resultado: ${result.address}');
-                  
-                  if (_isLocationDuplicate(result, targetField)) {
-                    debugPrint('🚫 Validación bloqueó la selección desde mapa');
-                    return;
-                  }
-
-                  setState(() {
-                    if (targetField == 'origin') {
-                      _selectedOrigin = result;
-                      _originController.text = result.address;
-                    } else if (targetField == 'destination') {
-                      _selectedDestination = result;
-                      _destinationController.text = result.address;
-                    } else if (targetField.startsWith('stop_')) {
-                      final i = int.parse(targetField.split('_')[1]);
-                      if (i < _stops.length) {
-                        _stops[i] = result;
-                        _stopControllers[i].text = result.address;
-                      }
-                    }
-                    _suggestions = [];
-                  });
-                }
-              },
+              onTap: () => _openMapPicker(null),
               isDark: isDark,
             ),
           ),
@@ -751,6 +749,42 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   }
 
   Widget _buildSuggestionsList(bool isDark) {
+    // Use explicit state variable for reliable focus detection
+    final focusedField = _currentlyFocusedField;
+
+    // If there is focus and NO search results (empty query), show default options
+    if (_suggestions.isEmpty && focusedField != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 100),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            _buildDefaultActionItem(
+              isDark: isDark,
+              icon: Icons.my_location_rounded,
+              title: 'Usar mi ubicación actual',
+              subtitle: 'Usa el GPS para localizarte',
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                _setCurrentLocation(targetField: focusedField!);
+              },
+            ),
+            _buildDefaultActionItem(
+              isDark: isDark,
+              icon: Icons.map_rounded,
+              title: 'Seleccionar en el mapa',
+              subtitle: 'Elige el punto exacto en el mapa',
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                _openMapPicker(focusedField!);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_suggestions.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -1285,5 +1319,128 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
         setState(() => _isLoadingSuggestions = false);
       }
     }
+  }
+
+  Future<void> _openMapPicker(String? targetFieldOverride) async {
+    final targetField = targetFieldOverride ?? _lastFocusedField;
+    
+    LatLng? initialPos;
+    // Try to get position from currently selected field or origin
+    if (_selectedOrigin != null) {
+      initialPos = LatLng(_selectedOrigin!.latitude, _selectedOrigin!.longitude);
+    }
+    
+    final result = await Navigator.push<SimpleLocation>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationPickerScreen(
+          initialPosition: initialPos,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      debugPrint('🗺️ Ubicación desde mapa para campo: $targetField');
+      debugPrint('🗺️ Resultado: ${result.address}');
+      
+      if (_isLocationDuplicate(result, targetField)) {
+        debugPrint('🚫 Validación bloqueó la selección desde mapa');
+        return;
+      }
+
+      setState(() {
+        if (targetField == 'origin') {
+          _selectedOrigin = result;
+          _originController.text = result.address;
+        } else if (targetField == 'destination') {
+          _selectedDestination = result;
+          _destinationController.text = result.address;
+        } else if (targetField.startsWith('stop_')) {
+          final i = int.parse(targetField.split('_')[1]);
+          if (i < _stops.length) {
+            _stops[i] = result;
+            _stopControllers[i].text = result.address;
+          }
+        }
+        _suggestions = [];
+      });
+    }
+  }
+
+  Widget _buildDefaultActionItem({
+    required bool isDark,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: isDark ? Colors.white24 : Colors.black26, 
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
