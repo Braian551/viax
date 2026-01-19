@@ -18,7 +18,11 @@ class TripInfoPanel extends StatelessWidget {
   final double? distanciaRecorrida;
   
   /// Tiempo transcurrido real en segundos del tracking (opcional)
+  /// Tiempo transcurrido real en segundos del tracking (opcional)
   final int? tiempoTranscurrido;
+  
+  /// Callback al tocar la info del conductor
+  final VoidCallback? onDriverTap;
 
   const TripInfoPanel({
     super.key,
@@ -30,6 +34,7 @@ class TripInfoPanel extends StatelessWidget {
     this.precioActual,
     this.distanciaRecorrida,
     this.tiempoTranscurrido,
+    this.onDriverTap,
   });
   
   /// Formatea segundos en formato legible (seg/min/horas)
@@ -101,132 +106,152 @@ class TripInfoPanel extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Info del conductor
-          Row(
-            children: [
-              // Avatar
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: conductorFoto != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.network(
-                          DocumentUploadService.getDocumentUrl(conductorFoto),
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.person_rounded,
-                            color: AppColors.primary,
-                            size: 28,
-                          ),
-                        ),
-                      )
-                    : const Icon(
-                        Icons.person_rounded,
-                        color: AppColors.primary,
-                        size: 28,
-                      ),
+          // Info del conductor - GestureDetector para evitar conflicto con scroll
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              debugPrint('👆 Tap en info del conductor');
+              if (onDriverTap != null) onDriverTap!();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(width: 14),
-
-              // Nombre y vehículo
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            conductorNombre,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.grey[900],
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (calificacion != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  color: Colors.amber,
-                                  size: 14,
+                    // Avatar
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: conductorFoto != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.network(
+                                DocumentUploadService.getDocumentUrl(conductorFoto),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.person_rounded,
+                                  color: AppColors.primary,
+                                  size: 28,
                                 ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  calificacion.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    color: Colors.amber,
-                                    fontSize: 12,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person_rounded,
+                              color: AppColors.primary,
+                              size: 28,
+                            ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Nombre y vehículo
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  conductorNombre,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.grey[900],
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (calificacion != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        color: Colors.amber,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        calificacion.toStringAsFixed(1),
+                                        style: const TextStyle(
+                                          color: Colors.amber,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
+                          const SizedBox(height: 4),
+                          if (vehiculoInfo != null && vehiculoInfo.isNotEmpty)
+                            Text(
+                              vehiculoInfo,
+                              style: TextStyle(
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontSize: 13,
+                              ),
+                            ),
                         ],
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    if (vehiculoInfo != null && vehiculoInfo.isNotEmpty)
-                      Text(
-                        vehiculoInfo,
-                        style: TextStyle(
-                          color: isDark ? Colors.white60 : Colors.grey[600],
-                          fontSize: 13,
+
+                    // Placa
+                    if (placa != null && placa.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? Colors.white12 : Colors.grey[300]!,
+                          ),
+                        ),
+                        child: Text(
+                          placa,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.grey[800],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
                         ),
                       ),
+                    
+                    // Flecha indicando que es clickeable
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: isDark ? Colors.white24 : Colors.grey[300],
+                    ),
                   ],
                 ),
               ),
-
-              // Placa
-              if (placa != null && placa.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDark ? Colors.white12 : Colors.grey[300]!,
-                    ),
-                  ),
-                  child: Text(
-                    placa,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.grey[800],
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            ),
           
           // Tracking en tiempo real
           if (precioActual != null && precioActual! > 0) ...[

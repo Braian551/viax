@@ -16,6 +16,7 @@ import '../../services/trip_request_service.dart';
 import '../../services/client_tracking_service.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
 import '../widgets/user_active_trip/user_active_trip_widgets.dart';
+import '../widgets/user_active_trip/driver_detail_sheet.dart';
 
 /// Pantalla de viaje activo para el usuario/cliente.
 ///
@@ -799,6 +800,32 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     );
   }
 
+  void _showDriverDetails() {
+    debugPrint('🚀 _showDriverDetails called. Conductor: $_conductor');
+    if (_conductor == null) {
+      debugPrint('❌ Conductor is null, cannot show details');
+      return;
+    }
+    if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => DriverDetailSheet(
+          conductor: _conductor!,
+          isDark: isDark,
+          scrollController: controller,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomPanel(bool isDark) {
     return DraggableScrollableSheet(
       initialChildSize: 0.32,
@@ -846,6 +873,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                   precioActual: _precioActual,
                   distanciaRecorrida: _distanceTraveled,
                   tiempoTranscurrido: _tiempoTranscurridoSeg,
+                  onDriverTap: _showDriverDetails,
                 ),
 
                 const SizedBox(height: 16),
@@ -867,11 +895,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                       const SizedBox(width: 12),
                       Expanded(
                         child: _ActionButton(
-                          icon: Icons.share_location_rounded,
-                          label: 'Compartir',
-                          onTap: () {
-                            // TODO: Compartir ubicación
-                          },
+                          icon: Icons.person_rounded,
+                          label: 'Perfil',
+                          onTap: _showDriverDetails,
                           isDark: isDark,
                         ),
                       ),
