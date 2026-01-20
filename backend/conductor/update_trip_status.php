@@ -94,17 +94,14 @@ try {
     }
 
     // --- GUARDAR DATOS FINALES DEL VIAJE ---
-    // NOTA: Si el estado es 'completada', finalize.php ya guardó los datos correctos
-    // con el precio calculado. No sobrescribimos para evitar perder esos datos.
-    if ($nuevo_estado !== 'completada') {
-        if ($distancia_recorrida !== null) {
-            $update_fields[] = "distancia_recorrida = :distancia";
-            $params[':distancia'] = $distancia_recorrida;
-        }
-        if ($tiempo_transcurrido !== null) {
-            $update_fields[] = "tiempo_transcurrido = :tiempo";
-            $params[':tiempo'] = $tiempo_transcurrido;
-        }
+    // Siempre guardar distancia y tiempo si vienen en la petición
+    if ($distancia_recorrida !== null && $distancia_recorrida > 0) {
+        $update_fields[] = "distancia_recorrida = :distancia";
+        $params[':distancia'] = $distancia_recorrida;
+    }
+    if ($tiempo_transcurrido !== null && $tiempo_transcurrido > 0) {
+        $update_fields[] = "tiempo_transcurrido = :tiempo";
+        $params[':tiempo'] = $tiempo_transcurrido;
     }
 
     $query = "UPDATE solicitudes_servicio SET " . implode(', ', $update_fields) . " WHERE id = :solicitud_id";

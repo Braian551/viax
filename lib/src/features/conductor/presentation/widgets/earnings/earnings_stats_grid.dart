@@ -143,42 +143,61 @@ class _EarningsStatCardState extends State<EarningsStatCard>
 class EarningsStatsGrid extends StatelessWidget {
   final int totalTrips;
   final double averagePerTrip;
+  final double comisionPeriodo;
 
   const EarningsStatsGrid({
     super.key,
     required this.totalTrips,
     required this.averagePerTrip,
+    this.comisionPeriodo = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SizedBox(
-        height: 140,
-        child: Row(
-          children: [
-            Expanded(
-              child: EarningsStatCard(
-                icon: Icons.route_rounded,
-                label: 'Viajes',
-                value: '$totalTrips',
-                color: AppColors.primary,
-                index: 0,
-              ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 140,
+            child: Row(
+              children: [
+                Expanded(
+                  child: EarningsStatCard(
+                    icon: Icons.route_rounded,
+                    label: 'Viajes',
+                    value: '$totalTrips',
+                    color: AppColors.primary,
+                    index: 0,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: EarningsStatCard(
+                    icon: Icons.trending_up_rounded,
+                    label: 'Promedio',
+                    value: formatCurrency(averagePerTrip),
+                    color: AppColors.accent,
+                    index: 1,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
+          ),
+          if (comisionPeriodo > 0) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 140,
               child: EarningsStatCard(
-                icon: Icons.trending_up_rounded,
-                label: 'Promedio',
-                value: formatCurrency(averagePerTrip),
-                color: AppColors.accent,
-                index: 1,
+                icon: Icons.receipt_long_rounded,
+                label: 'Comisión período',
+                value: formatCurrency(comisionPeriodo),
+                color: Colors.orange,
+                index: 2,
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

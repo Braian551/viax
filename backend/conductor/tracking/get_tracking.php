@@ -163,8 +163,10 @@ try {
     // Si NO hay tracking pero el viaje está completado, usar datos finales de la solicitud
     else if (in_array($solicitud['estado'], ['completada', 'entregado'])) {
         $distancia_final = floatval($solicitud['distancia_recorrida'] ?? 0);
+        // tiempo_transcurrido está en SEGUNDOS (guardado por finalize.php)
         $tiempo_final_seg = intval($solicitud['tiempo_transcurrido'] ?? 0);
         $tiempo_final_min = ceil($tiempo_final_seg / 60);
+
         $precio_final = floatval($solicitud['precio_final'] ?? $solicitud['precio_estimado']);
         
         $response['tracking_actual'] = [

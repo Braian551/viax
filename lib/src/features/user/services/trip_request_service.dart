@@ -93,22 +93,27 @@ class TripRequestService {
   }
 
   /// Buscar conductores cercanos disponibles
+  /// Filtra por tipo de vehículo y opcionalmente por empresa
   static Future<List<Map<String, dynamic>>> findNearbyDrivers({
     required double latitude,
     required double longitude,
     required String vehicleType,
+    int? empresaId,
     double radiusKm = 5.0,
   }) async {
     try {
+      final requestBody = {
+        'latitud': latitude,
+        'longitud': longitude,
+        'tipo_vehiculo': vehicleType,
+        'radio_km': radiusKm,
+        if (empresaId != null) 'empresa_id': empresaId,
+      };
+      
       final response = await http.post(
         Uri.parse('$baseUrl/user/find_nearby_drivers.php'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'latitud': latitude,
-          'longitud': longitude,
-          'tipo_vehiculo': vehicleType,
-          'radio_km': radiusKm,
-        }),
+        body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {

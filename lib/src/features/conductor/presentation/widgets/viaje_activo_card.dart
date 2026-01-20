@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/conductor_active_trip_screen.dart';
 import '../../services/document_upload_service.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../global/services/auth/user_service.dart';
 
 class ViajeActivoCard extends StatelessWidget {
   final Map<String, dynamic> viaje;
@@ -186,7 +187,8 @@ class ViajeActivoCard extends StatelessWidget {
                                 direccionOrigen: viaje['direccion_origen']?.toString() ?? origen,
                                 direccionDestino: viaje['direccion_destino']?.toString() ?? destino,
                                 clienteNombre: clienteNombre,
-                                clienteFoto: viaje['cliente_foto']?.toString(),
+                                // Procesar foto R2 correctamente
+                                clienteFoto: _processPhotoUrl(viaje['cliente_foto']?.toString()),
                               ),
                             ),
                           );
@@ -237,5 +239,16 @@ class ViajeActivoCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Procesa la URL de la foto para manejar correctamente fotos de R2
+  static String? _processPhotoUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.isEmpty) return null;
+    // Si ya es una URL completa, retornarla
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      return rawUrl;
+    }
+    // Si es un key de R2, convertirla a URL completa
+    return UserService.getR2ImageUrl(rawUrl);
   }
 }

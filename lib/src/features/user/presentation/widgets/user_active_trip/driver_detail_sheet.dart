@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../../conductor/services/document_upload_service.dart';
 
-class DriverDetailSheet extends StatelessWidget {
+import 'package:viax/src/global/services/rating_service.dart';
+
+class DriverDetailSheet extends StatefulWidget {
   final Map<String, dynamic> conductor;
   final bool isDark;
   final ScrollController? scrollController;
@@ -15,42 +17,79 @@ class DriverDetailSheet extends StatelessWidget {
   });
 
   @override
+  State<DriverDetailSheet> createState() => _DriverDetailSheetState();
+}
+
+class _DriverDetailSheetState extends State<DriverDetailSheet> {
+  List<Map<String, dynamic>> _reviews = [];
+  bool _isLoadingFn = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    debugPrint('🔍 [DriverDetailSheet] Conductor data: ${widget.conductor}');
+    final conductorId = widget.conductor['id'] ?? widget.conductor['id_conductor'];
+    debugPrint('🔍 [DriverDetailSheet] Conductor ID: $conductorId');
+    
+    if (conductorId == null) {
+      debugPrint('🔍 [DriverDetailSheet] Conductor ID is null, aborting');
+      if (mounted) setState(() => _isLoadingFn = false);
+      return;
+    }
+
+    // Convertir ID a entero si viene como string
+    final idInt = conductorId is String ? int.tryParse(conductorId) : conductorId as int?;
+    debugPrint('🔍 [DriverDetailSheet] ID as int: $idInt');
+    
+    if (idInt == null) {
+        debugPrint('🔍 [DriverDetailSheet] Could not parse ID to int');
+        if (mounted) setState(() => _isLoadingFn = false);
+        return;
+    }
+
+    try {
+      final response = await RatingService.obtenerCalificaciones(
+        usuarioId: idInt,
+        tipoUsuario: 'conductor',
+        limit: 10,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (response['success'] == true) {
+            _reviews = List<Map<String, dynamic>>.from(response['calificaciones'] ?? []);
+          }
+          _isLoadingFn = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading reviews: $e');
+      if (mounted) setState(() => _isLoadingFn = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final conductorNombre = conductor['nombre'] as String? ?? 'Conductor';
-    final conductorFoto = conductor['foto'];
-    final calificacion = (conductor['calificacion_promedio'] as num?)?.toDouble() ?? 5.0;
-    final vehiculo = conductor['vehiculo'] as Map<String, dynamic>?;
+    final conductorNombre = widget.conductor['nombre'] as String? ?? 'Conductor';
+    final conductorFoto = widget.conductor['foto'];
+    // Intentar obtener calificacion de varios campos posibles
+    final calificacion = (widget.conductor['calificacion_promedio'] as num?)?.toDouble() 
+        ?? (widget.conductor['calificacion'] as num?)?.toDouble() 
+        ?? 5.0;
+    final vehiculo = widget.conductor['vehiculo'] as Map<String, dynamic>?;
     final vehiculoInfo = vehiculo != null
         ? '${vehiculo['marca'] ?? ''} ${vehiculo['modelo'] ?? ''}'.trim()
         : 'Vehículo no especificado';
     final placa = vehiculo?['placa'] as String? ?? '';
     
-    // Mock reviews for now as they are not yet in the backend response
-    final reviews = [
-      {
-        'usuario': 'Ana María',
-        'fecha': 'Hace 2 días',
-        'texto': 'Excelente servicio, muy amable y condujo con precaución.',
-        'calificacion': 5.0,
-      },
-      {
-        'usuario': 'Carlos Ruiz',
-        'fecha': 'Hace 1 semana',
-        'texto': 'El carro estaba muy limpio y llegó rápido.',
-        'calificacion': 5.0,
-      },
-      {
-        'usuario': 'Laura T.',
-        'fecha': 'Hace 2 semanas',
-        'texto': 'Buen viaje, recomendadísimo.',
-        'calificacion': 4.8,
-      },
-    ];
-
     return Container(
       padding: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -63,7 +102,7 @@ class DriverDetailSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.grey[300],
+                color: widget.isDark ? Colors.white24 : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -71,7 +110,7 @@ class DriverDetailSheet extends StatelessWidget {
           
           Flexible(
             child: ListView(
-              controller: scrollController,
+              controller: widget.scrollController,
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               shrinkWrap: true,
               children: [
@@ -91,9 +130,9 @@ class DriverDetailSheet extends StatelessWidget {
                       image: DecorationImage(
                         image: conductorFoto != null
                             ? NetworkImage(DocumentUploadService.getDocumentUrl(conductorFoto))
-                            : const AssetImage('assets/images/default_avatar.png') as ImageProvider, // Fallback safe
+                            : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                         fit: BoxFit.cover,
-                        onError: (_, __) {}, // Handle error silently
+                        onError: (_, __) {},
                       ),
                     ),
                     child: conductorFoto == null
@@ -109,7 +148,7 @@ class DriverDetailSheet extends StatelessWidget {
                   conductorNombre,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
+                    color: widget.isDark ? Colors.white : Colors.black,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -152,10 +191,10 @@ class DriverDetailSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
+                    color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!,
+                      color: widget.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!,
                     ),
                   ),
                   child: Row(
@@ -179,7 +218,7 @@ class DriverDetailSheet extends StatelessWidget {
                           Text(
                             vehiculoInfo,
                             style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: widget.isDark ? Colors.white : Colors.black87,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -188,7 +227,7 @@ class DriverDetailSheet extends StatelessWidget {
                             Text(
                               placa,
                               style: TextStyle(
-                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                color: widget.isDark ? Colors.white60 : Colors.grey[600],
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 1,
@@ -203,18 +242,49 @@ class DriverDetailSheet extends StatelessWidget {
                 const SizedBox(height: 32),
                 
                 // Reseñas header
-                Text(
-                  'Reseñas de usuarios',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Reseñas de usuarios',
+                      style: TextStyle(
+                        color: widget.isDark ? Colors.white : Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (_reviews.length > 3)
+                      TextButton(
+                        onPressed: _showAllReviews,
+                        child: Text(
+                          'Ver todas (${_reviews.length})',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 
-                // Lista de reseñas
-                ...reviews.map((review) => _buildReviewItem(review, isDark)),
+                // Lista de reseñas (máximo 3)
+                if (_isLoadingFn)
+                  const Center(child: CircularProgressIndicator())
+                else if (_reviews.isEmpty)
+                   Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text(
+                        'Aún no hay reseñas',
+                        style: TextStyle(
+                          color: widget.isDark ? Colors.white38 : Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ..._reviews.take(3).map((review) => _buildReviewItem(review, widget.isDark)),
                 
                 const SizedBox(height: 20),
               ],
@@ -224,8 +294,83 @@ class DriverDetailSheet extends StatelessWidget {
       ),
     );
   }
+  
+  void _showAllReviews() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: widget.isDark ? Colors.white24 : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Todas las reseñas (${_reviews.length})',
+                      style: TextStyle(
+                        color: widget.isDark ? Colors.white : Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: widget.isDark ? Colors.white60 : Colors.grey[600],
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // Lista completa de reseñas
+              Expanded(
+                child: ListView.builder(
+                  controller: controller,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _reviews.length,
+                  itemBuilder: (context, index) => 
+                      _buildReviewItem(_reviews[index], widget.isDark),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildReviewItem(Map<String, dynamic> review, bool isDark) {
+    final nombre = review['nombre_calificador'] ?? 'Usuario';
+    final fecha = review['fecha_calificacion'] ?? ''; // Formatear fecha si es necesario
+    final comentario = review['comentario'] as String? ?? '';
+    final rating = (review['calificacion'] as num?)?.toDouble() ?? 5.0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -251,41 +396,45 @@ class DriverDetailSheet extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                review['usuario'] as String,
+                nombre,
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.black87,
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                review['fecha'] as String,
-                style: TextStyle(
-                  color: isDark ? Colors.white38 : Colors.grey[500],
-                  fontSize: 12,
+              if (fecha.isNotEmpty)
+                Text(
+                  // Podrías usar intl para formatear "hace X días"
+                  fecha.toString().substring(0, 10), 
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.grey[500],
+                    fontSize: 12,
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 6),
           Row(
             children: List.generate(5, (index) {
               return Icon(
-                index < (review['calificacion'] as double) ? Icons.star_rounded : Icons.star_border_rounded,
+                index < rating ? Icons.star_rounded : Icons.star_border_rounded,
                 color: Colors.amber,
                 size: 16,
               );
             }),
           ),
-          const SizedBox(height: 8),
-          Text(
-            review['texto'] as String,
-            style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.grey[700],
-              fontSize: 14,
-              height: 1.4,
+          if (comentario.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              comentario,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey[700],
+                fontSize: 14,
+                height: 1.4,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

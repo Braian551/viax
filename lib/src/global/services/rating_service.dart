@@ -69,24 +69,32 @@ class RatingService {
     int limit = 20,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          '$_baseUrl/rating/get_ratings.php'
+      final url = '$_baseUrl/rating/get_ratings.php'
           '?usuario_id=$usuarioId'
           '&tipo_usuario=$tipoUsuario'
           '&page=$page'
-          '&limit=$limit'
-        ),
+          '&limit=$limit';
+      
+      debugPrint('📥 [RatingService] Fetching ratings from: $url');
+      
+      final response = await http.get(
+        Uri.parse(url),
         headers: {'Accept': 'application/json'},
       );
 
+      debugPrint('📥 [RatingService] Response status: ${response.statusCode}');
+      debugPrint('📥 [RatingService] Response body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}...');
+
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        debugPrint('📥 [RatingService] Parsed ${(data['calificaciones'] as List?)?.length ?? 0} calificaciones');
+        return data;
       }
       
+      debugPrint('📥 [RatingService] Error: status ${response.statusCode}');
       return {'success': false, 'calificaciones': []};
     } catch (e) {
-      debugPrint('Error obteniendo calificaciones: $e');
+      debugPrint('📥 [RatingService] Exception: $e');
       return {'success': false, 'calificaciones': []};
     }
   }

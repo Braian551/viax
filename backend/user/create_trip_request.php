@@ -169,13 +169,15 @@ try {
         ];
         $vehiculoTipo = $vehiculoTipoMap[$data['tipo_vehiculo']] ?? 'moto';
         
-        $stmt = $db->prepare("
+        // Construir query base
+        $query = "
             SELECT 
                 u.id,
                 u.nombre,
                 u.apellido,
                 u.telefono,
                 u.foto_perfil,
+                u.empresa_id,
                 dc.vehiculo_tipo,
                 dc.vehiculo_marca,
                 dc.vehiculo_modelo,
@@ -202,12 +204,10 @@ try {
                 cos(radians(?)) * cos(radians(dc.latitud_actual)) *
                 cos(radians(dc.longitud_actual) - radians(?)) +
                 sin(radians(?)) * sin(radians(dc.latitud_actual))
-            )) <= ?
-            ORDER BY distancia ASC
-            LIMIT 10
-        ");
+            )) <= ?";
         
-        $stmt->execute([
+        // Parámetros base
+        $params = [
             $data['latitud_origen'],
             $data['longitud_origen'],
             $data['latitud_origen'],
@@ -216,7 +216,18 @@ try {
             $data['longitud_origen'],
             $data['latitud_origen'],
             $radiusKm
-        ]);
+        ];
+        
+        // Agregar filtro de empresa si se proporciona
+        if ($empresaId !== null) {
+            $query .= " AND u.empresa_id = ?";
+            $params[] = $empresaId;
+        }
+        
+        $query .= " ORDER BY distancia ASC LIMIT 10";
+        
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
         
         $conductoresCercanos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -420,25 +420,28 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildStatsGrid(bool isDark) {
+    final duracionTexto = widget.trip.duracionFormateada;
+    final tieneDuracion = duracionTexto != '-';
+    
     return Row(
       children: [
-        if (widget.trip.distanciaKm != null)
-          Expanded(
-            child: _buildStatCard(
-              icon: Icons.route_rounded,
-              label: 'Distancia',
-              value: '${widget.trip.distanciaKm!.toStringAsFixed(1)} km',
-              isDark: isDark,
-            ),
+        // Siempre mostrar distancia
+        Expanded(
+          child: _buildStatCard(
+            icon: Icons.route_rounded,
+            label: 'Distancia',
+            value: '${(widget.trip.distanciaKm ?? 0).toStringAsFixed(1)} km',
+            isDark: isDark,
           ),
-        if (widget.trip.distanciaKm != null && widget.trip.duracionEstimada != null)
+        ),
+        if (tieneDuracion)
           const SizedBox(width: 12),
-        if (widget.trip.duracionEstimada != null)
+        if (tieneDuracion)
           Expanded(
             child: _buildStatCard(
               icon: Icons.timer_rounded,
               label: 'Duración',
-              value: '${widget.trip.duracionEstimada} min',
+              value: duracionTexto,
               isDark: isDark,
             ),
           ),

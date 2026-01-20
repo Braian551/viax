@@ -310,20 +310,24 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildTripStats(Color subtitleColor, bool isDark) {
+    // Usar el formato flexible de duración del modelo
+    final duracionTexto = widget.trip.duracionFormateada;
+    final tieneDuracion = duracionTexto != '-';
+    
     return Row(
       children: [
-        if (widget.trip.distanciaKm != null)
-          _StatBadge(
-            icon: Icons.route_rounded,
-            text: '${widget.trip.distanciaKm!.toStringAsFixed(1)} km',
-            isDark: isDark,
-          ),
-        if (widget.trip.distanciaKm != null && widget.trip.duracionEstimada != null)
+        // Siempre mostrar distancia (0.0 si no hay tracking)
+        _StatBadge(
+          icon: Icons.route_rounded,
+          text: '${(widget.trip.distanciaKm ?? 0).toStringAsFixed(1)} km',
+          isDark: isDark,
+        ),
+        if (tieneDuracion)
           const SizedBox(width: 12),
-        if (widget.trip.duracionEstimada != null)
+        if (tieneDuracion)
           _StatBadge(
             icon: Icons.access_time_rounded,
-            text: '${widget.trip.duracionEstimada} min',
+            text: duracionTexto,
             isDark: isDark,
           ),
       ],
@@ -331,7 +335,13 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildEarningsFooter(bool isDark) {
-    final ganancia = widget.trip.precioFinal ?? widget.trip.precioEstimado ?? 0;
+    // Usar ganancia neta del viaje (ya con comisión descontada)
+    final ganancia = widget.trip.gananciaViaje ?? 
+                     widget.trip.precioFinal ?? 
+                     widget.trip.precioEstimado ?? 
+                     0;
+    final comision = widget.trip.comisionEmpresa ?? 0;
+    final precioTotal = widget.trip.precioFinal ?? widget.trip.precioEstimado ?? 0;
     final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
 
@@ -350,38 +360,72 @@ class _TripHistoryCardState extends State<TripHistoryCard>
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          Text(
-            isCompleted ? 'Ganancia del viaje' : 'Viaje cancelado',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (isCompleted)
-                Text(
-                  '+',
-                  style: TextStyle(
-                    color: AppColors.success,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isCompleted ? 'Tu ganancia' : 'Viaje cancelado',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              Text(
-                '\$${ganancia.toStringAsFixed(0)}',
-                style: TextStyle(
-                  color: isCompleted ? AppColors.success : AppColors.error,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                  if (isCompleted && comision > 0)
+                    Text(
+                      'Comisión: -\$${comision.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.grey[500],
+                        fontSize: 11,
+                      ),
+                    ),
+                ],
+              ),
+              Row(
+                children: [
+                  if (isCompleted)
+                    Text(
+                      '+',
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  Text(
+                    '\$${ganancia.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: isCompleted ? AppColors.success : AppColors.error,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
+          // Mostrar precio total si hay comisión
+          if (isCompleted && comision > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Total cobrado: \$${precioTotal.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

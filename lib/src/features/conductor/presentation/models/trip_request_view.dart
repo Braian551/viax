@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import '../../../../global/services/auth/user_service.dart';
 
 /// Vista tipada de la solicitud de viaje para evitar uso de mapas dinámicos.
 class TripRequestView {
@@ -65,8 +66,20 @@ class TripRequestView {
       direccionDestino: raw['direccion_destino']?.toString() ?? 'Sin dirección',
       clienteId: _toIntOrNull(raw['cliente_id']),
       clienteNombre: (raw['cliente_nombre'] ?? raw['nombre_usuario'])?.toString(),
-      clienteFoto: (raw['cliente_foto'] ?? raw['foto_usuario'])?.toString(),
+      // Procesar foto con R2 URL si es necesario
+      clienteFoto: _processPhotoUrl((raw['cliente_foto'] ?? raw['foto_usuario'])?.toString()),
       clienteTelefono: (raw['cliente_telefono'] ?? raw['telefono_usuario'])?.toString(),
     );
+  }
+
+  /// Procesa la URL de la foto para manejar correctamente fotos de R2
+  static String? _processPhotoUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.isEmpty) return null;
+    // Si ya es una URL completa, retornarla
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      return rawUrl;
+    }
+    // Si es un key de R2, convertirla a URL completa
+    return UserService.getR2ImageUrl(rawUrl);
   }
 }

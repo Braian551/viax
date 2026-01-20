@@ -346,9 +346,16 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           }
           
           // Obtener tiempo del tracking si está disponible
-          if (trip['tiempo_transcurrido'] != null) {
-            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido'] as num).toInt();
+          // Prioridad: duracion_segundos > tiempo_transcurrido_seg > tiempo_transcurrido*60
+          if (trip['duracion_segundos'] != null && (trip['duracion_segundos'] as num) > 0) {
+            _tiempoTranscurridoSeg = (trip['duracion_segundos'] as num).toInt();
+          } else if (trip['tiempo_transcurrido_seg'] != null && (trip['tiempo_transcurrido_seg'] as num) > 0) {
+            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido_seg'] as num).toInt();
+          } else if (trip['tiempo_transcurrido'] != null && (trip['tiempo_transcurrido'] as num) > 0) {
+            // Fallback: tiempo_transcurrido puede estar en minutos (viejo formato)
+            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido'] as num).toInt() * 60;
           }
+
           
           // Precio: prioridad -> precio_final > precio_en_tracking > precio_estimado
           if (trip['precio_final'] != null && (trip['precio_final'] as num) > 0) {
@@ -363,19 +370,55 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         // VERIFICAR ESTADOS FINALES
         if (estado == 'completada' || estado == 'entregado') {
           // Cuando el viaje está completo, SIEMPRE leer datos finales de la BD
-          if (trip['distancia_recorrida'] != null) {
+          debugPrint('📊 [Cliente] Datos crudos del backend:');
+          debugPrint('   - distancia_recorrida: ${trip['distancia_recorrida']}');
+          debugPrint('   - tiempo_transcurrido: ${trip['tiempo_transcurrido']}');
+          debugPrint('   - duracion_minutos: ${trip['duracion_minutos']}');
+          debugPrint('   - precio_final: ${trip['precio_final']}');
+          
+          // Distancia: usar real si existe
+          if (trip['distancia_recorrida'] != null && (trip['distancia_recorrida'] as num) > 0) {
             _distanceTraveled = (trip['distancia_recorrida'] as num).toDouble();
           }
-          if (trip['tiempo_transcurrido'] != null) {
-            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido'] as num).toInt();
+          
+          // Tiempo: prioridad -> duracion_segundos > tiempo_transcurrido_seg > tiempo_minutos*60 > local
+          // El backend ahora devuelve tiempo en segundos exactos
+          int tiempoFinalSegundos = 0;
+          
+          // Prioridad 1: usar duracion_segundos (valor exacto del backend)
+          if (trip['duracion_segundos'] != null && (trip['duracion_segundos'] as num) > 0) {
+            tiempoFinalSegundos = (trip['duracion_segundos'] as num).toInt();
+          } 
+          // Prioridad 2: usar tiempo_transcurrido_seg (nuevo campo del backend)
+          else if (trip['tiempo_transcurrido_seg'] != null && (trip['tiempo_transcurrido_seg'] as num) > 0) {
+            tiempoFinalSegundos = (trip['tiempo_transcurrido_seg'] as num).toInt();
           }
+          // Prioridad 3: convertir minutos a segundos (fallback)
+          else if (trip['tiempo_transcurrido'] != null && (trip['tiempo_transcurrido'] as num) > 0) {
+            tiempoFinalSegundos = (trip['tiempo_transcurrido'] as num).toInt() * 60;
+          } else if (trip['duracion_minutos'] != null && (trip['duracion_minutos'] as num) > 0) {
+            tiempoFinalSegundos = (trip['duracion_minutos'] as num).toInt() * 60;
+          } else if (_elapsedMinutes > 0) {
+            tiempoFinalSegundos = _elapsedMinutes * 60;
+          }
+          
+          // Usar el tiempo en segundos directamente
+          if (tiempoFinalSegundos > 0) {
+            _tiempoTranscurridoSeg = tiempoFinalSegundos;
+          } else if (_tripStartTime != null) {
+            // Fallback: calcular desde hora de inicio
+            _tiempoTranscurridoSeg = DateTime.now().difference(_tripStartTime!).inSeconds;
+          }
+
+          
+          // Precio: usar precio_final
           if (trip['precio_final'] != null && (trip['precio_final'] as num) > 0) {
             _precioActual = (trip['precio_final'] as num).toDouble();
           }
           
           debugPrint('📊 [Cliente] Viaje completado - Datos finales:');
           debugPrint('   - Distancia: $_distanceTraveled km');
-          debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s');
+          debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s (${_tiempoTranscurridoSeg / 60} min)');
           debugPrint('   - Precio: $_precioActual');
           _onTripCompleted();
           return;
@@ -497,7 +540,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     );
   }
 
-  void _onTripCompleted() {
+  Future<void> _onTripCompleted() async {
     if (_tripCompleted) return;
     _tripCompleted = true;
     _statusTimer?.cancel();
@@ -506,9 +549,27 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     HapticFeedback.heavyImpact();
     SoundService.playAcceptSound();
 
+    // Obtener datos finales del tracking antes de navegar
+    // Esto asegura que tenemos los datos más recientes del servidor
+    try {
+      final trackingData = await _trackingService.getTrackingOnce(widget.solicitudId);
+      if (trackingData != null && trackingData.tiempoSegundos > 0) {
+        _tiempoTranscurridoSeg = trackingData.tiempoSegundos;
+        _distanceTraveled = trackingData.distanciaKm;
+        _precioActual = trackingData.precioActual;
+        debugPrint('✅ [Cliente] Datos finales del tracking obtenidos:');
+        debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s');
+        debugPrint('   - Distancia: $_distanceTraveled km');
+        debugPrint('   - Precio: $_precioActual');
+      }
+    } catch (e) {
+      debugPrint('⚠️ [Cliente] Error obteniendo tracking final: $e');
+    }
+
     // Mostrar diálogo de finalización
     _showCompletionDialog();
   }
+
 
   void _onTripCancelled() {
     _tripCompleted = true;
@@ -904,10 +965,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                       const SizedBox(width: 12),
                       Expanded(
                         child: _ActionButton(
-                          icon: Icons.support_agent_rounded,
-                          label: 'Ayuda',
+                          icon: Icons.share_location_rounded,
+                          label: 'Compartir',
                           onTap: () {
-                            // TODO: Centro de ayuda
+                            // TODO: Implementar compartir viaje
                           },
                           isDark: isDark,
                         ),

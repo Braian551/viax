@@ -12,6 +12,9 @@ class ConductorProfileModel {
   final String? motivoRechazo;
   final bool aprobado;
 
+  final int viajes;
+  final DateTime? fechaRegistro;
+
   ConductorProfileModel({
     this.licencia,
     this.vehiculo,
@@ -21,6 +24,8 @@ class ConductorProfileModel {
     this.documentosRechazados = const [],
     this.motivoRechazo,
     this.aprobado = false,
+    this.viajes = 0,
+    this.fechaRegistro,
   });
 
   factory ConductorProfileModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +50,10 @@ class ConductorProfileModel {
           : [],
       motivoRechazo: json['motivo_rechazo']?.toString(),
       aprobado: json['aprobado'] == 1 || json['aprobado'] == true,
+      viajes: int.tryParse(json['viajes']?.toString() ?? '0') ?? 0,
+      fechaRegistro: json['fecha_registro'] != null
+          ? DateTime.tryParse(json['fecha_registro'].toString())
+          : null,
     );
   }
 
@@ -58,6 +67,8 @@ class ConductorProfileModel {
       'documentos_rechazados': documentosRechazados,
       'motivo_rechazo': motivoRechazo,
       'aprobado': aprobado ? 1 : 0,
+      'viajes': viajes,
+      'fecha_registro': fechaRegistro?.toIso8601String(),
     };
   }
 
@@ -167,6 +178,8 @@ class ConductorProfileModel {
     List<String>? documentosRechazados,
     String? motivoRechazo,
     bool? aprobado,
+    int? viajes,
+    DateTime? fechaRegistro,
   }) {
     return ConductorProfileModel(
       licencia: licencia ?? this.licencia,
@@ -177,6 +190,8 @@ class ConductorProfileModel {
       documentosRechazados: documentosRechazados ?? this.documentosRechazados,
       motivoRechazo: motivoRechazo ?? this.motivoRechazo,
       aprobado: aprobado ?? this.aprobado,
+      viajes: viajes ?? this.viajes,
+      fechaRegistro: fechaRegistro ?? this.fechaRegistro,
     );
   }
 }

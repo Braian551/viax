@@ -10,15 +10,21 @@ class TripModel {
   final double? precioEstimado;
   final double? precioFinal;
   final double? distanciaKm;
+  final double? distanciaEstimada;
+  final int? duracionSegundos; // Duración real en segundos
+  final int? duracionMinutos;
   final int? duracionEstimada;
   final DateTime fechaSolicitud;
   final DateTime? fechaCompletado;
+  final DateTime? fechaAceptado;
   final String? origen;
   final String? destino;
   final String clienteNombre;
   final String clienteApellido;
   final int? calificacion;
   final String? comentario;
+  final double? gananciaViaje;
+  final double? comisionEmpresa;
 
   TripModel({
     required this.id,
@@ -27,16 +33,42 @@ class TripModel {
     this.precioEstimado,
     this.precioFinal,
     this.distanciaKm,
+    this.distanciaEstimada,
+    this.duracionSegundos,
+    this.duracionMinutos,
     this.duracionEstimada,
     required this.fechaSolicitud,
     this.fechaCompletado,
+    this.fechaAceptado,
     this.origen,
     this.destino,
     required this.clienteNombre,
     required this.clienteApellido,
     this.calificacion,
     this.comentario,
+    this.gananciaViaje,
+    this.comisionEmpresa,
   });
+  
+  /// Formatea la duración de forma legible (seg/min/horas)
+  String get duracionFormateada {
+    final segundos = duracionSegundos ?? (duracionMinutos != null ? duracionMinutos! * 60 : null);
+    if (segundos == null) return '-';
+    
+    if (segundos < 60) {
+      return '$segundos seg';
+    } else if (segundos < 3600) {
+      final min = segundos ~/ 60;
+      final seg = segundos % 60;
+      if (seg == 0) return '$min min';
+      return '$min min $seg seg';
+    } else {
+      final hours = segundos ~/ 3600;
+      final mins = (segundos % 3600) ~/ 60;
+      if (mins == 0) return '${hours}h';
+      return '${hours}h ${mins}m';
+    }
+  }
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
     try {
@@ -88,15 +120,21 @@ class TripModel {
         precioEstimado: parseDouble(json['precio_estimado']),
         precioFinal: parseDouble(json['precio_final']),
         distanciaKm: parseDouble(json['distancia_km']),
+        distanciaEstimada: parseDouble(json['distancia_estimada']),
+        duracionSegundos: parseInt(json['duracion_segundos']),
+        duracionMinutos: parseInt(json['duracion_minutos']),
         duracionEstimada: parseInt(json['duracion_estimada']),
         fechaSolicitud: fechaSolicitud,
         fechaCompletado: parseDate(json['fecha_completado']),
+        fechaAceptado: parseDate(json['fecha_aceptado']),
         origen: json['origen']?.toString(),
         destino: json['destino']?.toString(),
         clienteNombre: json['cliente_nombre']?.toString() ?? '',
         clienteApellido: json['cliente_apellido']?.toString() ?? '',
         calificacion: parseInt(json['calificacion']),
         comentario: json['comentario']?.toString(),
+        gananciaViaje: parseDouble(json['ganancia_viaje']),
+        comisionEmpresa: parseDouble(json['comision_empresa']),
       );
     } catch (e, stackTrace) {
       print('Error in TripModel.fromJson: $e');

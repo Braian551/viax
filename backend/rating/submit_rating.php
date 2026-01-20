@@ -67,38 +67,49 @@ try {
         throw new Exception('Solicitud no encontrada');
     }
     
-    // Verificar que no exista ya una calificación del mismo tipo para esta solicitud
+    // Verificar si ya existe una calificación del usuario para esta solicitud
     $stmt = $db->prepare("
         SELECT id FROM calificaciones
         WHERE solicitud_id = ? AND usuario_calificador_id = ?
     ");
     $stmt->execute([$solicitudId, $calificadorId]);
+    $existingRating = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($stmt->fetch()) {
-        throw new Exception('Ya has calificado este viaje');
+    if ($existingRating) {
+        // UPDATE: Actualizar la calificación existente
+        $stmt = $db->prepare("
+            UPDATE calificaciones SET
+                calificacion = ?,
+                comentarios = ?,
+                creado_en = NOW()
+            WHERE id = ?
+        ");
+        $stmt->execute([$calificacion, $comentario, $existingRating['id']]);
+        $calificacionId = $existingRating['id'];
+        $wasUpdated = true;
+    } else {
+        // INSERT: Nueva calificación
+        $stmt = $db->prepare("
+            INSERT INTO calificaciones (
+                solicitud_id,
+                usuario_calificador_id,
+                usuario_calificado_id,
+                calificacion,
+                comentarios,
+                creado_en
+            ) VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        
+        $stmt->execute([
+            $solicitudId,
+            $calificadorId,
+            $calificadoId,
+            $calificacion,
+            $comentario
+        ]);
+        $calificacionId = $db->lastInsertId();
+        $wasUpdated = false;
     }
-    
-    // Insertar calificación
-    $stmt = $db->prepare("
-        INSERT INTO calificaciones (
-            solicitud_id,
-            usuario_calificador_id,
-            usuario_calificado_id,
-            calificacion,
-            comentarios,
-            creado_en
-        ) VALUES (?, ?, ?, ?, ?, NOW())
-    ");
-    
-    $stmt->execute([
-        $solicitudId,
-        $calificadorId,
-        $calificadoId,
-        $calificacion,
-        $comentario
-    ]);
-    
-    $calificacionId = $db->lastInsertId();
     
     // Actualizar promedio de calificaciones del usuario calificado
     if ($tipoCalificador === 'cliente') {
@@ -136,9 +147,10 @@ try {
     
     echo json_encode([
         'success' => true,
-        'message' => 'Calificación enviada correctamente',
+        'message' => $wasUpdated ? 'Calificación actualizada correctamente' : 'Calificación enviada correctamente',
         'calificacion_id' => $calificacionId,
-        'nuevo_promedio' => round(floatval($nuevoPromedio), 1)
+        'nuevo_promedio' => round(floatval($nuevoPromedio), 1),
+        'updated' => $wasUpdated
     ]);
     
 } catch (Exception $e) {

@@ -5,22 +5,31 @@ import '../../../core/config/app_config.dart';
 /// Modelo para las ganancias
 class EarningsModel {
   final double total;
+  final double totalCobrado;
   final int totalViajes;
   final double promedioPorViaje;
+  final double comisionPeriodo;
+  final double comisionAdeudada;
   final List<EarningsDayModel> desgloseDiario;
 
   EarningsModel({
     required this.total,
+    this.totalCobrado = 0,
     required this.totalViajes,
     required this.promedioPorViaje,
+    this.comisionPeriodo = 0,
+    this.comisionAdeudada = 0,
     required this.desgloseDiario,
   });
 
   factory EarningsModel.fromJson(Map<String, dynamic> json) {
     return EarningsModel(
       total: double.tryParse(json['total']?.toString() ?? '0') ?? 0.0,
+      totalCobrado: double.tryParse(json['total_cobrado']?.toString() ?? '0') ?? 0.0,
       totalViajes: int.tryParse(json['total_viajes']?.toString() ?? '0') ?? 0,
       promedioPorViaje: double.tryParse(json['promedio_por_viaje']?.toString() ?? '0') ?? 0.0,
+      comisionPeriodo: double.tryParse(json['comision_periodo']?.toString() ?? '0') ?? 0.0,
+      comisionAdeudada: double.tryParse(json['comision_adeudada']?.toString() ?? '0') ?? 0.0,
       desgloseDiario: (json['desglose_diario'] as List?)
           ?.map((item) => EarningsDayModel.fromJson(item))
           .toList() ?? [],
@@ -28,15 +37,17 @@ class EarningsModel {
   }
 }
 
-/// Modelo para las ganancias por dÃ­a
+/// Modelo para las ganancias por día
 class EarningsDayModel {
   final String fecha;
   final double ganancias;
+  final double comision;
   final int viajes;
 
   EarningsDayModel({
     required this.fecha,
     required this.ganancias,
+    this.comision = 0,
     required this.viajes,
   });
 
@@ -44,6 +55,7 @@ class EarningsDayModel {
     return EarningsDayModel(
       fecha: json['fecha']?.toString() ?? '',
       ganancias: double.tryParse(json['ganancias']?.toString() ?? '0') ?? 0.0,
+      comision: double.tryParse(json['comision']?.toString() ?? '0') ?? 0.0,
       viajes: int.tryParse(json['viajes']?.toString() ?? '0') ?? 0,
     );
   }

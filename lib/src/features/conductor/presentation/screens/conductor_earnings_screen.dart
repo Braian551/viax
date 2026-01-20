@@ -276,10 +276,14 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
                   periodLabel: _getPeriodLabel(provider.selectedPeriod),
                   totalTrips: earnings.totalViajes,
                 ),
+                // Card de comisión adeudada
+                if (earnings.comisionAdeudada > 0)
+                  _buildCommissionCard(earnings.comisionAdeudada, isDark),
                 const SizedBox(height: 24),
                 EarningsStatsGrid(
                   totalTrips: earnings.totalViajes,
                   averagePerTrip: earnings.promedioPorViaje,
+                  comisionPeriodo: earnings.comisionPeriodo,
                 ),
                 const SizedBox(height: 28),
                 EarningsBreakdownSection(
@@ -326,5 +330,70 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
       case EarningsPeriodType.month:
         return EarningsPeriod.month;
     }
+  }
+
+  Widget _buildCommissionCard(double comisionAdeudada, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? Colors.orange.withValues(alpha: 0.15) 
+            : Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.orange.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: Colors.orange,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comisión adeudada a empresa',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.grey[700],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Total acumulado pendiente de pago',
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.grey[500],
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '\$${comisionAdeudada.toStringAsFixed(0)}',
+            style: const TextStyle(
+              color: Colors.orange,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

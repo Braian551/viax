@@ -24,14 +24,37 @@ try {
         throw new Exception('ID de conductor inválido');
     }
 
-    // Calcular ganancias totales en el período
+    // Calcular ganancias desde solicitudes_servicio
+    // Prioridad de precio: tracking > precio_final > precio_estimado
     $query_total = "SELECT 
-                     COALESCE(SUM(t.monto_conductor), 0) as total_ganancias,
-                     COUNT(DISTINCT t.solicitud_id) as total_viajes
-                    FROM transacciones t
-                    WHERE t.conductor_id = :conductor_id
-                    AND DATE(t.fecha_transaccion) BETWEEN :fecha_inicio AND :fecha_fin
-                    AND t.estado = 'completada'";
+                     COALESCE(SUM(
+                       COALESCE(
+                         NULLIF(vrt.precio_final_aplicado, 0),
+                         NULLIF(s.precio_final, 0),
+                         s.precio_estimado
+                       ) * 0.90
+                     ), 0) as total_ganancias,
+                     COALESCE(SUM(
+                       COALESCE(
+                         NULLIF(vrt.precio_final_aplicado, 0),
+                         NULLIF(s.precio_final, 0),
+                         s.precio_estimado
+                       ) * 0.10
+                     ), 0) as total_comision,
+                     COALESCE(SUM(
+                       COALESCE(
+                         NULLIF(vrt.precio_final_aplicado, 0),
+                         NULLIF(s.precio_final, 0),
+                         s.precio_estimado
+                       )
+                     ), 0) as total_cobrado,
+                     COUNT(s.id) as total_viajes
+                    FROM solicitudes_servicio s
+                    INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
+                    LEFT JOIN viaje_resumen_tracking vrt ON s.id = vrt.solicitud_id
+                    WHERE ac.conductor_id = :conductor_id
+                    AND s.estado IN ('completada', 'entregado')
+                    AND DATE(COALESCE(s.completado_en, s.solicitado_en)) BETWEEN :fecha_inicio AND :fecha_fin";
     
     $stmt_total = $db->prepare($query_total);
     $stmt_total->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
@@ -40,16 +63,52 @@ try {
     $stmt_total->execute();
     $totales = $stmt_total->fetch(PDO::FETCH_ASSOC);
 
-    // Ganancias por día
+    // Calcular comisión total adeudada (de TODOS los viajes, no solo del período)
+    // Usar precio REAL del tracking cuando esté disponible
+    $query_comision_total = "SELECT 
+                              COALESCE(SUM(
+                                COALESCE(
+                                  NULLIF(vrt.precio_final_aplicado, 0),
+                                  NULLIF(s.precio_final, 0),
+                                  s.precio_estimado
+                                ) * 0.10
+                              ), 0) as comision_adeudada
+                             FROM solicitudes_servicio s
+                             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
+                             LEFT JOIN viaje_resumen_tracking vrt ON s.id = vrt.solicitud_id
+                             WHERE ac.conductor_id = :conductor_id
+                             AND s.estado IN ('completada', 'entregado')";
+    
+    $stmt_comision = $db->prepare($query_comision_total);
+    $stmt_comision->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+    $stmt_comision->execute();
+    $comision_data = $stmt_comision->fetch(PDO::FETCH_ASSOC);
+
+    // Ganancias por día - usando precio REAL del tracking
     $query_diario = "SELECT 
-                      DATE(t.fecha_transaccion) as fecha,
-                      COALESCE(SUM(t.monto_conductor), 0) as ganancias,
-                      COUNT(DISTINCT t.solicitud_id) as viajes
-                     FROM transacciones t
-                     WHERE t.conductor_id = :conductor_id
-                     AND DATE(t.fecha_transaccion) BETWEEN :fecha_inicio AND :fecha_fin
-                     AND t.estado = 'completada'
-                     GROUP BY DATE(t.fecha_transaccion)
+                      DATE(COALESCE(s.completado_en, s.solicitado_en)) as fecha,
+                      COALESCE(SUM(
+                        COALESCE(
+                          NULLIF(vrt.precio_final_aplicado, 0),
+                          NULLIF(s.precio_final, 0),
+                          s.precio_estimado
+                        ) * 0.90
+                      ), 0) as ganancias,
+                      COALESCE(SUM(
+                        COALESCE(
+                          NULLIF(vrt.precio_final_aplicado, 0),
+                          NULLIF(s.precio_final, 0),
+                          s.precio_estimado
+                        ) * 0.10
+                      ), 0) as comision,
+                      COUNT(s.id) as viajes
+                     FROM solicitudes_servicio s
+                     INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
+                     LEFT JOIN viaje_resumen_tracking vrt ON s.id = vrt.solicitud_id
+                     WHERE ac.conductor_id = :conductor_id
+                     AND s.estado IN ('completada', 'entregado')
+                     AND DATE(COALESCE(s.completado_en, s.solicitado_en)) BETWEEN :fecha_inicio AND :fecha_fin
+                     GROUP BY DATE(COALESCE(s.completado_en, s.solicitado_en))
                      ORDER BY fecha DESC";
     
     $stmt_diario = $db->prepare($query_diario);
@@ -59,15 +118,28 @@ try {
     $stmt_diario->execute();
     $ganancias_diarias = $stmt_diario->fetchAll(PDO::FETCH_ASSOC);
 
+    // Formatear desglose diario
+    $desglose = array_map(function($dia) {
+        return [
+            'fecha' => $dia['fecha'],
+            'ganancias' => floatval($dia['ganancias']),
+            'comision' => floatval($dia['comision']),
+            'viajes' => intval($dia['viajes'])
+        ];
+    }, $ganancias_diarias);
+
     echo json_encode([
         'success' => true,
         'ganancias' => [
             'total' => floatval($totales['total_ganancias']),
+            'total_cobrado' => floatval($totales['total_cobrado']),
             'total_viajes' => intval($totales['total_viajes']),
+            'comision_periodo' => floatval($totales['total_comision']),
+            'comision_adeudada' => floatval($comision_data['comision_adeudada']),
             'promedio_por_viaje' => $totales['total_viajes'] > 0 
                 ? round(floatval($totales['total_ganancias']) / intval($totales['total_viajes']), 2)
                 : 0,
-            'desglose_diario' => $ganancias_diarias
+            'desglose_diario' => $desglose
         ],
         'periodo' => [
             'inicio' => $fecha_inicio,

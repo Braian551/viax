@@ -150,17 +150,22 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final lastName = _conductorUser?['apellido'] ?? '';
     final fullName = '$name $lastName'.trim();
     final rating = double.tryParse(_conductorUser?['calificacion']?.toString() ?? '5.0') ?? 5.0;
-    final trips = _conductorUser?['viajes'] ?? 0;
-    final photoKey = _conductorUser?['foto_perfil'];
-    final photoUrl = photoKey != null ? UserService.getR2ImageUrl(photoKey) : null;
-    
+    final photoUrlStr = _conductorUser?['foto_perfil'];
+    final photoUrl = photoUrlStr != null ? UserService.getR2ImageUrl(photoUrlStr) : null;
+  
+    // Use data from provider if available, fallback to passed args
+    final trips = profile.viajes; // This is now populated from provider
+    final registrationDate = profile.fechaRegistro ?? 
+        (_conductorUser?['fecha_registro'] != null 
+            ? DateTime.tryParse(_conductorUser!['fecha_registro']) 
+            : null);
+
     // Calcular tiempo en la plataforma
     String timeOnPlatform = '0 días';
     String timeLabel = 'Tiempo';
     
-    if (_conductorUser?['fecha_registro'] != null) {
+    if (registrationDate != null) {
       try {
-        final registrationDate = DateTime.parse(_conductorUser!['fecha_registro']);
         final now = DateTime.now();
         final difference = now.difference(registrationDate);
         final days = difference.inDays;

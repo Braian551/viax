@@ -1,10 +1,11 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/conductor_profile_model.dart';
 import '../models/driver_license_model.dart';
 import '../models/vehicle_model.dart';
 import '../services/conductor_profile_service.dart';
 import '../services/document_upload_service.dart';
+import '../services/conductor_service.dart';
 
 class ConductorProfileProvider with ChangeNotifier {
   ConductorProfileModel? _profile;
@@ -27,13 +28,29 @@ class ConductorProfileProvider with ChangeNotifier {
 
     try {
       final profile = await ConductorProfileService.getProfile(conductorId);
+      
+      // Fetch statistics and basic info for extended profile data
+      final stats = await ConductorService.getEstadisticas(conductorId);
+      final info = await ConductorService.getConductorInfo(conductorId);
+
       if (profile != null) {
-        _profile = profile;
+        // Merge stats and info into the profile model
+        _profile = profile.copyWith(
+          viajes: int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0,
+          fechaRegistro: info != null && info['fecha_registro'] != null
+              ? DateTime.tryParse(info['fecha_registro'].toString())
+              : null,
+        );
         _errorMessage = null;
       } else {
         _errorMessage = 'No se pudo cargar el perfil';
-        // Inicializar perfil vacío
-        _profile = ConductorProfileModel();
+        // Inicializar perfil vacío con datos básicos si es posible
+         _profile = ConductorProfileModel(
+          viajes: int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0,
+          fechaRegistro: info != null && info['fecha_registro'] != null
+              ? DateTime.tryParse(info['fecha_registro'].toString())
+              : null,
+        );
       }
     } catch (e) {
       _errorMessage = 'Error al cargar perfil: $e';

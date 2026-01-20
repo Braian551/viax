@@ -18,6 +18,8 @@ class UserTripModel {
   final String? conductorNombre;
   final String? conductorApellido;
   final double? calificacionConductor;
+  final int? calificacionDada; // Calificación que el usuario dio al conductor
+  final String? comentarioDado;
   final DateTime? fechaSolicitud;
   final DateTime? fechaCompletado;
 
@@ -36,6 +38,8 @@ class UserTripModel {
     this.conductorNombre,
     this.conductorApellido,
     this.calificacionConductor,
+    this.calificacionDada,
+    this.comentarioDado,
     this.fechaSolicitud,
     this.fechaCompletado,
   });
@@ -48,7 +52,8 @@ class UserTripModel {
       origen: json['origen'] ?? '',
       destino: json['destino'] ?? '',
       distanciaKm: json['distancia_km']?.toDouble(),
-      duracionMinutos: json['duracion_estimada'],
+      // Usar duracion_minutos (real) o duracion_estimada como fallback
+      duracionMinutos: json['duracion_minutos'] ?? json['duracion_estimada'],
       precioEstimado: (json['precio_estimado'] ?? 0).toDouble(),
       precioFinal: (json['precio_final'] ?? 0).toDouble(),
       metodoPago: json['metodo_pago'] ?? 'efectivo',
@@ -56,6 +61,8 @@ class UserTripModel {
       conductorNombre: json['conductor_nombre'],
       conductorApellido: json['conductor_apellido'],
       calificacionConductor: json['calificacion_conductor']?.toDouble(),
+      calificacionDada: json['calificacion_dada'],
+      comentarioDado: json['comentario_dado'],
       fechaSolicitud: json['fecha_solicitud'] != null 
           ? DateTime.tryParse(json['fecha_solicitud']) 
           : null,
