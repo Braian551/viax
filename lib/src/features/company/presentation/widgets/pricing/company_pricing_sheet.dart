@@ -453,6 +453,32 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
               'Comisión a Conductores (%)',
               widget.controllers['comision_plataforma']!,
             ),
+            AnimatedBuilder(
+              animation: widget.controllers['comision_plataforma']!,
+              builder: (context, _) {
+                double value = double.tryParse(
+                      widget.controllers['comision_plataforma']!.text,
+                    ) ??
+                    0.0;
+                // Securely clamp the value between 0 and 100
+                if (value < 0) value = 0;
+                if (value > 100) value = 100;
+
+                return Slider(
+                  value: value,
+                  min: 0,
+                  max: 100,
+                  divisions: 200, // 0.5 steps
+                  label: value.toStringAsFixed(1),
+                  activeColor: AppColors.primary,
+                  inactiveColor: AppColors.primary.withValues(alpha: 0.2),
+                  onChanged: (newValue) {
+                    widget.controllers['comision_plataforma']!.text =
+                        newValue.toStringAsFixed(1);
+                  },
+                );
+              },
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(14),

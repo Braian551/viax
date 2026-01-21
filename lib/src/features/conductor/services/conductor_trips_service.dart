@@ -2,16 +2,91 @@
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 
+/// Modelo para el desglose de precio de un viaje
+class PriceBreakdownModel {
+  final double tarifaBase;
+  final double precioDistancia;
+  final double precioTiempo;
+  final double recargoNocturno;
+  final double recargoHoraPico;
+  final double recargoFestivo;
+  final double recargoEspera;
+  final double tiempoEsperaMinutos;
+  final double subtotalAntesMinimo;
+  final bool aplicoMinimo;
+  final double precioFinal;
+  final double comisionPorcentaje;
+  final double comisionValor;
+  final double gananciaConductor;
+
+  PriceBreakdownModel({
+    this.tarifaBase = 0,
+    this.precioDistancia = 0,
+    this.precioTiempo = 0,
+    this.recargoNocturno = 0,
+    this.recargoHoraPico = 0,
+    this.recargoFestivo = 0,
+    this.recargoEspera = 0,
+    this.tiempoEsperaMinutos = 0,
+    this.subtotalAntesMinimo = 0,
+    this.aplicoMinimo = false,
+    this.precioFinal = 0,
+    this.comisionPorcentaje = 0,
+    this.comisionValor = 0,
+    this.gananciaConductor = 0,
+  });
+
+  factory PriceBreakdownModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return PriceBreakdownModel();
+    
+    double parseDouble(dynamic value) {
+      if (value == null) return 0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0;
+    }
+
+    return PriceBreakdownModel(
+      tarifaBase: parseDouble(json['tarifa_base']),
+      precioDistancia: parseDouble(json['precio_distancia']),
+      precioTiempo: parseDouble(json['precio_tiempo']),
+      recargoNocturno: parseDouble(json['recargo_nocturno']),
+      recargoHoraPico: parseDouble(json['recargo_hora_pico']),
+      recargoFestivo: parseDouble(json['recargo_festivo']),
+      recargoEspera: parseDouble(json['recargo_espera']),
+      tiempoEsperaMinutos: parseDouble(json['tiempo_espera_minutos']),
+      subtotalAntesMinimo: parseDouble(json['subtotal_antes_minimo']),
+      aplicoMinimo: json['aplico_minimo'] == true,
+      precioFinal: parseDouble(json['precio_final']),
+      comisionPorcentaje: parseDouble(json['comision_porcentaje']),
+      comisionValor: parseDouble(json['comision_valor']),
+      gananciaConductor: parseDouble(json['ganancia_conductor']),
+    );
+  }
+
+  /// Indica si hay algún recargo aplicado
+  bool get tieneRecargos => 
+      recargoNocturno > 0 || 
+      recargoHoraPico > 0 || 
+      recargoFestivo > 0 || 
+      recargoEspera > 0;
+
+  /// Total de recargos
+  double get totalRecargos =>
+      recargoNocturno + recargoHoraPico + recargoFestivo + recargoEspera;
+}
+
 /// Modelo para un viaje individual
 class TripModel {
   final int id;
   final String tipoServicio;
+  final String? tipoVehiculo;
   final String estado;
   final double? precioEstimado;
   final double? precioFinal;
   final double? distanciaKm;
   final double? distanciaEstimada;
-  final int? duracionSegundos; // Duración real en segundos
+  final int? duracionSegundos;
   final int? duracionMinutos;
   final int? duracionEstimada;
   final DateTime fechaSolicitud;
@@ -25,10 +100,13 @@ class TripModel {
   final String? comentario;
   final double? gananciaViaje;
   final double? comisionEmpresa;
+  final double? comisionPorcentaje;
+  final PriceBreakdownModel? desglosePrecio;
 
   TripModel({
     required this.id,
     required this.tipoServicio,
+    this.tipoVehiculo,
     required this.estado,
     this.precioEstimado,
     this.precioFinal,
@@ -48,6 +126,8 @@ class TripModel {
     this.comentario,
     this.gananciaViaje,
     this.comisionEmpresa,
+    this.comisionPorcentaje,
+    this.desglosePrecio,
   });
   
   /// Formatea la duración de forma legible (seg/min/horas)
@@ -72,7 +152,6 @@ class TripModel {
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
     try {
-      // Helper para parsear fechas de manera segura
       DateTime? parseDate(dynamic value) {
         if (value == null || value.toString().isEmpty) return null;
         try {
@@ -83,7 +162,6 @@ class TripModel {
         }
       }
 
-      // Helper para parsear doubles de manera segura
       double? parseDouble(dynamic value) {
         if (value == null) return null;
         if (value is double) return value;
@@ -97,7 +175,6 @@ class TripModel {
         }
       }
 
-      // Helper para parsear ints de manera segura
       int? parseInt(dynamic value) {
         if (value == null) return null;
         if (value is int) return value;
@@ -113,9 +190,26 @@ class TripModel {
       final id = parseInt(json['id']) ?? 0;
       final fechaSolicitud = parseDate(json['fecha_solicitud']) ?? DateTime.now();
       
+      // Parsear desglose de precio si existe
+      PriceBreakdownModel? desglose;
+      if (json['desglose_precio'] != null) {
+        final desgloseData = json['desglose_precio'];
+        if (desgloseData is Map<String, dynamic>) {
+          desglose = PriceBreakdownModel.fromJson(desgloseData);
+        } else if (desgloseData is String) {
+          try {
+            final parsed = jsonDecode(desgloseData);
+            if (parsed is Map<String, dynamic>) {
+              desglose = PriceBreakdownModel.fromJson(parsed);
+            }
+          } catch (_) {}
+        }
+      }
+      
       return TripModel(
         id: id,
         tipoServicio: json['tipo_servicio']?.toString() ?? 'viaje',
+        tipoVehiculo: json['tipo_vehiculo']?.toString(),
         estado: json['estado']?.toString() ?? 'completado',
         precioEstimado: parseDouble(json['precio_estimado']),
         precioFinal: parseDouble(json['precio_final']),
@@ -135,6 +229,8 @@ class TripModel {
         comentario: json['comentario']?.toString(),
         gananciaViaje: parseDouble(json['ganancia_viaje']),
         comisionEmpresa: parseDouble(json['comision_empresa']),
+        comisionPorcentaje: parseDouble(json['comision_porcentaje']),
+        desglosePrecio: desglose,
       );
     } catch (e, stackTrace) {
       print('Error in TripModel.fromJson: $e');

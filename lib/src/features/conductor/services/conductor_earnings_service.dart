@@ -10,6 +10,7 @@ class EarningsModel {
   final double promedioPorViaje;
   final double comisionPeriodo;
   final double comisionAdeudada;
+  final double comisionPromedioPorcentaje;
   final List<EarningsDayModel> desgloseDiario;
 
   EarningsModel({
@@ -19,6 +20,7 @@ class EarningsModel {
     required this.promedioPorViaje,
     this.comisionPeriodo = 0,
     this.comisionAdeudada = 0,
+    this.comisionPromedioPorcentaje = 10.0,
     required this.desgloseDiario,
   });
 
@@ -30,11 +32,15 @@ class EarningsModel {
       promedioPorViaje: double.tryParse(json['promedio_por_viaje']?.toString() ?? '0') ?? 0.0,
       comisionPeriodo: double.tryParse(json['comision_periodo']?.toString() ?? '0') ?? 0.0,
       comisionAdeudada: double.tryParse(json['comision_adeudada']?.toString() ?? '0') ?? 0.0,
+      comisionPromedioPorcentaje: double.tryParse(json['comision_promedio_porcentaje']?.toString() ?? '10') ?? 10.0,
       desgloseDiario: (json['desglose_diario'] as List?)
           ?.map((item) => EarningsDayModel.fromJson(item))
           .toList() ?? [],
     );
   }
+
+  /// Porcentaje que el conductor recibe (100 - comisión)
+  double get porcentajeGanancia => 100.0 - comisionPromedioPorcentaje;
 }
 
 /// Modelo para las ganancias por día

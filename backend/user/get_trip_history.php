@@ -1,7 +1,11 @@
 <?php
 /**
  * get_trip_history.php
- * Obtiene el historial de viajes de un usuario
+ * Obtiene el historial de viajes de un usuario con DESGLOSE COMPLETO de precios
+ * 
+ * Este endpoint incluye:
+ * - Todos los recargos aplicados (festivo, hora pico, nocturno, espera)
+ * - Desglose detallado del precio final
  */
 
 header("Access-Control-Allow-Origin: *");
@@ -38,7 +42,7 @@ try {
     
     $offset = ($page - 1) * $limit;
     
-    // Construir query base - NOTA: la columna es cliente_id, no usuario_id
+    // Construir query base
     $whereClause = "WHERE ss.cliente_id = :usuario_id";
     $params = [':usuario_id' => $usuario_id];
     
@@ -72,36 +76,54 @@ try {
     $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
     $totalPages = ceil($totalRecords / $limit);
     
-    // Query principal con JOIN a conductores
-    // Usar datos reales (distancia_recorrida, tiempo_transcurrido) cuando estén disponibles
-    // y datos estimados como fallback
+    // Query principal con JOIN a tracking para DESGLOSE COMPLETO
     $query = "
         SELECT 
             ss.id,
             COALESCE(ss.tipo_servicio, 'transporte') as tipo_servicio,
+            ss.tipo_vehiculo,
             ss.estado,
             COALESCE(ss.direccion_recogida, '') as origen,
             COALESCE(ss.direccion_destino, '') as destino,
             ss.distancia_estimada,
             ss.tiempo_estimado,
-            -- Usar datos reales si existen, sino estimados
-            COALESCE(ss.distancia_recorrida, ss.distancia_estimada) as distancia_real,
-            COALESCE(ss.tiempo_transcurrido, ss.tiempo_estimado) as tiempo_real,
+            -- Usar datos reales del tracking
+            COALESCE(vrt.distancia_real_km, ss.distancia_recorrida, ss.distancia_estimada) as distancia_real,
+            COALESCE(vrt.tiempo_real_minutos, ss.tiempo_transcurrido, ss.tiempo_estimado) as tiempo_real,
             COALESCE(ss.precio_estimado, 0) as precio_estimado,
-            COALESCE(ss.precio_final, ss.precio_estimado, 0) as precio_final,
+            COALESCE(vrt.precio_final_aplicado, ss.precio_final, ss.precio_estimado, 0) as precio_final,
             COALESCE(ss.metodo_pago, 'efectivo') as metodo_pago,
             COALESCE(ss.pago_confirmado, false) as pago_confirmado,
             COALESCE(ss.solicitado_en, ss.fecha_creacion) as fecha_solicitud,
             ss.completado_en as fecha_completado,
+            ss.aceptado_en as fecha_aceptado,
+            -- Campo JSON con desglose
+            ss.desglose_precio,
+            -- Desglose del tracking
+            vrt.tarifa_base,
+            vrt.precio_distancia,
+            vrt.precio_tiempo,
+            vrt.recargo_nocturno,
+            vrt.recargo_hora_pico,
+            vrt.recargo_festivo,
+            vrt.recargo_espera,
+            vrt.tiempo_espera_min,
+            -- Conductor
             ac.conductor_id,
             u.nombre as conductor_nombre,
             u.apellido as conductor_apellido,
             u.foto_perfil as conductor_foto,
+            u.telefono as conductor_telefono,
             COALESCE(dc.calificacion_promedio, 0) as calificacion_conductor,
-            -- Obtener la calificación que el cliente dio al conductor en este viaje
+            COALESCE(dc.placa, '') as conductor_placa,
+            COALESCE(dc.marca_vehiculo, '') as conductor_marca,
+            COALESCE(dc.modelo_vehiculo, '') as conductor_modelo,
+            COALESCE(dc.color_vehiculo, '') as conductor_color,
+            -- Calificación dada
             cal.calificacion as calificacion_dada,
             cal.comentario as comentario_dado
         FROM solicitudes_servicio ss
+        LEFT JOIN viaje_resumen_tracking vrt ON ss.id = vrt.solicitud_id
         LEFT JOIN asignaciones_conductor ac ON ss.id = ac.solicitud_id AND ac.estado IN ('aceptada', 'completada', 'completado')
         LEFT JOIN detalles_conductor dc ON ac.conductor_id = dc.usuario_id
         LEFT JOIN usuarios u ON ac.conductor_id = u.id
@@ -121,37 +143,80 @@ try {
     
     $viajes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Formatear datos
+    // Formatear datos con DESGLOSE COMPLETO
     $viajesFormateados = array_map(function($viaje) {
-        // Usar precio_final si está disponible, sino precio_estimado
-        $precioMostrar = ($viaje['precio_final'] && $viaje['precio_final'] > 0) 
+        $precioFinal = ($viaje['precio_final'] && $viaje['precio_final'] > 0) 
             ? (float)$viaje['precio_final'] 
             : (float)$viaje['precio_estimado'];
+        
+        // Construir desglose de precio
+        $desglose = null;
+        
+        // Primero intentar obtener del campo JSON
+        if (!empty($viaje['desglose_precio'])) {
+            $desgloseJson = is_string($viaje['desglose_precio']) 
+                ? json_decode($viaje['desglose_precio'], true) 
+                : $viaje['desglose_precio'];
+            if ($desgloseJson && is_array($desgloseJson)) {
+                $desglose = $desgloseJson;
+            }
+        }
+        
+        // Si no hay desglose en JSON, construir desde columnas del tracking
+        if (!$desglose && isset($viaje['tarifa_base']) && $viaje['tarifa_base'] !== null) {
+            $desglose = [
+                'tarifa_base' => round((float)($viaje['tarifa_base'] ?? 0), 0),
+                'precio_distancia' => round((float)($viaje['precio_distancia'] ?? 0), 0),
+                'precio_tiempo' => round((float)($viaje['precio_tiempo'] ?? 0), 0),
+                'recargo_nocturno' => round((float)($viaje['recargo_nocturno'] ?? 0), 0),
+                'recargo_hora_pico' => round((float)($viaje['recargo_hora_pico'] ?? 0), 0),
+                'recargo_festivo' => round((float)($viaje['recargo_festivo'] ?? 0), 0),
+                'recargo_espera' => round((float)($viaje['recargo_espera'] ?? 0), 0),
+                'tiempo_espera_minutos' => (float)($viaje['tiempo_espera_min'] ?? 0),
+                'precio_final' => round($precioFinal, 0)
+            ];
+        }
             
         return [
             'id' => (int)$viaje['id'],
             'tipo_servicio' => $viaje['tipo_servicio'] ?? 'transporte',
+            'tipo_vehiculo' => $viaje['tipo_vehiculo'] ?? null,
             'estado' => $viaje['estado'],
             'origen' => $viaje['origen'] ?? '',
             'destino' => $viaje['destino'] ?? '',
-            // Usar datos reales en lugar de estimados
-            'distancia_km' => $viaje['distancia_real'] ? (float)$viaje['distancia_real'] : null,
+            // Datos reales
+            'distancia_km' => $viaje['distancia_real'] ? round((float)$viaje['distancia_real'], 2) : null,
             'duracion_minutos' => $viaje['tiempo_real'] ? (int)$viaje['tiempo_real'] : null,
-            // Mantener estimados para referencia si se necesitan
+            // Estimados para referencia
             'distancia_estimada' => $viaje['distancia_estimada'] ? (float)$viaje['distancia_estimada'] : null,
             'duracion_estimada' => $viaje['tiempo_estimado'] ? (int)$viaje['tiempo_estimado'] : null,
-            'precio_estimado' => (float)$viaje['precio_estimado'],
-            'precio_final' => $precioMostrar,
+            // Precios
+            'precio_estimado' => round((float)$viaje['precio_estimado'], 0),
+            'precio_final' => round($precioFinal, 0),
+            // DESGLOSE COMPLETO DEL PRECIO
+            'desglose_precio' => $desglose,
+            // Pago
             'metodo_pago' => $viaje['metodo_pago'],
             'pago_confirmado' => (bool)$viaje['pago_confirmado'],
+            // Fechas
             'fecha_solicitud' => $viaje['fecha_solicitud'],
+            'fecha_aceptado' => $viaje['fecha_aceptado'] ?? null,
             'fecha_completado' => $viaje['fecha_completado'],
+            // Conductor
             'conductor_id' => isset($viaje['conductor_id']) ? (int)$viaje['conductor_id'] : null,
             'conductor_nombre' => $viaje['conductor_nombre'],
             'conductor_apellido' => $viaje['conductor_apellido'],
             'conductor_foto' => $viaje['conductor_foto'],
+            'conductor_telefono' => $viaje['conductor_telefono'] ?? null,
             'calificacion_conductor' => $viaje['calificacion_conductor'] ? (float)$viaje['calificacion_conductor'] : null,
-            // Calificación que el cliente dio en este viaje
+            // Vehículo
+            'vehiculo' => [
+                'placa' => $viaje['conductor_placa'] ?? null,
+                'marca' => $viaje['conductor_marca'] ?? null,
+                'modelo' => $viaje['conductor_modelo'] ?? null,
+                'color' => $viaje['conductor_color'] ?? null
+            ],
+            // Calificación dada
             'calificacion_dada' => $viaje['calificacion_dada'] ? (int)$viaje['calificacion_dada'] : null,
             'comentario_dado' => $viaje['comentario_dado'],
         ];

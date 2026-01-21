@@ -7,8 +7,10 @@
  * Este endpoint se llama cuando el viaje termina para:
  * 1. Cerrar el tracking
  * 2. Calcular el precio final basado en distancia/tiempo REAL
- * 3. Actualizar la solicitud con los valores finales
- * 4. Retornar el precio que coincide para conductor y cliente
+ * 3. Calcular TODOS los recargos: nocturno, hora pico, festivo, espera
+ * 4. Aplicar la comisión REAL de la empresa
+ * 5. Actualizar la solicitud con los valores finales
+ * 6. Retornar el desglose completo del precio
  */
 
 header('Content-Type: application/json');
@@ -29,6 +31,39 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 require_once '../../config/database.php';
 
+/**
+ * Verifica si una fecha es festivo en Colombia
+ * Lista básica de festivos fijos - se puede expandir
+ */
+function esFestivoColombia($fecha = null) {
+    if ($fecha === null) {
+        $fecha = new DateTime();
+    }
+    
+    $mes = (int)$fecha->format('m');
+    $dia = (int)$fecha->format('d');
+    
+    // Festivos fijos en Colombia
+    $festivosFijos = [
+        [1, 1],   // Año Nuevo
+        [5, 1],   // Día del Trabajo
+        [7, 20],  // Día de la Independencia
+        [8, 7],   // Batalla de Boyacá
+        [12, 8],  // Inmaculada Concepción
+        [12, 25], // Navidad
+    ];
+    
+    foreach ($festivosFijos as $festivo) {
+        if ($mes === $festivo[0] && $dia === $festivo[1]) {
+            return true;
+        }
+    }
+    
+    // Domingos también se consideran para recargo
+    $diaSemana = (int)$fecha->format('w');
+    return $diaSemana === 0; // 0 = Domingo
+}
+
 try {
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -39,6 +74,8 @@ try {
     // Valores finales del tracking (enviados por la app del conductor)
     $distancia_final_km = isset($input['distancia_final_km']) ? floatval($input['distancia_final_km']) : null;
     $tiempo_final_seg = isset($input['tiempo_final_seg']) ? intval($input['tiempo_final_seg']) : null;
+    // Tiempo de espera adicional (si el cliente se demoró)
+    $tiempo_espera_min = isset($input['tiempo_espera_min']) ? intval($input['tiempo_espera_min']) : 0;
     
     if ($solicitud_id <= 0 || $conductor_id <= 0) {
         throw new Exception('solicitud_id y conductor_id son requeridos');
@@ -61,7 +98,8 @@ try {
             s.tiempo_estimado,
             s.precio_estimado,
             s.distancia_recorrida,
-            s.tiempo_transcurrido
+            s.tiempo_transcurrido,
+            s.solicitado_en
         FROM solicitudes_servicio s
         WHERE s.id = :solicitud_id
     ");
@@ -88,16 +126,10 @@ try {
     $ultimo_tracking = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // Usar valores del tracking si existen, si no, usar los enviados por la app
-    // IMPORTANTE: El tiempo del cronómetro del conductor tiene PRIORIDAD
-    // porque es el tiempo REAL desde "comenzar viaje" hasta "finalizar"
     if ($ultimo_tracking) {
-        // Distancia del tracking GPS (más precisa)
         $distancia_real = floatval($ultimo_tracking['distancia_acumulada_km']);
-        // Tiempo: usar el del conductor (cronómetro) si se envió, sino el del tracking
         $tiempo_real_seg = $tiempo_final_seg ?? intval($ultimo_tracking['tiempo_transcurrido_seg']);
     } else {
-        // Sin tracking: usar valores enviados por la app, o los guardados en la solicitud
-        // NUNCA usar distancia estimada como fallback - si no hay tracking, es 0
         $distancia_real = $distancia_final_km ?? floatval($viaje['distancia_recorrida'] ?? 0);
         $tiempo_real_seg = $tiempo_final_seg ?? intval($viaje['tiempo_transcurrido'] ?? 0);
     }
@@ -105,15 +137,28 @@ try {
     $tiempo_real_min = ceil($tiempo_real_seg / 60);
     
     // =====================================================
-    // OBTENER CONFIGURACIÓN DE PRECIOS (por empresa o global)
+    // OBTENER CONFIGURACIÓN DE PRECIOS COMPLETA
     // =====================================================
     $empresa_id = $viaje['empresa_id'];
     $config = null;
+    $config_precios_id = null;
+    $comision_admin_porcentaje = 0; // Comisión que el admin cobra a la empresa
+    
+    // Obtener comisión del admin sobre la empresa (si aplica)
+    if ($empresa_id) {
+        $stmt = $db->prepare("SELECT comision_admin_porcentaje FROM empresas_transporte WHERE id = :id");
+        $stmt->execute([':id' => $empresa_id]);
+        $empresa_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($empresa_data) {
+            $comision_admin_porcentaje = floatval($empresa_data['comision_admin_porcentaje'] ?? 0);
+        }
+    }
     
     // Primero buscar tarifa de la empresa
     if ($empresa_id) {
         $stmt = $db->prepare("
             SELECT 
+                id,
                 tarifa_base,
                 costo_por_km,
                 costo_por_minuto,
@@ -128,8 +173,11 @@ try {
                 recargo_nocturno,
                 hora_nocturna_inicio,
                 hora_nocturna_fin,
+                recargo_festivo,
                 umbral_km_descuento,
-                descuento_distancia_larga
+                descuento_distancia_larga,
+                tiempo_espera_gratis,
+                costo_tiempo_espera
             FROM configuracion_precios 
             WHERE empresa_id = :empresa_id AND tipo_vehiculo = :tipo AND activo = 1
             LIMIT 1
@@ -142,6 +190,7 @@ try {
     if (!$config) {
         $stmt = $db->prepare("
             SELECT 
+                id,
                 tarifa_base,
                 costo_por_km,
                 costo_por_minuto,
@@ -156,8 +205,11 @@ try {
                 recargo_nocturno,
                 hora_nocturna_inicio,
                 hora_nocturna_fin,
+                recargo_festivo,
                 umbral_km_descuento,
-                descuento_distancia_larga
+                descuento_distancia_larga,
+                tiempo_espera_gratis,
+                costo_tiempo_espera
             FROM configuracion_precios 
             WHERE empresa_id IS NULL AND tipo_vehiculo = :tipo AND activo = 1
             LIMIT 1
@@ -170,71 +222,116 @@ try {
         throw new Exception('No hay configuración de precios para este tipo de vehículo');
     }
     
+    $config_precios_id = intval($config['id']);
+    
     // =====================================================
-    // CALCULAR PRECIO FINAL
+    // CALCULAR PRECIO FINAL CON TODOS LOS COMPONENTES
     // =====================================================
     
+    // 1. Componentes base
     $tarifa_base = floatval($config['tarifa_base']);
     $precio_distancia = $distancia_real * floatval($config['costo_por_km']);
     $precio_tiempo = $tiempo_real_min * floatval($config['costo_por_minuto']);
     
-    $subtotal = $tarifa_base + $precio_distancia + $precio_tiempo;
+    $subtotal_sin_recargos = $tarifa_base + $precio_distancia + $precio_tiempo;
     
-    // Descuento por distancia larga
-    $descuento = 0;
-    if ($distancia_real >= floatval($config['umbral_km_descuento'])) {
-        $descuento = $subtotal * (floatval($config['descuento_distancia_larga']) / 100);
+    // 2. Descuento por distancia larga
+    $descuento_distancia_larga = 0;
+    $umbral_km = floatval($config['umbral_km_descuento'] ?? 15);
+    if ($distancia_real >= $umbral_km) {
+        $descuento_distancia_larga = $subtotal_sin_recargos * (floatval($config['descuento_distancia_larga'] ?? 0) / 100);
     }
     
-    $subtotal_con_descuento = $subtotal - $descuento;
+    $subtotal_con_descuento = $subtotal_sin_recargos - $descuento_distancia_larga;
     
-    // Recargos por horario
+    // 3. Tiempo de espera (fuera del tiempo gratis)
+    $tiempo_espera_gratis = intval($config['tiempo_espera_gratis'] ?? 3);
+    $tiempo_espera_cobrable = max(0, $tiempo_espera_min - $tiempo_espera_gratis);
+    $recargo_espera = $tiempo_espera_cobrable * floatval($config['costo_tiempo_espera'] ?? 0);
+    
+    // 4. Determinar recargos por horario/fecha
     $hora_actual = date('H:i:s');
-    $recargo = 0;
+    $fecha_actual = new DateTime();
+    
+    $recargo_nocturno = 0;
+    $recargo_hora_pico = 0;
+    $recargo_festivo = 0;
     $tipo_recargo = 'normal';
+    $recargo_porcentaje = 0;
     
-    // Hora pico mañana
-    if ($hora_actual >= $config['hora_pico_inicio_manana'] && 
-        $hora_actual <= $config['hora_pico_fin_manana']) {
-        $recargo = $subtotal_con_descuento * (floatval($config['recargo_hora_pico']) / 100);
-        $tipo_recargo = 'hora_pico_manana';
-    }
-    // Hora pico tarde
-    elseif ($hora_actual >= $config['hora_pico_inicio_tarde'] && 
-            $hora_actual <= $config['hora_pico_fin_tarde']) {
-        $recargo = $subtotal_con_descuento * (floatval($config['recargo_hora_pico']) / 100);
-        $tipo_recargo = 'hora_pico_tarde';
-    }
-    // Nocturno
-    elseif ($hora_actual >= $config['hora_nocturna_inicio'] || 
-            $hora_actual <= $config['hora_nocturna_fin']) {
-        $recargo = $subtotal_con_descuento * (floatval($config['recargo_nocturno']) / 100);
-        $tipo_recargo = 'nocturno';
+    // Verificar si es festivo primero (tiene prioridad)
+    $es_festivo = esFestivoColombia($fecha_actual);
+    
+    if ($es_festivo && floatval($config['recargo_festivo'] ?? 0) > 0) {
+        // Recargo festivo
+        $recargo_porcentaje = floatval($config['recargo_festivo']);
+        $recargo_festivo = $subtotal_con_descuento * ($recargo_porcentaje / 100);
+        $tipo_recargo = 'festivo';
+    } else {
+        // Verificar hora pico o nocturno
+        $h_pico_ini_m = $config['hora_pico_inicio_manana'] ?? '07:00:00';
+        $h_pico_fin_m = $config['hora_pico_fin_manana'] ?? '09:00:00';
+        $h_pico_ini_t = $config['hora_pico_inicio_tarde'] ?? '17:00:00';
+        $h_pico_fin_t = $config['hora_pico_fin_tarde'] ?? '19:00:00';
+        $h_noc_ini = $config['hora_nocturna_inicio'] ?? '22:00:00';
+        $h_noc_fin = $config['hora_nocturna_fin'] ?? '06:00:00';
+        
+        // Hora pico mañana
+        if ($hora_actual >= $h_pico_ini_m && $hora_actual <= $h_pico_fin_m) {
+            $recargo_porcentaje = floatval($config['recargo_hora_pico'] ?? 0);
+            $recargo_hora_pico = $subtotal_con_descuento * ($recargo_porcentaje / 100);
+            $tipo_recargo = 'hora_pico_manana';
+        }
+        // Hora pico tarde
+        elseif ($hora_actual >= $h_pico_ini_t && $hora_actual <= $h_pico_fin_t) {
+            $recargo_porcentaje = floatval($config['recargo_hora_pico'] ?? 0);
+            $recargo_hora_pico = $subtotal_con_descuento * ($recargo_porcentaje / 100);
+            $tipo_recargo = 'hora_pico_tarde';
+        }
+        // Nocturno (cruza medianoche)
+        elseif ($hora_actual >= $h_noc_ini || $hora_actual <= $h_noc_fin) {
+            $recargo_porcentaje = floatval($config['recargo_nocturno'] ?? 0);
+            $recargo_nocturno = $subtotal_con_descuento * ($recargo_porcentaje / 100);
+            $tipo_recargo = 'nocturno';
+        }
     }
     
-    $precio_total = $subtotal_con_descuento + $recargo;
+    // 5. Sumar todos los recargos
+    $total_recargos = $recargo_nocturno + $recargo_hora_pico + $recargo_festivo + $recargo_espera;
     
-    // Aplicar tarifa mínima
+    // 6. Precio total antes de límites
+    $precio_total = $subtotal_con_descuento + $total_recargos;
+    
+    // 7. Aplicar tarifa mínima
     $tarifa_minima = floatval($config['tarifa_minima']);
+    $aplico_tarifa_minima = false;
     if ($precio_total < $tarifa_minima) {
         $precio_total = $tarifa_minima;
+        $aplico_tarifa_minima = true;
     }
     
-    // Aplicar tarifa máxima si existe
-    if ($config['tarifa_maxima'] !== null) {
+    // 8. Aplicar tarifa máxima si existe
+    if ($config['tarifa_maxima'] !== null && $config['tarifa_maxima'] > 0) {
         $tarifa_maxima = floatval($config['tarifa_maxima']);
         if ($precio_total > $tarifa_maxima) {
             $precio_total = $tarifa_maxima;
         }
     }
     
-    // Redondear a 100 COP más cercano (típico en Colombia)
+    // 9. Redondear a 100 COP más cercano (típico en Colombia)
     $precio_final = round($precio_total / 100) * 100;
     
-    // Calcular comisiones
+    // 10. Calcular comisión de la EMPRESA al conductor
+    // Esta es la comisión que la empresa cobra a sus conductores
     $comision_plataforma_porcentaje = floatval($config['comision_plataforma']);
-    $comision_plataforma = $precio_final * ($comision_plataforma_porcentaje / 100);
-    $ganancia_conductor = $precio_final - $comision_plataforma;
+    $comision_plataforma_valor = $precio_final * ($comision_plataforma_porcentaje / 100);
+    $ganancia_conductor = $precio_final - $comision_plataforma_valor;
+    
+    // 11. Calcular comisión del ADMIN sobre lo que gana la empresa
+    // Esta es la comisión que el admin (VIAX) cobra a las empresas de transporte
+    // Se calcula sobre la comisión que la empresa cobró al conductor
+    $comision_admin_valor = $comision_plataforma_valor * ($comision_admin_porcentaje / 100);
+    $ganancia_empresa = $comision_plataforma_valor - $comision_admin_valor;
     
     // =====================================================
     // DETECTAR DESVÍOS SIGNIFICATIVOS
@@ -246,11 +343,51 @@ try {
         ? ($diferencia_distancia / $distancia_estimada) * 100 
         : 0;
     
-    $tuvo_desvio = abs($porcentaje_desvio) > 20; // Más del 20% de diferencia
+    $tuvo_desvio = abs($porcentaje_desvio) > 20;
     
     // =====================================================
-    // ACTUALIZAR RESUMEN DE TRACKING
+    // CREAR OBJETO JSON DE DESGLOSE COMPLETO
     // =====================================================
+    
+    $desglose_json = json_encode([
+        'tarifa_base' => round($tarifa_base, 2),
+        'precio_distancia' => round($precio_distancia, 2),
+        'precio_tiempo' => round($precio_tiempo, 2),
+        'subtotal_sin_recargos' => round($subtotal_sin_recargos, 2),
+        'descuento_distancia_larga' => round($descuento_distancia_larga, 2),
+        'subtotal_con_descuento' => round($subtotal_con_descuento, 2),
+        'recargo_nocturno' => round($recargo_nocturno, 2),
+        'recargo_hora_pico' => round($recargo_hora_pico, 2),
+        'recargo_festivo' => round($recargo_festivo, 2),
+        'recargo_espera' => round($recargo_espera, 2),
+        'tiempo_espera_min' => $tiempo_espera_cobrable,
+        'total_recargos' => round($total_recargos, 2),
+        'tipo_recargo' => $tipo_recargo,
+        'recargo_porcentaje' => $recargo_porcentaje,
+        'aplico_tarifa_minima' => $aplico_tarifa_minima,
+        'precio_antes_redondeo' => round($precio_total, 2),
+        'precio_final' => $precio_final,
+        // Comisión de la empresa al conductor
+        'comision_plataforma_porcentaje' => $comision_plataforma_porcentaje,
+        'comision_plataforma_valor' => round($comision_plataforma_valor, 2),
+        'ganancia_conductor' => round($ganancia_conductor, 2),
+        // Comisión del admin a la empresa
+        'comision_admin_porcentaje' => $comision_admin_porcentaje,
+        'comision_admin_valor' => round($comision_admin_valor, 2),
+        'ganancia_empresa' => round($ganancia_empresa, 2),
+        // Datos del viaje
+        'distancia_km' => round($distancia_real, 2),
+        'tiempo_min' => $tiempo_real_min,
+        'config_precios_id' => $config_precios_id,
+        'empresa_id' => $empresa_id
+    ]);
+    
+    // =====================================================
+    // ACTUALIZAR RESUMEN DE TRACKING CON DESGLOSE COMPLETO
+    // =====================================================
+    
+    $tiempo_estimado_min = intval($viaje['tiempo_estimado']);
+    $diff_tiempo_min = $tiempo_real_min - $tiempo_estimado_min;
     
     $stmt = $db->prepare("
         INSERT INTO viaje_resumen_tracking (
@@ -267,7 +404,32 @@ try {
             precio_final_aplicado,
             tiene_desvio_ruta,
             fin_viaje_real,
-            actualizado_en
+            actualizado_en,
+            -- Nuevas columnas de desglose
+            tarifa_base,
+            precio_distancia,
+            precio_tiempo,
+            recargo_nocturno,
+            recargo_hora_pico,
+            recargo_festivo,
+            recargo_espera,
+            tiempo_espera_min,
+            descuento_distancia_larga,
+            subtotal_sin_recargos,
+            total_recargos,
+            tipo_recargo,
+            aplico_tarifa_minima,
+            -- Comisión empresa al conductor
+            comision_plataforma_porcentaje,
+            comision_plataforma_valor,
+            ganancia_conductor,
+            -- Comisión admin a la empresa
+            comision_admin_porcentaje,
+            comision_admin_valor,
+            ganancia_empresa,
+            -- Referencias
+            empresa_id,
+            config_precios_id
         ) VALUES (
             :solicitud_id,
             :distancia_real,
@@ -282,7 +444,28 @@ try {
             :precio_aplicado,
             :tuvo_desvio,
             NOW(),
-            NOW()
+            NOW(),
+            :tarifa_base,
+            :precio_distancia,
+            :precio_tiempo,
+            :recargo_nocturno,
+            :recargo_hora_pico,
+            :recargo_festivo,
+            :recargo_espera,
+            :tiempo_espera_cobrable,
+            :descuento_distancia,
+            :subtotal_sin_recargos,
+            :total_recargos,
+            :tipo_recargo,
+            :aplico_tarifa_minima,
+            :comision_porcentaje,
+            :comision_valor,
+            :ganancia_conductor,
+            :comision_admin_porcentaje,
+            :comision_admin_valor,
+            :ganancia_empresa,
+            :empresa_id,
+            :config_precios_id
         )
         ON CONFLICT (solicitud_id) DO UPDATE SET
             distancia_real_km = EXCLUDED.distancia_real_km,
@@ -297,11 +480,29 @@ try {
             precio_final_aplicado = EXCLUDED.precio_final_aplicado,
             tiene_desvio_ruta = EXCLUDED.tiene_desvio_ruta,
             fin_viaje_real = NOW(),
-            actualizado_en = NOW()
+            actualizado_en = NOW(),
+            tarifa_base = EXCLUDED.tarifa_base,
+            precio_distancia = EXCLUDED.precio_distancia,
+            precio_tiempo = EXCLUDED.precio_tiempo,
+            recargo_nocturno = EXCLUDED.recargo_nocturno,
+            recargo_hora_pico = EXCLUDED.recargo_hora_pico,
+            recargo_festivo = EXCLUDED.recargo_festivo,
+            recargo_espera = EXCLUDED.recargo_espera,
+            tiempo_espera_min = EXCLUDED.tiempo_espera_min,
+            descuento_distancia_larga = EXCLUDED.descuento_distancia_larga,
+            subtotal_sin_recargos = EXCLUDED.subtotal_sin_recargos,
+            total_recargos = EXCLUDED.total_recargos,
+            tipo_recargo = EXCLUDED.tipo_recargo,
+            aplico_tarifa_minima = EXCLUDED.aplico_tarifa_minima,
+            comision_plataforma_porcentaje = EXCLUDED.comision_plataforma_porcentaje,
+            comision_plataforma_valor = EXCLUDED.comision_plataforma_valor,
+            ganancia_conductor = EXCLUDED.ganancia_conductor,
+            comision_admin_porcentaje = EXCLUDED.comision_admin_porcentaje,
+            comision_admin_valor = EXCLUDED.comision_admin_valor,
+            ganancia_empresa = EXCLUDED.ganancia_empresa,
+            empresa_id = EXCLUDED.empresa_id,
+            config_precios_id = EXCLUDED.config_precios_id
     ");
-    
-    $tiempo_estimado_min = intval($viaje['tiempo_estimado']);
-    $diff_tiempo_min = $tiempo_real_min - $tiempo_estimado_min;
     
     $stmt->execute([
         ':solicitud_id' => $solicitud_id,
@@ -315,11 +516,32 @@ try {
         ':precio_estimado' => floatval($viaje['precio_estimado']),
         ':precio_calculado' => $precio_final,
         ':precio_aplicado' => $precio_final,
-        ':tuvo_desvio' => $tuvo_desvio
+        ':tuvo_desvio' => $tuvo_desvio ? 1 : 0,
+        ':tarifa_base' => $tarifa_base,
+        ':precio_distancia' => $precio_distancia,
+        ':precio_tiempo' => $precio_tiempo,
+        ':recargo_nocturno' => $recargo_nocturno,
+        ':recargo_hora_pico' => $recargo_hora_pico,
+        ':recargo_festivo' => $recargo_festivo,
+        ':recargo_espera' => $recargo_espera,
+        ':tiempo_espera_cobrable' => $tiempo_espera_cobrable,
+        ':descuento_distancia' => $descuento_distancia_larga,
+        ':subtotal_sin_recargos' => $subtotal_sin_recargos,
+        ':total_recargos' => $total_recargos,
+        ':tipo_recargo' => $tipo_recargo,
+        ':aplico_tarifa_minima' => $aplico_tarifa_minima ? 1 : 0,
+        ':comision_porcentaje' => $comision_plataforma_porcentaje,
+        ':comision_valor' => $comision_plataforma_valor,
+        ':ganancia_conductor' => $ganancia_conductor,
+        ':comision_admin_porcentaje' => $comision_admin_porcentaje,
+        ':comision_admin_valor' => $comision_admin_valor,
+        ':ganancia_empresa' => $ganancia_empresa,
+        ':empresa_id' => $empresa_id,
+        ':config_precios_id' => $config_precios_id
     ]);
     
     // =====================================================
-    // ACTUALIZAR SOLICITUD
+    // ACTUALIZAR SOLICITUD CON DESGLOSE JSON
     // =====================================================
     
     $stmt = $db->prepare("
@@ -328,7 +550,8 @@ try {
             distancia_recorrida = :distancia,
             tiempo_transcurrido = :tiempo,
             precio_ajustado_por_tracking = TRUE,
-            tuvo_desvio_ruta = :tuvo_desvio
+            tuvo_desvio_ruta = :tuvo_desvio,
+            desglose_precio = :desglose_json
         WHERE id = :solicitud_id
     ");
     
@@ -336,14 +559,15 @@ try {
         ':precio_final' => $precio_final,
         ':distancia' => $distancia_real,
         ':tiempo' => $tiempo_real_seg,
-        ':tuvo_desvio' => $tuvo_desvio,
+        ':tuvo_desvio' => $tuvo_desvio ? 1 : 0,
+        ':desglose_json' => $desglose_json,
         ':solicitud_id' => $solicitud_id
     ]);
     
     $db->commit();
     
     // =====================================================
-    // RESPUESTA
+    // RESPUESTA CON DESGLOSE COMPLETO
     // =====================================================
     
     $response = [
@@ -351,15 +575,22 @@ try {
         'message' => 'Tracking finalizado y precio calculado',
         'precio_final' => $precio_final,
         'desglose' => [
-            'tarifa_base' => $tarifa_base,
+            'tarifa_base' => round($tarifa_base, 2),
             'precio_distancia' => round($precio_distancia, 2),
             'precio_tiempo' => round($precio_tiempo, 2),
-            'subtotal' => round($subtotal, 2),
-            'descuento_distancia' => round($descuento, 2),
-            'recargo' => round($recargo, 2),
+            'subtotal_sin_recargos' => round($subtotal_sin_recargos, 2),
+            'descuento_distancia_larga' => round($descuento_distancia_larga, 2),
+            'recargo_nocturno' => round($recargo_nocturno, 2),
+            'recargo_hora_pico' => round($recargo_hora_pico, 2),
+            'recargo_festivo' => round($recargo_festivo, 2),
+            'recargo_espera' => round($recargo_espera, 2),
+            'tiempo_espera_min' => $tiempo_espera_cobrable,
+            'total_recargos' => round($total_recargos, 2),
             'tipo_recargo' => $tipo_recargo,
-            'total_antes_redondeo' => round($precio_total, 2),
-            'total_final' => $precio_final
+            'recargo_porcentaje' => $recargo_porcentaje,
+            'aplico_tarifa_minima' => $aplico_tarifa_minima,
+            'precio_antes_redondeo' => round($precio_total, 2),
+            'precio_final' => $precio_final
         ],
         'tracking' => [
             'distancia_real_km' => round($distancia_real, 2),
@@ -376,13 +607,18 @@ try {
         ],
         'comisiones' => [
             'comision_plataforma_porcentaje' => $comision_plataforma_porcentaje,
-            'comision_plataforma' => round($comision_plataforma, 2),
+            'comision_plataforma_valor' => round($comision_plataforma_valor, 2),
             'ganancia_conductor' => round($ganancia_conductor, 2)
         ],
         'comparacion_precio' => [
             'precio_estimado' => floatval($viaje['precio_estimado']),
             'precio_final' => $precio_final,
             'diferencia' => $precio_final - floatval($viaje['precio_estimado'])
+        ],
+        'meta' => [
+            'empresa_id' => $empresa_id,
+            'config_precios_id' => $config_precios_id,
+            'tipo_vehiculo' => $viaje['tipo_vehiculo'] ?? 'moto'
         ]
     ];
     
