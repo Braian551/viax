@@ -5,6 +5,7 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
+import 'platform_earnings_screen.dart';
 
 class AdminDashboardTab extends StatefulWidget {
   final Map<String, dynamic> adminUser;
@@ -345,7 +346,93 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        // Tarjeta de Ganancias de Plataforma (full width)
+        _buildPlatformEarningsCard(),
       ],
+    );
+  }
+
+  Widget _buildPlatformEarningsCard() {
+    return GestureDetector(
+      onTap: () {
+        final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PlatformEarningsScreen(adminId: adminId),
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.2),
+                  AppColors.accent.withValues(alpha: 0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ganancias Plataforma',
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.displayMedium?.color,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Ver cuentas por cobrar de empresas',
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

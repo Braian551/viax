@@ -541,6 +541,36 @@ try {
     ]);
     
     // =====================================================
+    // ACTUALIZAR SALDO PENDIENTE DE LA EMPRESA CON ADMIN
+    // =====================================================
+    // La empresa debe al admin la comision_admin_valor de cada viaje
+    if ($empresa_id && $comision_admin_valor > 0) {
+        // Obtener saldo actual de la empresa
+        $stmtSaldo = $db->prepare("SELECT saldo_pendiente FROM empresas_transporte WHERE id = :id FOR UPDATE");
+        $stmtSaldo->execute([':id' => $empresa_id]);
+        $saldo_actual = floatval($stmtSaldo->fetchColumn() ?? 0);
+        $nuevo_saldo = $saldo_actual + $comision_admin_valor;
+        
+        // Actualizar saldo pendiente
+        $stmtUpdate = $db->prepare("UPDATE empresas_transporte SET saldo_pendiente = :nuevo_saldo, actualizado_en = NOW() WHERE id = :id");
+        $stmtUpdate->execute([':nuevo_saldo' => $nuevo_saldo, ':id' => $empresa_id]);
+        
+        // Registrar movimiento en pagos_empresas (cargo por comisión del viaje)
+        $stmtMovimiento = $db->prepare("
+            INSERT INTO pagos_empresas (empresa_id, monto, tipo, descripcion, viaje_id, saldo_anterior, saldo_nuevo, creado_en)
+            VALUES (:empresa_id, :monto, 'cargo', :descripcion, :viaje_id, :saldo_anterior, :saldo_nuevo, NOW())
+        ");
+        $stmtMovimiento->execute([
+            ':empresa_id' => $empresa_id,
+            ':monto' => $comision_admin_valor,
+            ':descripcion' => "Comisión viaje #$solicitud_id ({$comision_admin_porcentaje}%)",
+            ':viaje_id' => $solicitud_id,
+            ':saldo_anterior' => $saldo_actual,
+            ':saldo_nuevo' => $nuevo_saldo
+        ]);
+    }
+    
+    // =====================================================
     // ACTUALIZAR SOLICITUD CON DESGLOSE JSON
     // =====================================================
     

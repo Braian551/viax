@@ -588,4 +588,69 @@ class AdminService {
       return {'success': false, 'message': e.toString()};
     }
   }
+
+  /// Obtener ganancias de la plataforma (cuánto deben las empresas)
+  static Future<Map<String, dynamic>> getPlatformEarnings({
+    String periodo = 'mes',
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/platform_earnings.php').replace(
+        queryParameters: {'periodo': periodo},
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {'success': false, 'message': 'Error al obtener ganancias de plataforma'};
+    } catch (e) {
+      print('Error en getPlatformEarnings: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  /// Registrar pago de una empresa a la plataforma
+  static Future<Map<String, dynamic>> registrarPagoEmpresa({
+    required int empresaId,
+    required double monto,
+    int? adminId,
+    String? notas,
+    String metodoPago = 'transferencia',
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registrar_pago_empresa.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'empresa_id': empresaId,
+          'monto': monto,
+          'admin_id': adminId,
+          'notas': notas,
+          'metodo_pago': metodoPago,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {'success': false, 'message': 'Error al registrar pago de empresa'};
+    } catch (e) {
+      print('Error en registrarPagoEmpresa: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
 }

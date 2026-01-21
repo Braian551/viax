@@ -7,6 +7,7 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import '../widgets/pricing/company_pricing_card.dart';
 import '../widgets/pricing/company_pricing_sheet.dart';
+import '../widgets/balance/company_balance_sheet.dart';
 
 class CompanyPricingTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -281,42 +282,74 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     );
   }
 
+  void _showBalanceSheet() {
+    final empresaId = widget.user['empresa_id'] ?? widget.user['id'];
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => CompanyBalanceSheet(
+          empresaId: empresaId,
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummarySection(bool isDark) {
-    final comisionAdmin = _empresaInfo?['comision_admin_porcentaje'] ?? 0.0;
-    final saldo = _empresaInfo?['saldo_pendiente'] ?? 0.0;
+    final comisionAdmin =
+        (_empresaInfo?['comision_admin_porcentaje'] as num?)?.toDouble() ?? 0.0;
+    final saldo = (_empresaInfo?['saldo_pendiente'] as num?)?.toDouble() ?? 0.0;
     final hasDebt = saldo > 0;
 
     return Row(
       children: [
-        // Commission Card
+        // Commission Card (Plataforma - Porcentaje de comisión)
         Expanded(
           child: _buildSummaryCard(
             context: context,
-            title: 'Comisión',
+            title: 'Plataforma',
             value: '${comisionAdmin.toStringAsFixed(1)}%',
-            subtitle: 'Plataforma',
+            subtitle: 'Comisión',
             icon: Icons.percent_rounded,
             color: AppColors.primary,
             isDark: isDark,
           ),
         ),
         const SizedBox(width: 16),
-        // Balance Card
+        // Balance Card (Cuenta - Lo que debe a la plataforma)
         Expanded(
-          child: _buildSummaryCard(
-            context: context,
-            title: hasDebt ? 'Pendiente' : 'Al día',
-            value: '\$${saldo.toStringAsFixed(0)}',
-            subtitle: hasDebt ? 'Saldo' : 'Cuenta',
-            icon: hasDebt
-                ? Icons.priority_high_rounded
-                : Icons.check_circle_outline_rounded,
-            color: hasDebt ? AppColors.warning : AppColors.success,
-            isDark: isDark,
+          child: GestureDetector(
+            onTap: _showBalanceSheet,
+            child: _buildSummaryCard(
+              context: context,
+              title: hasDebt ? 'Por pagar' : 'Al día',
+              value: '\$${_formatSaldo(saldo)}',
+              subtitle: 'Cuenta',
+              icon: hasDebt
+                  ? Icons.account_balance_wallet_rounded
+                  : Icons.check_circle_outline_rounded,
+              color: hasDebt ? AppColors.warning : AppColors.success,
+              isDark: isDark,
+              showChevron: true,
+              highlightBorder: hasDebt,
+            ),
           ),
         ),
       ],
     );
+  }
+
+  String _formatSaldo(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(0)}K';
+    }
+    return value.toStringAsFixed(0);
   }
 
   Widget _buildSummaryCard({
@@ -327,6 +360,8 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
     required IconData icon,
     required Color color,
     required bool isDark,
+    bool showChevron = false,
+    bool highlightBorder = false,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -334,7 +369,10 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          color: highlightBorder 
+              ? color.withValues(alpha: 0.5)
+              : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+          width: highlightBorder ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
@@ -357,6 +395,14 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
+              if (showChevron) ...[
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  size: 20,
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -371,14 +417,29 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             ),
           ),
           const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
           Text(
-            value,
+            title,
             style: TextStyle(
-              fontSize: 20,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
