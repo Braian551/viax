@@ -5,6 +5,7 @@ import '../../../../theme/app_colors.dart';
 import '../../providers/conductor_earnings_provider.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/earnings/earnings_widgets.dart';
+import '../../../user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 
 /// Pantalla de Ganancias del Conductor
 /// 
@@ -385,7 +386,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
             ),
           ),
           Text(
-            '\$${comisionAdeudada.toStringAsFixed(0)}',
+            formatCurrency(comisionAdeudada),
             style: const TextStyle(
               color: Colors.orange,
               fontSize: 20,
