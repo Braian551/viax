@@ -59,38 +59,73 @@ function handleGetPricing($db, $empresaId) {
         $empresaStmt->execute([$empresaId]);
         $empresaInfo = $empresaStmt->fetch(PDO::FETCH_ASSOC);
         
-        // 2. Obtener configuración global (default)
+        // 2. Obtener vehículos ACTIVOS de la empresa (Source of Truth)
+        $queryActivos = "SELECT tipo_vehiculo_codigo FROM empresa_tipos_vehiculo WHERE empresa_id = ? AND activo = true";
+        $stmtActivos = $db->prepare($queryActivos);
+        $stmtActivos->execute([$empresaId]);
+        $vehiculosActivos = $stmtActivos->fetchAll(PDO::FETCH_COLUMN); // ['moto', 'carro']
+        
+        // Flag para saber si usamos la tabla normalizada (si tiene registros)
+        // Si no tiene registros, asumimos modo legacy o nuevo sin config
+        $hasNormalizedData = count($vehiculosActivos) > 0;
+        
+        // 3. Obtener configuración global (default)
         $queryGlobal = "SELECT * FROM configuracion_precios WHERE empresa_id IS NULL AND activo = 1";
         $stmtGlobal = $db->query($queryGlobal);
         $globalPrices = $stmtGlobal->fetchAll(PDO::FETCH_ASSOC);
         
-        // 3. Obtener configuración específica de la empresa
+        // 4. Obtener configuración específica de la empresa
         $queryEmpresa = "SELECT * FROM configuracion_precios WHERE empresa_id = ?";
         $stmtEmpresa = $db->prepare($queryEmpresa);
         $stmtEmpresa->execute([$empresaId]);
         $empresaPrices = $stmtEmpresa->fetchAll(PDO::FETCH_ASSOC);
         
         // Organizar por tipo_vehiculo
-        $result = [];
+        $merged = [];
         
-        // Mapear globales como base
+        // A. Mapear globales como base
         foreach ($globalPrices as $p) {
             $type = $p['tipo_vehiculo'];
             $p['es_global'] = true;
             $p['heredado'] = true;
-            $result[$type] = $p;
+            $merged[$type] = $p;
         }
         
-        // Sobrescribir con empresa
+        // B. Sobrescribir con empresa
         foreach ($empresaPrices as $p) {
             $type = $p['tipo_vehiculo'];
             $p['es_global'] = false;
             $p['heredado'] = false;
-            $result[$type] = $p;
+            $merged[$type] = $p;
+        }
+        
+        // 5. FILTRADO FINAL: Solo devolver lo que está activo
+        $finalResult = [];
+        
+        foreach ($merged as $type => $price) {
+            $isVisible = false;
+            
+            if ($hasNormalizedData) {
+                // Modo Estricto: Solo si está en la lista de activos de la empresa
+                if (in_array($type, $vehiculosActivos)) {
+                    $isVisible = true;
+                }
+            } else {
+                // Modo Fallback (Legacy): Si el precio tiene el flag activo
+                // O si es un precio de la empresa (incluso si activo=0, para que puedan verlo y reactivarlo? 
+                // No, el usuario pidió que NO aparezca si no está habilitado)
+                if (($price['activo'] ?? 0) == 1) {
+                    $isVisible = true;
+                }
+            }
+            
+            if ($isVisible) {
+                $finalResult[] = $price;
+            }
         }
         
         sendJsonResponse(true, 'Tarifas obtenidas', [
-            'precios' => array_values($result),
+            'precios' => $finalResult,
             'empresa' => $empresaInfo ? [
                 'id' => $empresaInfo['id'],
                 'nombre' => $empresaInfo['nombre'],

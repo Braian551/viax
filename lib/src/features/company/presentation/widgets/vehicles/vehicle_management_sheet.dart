@@ -27,8 +27,9 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
 
   static const List<Map<String, dynamic>> _allVehicleTypes = [
     {'key': 'moto', 'name': 'Moto', 'icon': Icons.two_wheeler_rounded, 'description': 'Motocicletas'},
-    {'key': 'auto', 'name': 'Auto', 'icon': Icons.directions_car_rounded, 'description': 'Automóviles'},
     {'key': 'motocarro', 'name': 'Motocarro', 'icon': Icons.electric_rickshaw_rounded, 'description': 'Motocarros de carga'},
+    {'key': 'taxi', 'name': 'Taxi', 'icon': Icons.local_taxi_rounded, 'description': 'Taxis y transporte público'},
+    {'key': 'carro', 'name': 'Carro', 'icon': Icons.directions_car_rounded, 'description': 'Automóviles particulares'},
   ];
 
   @override
@@ -251,7 +252,7 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.55,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
