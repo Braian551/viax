@@ -345,6 +345,8 @@ class _TripHistoryCardState extends State<TripHistoryCard>
     final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
 
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '', decimalDigits: 0);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -378,7 +380,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
                   ),
                   if (isCompleted && comision > 0)
                     Text(
-                      'Comisión: -\$${comision.toStringAsFixed(0)}',
+                      'Comisión: -\$${currencyFormat.format(comision)}',
                       style: TextStyle(
                         color: isDark ? Colors.white38 : Colors.grey[500],
                         fontSize: 11,
@@ -398,7 +400,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
                       ),
                     ),
                   Text(
-                    '\$${ganancia.toStringAsFixed(0)}',
+                    '\$${currencyFormat.format(ganancia)}',
                     style: TextStyle(
                       color: isCompleted ? AppColors.success : AppColors.error,
                       fontSize: 22,
@@ -417,7 +419,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'Total cobrado: \$${precioTotal.toStringAsFixed(0)}',
+                    'Total cobrado: \$${currencyFormat.format(precioTotal)}',
                     style: TextStyle(
                       color: isDark ? Colors.white38 : Colors.grey[500],
                       fontSize: 12,

@@ -24,6 +24,7 @@ import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/demand_zones_overlay.dart';
 import '../widgets/common/radar_indicator.dart';
+import 'package:intl/intl.dart';
 import '../../../user/presentation/widgets/home/map_loading_shimmer.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
@@ -1378,109 +1379,118 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   Widget _buildCompactInfoRow(ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Indicador de Estado Animado
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _isOnline
-                  ? AppColors.success.withValues(alpha: 0.1)
-                  : theme.dividerColor.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _isOnline
-                    ? AppColors.success.withValues(alpha: 0.2)
-                    : Colors.transparent,
-                width: 1.5,
+          // Fila Superior: Indicador + Textos
+          Row(
+            children: [
+              // Indicador de Estado Animado
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _isOnline
+                      ? AppColors.success.withValues(alpha: 0.1)
+                      : theme.dividerColor.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _isOnline
+                        ? AppColors.success.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, anim) =>
+                      ScaleTransition(scale: anim, child: child),
+                  child: _isOnline
+                      ? RadarIndicator(
+                          key: ValueKey(_isOnline),
+                          active: true,
+                          size: 26,
+                          color: AppColors.success,
+                        )
+                      : Icon(
+                          Icons.wifi_off_rounded,
+                          key: ValueKey(_isOnline),
+                          color: theme.iconTheme.color?.withValues(alpha: 0.3),
+                          size: 26,
+                        ),
+                ),
               ),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: _isOnline
-                  ? RadarIndicator(
-                      key: ValueKey(_isOnline),
-                      active: true,
-                      size: 26,
-                      color: AppColors.success,
-                    )
-                  : Icon(
-                      Icons.wifi_off_rounded,
-                      key: ValueKey(_isOnline),
-                      color: theme.iconTheme.color?.withValues(alpha: 0.3),
-                      size: 26,
-                    ),
-            ),
-          ),
-          const SizedBox(width: 16),
+              const SizedBox(width: 16),
 
-          // Texto de Estado
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    _isOnline ? 'En línea' : 'Desconectado',
-                    key: ValueKey(_isOnline),
-                    style: TextStyle(
-                      color: theme.textTheme.titleMedium?.color,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    _isOnline
-                        ? 'Buscando pasajes...'
-                        : 'Conéctate para trabajar',
-                    key: ValueKey(_isOnline),
-                    style: TextStyle(
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.5,
+              // Texto de Estado - Expanded para usar todo el ancho disponible
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _isOnline ? 'En línea' : 'Desconectado',
+                        key: ValueKey(_isOnline),
+                        style: TextStyle(
+                          color: theme.textTheme.titleMedium?.color,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _isOnline
+                            ? 'Buscando pasajes...'
+                            : 'Conéctate para trabajar',
+                        key: ValueKey(_isOnline),
+                        style: TextStyle(
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.5,
+                          ),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          
+          const SizedBox(height: 16),
 
-          // Mini Estadísticas (Glass Pill)
+          // Fila Inferior: Estadísticas (Full Width)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest.withValues(
                 alpha: 0.3,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: theme.dividerColor.withValues(alpha: 0.05),
               ),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildMiniStat(theme, Icons.local_taxi_rounded, "$_viajesHoy"),
                 Container(
                   height: 14,
                   width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
                   color: theme.dividerColor.withValues(alpha: 0.2),
                 ),
-                _buildMiniStat(theme, Icons.attach_money_rounded, "\$${_gananciasHoy.toStringAsFixed(0)}"),
+                _buildMiniStat(theme, Icons.attach_money_rounded, "\$${NumberFormat.currency(locale: 'es_CO', symbol: '', decimalDigits: 0).format(_gananciasHoy)}"),
               ],
             ),
           ),

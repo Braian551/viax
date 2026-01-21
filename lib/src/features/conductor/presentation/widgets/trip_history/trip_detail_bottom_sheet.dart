@@ -502,6 +502,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     final ganancia = widget.trip.precioFinal ?? widget.trip.precioEstimado ?? 0;
     final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
+    
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '', decimalDigits: 0);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -565,7 +567,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                   ),
                 ),
               Text(
-                '\$${ganancia.toStringAsFixed(0)}',
+                '\$${currencyFormat.format(ganancia)}',
                 style: TextStyle(
                   color: isCompleted ? AppColors.success : AppColors.error,
                   fontSize: 32,
