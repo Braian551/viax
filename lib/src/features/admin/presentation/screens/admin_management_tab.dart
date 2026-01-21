@@ -154,19 +154,7 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
                   _showComingSoon();
                 },
               ),
-              _ManagementItem(
-                title: 'Tarifas y Comisiones',
-                subtitle: 'Gestionar precios y comisiones',
-                icon: Icons.attach_money_rounded,
-                accentColor: AppColors.primary,
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    RouteNames.adminPricing,
-                    arguments: {'admin_user': widget.adminUser},
-                  );
-                },
-              ),
+
               _ManagementItem(
                 title: 'Notificaciones Push',
                 subtitle: 'Enviar notificaciones a usuarios',

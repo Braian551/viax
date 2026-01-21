@@ -38,7 +38,7 @@
   static const String adminAuditLogs = '/admin/audit-logs';
   static const String adminConfig = '/admin/config';
   static const String adminConductorDocs = '/admin/conductor-docs';
-  static const String adminPricing = '/admin/pricing';
+
   static const String adminEmpresas = '/admin/empresas';
   
   // Rutas de empresa
