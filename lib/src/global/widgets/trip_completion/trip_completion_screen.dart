@@ -49,7 +49,10 @@ class TripCompletionScreen extends StatefulWidget {
   final TripCompletionData tripData;
   final int miUsuarioId;
   final int otroUsuarioId;
-  final Future<bool> Function(int rating, String? comentario) onSubmitRating;
+  /// Callback para enviar la calificación.
+  /// Retorna un Map con 'success' (bool) y opcionalmente 'updated' (bool).
+  /// Si 'updated' es true, significa que se actualizó una calificación existente.
+  final Future<Map<String, dynamic>> Function(int rating, String? comentario) onSubmitRating;
   final Future<bool> Function(bool received)? onConfirmPayment;
   final VoidCallback onComplete;
 
@@ -81,6 +84,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   bool _clientPaymentConfirmed = false;
   bool _isSubmitting = false;
   bool _ratingSubmitted = false;
+  bool _ratingWasUpdated = false; // Nueva: indica si se actualizó una calificación existente
   bool _isReportingPayment = false;
   bool _hasDispute = false;
 
@@ -162,18 +166,32 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
     setState(() => _isSubmitting = true);
 
     try {
-      final success = await widget.onSubmitRating(
+      final result = await widget.onSubmitRating(
         _selectedRating,
         _comentario.isNotEmpty ? _comentario : null,
       );
 
+      final success = result['success'] == true;
+      final wasUpdated = result['updated'] == true;
+
       if (success && mounted) {
         HapticFeedback.mediumImpact();
-        setState(() => _ratingSubmitted = true);
+        setState(() {
+          _ratingSubmitted = true;
+          _ratingWasUpdated = wasUpdated;
+        });
 
         // Esperar un momento y luego completar
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) widget.onComplete();
+      } else if (!success && mounted) {
+        // Mostrar error del servidor
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Error al enviar calificación'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Error submitting rating: $e');
@@ -616,10 +634,15 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check_circle_rounded, color: AppColors.success),
+          Icon(
+            _ratingWasUpdated ? Icons.update_rounded : Icons.check_circle_rounded, 
+            color: AppColors.success,
+          ),
           const SizedBox(width: 8),
           Text(
-            '¡Gracias por tu calificación!',
+            _ratingWasUpdated 
+                ? '¡Calificación actualizada!' 
+                : '¡Gracias por tu calificación!',
             style: TextStyle(
               color: AppColors.success,
               fontWeight: FontWeight.w600,

@@ -74,6 +74,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   
   // Info Empresa
   Map<String, dynamic>? _companyInfo;
+  
+  // Estadísticas del día
+  int _viajesHoy = 0;
+  double _gananciasHoy = 0.0;
 
   late AnimationController _pulseController;
   late AnimationController _connectionController;
@@ -104,8 +108,28 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         // Verificar onboarding del conductor
         _checkDriverOnboarding();
         _loadCompanyInfo();
+        _loadDailyStats();
       }
     });
+  }
+
+  Future<void> _loadDailyStats() async {
+    try {
+      final conductorId = widget.conductorUser['id'];
+      if (conductorId == null) return;
+      
+      final stats = await ConductorService.getEstadisticas(int.parse(conductorId.toString()));
+      
+      if (stats.isNotEmpty && mounted) {
+        _safeSetState(() {
+          _viajesHoy = stats['viajes_hoy'] ?? 0;
+          _gananciasHoy = (stats['ganancias_hoy'] ?? 0).toDouble();
+        });
+        debugPrint('📊 Estadísticas del día: $_viajesHoy viajes, \$$_gananciasHoy');
+      }
+    } catch (e) {
+      debugPrint('Error loading daily stats: $e');
+    }
   }
 
   Future<void> _loadCompanyInfo() async {
@@ -1449,14 +1473,14 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildMiniStat(theme, Icons.local_taxi_rounded, "0"),
+                _buildMiniStat(theme, Icons.local_taxi_rounded, "$_viajesHoy"),
                 Container(
                   height: 14,
                   width: 1,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   color: theme.dividerColor.withValues(alpha: 0.2),
                 ),
-                _buildMiniStat(theme, Icons.attach_money_rounded, "\$0"),
+                _buildMiniStat(theme, Icons.attach_money_rounded, "\$${_gananciasHoy.toStringAsFixed(0)}"),
               ],
             ),
           ),

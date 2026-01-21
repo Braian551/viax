@@ -149,12 +149,13 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final name = _conductorUser?['nombre'] ?? 'Conductor';
     final lastName = _conductorUser?['apellido'] ?? '';
     final fullName = '$name $lastName'.trim();
-    final rating = double.tryParse(_conductorUser?['calificacion']?.toString() ?? '5.0') ?? 5.0;
+    // Use calificación from profile model (loaded from backend) instead of conductorUser
+    final rating = profile.calificacionPromedio;
     final photoUrlStr = _conductorUser?['foto_perfil'];
     final photoUrl = photoUrlStr != null ? UserService.getR2ImageUrl(photoUrlStr) : null;
   
-    // Use data from provider if available, fallback to passed args
-    final trips = profile.viajes; // This is now populated from provider
+    // Use data from provider 
+    final trips = profile.viajes;
     final registrationDate = profile.fechaRegistro ?? 
         (_conductorUser?['fecha_registro'] != null 
             ? DateTime.tryParse(_conductorUser!['fecha_registro']) 
@@ -188,7 +189,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     }
     
     return SliverAppBar(
-      expandedHeight: 280.0,
+      expandedHeight: 340.0,
       floating: false,
       pinned: true,
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.primary,
@@ -317,9 +318,9 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Nivel Oro', // Placeholder for tier
-                          style: TextStyle(
+                        Text(
+                          _getDriverLevel(rating),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -376,6 +377,15 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
         ),
       ],
     );
+  }
+
+  /// Determine driver level based on rating
+  String _getDriverLevel(double rating) {
+    if (rating >= 4.8) return 'Nivel Diamante';
+    if (rating >= 4.5) return 'Nivel Oro';
+    if (rating >= 4.0) return 'Nivel Plata';
+    if (rating >= 3.5) return 'Nivel Bronce';
+    return 'Nuevo';
   }
 
   Widget _buildApprovedContent(ConductorProfileModel profile, bool isDark) {

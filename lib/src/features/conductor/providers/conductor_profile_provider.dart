@@ -33,23 +33,83 @@ class ConductorProfileProvider with ChangeNotifier {
       final stats = await ConductorService.getEstadisticas(conductorId);
       final info = await ConductorService.getConductorInfo(conductorId);
 
+      debugPrint('📊 [ConductorProfile] Stats received: $stats');
+      debugPrint('📋 [ConductorProfile] Info received: ${info?['conductor']}');
+
       if (profile != null) {
         // Merge stats and info into the profile model
+        final conductorData = info?['conductor'] as Map<String, dynamic>?;
+        
+        // Get trips from stats (viajes_totales), fallback to conductor info
+        int trips = int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0;
+        if (trips == 0 && conductorData != null) {
+          trips = int.tryParse(conductorData['total_viajes']?.toString() ?? '0') ?? 0;
+        }
+
+        // Get fecha_registro from stats first, fallback to conductorData
+        DateTime? fechaRegistro;
+        if (stats['fecha_registro'] != null) {
+          fechaRegistro = DateTime.tryParse(stats['fecha_registro'].toString());
+        }
+        if (fechaRegistro == null && conductorData != null && conductorData['fecha_registro'] != null) {
+          fechaRegistro = DateTime.tryParse(conductorData['fecha_registro'].toString());
+        }
+
+        // Get calificación from stats, fallback to conductorData
+        double calificacion = double.tryParse(stats['calificacion_promedio']?.toString() ?? '5.0') ?? 5.0;
+        if (calificacion == 0 && conductorData != null) {
+          calificacion = double.tryParse(conductorData['calificacion_promedio']?.toString() ?? '5.0') ?? 5.0;
+        }
+        
+        int totalCalificaciones = int.tryParse(stats['total_calificaciones']?.toString() ?? '0') ?? 0;
+        if (totalCalificaciones == 0 && conductorData != null) {
+          totalCalificaciones = int.tryParse(conductorData['total_calificaciones']?.toString() ?? '0') ?? 0;
+        }
+
+        debugPrint('📊 [ConductorProfile] Trips: $trips, FechaRegistro: $fechaRegistro, Rating: $calificacion');
+
         _profile = profile.copyWith(
-          viajes: int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0,
-          fechaRegistro: info != null && info['fecha_registro'] != null
-              ? DateTime.tryParse(info['fecha_registro'].toString())
-              : null,
+          viajes: trips,
+          fechaRegistro: fechaRegistro,
+          calificacionPromedio: calificacion,
+          totalCalificaciones: totalCalificaciones,
         );
         _errorMessage = null;
       } else {
         _errorMessage = 'No se pudo cargar el perfil';
         // Inicializar perfil vacío con datos básicos si es posible
+        final conductorData = info?['conductor'] as Map<String, dynamic>?;
+        
+        int trips = int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0;
+        if (trips == 0 && conductorData != null) {
+          trips = int.tryParse(conductorData['total_viajes']?.toString() ?? '0') ?? 0;
+        }
+
+        // Get fecha_registro from stats first, fallback to conductorData
+        DateTime? fechaRegistro;
+        if (stats['fecha_registro'] != null) {
+          fechaRegistro = DateTime.tryParse(stats['fecha_registro'].toString());
+        }
+        if (fechaRegistro == null && conductorData != null && conductorData['fecha_registro'] != null) {
+          fechaRegistro = DateTime.tryParse(conductorData['fecha_registro'].toString());
+        }
+
+        // Get calificación from stats, fallback to conductorData
+        double calificacion = double.tryParse(stats['calificacion_promedio']?.toString() ?? '5.0') ?? 5.0;
+        if (calificacion == 0 && conductorData != null) {
+          calificacion = double.tryParse(conductorData['calificacion_promedio']?.toString() ?? '5.0') ?? 5.0;
+        }
+        
+        int totalCalificaciones = int.tryParse(stats['total_calificaciones']?.toString() ?? '0') ?? 0;
+        if (totalCalificaciones == 0 && conductorData != null) {
+          totalCalificaciones = int.tryParse(conductorData['total_calificaciones']?.toString() ?? '0') ?? 0;
+        }
+
          _profile = ConductorProfileModel(
-          viajes: int.tryParse(stats['viajes_totales']?.toString() ?? '0') ?? 0,
-          fechaRegistro: info != null && info['fecha_registro'] != null
-              ? DateTime.tryParse(info['fecha_registro'].toString())
-              : null,
+          viajes: trips,
+          fechaRegistro: fechaRegistro,
+          calificacionPromedio: calificacion,
+          totalCalificaciones: totalCalificaciones,
         );
       }
     } catch (e) {

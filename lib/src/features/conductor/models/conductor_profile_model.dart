@@ -14,6 +14,8 @@ class ConductorProfileModel {
 
   final int viajes;
   final DateTime? fechaRegistro;
+  final double calificacionPromedio;
+  final int totalCalificaciones;
 
   ConductorProfileModel({
     this.licencia,
@@ -26,6 +28,8 @@ class ConductorProfileModel {
     this.aprobado = false,
     this.viajes = 0,
     this.fechaRegistro,
+    this.calificacionPromedio = 5.0,
+    this.totalCalificaciones = 0,
   });
 
   factory ConductorProfileModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +58,8 @@ class ConductorProfileModel {
       fechaRegistro: json['fecha_registro'] != null
           ? DateTime.tryParse(json['fecha_registro'].toString())
           : null,
+      calificacionPromedio: double.tryParse(json['calificacion_promedio']?.toString() ?? '5.0') ?? 5.0,
+      totalCalificaciones: int.tryParse(json['total_calificaciones']?.toString() ?? '0') ?? 0,
     );
   }
 
@@ -69,6 +75,8 @@ class ConductorProfileModel {
       'aprobado': aprobado ? 1 : 0,
       'viajes': viajes,
       'fecha_registro': fechaRegistro?.toIso8601String(),
+      'calificacion_promedio': calificacionPromedio,
+      'total_calificaciones': totalCalificaciones,
     };
   }
 
@@ -180,6 +188,8 @@ class ConductorProfileModel {
     bool? aprobado,
     int? viajes,
     DateTime? fechaRegistro,
+    double? calificacionPromedio,
+    int? totalCalificaciones,
   }) {
     return ConductorProfileModel(
       licencia: licencia ?? this.licencia,
@@ -192,6 +202,8 @@ class ConductorProfileModel {
       aprobado: aprobado ?? this.aprobado,
       viajes: viajes ?? this.viajes,
       fechaRegistro: fechaRegistro ?? this.fechaRegistro,
+      calificacionPromedio: calificacionPromedio ?? this.calificacionPromedio,
+      totalCalificaciones: totalCalificaciones ?? this.totalCalificaciones,
     );
   }
 }

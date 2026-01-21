@@ -3,9 +3,47 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
 
+/// Resultado de enviar una calificación.
+class RatingResult {
+  final bool success;
+  final String message;
+  final bool wasUpdated;
+  final int? previousRating;
+  final int? currentRating;
+  final double? nuevoPromedio;
+
+  const RatingResult({
+    required this.success,
+    required this.message,
+    this.wasUpdated = false,
+    this.previousRating,
+    this.currentRating,
+    this.nuevoPromedio,
+  });
+
+  factory RatingResult.fromJson(Map<String, dynamic> json) {
+    return RatingResult(
+      success: json['success'] == true,
+      message: json['message'] ?? '',
+      wasUpdated: json['updated'] == true,
+      previousRating: json['previous_rating'] as int?,
+      currentRating: json['current_rating'] as int?,
+      nuevoPromedio: (json['nuevo_promedio'] as num?)?.toDouble(),
+    );
+  }
+
+  factory RatingResult.error(String message) {
+    return RatingResult(success: false, message: message);
+  }
+}
+
 /// Servicio para gestionar calificaciones de viajes.
 /// 
 /// Maneja calificaciones de cliente a conductor y viceversa.
+/// 
+/// **Lógica de reemplazo**: Si un usuario intenta calificar el mismo
+/// viaje más de una vez, la calificación anterior será reemplazada
+/// por la nueva, evitando duplicados en la base de datos.
 class RatingService {
   static String get _baseUrl => AppConfig.baseUrl;
 
@@ -17,6 +55,9 @@ class RatingService {
   /// [calificacion] Valor de 1 a 5 estrellas.
   /// [tipoCalificador] 'cliente' o 'conductor'.
   /// [comentario] Comentario opcional.
+  /// 
+  /// **Nota**: Si el usuario ya había calificado este viaje,
+  /// la calificación anterior será reemplazada automáticamente.
   static Future<Map<String, dynamic>> enviarCalificacion({
     required int solicitudId,
     required int calificadorId,
@@ -26,6 +67,13 @@ class RatingService {
     String? comentario,
   }) async {
     try {
+      debugPrint('📝 [RatingService] Enviando calificación:');
+      debugPrint('   - solicitud_id: $solicitudId');
+      debugPrint('   - calificador_id: $calificadorId');
+      debugPrint('   - calificado_id: $calificadoId');
+      debugPrint('   - calificacion: $calificacion');
+      debugPrint('   - tipo_calificador: $tipoCalificador');
+      
       final response = await http.post(
         Uri.parse('$_baseUrl/rating/submit_rating.php'),
         headers: {
@@ -42,10 +90,19 @@ class RatingService {
         }),
       );
 
-      debugPrint('Rating response (${response.statusCode}): ${response.body}');
+      debugPrint('📥 [RatingService] Response (${response.statusCode}): ${response.body}');
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        
+        // Log si fue una actualización
+        if (data['updated'] == true) {
+          debugPrint('♻️ [RatingService] Calificación actualizada (anterior: ${data['previous_rating']})');
+        } else {
+          debugPrint('✅ [RatingService] Nueva calificación creada');
+        }
+        
+        return data;
       }
       
       return {
@@ -53,12 +110,35 @@ class RatingService {
         'message': 'Error al enviar calificación: ${response.statusCode}',
       };
     } catch (e) {
-      debugPrint('Error enviando calificación: $e');
+      debugPrint('❌ [RatingService] Error enviando calificación: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',
       };
     }
+  }
+
+  /// Enviar calificación con resultado tipado.
+  /// 
+  /// Versión alternativa que retorna un [RatingResult] en lugar de Map.
+  static Future<RatingResult> enviarCalificacionTyped({
+    required int solicitudId,
+    required int calificadorId,
+    required int calificadoId,
+    required int calificacion,
+    required String tipoCalificador,
+    String? comentario,
+  }) async {
+    final result = await enviarCalificacion(
+      solicitudId: solicitudId,
+      calificadorId: calificadorId,
+      calificadoId: calificadoId,
+      calificacion: calificacion,
+      tipoCalificador: tipoCalificador,
+      comentario: comentario,
+    );
+    
+    return RatingResult.fromJson(result);
   }
 
   /// Obtener calificaciones de un usuario.

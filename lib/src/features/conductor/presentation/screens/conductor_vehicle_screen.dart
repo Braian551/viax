@@ -109,14 +109,18 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
       drawer: widget.conductorUser != null
           ? ConductorDrawer(conductorUser: widget.conductorUser!)
           : null,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(isDark),
-          SliverToBoxAdapter(
-            child: _buildContent(isDark),
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _loadVehicleData,
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _buildSliverAppBar(isDark),
+            SliverToBoxAdapter(
+              child: _buildContent(isDark),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,32 +233,27 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
 
         final isVerified = profile?.estadoVerificacion == VerificationStatus.aprobado;
 
-        return RefreshIndicator(
-          onRefresh: _loadVehicleData,
-          color: AppColors.primary,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                VehicleInfoCard(
-                  vehicleData: vehicleData,
-                  onEdit: _handleEditVehicle,
-                ),
-                const SizedBox(height: 20),
-                VehicleStatusCard(
-                  isVerified: isVerified,
-                  statusMessage: isVerified
-                      ? 'Tu vehículo está verificado y listo para operar'
-                      : 'Completa la verificación para comenzar',
-                  onVerify: isVerified ? null : _handleRegisterVehicle,
-                ),
-                const SizedBox(height: 24),
-                _buildDocumentsSection(isDark, vehicle),
-                const SizedBox(height: 40),
-              ],
-            ),
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              VehicleInfoCard(
+                vehicleData: vehicleData,
+                onEdit: _handleEditVehicle,
+              ),
+              const SizedBox(height: 20),
+              VehicleStatusCard(
+                isVerified: isVerified,
+                statusMessage: isVerified
+                    ? 'Tu vehículo está verificado y listo para operar'
+                    : 'Completa la verificación para comenzar',
+                onVerify: isVerified ? null : _handleRegisterVehicle,
+              ),
+              const SizedBox(height: 24),
+              _buildDocumentsSection(isDark, vehicle),
+              const SizedBox(height: 40),
+            ],
           ),
         );
       },
@@ -274,14 +273,17 @@ class _ConductorVehicleScreenState extends State<ConductorVehicleScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Documentos del Vehículo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+            Expanded(
+              child: Text(
+                'Documentos del Vehículo',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             TextButton.icon(
               onPressed: () => _handleEditDocuments(vehicle),
               icon: const Icon(Icons.edit_rounded, size: 16),

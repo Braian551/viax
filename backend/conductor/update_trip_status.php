@@ -121,6 +121,28 @@ try {
         // Actualizar estado de la asignación a 'completado'
         $stmt = $db->prepare("UPDATE asignaciones_conductor SET estado = 'completado' WHERE solicitud_id = ? AND conductor_id = ?");
         $stmt->execute([$solicitud_id, $conductor_id]);
+        
+        // Actualizar métricas de la empresa del conductor
+        $stmtEmpresa = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = ?");
+        $stmtEmpresa->execute([$conductor_id]);
+        $empresaId = $stmtEmpresa->fetchColumn();
+        
+        if ($empresaId) {
+            // Actualizar total_viajes_completados e ingresos en empresas_metricas
+            $precioViaje = $precio_final ?? $solicitud['precio_estimado'] ?? 0;
+            
+            $stmt = $db->prepare("
+                INSERT INTO empresas_metricas (empresa_id, total_viajes_completados, ingresos_totales, viajes_mes, ingresos_mes, ultima_actualizacion)
+                VALUES (?, 1, ?, 1, ?, NOW())
+                ON CONFLICT (empresa_id) DO UPDATE SET
+                    total_viajes_completados = empresas_metricas.total_viajes_completados + 1,
+                    ingresos_totales = empresas_metricas.ingresos_totales + EXCLUDED.ingresos_totales,
+                    viajes_mes = empresas_metricas.viajes_mes + 1,
+                    ingresos_mes = empresas_metricas.ingresos_mes + EXCLUDED.ingresos_mes,
+                    ultima_actualizacion = NOW()
+            ");
+            $stmt->execute([$empresaId, $precioViaje, $precioViaje]);
+        }
     }
     
     // Si se canceló, liberar al conductor

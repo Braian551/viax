@@ -37,7 +37,11 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   ];
 
   Future<void> _saveChanges() async {
+    FocusScope.of(context).unfocus();
     setState(() => _isSaving = true);
+    
+    bool shouldResetState = true;
+
     try {
       final body = {
         'empresa_id': widget.empresaId,
@@ -95,23 +99,26 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  SizedBox(width: 12),
-                  Text('Tarifas actualizadas'),
-                ],
+          shouldResetState = false; // Don't reset state if we are closing
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white, size: 20),
+                    SizedBox(width: 12),
+                    Text('Tarifas actualizadas'),
+                  ],
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-          Navigator.pop(context, true);
+            );
+            Navigator.pop(context, true);
+          }
         } else {
           _showError(data['message']);
         }
@@ -121,7 +128,9 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     } catch (e) {
       if (mounted) _showError('Error: $e');
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted && shouldResetState) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 

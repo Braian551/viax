@@ -652,7 +652,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           otroUsuarioId: (_conductor?['id'] as int?) ?? 0,
           onSubmitRating: (rating, comentario) async {
             final conductorId = _conductor?['id'] as int?;
-            if (conductorId == null) return false;
+            if (conductorId == null) {
+              return {'success': false, 'message': 'Conductor no disponible'};
+            }
             final result = await RatingService.enviarCalificacion(
               solicitudId: widget.solicitudId,
               calificadorId: widget.clienteId,
@@ -661,7 +663,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               tipoCalificador: 'cliente',
               comentario: comentario,
             );
-            return result['success'] == true;
+            return result;
           },
           onComplete: () {
             // Volver a la pantalla principal
