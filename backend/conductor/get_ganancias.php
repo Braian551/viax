@@ -119,10 +119,20 @@ try {
     WHERE ac.conductor_id = :conductor_id
     AND s.estado IN ('completada', 'entregado')";
     
-    $stmt_comision = $db->prepare($query_comision_total);
     $stmt_comision->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
     $stmt_comision->execute();
     $comision_data = $stmt_comision->fetch(PDO::FETCH_ASSOC);
+
+    // Calcular pagos realizados
+    $query_pagos = "SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos_comision WHERE conductor_id = :conductor_id";
+    $stmt_pagos = $db->prepare($query_pagos);
+    $stmt_pagos->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
+    $stmt_pagos->execute();
+    $pagos_data = $stmt_pagos->fetch(PDO::FETCH_ASSOC);
+
+    $comision_total_adeudada = floatval($comision_data['comision_adeudada']);
+    $total_pagado = floatval($pagos_data['total_pagado']);
+    $deuda_real = max(0, $comision_total_adeudada - $total_pagado);
 
     // Ganancias por día con comisión real
     $query_diario = "SELECT 
@@ -187,7 +197,8 @@ try {
             'total_cobrado' => round(floatval($totales['total_cobrado']), 2),
             'total_viajes' => intval($totales['total_viajes']),
             'comision_periodo' => round(floatval($totales['total_comision']), 2),
-            'comision_adeudada' => round(floatval($comision_data['comision_adeudada']), 2),
+            'comision_adeudada' => round($deuda_real, 2),
+            'total_pagado' => round($total_pagado, 2),
             'comision_promedio_porcentaje' => round(floatval($totales['comision_promedio_porcentaje'] ?? 10), 2),
             'promedio_por_viaje' => $totales['total_viajes'] > 0 
                 ? round(floatval($totales['total_ganancias']) / intval($totales['total_viajes']), 2)

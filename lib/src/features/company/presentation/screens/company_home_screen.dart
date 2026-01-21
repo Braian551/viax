@@ -12,6 +12,7 @@ import 'tabs/company_profile_tab.dart';
 import 'company_drivers_screen.dart'; // Contains CompanyDriversTab
 import 'company_pricing_screen.dart'; // Contains CompanyPricingTab
 import 'company_conductores_documentos_screen.dart';
+import 'company_commissions_screen.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -102,6 +103,16 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                   onNavigateToDrivers: () => _onNavigateToTab(1),
                   onNavigateToPricing: () => _onNavigateToTab(2),
                   onNavigateToDocumentos: () => _navigateToDocumentos(),
+                  onNavigateToCommissions: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CompanyCommissionsScreen(user: widget.user),
+                      ),
+                    ).then((_) {
+                       if (mounted) context.read<CompanyProvider>().loadDashboardStats();
+                    });
+                  },
                 ),
                 CompanyDriversTab(user: widget.user),
                 CompanyPricingTab(user: widget.user),

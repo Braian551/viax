@@ -518,4 +518,74 @@ class AdminService {
       return {'success': false, 'message': e.toString()};
     }
   }
+  /// Registrar pago de comisión
+  static Future<Map<String, dynamic>> registrarPagoComision({
+    required int adminId,
+    required int conductorId,
+    required double monto,
+    String? notas,
+    String metodoPago = 'efectivo',
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registrar_pago_comision.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'admin_id': adminId,
+          'conductor_id': conductorId,
+          'monto': monto,
+          'notas': notas,
+          'metodo_pago': metodoPago,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {'success': false, 'message': 'Error al registrar pago'};
+    } catch (e) {
+      print('Error en registrarPagoComision: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  /// Obtener ganancias de un conductor (reutiliza endpoint de conductor)
+  static Future<Map<String, dynamic>> getConductorEarnings({
+    required int conductorId,
+  }) async {
+    try {
+      // Reutilizamos el endpoint existente del conductor
+      // Nota: asume que la URL base es la misma para conductor y admin, 
+      // o que _baseUrl apunta a /backend/admin y necesitamos salir a /backend/conductor
+      // Ajustaremos la URL asumiendo que _baseUrl es .../backend/admin
+      
+      final base = _baseUrl.replaceAll('/admin', '/conductor');
+      final uri = Uri.parse('$base/get_ganancias.php').replace(queryParameters: {
+        'conductor_id': conductorId.toString(),
+      });
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {'success': false, 'message': 'Error al obtener ganancias'};
+    } catch (e) {
+      print('Error en getConductorEarnings: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
 }

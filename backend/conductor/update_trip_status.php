@@ -108,7 +108,8 @@ try {
     $stmt = $db->prepare($query);
     $stmt->execute($params);
 
-    // Si se completó el viaje, actualizar disponibilidad del conductor y asignación
+
+    // Si se completó el viaje, actualizar disponibilidad, asignación y asegurar inmutabilidad de la comisión
     if ($nuevo_estado === 'completada') {
         $stmt = $db->prepare("
             UPDATE detalles_conductor 
@@ -122,12 +123,82 @@ try {
         $stmt = $db->prepare("UPDATE asignaciones_conductor SET estado = 'completado' WHERE solicitud_id = ? AND conductor_id = ?");
         $stmt->execute([$solicitud_id, $conductor_id]);
         
+        // --- LOGICA DE COMISIÓN (OPTIMIZACIÓN PARA INMUTABILIDAD) ---
+        // Verificar si ya existe un tracking finalizado (creado por finalize.php)
+        $stmtCheck = $db->prepare("SELECT id FROM viaje_resumen_tracking WHERE solicitud_id = ?");
+        $stmtCheck->execute([$solicitud_id]);
+        if (!$stmtCheck->fetch()) {
+            // Si no existe, creamos un registro básico para "congelar" la comisión y el precio
+            // Esto asegura que cambios futuros en tarifas NO afecten viajes pasados
+            
+            $precioViaje = $precio_final ?? floatval($solicitud['precio_estimado'] ?? 0);
+            
+            // Obtener configuración de precios vigente
+            $empresaId = $solicitud['empresa_id'] ?? null;
+            $tipoVehiculo = $solicitud['tipo_vehiculo'] ?? 'moto';
+            
+            $queryConfig = "SELECT comision_plataforma, comision_metodo_pago, id as config_id 
+                           FROM configuracion_precios 
+                           WHERE tipo_vehiculo = :tipo AND activo = 1";
+                           
+            if ($empresaId) {
+                $queryConfig .= " AND empresa_id = :empresa_id";
+                $stmtConfig = $db->prepare($queryConfig);
+                $stmtConfig->execute([':tipo' => $tipoVehiculo, ':empresa_id' => $empresaId]);
+            } else {
+                $queryConfig .= " AND empresa_id IS NULL";
+                $stmtConfig = $db->prepare($queryConfig);
+                $stmtConfig->execute([':tipo' => $tipoVehiculo]);
+            }
+            
+            $config = $stmtConfig->fetch(PDO::FETCH_ASSOC);
+            
+            // Valores por defecto si no hay config (fallback)
+            $porcentajeComision = 15.0; // Default
+            $configId = null;
+            
+            if ($config) {
+                $porcentajeComision = floatval($config['comision_plataforma']);
+                $configId = $config['config_id'];
+            }
+            
+            $valorComision = $precioViaje * ($porcentajeComision / 100);
+            $gananciaConductor = $precioViaje - $valorComision;
+            
+            // Insertar tracking "dummy" para fines financieros
+            $stmtInsert = $db->prepare("
+                INSERT INTO viaje_resumen_tracking (
+                    solicitud_id,
+                    precio_final_aplicado,
+                    comision_plataforma_porcentaje,
+                    comision_plataforma_valor,
+                    ganancia_conductor,
+                    config_precios_id,
+                    empresa_id,
+                    actualizado_en,
+                    fin_viaje_real
+                ) VALUES (
+                    :solid, :precio, :porc, :valor, :ganancia, :confid, :empid, NOW(), NOW()
+                )
+            ");
+            
+            $stmtInsert->execute([
+                ':solid' => $solicitud_id,
+                ':precio' => $precioViaje,
+                ':porc' => $porcentajeComision,
+                ':valor' => $valorComision,
+                ':ganancia' => $gananciaConductor,
+                ':confid' => $configId,
+                ':empid' => $empresaId
+            ]);
+        }
+
         // Actualizar métricas de la empresa del conductor
         $stmtEmpresa = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = ?");
         $stmtEmpresa->execute([$conductor_id]);
-        $empresaId = $stmtEmpresa->fetchColumn();
+        $empresaIdConductor = $stmtEmpresa->fetchColumn();
         
-        if ($empresaId) {
+        if ($empresaIdConductor) {
             // Actualizar total_viajes_completados e ingresos en empresas_metricas
             $precioViaje = $precio_final ?? $solicitud['precio_estimado'] ?? 0;
             
@@ -141,7 +212,7 @@ try {
                     ingresos_mes = empresas_metricas.ingresos_mes + EXCLUDED.ingresos_mes,
                     ultima_actualizacion = NOW()
             ");
-            $stmt->execute([$empresaId, $precioViaje, $precioViaje]);
+            $stmt->execute([$empresaIdConductor, $precioViaje, $precioViaje]);
         }
     }
     

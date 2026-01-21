@@ -1,14 +1,18 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:intl/intl.dart';
+import 'package:viax/src/global/services/admin/admin_service.dart';
+import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'conductor_actions.dart';
 
-class ConductorDetailsSheet extends StatelessWidget {
+class ConductorDetailsSheet extends StatefulWidget {
   final Map<String, dynamic> conductor;
   final VoidCallback onAprobar;
   final VoidCallback onRechazar;
   final Function(int) onShowHistory;
-  /// Callback para ver documento: (url, nombre, tipoArchivo)
   final Function(String?, String, {String? tipoArchivo}) onViewDocument;
+  final int adminId; // Added adminId
 
   const ConductorDetailsSheet({
     super.key,
@@ -17,14 +21,60 @@ class ConductorDetailsSheet extends StatelessWidget {
     required this.onRechazar,
     required this.onShowHistory,
     required this.onViewDocument,
+    this.adminId = 1, // Default processing
   });
+
+  @override
+  State<ConductorDetailsSheet> createState() => _ConductorDetailsSheetState();
+}
+
+
+class _ConductorDetailsSheetState extends State<ConductorDetailsSheet> {
+  bool _isLoadingEarnings = false;
+  Map<String, dynamic>? _earningsData;
+  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEarnings();
+  }
+
+  Future<void> _loadEarnings() async {
+    final conductorId = int.tryParse(widget.conductor['usuario_id']?.toString() ?? '');
+    if (conductorId == null) return;
+
+    setState(() => _isLoadingEarnings = true);
+    
+    try {
+      final response = await AdminService.getConductorEarnings(conductorId: conductorId);
+      if (mounted && response['success'] == true) {
+        setState(() => _earningsData = response['ganancias']);
+      }
+    } catch (e) {
+      print('Error loading earnings: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingEarnings = false);
+    }
+  }
+
+  Future<void> _registrarPago(double deuda) async {
+    final success = await registrarPagoComisionAction(
+      context: context,
+      adminId: widget.adminId, 
+      conductor: widget.conductor, 
+      deudaActual: deuda
+    );
+
+    if (success && mounted) {
+      _loadEarnings();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Usamos Container en lugar de DraggableScrollableSheet para un modal fijo más limpio
-    // o DraggableScrollableSheet sin el handle visual si se prefiere funcionalidad
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -49,10 +99,7 @@ class ConductorDetailsSheet extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                   // Espaciado superior limpio sin handle
                   const SizedBox(height: 20),
-                  
-                  // Título centralizado
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Row(
@@ -75,7 +122,7 @@ class ConductorDetailsSheet extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                conductor['nombre_completo'] ?? 'Conductor',
+                                widget.conductor['nombre_completo'] ?? 'Conductor',
                                 style: TextStyle(
                                   color: Theme.of(context).textTheme.bodyLarge?.color,
                                   fontSize: 20,
@@ -124,46 +171,51 @@ class ConductorDetailsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (_earningsData != null) ...[
+                             _buildSectionTitle(context, 'Estado de Cuenta'),
+                             _buildEarningsCard(isDark),
+                             const SizedBox(height: 24),
+                          ],
+
                           _buildSectionTitle(context, 'Información Personal'),
                           _buildInfoCard(context, [
-                            _buildInfoRow(context, 'Email', conductor['email'], Icons.email_outlined),
-                            _buildInfoRow(context, 'Teléfono', conductor['telefono'], Icons.phone_outlined),
-                            _buildInfoRow(context, 'Estado', conductor['es_activo'] == 1 ? 'Activo' : 'Inactivo', 
-                              conductor['es_activo'] == 1 ? Icons.check_circle_outline : Icons.cancel_outlined),
+                            _buildInfoRow(context, 'Email', widget.conductor['email'], Icons.email_outlined),
+                            _buildInfoRow(context, 'Teléfono', widget.conductor['telefono'], Icons.phone_outlined),
+                            _buildInfoRow(context, 'Estado', widget.conductor['es_activo'] == 1 ? 'Activo' : 'Inactivo', 
+                              widget.conductor['es_activo'] == 1 ? Icons.check_circle_outline : Icons.cancel_outlined),
                           ]),
 
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Licencia de Conducción'),
                           _buildInfoCard(context, [
-                            _buildInfoRow(context, 'Número', conductor['licencia_conduccion'], Icons.badge_outlined),
-                            _buildInfoRow(context, 'Categoría', conductor['licencia_categoria'], Icons.category_outlined),
-                            _buildInfoRow(context, 'Vencimiento', _formatDate(conductor['licencia_vencimiento']), Icons.event_outlined),
+                            _buildInfoRow(context, 'Número', widget.conductor['licencia_conduccion'], Icons.badge_outlined),
+                            _buildInfoRow(context, 'Categoría', widget.conductor['licencia_categoria'], Icons.category_outlined),
+                            _buildInfoRow(context, 'Vencimiento', _formatDate(widget.conductor['licencia_vencimiento']), Icons.event_outlined),
                           ]),
-                          if (conductor['licencia_foto_url'] != null)
-                             _buildDocButton(context, 'Ver Licencia', conductor['licencia_foto_url'], Icons.drive_eta_rounded, conductor['licencia_tipo_archivo']),
+                          if (widget.conductor['licencia_foto_url'] != null)
+                             _buildDocButton(context, 'Ver Licencia', widget.conductor['licencia_foto_url'], Icons.drive_eta_rounded, widget.conductor['licencia_tipo_archivo']),
 
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Vehículo'),
                           _buildInfoCard(context, [
-                            _buildInfoRow(context, 'Placa', conductor['vehiculo_placa'], Icons.directions_car_outlined, isBold: true),
-                            _buildInfoRow(context, 'Modelo', '${conductor['vehiculo_marca']} ${conductor['vehiculo_modelo']} ${conductor['vehiculo_anio'] ?? ''}', Icons.info_outline),
-                            _buildInfoRow(context, 'Color', conductor['vehiculo_color'], Icons.color_lens_outlined),
-                            _buildInfoRow(context, 'Tipo', conductor['vehiculo_tipo'], Icons.local_taxi_outlined),
+                            _buildInfoRow(context, 'Placa', widget.conductor['vehiculo_placa'], Icons.directions_car_outlined, isBold: true),
+                            _buildInfoRow(context, 'Modelo', '${widget.conductor['vehiculo_marca']} ${widget.conductor['vehiculo_modelo']} ${widget.conductor['vehiculo_anio'] ?? ''}', Icons.info_outline),
+                            _buildInfoRow(context, 'Color', widget.conductor['vehiculo_color'], Icons.color_lens_outlined),
+                            _buildInfoRow(context, 'Tipo', widget.conductor['vehiculo_tipo'], Icons.local_taxi_outlined),
                           ]),
-                          if (conductor['vehiculo_foto_url'] != null)
-                             _buildDocButton(context, 'Ver Foto Vehículo', conductor['vehiculo_foto_url'], Icons.directions_car_rounded, conductor['vehiculo_tipo_archivo'])
+                          if (widget.conductor['vehiculo_foto_url'] != null)
+                             _buildDocButton(context, 'Ver Foto Vehículo', widget.conductor['vehiculo_foto_url'], Icons.directions_car_rounded, widget.conductor['vehiculo_tipo_archivo'])
                           else
                              _buildDocButton(context, 'Sin Foto Vehículo', null, Icons.directions_car_rounded, null),
                           
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Documentación Legal'),
                           _buildInfoCard(context, [
-                            _buildInfoRow(context, 'SOAT', _formatDate(conductor['soat_vencimiento']), Icons.security_outlined),
-                            _buildInfoRow(context, 'Número SOAT', conductor['soat_numero'], Icons.tag),
-                            _buildInfoRow(context, 'Tecnomecánica', _formatDate(conductor['tecnomecanica_vencimiento']), Icons.build_outlined),
-                            _buildInfoRow(context, 'Número Tecno', conductor['tecnomecanica_numero'], Icons.tag),
-                            // _buildInfoRow(context, 'Seguro', _formatDate(conductor['vencimiento_seguro']), Icons.shield_outlined), // REMOVED
-                            _buildInfoRow(context, 'Tarjeta Propiedad', conductor['tarjeta_propiedad_numero'], Icons.credit_card_outlined),
+                            _buildInfoRow(context, 'SOAT', _formatDate(widget.conductor['soat_vencimiento']), Icons.security_outlined),
+                            _buildInfoRow(context, 'Número SOAT', widget.conductor['soat_numero'], Icons.tag),
+                            _buildInfoRow(context, 'Tecnomecánica', _formatDate(widget.conductor['tecnomecanica_vencimiento']), Icons.build_outlined),
+                            _buildInfoRow(context, 'Número Tecno', widget.conductor['tecnomecanica_numero'], Icons.tag),
+                            _buildInfoRow(context, 'Tarjeta Propiedad', widget.conductor['tarjeta_propiedad_numero'], Icons.credit_card_outlined),
                           ]),
                           
                           const SizedBox(height: 16),
@@ -171,24 +223,22 @@ class ConductorDetailsSheet extends StatelessWidget {
                             spacing: 12,
                             runSpacing: 12,
                             children: [
-                              if (conductor['soat_foto_url'] != null)
-                                _buildMiniDocButton(context, 'SOAT', conductor['soat_foto_url'], conductor['soat_tipo_archivo']),
-                              if (conductor['tecnomecanica_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Tecno', conductor['tecnomecanica_foto_url'], conductor['tecnomecanica_tipo_archivo']),
-                              // if (conductor['seguro_foto_url'] != null)
-                              //   _buildMiniDocButton(context, 'Seguro', conductor['seguro_foto_url'], conductor['seguro_tipo_archivo']), // REMOVED
-                              if (conductor['tarjeta_propiedad_foto_url'] != null)
-                                _buildMiniDocButton(context, 'Tarjeta', conductor['tarjeta_propiedad_foto_url'], conductor['tarjeta_propiedad_tipo_archivo']),
+                              if (widget.conductor['soat_foto_url'] != null)
+                                _buildMiniDocButton(context, 'SOAT', widget.conductor['soat_foto_url'], widget.conductor['soat_tipo_archivo']),
+                              if (widget.conductor['tecnomecanica_foto_url'] != null)
+                                _buildMiniDocButton(context, 'Tecno', widget.conductor['tecnomecanica_foto_url'], widget.conductor['tecnomecanica_tipo_archivo']),
+                              if (widget.conductor['tarjeta_propiedad_foto_url'] != null)
+                                _buildMiniDocButton(context, 'Tarjeta', widget.conductor['tarjeta_propiedad_foto_url'], widget.conductor['tarjeta_propiedad_tipo_archivo']),
                             ],
                           ),
 
                           const SizedBox(height: 24),
                           _buildHistoryButton(context),
 
-                          if (conductor['documentos_vencidos'] != null && (conductor['documentos_vencidos'] as List).isNotEmpty)
-                            _buildExpiredWarning(context, conductor['documentos_vencidos'] as List),
+                          if (widget.conductor['documentos_vencidos'] != null && (widget.conductor['documentos_vencidos'] as List).isNotEmpty)
+                            _buildExpiredWarning(context, widget.conductor['documentos_vencidos'] as List),
 
-                          const SizedBox(height: 100), // Espacio para botones flotantes
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -199,6 +249,95 @@ class ConductorDetailsSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEarningsCard(bool isDark) {
+    if (_earningsData == null) return const SizedBox();
+
+    final debt = double.tryParse(_earningsData!['comision_adeudada'].toString()) ?? 0.0;
+    final hasDebt = debt > 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? AppColors.darkCard 
+            : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasDebt ? Colors.orange.withOpacity(0.5) : AppColors.success.withOpacity(0.5),
+          width: hasDebt ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  hasDebt ? Icons.warning_rounded : Icons.check_circle_rounded,
+                  color: hasDebt ? Colors.orange : AppColors.success,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Comisión Adeudada',
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _currencyFormat.format(debt),
+                      style: TextStyle(
+                        color: hasDebt ? Colors.orange : AppColors.success,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (hasDebt) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _registrarPago(debt),
+                icon: const Icon(Icons.payments_rounded),
+                label: const Text('Registrar Pago'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -241,7 +380,6 @@ class ConductorDetailsSheet extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, String label, dynamic value, IconData icon, {bool isBold = false}) {
     final valueStr = value?.toString() ?? 'N/A';
-    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -291,7 +429,7 @@ class ConductorDetailsSheet extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12),
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: url != null ? () => onViewDocument(url, label, tipoArchivo: tipoArchivo) : null,
+        onPressed: url != null ? () => widget.onViewDocument(url, label, tipoArchivo: tipoArchivo) : null,
         icon: Icon(isPdf ? Icons.picture_as_pdf_rounded : icon, size: 18, color: url != null ? (isPdf ? Colors.red : AppColors.primary) : Colors.grey),
         label: Row(
           mainAxisSize: MainAxisSize.min,
@@ -351,7 +489,7 @@ class ConductorDetailsSheet extends StatelessWidget {
           ],
         ],
       ),
-      onPressed: () => onViewDocument(url, 'Documento $label', tipoArchivo: tipoArchivo),
+      onPressed: () => widget.onViewDocument(url, 'Documento $label', tipoArchivo: tipoArchivo),
       backgroundColor: (isPdf ? Colors.red : AppColors.primary).withValues(alpha: 0.1),
       side: BorderSide.none,
       labelStyle: TextStyle(
@@ -368,9 +506,9 @@ class ConductorDetailsSheet extends StatelessWidget {
       width: double.infinity,
       child: TextButton.icon(
         onPressed: () {
-          final id = int.tryParse(conductor['usuario_id']?.toString() ?? '');
+          final id = int.tryParse(widget.conductor['usuario_id']?.toString() ?? '');
           if (id != null) {
-            onShowHistory(id);
+            widget.onShowHistory(id);
           }
         },
         icon: const Icon(Icons.history, size: 20),

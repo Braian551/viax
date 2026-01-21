@@ -7,6 +7,7 @@ class DashboardMenuGrid extends StatelessWidget {
   final VoidCallback? onPricingTap;
   final VoidCallback? onReportsTap;
   final VoidCallback? onVehiclesTap;
+  final VoidCallback? onCommissionsTap;
 
   const DashboardMenuGrid({
     super.key,
@@ -15,6 +16,7 @@ class DashboardMenuGrid extends StatelessWidget {
     this.onPricingTap,
     this.onReportsTap,
     this.onVehiclesTap,
+    this.onCommissionsTap,
   });
 
   @override
@@ -102,6 +104,17 @@ class DashboardMenuGrid extends StatelessWidget {
                 icon: Icons.bar_chart_rounded,
                 color: Colors.deepOrange,
                 onTap: onReportsTap,
+                isDark: isDark,
+                isFullWidth: true,
+              ),
+              const SizedBox(height: 12),
+              _buildMenuCard(
+                context,
+                title: 'Comisiones',
+                subtitle: 'Gestionar deudas y pagos',
+                icon: Icons.monetization_on_rounded,
+                color: Colors.purple,
+                onTap: onCommissionsTap,
                 isDark: isDark,
                 isFullWidth: true,
               ),

@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict Dq3oD9jINVut0lUKABlMd9ADHtI5cuvjIbq7nWdarCIibKXRE12hetzNNYge0ca
+\restrict dzKh0yaX1IH1Ho9AvuTBQCbUxaj7lxhQz3O3yfC673NJF4lU4ialfU9FZnHeHFJ
 
 -- Dumped from database version 17.7
 -- Dumped by pg_dump version 17.7
 
--- Started on 2026-01-20 20:50:48
+-- Started on 2026-01-21 15:08:47
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -282,7 +282,7 @@ $$;
 ALTER FUNCTION public.calcular_precio_por_tracking(p_solicitud_id bigint) OWNER TO postgres;
 
 --
--- TOC entry 6164 (class 0 OID 0)
+-- TOC entry 6187 (class 0 OID 0)
 -- Dependencies: 350
 -- Name: FUNCTION calcular_precio_por_tracking(p_solicitud_id bigint); Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -313,7 +313,7 @@ $$;
 ALTER FUNCTION public.contar_notificaciones_no_leidas(p_usuario_id integer) OWNER TO postgres;
 
 --
--- TOC entry 6165 (class 0 OID 0)
+-- TOC entry 6188 (class 0 OID 0)
 -- Dependencies: 344
 -- Name: FUNCTION contar_notificaciones_no_leidas(p_usuario_id integer); Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -362,7 +362,7 @@ $$;
 ALTER FUNCTION public.crear_notificacion(p_usuario_id integer, p_tipo_codigo character varying, p_titulo character varying, p_mensaje text, p_referencia_tipo character varying, p_referencia_id integer, p_data jsonb) OWNER TO postgres;
 
 --
--- TOC entry 6166 (class 0 OID 0)
+-- TOC entry 6189 (class 0 OID 0)
 -- Dependencies: 343
 -- Name: FUNCTION crear_notificacion(p_usuario_id integer, p_tipo_codigo character varying, p_titulo character varying, p_mensaje text, p_referencia_tipo character varying, p_referencia_id integer, p_data jsonb); Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -689,7 +689,7 @@ CREATE SEQUENCE public.asignaciones_conductor_id_seq
 ALTER SEQUENCE public.asignaciones_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6167 (class 0 OID 0)
+-- TOC entry 6190 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: asignaciones_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -736,7 +736,7 @@ CREATE SEQUENCE public.cache_direcciones_id_seq
 ALTER SEQUENCE public.cache_direcciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6168 (class 0 OID 0)
+-- TOC entry 6191 (class 0 OID 0)
 -- Dependencies: 254
 -- Name: cache_direcciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -780,7 +780,7 @@ CREATE SEQUENCE public.cache_geocodificacion_id_seq
 ALTER SEQUENCE public.cache_geocodificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6169 (class 0 OID 0)
+-- TOC entry 6192 (class 0 OID 0)
 -- Dependencies: 255
 -- Name: cache_geocodificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -811,7 +811,7 @@ CREATE TABLE public.calificaciones (
 ALTER TABLE public.calificaciones OWNER TO postgres;
 
 --
--- TOC entry 6170 (class 0 OID 0)
+-- TOC entry 6193 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: TABLE calificaciones; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -835,7 +835,7 @@ CREATE SEQUENCE public.calificaciones_id_seq
 ALTER SEQUENCE public.calificaciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6171 (class 0 OID 0)
+-- TOC entry 6194 (class 0 OID 0)
 -- Dependencies: 246
 -- Name: calificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -863,7 +863,7 @@ CREATE TABLE public.catalogo_tipos_vehiculo (
 ALTER TABLE public.catalogo_tipos_vehiculo OWNER TO postgres;
 
 --
--- TOC entry 6172 (class 0 OID 0)
+-- TOC entry 6195 (class 0 OID 0)
 -- Dependencies: 300
 -- Name: TABLE catalogo_tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -888,7 +888,7 @@ CREATE SEQUENCE public.catalogo_tipos_vehiculo_id_seq
 ALTER SEQUENCE public.catalogo_tipos_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6173 (class 0 OID 0)
+-- TOC entry 6196 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: catalogo_tipos_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -917,7 +917,7 @@ CREATE TABLE public.categorias_soporte (
 ALTER TABLE public.categorias_soporte OWNER TO postgres;
 
 --
--- TOC entry 6174 (class 0 OID 0)
+-- TOC entry 6197 (class 0 OID 0)
 -- Dependencies: 310
 -- Name: TABLE categorias_soporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -942,7 +942,7 @@ CREATE SEQUENCE public.categorias_soporte_id_seq
 ALTER SEQUENCE public.categorias_soporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6175 (class 0 OID 0)
+-- TOC entry 6198 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: categorias_soporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -982,7 +982,7 @@ CREATE SEQUENCE public.colores_vehiculo_id_seq
 ALTER SEQUENCE public.colores_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6176 (class 0 OID 0)
+-- TOC entry 6199 (class 0 OID 0)
 -- Dependencies: 272
 -- Name: colores_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1069,7 +1069,7 @@ CREATE TABLE public.detalles_conductor (
 ALTER TABLE public.detalles_conductor OWNER TO postgres;
 
 --
--- TOC entry 6177 (class 0 OID 0)
+-- TOC entry 6200 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: COLUMN detalles_conductor.foto_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1142,7 +1142,7 @@ CREATE TABLE public.usuarios (
 ALTER TABLE public.usuarios OWNER TO postgres;
 
 --
--- TOC entry 6178 (class 0 OID 0)
+-- TOC entry 6201 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.google_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1151,7 +1151,7 @@ COMMENT ON COLUMN public.usuarios.google_id IS 'ID único del usuario en Google 
 
 
 --
--- TOC entry 6179 (class 0 OID 0)
+-- TOC entry 6202 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.apple_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1160,7 +1160,7 @@ COMMENT ON COLUMN public.usuarios.apple_id IS 'ID único del usuario en Apple pa
 
 
 --
--- TOC entry 6180 (class 0 OID 0)
+-- TOC entry 6203 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.auth_provider; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1169,7 +1169,7 @@ COMMENT ON COLUMN public.usuarios.auth_provider IS 'Método de autenticación or
 
 
 --
--- TOC entry 6181 (class 0 OID 0)
+-- TOC entry 6204 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: CONSTRAINT chk_conductor_empresa_required ON usuarios; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1232,7 +1232,7 @@ CREATE SEQUENCE public.conductores_favoritos_id_seq
 ALTER SEQUENCE public.conductores_favoritos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6182 (class 0 OID 0)
+-- TOC entry 6205 (class 0 OID 0)
 -- Dependencies: 256
 -- Name: conductores_favoritos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1281,7 +1281,7 @@ CREATE TABLE public.empresas_transporte (
 ALTER TABLE public.empresas_transporte OWNER TO postgres;
 
 --
--- TOC entry 6183 (class 0 OID 0)
+-- TOC entry 6206 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: TABLE empresas_transporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1290,7 +1290,7 @@ COMMENT ON TABLE public.empresas_transporte IS 'Tabla para almacenar empresas de
 
 
 --
--- TOC entry 6184 (class 0 OID 0)
+-- TOC entry 6207 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1299,7 +1299,7 @@ COMMENT ON COLUMN public.empresas_transporte.tipos_vehiculo IS 'Array de tipos d
 
 
 --
--- TOC entry 6185 (class 0 OID 0)
+-- TOC entry 6208 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1308,7 +1308,7 @@ COMMENT ON COLUMN public.empresas_transporte.estado IS 'Estado de la empresa: ac
 
 
 --
--- TOC entry 6186 (class 0 OID 0)
+-- TOC entry 6209 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.comision_admin_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1317,7 +1317,7 @@ COMMENT ON COLUMN public.empresas_transporte.comision_admin_porcentaje IS 'Porce
 
 
 --
--- TOC entry 6187 (class 0 OID 0)
+-- TOC entry 6210 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.saldo_pendiente; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1346,7 +1346,7 @@ CREATE TABLE public.solicitudes_vinculacion_conductor (
 ALTER TABLE public.solicitudes_vinculacion_conductor OWNER TO postgres;
 
 --
--- TOC entry 6188 (class 0 OID 0)
+-- TOC entry 6211 (class 0 OID 0)
 -- Dependencies: 289
 -- Name: TABLE solicitudes_vinculacion_conductor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1385,7 +1385,7 @@ CREATE VIEW public.conductores_pendientes_vinculacion AS
 ALTER VIEW public.conductores_pendientes_vinculacion OWNER TO postgres;
 
 --
--- TOC entry 6189 (class 0 OID 0)
+-- TOC entry 6212 (class 0 OID 0)
 -- Dependencies: 290
 -- Name: VIEW conductores_pendientes_vinculacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1419,7 +1419,7 @@ CREATE TABLE public.configuracion_notificaciones_usuario (
 ALTER TABLE public.configuracion_notificaciones_usuario OWNER TO postgres;
 
 --
--- TOC entry 6190 (class 0 OID 0)
+-- TOC entry 6213 (class 0 OID 0)
 -- Dependencies: 284
 -- Name: TABLE configuracion_notificaciones_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1444,7 +1444,7 @@ CREATE SEQUENCE public.configuracion_notificaciones_usuario_id_seq
 ALTER SEQUENCE public.configuracion_notificaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6191 (class 0 OID 0)
+-- TOC entry 6214 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: configuracion_notificaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1508,7 +1508,7 @@ CREATE SEQUENCE public.configuracion_precios_id_seq
 ALTER SEQUENCE public.configuracion_precios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6192 (class 0 OID 0)
+-- TOC entry 6215 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: configuracion_precios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1554,7 +1554,7 @@ CREATE SEQUENCE public.configuraciones_app_id_seq
 ALTER SEQUENCE public.configuraciones_app_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6193 (class 0 OID 0)
+-- TOC entry 6216 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: configuraciones_app_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1578,7 +1578,7 @@ CREATE SEQUENCE public.detalles_conductor_id_seq
 ALTER SEQUENCE public.detalles_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6194 (class 0 OID 0)
+-- TOC entry 6217 (class 0 OID 0)
 -- Dependencies: 249
 -- Name: detalles_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1655,7 +1655,7 @@ CREATE TABLE public.disputas_pago (
 ALTER TABLE public.disputas_pago OWNER TO postgres;
 
 --
--- TOC entry 6195 (class 0 OID 0)
+-- TOC entry 6218 (class 0 OID 0)
 -- Dependencies: 264
 -- Name: TABLE disputas_pago; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1664,7 +1664,7 @@ COMMENT ON TABLE public.disputas_pago IS 'Registro de disputas de pago entre cli
 
 
 --
--- TOC entry 6196 (class 0 OID 0)
+-- TOC entry 6219 (class 0 OID 0)
 -- Dependencies: 264
 -- Name: COLUMN disputas_pago.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1688,7 +1688,7 @@ CREATE SEQUENCE public.disputas_pago_id_seq
 ALTER SEQUENCE public.disputas_pago_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6197 (class 0 OID 0)
+-- TOC entry 6220 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: disputas_pago_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1723,7 +1723,7 @@ CREATE TABLE public.documentos_conductor_historial (
 ALTER TABLE public.documentos_conductor_historial OWNER TO postgres;
 
 --
--- TOC entry 6198 (class 0 OID 0)
+-- TOC entry 6221 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: COLUMN documentos_conductor_historial.asignado_empresa_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1732,7 +1732,7 @@ COMMENT ON COLUMN public.documentos_conductor_historial.asignado_empresa_id IS '
 
 
 --
--- TOC entry 6199 (class 0 OID 0)
+-- TOC entry 6222 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: COLUMN documentos_conductor_historial.verificado_por_admin; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1776,7 +1776,7 @@ CREATE SEQUENCE public.documentos_verificacion_id_seq
 ALTER SEQUENCE public.documentos_verificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6200 (class 0 OID 0)
+-- TOC entry 6223 (class 0 OID 0)
 -- Dependencies: 270
 -- Name: documentos_verificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1809,7 +1809,7 @@ CREATE TABLE public.empresa_tipos_vehiculo (
 ALTER TABLE public.empresa_tipos_vehiculo OWNER TO postgres;
 
 --
--- TOC entry 6201 (class 0 OID 0)
+-- TOC entry 6224 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: TABLE empresa_tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1818,7 +1818,7 @@ COMMENT ON TABLE public.empresa_tipos_vehiculo IS 'Tipos de vehículo habilitado
 
 
 --
--- TOC entry 6202 (class 0 OID 0)
+-- TOC entry 6225 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: COLUMN empresa_tipos_vehiculo.activo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1827,7 +1827,7 @@ COMMENT ON COLUMN public.empresa_tipos_vehiculo.activo IS 'TRUE si el tipo de ve
 
 
 --
--- TOC entry 6203 (class 0 OID 0)
+-- TOC entry 6226 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: COLUMN empresa_tipos_vehiculo.motivo_desactivacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1860,7 +1860,7 @@ CREATE TABLE public.empresa_tipos_vehiculo_historial (
 ALTER TABLE public.empresa_tipos_vehiculo_historial OWNER TO postgres;
 
 --
--- TOC entry 6204 (class 0 OID 0)
+-- TOC entry 6227 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: TABLE empresa_tipos_vehiculo_historial; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1884,7 +1884,7 @@ CREATE SEQUENCE public.empresa_tipos_vehiculo_historial_id_seq
 ALTER SEQUENCE public.empresa_tipos_vehiculo_historial_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6205 (class 0 OID 0)
+-- TOC entry 6228 (class 0 OID 0)
 -- Dependencies: 303
 -- Name: empresa_tipos_vehiculo_historial_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1908,7 +1908,7 @@ CREATE SEQUENCE public.empresa_tipos_vehiculo_id_seq
 ALTER SEQUENCE public.empresa_tipos_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6206 (class 0 OID 0)
+-- TOC entry 6229 (class 0 OID 0)
 -- Dependencies: 301
 -- Name: empresa_tipos_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1941,7 +1941,7 @@ CREATE TABLE public.empresa_vehiculo_notificaciones (
 ALTER TABLE public.empresa_vehiculo_notificaciones OWNER TO postgres;
 
 --
--- TOC entry 6207 (class 0 OID 0)
+-- TOC entry 6230 (class 0 OID 0)
 -- Dependencies: 306
 -- Name: TABLE empresa_vehiculo_notificaciones; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1965,7 +1965,7 @@ CREATE SEQUENCE public.empresa_vehiculo_notificaciones_id_seq
 ALTER SEQUENCE public.empresa_vehiculo_notificaciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6208 (class 0 OID 0)
+-- TOC entry 6231 (class 0 OID 0)
 -- Dependencies: 305
 -- Name: empresa_vehiculo_notificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1999,7 +1999,7 @@ CREATE TABLE public.empresas_configuracion (
 ALTER TABLE public.empresas_configuracion OWNER TO postgres;
 
 --
--- TOC entry 6209 (class 0 OID 0)
+-- TOC entry 6232 (class 0 OID 0)
 -- Dependencies: 298
 -- Name: TABLE empresas_configuracion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2023,7 +2023,7 @@ CREATE SEQUENCE public.empresas_configuracion_id_seq
 ALTER SEQUENCE public.empresas_configuracion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6210 (class 0 OID 0)
+-- TOC entry 6233 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: empresas_configuracion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2053,7 +2053,7 @@ CREATE TABLE public.empresas_contacto (
 ALTER TABLE public.empresas_contacto OWNER TO postgres;
 
 --
--- TOC entry 6211 (class 0 OID 0)
+-- TOC entry 6234 (class 0 OID 0)
 -- Dependencies: 292
 -- Name: TABLE empresas_contacto; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2077,7 +2077,7 @@ CREATE SEQUENCE public.empresas_contacto_id_seq
 ALTER SEQUENCE public.empresas_contacto_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6212 (class 0 OID 0)
+-- TOC entry 6235 (class 0 OID 0)
 -- Dependencies: 291
 -- Name: empresas_contacto_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2110,7 +2110,7 @@ CREATE TABLE public.empresas_metricas (
 ALTER TABLE public.empresas_metricas OWNER TO postgres;
 
 --
--- TOC entry 6213 (class 0 OID 0)
+-- TOC entry 6236 (class 0 OID 0)
 -- Dependencies: 296
 -- Name: TABLE empresas_metricas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2134,7 +2134,7 @@ CREATE SEQUENCE public.empresas_metricas_id_seq
 ALTER SEQUENCE public.empresas_metricas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6214 (class 0 OID 0)
+-- TOC entry 6237 (class 0 OID 0)
 -- Dependencies: 295
 -- Name: empresas_metricas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2163,7 +2163,7 @@ CREATE TABLE public.empresas_representante (
 ALTER TABLE public.empresas_representante OWNER TO postgres;
 
 --
--- TOC entry 6215 (class 0 OID 0)
+-- TOC entry 6238 (class 0 OID 0)
 -- Dependencies: 294
 -- Name: TABLE empresas_representante; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2187,7 +2187,7 @@ CREATE SEQUENCE public.empresas_representante_id_seq
 ALTER SEQUENCE public.empresas_representante_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6216 (class 0 OID 0)
+-- TOC entry 6239 (class 0 OID 0)
 -- Dependencies: 293
 -- Name: empresas_representante_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2211,7 +2211,7 @@ CREATE SEQUENCE public.empresas_transporte_id_seq
 ALTER SEQUENCE public.empresas_transporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6217 (class 0 OID 0)
+-- TOC entry 6240 (class 0 OID 0)
 -- Dependencies: 268
 -- Name: empresas_transporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2271,7 +2271,7 @@ CREATE SEQUENCE public.historial_confianza_id_seq
 ALTER SEQUENCE public.historial_confianza_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6218 (class 0 OID 0)
+-- TOC entry 6241 (class 0 OID 0)
 -- Dependencies: 258
 -- Name: historial_confianza_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2365,7 +2365,7 @@ CREATE SEQUENCE public.logs_auditoria_id_seq
 ALTER SEQUENCE public.logs_auditoria_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6219 (class 0 OID 0)
+-- TOC entry 6242 (class 0 OID 0)
 -- Dependencies: 274
 -- Name: logs_auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2399,7 +2399,7 @@ CREATE TABLE public.mensajes_chat (
 ALTER TABLE public.mensajes_chat OWNER TO postgres;
 
 --
--- TOC entry 6220 (class 0 OID 0)
+-- TOC entry 6243 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: TABLE mensajes_chat; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2408,7 +2408,7 @@ COMMENT ON TABLE public.mensajes_chat IS 'Mensajes de chat entre conductores y c
 
 
 --
--- TOC entry 6221 (class 0 OID 0)
+-- TOC entry 6244 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.solicitud_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2417,7 +2417,7 @@ COMMENT ON COLUMN public.mensajes_chat.solicitud_id IS 'ID de la solicitud/viaje
 
 
 --
--- TOC entry 6222 (class 0 OID 0)
+-- TOC entry 6245 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.tipo_remitente; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2426,7 +2426,7 @@ COMMENT ON COLUMN public.mensajes_chat.tipo_remitente IS 'Tipo de usuario que en
 
 
 --
--- TOC entry 6223 (class 0 OID 0)
+-- TOC entry 6246 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.tipo_mensaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2435,7 +2435,7 @@ COMMENT ON COLUMN public.mensajes_chat.tipo_mensaje IS 'Tipo de contenido: texto
 
 
 --
--- TOC entry 6224 (class 0 OID 0)
+-- TOC entry 6247 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.leido; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2460,7 +2460,7 @@ CREATE SEQUENCE public.mensajes_chat_id_seq
 ALTER SEQUENCE public.mensajes_chat_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6225 (class 0 OID 0)
+-- TOC entry 6248 (class 0 OID 0)
 -- Dependencies: 261
 -- Name: mensajes_chat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2489,7 +2489,7 @@ CREATE TABLE public.mensajes_ticket (
 ALTER TABLE public.mensajes_ticket OWNER TO postgres;
 
 --
--- TOC entry 6226 (class 0 OID 0)
+-- TOC entry 6249 (class 0 OID 0)
 -- Dependencies: 314
 -- Name: TABLE mensajes_ticket; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2514,7 +2514,7 @@ CREATE SEQUENCE public.mensajes_ticket_id_seq
 ALTER SEQUENCE public.mensajes_ticket_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6227 (class 0 OID 0)
+-- TOC entry 6250 (class 0 OID 0)
 -- Dependencies: 313
 -- Name: mensajes_ticket_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2573,7 +2573,7 @@ CREATE TABLE public.notificaciones_usuario (
 ALTER TABLE public.notificaciones_usuario OWNER TO postgres;
 
 --
--- TOC entry 6228 (class 0 OID 0)
+-- TOC entry 6251 (class 0 OID 0)
 -- Dependencies: 282
 -- Name: TABLE notificaciones_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2601,7 +2601,7 @@ CREATE TABLE public.tipos_notificacion (
 ALTER TABLE public.tipos_notificacion OWNER TO postgres;
 
 --
--- TOC entry 6229 (class 0 OID 0)
+-- TOC entry 6252 (class 0 OID 0)
 -- Dependencies: 280
 -- Name: TABLE tipos_notificacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2637,7 +2637,7 @@ CREATE VIEW public.notificaciones_completas AS
 ALTER VIEW public.notificaciones_completas OWNER TO postgres;
 
 --
--- TOC entry 6230 (class 0 OID 0)
+-- TOC entry 6253 (class 0 OID 0)
 -- Dependencies: 287
 -- Name: VIEW notificaciones_completas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2662,7 +2662,7 @@ CREATE SEQUENCE public.notificaciones_usuario_id_seq
 ALTER SEQUENCE public.notificaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6231 (class 0 OID 0)
+-- TOC entry 6254 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: notificaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2691,7 +2691,7 @@ CREATE TABLE public.pagos_empresas (
 ALTER TABLE public.pagos_empresas OWNER TO postgres;
 
 --
--- TOC entry 6232 (class 0 OID 0)
+-- TOC entry 6255 (class 0 OID 0)
 -- Dependencies: 276
 -- Name: TABLE pagos_empresas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2715,7 +2715,7 @@ CREATE SEQUENCE public.pagos_empresas_id_seq
 ALTER SEQUENCE public.pagos_empresas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6233 (class 0 OID 0)
+-- TOC entry 6256 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: pagos_empresas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2744,7 +2744,7 @@ CREATE TABLE public.pagos_viaje (
 ALTER TABLE public.pagos_viaje OWNER TO postgres;
 
 --
--- TOC entry 6234 (class 0 OID 0)
+-- TOC entry 6257 (class 0 OID 0)
 -- Dependencies: 266
 -- Name: TABLE pagos_viaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2769,7 +2769,7 @@ CREATE SEQUENCE public.pagos_viaje_id_seq
 ALTER SEQUENCE public.pagos_viaje_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6235 (class 0 OID 0)
+-- TOC entry 6258 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: pagos_viaje_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2815,7 +2815,7 @@ CREATE SEQUENCE public.paradas_solicitud_id_seq
 ALTER SEQUENCE public.paradas_solicitud_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6236 (class 0 OID 0)
+-- TOC entry 6259 (class 0 OID 0)
 -- Dependencies: 253
 -- Name: paradas_solicitud_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2858,7 +2858,7 @@ CREATE SEQUENCE public.plantillas_bloqueadas_id_seq
 ALTER SEQUENCE public.plantillas_bloqueadas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6237 (class 0 OID 0)
+-- TOC entry 6260 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: plantillas_bloqueadas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2965,7 +2965,7 @@ CREATE TABLE public.solicitudes_callback (
 ALTER TABLE public.solicitudes_callback OWNER TO postgres;
 
 --
--- TOC entry 6238 (class 0 OID 0)
+-- TOC entry 6261 (class 0 OID 0)
 -- Dependencies: 316
 -- Name: TABLE solicitudes_callback; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2990,7 +2990,7 @@ CREATE SEQUENCE public.solicitudes_callback_id_seq
 ALTER SEQUENCE public.solicitudes_callback_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6239 (class 0 OID 0)
+-- TOC entry 6262 (class 0 OID 0)
 -- Dependencies: 315
 -- Name: solicitudes_callback_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3046,6 +3046,7 @@ CREATE TABLE public.solicitudes_servicio (
     empresa_id bigint,
     conductor_id bigint,
     precio_en_tracking numeric(10,2) DEFAULT NULL::numeric,
+    desglose_precio jsonb,
     CONSTRAINT check_tipo_vehiculo_solicitud CHECK (((tipo_vehiculo IS NULL) OR ((tipo_vehiculo)::text = ANY ((ARRAY['moto'::character varying, 'auto'::character varying, 'motocarro'::character varying, 'taxi'::character varying])::text[]))))
 );
 
@@ -3053,7 +3054,7 @@ CREATE TABLE public.solicitudes_servicio (
 ALTER TABLE public.solicitudes_servicio OWNER TO postgres;
 
 --
--- TOC entry 6240 (class 0 OID 0)
+-- TOC entry 6263 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_final; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3062,7 +3063,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_final IS 'Precio final del 
 
 
 --
--- TOC entry 6241 (class 0 OID 0)
+-- TOC entry 6264 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_estimado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3071,7 +3072,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_estimado IS 'Precio calcula
 
 
 --
--- TOC entry 6242 (class 0 OID 0)
+-- TOC entry 6265 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_ajustado_por_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3080,12 +3081,21 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_ajustado_por_tracking IS 'I
 
 
 --
--- TOC entry 6243 (class 0 OID 0)
+-- TOC entry 6266 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.tuvo_desvio_ruta; Type: COMMENT; Schema: public; Owner: postgres
 --
 
 COMMENT ON COLUMN public.solicitudes_servicio.tuvo_desvio_ruta IS 'Indica si el viaje tuvo un desvío significativo de la ruta original';
+
+
+--
+-- TOC entry 6267 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: COLUMN solicitudes_servicio.desglose_precio; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.solicitudes_servicio.desglose_precio IS 'JSON con desglose completo del precio: base, distancia, tiempo, recargos, comisión, etc.';
 
 
 --
@@ -3104,7 +3114,7 @@ CREATE SEQUENCE public.solicitudes_servicio_id_seq
 ALTER SEQUENCE public.solicitudes_servicio_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6244 (class 0 OID 0)
+-- TOC entry 6268 (class 0 OID 0)
 -- Dependencies: 244
 -- Name: solicitudes_servicio_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3128,7 +3138,7 @@ CREATE SEQUENCE public.solicitudes_vinculacion_conductor_id_seq
 ALTER SEQUENCE public.solicitudes_vinculacion_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6245 (class 0 OID 0)
+-- TOC entry 6269 (class 0 OID 0)
 -- Dependencies: 288
 -- Name: solicitudes_vinculacion_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3164,7 +3174,7 @@ CREATE TABLE public.tickets_soporte (
 ALTER TABLE public.tickets_soporte OWNER TO postgres;
 
 --
--- TOC entry 6246 (class 0 OID 0)
+-- TOC entry 6270 (class 0 OID 0)
 -- Dependencies: 312
 -- Name: TABLE tickets_soporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3225,7 +3235,7 @@ CREATE SEQUENCE public.tickets_soporte_id_seq
 ALTER SEQUENCE public.tickets_soporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6247 (class 0 OID 0)
+-- TOC entry 6271 (class 0 OID 0)
 -- Dependencies: 311
 -- Name: tickets_soporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3250,7 +3260,7 @@ CREATE SEQUENCE public.tipos_notificacion_id_seq
 ALTER SEQUENCE public.tipos_notificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6248 (class 0 OID 0)
+-- TOC entry 6272 (class 0 OID 0)
 -- Dependencies: 279
 -- Name: tipos_notificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3279,7 +3289,7 @@ CREATE TABLE public.tokens_push_usuario (
 ALTER TABLE public.tokens_push_usuario OWNER TO postgres;
 
 --
--- TOC entry 6249 (class 0 OID 0)
+-- TOC entry 6273 (class 0 OID 0)
 -- Dependencies: 286
 -- Name: TABLE tokens_push_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3304,7 +3314,7 @@ CREATE SEQUENCE public.tokens_push_usuario_id_seq
 ALTER SEQUENCE public.tokens_push_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6250 (class 0 OID 0)
+-- TOC entry 6274 (class 0 OID 0)
 -- Dependencies: 285
 -- Name: tokens_push_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3348,7 +3358,7 @@ CREATE TABLE public.transacciones (
 ALTER TABLE public.transacciones OWNER TO postgres;
 
 --
--- TOC entry 6251 (class 0 OID 0)
+-- TOC entry 6275 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: COLUMN transacciones.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3357,7 +3367,7 @@ COMMENT ON COLUMN public.transacciones.estado IS 'Estado de la transacción: pen
 
 
 --
--- TOC entry 6252 (class 0 OID 0)
+-- TOC entry 6276 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: COLUMN transacciones.monto_conductor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3381,7 +3391,7 @@ CREATE SEQUENCE public.transacciones_id_seq
 ALTER SEQUENCE public.transacciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6253 (class 0 OID 0)
+-- TOC entry 6277 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: transacciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3430,7 +3440,7 @@ CREATE SEQUENCE public.ubicaciones_usuario_id_seq
 ALTER SEQUENCE public.ubicaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6254 (class 0 OID 0)
+-- TOC entry 6278 (class 0 OID 0)
 -- Dependencies: 251
 -- Name: ubicaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3475,7 +3485,7 @@ CREATE SEQUENCE public.user_devices_id_seq
 ALTER SEQUENCE public.user_devices_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6255 (class 0 OID 0)
+-- TOC entry 6279 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: user_devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3527,7 +3537,7 @@ CREATE SEQUENCE public.usuarios_id_seq
 ALTER SEQUENCE public.usuarios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6256 (class 0 OID 0)
+-- TOC entry 6280 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3619,7 +3629,7 @@ CREATE VIEW public.v_empresas_completas AS
 ALTER VIEW public.v_empresas_completas OWNER TO postgres;
 
 --
--- TOC entry 6257 (class 0 OID 0)
+-- TOC entry 6281 (class 0 OID 0)
 -- Dependencies: 308
 -- Name: VIEW v_empresas_completas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3670,19 +3680,229 @@ CREATE TABLE public.viaje_resumen_tracking (
     inicio_viaje_real timestamp without time zone,
     fin_viaje_real timestamp without time zone,
     creado_en timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    actualizado_en timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    actualizado_en timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    tarifa_base numeric(12,2) DEFAULT 0,
+    precio_distancia numeric(12,2) DEFAULT 0,
+    precio_tiempo numeric(12,2) DEFAULT 0,
+    recargo_nocturno numeric(12,2) DEFAULT 0,
+    recargo_hora_pico numeric(12,2) DEFAULT 0,
+    recargo_festivo numeric(12,2) DEFAULT 0,
+    recargo_espera numeric(12,2) DEFAULT 0,
+    tiempo_espera_min integer DEFAULT 0,
+    descuento_distancia_larga numeric(12,2) DEFAULT 0,
+    subtotal_sin_recargos numeric(12,2) DEFAULT 0,
+    total_recargos numeric(12,2) DEFAULT 0,
+    tipo_recargo character varying(30) DEFAULT 'normal'::character varying,
+    aplico_tarifa_minima boolean DEFAULT false,
+    comision_plataforma_porcentaje numeric(5,2) DEFAULT 0,
+    comision_plataforma_valor numeric(12,2) DEFAULT 0,
+    ganancia_conductor numeric(12,2) DEFAULT 0,
+    empresa_id bigint,
+    config_precios_id bigint,
+    comision_admin_porcentaje numeric(5,2) DEFAULT 0,
+    comision_admin_valor numeric(12,2) DEFAULT 0,
+    ganancia_empresa numeric(12,2) DEFAULT 0
 );
 
 
 ALTER TABLE public.viaje_resumen_tracking OWNER TO postgres;
 
 --
--- TOC entry 6258 (class 0 OID 0)
+-- TOC entry 6282 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: TABLE viaje_resumen_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
 
 COMMENT ON TABLE public.viaje_resumen_tracking IS 'Resumen consolidado del tracking de cada viaje para consultas rápidas y cálculo de tarifas';
+
+
+--
+-- TOC entry 6283 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.tarifa_base; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.tarifa_base IS 'Tarifa base del tipo de vehículo';
+
+
+--
+-- TOC entry 6284 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.precio_distancia; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.precio_distancia IS 'Precio calculado por distancia (km * costo_por_km)';
+
+
+--
+-- TOC entry 6285 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.precio_tiempo; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.precio_tiempo IS 'Precio calculado por tiempo (min * costo_por_minuto)';
+
+
+--
+-- TOC entry 6286 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.recargo_nocturno; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_nocturno IS 'Recargo aplicado por horario nocturno';
+
+
+--
+-- TOC entry 6287 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.recargo_hora_pico; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_hora_pico IS 'Recargo aplicado por hora pico';
+
+
+--
+-- TOC entry 6288 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.recargo_festivo; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_festivo IS 'Recargo aplicado por día festivo';
+
+
+--
+-- TOC entry 6289 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.recargo_espera; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_espera IS 'Recargo por tiempo de espera adicional';
+
+
+--
+-- TOC entry 6290 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.tiempo_espera_min; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.tiempo_espera_min IS 'Tiempo de espera en minutos (fuera del tiempo gratis)';
+
+
+--
+-- TOC entry 6291 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.descuento_distancia_larga; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.descuento_distancia_larga IS 'Descuento aplicado por distancia larga';
+
+
+--
+-- TOC entry 6292 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.subtotal_sin_recargos; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.subtotal_sin_recargos IS 'Suma de base + distancia + tiempo';
+
+
+--
+-- TOC entry 6293 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.total_recargos; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.total_recargos IS 'Suma total de todos los recargos aplicados';
+
+
+--
+-- TOC entry 6294 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.tipo_recargo; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.tipo_recargo IS 'Tipo de recargo aplicado: normal, nocturno, hora_pico_manana, hora_pico_tarde, festivo';
+
+
+--
+-- TOC entry 6295 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.aplico_tarifa_minima; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.aplico_tarifa_minima IS 'Indica si se aplicó la tarifa mínima en lugar del cálculo';
+
+
+--
+-- TOC entry 6296 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.comision_plataforma_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.comision_plataforma_porcentaje IS 'Porcentaje de comisión que la empresa cobra al conductor';
+
+
+--
+-- TOC entry 6297 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.comision_plataforma_valor; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.comision_plataforma_valor IS 'Valor en pesos de la comisión cobrada al conductor';
+
+
+--
+-- TOC entry 6298 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.ganancia_conductor; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.ganancia_conductor IS 'Ganancia neta del conductor después de comisión de empresa';
+
+
+--
+-- TOC entry 6299 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.empresa_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.empresa_id IS 'ID de la empresa a la que pertenece el conductor';
+
+
+--
+-- TOC entry 6300 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.config_precios_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.config_precios_id IS 'ID de la configuración de precios utilizada';
+
+
+--
+-- TOC entry 6301 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.comision_admin_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.comision_admin_porcentaje IS 'Porcentaje de comisión que el admin cobra a la empresa';
+
+
+--
+-- TOC entry 6302 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.comision_admin_valor; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.comision_admin_valor IS 'Valor en pesos de la comisión cobrada a la empresa';
+
+
+--
+-- TOC entry 6303 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: COLUMN viaje_resumen_tracking.ganancia_empresa; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.viaje_resumen_tracking.ganancia_empresa IS 'Ganancia neta de la empresa después de comisión del admin';
 
 
 --
@@ -3701,7 +3921,7 @@ CREATE SEQUENCE public.viaje_resumen_tracking_id_seq
 ALTER SEQUENCE public.viaje_resumen_tracking_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6259 (class 0 OID 0)
+-- TOC entry 6304 (class 0 OID 0)
 -- Dependencies: 320
 -- Name: viaje_resumen_tracking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3739,7 +3959,7 @@ CREATE TABLE public.viaje_tracking_realtime (
 ALTER TABLE public.viaje_tracking_realtime OWNER TO postgres;
 
 --
--- TOC entry 6260 (class 0 OID 0)
+-- TOC entry 6305 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: TABLE viaje_tracking_realtime; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3748,7 +3968,7 @@ COMMENT ON TABLE public.viaje_tracking_realtime IS 'Tracking GPS en tiempo real 
 
 
 --
--- TOC entry 6261 (class 0 OID 0)
+-- TOC entry 6306 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.distancia_acumulada_km; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3757,7 +3977,7 @@ COMMENT ON COLUMN public.viaje_tracking_realtime.distancia_acumulada_km IS 'Dist
 
 
 --
--- TOC entry 6262 (class 0 OID 0)
+-- TOC entry 6307 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.tiempo_transcurrido_seg; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3766,7 +3986,7 @@ COMMENT ON COLUMN public.viaje_tracking_realtime.tiempo_transcurrido_seg IS 'Tie
 
 
 --
--- TOC entry 6263 (class 0 OID 0)
+-- TOC entry 6308 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.precio_parcial; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3790,7 +4010,7 @@ CREATE SEQUENCE public.viaje_tracking_realtime_id_seq
 ALTER SEQUENCE public.viaje_tracking_realtime_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6264 (class 0 OID 0)
+-- TOC entry 6309 (class 0 OID 0)
 -- Dependencies: 318
 -- Name: viaje_tracking_realtime_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3838,7 +4058,7 @@ CREATE VIEW public.viajes_con_tracking AS
 ALTER VIEW public.viajes_con_tracking OWNER TO postgres;
 
 --
--- TOC entry 6265 (class 0 OID 0)
+-- TOC entry 6310 (class 0 OID 0)
 -- Dependencies: 322
 -- Name: VIEW viajes_con_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -4243,7 +4463,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime ALTER COLUMN id SET DEFAULT next
 
 
 --
--- TOC entry 6061 (class 0 OID 16508)
+-- TOC entry 6084 (class 0 OID 16508)
 -- Dependencies: 217
 -- Data for Name: asignaciones_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4366,13 +4586,16 @@ COPY public.asignaciones_conductor (id, solicitud_id, conductor_id, asignado_en,
 180	758	277	2026-01-18 22:34:21	\N	cancelado
 181	759	277	2026-01-18 22:37:18	\N	cancelado
 182	760	277	2026-01-18 23:02:58	\N	cancelado
+205	788	277	2026-01-21 03:19:42	\N	completado
 183	761	277	2026-01-18 23:19:16	\N	cancelado
 184	763	277	2026-01-18 23:22:41	\N	cancelado
 185	764	277	2026-01-18 23:47:18	\N	cancelado
 186	765	277	2026-01-18 23:53:21	\N	cancelado
 187	766	277	2026-01-19 00:01:02	\N	completado
+206	789	277	2026-01-21 03:34:04	\N	completado
 188	767	277	2026-01-19 03:24:14	\N	completado
 189	768	277	2026-01-19 03:39:26	\N	completado
+207	791	277	2026-01-21 03:39:57	\N	completado
 190	769	277	2026-01-19 22:21:23	\N	completado
 191	772	277	2026-01-19 22:49:59	\N	completado
 192	775	277	2026-01-19 22:59:39	\N	completado
@@ -4392,7 +4615,7 @@ COPY public.asignaciones_conductor (id, solicitud_id, conductor_id, asignado_en,
 
 
 --
--- TOC entry 6062 (class 0 OID 16518)
+-- TOC entry 6085 (class 0 OID 16518)
 -- Dependencies: 218
 -- Data for Name: cache_direcciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4402,7 +4625,7 @@ COPY public.cache_direcciones (id, latitud_origen, longitud_origen, latitud_dest
 
 
 --
--- TOC entry 6063 (class 0 OID 16525)
+-- TOC entry 6086 (class 0 OID 16525)
 -- Dependencies: 219
 -- Data for Name: cache_geocodificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4412,7 +4635,7 @@ COPY public.cache_geocodificacion (id, latitud, longitud, direccion_formateada, 
 
 
 --
--- TOC entry 6064 (class 0 OID 16533)
+-- TOC entry 6087 (class 0 OID 16533)
 -- Dependencies: 220
 -- Data for Name: calificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4496,11 +4719,15 @@ COPY public.calificaciones (id, solicitud_id, usuario_calificador_id, usuario_ca
 76	786	276	277	5	garnde	2026-01-20 01:54:38
 77	787	277	276	5	\N	2026-01-21 01:39:14
 78	787	276	277	5	\N	2026-01-21 01:39:18
+79	788	277	276	5	\N	2026-01-21 03:21:46
+80	788	276	277	5	\N	2026-01-21 03:32:17
+81	789	277	276	5	\N	2026-01-21 03:35:36
+82	789	276	277	5	\N	2026-01-21 03:38:34
 \.
 
 
 --
--- TOC entry 6140 (class 0 OID 115555)
+-- TOC entry 6163 (class 0 OID 115555)
 -- Dependencies: 300
 -- Data for Name: catalogo_tipos_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4514,7 +4741,7 @@ COPY public.catalogo_tipos_vehiculo (id, codigo, nombre, descripcion, icono, ord
 
 
 --
--- TOC entry 6148 (class 0 OID 115673)
+-- TOC entry 6171 (class 0 OID 115673)
 -- Dependencies: 310
 -- Data for Name: categorias_soporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4532,7 +4759,7 @@ COPY public.categorias_soporte (id, codigo, nombre, descripcion, icono, color, o
 
 
 --
--- TOC entry 6115 (class 0 OID 33658)
+-- TOC entry 6138 (class 0 OID 33658)
 -- Dependencies: 273
 -- Data for Name: colores_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4568,7 +4795,7 @@ COPY public.colores_vehiculo (id, nombre, hex_code, activo) FROM stdin;
 
 
 --
--- TOC entry 6100 (class 0 OID 17166)
+-- TOC entry 6123 (class 0 OID 17166)
 -- Dependencies: 257
 -- Data for Name: conductores_favoritos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4578,7 +4805,7 @@ COPY public.conductores_favoritos (id, usuario_id, conductor_id, es_favorito, fe
 
 
 --
--- TOC entry 6126 (class 0 OID 91011)
+-- TOC entry 6149 (class 0 OID 91011)
 -- Dependencies: 284
 -- Data for Name: configuracion_notificaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4591,7 +4818,7 @@ COPY public.configuracion_notificaciones_usuario (id, usuario_id, push_enabled, 
 
 
 --
--- TOC entry 6066 (class 0 OID 16555)
+-- TOC entry 6089 (class 0 OID 16555)
 -- Dependencies: 222
 -- Data for Name: configuracion_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4603,12 +4830,12 @@ COPY public.configuracion_precios (id, tipo_vehiculo, tarifa_base, costo_por_km,
 11	motocarro	5500.00	2500.00	350.00	8000.00	\N	18.00	22.00	28.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:24	2026-01-11 01:04:24	\N	1
 13	taxi	7000.00	3200.00	450.00	10000.00	\N	22.00	28.00	35.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	2.50	0.50	100.00	3	500.00	1	2026-01-12 01:46:28	2026-01-12 01:46:28	Configuración global para taxi - Enero 2026	\N
 10	auto	7000.00	3000.00	400.00	9000.00	\N	20.00	25.00	30.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:23	2026-01-13 15:58:26	\N	1
-9	moto	4000.00	2000.00	250.00	6000.00	\N	15.00	20.00	25.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	10.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:22	2026-01-21 00:15:40	\N	1
+9	moto	4000.00	2000.00	250.00	6000.00	\N	15.00	20.00	25.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	20.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:22	2026-01-21 03:37:20	\N	1
 \.
 
 
 --
--- TOC entry 6065 (class 0 OID 16543)
+-- TOC entry 6088 (class 0 OID 16543)
 -- Dependencies: 221
 -- Data for Name: configuraciones_app; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4626,7 +4853,7 @@ COPY public.configuraciones_app (id, clave, valor, tipo, categoria, descripcion,
 
 
 --
--- TOC entry 6067 (class 0 OID 16588)
+-- TOC entry 6090 (class 0 OID 16588)
 -- Dependencies: 223
 -- Data for Name: detalles_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4648,10 +4875,10 @@ COPY public.detalles_conductor (id, usuario_id, licencia_conduccion, licencia_ve
 14	234	65662	2028-01-01	2023-01-01	A2	documents/234/licencia_conduccion_1767488583.pdf	moto	JJDJ	FUURUR	2020	Blanco	FKFKJF	\N	\N	\N	\N	kfkfjrj	2026-04-30	documents/234/soat_1767488584.jpg	6562626	2026-04-30	documents/234/tecnomecanica_1767488585.pdf	9592962	documents/234/tarjeta_propiedad_1767488587.jpg	0	pendiente	0.00	0	2026-01-04 01:03:02	2026-01-04 01:03:03	0	\N	\N	\N	0	en_revision	\N	2026-01-04 01:03:02	0.00	verificado	vehicle/234_1767488582.jpg	imagen	imagen	imagen	imagen	imagen	[-0.010752628735122394,0.15488318885208852,0.12000132646194646,-0.1541489917068979,0.012290385649119445,0.06581765036081777,0.06734024045391067,0.11187677238341186,-0.023095687405169534,0.021458730628447286,0.014518646640446676,-0.0689775510270663,0.039816248855482926,-0.1382205949103448,0.08320348542747635,0.20616374353169215,0.19024795233527977,-0.12454548632447093,0.05753429284301325,-0.022261071835100104,0.09002614269001424,0.08591056214375754,0.1132650660233544,-0.23939162477171794,-0.17902758026035295,-0.13675851297945843,-0.16002647636740053,-0.0009019594182845044,-0.011236596741708056,-0.10004266603938905,0.07706936494764652,0.050480393341653496,-0.24407750660459746,0.14587236085857266,0.05390410703615988,-0.0008463250557250599,0.07567586592133771,0.015799670048255263,-0.006871713039388813,-0.02132325175166923,0.09256697893930971,0.10336525431726012,0.24703204764394648,-0.08441260170989803,0.08803500151966902,-0.2293186216161991,-0.08521324956454211,0.01913540766864935,0.11163259083407423,-0.17417540937631049,0.09861592715052854,0.0012624237785443598,-0.05494552366767241,-0.047289521210046224,-0.2140169384238942,0.044565860217745557,0.09144577888325096,0.014843763764854905,0.09643905191551376,-0.06971387916527595,-0.09236423860689691,-0.08881819171211947,0.09072951076077476,-0.05750539996258139,-0.07569212627007842,-0.06440841476177707,-0.04077628397736643,0.1338243476231618,0.1618111871117266,0.11376200258178636,-0.07193379189002942,0.08048776477939903,0.11229504007746471,0.09450725330421866,0.08162173380815409,-0.049245246690005795,-0.06873240857631294,-0.11637715196586339,0.017222843142399306,0.12846111050895623,-0.06072316778098862,0.2118842465524906,0.0048911776922060625,0.03023800462676264,-0.1603147726880508,0.08825272643090648,0.08935204806579672,-0.02424256437147777,-0.04336588618327283,-0.06345377164567802,0.1220206071937414,0.15954404984362516,-0.12950224819141756,-0.15651577810084016,-0.03860828488534778,-0.05068644420960984,0.18530336740945644,-0.029496889148479963,-0.10600129906781047,0.0934906660849974,-0.06768721797304966,-0.08365398070554139,0.04024409336375002,-0.024651212041868223,0.04441516436859095,-0.06776592257113451,-0.02657164832436994,0.06339209501293518,0.05923278759438079,0.03549253574821185,-0.2203772707421522,0.16992678794023636,0.17277463898025786,-0.15008898800766932,-0.0076040483928646666,0.11762976321542934,-0.10905352462691387,-0.016676136197457232,0.08317988539213392,-0.09382503832609215,0.07715025052297264,0.11820463016828736,0.1488858603516749,-0.021124320120935496,0.21910865773687005,0.005991704334232829,0.22772134604063457,0.05900803721726691]	2026-01-04 01:03:09.649303	\N
 13	233	65659	2028-01-01	2023-01-01	A2	documents/233/licencia_conduccion_1767323815.jpg	moto	JEJNFND	FJJDJE	65656	Blanco	JRNNFJF	\N	\N	\N	\N	irkfkf	2026-04-30	documents/233/soat_1767323816.pdf	6565626	2026-04-30	documents/233/tecnomecanica_1767323817.jpg	266262	documents/233/tarjeta_propiedad_1767323818.jpg	0	pendiente	0.00	0	2026-01-02 03:16:54	2026-01-02 03:16:55	0	\N	\N	\N	0	en_revision	\N	2026-01-02 03:16:54	0.00	verificado	vehicle/233_1767323814.jpg	imagen	imagen	imagen	imagen	imagen	[-0.016588675080919168,0.09923995161211742,0.006923094478129281,-0.024923124336983973,-0.02865273047264208,0.05942041385706173,0.04018104807054203,-0.12279943814767952,0.08126736576989552,-0.1237890774737831,-0.04234394464357635,-0.12166788703317231,-0.2058046347560615,-0.06375418920070157,0.07366458175537548,0.043642478435247135,-0.13718626658526373,0.08963245986562955,-0.18595888261977467,-0.08034406375369174,-0.08318878356382962,0.029595944654660308,0.02345417316370224,0.023584036252565495,-0.013961658976299036,-0.015344483976620808,-0.08084464659085736,0.037811465040469026,-0.10746763372863632,0.021339489314782495,0.006658469391720313,-0.21441786170809507,-0.023148448700789807,-0.018293756024907765,0.05141554689172401,0.07965796871860295,0.05661881349317743,0.14771496441204837,0.18364583635406365,0.08355597435998617,0.18110055125843638,-0.03434896881513844,0.1060073753080268,0.040827513496615446,-0.10387279744793232,0.08154996341141227,0.09933284321444219,-0.06565783906835351,0.19064664158258723,-0.03382026697765294,-0.047826319050463494,-0.09157188440935532,0.14368191562598406,0.01260588113761804,0.13888148207021192,0.01097230030032956,0.011552515619975116,0.01866943399166373,0.18563349382038588,-0.12220910230771609,0.09880038772065666,-0.09514976172467585,0.16816028603520713,0.0715255922434442,0.05819647046783588,0.13060486122894155,0.08848916116029815,0.1617945995776548,-0.06562780938981548,0.0023590439002961223,0.023276775963036202,-0.016068896774387782,0.11697483175987347,-0.10616954816805634,-0.0445647030070867,0.13485820769912427,0.0008394709131292126,-0.011223664412005015,-0.15491639886933095,-0.009013633651131501,0.00541838784572613,-0.10205932492093105,0.09046345620460894,-0.0028727623690147346,0.0789018784825456,-0.07537138979795154,0.03863346404000415,-0.13101330626223057,0.1197373926993302,-0.02830062791123887,0.028309616656422773,0.12727520256808897,-0.05029156118827051,0.007549923333345267,0.044378520298070316,-0.12690059470848347,-0.15193923016321786,-0.06714268122952279,0.005541955698090688,0.018092957292315484,-0.06837539202196831,-0.02635420433017953,0.18457176218102603,0.010363208220432768,0.10093053137579958,0.01897967131981071,0.04751187993296957,0.0073877149798510485,0.06528550048379238,0.04003684775645072,-0.03857386436946783,-0.09101918954348162,-0.09661958111195686,-0.08627776630548971,0.06797119472539286,0.0531448113505849,0.10999899579889849,0.06945624046101936,0.05345324144443064,0.019885060841251318,0.004135301488281082,0.0711052793564994,0.033212499946152836,0.04881556614135138,0.05204736546713571,0.15132805672205582,-0.13202258077700899,0.031028638263126018]	2026-01-02 03:17:01.298993	\N
 12	232	265656	2028-01-01	2023-01-01	A2	documents/232/licencia_conduccion_1767323347.jpg	moto	RNFNDN	RKFIKD	65653	Blanco	UBDJD	\N	\N	\N	\N	ridkd	2026-04-30	documents/232/soat_1767323349.jpg	326656	2026-04-30	documents/232/tecnomecanica_1767323350.pdf	326262	documents/232/tarjeta_propiedad_1767323352.jpg	0	rechazado	0.00	0	2026-01-02 03:09:07	2026-01-02 23:17:35	0	\N	\N	\N	0	rechazado	2026-01-02 23:17:35	2026-01-02 03:09:07	0.00	verificado	\N	imagen	imagen	imagen	imagen	imagen	[0.11805780160971013,-0.11389751637974244,-0.1044039933593143,0.28917767459859545,0.1740117541591018,0.07487427447443243,0.09034230440225577,0.019367138162584487,0.022349326004863213,-0.14355770939353543,-0.07124092671557922,0.1298399750742221,0.15327411164080737,0.044523055263113835,-0.08451649224656814,0.055699307199017105,0.04693858916751194,0.14866937069758454,-0.05883511968587584,-0.0007197192044541553,0.05419567364916024,-0.09766679532074396,0.040293565404195604,0.10424029222553935,0.09385161418008041,-0.12216269143337782,0.002480915507053486,0.1465426405362474,-0.10347640131430419,-0.18838323306414495,-0.17772685194259227,0.0486252388778347,0.027270297204250244,0.13061262276318805,0.005670535057284979,0.05109929113028742,0.0369328417303429,-0.02597028922927877,-0.05544025536347938,-0.055878272584521084,-0.13322546109554154,0.06773462699130947,0.028541407407487025,0.08034668442171557,-0.16173404762589763,0.05585554999926581,-0.023672737795324764,-0.035687567462664764,-0.05966846555622138,0.20949875528571052,0.11313141770718052,0.06750878256307695,-0.10414899593793042,0.05122986751648239,0.04231323118302919,0.026664598942706265,0.02032272954534209,-0.08725699022244643,0.02633888739270489,0.02274595942783325,0.04035714805717886,0.16288361873788396,0.007825190266329059,-0.028134642194193156,-0.025106884020261955,0.07786785321648783,0.038090994536746886,0.11962747760218631,-0.08728441737730891,0.014742570456485433,0.00412469775069923,-0.17159359226105803,-0.01839990036214424,0.027208728055063903,0.12678638013779103,-0.06451763403726712,0.018767090270462642,0.09836804795477722,0.04970246587489202,-0.06256230331139406,-0.01118226819162722,-0.05895691704893361,-0.06809661412590139,-0.0016570710570436567,0.10269086176237552,0.2523106952828272,-0.0591826379206045,0.03667821225674368,-0.1800917934626397,0.05822425940795406,0.07134996108582899,-0.08964698109472252,0.050001316154393384,0.0822911469790118,-0.015059063053316746,0.13885156436181126,0.13543871424515277,0.02849644603955445,0.003909004721517207,0.1084640459945919,-0.051037495167388716,-0.2579686593909661,0.04232053168947633,-0.0016818412171365777,0.04242884151529865,-0.1648895653250417,0.014208121330235588,-0.1620920331055747,-0.044972658108470884,-0.061757852203220165,-0.11901379812876896,-0.06451511271887804,0.1808006420627034,-0.04658579311771391,0.08937246760953035,0.0787701395617885,-0.05433227043901952,0.005554848459876812,-0.08952445506772458,-0.09432149014354096,-0.07221122922712474,0.11834152823860129,-0.09140184339298843,-0.1560457291462889,0.006237804158945968,-0.1962086456725296,0.04317948054184414,-0.04583888469392261]	2026-01-02 03:09:14.561879	\N
-20	277	65564646	2028-01-01	2023-01-01	A2	documents/277/licencia_conduccion_1768322945.jpg	moto	FERRARI	VOLCAN11	2020	Negro	HDDHDU	\N	\N	\N	\N	jddjdjjjdd	2026-02-28	documents/277/soat_1768322946.jpg	34343	2026-04-30	documents/277/tecnomecanica_1768322947.jpg	65656645	documents/277/tarjeta_propiedad_1768322948.jpg	1	aprobado	4.87	15	2026-01-13 16:49:03	2026-01-14 22:43:48	1	6.25373000	-75.53883670	2026-01-21 01:38:49	35	aprobado	2026-01-13 20:48:12	2026-01-13 16:49:03	262296.76	verificado	vehicle/277_1768322944.jpg	imagen	imagen	imagen	imagen	imagen	[-0.02198266636817153,0.08118854439106869,-0.15134703669439734,0.09400863493486929,0.1430922866040471,-0.10769984928838956,0.2532615964559309,0.006454133603568187,-0.05963281054568396,0.13033529184109824,-0.17059385697477214,0.06258115683244449,0.08843000849485341,-0.11286166062853885,-0.036042190552170214,0.0680902380865547,0.1418954508464828,-0.2848853932835627,0.02634503142717344,0.005799642140664835,-0.21373742784493227,0.08952500597659185,-0.11642419018415336,0.12341300721318425,-0.09209776228555473,-0.03765305889052175,0.05925028409029159,-0.06778579451920462,0.048158269483613896,0.21234609527139595,0.07432419112437506,-0.2039775785132934,-0.07930836186899588,0.020992036370863484,-0.189597679522125,0.0012616195733990622,-0.023259334000801213,0.11694855907245466,-0.0259067181524517,0.13862078691093224,-0.031996498059407165,-0.06669367722882429,-0.0016231349902908476,0.07802691621336023,-0.01372937506200167,0.07614873907582027,0.13698042507703842,-0.04385676549284473,-0.053166980385005475,-0.005149956177844757,0.09581979880441256,0.006075493966404885,0.0037821960084418733,-0.011259255508114328,0.10520638600354398,-0.002433192710948574,0.16282834554971806,0.1037574027680318,0.03657130801175542,-0.09557571140238613,0.05273103206439499,-0.057142851557288155,0.014307818102591595,-0.08320638014218074,-0.11029828080862612,-0.03715329376239424,-0.015733164308572297,-0.08368091203928407,-0.21390279469749685,-0.06417938504525808,0.15593142553135128,0.007901315127039888,-0.03800845692093727,-0.07230604943459125,-0.08796046913574523,-0.1395405476348696,-0.042387122202096,0.25308718355428084,0.04975147712622939,-0.049625096157900055,0.1148979410668221,-0.1912101297237323,0.0680880957953568,-0.11344283242605735,-0.09798674684274307,0.087694557148006,0.03295511715289056,0.10691257025978183,-0.03023187205037363,-0.10937847257553378,0.08657365466263062,-0.022097298178281065,-0.1074216279247453,-0.03381857096788278,-0.16069527092085048,-0.10107678517480197,0.050611557571712186,-0.16542083931461846,-0.0619488319589121,-0.1106126829452438,0.08064075848079333,-0.12055090824880972,0.07026001902275412,-0.016932005187664655,0.041943836740266,0.10456002613193556,-0.14573089007921075,0.05419790901820698,0.09838042421943566,-0.035019862654241,-0.04860770383498092,0.02063709826372452,-0.03039991268754351,-0.15674899905998005,0.12498571759874642,-0.16184763432026728,-0.022354009029222337,0.0640674753787169,0.08229415538281465,-0.17525525283276536,0.05721913680611791,-0.021397909529529607,0.015339747494722708,-0.02704050795590391,0.14542137270446553,-0.024735401880913235,0.03998275079670499,0.023739270407349033]	2026-01-13 16:49:11.177031	\N
 18	5	PENDIENTE	2030-01-01	\N	C1	\N	auto	\N	\N	\N	\N	PENDIENTE	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	0.00	0	2026-01-04 17:45:27	2026-01-04 17:45:27	0	\N	\N	\N	0	rechazado	2026-01-04 17:45:27	2026-01-04 17:45:27	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	w
 19	11	PENDIENTE	2030-01-01	\N	C1	\N	auto	\N	\N	\N	\N	PENDIENTE	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	0.00	0	2026-01-04 17:56:32	2026-01-04 17:56:32	0	\N	\N	\N	0	aprobado	2026-01-04 17:56:32	2026-01-04 17:56:32	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 15	235	265665	2028-01-01	2023-01-01	A2	documents/235/licencia_conduccion_1767495096.pdf	moto	JDJDJ	EHEJ	2020	Blanco	GDHHDH	\N	\N	\N	\N	rufjjf	2026-04-30	documents/235/soat_1767495097.jpg	6562632	2026-04-30	documents/235/tecnomecanica_1767495099.jpg	65656	documents/235/tarjeta_propiedad_1767495100.jpg	0	pendiente	0.00	0	2026-01-04 02:51:35	2026-01-04 17:58:56	0	\N	\N	\N	0	aprobado	2026-01-04 17:58:56	2026-01-04 02:51:35	0.00	verificado	vehicle/235_1767495094.jpg	imagen	imagen	imagen	imagen	imagen	[0.10712268379144835,-0.12813128744547242,-0.1515694798710023,0.0560848253925513,-0.20460121647040852,-0.05154047135669626,-0.10681627429275908,-0.15839945694042837,-0.058944630261466874,-0.21564334582921224,-0.03693879524274278,-0.04891054600053267,0.06076358100077905,0.04163567861208249,0.21697704287013253,0.12848009426358237,-0.055685114392792945,-0.04315841591409123,0.12025309392345612,0.08677381497925689,0.011072914643354836,-0.06817737434900413,0.12411886710280495,-0.043760914147058114,-0.04549563624148264,0.06457622728080133,-0.10393121791309326,-0.014582509106188642,0.08579349028413367,-0.06335843255941782,0.17769395137244448,-0.05906646945875141,-0.08695530941226746,-0.18515236549084568,-0.039873317369713196,0.0723447011486767,-0.0012275221352925803,-0.0980514942927531,0.07067345192956287,0.036808951648656385,-0.14134235798967806,-0.15859591490126682,0.03551941868534899,0.13635107710988567,-0.07681660491229816,-0.0013386531152784242,-0.0073200586661886745,0.009771078186152533,0.045701364263334626,0.1261268566910709,-0.02060283343781147,0.010382517693263517,0.2349803740938218,-0.09033730051473338,-0.08027273003836186,0.16497791076995824,0.05899405941156724,-0.0082357924576219,0.0021705907951377374,0.10653040504048286,-0.04460227021504559,0.005993277353304076,0.17303090749452163,0.0008412234787578745,0.11985685664263279,0.06258320641719227,-0.09519732792427764,-0.06505177159863616,0.009620695192118889,0.10616518268397963,-0.13203818830635966,0.14929188350760822,-0.0478686185130802,0.05214075383002127,-0.11592631308076085,-0.05877511896381715,0.1013777530881975,0.05680464627936635,0.061367719602792886,0.13858586209919588,0.051004907562212966,0.034555634215054254,0.07693931418301657,0.030668355192639954,0.04007018406531962,0.1179461446027841,-0.06786603680805497,-0.035370134871729894,-0.13661223958866084,0.06111465918747821,-0.321291802586909,0.09061192748143608,-0.16496344741950203,0.04032612701563909,0.13180152194034886,-0.001472068482878503,0.03907458658164641,0.1301175359410745,0.08703214268945472,-0.09771973024535131,-0.12405765572408048,0.07476951133643983,-0.044019540463488604,-0.015126171610006964,-0.032862258296019124,0.12992175482653504,0.0972521911061727,-0.18897128273725775,-0.13058459040201595,0.11304442583581585,0.010691078283745478,0.017695127025521586,-0.05690824169126096,-0.06537582745498416,0.08608468137750808,0.0032174662659955645,-0.04541626095712019,0.0372435717796494,-0.0061304010952890065,-0.13603309334173047,0.09221728509815805,0.09662355395814401,-0.07613932141181701,0.22132366263771389,0.055613727671965096,0.12885183560480906,0.003762468044567579,-0.1791516646250979]	2026-01-04 02:51:42.974727	\N
+20	277	65564646	2028-01-01	2023-01-01	A2	documents/277/licencia_conduccion_1768322945.jpg	moto	FERRARI	VOLCAN11	2020	Negro	HDDHDU	\N	\N	\N	\N	jddjdjjjdd	2026-02-28	documents/277/soat_1768322946.jpg	34343	2026-04-30	documents/277/tecnomecanica_1768322947.jpg	65656645	documents/277/tarjeta_propiedad_1768322948.jpg	1	aprobado	4.88	17	2026-01-13 16:49:03	2026-01-14 22:43:48	0	6.25373000	-75.53883670	2026-01-21 19:47:48	38	aprobado	2026-01-13 20:48:12	2026-01-13 16:49:03	262296.76	verificado	vehicle/277_1768322944.jpg	imagen	imagen	imagen	imagen	imagen	[-0.02198266636817153,0.08118854439106869,-0.15134703669439734,0.09400863493486929,0.1430922866040471,-0.10769984928838956,0.2532615964559309,0.006454133603568187,-0.05963281054568396,0.13033529184109824,-0.17059385697477214,0.06258115683244449,0.08843000849485341,-0.11286166062853885,-0.036042190552170214,0.0680902380865547,0.1418954508464828,-0.2848853932835627,0.02634503142717344,0.005799642140664835,-0.21373742784493227,0.08952500597659185,-0.11642419018415336,0.12341300721318425,-0.09209776228555473,-0.03765305889052175,0.05925028409029159,-0.06778579451920462,0.048158269483613896,0.21234609527139595,0.07432419112437506,-0.2039775785132934,-0.07930836186899588,0.020992036370863484,-0.189597679522125,0.0012616195733990622,-0.023259334000801213,0.11694855907245466,-0.0259067181524517,0.13862078691093224,-0.031996498059407165,-0.06669367722882429,-0.0016231349902908476,0.07802691621336023,-0.01372937506200167,0.07614873907582027,0.13698042507703842,-0.04385676549284473,-0.053166980385005475,-0.005149956177844757,0.09581979880441256,0.006075493966404885,0.0037821960084418733,-0.011259255508114328,0.10520638600354398,-0.002433192710948574,0.16282834554971806,0.1037574027680318,0.03657130801175542,-0.09557571140238613,0.05273103206439499,-0.057142851557288155,0.014307818102591595,-0.08320638014218074,-0.11029828080862612,-0.03715329376239424,-0.015733164308572297,-0.08368091203928407,-0.21390279469749685,-0.06417938504525808,0.15593142553135128,0.007901315127039888,-0.03800845692093727,-0.07230604943459125,-0.08796046913574523,-0.1395405476348696,-0.042387122202096,0.25308718355428084,0.04975147712622939,-0.049625096157900055,0.1148979410668221,-0.1912101297237323,0.0680880957953568,-0.11344283242605735,-0.09798674684274307,0.087694557148006,0.03295511715289056,0.10691257025978183,-0.03023187205037363,-0.10937847257553378,0.08657365466263062,-0.022097298178281065,-0.1074216279247453,-0.03381857096788278,-0.16069527092085048,-0.10107678517480197,0.050611557571712186,-0.16542083931461846,-0.0619488319589121,-0.1106126829452438,0.08064075848079333,-0.12055090824880972,0.07026001902275412,-0.016932005187664655,0.041943836740266,0.10456002613193556,-0.14573089007921075,0.05419790901820698,0.09838042421943566,-0.035019862654241,-0.04860770383498092,0.02063709826372452,-0.03039991268754351,-0.15674899905998005,0.12498571759874642,-0.16184763432026728,-0.022354009029222337,0.0640674753787169,0.08229415538281465,-0.17525525283276536,0.05721913680611791,-0.021397909529529607,0.015339747494722708,-0.02704050795590391,0.14542137270446553,-0.024735401880913235,0.03998275079670499,0.023739270407349033]	2026-01-13 16:49:11.177031	\N
 32	295	LIC10002	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC102	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 33	296	LIC10003	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC103	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 34	297	LIC10004	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC104	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
@@ -4661,7 +4888,7 @@ COPY public.detalles_conductor (id, usuario_id, licencia_conduccion, licencia_ve
 
 
 --
--- TOC entry 6068 (class 0 OID 16627)
+-- TOC entry 6091 (class 0 OID 16627)
 -- Dependencies: 224
 -- Data for Name: detalles_paquete; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4671,7 +4898,7 @@ COPY public.detalles_paquete (id, solicitud_id, tipo_paquete, descripcion_paquet
 
 
 --
--- TOC entry 6069 (class 0 OID 16643)
+-- TOC entry 6092 (class 0 OID 16643)
 -- Dependencies: 225
 -- Data for Name: detalles_viaje; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4681,7 +4908,7 @@ COPY public.detalles_viaje (id, solicitud_id, numero_pasajeros, opciones_viaje, 
 
 
 --
--- TOC entry 6106 (class 0 OID 17282)
+-- TOC entry 6129 (class 0 OID 17282)
 -- Dependencies: 264
 -- Data for Name: disputas_pago; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4694,7 +4921,7 @@ COPY public.disputas_pago (id, solicitud_id, cliente_id, conductor_id, cliente_c
 
 
 --
--- TOC entry 6070 (class 0 OID 16653)
+-- TOC entry 6093 (class 0 OID 16653)
 -- Dependencies: 226
 -- Data for Name: documentos_conductor_historial; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4708,7 +4935,7 @@ COPY public.documentos_conductor_historial (id, conductor_id, tipo_documento, ur
 
 
 --
--- TOC entry 6113 (class 0 OID 33640)
+-- TOC entry 6136 (class 0 OID 33640)
 -- Dependencies: 271
 -- Data for Name: documentos_verificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4777,7 +5004,7 @@ COPY public.documentos_verificacion (id, conductor_id, tipo_documento, ruta_arch
 
 
 --
--- TOC entry 6142 (class 0 OID 115569)
+-- TOC entry 6165 (class 0 OID 115569)
 -- Dependencies: 302
 -- Data for Name: empresa_tipos_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4813,7 +5040,7 @@ COPY public.empresa_tipos_vehiculo (id, empresa_id, tipo_vehiculo_codigo, activo
 
 
 --
--- TOC entry 6144 (class 0 OID 115610)
+-- TOC entry 6167 (class 0 OID 115610)
 -- Dependencies: 304
 -- Data for Name: empresa_tipos_vehiculo_historial; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4823,7 +5050,7 @@ COPY public.empresa_tipos_vehiculo_historial (id, empresa_tipo_vehiculo_id, empr
 
 
 --
--- TOC entry 6146 (class 0 OID 115633)
+-- TOC entry 6169 (class 0 OID 115633)
 -- Dependencies: 306
 -- Data for Name: empresa_vehiculo_notificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4833,7 +5060,7 @@ COPY public.empresa_vehiculo_notificaciones (id, historial_id, conductor_id, emp
 
 
 --
--- TOC entry 6138 (class 0 OID 91274)
+-- TOC entry 6161 (class 0 OID 91274)
 -- Dependencies: 298
 -- Data for Name: empresas_configuracion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4850,7 +5077,7 @@ COPY public.empresas_configuracion (id, empresa_id, tipos_vehiculo, zona_operaci
 
 
 --
--- TOC entry 6132 (class 0 OID 91208)
+-- TOC entry 6155 (class 0 OID 91208)
 -- Dependencies: 292
 -- Data for Name: empresas_contacto; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4867,7 +5094,7 @@ COPY public.empresas_contacto (id, empresa_id, email, telefono, telefono_secunda
 
 
 --
--- TOC entry 6136 (class 0 OID 91248)
+-- TOC entry 6159 (class 0 OID 91248)
 -- Dependencies: 296
 -- Data for Name: empresas_metricas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4879,12 +5106,12 @@ COPY public.empresas_metricas (id, empresa_id, total_conductores, conductores_ac
 28	14	0	0	0	0	0	0.00	0	0.00	0	0.00	2026-01-20 02:16:59.456851
 29	15	0	0	0	0	0	0.00	0	0.00	0	0.00	2026-01-20 02:16:59.463702
 30	16	0	0	0	0	0	0.00	0	0.00	0	0.00	2026-01-20 02:16:59.472594
-7	1	2	1	0	35	19	4.87	15	483109.84	30	483109.84	2026-01-21 01:39:18.203446
+7	1	2	1	0	38	19	4.88	17	710716.84	33	710716.84	2026-01-21 03:40:53.14952
 \.
 
 
 --
--- TOC entry 6134 (class 0 OID 91228)
+-- TOC entry 6157 (class 0 OID 91228)
 -- Dependencies: 294
 -- Data for Name: empresas_representante; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4896,7 +5123,7 @@ COPY public.empresas_representante (id, empresa_id, nombre, telefono, email, doc
 
 
 --
--- TOC entry 6111 (class 0 OID 25436)
+-- TOC entry 6134 (class 0 OID 25436)
 -- Dependencies: 269
 -- Data for Name: empresas_transporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4913,7 +5140,7 @@ COPY public.empresas_transporte (id, nombre, nit, razon_social, email, telefono,
 
 
 --
--- TOC entry 6071 (class 0 OID 16664)
+-- TOC entry 6094 (class 0 OID 16664)
 -- Dependencies: 227
 -- Data for Name: estadisticas_sistema; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4923,7 +5150,7 @@ COPY public.estadisticas_sistema (id, fecha, total_usuarios, total_clientes, tot
 
 
 --
--- TOC entry 6102 (class 0 OID 17187)
+-- TOC entry 6125 (class 0 OID 17187)
 -- Dependencies: 259
 -- Data for Name: historial_confianza; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4933,7 +5160,7 @@ COPY public.historial_confianza (id, usuario_id, conductor_id, total_viajes, via
 
 
 --
--- TOC entry 6072 (class 0 OID 16690)
+-- TOC entry 6095 (class 0 OID 16690)
 -- Dependencies: 228
 -- Data for Name: historial_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4943,7 +5170,7 @@ COPY public.historial_precios (id, configuracion_id, campo_modificado, valor_ant
 
 
 --
--- TOC entry 6073 (class 0 OID 16699)
+-- TOC entry 6096 (class 0 OID 16699)
 -- Dependencies: 229
 -- Data for Name: historial_seguimiento; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4953,7 +5180,7 @@ COPY public.historial_seguimiento (id, solicitud_id, conductor_id, latitud, long
 
 
 --
--- TOC entry 6074 (class 0 OID 16708)
+-- TOC entry 6097 (class 0 OID 16708)
 -- Dependencies: 230
 -- Data for Name: logs_auditoria; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5090,7 +5317,7 @@ COPY public.logs_auditoria (id, usuario_id, accion, entidad, entidad_id, descrip
 
 
 --
--- TOC entry 6104 (class 0 OID 17244)
+-- TOC entry 6127 (class 0 OID 17244)
 -- Dependencies: 262
 -- Data for Name: mensajes_chat; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5148,7 +5375,7 @@ COPY public.mensajes_chat (id, solicitud_id, remitente_id, destinatario_id, tipo
 
 
 --
--- TOC entry 6152 (class 0 OID 115717)
+-- TOC entry 6175 (class 0 OID 115717)
 -- Dependencies: 314
 -- Data for Name: mensajes_ticket; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5158,7 +5385,7 @@ COPY public.mensajes_ticket (id, ticket_id, remitente_id, es_agente, mensaje, ad
 
 
 --
--- TOC entry 6075 (class 0 OID 16720)
+-- TOC entry 6098 (class 0 OID 16720)
 -- Dependencies: 231
 -- Data for Name: metodos_pago_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5168,7 +5395,7 @@ COPY public.metodos_pago_usuario (id, usuario_id, tipo_pago, ultimos_cuatro_digi
 
 
 --
--- TOC entry 6124 (class 0 OID 90987)
+-- TOC entry 6147 (class 0 OID 90987)
 -- Dependencies: 282
 -- Data for Name: notificaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5184,7 +5411,7 @@ COPY public.notificaciones_usuario (id, usuario_id, tipo_id, titulo, mensaje, re
 
 
 --
--- TOC entry 6118 (class 0 OID 58206)
+-- TOC entry 6141 (class 0 OID 58206)
 -- Dependencies: 276
 -- Data for Name: pagos_empresas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5194,7 +5421,7 @@ COPY public.pagos_empresas (id, empresa_id, monto, tipo, descripcion, viaje_id, 
 
 
 --
--- TOC entry 6108 (class 0 OID 17348)
+-- TOC entry 6131 (class 0 OID 17348)
 -- Dependencies: 266
 -- Data for Name: pagos_viaje; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5218,7 +5445,7 @@ COPY public.pagos_viaje (id, solicitud_id, conductor_id, cliente_id, monto, meto
 
 
 --
--- TOC entry 6076 (class 0 OID 16733)
+-- TOC entry 6099 (class 0 OID 16733)
 -- Dependencies: 232
 -- Data for Name: paradas_solicitud; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5228,7 +5455,7 @@ COPY public.paradas_solicitud (id, solicitud_id, latitud, longitud, direccion, o
 
 
 --
--- TOC entry 6120 (class 0 OID 82780)
+-- TOC entry 6143 (class 0 OID 82780)
 -- Dependencies: 278
 -- Data for Name: plantillas_bloqueadas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5238,7 +5465,7 @@ COPY public.plantillas_bloqueadas (id, plantilla_hash, plantilla, usuario_origen
 
 
 --
--- TOC entry 6077 (class 0 OID 16743)
+-- TOC entry 6100 (class 0 OID 16743)
 -- Dependencies: 233
 -- Data for Name: proveedores_mapa; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5248,7 +5475,7 @@ COPY public.proveedores_mapa (id, nombre, api_key, activo, contador_solicitudes,
 
 
 --
--- TOC entry 6078 (class 0 OID 16751)
+-- TOC entry 6101 (class 0 OID 16751)
 -- Dependencies: 234
 -- Data for Name: reglas_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5258,7 +5485,7 @@ COPY public.reglas_precios (id, tipo_servicio, tipo_vehiculo, tarifa_base, costo
 
 
 --
--- TOC entry 6079 (class 0 OID 16763)
+-- TOC entry 6102 (class 0 OID 16763)
 -- Dependencies: 235
 -- Data for Name: reportes_usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5268,7 +5495,7 @@ COPY public.reportes_usuarios (id, usuario_reportante_id, usuario_reportado_id, 
 
 
 --
--- TOC entry 6154 (class 0 OID 115737)
+-- TOC entry 6177 (class 0 OID 115737)
 -- Dependencies: 316
 -- Data for Name: solicitudes_callback; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5278,171 +5505,175 @@ COPY public.solicitudes_callback (id, usuario_id, telefono, motivo, estado, nota
 
 
 --
--- TOC entry 6080 (class 0 OID 16778)
+-- TOC entry 6103 (class 0 OID 16778)
 -- Dependencies: 236
 -- Data for Name: solicitudes_servicio; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.solicitudes_servicio (id, uuid_solicitud, cliente_id, tipo_servicio, ubicacion_recogida_id, ubicacion_destino_id, latitud_recogida, longitud_recogida, direccion_recogida, latitud_destino, longitud_destino, direccion_destino, distancia_estimada, tiempo_estimado, estado, fecha_creacion, solicitado_en, aceptado_en, recogido_en, entregado_en, completado_en, cancelado_en, motivo_cancelacion, cliente_confirma_pago, conductor_confirma_recibo, tiene_disputa, disputa_id, precio_final, metodo_pago, pago_confirmado, pago_confirmado_en, precio_estimado, conductor_llego_en, metodo_pago_usado, distancia_recorrida, tiempo_transcurrido, precio_ajustado_por_tracking, tuvo_desvio_ruta, tipo_vehiculo, empresa_id, conductor_id, precio_en_tracking) FROM stdin;
-629	699a839e-587e-4ffc-86c4-2e380521a503	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:30:00	2025-12-21 20:30:00	2025-12-21 20:30:07	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-630	8a544e12-5a76-4ed8-a61d-51f75d7ab9b6	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:54:34	2025-12-21 20:54:34	2025-12-21 20:54:36	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-631	50cac957-abfa-4af0-8ca8-057b78448a14	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:57:49	2025-12-21 20:57:49	2025-12-21 20:57:53	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-632	be3e2557-af78-490e-96bd-8567512d429b	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:02:42	2025-12-21 21:02:42	2025-12-21 21:02:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-633	ff13dcd9-3540-44e1-924f-f4a8019e210b	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:16:43	2025-12-21 21:16:43	2025-12-21 21:16:52	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-634	1e06e459-2ac9-4b9a-b42e-978094f0f12d	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:23:21	2025-12-21 21:23:21	2025-12-21 21:23:25	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-635	004f5f2a-a249-4a7c-9abd-ed0860efb744	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:35:19	2025-12-21 21:35:19	2025-12-21 21:35:26	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-636	c0c54227-8aea-4cab-8e9a-4f7ac6f5a0c6	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:45:56	2025-12-21 21:45:56	2025-12-21 21:46:05	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-653	addd37b6-f9c5-4588-81db-af483a760507	8	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 01:28:49	2025-12-22 01:28:49	2025-12-22 01:28:56	2025-12-22 01:29:58	\N	2025-12-22 01:30:35	\N	\N	t	t	f	5	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-646	6ffeb18a-8621-4964-8582-2c4ee6362f8d	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:29:20	2025-12-21 23:29:20	2025-12-21 23:29:26	2025-12-21 23:29:39	\N	2025-12-21 23:30:30	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-639	c47b0fd9-73c6-41ea-9228-a874f7f925e8	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	conductor_llego	2025-12-21 22:17:43	2025-12-21 22:17:43	2025-12-21 22:17:58	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-640	af4eccae-e352-4af9-89ac-f4349b2ab83a	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	conductor_llego	2025-12-21 22:27:21	2025-12-21 22:27:21	2025-12-21 22:27:23	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-638	914735ed-1eb5-4c6e-b459-975db47c8fab	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-21 22:14:54	2025-12-21 22:14:54	2025-12-21 22:15:05	2025-12-21 22:29:12	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-637	0ce2cf12-7002-403b-9d6a-a3c0151be528	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	conductor_llego	2025-12-21 21:51:35	2025-12-21 21:51:35	2025-12-21 21:51:43	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-652	7bfde53f-13cd-43e2-88f2-d4d2bcbe3fd5	6	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 01:17:20	2025-12-22 01:17:20	2025-12-22 01:17:33	2025-12-22 01:18:19	\N	2025-12-22 01:18:28	\N	\N	\N	\N	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-641	8e0e30c9-c858-4fe5-9473-65ef5a9191cc	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:37:57	2025-12-21 22:37:57	2025-12-21 22:38:25	2025-12-21 22:39:03	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-642	37439b27-d3fe-4867-84c7-7d79ba534199	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:44:32	2025-12-21 22:44:32	2025-12-21 22:44:54	2025-12-21 22:45:30	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-654	645e6e9d-8e01-4466-bd73-af35426b5237	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 22:52:30	2025-12-22 22:52:30	2025-12-22 22:53:10	2025-12-22 22:53:22	\N	2025-12-22 22:53:34	\N	\N	f	t	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-643	595351a7-2044-4906-a9ab-dfa492f4fb81	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:53:42	2025-12-21 22:53:42	2025-12-21 22:54:05	2025-12-21 22:54:30	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-644	c4ae3c1f-e029-4558-8663-81149a640596	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 22:56:42	2025-12-21 22:56:42	2025-12-21 22:56:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-647	1a169b13-fc5e-4588-ae54-be1e96683d17	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:31:55	2025-12-21 23:31:55	2025-12-21 23:32:02	2025-12-21 23:32:48	\N	2025-12-21 23:33:21	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-651	24fe169d-80f5-4eec-a39a-4594b5b1c5dc	4	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:53:50	2025-12-22 00:53:50	2025-12-22 00:53:55	2025-12-22 00:55:00	\N	2025-12-22 00:55:08	\N	\N	\N	\N	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-648	fb3b7680-4556-45aa-8638-1db160bbbc1c	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:09:52	2025-12-22 00:09:52	2025-12-22 00:10:01	2025-12-22 00:10:44	\N	2025-12-22 00:10:53	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-650	5602b582-b0ea-4efe-b086-efe017c921fa	3	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:37:53	2025-12-22 00:37:53	2025-12-22 00:37:59	2025-12-22 00:39:40	\N	2025-12-22 00:40:25	\N	\N	t	f	t	2	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-645	e2969ddb-a482-4cc3-81ff-f3465a7a747f	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:06:23	2025-12-21 23:06:23	2025-12-21 23:06:34	2025-12-21 23:07:06	\N	2025-12-21 23:23:54	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-649	ac0759a6-661f-4fc8-bcb5-f6b2230c7cad	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completado	2025-12-22 00:15:56	2025-12-22 00:15:56	2025-12-22 00:16:00	2025-12-22 00:16:16	\N	2025-12-22 00:27:21	\N	\N	t	f	t	1	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-749	befd9b86-754b-44f3-9b4c-c62321357d4e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 20:25:18	2026-01-18 20:25:18	2026-01-18 20:25:30	\N	\N	\N	2026-01-18 20:26:15	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-655	60be1f85-e210-4d8a-9e92-ec018866dfc3	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 23:01:01	2025-12-22 23:01:01	2025-12-22 23:01:07	2025-12-22 23:01:18	\N	2025-12-22 23:01:25	\N	\N	f	t	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-751	047c46e2-1204-49ac-b32a-e285fe813ce5	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:07:37	2026-01-18 21:07:37	2026-01-18 21:07:44	\N	\N	\N	2026-01-18 21:10:38	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-733	3e9af0c4-dd9c-4273-93fb-eb7438b4d516	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.74532600	-76.02248900	Carrera 30 25 195, 057060 Cañasgordas, Antioquia, Colombia	1.11	4	completada	2026-01-17 22:06:35	2026-01-17 22:06:35	2026-01-17 22:06:54	2026-01-17 22:13:05	\N	2026-01-17 22:14:28	\N	\N	t	t	f	\N	291440.84	efectivo	t	2026-01-17 22:48:28.132858	8662.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-753	429370c2-df25-4076-b591-211beb6df6df	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:24:59	2026-01-18 21:24:59	2026-01-18 21:25:18	\N	\N	\N	2026-01-18 21:26:37	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-755	845fce96-23b0-4154-83e8-b660197dbd07	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:04:44	2026-01-18 22:04:44	2026-01-18 22:05:06	\N	\N	\N	2026-01-18 22:06:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-735	1f05b219-a52b-4c23-9fbe-ed783abc3663	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75786900	-76.03001000	Carrera 28 37 290, 057060 Cañasgordas, Antioquia, Colombia	1.61	6	completada	2026-01-17 23:18:28	2026-01-17 23:18:28	2026-01-17 23:18:39	2026-01-17 23:18:54	\N	2026-01-17 23:19:01	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	10470.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-757	32d113c8-923c-402a-8622-52c535737bcf	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:33:05	2026-01-18 22:33:05	\N	\N	\N	\N	2026-01-18 22:33:40	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-758	42e1292c-379d-4c7e-9bea-f367eef5fa84	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:33:50	2026-01-18 22:33:50	2026-01-18 22:34:21	\N	\N	\N	2026-01-18 22:36:01	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-737	864adfc1-ba86-4c2f-87a5-269ca7cab0e2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75510200	-76.02918600	Carrera 28 34a 242, 057060 Cañasgordas, Antioquia, Colombia	0.61	4	completada	2026-01-17 23:56:34	2026-01-17 23:56:34	2026-01-17 23:56:45	2026-01-17 23:57:05	\N	2026-01-17 23:58:11	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	7458.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-759	dfb607a3-a2f4-4d0b-b5d0-ca7ee2643f1d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:36:40	2026-01-18 22:36:40	2026-01-18 22:37:18	\N	\N	\N	2026-01-18 22:37:53	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 22:37:39.469945	\N	0.00	0	f	f	moto	1	\N	\N
-739	5c86e127-e643-4fe2-84ae-9ba6ccb446e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75755300	-76.02989600	Carrera 28 37 212, 057060 Cañasgordas, Antioquia, Colombia	1.57	5	completada	2026-01-18 01:26:52	2026-01-18 01:26:52	2026-01-18 01:26:56	2026-01-18 01:27:22	2026-01-18 01:28:31	2026-01-18 01:28:31	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	10080.00	2026-01-18 01:27:13.063096	\N	118.20	1	f	f	moto	\N	\N	\N
-760	b9393862-7a23-4009-8b39-db0b0e957a2b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:02:38	2026-01-18 23:02:38	2026-01-18 23:02:58	\N	\N	\N	2026-01-18 23:03:06	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-741	6d3e0634-1729-4061-9bc2-f314f8cd40e4	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 02:22:37	2026-01-18 02:22:37	2026-01-18 02:22:51	2026-01-18 02:23:08	2026-01-18 02:24:15	2026-01-18 02:24:15	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 02:22:58.457902	\N	92.96	1	f	f	moto	\N	\N	\N
-761	0f32f657-a3ca-4491-addf-b17020b2993a	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:06:10	2026-01-18 23:06:10	2026-01-18 23:19:16	\N	\N	\N	2026-01-18 23:19:55	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 23:19:38.702909	\N	0.00	0	f	f	moto	1	\N	\N
-763	5416013c-b10b-4ded-9891-f4b9d58f9db0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:22:36	2026-01-18 23:22:36	2026-01-18 23:22:41	\N	\N	\N	2026-01-18 23:38:37	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-743	11c13dcd-1f68-454a-8978-efb84c435422	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 03:19:35	2026-01-18 03:19:35	2026-01-18 03:19:45	2026-01-18 03:20:04	2026-01-18 03:21:08	2026-01-18 03:21:08	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 03:20:02.081526	\N	0.00	1	f	f	moto	1	\N	\N
-765	0f349ad5-14d1-4bd2-8117-a26fd3430c3b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.13996280	-75.62149500	Cañaveralejo, Sabaneta, Antioquia, Colombia	126.63	180	cancelada	2026-01-18 23:53:10	2026-01-18 23:53:10	2026-01-18 23:53:21	\N	\N	\N	2026-01-19 00:00:00	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	362702.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-745	98c075f9-40ae-47cf-8157-1bfc551b1d0e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 13:56:35	2026-01-18 13:56:35	2026-01-18 13:56:41	2026-01-18 13:56:55	2026-01-18 14:15:38	2026-01-18 14:15:38	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 13:56:45.03322	\N	0.00	60	t	t	moto	1	\N	\N
-747	5c2b7846-1fb1-4288-b5e1-1ea44cc19d62	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 14:23:54	2026-01-18 14:23:54	2026-01-18 14:24:00	2026-01-18 14:29:02	2026-01-18 14:30:41	2026-01-18 14:30:41	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 14:24:03.427655	\N	0.00	95	t	t	moto	1	\N	6000.00
-657	c18f733f-c5bc-4482-a689-9338bad63684	2	transporte	\N	\N	4.60970000	-74.08170000	Test Origen	4.64970000	-74.07170000	Test Destino	5.20	15	completada	2025-12-23 00:22:08	2025-12-23 00:22:08	2025-12-23 00:22:08	\N	\N	2025-12-23 00:22:08	\N	\N	f	t	f	\N	38000.00	efectivo	t	2025-12-23 00:22:07.524355	35000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-658	cbd2b3f9-faec-44c3-b2d9-84513d6251fe	6	transporte	\N	\N	6.25346200	-75.53843500	Calle 63 16d 111, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	47	cancelada	2025-12-23 02:54:32	2025-12-23 02:54:32	2025-12-23 02:54:55	\N	\N	\N	2025-12-23 02:55:36	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	61172.82	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-659	9f802101-f158-4577-8625-d75207b866ad	6	transporte	\N	\N	6.25265000	-75.53794100	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	47	completada	2025-12-23 03:00:39	2025-12-23 03:00:39	2025-12-23 03:01:11	2025-12-23 03:02:43	\N	2025-12-23 03:03:05	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	73407.35	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-660	fa31d95f-29d9-4a84-a66a-fb5203fbe270	6	transporte	\N	\N	6.25263800	-75.53793700	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	48	cancelada	2025-12-23 03:03:52	2025-12-23 03:03:52	2025-12-23 03:03:59	\N	\N	\N	2025-12-23 03:04:33	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	73707.81	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-661	77a23816-c6a1-42ad-9623-a4e838dbeb1c	9	transporte	\N	\N	6.27755470	-75.51824010	Punto de Recogida - Prueba (dentro de 5km)	6.31255470	-75.48824010	Punto de Destino - Prueba	7.00	20	completada	2025-12-23 03:07:47	2025-12-23 03:07:47	2025-12-23 03:08:09	2025-12-23 03:09:53	\N	2025-12-23 03:10:10	\N	\N	f	t	f	\N	62062.94	efectivo	t	2025-12-23 03:10:19.792495	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-673	81e5f8c2-e062-4d91-a750-892d54bf2208	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:55:26	2025-12-29 20:55:26	2025-12-29 20:55:33	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-662	9e88486b-4731-4ae1-9fcb-87332f80e31a	9	transporte	\N	\N	6.27755470	-75.51824010	Punto de Recogida - Prueba (dentro de 5km)	6.31255470	-75.48824010	Punto de Destino - Prueba	7.00	20	completada	2025-12-23 03:16:39	2025-12-23 03:16:39	2025-12-23 03:16:49	2025-12-23 03:17:00	\N	2025-12-23 03:17:09	\N	\N	f	t	f	\N	61236.60	efectivo	t	2025-12-23 03:17:12.532288	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-663	bd8285e8-a67c-4104-a353-3f7ed8bb6d98	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	aceptada	2025-12-23 03:19:08	2025-12-23 03:19:08	2025-12-23 03:19:14	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	72314.36	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-664	faaf5585-de64-48b6-a9ac-bb123bf0a13f	6	transporte	\N	\N	6.25366300	-75.53828500	Calle 63 16d 111, 050017 Medellín, Antioquia, Colombia	2.80027410	-76.47050390	CENTRO EDUCATIVO CENTRO DE FORMACION INTEGRAL COMUNITARIO IKH TUKH KIWE LA ESTRE, Caldono - Pioya, Caldonó, Norte, Cauca, RAP Pacífico, Colombia	529.82	587	cancelada	2025-12-23 23:52:21	2025-12-23 23:52:21	\N	\N	\N	\N	2025-12-23 23:52:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	1391944.19	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-667	74f5fb58-9671-4ab9-b06c-9e69bff1311a	1	transporte	\N	\N	4.71098900	-74.07209200	Calle 10 #20-30, Centro	4.72541300	-74.08356400	Av. Principal #45-67, Norte	8.50	25	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	45000.00	efectivo	f	\N	45000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-668	0aa118d3-a59d-463e-a6c1-5eabd38760af	1	transporte	\N	\N	4.69854700	-74.08914500	Carrera 15 #10-22	4.71234500	-74.07623400	Parque Central	5.20	15	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	28000.00	efectivo	f	\N	28000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-670	90a317fb-dc89-4229-936d-0c2509bc6c64	1	mudanza	\N	\N	4.67823400	-74.05467800	Edificio Plaza, Apt 501	4.73215600	-74.02845600	Casa 23, Urb Los Pinos	15.00	45	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	125000.00	efectivo	f	\N	120000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-671	774cadc2-0977-4a1e-9247-22711895a444	1	mandado	\N	\N	4.71567800	-74.06823400	Supermercado Extra	4.71245600	-74.07123400	Mi Casa	3.00	10	cancelada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	\N	efectivo	f	\N	15000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-672	aa73d5f8-b99f-4061-9bc8-e940874e3147	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:48:22	2025-12-29 20:48:22	2025-12-29 20:48:49	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-674	0360e4ba-7b5a-4725-9875-495840dc00b6	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:59:38	2025-12-29 20:59:38	2025-12-29 20:59:46	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-675	751a3219-ea6e-458a-b4bd-fd91d5a9506b	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:17:42	2025-12-29 21:17:42	2025-12-29 21:17:57	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-676	322675b3-b4c9-4a0d-8462-c67fbb6c1d0b	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:24:32	2025-12-29 21:24:32	2025-12-29 21:24:37	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-677	bf7b578e-80f9-4f2c-8cf3-eea7ff3ece90	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:26:07	2025-12-29 21:26:07	2025-12-29 21:26:15	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-678	247ae73f-5a8a-4d45-82e3-c666a6b266ad	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:29:43	2025-12-29 21:29:43	2025-12-29 21:30:00	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-679	a1d4a547-8177-46d9-b717-5f675b8e904d	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 21:31:09	2025-12-29 21:31:09	2025-12-29 21:31:19	2025-12-29 21:31:44	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-680	869f4fab-dd7e-4c33-85e9-c7c3e41cf35a	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:40:56	2025-12-29 21:40:56	2025-12-29 21:41:03	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-681	21757b6d-1f10-4233-a0bc-6ab349d74559	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 21:45:29	2025-12-29 21:45:29	2025-12-29 21:45:38	2025-12-29 21:46:10	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-682	99ec91d1-280d-493d-917e-517bb776f038	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	conductor_llego	2025-12-29 21:47:31	2025-12-29 21:47:31	2025-12-29 21:47:44	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-683	af661b59-b089-4097-b4d7-8a53192ab827	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 23:23:31	2025-12-29 23:23:31	2025-12-29 23:23:40	2025-12-29 23:23:51	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-685	trip_69670065dcf519.66346969	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:33:10	2026-01-14 02:33:10	\N	\N	\N	2026-01-14 02:33:10	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-686	trip_696700b47d11c4.78561026	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:34:29	2026-01-14 02:34:29	\N	\N	\N	2026-01-14 02:34:29	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-687	trip_696700f1b26531.01615415	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:35:30	2026-01-14 02:35:30	\N	\N	\N	2026-01-14 02:35:30	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-688	trip_6967012a034af8.81870831	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:36:26	2026-01-14 02:36:26	\N	\N	\N	2026-01-14 02:36:26	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-689	trip_6967015cbed817.34557656	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-690	trip_6967015cc2f726.28636600	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-691	trip_6967015cc3dd01.51522905	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-692	trip_6967015cc4b9d9.29342693	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-693	trip_6967015cc5af51.21118155	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-694	trip_6967015cc67fa4.05328095	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-695	trip_6967015cc78b48.10294080	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-696	trip_6967015cc823c2.90764615	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-697	trip_6967015cc8c4f5.42674348	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-698	trip_6967015cc94403.73145604	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-699	trip_6967015cca0e27.81196448	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-700	trip_6967015ccafc40.73145627	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-701	trip_6967015ccbe973.51041687	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-702	trip_6967015cccbc67.57255690	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-703	trip_6967015ccd5029.12234334	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-704	trip_6967015cce3030.10136522	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-705	trip_6967015ccee7c2.17001484	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-706	trip_6967015ccf5e38.83927736	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-707	trip_6967015cd02369.15308568	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-708	trip_6967015cd0be01.04771192	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-709	trip_6967015cd18a54.04738514	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-710	trip_6967015cd234c4.67751676	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-711	trip_6967015cd314c3.17330257	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-712	trip_6967015cd40a74.86161000	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-713	trip_6967015cd4cc68.72840568	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-714	trip_6967015cd55615.09782641	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-715	trip_6967015cd60934.63585006	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-716	trip_6967015cd6d862.28844971	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-717	trip_6967015cd77bd2.85454591	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-718	trip_6967015cd81cc5.98796601	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-719	trip_6967015cd8d218.06636252	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-720	trip_6967015cd972b9.59565868	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-721	trip_6967015cda4f03.91476709	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-722	trip_6967015cdb0e30.62668180	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-723	trip_6967015cdbf9e5.30365560	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-724	trip_6967015cdc83f9.36535523	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-725	69657841-ce9a-4494-b5df-e74001088356	276	transporte	\N	\N	6.25346300	-75.53849300	Cl 64cr 16 127, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	81	pendiente	2026-01-16 02:40:26	2026-01-16 02:40:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161140.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-726	3bb70e8e-e6fa-4a45-9797-b38fa09ebce2	276	transporte	\N	\N	6.25264000	-75.53793800	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	81	pendiente	2026-01-16 03:06:06	2026-01-16 03:06:06	\N	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161140.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-748	5137f71c-a510-4d74-9e9a-2d8666bf7c0d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 15:04:46	2026-01-18 15:04:46	2026-01-18 15:04:56	2026-01-18 15:05:14	2026-01-18 15:05:52	2026-01-18 15:05:52	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 15:05:08.189171	\N	0.00	36	t	t	moto	1	\N	6000.00
-727	af24a0c2-0f09-43f6-b38a-a654e9e1d521	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	cancelada	2026-01-16 19:23:05	2026-01-16 19:23:05	2026-01-16 19:23:30	\N	\N	\N	2026-01-16 19:24:39	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-750	23bf8717-6bd1-4ff3-a54d-75fbbd1d5bd6	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:01:44	2026-01-18 21:01:44	2026-01-18 21:01:52	\N	\N	\N	2026-01-18 21:02:37	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-728	89e01d90-704b-4dbc-8f9a-32511b94ee41	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	cancelada	2026-01-16 19:58:31	2026-01-16 19:58:31	2026-01-16 19:58:39	\N	\N	\N	2026-01-16 20:04:25	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-734	8303b37c-9316-412e-b587-325c5543a6fb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75589500	-76.02884500	Cañasgordas - Uramita, 057068 Cañasgordas, Antioquia, Colombia	1.33	4	completada	2026-01-17 23:00:27	2026-01-17 23:00:27	2026-01-17 23:00:39	2026-01-17 23:00:54	\N	2026-01-17 23:00:57	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	9185.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-752	5b529dc7-903a-4d36-bfc9-68c7ab998b2b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:17:31	2026-01-18 21:17:31	2026-01-18 21:17:37	\N	\N	\N	2026-01-18 21:19:05	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-754	eb40b09c-2385-4281-a24c-f6a41cda6628	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:26:53	2026-01-18 21:26:53	2026-01-18 21:28:06	\N	\N	\N	2026-01-18 21:30:34	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-736	57dc6309-c5e3-4f28-9484-f5f67e203d7c	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75385500	-76.02824800	Carrera 28 34a 67, 057060 Cañasgordas, Antioquia, Colombia	0.43	3	completada	2026-01-17 23:32:01	2026-01-17 23:32:01	2026-01-17 23:32:07	2026-01-17 23:32:25	\N	2026-01-17 23:32:28	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	6739.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-756	711d242d-9777-4527-a973-0da37b0e61df	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:13:00	2026-01-18 22:13:00	2026-01-18 22:13:15	\N	\N	\N	2026-01-18 22:13:36	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-729	788b114e-b95a-417f-846a-552ac3126736	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 20:36:47	2026-01-16 20:36:47	2026-01-16 20:37:03	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-730	bbaf09a8-e7eb-4b42-91d4-bcd97dc03c80	276	transporte	\N	\N	6.25465300	-75.53949100	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 21:33:41	2026-01-16 21:33:41	2026-01-16 21:33:49	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-731	8fa54fca-307f-4845-895b-6c3b7bbc2bcb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 22:11:03	2026-01-16 22:11:03	2026-01-16 22:11:07	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161440.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-732	14f4d4da-80fc-45fb-be50-d54a19d13ead	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 22:21:29	2026-01-16 22:21:29	2026-01-16 22:21:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161440.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N
-738	c99a5e21-d86e-408a-a6c8-a1d22d9544c5	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75498400	-76.02748400	Cañasgordas - Uramita, 057060 Cañasgordas, Antioquia, Colombia	1.14	4	completada	2026-01-18 00:26:06	2026-01-18 00:26:06	2026-01-18 00:26:12	2026-01-18 00:26:34	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	8741.00	2026-01-18 00:26:21.094091	\N	0.00	0	f	f	moto	\N	\N	\N
-762	855c7950-154f-4175-b18d-611eb40af327	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:18:53	2026-01-18 23:18:53	\N	\N	\N	\N	2026-01-18 23:20:05	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-742	b07caacc-644d-4705-bad9-736f8af0e792	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 02:58:11	2026-01-18 02:58:11	2026-01-18 02:58:20	2026-01-18 02:58:37	2026-01-18 03:00:09	2026-01-18 03:00:09	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 02:58:31.801829	\N	0.00	1	f	f	moto	\N	\N	\N
-740	9c6ee1a0-5270-475f-ae96-e03b028ac4a0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75566000	-76.02965500	Carrera 28 37 72, 057060 Cañasgordas, Antioquia, Colombia	0.69	4	completada	2026-01-18 02:08:16	2026-01-18 02:08:16	2026-01-18 02:08:25	2026-01-18 02:08:37	2026-01-18 02:10:13	2026-01-18 02:10:13	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	7654.00	2026-01-18 02:08:34.6578	\N	118.23	1	f	f	moto	\N	\N	\N
-744	83cdda62-d619-4b58-baed-43d661019ba6	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 13:10:41	2026-01-18 13:10:41	2026-01-18 13:10:47	2026-01-18 13:11:28	2026-01-18 13:12:19	2026-01-18 13:12:19	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 13:10:59.20798	\N	0.00	1	t	t	moto	1	\N	\N
-746	33620b1d-0873-44e9-bdd5-fd812ee29a5b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	conductor_llego	2026-01-18 14:20:15	2026-01-18 14:20:15	2026-01-18 14:20:22	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	63225.00	2026-01-18 14:20:32.515372	\N	0.00	0	f	f	moto	1	\N	\N
-764	19bd99ac-6631-4287-8ea4-3553e0e531e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:47:12	2026-01-18 23:47:12	2026-01-18 23:47:18	\N	\N	\N	2026-01-18 23:52:21	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-772	60992ec3-382b-42f7-98e3-37d3767b0d04	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:49:51	2026-01-19 22:49:51	2026-01-19 22:49:59	2026-01-19 22:50:28	2026-01-19 22:51:15	2026-01-19 22:51:15	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:50:17.802269	\N	0.00	1	t	t	moto	1	\N	6000.00
-766	dac02d14-8082-4203-9164-00eb15eabe7f	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 00:00:57	2026-01-19 00:00:57	2026-01-19 00:01:02	2026-01-19 00:02:55	2026-01-19 00:12:07	2026-01-19 00:12:07	\N	\N	f	f	f	\N	7800.00	efectivo	f	\N	75869.00	2026-01-19 00:01:59.33322	\N	0.00	549	t	t	moto	1	\N	6287.50
-778	6ecfa46f-7707-4cfc-b7e9-98cd153ff957	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 23:22:27	2026-01-19 23:22:27	2026-01-19 23:22:32	2026-01-19 23:22:45	2026-01-19 23:23:07	2026-01-19 23:23:07	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 23:22:39.90858	\N	0.00	1	t	t	moto	1	\N	6000.00
-777	11167664-a1aa-4181-93d8-e36570aeacb3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 23:21:39	2026-01-19 23:21:39	2026-01-19 23:21:45	2026-01-19 23:21:50	\N	\N	2026-01-19 23:22:20	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-19 23:21:47.784176	\N	0.00	26	f	f	moto	1	\N	6000.00
-767	3a9e1276-dade-4e46-acf7-09973332a22d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 03:24:08	2026-01-19 03:24:08	2026-01-19 03:24:14	2026-01-19 03:24:35	2026-01-19 03:26:09	2026-01-19 03:26:09	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 03:24:23.401633	\N	0.00	92	t	t	moto	1	\N	6000.00
-773	c0ac9e14-79da-4858-9aa8-33eced978b4f	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:56:38	2026-01-19 22:56:38	\N	\N	\N	\N	2026-01-19 22:56:54	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-769	97b07103-e39a-4032-a631-2cf6ee9b9706	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:21:13	2026-01-19 22:21:13	2026-01-19 22:21:23	2026-01-19 22:22:22	2026-01-19 22:23:22	2026-01-19 22:23:22	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:22:03.32894	\N	0.00	1	t	t	moto	1	\N	6000.00
-779	e71a330c-ac7f-4811-b498-d56da67790f2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:02:25	2026-01-20 00:02:25	2026-01-20 00:02:32	2026-01-20 00:02:47	2026-01-20 00:03:40	2026-01-20 00:03:40	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:02:45.335332	\N	0.00	1	t	t	moto	1	\N	6000.00
-768	901473ca-19b2-40a4-9a79-98cd86b814cf	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 03:38:12	2026-01-19 03:38:12	2026-01-19 03:39:26	2026-01-19 03:40:18	2026-01-19 03:40:29	2026-01-19 03:40:29	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 03:39:40.89617	\N	92.96	0	t	t	moto	1	\N	6000.00
-770	fd810323-449a-4505-9d00-f627bd7229e4	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:27:44	2026-01-19 22:27:44	\N	\N	\N	\N	2026-01-19 22:28:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	121077.00	\N	\N	0.00	0	f	f	auto	1	\N	\N
-771	7ed4b8bd-682a-4cdd-aed9-8434d5a12d10	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:49:31	2026-01-19 22:49:31	\N	\N	\N	\N	2026-01-19 22:49:42	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	121077.00	\N	\N	0.00	0	f	f	auto	1	\N	\N
-780	fd2a442a-4f0c-44c6-a3be-bd09f203145a	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:32:46	2026-01-20 00:32:46	2026-01-20 00:32:52	2026-01-20 00:33:03	2026-01-20 00:33:32	2026-01-20 00:33:32	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:32:58.760083	\N	0.00	1	t	t	moto	1	\N	6000.00
-774	69dec554-b5fb-4b1a-ace1-3f2047ddfc3c	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:57:02	2026-01-19 22:57:02	\N	\N	\N	\N	2026-01-19 22:57:51	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-781	9418edec-b718-4abc-90d2-844bf11bcfba	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-20 00:46:48	2026-01-20 00:46:48	2026-01-20 00:46:55	\N	\N	\N	2026-01-20 00:47:11	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N
-782	48501c44-14b7-42d2-b415-540fe6067fd2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:51:36	2026-01-20 00:51:36	2026-01-20 00:51:39	2026-01-20 00:51:53	2026-01-20 00:52:14	2026-01-20 00:52:14	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:51:48.727922	\N	0.00	1	t	t	moto	1	\N	6000.00
-775	b838c07f-0a34-4d03-9fe3-ea38b493f274	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:59:29	2026-01-19 22:59:29	2026-01-19 22:59:39	2026-01-19 23:00:00	2026-01-19 23:00:59	2026-01-19 23:00:59	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:59:51.132407	\N	92.96	1	t	t	moto	1	\N	6000.00
-776	35e52b2a-74c9-4e56-8393-70b2a1d300fb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 23:18:32	2026-01-19 23:18:32	2026-01-19 23:18:39	2026-01-19 23:18:48	2026-01-19 23:19:18	2026-01-19 23:19:18	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 23:18:46.369879	\N	0.00	1	t	t	moto	1	\N	6000.00
-786	13b4ab22-c287-418a-a0e7-eb2fe2dda0fc	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:53:00	2026-01-20 01:53:00	2026-01-20 01:53:11	2026-01-20 01:53:39	2026-01-20 01:54:07	2026-01-20 01:54:07	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:53:27.943106	\N	0.00	1	t	t	moto	1	\N	6000.00
-785	a42f7a19-8b30-400f-94a1-63ff829262e0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:33:39	2026-01-20 01:33:39	2026-01-20 01:33:53	2026-01-20 01:35:17	2026-01-20 01:36:38	2026-01-20 01:36:38	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:35:09.349548	\N	0.00	2	t	t	moto	1	\N	6000.00
-783	0e85a3a7-cc39-4e1c-83b6-6bf66bd40376	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:03:45	2026-01-20 01:03:45	2026-01-20 01:03:50	2026-01-20 01:04:12	2026-01-20 01:04:46	2026-01-20 01:04:46	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:04:05.379051	\N	0.00	1	t	t	moto	1	\N	6000.00
-784	35291d5e-210d-4e3e-ae58-819403bcc8e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:19:02	2026-01-20 01:19:02	2026-01-20 01:19:07	2026-01-20 01:19:42	2026-01-20 01:20:29	2026-01-20 01:20:29	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:19:34.502432	\N	0.00	1	t	t	moto	1	\N	6000.00
-787	ed00a03f-70dc-42e8-9042-5a8baa95807b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 01:37:12	2026-01-21 01:37:12	2026-01-21 01:37:24	2026-01-21 01:37:49	2026-01-21 01:38:49	2026-01-21 01:38:49	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 01:37:38.047449	\N	0.00	1	t	t	moto	1	\N	6000.00
+COPY public.solicitudes_servicio (id, uuid_solicitud, cliente_id, tipo_servicio, ubicacion_recogida_id, ubicacion_destino_id, latitud_recogida, longitud_recogida, direccion_recogida, latitud_destino, longitud_destino, direccion_destino, distancia_estimada, tiempo_estimado, estado, fecha_creacion, solicitado_en, aceptado_en, recogido_en, entregado_en, completado_en, cancelado_en, motivo_cancelacion, cliente_confirma_pago, conductor_confirma_recibo, tiene_disputa, disputa_id, precio_final, metodo_pago, pago_confirmado, pago_confirmado_en, precio_estimado, conductor_llego_en, metodo_pago_usado, distancia_recorrida, tiempo_transcurrido, precio_ajustado_por_tracking, tuvo_desvio_ruta, tipo_vehiculo, empresa_id, conductor_id, precio_en_tracking, desglose_precio) FROM stdin;
+629	699a839e-587e-4ffc-86c4-2e380521a503	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:30:00	2025-12-21 20:30:00	2025-12-21 20:30:07	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+630	8a544e12-5a76-4ed8-a61d-51f75d7ab9b6	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:54:34	2025-12-21 20:54:34	2025-12-21 20:54:36	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+631	50cac957-abfa-4af0-8ca8-057b78448a14	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 20:57:49	2025-12-21 20:57:49	2025-12-21 20:57:53	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+632	be3e2557-af78-490e-96bd-8567512d429b	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:02:42	2025-12-21 21:02:42	2025-12-21 21:02:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+633	ff13dcd9-3540-44e1-924f-f4a8019e210b	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:16:43	2025-12-21 21:16:43	2025-12-21 21:16:52	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+634	1e06e459-2ac9-4b9a-b42e-978094f0f12d	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:23:21	2025-12-21 21:23:21	2025-12-21 21:23:25	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+635	004f5f2a-a249-4a7c-9abd-ed0860efb744	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:35:19	2025-12-21 21:35:19	2025-12-21 21:35:26	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+636	c0c54227-8aea-4cab-8e9a-4f7ac6f5a0c6	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 21:45:56	2025-12-21 21:45:56	2025-12-21 21:46:05	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+653	addd37b6-f9c5-4588-81db-af483a760507	8	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 01:28:49	2025-12-22 01:28:49	2025-12-22 01:28:56	2025-12-22 01:29:58	\N	2025-12-22 01:30:35	\N	\N	t	t	f	5	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+646	6ffeb18a-8621-4964-8582-2c4ee6362f8d	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:29:20	2025-12-21 23:29:20	2025-12-21 23:29:26	2025-12-21 23:29:39	\N	2025-12-21 23:30:30	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+639	c47b0fd9-73c6-41ea-9228-a874f7f925e8	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	conductor_llego	2025-12-21 22:17:43	2025-12-21 22:17:43	2025-12-21 22:17:58	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+640	af4eccae-e352-4af9-89ac-f4349b2ab83a	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	conductor_llego	2025-12-21 22:27:21	2025-12-21 22:27:21	2025-12-21 22:27:23	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+638	914735ed-1eb5-4c6e-b459-975db47c8fab	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-21 22:14:54	2025-12-21 22:14:54	2025-12-21 22:15:05	2025-12-21 22:29:12	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+637	0ce2cf12-7002-403b-9d6a-a3c0151be528	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	conductor_llego	2025-12-21 21:51:35	2025-12-21 21:51:35	2025-12-21 21:51:43	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+652	7bfde53f-13cd-43e2-88f2-d4d2bcbe3fd5	6	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 01:17:20	2025-12-22 01:17:20	2025-12-22 01:17:33	2025-12-22 01:18:19	\N	2025-12-22 01:18:28	\N	\N	\N	\N	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+641	8e0e30c9-c858-4fe5-9473-65ef5a9191cc	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:37:57	2025-12-21 22:37:57	2025-12-21 22:38:25	2025-12-21 22:39:03	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+642	37439b27-d3fe-4867-84c7-7d79ba534199	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:44:32	2025-12-21 22:44:32	2025-12-21 22:44:54	2025-12-21 22:45:30	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+654	645e6e9d-8e01-4466-bd73-af35426b5237	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 22:52:30	2025-12-22 22:52:30	2025-12-22 22:53:10	2025-12-22 22:53:22	\N	2025-12-22 22:53:34	\N	\N	f	t	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+643	595351a7-2044-4906-a9ab-dfa492f4fb81	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	en_curso	2025-12-21 22:53:42	2025-12-21 22:53:42	2025-12-21 22:54:05	2025-12-21 22:54:30	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+644	c4ae3c1f-e029-4558-8663-81149a640596	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-21 22:56:42	2025-12-21 22:56:42	2025-12-21 22:56:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+647	1a169b13-fc5e-4588-ae54-be1e96683d17	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:31:55	2025-12-21 23:31:55	2025-12-21 23:32:02	2025-12-21 23:32:48	\N	2025-12-21 23:33:21	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+651	24fe169d-80f5-4eec-a39a-4594b5b1c5dc	4	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:53:50	2025-12-22 00:53:50	2025-12-22 00:53:55	2025-12-22 00:55:00	\N	2025-12-22 00:55:08	\N	\N	\N	\N	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+648	fb3b7680-4556-45aa-8638-1db160bbbc1c	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:09:52	2025-12-22 00:09:52	2025-12-22 00:10:01	2025-12-22 00:10:44	\N	2025-12-22 00:10:53	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+650	5602b582-b0ea-4efe-b086-efe017c921fa	3	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 00:37:53	2025-12-22 00:37:53	2025-12-22 00:37:59	2025-12-22 00:39:40	\N	2025-12-22 00:40:25	\N	\N	t	f	t	2	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+645	e2969ddb-a482-4cc3-81ff-f3465a7a747f	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-21 23:06:23	2025-12-21 23:06:23	2025-12-21 23:06:34	2025-12-21 23:07:06	\N	2025-12-21 23:23:54	\N	\N	f	f	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+649	ac0759a6-661f-4fc8-bcb5-f6b2230c7cad	2	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completado	2025-12-22 00:15:56	2025-12-22 00:15:56	2025-12-22 00:16:00	2025-12-22 00:16:16	\N	2025-12-22 00:27:21	\N	\N	t	f	t	1	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+749	befd9b86-754b-44f3-9b4c-c62321357d4e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 20:25:18	2026-01-18 20:25:18	2026-01-18 20:25:30	\N	\N	\N	2026-01-18 20:26:15	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+655	60be1f85-e210-4d8a-9e92-ec018866dfc3	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	completada	2025-12-22 23:01:01	2025-12-22 23:01:01	2025-12-22 23:01:07	2025-12-22 23:01:18	\N	2025-12-22 23:01:25	\N	\N	f	t	f	\N	50000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+751	047c46e2-1204-49ac-b32a-e285fe813ce5	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:07:37	2026-01-18 21:07:37	2026-01-18 21:07:44	\N	\N	\N	2026-01-18 21:10:38	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+733	3e9af0c4-dd9c-4273-93fb-eb7438b4d516	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.74532600	-76.02248900	Carrera 30 25 195, 057060 Cañasgordas, Antioquia, Colombia	1.11	4	completada	2026-01-17 22:06:35	2026-01-17 22:06:35	2026-01-17 22:06:54	2026-01-17 22:13:05	\N	2026-01-17 22:14:28	\N	\N	t	t	f	\N	291440.84	efectivo	t	2026-01-17 22:48:28.132858	8662.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+753	429370c2-df25-4076-b591-211beb6df6df	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:24:59	2026-01-18 21:24:59	2026-01-18 21:25:18	\N	\N	\N	2026-01-18 21:26:37	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+755	845fce96-23b0-4154-83e8-b660197dbd07	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:04:44	2026-01-18 22:04:44	2026-01-18 22:05:06	\N	\N	\N	2026-01-18 22:06:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+735	1f05b219-a52b-4c23-9fbe-ed783abc3663	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75786900	-76.03001000	Carrera 28 37 290, 057060 Cañasgordas, Antioquia, Colombia	1.61	6	completada	2026-01-17 23:18:28	2026-01-17 23:18:28	2026-01-17 23:18:39	2026-01-17 23:18:54	\N	2026-01-17 23:19:01	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	10470.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+757	32d113c8-923c-402a-8622-52c535737bcf	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:33:05	2026-01-18 22:33:05	\N	\N	\N	\N	2026-01-18 22:33:40	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+758	42e1292c-379d-4c7e-9bea-f367eef5fa84	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:33:50	2026-01-18 22:33:50	2026-01-18 22:34:21	\N	\N	\N	2026-01-18 22:36:01	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+737	864adfc1-ba86-4c2f-87a5-269ca7cab0e2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75510200	-76.02918600	Carrera 28 34a 242, 057060 Cañasgordas, Antioquia, Colombia	0.61	4	completada	2026-01-17 23:56:34	2026-01-17 23:56:34	2026-01-17 23:56:45	2026-01-17 23:57:05	\N	2026-01-17 23:58:11	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	7458.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+759	dfb607a3-a2f4-4d0b-b5d0-ca7ee2643f1d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:36:40	2026-01-18 22:36:40	2026-01-18 22:37:18	\N	\N	\N	2026-01-18 22:37:53	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 22:37:39.469945	\N	0.00	0	f	f	moto	1	\N	\N	\N
+739	5c86e127-e643-4fe2-84ae-9ba6ccb446e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75755300	-76.02989600	Carrera 28 37 212, 057060 Cañasgordas, Antioquia, Colombia	1.57	5	completada	2026-01-18 01:26:52	2026-01-18 01:26:52	2026-01-18 01:26:56	2026-01-18 01:27:22	2026-01-18 01:28:31	2026-01-18 01:28:31	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	10080.00	2026-01-18 01:27:13.063096	\N	118.20	1	f	f	moto	\N	\N	\N	\N
+760	b9393862-7a23-4009-8b39-db0b0e957a2b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:02:38	2026-01-18 23:02:38	2026-01-18 23:02:58	\N	\N	\N	2026-01-18 23:03:06	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+741	6d3e0634-1729-4061-9bc2-f314f8cd40e4	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 02:22:37	2026-01-18 02:22:37	2026-01-18 02:22:51	2026-01-18 02:23:08	2026-01-18 02:24:15	2026-01-18 02:24:15	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 02:22:58.457902	\N	92.96	1	f	f	moto	\N	\N	\N	\N
+761	0f32f657-a3ca-4491-addf-b17020b2993a	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:06:10	2026-01-18 23:06:10	2026-01-18 23:19:16	\N	\N	\N	2026-01-18 23:19:55	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 23:19:38.702909	\N	0.00	0	f	f	moto	1	\N	\N	\N
+763	5416013c-b10b-4ded-9891-f4b9d58f9db0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:22:36	2026-01-18 23:22:36	2026-01-18 23:22:41	\N	\N	\N	2026-01-18 23:38:37	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+743	11c13dcd-1f68-454a-8978-efb84c435422	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 03:19:35	2026-01-18 03:19:35	2026-01-18 03:19:45	2026-01-18 03:20:04	2026-01-18 03:21:08	2026-01-18 03:21:08	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 03:20:02.081526	\N	0.00	1	f	f	moto	1	\N	\N	\N
+765	0f349ad5-14d1-4bd2-8117-a26fd3430c3b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.13996280	-75.62149500	Cañaveralejo, Sabaneta, Antioquia, Colombia	126.63	180	cancelada	2026-01-18 23:53:10	2026-01-18 23:53:10	2026-01-18 23:53:21	\N	\N	\N	2026-01-19 00:00:00	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	362702.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+745	98c075f9-40ae-47cf-8157-1bfc551b1d0e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 13:56:35	2026-01-18 13:56:35	2026-01-18 13:56:41	2026-01-18 13:56:55	2026-01-18 14:15:38	2026-01-18 14:15:38	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 13:56:45.03322	\N	0.00	60	t	t	moto	1	\N	\N	\N
+747	5c2b7846-1fb1-4288-b5e1-1ea44cc19d62	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 14:23:54	2026-01-18 14:23:54	2026-01-18 14:24:00	2026-01-18 14:29:02	2026-01-18 14:30:41	2026-01-18 14:30:41	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 14:24:03.427655	\N	0.00	95	t	t	moto	1	\N	6000.00	\N
+657	c18f733f-c5bc-4482-a689-9338bad63684	2	transporte	\N	\N	4.60970000	-74.08170000	Test Origen	4.64970000	-74.07170000	Test Destino	5.20	15	completada	2025-12-23 00:22:08	2025-12-23 00:22:08	2025-12-23 00:22:08	\N	\N	2025-12-23 00:22:08	\N	\N	f	t	f	\N	38000.00	efectivo	t	2025-12-23 00:22:07.524355	35000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+658	cbd2b3f9-faec-44c3-b2d9-84513d6251fe	6	transporte	\N	\N	6.25346200	-75.53843500	Calle 63 16d 111, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	47	cancelada	2025-12-23 02:54:32	2025-12-23 02:54:32	2025-12-23 02:54:55	\N	\N	\N	2025-12-23 02:55:36	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	61172.82	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+659	9f802101-f158-4577-8625-d75207b866ad	6	transporte	\N	\N	6.25265000	-75.53794100	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	47	completada	2025-12-23 03:00:39	2025-12-23 03:00:39	2025-12-23 03:01:11	2025-12-23 03:02:43	\N	2025-12-23 03:03:05	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	73407.35	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+660	fa31d95f-29d9-4a84-a66a-fb5203fbe270	6	transporte	\N	\N	6.25263800	-75.53793700	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.71	48	cancelada	2025-12-23 03:03:52	2025-12-23 03:03:52	2025-12-23 03:03:59	\N	\N	\N	2025-12-23 03:04:33	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	73707.81	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+661	77a23816-c6a1-42ad-9623-a4e838dbeb1c	9	transporte	\N	\N	6.27755470	-75.51824010	Punto de Recogida - Prueba (dentro de 5km)	6.31255470	-75.48824010	Punto de Destino - Prueba	7.00	20	completada	2025-12-23 03:07:47	2025-12-23 03:07:47	2025-12-23 03:08:09	2025-12-23 03:09:53	\N	2025-12-23 03:10:10	\N	\N	f	t	f	\N	62062.94	efectivo	t	2025-12-23 03:10:19.792495	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+673	81e5f8c2-e062-4d91-a750-892d54bf2208	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:55:26	2025-12-29 20:55:26	2025-12-29 20:55:33	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+662	9e88486b-4731-4ae1-9fcb-87332f80e31a	9	transporte	\N	\N	6.27755470	-75.51824010	Punto de Recogida - Prueba (dentro de 5km)	6.31255470	-75.48824010	Punto de Destino - Prueba	7.00	20	completada	2025-12-23 03:16:39	2025-12-23 03:16:39	2025-12-23 03:16:49	2025-12-23 03:17:00	\N	2025-12-23 03:17:09	\N	\N	f	t	f	\N	61236.60	efectivo	t	2025-12-23 03:17:12.532288	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+663	bd8285e8-a67c-4104-a353-3f7ed8bb6d98	6	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.15767810	-75.64338780	La Estrella, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 055460, Colombia	22.38	46	aceptada	2025-12-23 03:19:08	2025-12-23 03:19:08	2025-12-23 03:19:14	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	72314.36	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+664	faaf5585-de64-48b6-a9ac-bb123bf0a13f	6	transporte	\N	\N	6.25366300	-75.53828500	Calle 63 16d 111, 050017 Medellín, Antioquia, Colombia	2.80027410	-76.47050390	CENTRO EDUCATIVO CENTRO DE FORMACION INTEGRAL COMUNITARIO IKH TUKH KIWE LA ESTRE, Caldono - Pioya, Caldonó, Norte, Cauca, RAP Pacífico, Colombia	529.82	587	cancelada	2025-12-23 23:52:21	2025-12-23 23:52:21	\N	\N	\N	\N	2025-12-23 23:52:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	1391944.19	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+667	74f5fb58-9671-4ab9-b06c-9e69bff1311a	1	transporte	\N	\N	4.71098900	-74.07209200	Calle 10 #20-30, Centro	4.72541300	-74.08356400	Av. Principal #45-67, Norte	8.50	25	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	45000.00	efectivo	f	\N	45000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+668	0aa118d3-a59d-463e-a6c1-5eabd38760af	1	transporte	\N	\N	4.69854700	-74.08914500	Carrera 15 #10-22	4.71234500	-74.07623400	Parque Central	5.20	15	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	28000.00	efectivo	f	\N	28000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+670	90a317fb-dc89-4229-936d-0c2509bc6c64	1	mudanza	\N	\N	4.67823400	-74.05467800	Edificio Plaza, Apt 501	4.73215600	-74.02845600	Casa 23, Urb Los Pinos	15.00	45	completada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	125000.00	efectivo	f	\N	120000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+671	774cadc2-0977-4a1e-9247-22711895a444	1	mandado	\N	\N	4.71567800	-74.06823400	Supermercado Extra	4.71245600	-74.07123400	Mi Casa	3.00	10	cancelada	2025-12-24 00:48:26	2025-12-24 00:48:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	\N	efectivo	f	\N	15000.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+672	aa73d5f8-b99f-4061-9bc8-e940874e3147	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:48:22	2025-12-29 20:48:22	2025-12-29 20:48:49	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+674	0360e4ba-7b5a-4725-9875-495840dc00b6	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 20:59:38	2025-12-29 20:59:38	2025-12-29 20:59:46	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+675	751a3219-ea6e-458a-b4bd-fd91d5a9506b	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:17:42	2025-12-29 21:17:42	2025-12-29 21:17:57	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+676	322675b3-b4c9-4a0d-8462-c67fbb6c1d0b	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:24:32	2025-12-29 21:24:32	2025-12-29 21:24:37	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+677	bf7b578e-80f9-4f2c-8cf3-eea7ff3ece90	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:26:07	2025-12-29 21:26:07	2025-12-29 21:26:15	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+678	247ae73f-5a8a-4d45-82e3-c666a6b266ad	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:29:43	2025-12-29 21:29:43	2025-12-29 21:30:00	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+679	a1d4a547-8177-46d9-b717-5f675b8e904d	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 21:31:09	2025-12-29 21:31:09	2025-12-29 21:31:19	2025-12-29 21:31:44	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+680	869f4fab-dd7e-4c33-85e9-c7c3e41cf35a	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	aceptada	2025-12-29 21:40:56	2025-12-29 21:40:56	2025-12-29 21:41:03	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+681	21757b6d-1f10-4233-a0bc-6ab349d74559	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 21:45:29	2025-12-29 21:45:29	2025-12-29 21:45:38	2025-12-29 21:46:10	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+682	99ec91d1-280d-493d-917e-517bb776f038	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	conductor_llego	2025-12-29 21:47:31	2025-12-29 21:47:31	2025-12-29 21:47:44	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+683	af661b59-b089-4097-b4d7-8a53192ab827	9	transporte	\N	\N	6.27961830	-75.51955670	Punto de Recogida - Prueba (dentro de 5km)	6.31461830	-75.48955670	Punto de Destino - Prueba	7.00	20	en_curso	2025-12-29 23:23:31	2025-12-29 23:23:31	2025-12-29 23:23:40	2025-12-29 23:23:51	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+685	trip_69670065dcf519.66346969	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:33:10	2026-01-14 02:33:10	\N	\N	\N	2026-01-14 02:33:10	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+686	trip_696700b47d11c4.78561026	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:34:29	2026-01-14 02:34:29	\N	\N	\N	2026-01-14 02:34:29	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+687	trip_696700f1b26531.01615415	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:35:30	2026-01-14 02:35:30	\N	\N	\N	2026-01-14 02:35:30	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+688	trip_6967012a034af8.81870831	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:36:26	2026-01-14 02:36:26	\N	\N	\N	2026-01-14 02:36:26	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+689	trip_6967015cbed817.34557656	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+690	trip_6967015cc2f726.28636600	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+691	trip_6967015cc3dd01.51522905	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+692	trip_6967015cc4b9d9.29342693	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+693	trip_6967015cc5af51.21118155	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+694	trip_6967015cc67fa4.05328095	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+695	trip_6967015cc78b48.10294080	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+696	trip_6967015cc823c2.90764615	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+697	trip_6967015cc8c4f5.42674348	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+698	trip_6967015cc94403.73145604	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+699	trip_6967015cca0e27.81196448	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+700	trip_6967015ccafc40.73145627	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+701	trip_6967015ccbe973.51041687	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+702	trip_6967015cccbc67.57255690	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+703	trip_6967015ccd5029.12234334	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+704	trip_6967015cce3030.10136522	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+705	trip_6967015ccee7c2.17001484	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+706	trip_6967015ccf5e38.83927736	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+707	trip_6967015cd02369.15308568	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+708	trip_6967015cd0be01.04771192	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+709	trip_6967015cd18a54.04738514	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+710	trip_6967015cd234c4.67751676	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+711	trip_6967015cd314c3.17330257	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+712	trip_6967015cd40a74.86161000	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+713	trip_6967015cd4cc68.72840568	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+714	trip_6967015cd55615.09782641	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+715	trip_6967015cd60934.63585006	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+716	trip_6967015cd6d862.28844971	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+717	trip_6967015cd77bd2.85454591	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+718	trip_6967015cd81cc5.98796601	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+719	trip_6967015cd8d218.06636252	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+720	trip_6967015cd972b9.59565868	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+721	trip_6967015cda4f03.91476709	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+722	trip_6967015cdb0e30.62668180	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+723	trip_6967015cdbf9e5.30365560	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+724	trip_6967015cdc83f9.36535523	1	transporte	\N	\N	6.25180000	-75.56360000	Calle 10	6.25300000	-75.56400000	Carrera 43	2.50	15	completada	2026-01-14 02:37:17	2026-01-14 02:37:17	\N	\N	\N	2026-01-14 02:37:17	\N	\N	f	f	f	\N	15000.00	efectivo	f	\N	0.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+725	69657841-ce9a-4494-b5df-e74001088356	276	transporte	\N	\N	6.25346300	-75.53849300	Cl 64cr 16 127, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	81	pendiente	2026-01-16 02:40:26	2026-01-16 02:40:26	\N	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161140.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+726	3bb70e8e-e6fa-4a45-9797-b38fa09ebce2	276	transporte	\N	\N	6.25264000	-75.53793800	Cr 17bb 57e-38, 050017 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	81	pendiente	2026-01-16 03:06:06	2026-01-16 03:06:06	\N	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161140.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+748	5137f71c-a510-4d74-9e9a-2d8666bf7c0d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 15:04:46	2026-01-18 15:04:46	2026-01-18 15:04:56	2026-01-18 15:05:14	2026-01-18 15:05:52	2026-01-18 15:05:52	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 15:05:08.189171	\N	0.00	36	t	t	moto	1	\N	6000.00	\N
+727	af24a0c2-0f09-43f6-b38a-a654e9e1d521	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	cancelada	2026-01-16 19:23:05	2026-01-16 19:23:05	2026-01-16 19:23:30	\N	\N	\N	2026-01-16 19:24:39	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+750	23bf8717-6bd1-4ff3-a54d-75fbbd1d5bd6	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:01:44	2026-01-18 21:01:44	2026-01-18 21:01:52	\N	\N	\N	2026-01-18 21:02:37	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+728	89e01d90-704b-4dbc-8f9a-32511b94ee41	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	cancelada	2026-01-16 19:58:31	2026-01-16 19:58:31	2026-01-16 19:58:39	\N	\N	\N	2026-01-16 20:04:25	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+734	8303b37c-9316-412e-b587-325c5543a6fb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75589500	-76.02884500	Cañasgordas - Uramita, 057068 Cañasgordas, Antioquia, Colombia	1.33	4	completada	2026-01-17 23:00:27	2026-01-17 23:00:27	2026-01-17 23:00:39	2026-01-17 23:00:54	\N	2026-01-17 23:00:57	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	9185.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+752	5b529dc7-903a-4d36-bfc9-68c7ab998b2b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:17:31	2026-01-18 21:17:31	2026-01-18 21:17:37	\N	\N	\N	2026-01-18 21:19:05	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+754	eb40b09c-2385-4281-a24c-f6a41cda6628	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 21:26:53	2026-01-18 21:26:53	2026-01-18 21:28:06	\N	\N	\N	2026-01-18 21:30:34	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+736	57dc6309-c5e3-4f28-9484-f5f67e203d7c	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75385500	-76.02824800	Carrera 28 34a 67, 057060 Cañasgordas, Antioquia, Colombia	0.43	3	completada	2026-01-17 23:32:01	2026-01-17 23:32:01	2026-01-17 23:32:07	2026-01-17 23:32:25	\N	2026-01-17 23:32:28	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	6739.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+756	711d242d-9777-4527-a973-0da37b0e61df	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 22:13:00	2026-01-18 22:13:00	2026-01-18 22:13:15	\N	\N	\N	2026-01-18 22:13:36	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+729	788b114e-b95a-417f-846a-552ac3126736	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 20:36:47	2026-01-16 20:36:47	2026-01-16 20:37:03	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+730	bbaf09a8-e7eb-4b42-91d4-bcd97dc03c80	276	transporte	\N	\N	6.25465300	-75.53949100	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 21:33:41	2026-01-16 21:33:41	2026-01-16 21:33:49	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	134534.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+731	8fa54fca-307f-4845-895b-6c3b7bbc2bcb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 22:11:03	2026-01-16 22:11:03	2026-01-16 22:11:07	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161440.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+732	14f4d4da-80fc-45fb-be50-d54a19d13ead	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.56514100	-75.83641800	Cañasgordas - Santafé de Antioquia, 057057 Santa Fe de Antioquia, Antioquia, Colombia	55.02	82	completada	2026-01-16 22:21:29	2026-01-16 22:21:29	2026-01-16 22:21:48	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	161440.00	\N	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+738	c99a5e21-d86e-408a-a6c8-a1d22d9544c5	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75498400	-76.02748400	Cañasgordas - Uramita, 057060 Cañasgordas, Antioquia, Colombia	1.14	4	completada	2026-01-18 00:26:06	2026-01-18 00:26:06	2026-01-18 00:26:12	2026-01-18 00:26:34	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	8741.00	2026-01-18 00:26:21.094091	\N	0.00	0	f	f	moto	\N	\N	\N	\N
+762	855c7950-154f-4175-b18d-611eb40af327	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:18:53	2026-01-18 23:18:53	\N	\N	\N	\N	2026-01-18 23:20:05	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+742	b07caacc-644d-4705-bad9-736f8af0e792	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 02:58:11	2026-01-18 02:58:11	2026-01-18 02:58:20	2026-01-18 02:58:37	2026-01-18 03:00:09	2026-01-18 03:00:09	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-18 02:58:31.801829	\N	0.00	1	f	f	moto	\N	\N	\N	\N
+740	9c6ee1a0-5270-475f-ae96-e03b028ac4a0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.75566000	-76.02965500	Carrera 28 37 72, 057060 Cañasgordas, Antioquia, Colombia	0.69	4	completada	2026-01-18 02:08:16	2026-01-18 02:08:16	2026-01-18 02:08:25	2026-01-18 02:08:37	2026-01-18 02:10:13	2026-01-18 02:10:13	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	7654.00	2026-01-18 02:08:34.6578	\N	118.23	1	f	f	moto	\N	\N	\N	\N
+744	83cdda62-d619-4b58-baed-43d661019ba6	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-18 13:10:41	2026-01-18 13:10:41	2026-01-18 13:10:47	2026-01-18 13:11:28	2026-01-18 13:12:19	2026-01-18 13:12:19	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	63225.00	2026-01-18 13:10:59.20798	\N	0.00	1	t	t	moto	1	\N	\N	\N
+746	33620b1d-0873-44e9-bdd5-fd812ee29a5b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	conductor_llego	2026-01-18 14:20:15	2026-01-18 14:20:15	2026-01-18 14:20:22	\N	\N	\N	\N	\N	f	f	f	\N	0.00	efectivo	f	\N	63225.00	2026-01-18 14:20:32.515372	\N	0.00	0	f	f	moto	1	\N	\N	\N
+764	19bd99ac-6631-4287-8ea4-3553e0e531e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-18 23:47:12	2026-01-18 23:47:12	2026-01-18 23:47:18	\N	\N	\N	2026-01-18 23:52:21	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+772	60992ec3-382b-42f7-98e3-37d3767b0d04	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:49:51	2026-01-19 22:49:51	2026-01-19 22:49:59	2026-01-19 22:50:28	2026-01-19 22:51:15	2026-01-19 22:51:15	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:50:17.802269	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+766	dac02d14-8082-4203-9164-00eb15eabe7f	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 00:00:57	2026-01-19 00:00:57	2026-01-19 00:01:02	2026-01-19 00:02:55	2026-01-19 00:12:07	2026-01-19 00:12:07	\N	\N	f	f	f	\N	7800.00	efectivo	f	\N	75869.00	2026-01-19 00:01:59.33322	\N	0.00	549	t	t	moto	1	\N	6287.50	\N
+778	6ecfa46f-7707-4cfc-b7e9-98cd153ff957	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 23:22:27	2026-01-19 23:22:27	2026-01-19 23:22:32	2026-01-19 23:22:45	2026-01-19 23:23:07	2026-01-19 23:23:07	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 23:22:39.90858	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+777	11167664-a1aa-4181-93d8-e36570aeacb3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 23:21:39	2026-01-19 23:21:39	2026-01-19 23:21:45	2026-01-19 23:21:50	\N	\N	2026-01-19 23:22:20	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-19 23:21:47.784176	\N	0.00	26	f	f	moto	1	\N	6000.00	\N
+767	3a9e1276-dade-4e46-acf7-09973332a22d	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 03:24:08	2026-01-19 03:24:08	2026-01-19 03:24:14	2026-01-19 03:24:35	2026-01-19 03:26:09	2026-01-19 03:26:09	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 03:24:23.401633	\N	0.00	92	t	t	moto	1	\N	6000.00	\N
+773	c0ac9e14-79da-4858-9aa8-33eced978b4f	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:56:38	2026-01-19 22:56:38	\N	\N	\N	\N	2026-01-19 22:56:54	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+769	97b07103-e39a-4032-a631-2cf6ee9b9706	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:21:13	2026-01-19 22:21:13	2026-01-19 22:21:23	2026-01-19 22:22:22	2026-01-19 22:23:22	2026-01-19 22:23:22	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:22:03.32894	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+779	e71a330c-ac7f-4811-b498-d56da67790f2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:02:25	2026-01-20 00:02:25	2026-01-20 00:02:32	2026-01-20 00:02:47	2026-01-20 00:03:40	2026-01-20 00:03:40	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:02:45.335332	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+768	901473ca-19b2-40a4-9a79-98cd86b814cf	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 03:38:12	2026-01-19 03:38:12	2026-01-19 03:39:26	2026-01-19 03:40:18	2026-01-19 03:40:29	2026-01-19 03:40:29	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 03:39:40.89617	\N	92.96	0	t	t	moto	1	\N	6000.00	\N
+770	fd810323-449a-4505-9d00-f627bd7229e4	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:27:44	2026-01-19 22:27:44	\N	\N	\N	\N	2026-01-19 22:28:26	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	121077.00	\N	\N	0.00	0	f	f	auto	1	\N	\N	\N
+771	7ed4b8bd-682a-4cdd-aed9-8434d5a12d10	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:49:31	2026-01-19 22:49:31	\N	\N	\N	\N	2026-01-19 22:49:42	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	121077.00	\N	\N	0.00	0	f	f	auto	1	\N	\N	\N
+780	fd2a442a-4f0c-44c6-a3be-bd09f203145a	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:32:46	2026-01-20 00:32:46	2026-01-20 00:32:52	2026-01-20 00:33:03	2026-01-20 00:33:32	2026-01-20 00:33:32	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:32:58.760083	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+774	69dec554-b5fb-4b1a-ace1-3f2047ddfc3c	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-19 22:57:02	2026-01-19 22:57:02	\N	\N	\N	\N	2026-01-19 22:57:51	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+781	9418edec-b718-4abc-90d2-844bf11bcfba	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-20 00:46:48	2026-01-20 00:46:48	2026-01-20 00:46:55	\N	\N	\N	2026-01-20 00:47:11	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+782	48501c44-14b7-42d2-b415-540fe6067fd2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:51:36	2026-01-20 00:51:36	2026-01-20 00:51:39	2026-01-20 00:51:53	2026-01-20 00:52:14	2026-01-20 00:52:14	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:51:48.727922	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+775	b838c07f-0a34-4d03-9fe3-ea38b493f274	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:59:29	2026-01-19 22:59:29	2026-01-19 22:59:39	2026-01-19 23:00:00	2026-01-19 23:00:59	2026-01-19 23:00:59	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:59:51.132407	\N	92.96	1	t	t	moto	1	\N	6000.00	\N
+776	35e52b2a-74c9-4e56-8393-70b2a1d300fb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 23:18:32	2026-01-19 23:18:32	2026-01-19 23:18:39	2026-01-19 23:18:48	2026-01-19 23:19:18	2026-01-19 23:19:18	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 23:18:46.369879	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+790	fc9c8552-6468-4e4a-8447-49f8cfe90c7e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-21 03:39:14	2026-01-21 03:39:14	\N	\N	\N	\N	2026-01-21 03:39:33	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
+786	13b4ab22-c287-418a-a0e7-eb2fe2dda0fc	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:53:00	2026-01-20 01:53:00	2026-01-20 01:53:11	2026-01-20 01:53:39	2026-01-20 01:54:07	2026-01-20 01:54:07	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:53:27.943106	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+785	a42f7a19-8b30-400f-94a1-63ff829262e0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:33:39	2026-01-20 01:33:39	2026-01-20 01:33:53	2026-01-20 01:35:17	2026-01-20 01:36:38	2026-01-20 01:36:38	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:35:09.349548	\N	0.00	2	t	t	moto	1	\N	6000.00	\N
+783	0e85a3a7-cc39-4e1c-83b6-6bf66bd40376	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:03:45	2026-01-20 01:03:45	2026-01-20 01:03:50	2026-01-20 01:04:12	2026-01-20 01:04:46	2026-01-20 01:04:46	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:04:05.379051	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+784	35291d5e-210d-4e3e-ae58-819403bcc8e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:19:02	2026-01-20 01:19:02	2026-01-20 01:19:07	2026-01-20 01:19:42	2026-01-20 01:20:29	2026-01-20 01:20:29	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:19:34.502432	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+787	ed00a03f-70dc-42e8-9042-5a8baa95807b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 01:37:12	2026-01-21 01:37:12	2026-01-21 01:37:24	2026-01-21 01:37:49	2026-01-21 01:38:49	2026-01-21 01:38:49	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 01:37:38.047449	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+788	145d915e-8295-4f89-8b10-cea9480129d3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:19:36	2026-01-21 03:19:36	2026-01-21 03:19:42	2026-01-21 03:20:10	2026-01-21 03:21:32	2026-01-21 03:21:32	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:20:03.90948	\N	92.96	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 2, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 500, "recargo_espera": 0, "total_recargos": 900, "recargo_festivo": 0, "ganancia_empresa": 540, "precio_distancia": 0, "recargo_nocturno": 900, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 5400, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 60, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4500, "subtotal_con_descuento": 4500, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 600, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 10}
+791	ad60e234-c8bf-4958-adb7-ed93ab9b3ac0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:39:41	2026-01-21 03:39:41	2026-01-21 03:39:57	2026-01-21 03:40:12	2026-01-21 03:40:53	2026-01-21 03:40:53	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:40:09.046565	\N	0.00	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 1, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 250, "recargo_espera": 0, "total_recargos": 850, "recargo_festivo": 0, "ganancia_empresa": 1080, "precio_distancia": 0, "recargo_nocturno": 850, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 4800, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 120, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4250, "subtotal_con_descuento": 4250, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 1200, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 20}
+789	63082c51-cce2-46bb-aeb6-09c28a952462	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:33:48	2026-01-21 03:33:48	2026-01-21 03:34:04	2026-01-21 03:34:22	2026-01-21 03:35:02	2026-01-21 03:35:02	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:34:09.899847	\N	0.00	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 1, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 250, "recargo_espera": 0, "total_recargos": 850, "recargo_festivo": 0, "ganancia_empresa": 540, "precio_distancia": 0, "recargo_nocturno": 850, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 5400, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 60, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4250, "subtotal_con_descuento": 4250, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 600, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 10}
 \.
 
 
 --
--- TOC entry 6130 (class 0 OID 91158)
+-- TOC entry 6153 (class 0 OID 91158)
 -- Dependencies: 289
 -- Data for Name: solicitudes_vinculacion_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5456,7 +5687,7 @@ COPY public.solicitudes_vinculacion_conductor (id, conductor_id, empresa_id, est
 
 
 --
--- TOC entry 6150 (class 0 OID 115689)
+-- TOC entry 6173 (class 0 OID 115689)
 -- Dependencies: 312
 -- Data for Name: tickets_soporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5466,7 +5697,7 @@ COPY public.tickets_soporte (id, numero_ticket, usuario_id, categoria_id, asunto
 
 
 --
--- TOC entry 6122 (class 0 OID 90972)
+-- TOC entry 6145 (class 0 OID 90972)
 -- Dependencies: 280
 -- Data for Name: tipos_notificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5488,7 +5719,7 @@ COPY public.tipos_notificacion (id, codigo, nombre, descripcion, icono, color, a
 
 
 --
--- TOC entry 6128 (class 0 OID 91031)
+-- TOC entry 6151 (class 0 OID 91031)
 -- Dependencies: 286
 -- Data for Name: tokens_push_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5498,7 +5729,7 @@ COPY public.tokens_push_usuario (id, usuario_id, token, plataforma, device_id, d
 
 
 --
--- TOC entry 6081 (class 0 OID 16798)
+-- TOC entry 6104 (class 0 OID 16798)
 -- Dependencies: 237
 -- Data for Name: transacciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5522,7 +5753,7 @@ COPY public.transacciones (id, solicitud_id, cliente_id, conductor_id, monto_tar
 
 
 --
--- TOC entry 6082 (class 0 OID 16812)
+-- TOC entry 6105 (class 0 OID 16812)
 -- Dependencies: 238
 -- Data for Name: ubicaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5541,7 +5772,7 @@ COPY public.ubicaciones_usuario (id, usuario_id, latitud, longitud, direccion, c
 
 
 --
--- TOC entry 6083 (class 0 OID 16825)
+-- TOC entry 6106 (class 0 OID 16825)
 -- Dependencies: 239
 -- Data for Name: user_devices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5576,7 +5807,7 @@ COPY public.user_devices (id, user_id, device_uuid, first_seen, last_seen, trust
 
 
 --
--- TOC entry 6084 (class 0 OID 16835)
+-- TOC entry 6107 (class 0 OID 16835)
 -- Dependencies: 240
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5804,7 +6035,7 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 278	user_6966bf047561c5.15146061	leidy andrea	durango durango	leidyandrea315@gmail.com	+573205899682	$2y$10$fWhki.9r3/7zMI6hR4m3EeYpWK3cRLxXQ13U5Z4sqGPiArAL2IxZi	conductor	https://lh3.googleusercontent.com/a/ACg8ocIu5nnDbKkRsJWBJykXiqekhhhqtJe-5_xMeSJtsccM3ML14Q=s96-c	\N	1	1	2026-01-13 21:54:13	2026-01-14 13:20:11	2026-01-14 00:46:58	f	\N	1	\N	5.00	vinculado	101036033552230941677	\N	email
 2	user_68e44706c14db4.53994811	braian890	oquendo	braian890@gmail.com	32323232	$2y$10$NB9S4hWQLrK7HhTjc9yneu9RTb6otip3dtZ1muEgukWWLKcSpxRF6	cliente	\N	\N	0	1	2025-10-06 22:47:34	\N	\N	t	1	\N	\N	5.00	activo	\N	\N	email
 298	user_696eeadd6c00d8.47929678	Santiago	Zapata	conductorbird@gmail.com	3532323	$2y$10$J0lYEf0yvUkbE78448B.LObZi4NjDJg3H0gEnnGvwKPo8j12T5Sg6	conductor	\N	\N	1	1	2026-01-20 02:39:25	2026-01-20 03:29:49	\N	f	\N	1	\N	5.00	vinculado	\N	\N	email
-255	empresa_rep_6961b9306f2bf2.66858089	Braian Andres	Oquendo Durango	traconmaster@gmail.com	233232	$2y$10$ING2VgbKD.eXwpwDGnyAteGr/Ave0qV/q5Mpm/xoBzP18hgz5.zGK	empresa	https://lh3.googleusercontent.com/a/ACg8ocK3-3Zs26o26dpSe0Lkf4ZPUfGkj2RaGNbJy-Yn5YBtz-uw_eM=s96-c	\N	1	1	2026-01-10 02:28:00	\N	2026-01-20 21:37:12	f	\N	1	\N	5.00	activo	116860906216950009498	\N	email
+255	empresa_rep_6961b9306f2bf2.66858089	Braian Andres	Oquendo Durango	traconmaster@gmail.com	233232	$2y$10$ING2VgbKD.eXwpwDGnyAteGr/Ave0qV/q5Mpm/xoBzP18hgz5.zGK	empresa	https://lh3.googleusercontent.com/a/ACg8ocK3-3Zs26o26dpSe0Lkf4ZPUfGkj2RaGNbJy-Yn5YBtz-uw_eM=s96-c	\N	1	1	2026-01-10 02:28:00	\N	2026-01-21 19:51:54	f	\N	1	\N	5.00	activo	116860906216950009498	\N	email
 226	user_694d686fc4d124.55220713	andres	oquendo	andresoquendo@gmail.com	313131313	$2y$10$rfpnS5Io8spwxDdnKsrvReiAHR49v0thMTYzPBx4Asj.AEqaPPPdq	cliente	\N	\N	0	1	2025-12-25 16:38:08	\N	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
 215	6aaaf173-e3e3-4ab5-a4b0-92258f9f9fff	ClienteHot	Test3	cliente_hot_3_1764713418_60@test.local	+5006699882	$2y$12$HBvylQXLdwYwToSMyAx2geMxdEWxOc.LsjvCnfJLxFYe8GdjRhjma	cliente	\N	\N	0	0	2025-12-02 22:10:19	2025-12-27 22:36:55	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
 229	user_69571dbb2a3174.00297676	oquendo	Durango	oquendo@gmail.com	3535343343	$2y$10$veHd5T/xGZL/p8Rjk2I7kOZ9xdF/IW7VysMV1u8ZYZc79RODeMdlS	cliente	\N	\N	0	1	2026-01-02 01:22:03	\N	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
@@ -5818,8 +6049,8 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 1	user_68daf618780e50.65802566	braian	oquendo	braianoquen@gmail.com	3013636902	$2y$10$H2Un4DmxCsM6XOGA1fiX8.5VB42Z9v8uwqERrGBms83dk2CQVQKnO	administrador	https://lh3.googleusercontent.com/a/ACg8ocLGRW44x3yOuEc2Cto3I434ck4B-Zz8UBVPRWSAVXTUUM_KFw=s96-c	\N	1	1	2025-09-29 21:11:52	2025-10-22 14:16:12	2026-01-20 03:28:42	f	\N	\N	\N	5.00	activo	100021586628962750893	\N	email
 11	bd852c00-8127-49ab-a6b1-17bc1128f0cd	Conductor	Prueba	conductor.prueba@test.com	+573009876543	$2y$12$t5I6QV69PHlcY4ozF2G5wObcdn8MK6vOawu0U./aLdWvWrhfxNBvS	conductor	\N	\N	1	0	2025-10-27 00:27:44	2026-01-04 17:52:26	\N	f	\N	\N	\N	5.00	pendiente_empresa	\N	\N	email
 235	user_6959ce1194cf04.53594144	victor2	oquendo	victor2@gmail.com	323232	$2y$10$eoEK5r6Eq1NArh/imHFfGeZHKoYj2hRd60YHDUjVg4OsWn73nc6D.	conductor	\N	\N	1	0	2026-01-04 02:18:58	2026-01-04 17:58:45	\N	f	\N	\N	\N	5.00	pendiente_empresa	\N	\N	email
+277	user_696676b59b57a9.80699283	Oscar Alejandro	Oquendo Durango	secretoestoico8052@gmail.com	326556566566	$2y$10$IklqjVXZNcgq/uEaK0S41OhwI7MPjrIB18i1pp9zVjJJJi8t/BhFy	conductor	https://lh3.googleusercontent.com/a/ACg8ocKrSsyN6lq-gOoqsHTzRMsi5aFdjM4yd1az8I9CZwF4ztJNnQ=s96-c	\N	1	1	2026-01-13 16:45:42	2026-01-13 20:48:12	2026-01-21 03:38:27	f	\N	1	\N	5.00	pendiente_aprobacion	114135017006116447797	\N	email
 276	user_69642016735491.91239396	Alejandro	Zapata	tracongamescorreos@gmail.com	3213243222	$2y$10$59XENVeFt0FKg6mtRHiQI.pWRKPkpsdZGulpHTksiCcwzV7wdnYjC	cliente	profile/276_1768176614.jpg	\N	1	1	2026-01-11 22:11:34	2026-01-12 00:10:16	2026-01-20 01:16:11	f	\N	\N	\N	5.00	activo	102784292193798397096	\N	email
-277	user_696676b59b57a9.80699283	Oscar Alejandro	Oquendo Durango	secretoestoico8052@gmail.com	326556566566	$2y$10$IklqjVXZNcgq/uEaK0S41OhwI7MPjrIB18i1pp9zVjJJJi8t/BhFy	conductor	https://lh3.googleusercontent.com/a/ACg8ocKrSsyN6lq-gOoqsHTzRMsi5aFdjM4yd1az8I9CZwF4ztJNnQ=s96-c	\N	1	1	2026-01-13 16:45:42	2026-01-13 20:48:12	2026-01-21 01:32:51	f	\N	1	\N	5.00	pendiente_aprobacion	114135017006116447797	\N	email
 254	empresa_6961b9305a4592.56020642	Braian Andres	Oquendo Durango	bird@gmail.com	2434234	$2y$10$3s1NTs62TgFqYRp17ZjvSumjcEJ36O174Idez/L0lNmypKr2Mr6z.	empresa	\N	\N	0	1	2026-01-10 02:28:00	\N	\N	f	\N	1	\N	5.00	activo	\N	\N	email
 274	empresa_6962e6317693b2.08987946	Juan	Oquendo	aguila@gmail.com4	32424	$2y$10$9r7ZRx1IeERSk6MRmEbYg.MD2ewf1/bUzEw0Xk.L1hZzdBPl9kTAW	empresa	\N	\N	0	1	2026-01-10 23:52:17	\N	\N	f	\N	11	\N	5.00	activo	\N	\N	email
 275	empresa_rep_6962e6318a5930.51368404	Juan	Oquendo	angelow2025sen@gmail.com	43434553	$2y$10$BECzTxh9eKPMKfVjkFfHfuWHvGndfYMlV01YH7VYwILuB9lpV5b4u	empresa	\N	\N	0	1	2026-01-10 23:52:17	\N	\N	f	\N	11	\N	5.00	activo	\N	\N	email
@@ -5846,7 +6077,7 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 
 
 --
--- TOC entry 6085 (class 0 OID 16849)
+-- TOC entry 6108 (class 0 OID 16849)
 -- Dependencies: 241
 -- Data for Name: usuarios_backup_20251023; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5863,7 +6094,7 @@ COPY public.usuarios_backup_20251023 (id, uuid, nombre, apellido, email, telefon
 
 
 --
--- TOC entry 6086 (class 0 OID 16863)
+-- TOC entry 6109 (class 0 OID 16863)
 -- Dependencies: 242
 -- Data for Name: verification_codes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5963,42 +6194,45 @@ COPY public.verification_codes (id, email, code, created_at, expires_at, used) F
 
 
 --
--- TOC entry 6158 (class 0 OID 123797)
+-- TOC entry 6181 (class 0 OID 123797)
 -- Dependencies: 321
 -- Data for Name: viaje_resumen_tracking; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.viaje_resumen_tracking (id, solicitud_id, distancia_real_km, tiempo_real_minutos, distancia_estimada_km, tiempo_estimado_minutos, diferencia_distancia_km, diferencia_tiempo_min, porcentaje_desvio_distancia, precio_estimado, precio_final_calculado, precio_final_aplicado, velocidad_promedio_kmh, velocidad_maxima_kmh, total_puntos_gps, tiene_desvio_ruta, km_desvio_detectado, inicio_viaje_real, fin_viaje_real, creado_en, actualizado_en) FROM stdin;
-1	740	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:08:38.871771	\N	2026-01-18 02:08:38.871771	2026-01-18 02:10:13.13505
-3	741	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:23:10.368402	\N	2026-01-18 02:23:10.368402	2026-01-18 02:24:15.18838
-5	742	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:58:38.936533	\N	2026-01-18 02:58:38.936533	2026-01-18 03:00:08.397349
-7	743	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 03:20:05.42157	\N	2026-01-18 03:20:05.42157	2026-01-18 03:21:07.324165
-35	747	0.000	2	24.490	41	-24.490	-39	-100.00	63225.00	6000.00	6000.00	0.00	0.00	21	t	0.000	2026-01-18 14:29:04.995422	2026-01-18 14:30:40.813843	2026-01-18 14:29:04.995422	2026-01-18 14:30:40.813843
-230	775	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-19 23:00:01.712867	2026-01-19 23:00:59.311955	2026-01-19 23:00:01.712867	2026-01-19 23:00:59.311955
-179	767	0.000	2	24.490	41	-24.490	-39	-100.00	75869.00	6000.00	6000.00	0.00	0.00	20	t	0.000	2026-01-19 03:24:36.700765	2026-01-19 03:26:09.15052	2026-01-19 03:24:36.700765	2026-01-19 03:26:09.15052
-200	768	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	3	t	0.000	2026-01-19 03:40:20.071255	2026-01-19 03:40:28.72373	2026-01-19 03:40:20.071255	2026-01-19 03:40:28.72373
-57	748	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	9	t	0.000	2026-01-18 15:05:15.319767	2026-01-18 15:05:51.442411	2026-01-18 15:05:15.319767	2026-01-18 15:05:51.442411
-9	744	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-18 13:11:29.56679	2026-01-18 13:12:19.004516	2026-01-18 13:11:29.56679	2026-01-18 13:12:19.272806
-277	780	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-20 00:33:05.386262	2026-01-20 00:33:32.334503	2026-01-20 00:33:05.386262	2026-01-20 00:33:32.334503
-337	787	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-21 01:37:52.692324	2026-01-21 01:38:49.155455	2026-01-21 01:37:52.692324	2026-01-21 01:38:49.155455
-244	776	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476
-23	745	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496
-285	782	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	5	t	0.000	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434
-252	777	0.000	1	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	6	f	0.000	2026-01-19 23:21:50.83374	\N	2026-01-19 23:21:50.83374	2026-01-19 23:22:15.924989
-204	769	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625
-67	766	0.000	10	24.490	41	-24.490	-31	-100.00	75869.00	7800.00	7800.00	0.00	0.00	111	t	0.000	2026-01-19 00:02:58.553311	2026-01-19 00:12:06.560003	2026-01-19 00:02:58.553311	2026-01-19 00:12:06.560003
-258	778	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	5	t	0.000	2026-01-19 23:22:47.066413	2026-01-19 23:23:06.64876	2026-01-19 23:22:47.066413	2026-01-19 23:23:06.64876
-311	785	0.000	2	24.490	41	-24.490	-39	-100.00	75869.00	6000.00	6000.00	0.00	0.00	17	t	0.000	2026-01-20 01:35:19.154306	2026-01-20 01:36:38.164935	2026-01-20 01:35:19.154306	2026-01-20 01:36:38.164935
-291	783	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	8	t	0.000	2026-01-20 01:04:13.891843	2026-01-20 01:04:46.008966	2026-01-20 01:04:13.891843	2026-01-20 01:04:46.008966
-218	772	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	11	t	0.000	2026-01-19 22:50:28.487567	2026-01-19 22:51:14.819323	2026-01-19 22:50:28.487567	2026-01-19 22:51:14.819323
-264	779	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	12	t	0.000	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989
-329	786	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444
-300	784	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069
+COPY public.viaje_resumen_tracking (id, solicitud_id, distancia_real_km, tiempo_real_minutos, distancia_estimada_km, tiempo_estimado_minutos, diferencia_distancia_km, diferencia_tiempo_min, porcentaje_desvio_distancia, precio_estimado, precio_final_calculado, precio_final_aplicado, velocidad_promedio_kmh, velocidad_maxima_kmh, total_puntos_gps, tiene_desvio_ruta, km_desvio_detectado, inicio_viaje_real, fin_viaje_real, creado_en, actualizado_en, tarifa_base, precio_distancia, precio_tiempo, recargo_nocturno, recargo_hora_pico, recargo_festivo, recargo_espera, tiempo_espera_min, descuento_distancia_larga, subtotal_sin_recargos, total_recargos, tipo_recargo, aplico_tarifa_minima, comision_plataforma_porcentaje, comision_plataforma_valor, ganancia_conductor, empresa_id, config_precios_id, comision_admin_porcentaje, comision_admin_valor, ganancia_empresa) FROM stdin;
+1	740	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:08:38.871771	\N	2026-01-18 02:08:38.871771	2026-01-18 02:10:13.13505	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+3	741	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:23:10.368402	\N	2026-01-18 02:23:10.368402	2026-01-18 02:24:15.18838	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+5	742	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 02:58:38.936533	\N	2026-01-18 02:58:38.936533	2026-01-18 03:00:08.397349	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+7	743	0.000	2	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	2	f	0.000	2026-01-18 03:20:05.42157	\N	2026-01-18 03:20:05.42157	2026-01-18 03:21:07.324165	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+35	747	0.000	2	24.490	41	-24.490	-39	-100.00	63225.00	6000.00	6000.00	0.00	0.00	21	t	0.000	2026-01-18 14:29:04.995422	2026-01-18 14:30:40.813843	2026-01-18 14:29:04.995422	2026-01-18 14:30:40.813843	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+230	775	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-19 23:00:01.712867	2026-01-19 23:00:59.311955	2026-01-19 23:00:01.712867	2026-01-19 23:00:59.311955	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+179	767	0.000	2	24.490	41	-24.490	-39	-100.00	75869.00	6000.00	6000.00	0.00	0.00	20	t	0.000	2026-01-19 03:24:36.700765	2026-01-19 03:26:09.15052	2026-01-19 03:24:36.700765	2026-01-19 03:26:09.15052	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+351	788	0.000	2	24.490	41	-24.490	-39	-100.00	75869.00	6000.00	6000.00	0.00	0.00	17	t	0.000	2026-01-21 03:20:13.629544	2026-01-21 03:21:31.60266	2026-01-21 03:20:13.629544	2026-01-21 03:21:31.60266	4000.00	0.00	500.00	900.00	0.00	0.00	0.00	0	0.00	4500.00	900.00	nocturno	t	10.00	600.00	5400.00	1	9	10.00	60.00	540.00
+200	768	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	3	t	0.000	2026-01-19 03:40:20.071255	2026-01-19 03:40:28.72373	2026-01-19 03:40:20.071255	2026-01-19 03:40:28.72373	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+57	748	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	9	t	0.000	2026-01-18 15:05:15.319767	2026-01-18 15:05:51.442411	2026-01-18 15:05:15.319767	2026-01-18 15:05:51.442411	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+9	744	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-18 13:11:29.56679	2026-01-18 13:12:19.004516	2026-01-18 13:11:29.56679	2026-01-18 13:12:19.272806	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+277	780	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-20 00:33:05.386262	2026-01-20 00:33:32.334503	2026-01-20 00:33:05.386262	2026-01-20 00:33:32.334503	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+337	787	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-21 01:37:52.692324	2026-01-21 01:38:49.155455	2026-01-21 01:37:52.692324	2026-01-21 01:38:49.155455	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+244	776	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+23	745	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+285	782	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	5	t	0.000	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+252	777	0.000	1	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	6	f	0.000	2026-01-19 23:21:50.83374	\N	2026-01-19 23:21:50.83374	2026-01-19 23:22:15.924989	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+204	769	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+379	791	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	9	t	0.000	2026-01-21 03:40:15.838256	2026-01-21 03:40:52.715984	2026-01-21 03:40:15.838256	2026-01-21 03:40:52.715984	4000.00	0.00	250.00	850.00	0.00	0.00	0.00	0	0.00	4250.00	850.00	nocturno	t	20.00	1200.00	4800.00	1	9	10.00	120.00	1080.00
+67	766	0.000	10	24.490	41	-24.490	-31	-100.00	75869.00	7800.00	7800.00	0.00	0.00	111	t	0.000	2026-01-19 00:02:58.553311	2026-01-19 00:12:06.560003	2026-01-19 00:02:58.553311	2026-01-19 00:12:06.560003	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+258	778	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	5	t	0.000	2026-01-19 23:22:47.066413	2026-01-19 23:23:06.64876	2026-01-19 23:22:47.066413	2026-01-19 23:23:06.64876	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+311	785	0.000	2	24.490	41	-24.490	-39	-100.00	75869.00	6000.00	6000.00	0.00	0.00	17	t	0.000	2026-01-20 01:35:19.154306	2026-01-20 01:36:38.164935	2026-01-20 01:35:19.154306	2026-01-20 01:36:38.164935	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+291	783	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	8	t	0.000	2026-01-20 01:04:13.891843	2026-01-20 01:04:46.008966	2026-01-20 01:04:13.891843	2026-01-20 01:04:46.008966	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+218	772	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	11	t	0.000	2026-01-19 22:50:28.487567	2026-01-19 22:51:14.819323	2026-01-19 22:50:28.487567	2026-01-19 22:51:14.819323	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+369	789	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	9	t	0.000	2026-01-21 03:34:25.199353	2026-01-21 03:35:01.862006	2026-01-21 03:34:25.199353	2026-01-21 03:35:01.862006	4000.00	0.00	250.00	850.00	0.00	0.00	0.00	0	0.00	4250.00	850.00	nocturno	t	10.00	600.00	5400.00	1	9	10.00	60.00	540.00
+264	779	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	12	t	0.000	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+329	786	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+300	784	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 \.
 
 
 --
--- TOC entry 6156 (class 0 OID 123764)
+-- TOC entry 6179 (class 0 OID 123764)
 -- Dependencies: 319
 -- Data for Name: viaje_tracking_realtime; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6333,20 +6567,55 @@ COPY public.viaje_tracking_realtime (id, solicitud_id, conductor_id, latitud, lo
 327	787	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-21 01:38:42.871839	2026-01-21 01:38:42.871839	hacia_destino	\N	t
 328	787	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-21 01:38:47.984969	2026-01-21 01:38:47.984969	hacia_destino	\N	t
 329	787	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	56	0.00	6000.00	2026-01-21 01:38:48.935768	2026-01-21 01:38:48.935768	hacia_destino	fin	t
+330	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-21 03:20:13.629544	2026-01-21 03:20:13.629544	hacia_destino	inicio	t
+331	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-21 03:20:18.806755	2026-01-21 03:20:18.806755	hacia_destino	\N	t
+332	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-21 03:20:23.815157	2026-01-21 03:20:23.815157	hacia_destino	\N	t
+333	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-21 03:20:28.81613	2026-01-21 03:20:28.81613	hacia_destino	\N	t
+334	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-21 03:20:33.802097	2026-01-21 03:20:33.802097	hacia_destino	\N	t
+335	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-21 03:20:38.818404	2026-01-21 03:20:38.818404	hacia_destino	\N	t
+336	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-21 03:20:43.837313	2026-01-21 03:20:43.837313	hacia_destino	\N	t
+337	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-21 03:20:48.847917	2026-01-21 03:20:48.847917	hacia_destino	\N	t
+338	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	40	0.00	6000.00	2026-01-21 03:20:53.815296	2026-01-21 03:20:53.815296	hacia_destino	\N	t
+339	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	45	0.00	6000.00	2026-01-21 03:20:58.817476	2026-01-21 03:20:58.817476	hacia_destino	\N	t
+340	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-21 03:21:03.862654	2026-01-21 03:21:03.862654	hacia_destino	\N	t
+341	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-21 03:21:08.81708	2026-01-21 03:21:08.81708	hacia_destino	\N	t
+342	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	60	0.00	6000.00	2026-01-21 03:21:13.830094	2026-01-21 03:21:13.830094	hacia_destino	\N	t
+343	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	65	0.00	6000.00	2026-01-21 03:21:18.821141	2026-01-21 03:21:18.821141	hacia_destino	\N	t
+344	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	70	0.00	6000.00	2026-01-21 03:21:23.852252	2026-01-21 03:21:23.852252	hacia_destino	\N	t
+345	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	75	0.00	6000.00	2026-01-21 03:21:28.80655	2026-01-21 03:21:28.80655	hacia_destino	\N	t
+346	788	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	77	0.00	6000.00	2026-01-21 03:21:30.173326	2026-01-21 03:21:30.173326	hacia_destino	fin	t
+347	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-21 03:34:25.199353	2026-01-21 03:34:25.199353	hacia_destino	inicio	t
+348	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-21 03:34:30.370265	2026-01-21 03:34:30.370265	hacia_destino	\N	t
+349	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-21 03:34:35.361278	2026-01-21 03:34:35.361278	hacia_destino	\N	t
+350	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-21 03:34:40.423734	2026-01-21 03:34:40.423734	hacia_destino	\N	t
+351	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-21 03:34:45.463236	2026-01-21 03:34:45.463236	hacia_destino	\N	t
+352	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-21 03:34:50.364956	2026-01-21 03:34:50.364956	hacia_destino	\N	t
+353	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-21 03:34:55.370278	2026-01-21 03:34:55.370278	hacia_destino	\N	t
+354	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-21 03:35:00.391258	2026-01-21 03:35:00.391258	hacia_destino	\N	t
+355	789	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	36	0.00	6000.00	2026-01-21 03:35:01.680776	2026-01-21 03:35:01.680776	hacia_destino	fin	t
+356	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-21 03:40:15.838256	2026-01-21 03:40:15.838256	hacia_destino	inicio	t
+357	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-21 03:40:21.139149	2026-01-21 03:40:21.139149	hacia_destino	\N	t
+358	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-21 03:40:26.14211	2026-01-21 03:40:26.14211	hacia_destino	\N	t
+359	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-21 03:40:31.123875	2026-01-21 03:40:31.123875	hacia_destino	\N	t
+360	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-21 03:40:36.161808	2026-01-21 03:40:36.161808	hacia_destino	\N	t
+361	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-21 03:40:41.158018	2026-01-21 03:40:41.158018	hacia_destino	\N	t
+362	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-21 03:40:46.240336	2026-01-21 03:40:46.240336	hacia_destino	\N	t
+363	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-21 03:40:51.342335	2026-01-21 03:40:51.342335	hacia_destino	\N	t
+364	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	36	0.00	6000.00	2026-01-21 03:40:52.414397	2026-01-21 03:40:52.414397	hacia_destino	fin	t
 \.
 
 
 --
--- TOC entry 6266 (class 0 OID 0)
+-- TOC entry 6311 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: asignaciones_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.asignaciones_conductor_id_seq', 204, true);
+SELECT pg_catalog.setval('public.asignaciones_conductor_id_seq', 207, true);
 
 
 --
--- TOC entry 6267 (class 0 OID 0)
+-- TOC entry 6312 (class 0 OID 0)
 -- Dependencies: 254
 -- Name: cache_direcciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6355,7 +6624,7 @@ SELECT pg_catalog.setval('public.cache_direcciones_id_seq', 1, false);
 
 
 --
--- TOC entry 6268 (class 0 OID 0)
+-- TOC entry 6313 (class 0 OID 0)
 -- Dependencies: 255
 -- Name: cache_geocodificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6364,16 +6633,16 @@ SELECT pg_catalog.setval('public.cache_geocodificacion_id_seq', 1, false);
 
 
 --
--- TOC entry 6269 (class 0 OID 0)
+-- TOC entry 6314 (class 0 OID 0)
 -- Dependencies: 246
 -- Name: calificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.calificaciones_id_seq', 78, true);
+SELECT pg_catalog.setval('public.calificaciones_id_seq', 82, true);
 
 
 --
--- TOC entry 6270 (class 0 OID 0)
+-- TOC entry 6315 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: catalogo_tipos_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6382,7 +6651,7 @@ SELECT pg_catalog.setval('public.catalogo_tipos_vehiculo_id_seq', 4, true);
 
 
 --
--- TOC entry 6271 (class 0 OID 0)
+-- TOC entry 6316 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: categorias_soporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6391,7 +6660,7 @@ SELECT pg_catalog.setval('public.categorias_soporte_id_seq', 8, true);
 
 
 --
--- TOC entry 6272 (class 0 OID 0)
+-- TOC entry 6317 (class 0 OID 0)
 -- Dependencies: 272
 -- Name: colores_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6400,7 +6669,7 @@ SELECT pg_catalog.setval('public.colores_vehiculo_id_seq', 26, true);
 
 
 --
--- TOC entry 6273 (class 0 OID 0)
+-- TOC entry 6318 (class 0 OID 0)
 -- Dependencies: 256
 -- Name: conductores_favoritos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6409,7 +6678,7 @@ SELECT pg_catalog.setval('public.conductores_favoritos_id_seq', 1, false);
 
 
 --
--- TOC entry 6274 (class 0 OID 0)
+-- TOC entry 6319 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: configuracion_notificaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6418,7 +6687,7 @@ SELECT pg_catalog.setval('public.configuracion_notificaciones_usuario_id_seq', 3
 
 
 --
--- TOC entry 6275 (class 0 OID 0)
+-- TOC entry 6320 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: configuracion_precios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6427,7 +6696,7 @@ SELECT pg_catalog.setval('public.configuracion_precios_id_seq', 13, true);
 
 
 --
--- TOC entry 6276 (class 0 OID 0)
+-- TOC entry 6321 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: configuraciones_app_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6436,7 +6705,7 @@ SELECT pg_catalog.setval('public.configuraciones_app_id_seq', 9, false);
 
 
 --
--- TOC entry 6277 (class 0 OID 0)
+-- TOC entry 6322 (class 0 OID 0)
 -- Dependencies: 249
 -- Name: detalles_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6445,7 +6714,7 @@ SELECT pg_catalog.setval('public.detalles_conductor_id_seq', 35, true);
 
 
 --
--- TOC entry 6278 (class 0 OID 0)
+-- TOC entry 6323 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: disputas_pago_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6454,7 +6723,7 @@ SELECT pg_catalog.setval('public.disputas_pago_id_seq', 5, true);
 
 
 --
--- TOC entry 6279 (class 0 OID 0)
+-- TOC entry 6324 (class 0 OID 0)
 -- Dependencies: 270
 -- Name: documentos_verificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6463,7 +6732,7 @@ SELECT pg_catalog.setval('public.documentos_verificacion_id_seq', 119, true);
 
 
 --
--- TOC entry 6280 (class 0 OID 0)
+-- TOC entry 6325 (class 0 OID 0)
 -- Dependencies: 303
 -- Name: empresa_tipos_vehiculo_historial_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6472,7 +6741,7 @@ SELECT pg_catalog.setval('public.empresa_tipos_vehiculo_historial_id_seq', 1, fa
 
 
 --
--- TOC entry 6281 (class 0 OID 0)
+-- TOC entry 6326 (class 0 OID 0)
 -- Dependencies: 301
 -- Name: empresa_tipos_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6481,7 +6750,7 @@ SELECT pg_catalog.setval('public.empresa_tipos_vehiculo_id_seq', 52, true);
 
 
 --
--- TOC entry 6282 (class 0 OID 0)
+-- TOC entry 6327 (class 0 OID 0)
 -- Dependencies: 305
 -- Name: empresa_vehiculo_notificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6490,7 +6759,7 @@ SELECT pg_catalog.setval('public.empresa_vehiculo_notificaciones_id_seq', 1, fal
 
 
 --
--- TOC entry 6283 (class 0 OID 0)
+-- TOC entry 6328 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: empresas_configuracion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6499,7 +6768,7 @@ SELECT pg_catalog.setval('public.empresas_configuracion_id_seq', 8, true);
 
 
 --
--- TOC entry 6284 (class 0 OID 0)
+-- TOC entry 6329 (class 0 OID 0)
 -- Dependencies: 291
 -- Name: empresas_contacto_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6508,16 +6777,16 @@ SELECT pg_catalog.setval('public.empresas_contacto_id_seq', 8, true);
 
 
 --
--- TOC entry 6285 (class 0 OID 0)
+-- TOC entry 6330 (class 0 OID 0)
 -- Dependencies: 295
 -- Name: empresas_metricas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.empresas_metricas_id_seq', 33, true);
+SELECT pg_catalog.setval('public.empresas_metricas_id_seq', 38, true);
 
 
 --
--- TOC entry 6286 (class 0 OID 0)
+-- TOC entry 6331 (class 0 OID 0)
 -- Dependencies: 293
 -- Name: empresas_representante_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6526,7 +6795,7 @@ SELECT pg_catalog.setval('public.empresas_representante_id_seq', 3, true);
 
 
 --
--- TOC entry 6287 (class 0 OID 0)
+-- TOC entry 6332 (class 0 OID 0)
 -- Dependencies: 268
 -- Name: empresas_transporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6535,7 +6804,7 @@ SELECT pg_catalog.setval('public.empresas_transporte_id_seq', 16, true);
 
 
 --
--- TOC entry 6288 (class 0 OID 0)
+-- TOC entry 6333 (class 0 OID 0)
 -- Dependencies: 258
 -- Name: historial_confianza_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6544,7 +6813,7 @@ SELECT pg_catalog.setval('public.historial_confianza_id_seq', 1, false);
 
 
 --
--- TOC entry 6289 (class 0 OID 0)
+-- TOC entry 6334 (class 0 OID 0)
 -- Dependencies: 274
 -- Name: logs_auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6553,7 +6822,7 @@ SELECT pg_catalog.setval('public.logs_auditoria_id_seq', 159, true);
 
 
 --
--- TOC entry 6290 (class 0 OID 0)
+-- TOC entry 6335 (class 0 OID 0)
 -- Dependencies: 261
 -- Name: mensajes_chat_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6562,7 +6831,7 @@ SELECT pg_catalog.setval('public.mensajes_chat_id_seq', 48, true);
 
 
 --
--- TOC entry 6291 (class 0 OID 0)
+-- TOC entry 6336 (class 0 OID 0)
 -- Dependencies: 313
 -- Name: mensajes_ticket_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6571,7 +6840,7 @@ SELECT pg_catalog.setval('public.mensajes_ticket_id_seq', 1, false);
 
 
 --
--- TOC entry 6292 (class 0 OID 0)
+-- TOC entry 6337 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: notificaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6580,7 +6849,7 @@ SELECT pg_catalog.setval('public.notificaciones_usuario_id_seq', 6, true);
 
 
 --
--- TOC entry 6293 (class 0 OID 0)
+-- TOC entry 6338 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: pagos_empresas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6589,7 +6858,7 @@ SELECT pg_catalog.setval('public.pagos_empresas_id_seq', 1, false);
 
 
 --
--- TOC entry 6294 (class 0 OID 0)
+-- TOC entry 6339 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: pagos_viaje_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6598,7 +6867,7 @@ SELECT pg_catalog.setval('public.pagos_viaje_id_seq', 14, true);
 
 
 --
--- TOC entry 6295 (class 0 OID 0)
+-- TOC entry 6340 (class 0 OID 0)
 -- Dependencies: 253
 -- Name: paradas_solicitud_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6607,7 +6876,7 @@ SELECT pg_catalog.setval('public.paradas_solicitud_id_seq', 3, false);
 
 
 --
--- TOC entry 6296 (class 0 OID 0)
+-- TOC entry 6341 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: plantillas_bloqueadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6616,7 +6885,7 @@ SELECT pg_catalog.setval('public.plantillas_bloqueadas_id_seq', 1, false);
 
 
 --
--- TOC entry 6297 (class 0 OID 0)
+-- TOC entry 6342 (class 0 OID 0)
 -- Dependencies: 315
 -- Name: solicitudes_callback_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6625,16 +6894,16 @@ SELECT pg_catalog.setval('public.solicitudes_callback_id_seq', 1, false);
 
 
 --
--- TOC entry 6298 (class 0 OID 0)
+-- TOC entry 6343 (class 0 OID 0)
 -- Dependencies: 244
 -- Name: solicitudes_servicio_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.solicitudes_servicio_id_seq', 787, true);
+SELECT pg_catalog.setval('public.solicitudes_servicio_id_seq', 791, true);
 
 
 --
--- TOC entry 6299 (class 0 OID 0)
+-- TOC entry 6344 (class 0 OID 0)
 -- Dependencies: 288
 -- Name: solicitudes_vinculacion_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6643,7 +6912,7 @@ SELECT pg_catalog.setval('public.solicitudes_vinculacion_conductor_id_seq', 34, 
 
 
 --
--- TOC entry 6300 (class 0 OID 0)
+-- TOC entry 6345 (class 0 OID 0)
 -- Dependencies: 311
 -- Name: tickets_soporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6652,7 +6921,7 @@ SELECT pg_catalog.setval('public.tickets_soporte_id_seq', 1, false);
 
 
 --
--- TOC entry 6301 (class 0 OID 0)
+-- TOC entry 6346 (class 0 OID 0)
 -- Dependencies: 279
 -- Name: tipos_notificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6661,7 +6930,7 @@ SELECT pg_catalog.setval('public.tipos_notificacion_id_seq', 12, true);
 
 
 --
--- TOC entry 6302 (class 0 OID 0)
+-- TOC entry 6347 (class 0 OID 0)
 -- Dependencies: 285
 -- Name: tokens_push_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6670,7 +6939,7 @@ SELECT pg_catalog.setval('public.tokens_push_usuario_id_seq', 1, false);
 
 
 --
--- TOC entry 6303 (class 0 OID 0)
+-- TOC entry 6348 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: transacciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6679,7 +6948,7 @@ SELECT pg_catalog.setval('public.transacciones_id_seq', 24, true);
 
 
 --
--- TOC entry 6304 (class 0 OID 0)
+-- TOC entry 6349 (class 0 OID 0)
 -- Dependencies: 251
 -- Name: ubicaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6688,7 +6957,7 @@ SELECT pg_catalog.setval('public.ubicaciones_usuario_id_seq', 10, false);
 
 
 --
--- TOC entry 6305 (class 0 OID 0)
+-- TOC entry 6350 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: user_devices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6697,7 +6966,7 @@ SELECT pg_catalog.setval('public.user_devices_id_seq', 43, true);
 
 
 --
--- TOC entry 6306 (class 0 OID 0)
+-- TOC entry 6351 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6706,25 +6975,25 @@ SELECT pg_catalog.setval('public.usuarios_id_seq', 298, true);
 
 
 --
--- TOC entry 6307 (class 0 OID 0)
+-- TOC entry 6352 (class 0 OID 0)
 -- Dependencies: 320
 -- Name: viaje_resumen_tracking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.viaje_resumen_tracking_id_seq', 350, true);
+SELECT pg_catalog.setval('public.viaje_resumen_tracking_id_seq', 388, true);
 
 
 --
--- TOC entry 6308 (class 0 OID 0)
+-- TOC entry 6353 (class 0 OID 0)
 -- Dependencies: 318
 -- Name: viaje_tracking_realtime_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.viaje_tracking_realtime_id_seq', 329, true);
+SELECT pg_catalog.setval('public.viaje_tracking_realtime_id_seq', 364, true);
 
 
 --
--- TOC entry 5517 (class 2606 OID 16881)
+-- TOC entry 5536 (class 2606 OID 16881)
 -- Name: asignaciones_conductor asignaciones_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6733,7 +7002,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5521 (class 2606 OID 16885)
+-- TOC entry 5540 (class 2606 OID 16885)
 -- Name: cache_direcciones cache_direcciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6742,7 +7011,7 @@ ALTER TABLE ONLY public.cache_direcciones
 
 
 --
--- TOC entry 5524 (class 2606 OID 16888)
+-- TOC entry 5543 (class 2606 OID 16888)
 -- Name: cache_geocodificacion cache_geocodificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6751,7 +7020,7 @@ ALTER TABLE ONLY public.cache_geocodificacion
 
 
 --
--- TOC entry 5527 (class 2606 OID 16891)
+-- TOC entry 5546 (class 2606 OID 16891)
 -- Name: calificaciones calificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6760,7 +7029,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5775 (class 2606 OID 115567)
+-- TOC entry 5795 (class 2606 OID 115567)
 -- Name: catalogo_tipos_vehiculo catalogo_tipos_vehiculo_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6769,7 +7038,7 @@ ALTER TABLE ONLY public.catalogo_tipos_vehiculo
 
 
 --
--- TOC entry 5777 (class 2606 OID 115565)
+-- TOC entry 5797 (class 2606 OID 115565)
 -- Name: catalogo_tipos_vehiculo catalogo_tipos_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6778,7 +7047,7 @@ ALTER TABLE ONLY public.catalogo_tipos_vehiculo
 
 
 --
--- TOC entry 5795 (class 2606 OID 115687)
+-- TOC entry 5815 (class 2606 OID 115687)
 -- Name: categorias_soporte categorias_soporte_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6787,7 +7056,7 @@ ALTER TABLE ONLY public.categorias_soporte
 
 
 --
--- TOC entry 5797 (class 2606 OID 115685)
+-- TOC entry 5817 (class 2606 OID 115685)
 -- Name: categorias_soporte categorias_soporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6796,7 +7065,7 @@ ALTER TABLE ONLY public.categorias_soporte
 
 
 --
--- TOC entry 5714 (class 2606 OID 33664)
+-- TOC entry 5734 (class 2606 OID 33664)
 -- Name: colores_vehiculo colores_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6805,7 +7074,7 @@ ALTER TABLE ONLY public.colores_vehiculo
 
 
 --
--- TOC entry 5670 (class 2606 OID 17173)
+-- TOC entry 5690 (class 2606 OID 17173)
 -- Name: conductores_favoritos conductores_favoritos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6814,7 +7083,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5736 (class 2606 OID 91026)
+-- TOC entry 5756 (class 2606 OID 91026)
 -- Name: configuracion_notificaciones_usuario configuracion_notificaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6823,7 +7092,7 @@ ALTER TABLE ONLY public.configuracion_notificaciones_usuario
 
 
 --
--- TOC entry 5738 (class 2606 OID 91028)
+-- TOC entry 5758 (class 2606 OID 91028)
 -- Name: configuracion_notificaciones_usuario configuracion_notificaciones_usuario_usuario_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6832,7 +7101,7 @@ ALTER TABLE ONLY public.configuracion_notificaciones_usuario
 
 
 --
--- TOC entry 5541 (class 2606 OID 16901)
+-- TOC entry 5560 (class 2606 OID 16901)
 -- Name: configuracion_precios configuracion_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6841,7 +7110,7 @@ ALTER TABLE ONLY public.configuracion_precios
 
 
 --
--- TOC entry 5536 (class 2606 OID 16896)
+-- TOC entry 5555 (class 2606 OID 16896)
 -- Name: configuraciones_app configuraciones_app_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6850,7 +7119,7 @@ ALTER TABLE ONLY public.configuraciones_app
 
 
 --
--- TOC entry 5547 (class 2606 OID 16905)
+-- TOC entry 5566 (class 2606 OID 16905)
 -- Name: detalles_conductor detalles_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6859,7 +7128,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5561 (class 2606 OID 16917)
+-- TOC entry 5580 (class 2606 OID 16917)
 -- Name: detalles_paquete detalles_paquete_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6868,7 +7137,7 @@ ALTER TABLE ONLY public.detalles_paquete
 
 
 --
--- TOC entry 5564 (class 2606 OID 16920)
+-- TOC entry 5583 (class 2606 OID 16920)
 -- Name: detalles_viaje detalles_viaje_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6877,7 +7146,7 @@ ALTER TABLE ONLY public.detalles_viaje
 
 
 --
--- TOC entry 5691 (class 2606 OID 17294)
+-- TOC entry 5711 (class 2606 OID 17294)
 -- Name: disputas_pago disputas_pago_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6886,7 +7155,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5693 (class 2606 OID 17296)
+-- TOC entry 5713 (class 2606 OID 17296)
 -- Name: disputas_pago disputas_pago_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6895,7 +7164,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5567 (class 2606 OID 16923)
+-- TOC entry 5586 (class 2606 OID 16923)
 -- Name: documentos_conductor_historial documentos_conductor_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6904,7 +7173,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5711 (class 2606 OID 33649)
+-- TOC entry 5731 (class 2606 OID 33649)
 -- Name: documentos_verificacion documentos_verificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6913,7 +7182,7 @@ ALTER TABLE ONLY public.documentos_verificacion
 
 
 --
--- TOC entry 5787 (class 2606 OID 115619)
+-- TOC entry 5807 (class 2606 OID 115619)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6922,7 +7191,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5779 (class 2606 OID 115582)
+-- TOC entry 5799 (class 2606 OID 115582)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6931,7 +7200,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5791 (class 2606 OID 115643)
+-- TOC entry 5811 (class 2606 OID 115643)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6940,7 +7209,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5770 (class 2606 OID 91290)
+-- TOC entry 5790 (class 2606 OID 91290)
 -- Name: empresas_configuracion empresas_configuracion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6949,7 +7218,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5754 (class 2606 OID 91217)
+-- TOC entry 5774 (class 2606 OID 91217)
 -- Name: empresas_contacto empresas_contacto_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6958,7 +7227,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5765 (class 2606 OID 91264)
+-- TOC entry 5785 (class 2606 OID 91264)
 -- Name: empresas_metricas empresas_metricas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6967,7 +7236,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5760 (class 2606 OID 91238)
+-- TOC entry 5780 (class 2606 OID 91238)
 -- Name: empresas_representante empresas_representante_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6976,7 +7245,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5703 (class 2606 OID 25452)
+-- TOC entry 5723 (class 2606 OID 25452)
 -- Name: empresas_transporte empresas_transporte_nit_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6985,7 +7254,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5705 (class 2606 OID 25450)
+-- TOC entry 5725 (class 2606 OID 25450)
 -- Name: empresas_transporte empresas_transporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6994,7 +7263,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5574 (class 2606 OID 16928)
+-- TOC entry 5593 (class 2606 OID 16928)
 -- Name: estadisticas_sistema estadisticas_sistema_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7003,7 +7272,7 @@ ALTER TABLE ONLY public.estadisticas_sistema
 
 
 --
--- TOC entry 5676 (class 2606 OID 17201)
+-- TOC entry 5696 (class 2606 OID 17201)
 -- Name: historial_confianza historial_confianza_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7012,7 +7281,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5578 (class 2606 OID 16932)
+-- TOC entry 5597 (class 2606 OID 16932)
 -- Name: historial_precios historial_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7021,7 +7290,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5583 (class 2606 OID 16937)
+-- TOC entry 5602 (class 2606 OID 16937)
 -- Name: historial_seguimiento historial_seguimiento_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7030,7 +7299,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5538 (class 2606 OID 16898)
+-- TOC entry 5557 (class 2606 OID 16898)
 -- Name: configuraciones_app idx_clave; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7039,7 +7308,7 @@ ALTER TABLE ONLY public.configuraciones_app
 
 
 --
--- TOC entry 5559 (class 2606 OID 16907)
+-- TOC entry 5578 (class 2606 OID 16907)
 -- Name: detalles_conductor idx_detalles_conductor_usuario; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7048,7 +7317,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5576 (class 2606 OID 16930)
+-- TOC entry 5595 (class 2606 OID 16930)
 -- Name: estadisticas_sistema idx_fecha; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7057,7 +7326,7 @@ ALTER TABLE ONLY public.estadisticas_sistema
 
 
 --
--- TOC entry 5632 (class 2606 OID 16977)
+-- TOC entry 5652 (class 2606 OID 16977)
 -- Name: transacciones idx_transacciones_solicitud; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7066,7 +7335,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5591 (class 2606 OID 16942)
+-- TOC entry 5610 (class 2606 OID 16942)
 -- Name: logs_auditoria logs_auditoria_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7075,7 +7344,7 @@ ALTER TABLE ONLY public.logs_auditoria
 
 
 --
--- TOC entry 5689 (class 2606 OID 17258)
+-- TOC entry 5709 (class 2606 OID 17258)
 -- Name: mensajes_chat mensajes_chat_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7084,7 +7353,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5809 (class 2606 OID 115728)
+-- TOC entry 5829 (class 2606 OID 115728)
 -- Name: mensajes_ticket mensajes_ticket_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7093,7 +7362,7 @@ ALTER TABLE ONLY public.mensajes_ticket
 
 
 --
--- TOC entry 5594 (class 2606 OID 16947)
+-- TOC entry 5613 (class 2606 OID 16947)
 -- Name: metodos_pago_usuario metodos_pago_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7102,7 +7371,7 @@ ALTER TABLE ONLY public.metodos_pago_usuario
 
 
 --
--- TOC entry 5734 (class 2606 OID 90999)
+-- TOC entry 5754 (class 2606 OID 90999)
 -- Name: notificaciones_usuario notificaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7111,7 +7380,7 @@ ALTER TABLE ONLY public.notificaciones_usuario
 
 
 --
--- TOC entry 5719 (class 2606 OID 58214)
+-- TOC entry 5739 (class 2606 OID 58214)
 -- Name: pagos_empresas pagos_empresas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7120,7 +7389,7 @@ ALTER TABLE ONLY public.pagos_empresas
 
 
 --
--- TOC entry 5699 (class 2606 OID 17356)
+-- TOC entry 5719 (class 2606 OID 17356)
 -- Name: pagos_viaje pagos_viaje_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7129,7 +7398,7 @@ ALTER TABLE ONLY public.pagos_viaje
 
 
 --
--- TOC entry 5701 (class 2606 OID 17358)
+-- TOC entry 5721 (class 2606 OID 17358)
 -- Name: pagos_viaje pagos_viaje_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7138,7 +7407,7 @@ ALTER TABLE ONLY public.pagos_viaje
 
 
 --
--- TOC entry 5597 (class 2606 OID 16950)
+-- TOC entry 5616 (class 2606 OID 16950)
 -- Name: paradas_solicitud paradas_solicitud_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7147,7 +7416,7 @@ ALTER TABLE ONLY public.paradas_solicitud
 
 
 --
--- TOC entry 5723 (class 2606 OID 82790)
+-- TOC entry 5743 (class 2606 OID 82790)
 -- Name: plantillas_bloqueadas plantillas_bloqueadas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7156,7 +7425,7 @@ ALTER TABLE ONLY public.plantillas_bloqueadas
 
 
 --
--- TOC entry 5599 (class 2606 OID 16955)
+-- TOC entry 5618 (class 2606 OID 16955)
 -- Name: proveedores_mapa proveedores_mapa_nombre_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7165,7 +7434,7 @@ ALTER TABLE ONLY public.proveedores_mapa
 
 
 --
--- TOC entry 5601 (class 2606 OID 16953)
+-- TOC entry 5620 (class 2606 OID 16953)
 -- Name: proveedores_mapa proveedores_mapa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7174,7 +7443,7 @@ ALTER TABLE ONLY public.proveedores_mapa
 
 
 --
--- TOC entry 5603 (class 2606 OID 16957)
+-- TOC entry 5622 (class 2606 OID 16957)
 -- Name: reglas_precios reglas_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7183,7 +7452,7 @@ ALTER TABLE ONLY public.reglas_precios
 
 
 --
--- TOC entry 5610 (class 2606 OID 16959)
+-- TOC entry 5629 (class 2606 OID 16959)
 -- Name: reportes_usuarios reportes_usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7192,7 +7461,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5813 (class 2606 OID 115748)
+-- TOC entry 5833 (class 2606 OID 115748)
 -- Name: solicitudes_callback solicitudes_callback_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7201,7 +7470,7 @@ ALTER TABLE ONLY public.solicitudes_callback
 
 
 --
--- TOC entry 5622 (class 2606 OID 16966)
+-- TOC entry 5642 (class 2606 OID 16966)
 -- Name: solicitudes_servicio solicitudes_servicio_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7210,7 +7479,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5750 (class 2606 OID 91167)
+-- TOC entry 5770 (class 2606 OID 91167)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7219,7 +7488,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5803 (class 2606 OID 115704)
+-- TOC entry 5823 (class 2606 OID 115704)
 -- Name: tickets_soporte tickets_soporte_numero_ticket_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7228,7 +7497,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5805 (class 2606 OID 115702)
+-- TOC entry 5825 (class 2606 OID 115702)
 -- Name: tickets_soporte tickets_soporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7237,7 +7506,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5725 (class 2606 OID 90985)
+-- TOC entry 5745 (class 2606 OID 90985)
 -- Name: tipos_notificacion tipos_notificacion_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7246,7 +7515,7 @@ ALTER TABLE ONLY public.tipos_notificacion
 
 
 --
--- TOC entry 5727 (class 2606 OID 90983)
+-- TOC entry 5747 (class 2606 OID 90983)
 -- Name: tipos_notificacion tipos_notificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7255,7 +7524,7 @@ ALTER TABLE ONLY public.tipos_notificacion
 
 
 --
--- TOC entry 5742 (class 2606 OID 91041)
+-- TOC entry 5762 (class 2606 OID 91041)
 -- Name: tokens_push_usuario tokens_push_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7264,7 +7533,7 @@ ALTER TABLE ONLY public.tokens_push_usuario
 
 
 --
--- TOC entry 5744 (class 2606 OID 91043)
+-- TOC entry 5764 (class 2606 OID 91043)
 -- Name: tokens_push_usuario tokens_push_usuario_usuario_id_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7273,7 +7542,7 @@ ALTER TABLE ONLY public.tokens_push_usuario
 
 
 --
--- TOC entry 5634 (class 2606 OID 16975)
+-- TOC entry 5654 (class 2606 OID 16975)
 -- Name: transacciones transacciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7282,7 +7551,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5637 (class 2606 OID 16982)
+-- TOC entry 5657 (class 2606 OID 16982)
 -- Name: ubicaciones_usuario ubicaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7291,7 +7560,7 @@ ALTER TABLE ONLY public.ubicaciones_usuario
 
 
 --
--- TOC entry 5534 (class 2606 OID 123860)
+-- TOC entry 5553 (class 2606 OID 123860)
 -- Name: calificaciones unique_calificacion_por_usuario_solicitud; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7300,7 +7569,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5641 (class 2606 OID 16985)
+-- TOC entry 5661 (class 2606 OID 16985)
 -- Name: user_devices user_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7309,7 +7578,7 @@ ALTER TABLE ONLY public.user_devices
 
 
 --
--- TOC entry 5643 (class 2606 OID 16987)
+-- TOC entry 5663 (class 2606 OID 16987)
 -- Name: user_devices user_devices_user_id_device_uuid_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7318,7 +7587,7 @@ ALTER TABLE ONLY public.user_devices
 
 
 --
--- TOC entry 5654 (class 2606 OID 99167)
+-- TOC entry 5674 (class 2606 OID 99167)
 -- Name: usuarios usuarios_apple_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7327,7 +7596,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5656 (class 2606 OID 16995)
+-- TOC entry 5676 (class 2606 OID 16995)
 -- Name: usuarios usuarios_email_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7336,7 +7605,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5658 (class 2606 OID 99164)
+-- TOC entry 5678 (class 2606 OID 99164)
 -- Name: usuarios usuarios_google_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7345,7 +7614,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5660 (class 2606 OID 16991)
+-- TOC entry 5680 (class 2606 OID 16991)
 -- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7354,7 +7623,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5662 (class 2606 OID 16997)
+-- TOC entry 5682 (class 2606 OID 16997)
 -- Name: usuarios usuarios_telefono_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7363,7 +7632,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5664 (class 2606 OID 16993)
+-- TOC entry 5684 (class 2606 OID 16993)
 -- Name: usuarios usuarios_uuid_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7372,7 +7641,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5624 (class 2606 OID 16968)
+-- TOC entry 5644 (class 2606 OID 16968)
 -- Name: solicitudes_servicio uuid_solicitud_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7381,7 +7650,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5674 (class 2606 OID 17175)
+-- TOC entry 5694 (class 2606 OID 17175)
 -- Name: conductores_favoritos ux_conductores_favoritos_usuario_conductor; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7390,7 +7659,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5773 (class 2606 OID 91292)
+-- TOC entry 5793 (class 2606 OID 91292)
 -- Name: empresas_configuracion ux_empresa_configuracion; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7399,7 +7668,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5758 (class 2606 OID 91219)
+-- TOC entry 5778 (class 2606 OID 91219)
 -- Name: empresas_contacto ux_empresa_contacto; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7408,7 +7677,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5768 (class 2606 OID 91266)
+-- TOC entry 5788 (class 2606 OID 91266)
 -- Name: empresas_metricas ux_empresa_metricas; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7417,7 +7686,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5763 (class 2606 OID 91240)
+-- TOC entry 5783 (class 2606 OID 91240)
 -- Name: empresas_representante ux_empresa_representante; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7426,7 +7695,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5785 (class 2606 OID 115584)
+-- TOC entry 5805 (class 2606 OID 115584)
 -- Name: empresa_tipos_vehiculo ux_empresa_tipo_vehiculo; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7435,7 +7704,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5682 (class 2606 OID 17203)
+-- TOC entry 5702 (class 2606 OID 17203)
 -- Name: historial_confianza ux_historial_confianza_usuario_conductor; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7444,7 +7713,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5752 (class 2606 OID 91169)
+-- TOC entry 5772 (class 2606 OID 91169)
 -- Name: solicitudes_vinculacion_conductor ux_solicitud_pendiente; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7453,7 +7722,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5668 (class 2606 OID 17002)
+-- TOC entry 5688 (class 2606 OID 17002)
 -- Name: verification_codes verification_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7462,7 +7731,7 @@ ALTER TABLE ONLY public.verification_codes
 
 
 --
--- TOC entry 5822 (class 2606 OID 123819)
+-- TOC entry 5843 (class 2606 OID 123819)
 -- Name: viaje_resumen_tracking viaje_resumen_tracking_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7471,7 +7740,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5824 (class 2606 OID 123821)
+-- TOC entry 5845 (class 2606 OID 123821)
 -- Name: viaje_resumen_tracking viaje_resumen_tracking_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7480,7 +7749,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5819 (class 2606 OID 123782)
+-- TOC entry 5839 (class 2606 OID 123782)
 -- Name: viaje_tracking_realtime viaje_tracking_realtime_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7489,7 +7758,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5518 (class 1259 OID 16883)
+-- TOC entry 5537 (class 1259 OID 16883)
 -- Name: idx_asignaciones_conductor_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7497,7 +7766,7 @@ CREATE INDEX idx_asignaciones_conductor_conductor_id ON public.asignaciones_cond
 
 
 --
--- TOC entry 5519 (class 1259 OID 16882)
+-- TOC entry 5538 (class 1259 OID 16882)
 -- Name: idx_asignaciones_conductor_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7505,7 +7774,7 @@ CREATE INDEX idx_asignaciones_conductor_solicitud_id ON public.asignaciones_cond
 
 
 --
--- TOC entry 5522 (class 1259 OID 16886)
+-- TOC entry 5541 (class 1259 OID 16886)
 -- Name: idx_cache_dir_ruta; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7513,7 +7782,7 @@ CREATE INDEX idx_cache_dir_ruta ON public.cache_direcciones USING btree (latitud
 
 
 --
--- TOC entry 5525 (class 1259 OID 16889)
+-- TOC entry 5544 (class 1259 OID 16889)
 -- Name: idx_cache_geo_coordenadas; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7521,7 +7790,7 @@ CREATE INDEX idx_cache_geo_coordenadas ON public.cache_geocodificacion USING btr
 
 
 --
--- TOC entry 5528 (class 1259 OID 41836)
+-- TOC entry 5547 (class 1259 OID 41836)
 -- Name: idx_calificaciones_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7529,7 +7798,7 @@ CREATE INDEX idx_calificaciones_solicitud ON public.calificaciones USING btree (
 
 
 --
--- TOC entry 5529 (class 1259 OID 123861)
+-- TOC entry 5548 (class 1259 OID 123861)
 -- Name: idx_calificaciones_solicitud_calificador; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7537,7 +7806,7 @@ CREATE INDEX idx_calificaciones_solicitud_calificador ON public.calificaciones U
 
 
 --
--- TOC entry 5530 (class 1259 OID 16892)
+-- TOC entry 5549 (class 1259 OID 16892)
 -- Name: idx_calificaciones_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7545,7 +7814,7 @@ CREATE INDEX idx_calificaciones_solicitud_id ON public.calificaciones USING btre
 
 
 --
--- TOC entry 5531 (class 1259 OID 16894)
+-- TOC entry 5550 (class 1259 OID 16894)
 -- Name: idx_calificaciones_usuario_calificado_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7553,7 +7822,7 @@ CREATE INDEX idx_calificaciones_usuario_calificado_id ON public.calificaciones U
 
 
 --
--- TOC entry 5532 (class 1259 OID 16893)
+-- TOC entry 5551 (class 1259 OID 16893)
 -- Name: idx_calificaciones_usuario_calificador_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7561,7 +7830,7 @@ CREATE INDEX idx_calificaciones_usuario_calificador_id ON public.calificaciones 
 
 
 --
--- TOC entry 5810 (class 1259 OID 115750)
+-- TOC entry 5830 (class 1259 OID 115750)
 -- Name: idx_callback_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7569,7 +7838,7 @@ CREATE INDEX idx_callback_estado ON public.solicitudes_callback USING btree (est
 
 
 --
--- TOC entry 5811 (class 1259 OID 115749)
+-- TOC entry 5831 (class 1259 OID 115749)
 -- Name: idx_callback_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7577,7 +7846,7 @@ CREATE INDEX idx_callback_usuario ON public.solicitudes_callback USING btree (us
 
 
 --
--- TOC entry 5715 (class 1259 OID 33665)
+-- TOC entry 5735 (class 1259 OID 33665)
 -- Name: idx_color_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7585,7 +7854,7 @@ CREATE INDEX idx_color_activo ON public.colores_vehiculo USING btree (activo);
 
 
 --
--- TOC entry 5677 (class 1259 OID 17233)
+-- TOC entry 5697 (class 1259 OID 17233)
 -- Name: idx_conductor_confianza; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7593,7 +7862,7 @@ CREATE INDEX idx_conductor_confianza ON public.historial_confianza USING btree (
 
 
 --
--- TOC entry 5671 (class 1259 OID 17231)
+-- TOC entry 5691 (class 1259 OID 17231)
 -- Name: idx_conductor_favoritos; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7601,7 +7870,7 @@ CREATE INDEX idx_conductor_favoritos ON public.conductores_favoritos USING btree
 
 
 --
--- TOC entry 5678 (class 1259 OID 17236)
+-- TOC entry 5698 (class 1259 OID 17236)
 -- Name: idx_confianza_score_viajes; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7609,7 +7878,7 @@ CREATE INDEX idx_confianza_score_viajes ON public.historial_confianza USING btre
 
 
 --
--- TOC entry 5739 (class 1259 OID 91029)
+-- TOC entry 5759 (class 1259 OID 91029)
 -- Name: idx_config_notif_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7617,7 +7886,7 @@ CREATE INDEX idx_config_notif_usuario ON public.configuracion_notificaciones_usu
 
 
 --
--- TOC entry 5542 (class 1259 OID 16903)
+-- TOC entry 5561 (class 1259 OID 16903)
 -- Name: idx_configuracion_precios_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7625,7 +7894,7 @@ CREATE INDEX idx_configuracion_precios_activo ON public.configuracion_precios US
 
 
 --
--- TOC entry 5543 (class 1259 OID 16902)
+-- TOC entry 5562 (class 1259 OID 16902)
 -- Name: idx_configuracion_precios_tipo_vehiculo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7633,7 +7902,7 @@ CREATE INDEX idx_configuracion_precios_tipo_vehiculo ON public.configuracion_pre
 
 
 --
--- TOC entry 5539 (class 1259 OID 16899)
+-- TOC entry 5558 (class 1259 OID 16899)
 -- Name: idx_configuraciones_app_categoria; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7641,7 +7910,7 @@ CREATE INDEX idx_configuraciones_app_categoria ON public.configuraciones_app USI
 
 
 --
--- TOC entry 5548 (class 1259 OID 82796)
+-- TOC entry 5567 (class 1259 OID 82796)
 -- Name: idx_dc_estado_bio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7649,7 +7918,7 @@ CREATE INDEX idx_dc_estado_bio ON public.detalles_conductor USING btree (estado_
 
 
 --
--- TOC entry 5549 (class 1259 OID 82797)
+-- TOC entry 5568 (class 1259 OID 82797)
 -- Name: idx_dc_plantilla_exists; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7657,7 +7926,7 @@ CREATE INDEX idx_dc_plantilla_exists ON public.detalles_conductor USING btree (u
 
 
 --
--- TOC entry 5550 (class 1259 OID 16908)
+-- TOC entry 5569 (class 1259 OID 16908)
 -- Name: idx_detalles_conductor_disponible; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7665,7 +7934,7 @@ CREATE INDEX idx_detalles_conductor_disponible ON public.detalles_conductor USIN
 
 
 --
--- TOC entry 5551 (class 1259 OID 16912)
+-- TOC entry 5570 (class 1259 OID 16912)
 -- Name: idx_detalles_conductor_estado_verificacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7673,7 +7942,7 @@ CREATE INDEX idx_detalles_conductor_estado_verificacion ON public.detalles_condu
 
 
 --
--- TOC entry 5552 (class 1259 OID 16910)
+-- TOC entry 5571 (class 1259 OID 16910)
 -- Name: idx_detalles_conductor_licencia; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7681,7 +7950,7 @@ CREATE INDEX idx_detalles_conductor_licencia ON public.detalles_conductor USING 
 
 
 --
--- TOC entry 5553 (class 1259 OID 16913)
+-- TOC entry 5572 (class 1259 OID 16913)
 -- Name: idx_detalles_conductor_licencia_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7689,7 +7958,7 @@ CREATE INDEX idx_detalles_conductor_licencia_vencimiento ON public.detalles_cond
 
 
 --
--- TOC entry 5554 (class 1259 OID 16911)
+-- TOC entry 5573 (class 1259 OID 16911)
 -- Name: idx_detalles_conductor_placa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7697,7 +7966,7 @@ CREATE INDEX idx_detalles_conductor_placa ON public.detalles_conductor USING btr
 
 
 --
--- TOC entry 5555 (class 1259 OID 16914)
+-- TOC entry 5574 (class 1259 OID 16914)
 -- Name: idx_detalles_conductor_soat_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7705,7 +7974,7 @@ CREATE INDEX idx_detalles_conductor_soat_vencimiento ON public.detalles_conducto
 
 
 --
--- TOC entry 5556 (class 1259 OID 16915)
+-- TOC entry 5575 (class 1259 OID 16915)
 -- Name: idx_detalles_conductor_tecnomecanica_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7713,7 +7982,7 @@ CREATE INDEX idx_detalles_conductor_tecnomecanica_vencimiento ON public.detalles
 
 
 --
--- TOC entry 5557 (class 1259 OID 16909)
+-- TOC entry 5576 (class 1259 OID 16909)
 -- Name: idx_detalles_conductor_ubicacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7721,7 +7990,7 @@ CREATE INDEX idx_detalles_conductor_ubicacion ON public.detalles_conductor USING
 
 
 --
--- TOC entry 5562 (class 1259 OID 16918)
+-- TOC entry 5581 (class 1259 OID 16918)
 -- Name: idx_detalles_paquete_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7729,7 +7998,7 @@ CREATE INDEX idx_detalles_paquete_solicitud_id ON public.detalles_paquete USING 
 
 
 --
--- TOC entry 5565 (class 1259 OID 16921)
+-- TOC entry 5584 (class 1259 OID 16921)
 -- Name: idx_detalles_viaje_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7737,7 +8006,7 @@ CREATE INDEX idx_detalles_viaje_solicitud_id ON public.detalles_viaje USING btre
 
 
 --
--- TOC entry 5694 (class 1259 OID 17332)
+-- TOC entry 5714 (class 1259 OID 17332)
 -- Name: idx_disputas_cliente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7745,7 +8014,7 @@ CREATE INDEX idx_disputas_cliente ON public.disputas_pago USING btree (cliente_i
 
 
 --
--- TOC entry 5695 (class 1259 OID 17333)
+-- TOC entry 5715 (class 1259 OID 17333)
 -- Name: idx_disputas_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7753,7 +8022,7 @@ CREATE INDEX idx_disputas_conductor ON public.disputas_pago USING btree (conduct
 
 
 --
--- TOC entry 5696 (class 1259 OID 17334)
+-- TOC entry 5716 (class 1259 OID 17334)
 -- Name: idx_disputas_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7761,7 +8030,7 @@ CREATE INDEX idx_disputas_estado ON public.disputas_pago USING btree (estado);
 
 
 --
--- TOC entry 5697 (class 1259 OID 17331)
+-- TOC entry 5717 (class 1259 OID 17331)
 -- Name: idx_disputas_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7769,7 +8038,7 @@ CREATE INDEX idx_disputas_solicitud ON public.disputas_pago USING btree (solicit
 
 
 --
--- TOC entry 5568 (class 1259 OID 66401)
+-- TOC entry 5587 (class 1259 OID 66401)
 -- Name: idx_doc_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7777,7 +8046,7 @@ CREATE INDEX idx_doc_empresa ON public.documentos_conductor_historial USING btre
 
 
 --
--- TOC entry 5712 (class 1259 OID 33656)
+-- TOC entry 5732 (class 1259 OID 33656)
 -- Name: idx_docs_tipo_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7785,7 +8054,7 @@ CREATE INDEX idx_docs_tipo_estado ON public.documentos_verificacion USING btree 
 
 
 --
--- TOC entry 5569 (class 1259 OID 16926)
+-- TOC entry 5588 (class 1259 OID 16926)
 -- Name: idx_documentos_conductor_historial_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7793,7 +8062,7 @@ CREATE INDEX idx_documentos_conductor_historial_activo ON public.documentos_cond
 
 
 --
--- TOC entry 5570 (class 1259 OID 16924)
+-- TOC entry 5589 (class 1259 OID 16924)
 -- Name: idx_documentos_conductor_historial_conductor_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7801,7 +8070,7 @@ CREATE INDEX idx_documentos_conductor_historial_conductor_tipo ON public.documen
 
 
 --
--- TOC entry 5571 (class 1259 OID 16925)
+-- TOC entry 5590 (class 1259 OID 16925)
 -- Name: idx_documentos_conductor_historial_fecha_carga; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7809,7 +8078,7 @@ CREATE INDEX idx_documentos_conductor_historial_fecha_carga ON public.documentos
 
 
 --
--- TOC entry 5572 (class 1259 OID 74593)
+-- TOC entry 5591 (class 1259 OID 74593)
 -- Name: idx_documentos_historial_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7817,7 +8086,7 @@ CREATE INDEX idx_documentos_historial_tipo ON public.documentos_conductor_histor
 
 
 --
--- TOC entry 5771 (class 1259 OID 91298)
+-- TOC entry 5791 (class 1259 OID 91298)
 -- Name: idx_empresas_configuracion_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7825,7 +8094,7 @@ CREATE INDEX idx_empresas_configuracion_empresa ON public.empresas_configuracion
 
 
 --
--- TOC entry 5755 (class 1259 OID 91225)
+-- TOC entry 5775 (class 1259 OID 91225)
 -- Name: idx_empresas_contacto_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7833,7 +8102,7 @@ CREATE INDEX idx_empresas_contacto_empresa ON public.empresas_contacto USING btr
 
 
 --
--- TOC entry 5756 (class 1259 OID 91226)
+-- TOC entry 5776 (class 1259 OID 91226)
 -- Name: idx_empresas_contacto_municipio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7841,7 +8110,7 @@ CREATE INDEX idx_empresas_contacto_municipio ON public.empresas_contacto USING b
 
 
 --
--- TOC entry 5766 (class 1259 OID 91272)
+-- TOC entry 5786 (class 1259 OID 91272)
 -- Name: idx_empresas_metricas_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7849,7 +8118,7 @@ CREATE INDEX idx_empresas_metricas_empresa ON public.empresas_metricas USING btr
 
 
 --
--- TOC entry 5761 (class 1259 OID 91246)
+-- TOC entry 5781 (class 1259 OID 91246)
 -- Name: idx_empresas_representante_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7857,7 +8126,7 @@ CREATE INDEX idx_empresas_representante_empresa ON public.empresas_representante
 
 
 --
--- TOC entry 5706 (class 1259 OID 25465)
+-- TOC entry 5726 (class 1259 OID 25465)
 -- Name: idx_empresas_transporte_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7865,7 +8134,7 @@ CREATE INDEX idx_empresas_transporte_estado ON public.empresas_transporte USING 
 
 
 --
--- TOC entry 5707 (class 1259 OID 25466)
+-- TOC entry 5727 (class 1259 OID 25466)
 -- Name: idx_empresas_transporte_municipio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7873,7 +8142,7 @@ CREATE INDEX idx_empresas_transporte_municipio ON public.empresas_transporte USI
 
 
 --
--- TOC entry 5708 (class 1259 OID 25464)
+-- TOC entry 5728 (class 1259 OID 25464)
 -- Name: idx_empresas_transporte_nit; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7881,7 +8150,7 @@ CREATE INDEX idx_empresas_transporte_nit ON public.empresas_transporte USING btr
 
 
 --
--- TOC entry 5709 (class 1259 OID 25463)
+-- TOC entry 5729 (class 1259 OID 25463)
 -- Name: idx_empresas_transporte_nombre; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7889,7 +8158,7 @@ CREATE INDEX idx_empresas_transporte_nombre ON public.empresas_transporte USING 
 
 
 --
--- TOC entry 5672 (class 1259 OID 17232)
+-- TOC entry 5692 (class 1259 OID 17232)
 -- Name: idx_es_favorito; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7897,7 +8166,7 @@ CREATE INDEX idx_es_favorito ON public.conductores_favoritos USING btree (es_fav
 
 
 --
--- TOC entry 5780 (class 1259 OID 115607)
+-- TOC entry 5800 (class 1259 OID 115607)
 -- Name: idx_etv_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7905,7 +8174,7 @@ CREATE INDEX idx_etv_activo ON public.empresa_tipos_vehiculo USING btree (activo
 
 
 --
--- TOC entry 5781 (class 1259 OID 115605)
+-- TOC entry 5801 (class 1259 OID 115605)
 -- Name: idx_etv_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7913,7 +8182,7 @@ CREATE INDEX idx_etv_empresa ON public.empresa_tipos_vehiculo USING btree (empre
 
 
 --
--- TOC entry 5782 (class 1259 OID 115608)
+-- TOC entry 5802 (class 1259 OID 115608)
 -- Name: idx_etv_empresa_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7921,7 +8190,7 @@ CREATE INDEX idx_etv_empresa_activo ON public.empresa_tipos_vehiculo USING btree
 
 
 --
--- TOC entry 5783 (class 1259 OID 115606)
+-- TOC entry 5803 (class 1259 OID 115606)
 -- Name: idx_etv_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7929,7 +8198,7 @@ CREATE INDEX idx_etv_tipo ON public.empresa_tipos_vehiculo USING btree (tipo_veh
 
 
 --
--- TOC entry 5788 (class 1259 OID 115630)
+-- TOC entry 5808 (class 1259 OID 115630)
 -- Name: idx_etvh_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7937,7 +8206,7 @@ CREATE INDEX idx_etvh_empresa ON public.empresa_tipos_vehiculo_historial USING b
 
 
 --
--- TOC entry 5789 (class 1259 OID 115631)
+-- TOC entry 5809 (class 1259 OID 115631)
 -- Name: idx_etvh_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7945,7 +8214,7 @@ CREATE INDEX idx_etvh_fecha ON public.empresa_tipos_vehiculo_historial USING btr
 
 
 --
--- TOC entry 5792 (class 1259 OID 115654)
+-- TOC entry 5812 (class 1259 OID 115654)
 -- Name: idx_evn_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7953,7 +8222,7 @@ CREATE INDEX idx_evn_conductor ON public.empresa_vehiculo_notificaciones USING b
 
 
 --
--- TOC entry 5793 (class 1259 OID 115655)
+-- TOC entry 5813 (class 1259 OID 115655)
 -- Name: idx_evn_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7961,7 +8230,7 @@ CREATE INDEX idx_evn_estado ON public.empresa_vehiculo_notificaciones USING btre
 
 
 --
--- TOC entry 5579 (class 1259 OID 16933)
+-- TOC entry 5598 (class 1259 OID 16933)
 -- Name: idx_historial_precios_configuracion_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7969,7 +8238,7 @@ CREATE INDEX idx_historial_precios_configuracion_id ON public.historial_precios 
 
 
 --
--- TOC entry 5580 (class 1259 OID 16934)
+-- TOC entry 5599 (class 1259 OID 16934)
 -- Name: idx_historial_precios_fecha_cambio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7977,7 +8246,7 @@ CREATE INDEX idx_historial_precios_fecha_cambio ON public.historial_precios USIN
 
 
 --
--- TOC entry 5581 (class 1259 OID 16935)
+-- TOC entry 5600 (class 1259 OID 16935)
 -- Name: idx_historial_precios_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7985,7 +8254,7 @@ CREATE INDEX idx_historial_precios_usuario_id ON public.historial_precios USING 
 
 
 --
--- TOC entry 5584 (class 1259 OID 16938)
+-- TOC entry 5603 (class 1259 OID 16938)
 -- Name: idx_historial_seguimiento_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7993,7 +8262,7 @@ CREATE INDEX idx_historial_seguimiento_conductor_id ON public.historial_seguimie
 
 
 --
--- TOC entry 5585 (class 1259 OID 16939)
+-- TOC entry 5604 (class 1259 OID 16939)
 -- Name: idx_historial_seguimiento_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8001,7 +8270,7 @@ CREATE INDEX idx_historial_seguimiento_solicitud_id ON public.historial_seguimie
 
 
 --
--- TOC entry 5586 (class 1259 OID 16940)
+-- TOC entry 5605 (class 1259 OID 16940)
 -- Name: idx_historial_seguimiento_timestamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8009,7 +8278,7 @@ CREATE INDEX idx_historial_seguimiento_timestamp ON public.historial_seguimiento
 
 
 --
--- TOC entry 5587 (class 1259 OID 16944)
+-- TOC entry 5606 (class 1259 OID 16944)
 -- Name: idx_logs_auditoria_accion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8017,7 +8286,7 @@ CREATE INDEX idx_logs_auditoria_accion ON public.logs_auditoria USING btree (acc
 
 
 --
--- TOC entry 5588 (class 1259 OID 16945)
+-- TOC entry 5607 (class 1259 OID 16945)
 -- Name: idx_logs_auditoria_fecha_creacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8025,7 +8294,7 @@ CREATE INDEX idx_logs_auditoria_fecha_creacion ON public.logs_auditoria USING bt
 
 
 --
--- TOC entry 5589 (class 1259 OID 16943)
+-- TOC entry 5608 (class 1259 OID 16943)
 -- Name: idx_logs_auditoria_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8033,7 +8302,7 @@ CREATE INDEX idx_logs_auditoria_usuario_id ON public.logs_auditoria USING btree 
 
 
 --
--- TOC entry 5806 (class 1259 OID 115735)
+-- TOC entry 5826 (class 1259 OID 115735)
 -- Name: idx_mensajes_created; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8041,7 +8310,7 @@ CREATE INDEX idx_mensajes_created ON public.mensajes_ticket USING btree (created
 
 
 --
--- TOC entry 5683 (class 1259 OID 17276)
+-- TOC entry 5703 (class 1259 OID 17276)
 -- Name: idx_mensajes_destinatario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8049,7 +8318,7 @@ CREATE INDEX idx_mensajes_destinatario ON public.mensajes_chat USING btree (dest
 
 
 --
--- TOC entry 5684 (class 1259 OID 17277)
+-- TOC entry 5704 (class 1259 OID 17277)
 -- Name: idx_mensajes_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8057,7 +8326,7 @@ CREATE INDEX idx_mensajes_fecha ON public.mensajes_chat USING btree (fecha_creac
 
 
 --
--- TOC entry 5685 (class 1259 OID 17278)
+-- TOC entry 5705 (class 1259 OID 17278)
 -- Name: idx_mensajes_no_leidos; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8065,7 +8334,7 @@ CREATE INDEX idx_mensajes_no_leidos ON public.mensajes_chat USING btree (destina
 
 
 --
--- TOC entry 5686 (class 1259 OID 17275)
+-- TOC entry 5706 (class 1259 OID 17275)
 -- Name: idx_mensajes_remitente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8073,7 +8342,7 @@ CREATE INDEX idx_mensajes_remitente ON public.mensajes_chat USING btree (remiten
 
 
 --
--- TOC entry 5687 (class 1259 OID 17274)
+-- TOC entry 5707 (class 1259 OID 17274)
 -- Name: idx_mensajes_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8081,7 +8350,7 @@ CREATE INDEX idx_mensajes_solicitud ON public.mensajes_chat USING btree (solicit
 
 
 --
--- TOC entry 5807 (class 1259 OID 115734)
+-- TOC entry 5827 (class 1259 OID 115734)
 -- Name: idx_mensajes_ticket; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8089,7 +8358,7 @@ CREATE INDEX idx_mensajes_ticket ON public.mensajes_ticket USING btree (ticket_i
 
 
 --
--- TOC entry 5592 (class 1259 OID 16948)
+-- TOC entry 5611 (class 1259 OID 16948)
 -- Name: idx_metodos_pago_usuario_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8097,7 +8366,7 @@ CREATE INDEX idx_metodos_pago_usuario_usuario_id ON public.metodos_pago_usuario 
 
 
 --
--- TOC entry 5728 (class 1259 OID 91009)
+-- TOC entry 5748 (class 1259 OID 91009)
 -- Name: idx_notif_created_at; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8105,7 +8374,7 @@ CREATE INDEX idx_notif_created_at ON public.notificaciones_usuario USING btree (
 
 
 --
--- TOC entry 5729 (class 1259 OID 91008)
+-- TOC entry 5749 (class 1259 OID 91008)
 -- Name: idx_notif_referencia; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8113,7 +8382,7 @@ CREATE INDEX idx_notif_referencia ON public.notificaciones_usuario USING btree (
 
 
 --
--- TOC entry 5730 (class 1259 OID 91007)
+-- TOC entry 5750 (class 1259 OID 91007)
 -- Name: idx_notif_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8121,7 +8390,7 @@ CREATE INDEX idx_notif_tipo ON public.notificaciones_usuario USING btree (tipo_i
 
 
 --
--- TOC entry 5731 (class 1259 OID 91005)
+-- TOC entry 5751 (class 1259 OID 91005)
 -- Name: idx_notif_usuario_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8129,7 +8398,7 @@ CREATE INDEX idx_notif_usuario_fecha ON public.notificaciones_usuario USING btre
 
 
 --
--- TOC entry 5732 (class 1259 OID 91006)
+-- TOC entry 5752 (class 1259 OID 91006)
 -- Name: idx_notif_usuario_no_leidas; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8137,7 +8406,7 @@ CREATE INDEX idx_notif_usuario_no_leidas ON public.notificaciones_usuario USING 
 
 
 --
--- TOC entry 5716 (class 1259 OID 58220)
+-- TOC entry 5736 (class 1259 OID 58220)
 -- Name: idx_pagos_empresas_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8145,7 +8414,7 @@ CREATE INDEX idx_pagos_empresas_empresa ON public.pagos_empresas USING btree (em
 
 
 --
--- TOC entry 5717 (class 1259 OID 58221)
+-- TOC entry 5737 (class 1259 OID 58221)
 -- Name: idx_pagos_empresas_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8153,7 +8422,7 @@ CREATE INDEX idx_pagos_empresas_fecha ON public.pagos_empresas USING btree (crea
 
 
 --
--- TOC entry 5595 (class 1259 OID 16951)
+-- TOC entry 5614 (class 1259 OID 16951)
 -- Name: idx_paradas_solicitud_solicitud_orden; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8161,7 +8430,7 @@ CREATE INDEX idx_paradas_solicitud_solicitud_orden ON public.paradas_solicitud U
 
 
 --
--- TOC entry 5720 (class 1259 OID 82799)
+-- TOC entry 5740 (class 1259 OID 82799)
 -- Name: idx_pb_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8169,7 +8438,7 @@ CREATE INDEX idx_pb_activo ON public.plantillas_bloqueadas USING btree (activo) 
 
 
 --
--- TOC entry 5721 (class 1259 OID 82798)
+-- TOC entry 5741 (class 1259 OID 82798)
 -- Name: idx_pb_hash; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8177,7 +8446,7 @@ CREATE UNIQUE INDEX idx_pb_hash ON public.plantillas_bloqueadas USING btree (pla
 
 
 --
--- TOC entry 5544 (class 1259 OID 50020)
+-- TOC entry 5563 (class 1259 OID 50020)
 -- Name: idx_precios_empresa_unique; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8185,7 +8454,7 @@ CREATE UNIQUE INDEX idx_precios_empresa_unique ON public.configuracion_precios U
 
 
 --
--- TOC entry 5545 (class 1259 OID 50019)
+-- TOC entry 5564 (class 1259 OID 50019)
 -- Name: idx_precios_global_unique; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8193,7 +8462,7 @@ CREATE UNIQUE INDEX idx_precios_global_unique ON public.configuracion_precios US
 
 
 --
--- TOC entry 5604 (class 1259 OID 16964)
+-- TOC entry 5623 (class 1259 OID 16964)
 -- Name: idx_reportes_usuarios_admin_revisor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8201,7 +8470,7 @@ CREATE INDEX idx_reportes_usuarios_admin_revisor_id ON public.reportes_usuarios 
 
 
 --
--- TOC entry 5605 (class 1259 OID 16962)
+-- TOC entry 5624 (class 1259 OID 16962)
 -- Name: idx_reportes_usuarios_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8209,7 +8478,7 @@ CREATE INDEX idx_reportes_usuarios_estado ON public.reportes_usuarios USING btre
 
 
 --
--- TOC entry 5606 (class 1259 OID 16961)
+-- TOC entry 5625 (class 1259 OID 16961)
 -- Name: idx_reportes_usuarios_reportado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8217,7 +8486,7 @@ CREATE INDEX idx_reportes_usuarios_reportado ON public.reportes_usuarios USING b
 
 
 --
--- TOC entry 5607 (class 1259 OID 16960)
+-- TOC entry 5626 (class 1259 OID 16960)
 -- Name: idx_reportes_usuarios_reportante; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8225,7 +8494,7 @@ CREATE INDEX idx_reportes_usuarios_reportante ON public.reportes_usuarios USING 
 
 
 --
--- TOC entry 5608 (class 1259 OID 16963)
+-- TOC entry 5627 (class 1259 OID 16963)
 -- Name: idx_reportes_usuarios_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8233,7 +8502,7 @@ CREATE INDEX idx_reportes_usuarios_solicitud_id ON public.reportes_usuarios USIN
 
 
 --
--- TOC entry 5820 (class 1259 OID 123838)
+-- TOC entry 5840 (class 1259 OID 123838)
 -- Name: idx_resumen_con_desvio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8241,7 +8510,7 @@ CREATE INDEX idx_resumen_con_desvio ON public.viaje_resumen_tracking USING btree
 
 
 --
--- TOC entry 5679 (class 1259 OID 17234)
+-- TOC entry 5699 (class 1259 OID 17234)
 -- Name: idx_score_confianza; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8249,7 +8518,7 @@ CREATE INDEX idx_score_confianza ON public.historial_confianza USING btree (scor
 
 
 --
--- TOC entry 5745 (class 1259 OID 91185)
+-- TOC entry 5765 (class 1259 OID 91185)
 -- Name: idx_solicitud_vinc_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8257,7 +8526,7 @@ CREATE INDEX idx_solicitud_vinc_conductor ON public.solicitudes_vinculacion_cond
 
 
 --
--- TOC entry 5746 (class 1259 OID 91188)
+-- TOC entry 5766 (class 1259 OID 91188)
 -- Name: idx_solicitud_vinc_creado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8265,7 +8534,7 @@ CREATE INDEX idx_solicitud_vinc_creado ON public.solicitudes_vinculacion_conduct
 
 
 --
--- TOC entry 5747 (class 1259 OID 91186)
+-- TOC entry 5767 (class 1259 OID 91186)
 -- Name: idx_solicitud_vinc_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8273,7 +8542,7 @@ CREATE INDEX idx_solicitud_vinc_empresa ON public.solicitudes_vinculacion_conduc
 
 
 --
--- TOC entry 5748 (class 1259 OID 91187)
+-- TOC entry 5768 (class 1259 OID 91187)
 -- Name: idx_solicitud_vinc_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8281,7 +8550,7 @@ CREATE INDEX idx_solicitud_vinc_estado ON public.solicitudes_vinculacion_conduct
 
 
 --
--- TOC entry 5611 (class 1259 OID 41832)
+-- TOC entry 5630 (class 1259 OID 41832)
 -- Name: idx_solicitudes_conductor_llego; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8289,7 +8558,15 @@ CREATE INDEX idx_solicitudes_conductor_llego ON public.solicitudes_servicio USIN
 
 
 --
--- TOC entry 5612 (class 1259 OID 123841)
+-- TOC entry 5631 (class 1259 OID 123890)
+-- Name: idx_solicitudes_desglose; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_solicitudes_desglose ON public.solicitudes_servicio USING gin (desglose_precio);
+
+
+--
+-- TOC entry 5632 (class 1259 OID 123841)
 -- Name: idx_solicitudes_empresa_vehiculo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8297,7 +8574,7 @@ CREATE INDEX idx_solicitudes_empresa_vehiculo ON public.solicitudes_servicio USI
 
 
 --
--- TOC entry 5613 (class 1259 OID 17343)
+-- TOC entry 5633 (class 1259 OID 17343)
 -- Name: idx_solicitudes_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8305,7 +8582,7 @@ CREATE INDEX idx_solicitudes_estado ON public.solicitudes_servicio USING btree (
 
 
 --
--- TOC entry 5614 (class 1259 OID 123842)
+-- TOC entry 5634 (class 1259 OID 123842)
 -- Name: idx_solicitudes_estado_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8313,7 +8590,7 @@ CREATE INDEX idx_solicitudes_estado_fecha ON public.solicitudes_servicio USING b
 
 
 --
--- TOC entry 5615 (class 1259 OID 17344)
+-- TOC entry 5635 (class 1259 OID 17344)
 -- Name: idx_solicitudes_precio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8321,7 +8598,7 @@ CREATE INDEX idx_solicitudes_precio ON public.solicitudes_servicio USING btree (
 
 
 --
--- TOC entry 5616 (class 1259 OID 16971)
+-- TOC entry 5636 (class 1259 OID 16971)
 -- Name: idx_solicitudes_servicio_cliente_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8329,7 +8606,7 @@ CREATE INDEX idx_solicitudes_servicio_cliente_id ON public.solicitudes_servicio 
 
 
 --
--- TOC entry 5617 (class 1259 OID 16972)
+-- TOC entry 5637 (class 1259 OID 16972)
 -- Name: idx_solicitudes_servicio_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8337,7 +8614,7 @@ CREATE INDEX idx_solicitudes_servicio_estado ON public.solicitudes_servicio USIN
 
 
 --
--- TOC entry 5618 (class 1259 OID 16973)
+-- TOC entry 5638 (class 1259 OID 16973)
 -- Name: idx_solicitudes_servicio_solicitado_en; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8345,7 +8622,7 @@ CREATE INDEX idx_solicitudes_servicio_solicitado_en ON public.solicitudes_servic
 
 
 --
--- TOC entry 5619 (class 1259 OID 16970)
+-- TOC entry 5639 (class 1259 OID 16970)
 -- Name: idx_solicitudes_servicio_ubicacion_destino_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8353,7 +8630,7 @@ CREATE INDEX idx_solicitudes_servicio_ubicacion_destino_id ON public.solicitudes
 
 
 --
--- TOC entry 5620 (class 1259 OID 16969)
+-- TOC entry 5640 (class 1259 OID 16969)
 -- Name: idx_solicitudes_servicio_ubicacion_recogida_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8361,7 +8638,7 @@ CREATE INDEX idx_solicitudes_servicio_ubicacion_recogida_id ON public.solicitude
 
 
 --
--- TOC entry 5798 (class 1259 OID 115714)
+-- TOC entry 5818 (class 1259 OID 115714)
 -- Name: idx_tickets_categoria; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8369,7 +8646,7 @@ CREATE INDEX idx_tickets_categoria ON public.tickets_soporte USING btree (catego
 
 
 --
--- TOC entry 5799 (class 1259 OID 115715)
+-- TOC entry 5819 (class 1259 OID 115715)
 -- Name: idx_tickets_created; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8377,7 +8654,7 @@ CREATE INDEX idx_tickets_created ON public.tickets_soporte USING btree (created_
 
 
 --
--- TOC entry 5800 (class 1259 OID 115713)
+-- TOC entry 5820 (class 1259 OID 115713)
 -- Name: idx_tickets_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8385,7 +8662,7 @@ CREATE INDEX idx_tickets_estado ON public.tickets_soporte USING btree (estado);
 
 
 --
--- TOC entry 5801 (class 1259 OID 115712)
+-- TOC entry 5821 (class 1259 OID 115712)
 -- Name: idx_tickets_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8393,7 +8670,7 @@ CREATE INDEX idx_tickets_usuario ON public.tickets_soporte USING btree (usuario_
 
 
 --
--- TOC entry 5740 (class 1259 OID 91044)
+-- TOC entry 5760 (class 1259 OID 91044)
 -- Name: idx_tokens_push_usuario_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8401,7 +8678,7 @@ CREATE INDEX idx_tokens_push_usuario_activo ON public.tokens_push_usuario USING 
 
 
 --
--- TOC entry 5814 (class 1259 OID 123795)
+-- TOC entry 5834 (class 1259 OID 123795)
 -- Name: idx_tracking_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8409,7 +8686,15 @@ CREATE INDEX idx_tracking_conductor_id ON public.viaje_tracking_realtime USING b
 
 
 --
--- TOC entry 5815 (class 1259 OID 123794)
+-- TOC entry 5841 (class 1259 OID 123889)
+-- Name: idx_tracking_empresa; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_tracking_empresa ON public.viaje_resumen_tracking USING btree (empresa_id);
+
+
+--
+-- TOC entry 5835 (class 1259 OID 123794)
 -- Name: idx_tracking_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8417,7 +8702,7 @@ CREATE INDEX idx_tracking_solicitud_id ON public.viaje_tracking_realtime USING b
 
 
 --
--- TOC entry 5816 (class 1259 OID 123793)
+-- TOC entry 5836 (class 1259 OID 123793)
 -- Name: idx_tracking_solicitud_tiempo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8425,7 +8710,7 @@ CREATE INDEX idx_tracking_solicitud_tiempo ON public.viaje_tracking_realtime USI
 
 
 --
--- TOC entry 5817 (class 1259 OID 123837)
+-- TOC entry 5837 (class 1259 OID 123837)
 -- Name: idx_tracking_timestamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8433,7 +8718,7 @@ CREATE INDEX idx_tracking_timestamp ON public.viaje_tracking_realtime USING btre
 
 
 --
--- TOC entry 5625 (class 1259 OID 16978)
+-- TOC entry 5645 (class 1259 OID 16978)
 -- Name: idx_transacciones_cliente_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8441,7 +8726,7 @@ CREATE INDEX idx_transacciones_cliente_id ON public.transacciones USING btree (c
 
 
 --
--- TOC entry 5626 (class 1259 OID 17359)
+-- TOC entry 5646 (class 1259 OID 17359)
 -- Name: idx_transacciones_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8449,7 +8734,7 @@ CREATE INDEX idx_transacciones_conductor ON public.transacciones USING btree (co
 
 
 --
--- TOC entry 5627 (class 1259 OID 16979)
+-- TOC entry 5647 (class 1259 OID 16979)
 -- Name: idx_transacciones_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8457,7 +8742,7 @@ CREATE INDEX idx_transacciones_conductor_id ON public.transacciones USING btree 
 
 
 --
--- TOC entry 5628 (class 1259 OID 17341)
+-- TOC entry 5648 (class 1259 OID 17341)
 -- Name: idx_transacciones_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8465,7 +8750,7 @@ CREATE INDEX idx_transacciones_estado ON public.transacciones USING btree (estad
 
 
 --
--- TOC entry 5629 (class 1259 OID 16980)
+-- TOC entry 5649 (class 1259 OID 16980)
 -- Name: idx_transacciones_estado_pago; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8473,7 +8758,7 @@ CREATE INDEX idx_transacciones_estado_pago ON public.transacciones USING btree (
 
 
 --
--- TOC entry 5630 (class 1259 OID 17342)
+-- TOC entry 5650 (class 1259 OID 17342)
 -- Name: idx_transacciones_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8481,7 +8766,7 @@ CREATE INDEX idx_transacciones_fecha ON public.transacciones USING btree (fecha_
 
 
 --
--- TOC entry 5635 (class 1259 OID 16983)
+-- TOC entry 5655 (class 1259 OID 16983)
 -- Name: idx_ubicaciones_usuario_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8489,7 +8774,7 @@ CREATE INDEX idx_ubicaciones_usuario_usuario_id ON public.ubicaciones_usuario US
 
 
 --
--- TOC entry 5638 (class 1259 OID 16988)
+-- TOC entry 5658 (class 1259 OID 16988)
 -- Name: idx_user_devices_device_uuid; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8497,7 +8782,7 @@ CREATE INDEX idx_user_devices_device_uuid ON public.user_devices USING btree (de
 
 
 --
--- TOC entry 5639 (class 1259 OID 16989)
+-- TOC entry 5659 (class 1259 OID 16989)
 -- Name: idx_user_devices_trusted; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8505,7 +8790,7 @@ CREATE INDEX idx_user_devices_trusted ON public.user_devices USING btree (truste
 
 
 --
--- TOC entry 5644 (class 1259 OID 99168)
+-- TOC entry 5664 (class 1259 OID 99168)
 -- Name: idx_usuarios_apple_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8513,7 +8798,7 @@ CREATE INDEX idx_usuarios_apple_id ON public.usuarios USING btree (apple_id) WHE
 
 
 --
--- TOC entry 5645 (class 1259 OID 17335)
+-- TOC entry 5665 (class 1259 OID 17335)
 -- Name: idx_usuarios_disputa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8521,7 +8806,7 @@ CREATE INDEX idx_usuarios_disputa ON public.usuarios USING btree (tiene_disputa_
 
 
 --
--- TOC entry 5646 (class 1259 OID 16998)
+-- TOC entry 5666 (class 1259 OID 16998)
 -- Name: idx_usuarios_email; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8529,7 +8814,7 @@ CREATE INDEX idx_usuarios_email ON public.usuarios USING btree (email);
 
 
 --
--- TOC entry 5647 (class 1259 OID 25472)
+-- TOC entry 5667 (class 1259 OID 25472)
 -- Name: idx_usuarios_empresa_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8537,7 +8822,7 @@ CREATE INDEX idx_usuarios_empresa_id ON public.usuarios USING btree (empresa_id)
 
 
 --
--- TOC entry 5648 (class 1259 OID 25478)
+-- TOC entry 5668 (class 1259 OID 25478)
 -- Name: idx_usuarios_empresa_preferida; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8545,7 +8830,7 @@ CREATE INDEX idx_usuarios_empresa_preferida ON public.usuarios USING btree (empr
 
 
 --
--- TOC entry 5649 (class 1259 OID 91156)
+-- TOC entry 5669 (class 1259 OID 91156)
 -- Name: idx_usuarios_estado_vinculacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8553,7 +8838,7 @@ CREATE INDEX idx_usuarios_estado_vinculacion ON public.usuarios USING btree (est
 
 
 --
--- TOC entry 5650 (class 1259 OID 99165)
+-- TOC entry 5670 (class 1259 OID 99165)
 -- Name: idx_usuarios_google_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8561,7 +8846,7 @@ CREATE INDEX idx_usuarios_google_id ON public.usuarios USING btree (google_id) W
 
 
 --
--- TOC entry 5651 (class 1259 OID 16999)
+-- TOC entry 5671 (class 1259 OID 16999)
 -- Name: idx_usuarios_telefono; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8569,7 +8854,7 @@ CREATE INDEX idx_usuarios_telefono ON public.usuarios USING btree (telefono);
 
 
 --
--- TOC entry 5652 (class 1259 OID 17000)
+-- TOC entry 5672 (class 1259 OID 17000)
 -- Name: idx_usuarios_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8577,7 +8862,7 @@ CREATE INDEX idx_usuarios_tipo ON public.usuarios USING btree (tipo_usuario);
 
 
 --
--- TOC entry 5665 (class 1259 OID 17004)
+-- TOC entry 5685 (class 1259 OID 17004)
 -- Name: idx_verification_codes_code; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8585,7 +8870,7 @@ CREATE INDEX idx_verification_codes_code ON public.verification_codes USING btre
 
 
 --
--- TOC entry 5666 (class 1259 OID 17003)
+-- TOC entry 5686 (class 1259 OID 17003)
 -- Name: idx_verification_codes_email; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8593,7 +8878,7 @@ CREATE INDEX idx_verification_codes_email ON public.verification_codes USING btr
 
 
 --
--- TOC entry 5680 (class 1259 OID 17235)
+-- TOC entry 5700 (class 1259 OID 17235)
 -- Name: idx_zona_frecuente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8601,7 +8886,7 @@ CREATE INDEX idx_zona_frecuente ON public.historial_confianza USING btree (zona_
 
 
 --
--- TOC entry 5907 (class 2620 OID 123831)
+-- TOC entry 5930 (class 2620 OID 123831)
 -- Name: viaje_tracking_realtime trg_actualizar_resumen_tracking; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8609,7 +8894,7 @@ CREATE TRIGGER trg_actualizar_resumen_tracking AFTER INSERT ON public.viaje_trac
 
 
 --
--- TOC entry 5898 (class 2620 OID 17238)
+-- TOC entry 5921 (class 2620 OID 17238)
 -- Name: historial_confianza trg_historial_confianza_actualizado_en; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8617,7 +8902,7 @@ CREATE TRIGGER trg_historial_confianza_actualizado_en BEFORE UPDATE ON public.hi
 
 
 --
--- TOC entry 5896 (class 2620 OID 115671)
+-- TOC entry 5919 (class 2620 OID 115671)
 -- Name: usuarios trigger_actualizar_metricas_empresa; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8625,7 +8910,7 @@ CREATE TRIGGER trigger_actualizar_metricas_empresa AFTER INSERT OR UPDATE OF emp
 
 
 --
--- TOC entry 5904 (class 2620 OID 115711)
+-- TOC entry 5927 (class 2620 OID 115711)
 -- Name: tickets_soporte trigger_generar_numero_ticket; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8633,7 +8918,7 @@ CREATE TRIGGER trigger_generar_numero_ticket BEFORE INSERT ON public.tickets_sop
 
 
 --
--- TOC entry 5902 (class 2620 OID 115659)
+-- TOC entry 5925 (class 2620 OID 115659)
 -- Name: empresa_tipos_vehiculo trigger_log_etv_change; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8641,7 +8926,7 @@ CREATE TRIGGER trigger_log_etv_change AFTER UPDATE ON public.empresa_tipos_vehic
 
 
 --
--- TOC entry 5906 (class 2620 OID 115753)
+-- TOC entry 5929 (class 2620 OID 115753)
 -- Name: solicitudes_callback trigger_update_callback_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8649,7 +8934,7 @@ CREATE TRIGGER trigger_update_callback_timestamp BEFORE UPDATE ON public.solicit
 
 
 --
--- TOC entry 5901 (class 2620 OID 91053)
+-- TOC entry 5924 (class 2620 OID 91053)
 -- Name: configuracion_notificaciones_usuario trigger_update_config_notif_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8657,7 +8942,7 @@ CREATE TRIGGER trigger_update_config_notif_timestamp BEFORE UPDATE ON public.con
 
 
 --
--- TOC entry 5900 (class 2620 OID 41837)
+-- TOC entry 5923 (class 2620 OID 41837)
 -- Name: empresas_transporte trigger_update_empresas_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8665,7 +8950,7 @@ CREATE TRIGGER trigger_update_empresas_timestamp BEFORE UPDATE ON public.empresa
 
 
 --
--- TOC entry 5903 (class 2620 OID 115657)
+-- TOC entry 5926 (class 2620 OID 115657)
 -- Name: empresa_tipos_vehiculo trigger_update_etv_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8673,7 +8958,7 @@ CREATE TRIGGER trigger_update_etv_timestamp BEFORE UPDATE ON public.empresa_tipo
 
 
 --
--- TOC entry 5899 (class 2620 OID 41834)
+-- TOC entry 5922 (class 2620 OID 41834)
 -- Name: mensajes_chat trigger_update_mensajes_chat; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8681,7 +8966,7 @@ CREATE TRIGGER trigger_update_mensajes_chat BEFORE UPDATE ON public.mensajes_cha
 
 
 --
--- TOC entry 5905 (class 2620 OID 115752)
+-- TOC entry 5928 (class 2620 OID 115752)
 -- Name: tickets_soporte trigger_update_ticket_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8689,7 +8974,7 @@ CREATE TRIGGER trigger_update_ticket_timestamp BEFORE UPDATE ON public.tickets_s
 
 
 --
--- TOC entry 5897 (class 2620 OID 91205)
+-- TOC entry 5920 (class 2620 OID 91205)
 -- Name: usuarios trigger_validar_conductor_empresa; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8697,7 +8982,7 @@ CREATE TRIGGER trigger_validar_conductor_empresa BEFORE INSERT OR UPDATE ON publ
 
 
 --
--- TOC entry 5825 (class 2606 OID 17005)
+-- TOC entry 5846 (class 2606 OID 17005)
 -- Name: asignaciones_conductor asignaciones_conductor_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8706,7 +8991,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5826 (class 2606 OID 17010)
+-- TOC entry 5847 (class 2606 OID 17010)
 -- Name: asignaciones_conductor asignaciones_conductor_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8715,7 +9000,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5827 (class 2606 OID 17015)
+-- TOC entry 5848 (class 2606 OID 17015)
 -- Name: calificaciones calificaciones_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8724,7 +9009,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5828 (class 2606 OID 17020)
+-- TOC entry 5849 (class 2606 OID 17020)
 -- Name: calificaciones calificaciones_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8733,7 +9018,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5829 (class 2606 OID 17025)
+-- TOC entry 5850 (class 2606 OID 17025)
 -- Name: calificaciones calificaciones_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8742,7 +9027,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5859 (class 2606 OID 17181)
+-- TOC entry 5880 (class 2606 OID 17181)
 -- Name: conductores_favoritos conductores_favoritos_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8751,7 +9036,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5860 (class 2606 OID 17176)
+-- TOC entry 5881 (class 2606 OID 17176)
 -- Name: conductores_favoritos conductores_favoritos_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8760,7 +9045,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5831 (class 2606 OID 17030)
+-- TOC entry 5852 (class 2606 OID 17030)
 -- Name: detalles_conductor detalles_conductor_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8769,7 +9054,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5832 (class 2606 OID 17035)
+-- TOC entry 5853 (class 2606 OID 17035)
 -- Name: detalles_paquete detalles_paquete_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8778,7 +9063,7 @@ ALTER TABLE ONLY public.detalles_paquete
 
 
 --
--- TOC entry 5833 (class 2606 OID 17040)
+-- TOC entry 5854 (class 2606 OID 17040)
 -- Name: detalles_viaje detalles_viaje_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8787,7 +9072,7 @@ ALTER TABLE ONLY public.detalles_viaje
 
 
 --
--- TOC entry 5866 (class 2606 OID 17302)
+-- TOC entry 5887 (class 2606 OID 17302)
 -- Name: disputas_pago disputas_pago_cliente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8796,7 +9081,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5867 (class 2606 OID 17307)
+-- TOC entry 5888 (class 2606 OID 17307)
 -- Name: disputas_pago disputas_pago_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8805,7 +9090,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5868 (class 2606 OID 17312)
+-- TOC entry 5889 (class 2606 OID 17312)
 -- Name: disputas_pago disputas_pago_resuelto_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8814,7 +9099,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5869 (class 2606 OID 17297)
+-- TOC entry 5890 (class 2606 OID 17297)
 -- Name: disputas_pago disputas_pago_solicitud_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8823,7 +9108,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5872 (class 2606 OID 33650)
+-- TOC entry 5893 (class 2606 OID 33650)
 -- Name: documentos_verificacion documentos_verificacion_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8832,7 +9117,7 @@ ALTER TABLE ONLY public.documentos_verificacion
 
 
 --
--- TOC entry 5883 (class 2606 OID 115590)
+-- TOC entry 5904 (class 2606 OID 115590)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_activado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8841,7 +9126,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5884 (class 2606 OID 115595)
+-- TOC entry 5905 (class 2606 OID 115595)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_desactivado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8850,7 +9135,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5885 (class 2606 OID 115585)
+-- TOC entry 5906 (class 2606 OID 115585)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8859,7 +9144,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5887 (class 2606 OID 115620)
+-- TOC entry 5908 (class 2606 OID 115620)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_empresa_tipo_vehiculo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8868,7 +9153,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5888 (class 2606 OID 115625)
+-- TOC entry 5909 (class 2606 OID 115625)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_realizado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8877,7 +9162,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5889 (class 2606 OID 115649)
+-- TOC entry 5910 (class 2606 OID 115649)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8886,7 +9171,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5890 (class 2606 OID 115644)
+-- TOC entry 5911 (class 2606 OID 115644)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_historial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8895,7 +9180,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5882 (class 2606 OID 91293)
+-- TOC entry 5903 (class 2606 OID 91293)
 -- Name: empresas_configuracion empresas_configuracion_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8904,7 +9189,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5879 (class 2606 OID 91220)
+-- TOC entry 5900 (class 2606 OID 91220)
 -- Name: empresas_contacto empresas_contacto_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8913,7 +9198,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5881 (class 2606 OID 91267)
+-- TOC entry 5902 (class 2606 OID 91267)
 -- Name: empresas_metricas empresas_metricas_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8922,7 +9207,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5880 (class 2606 OID 91241)
+-- TOC entry 5901 (class 2606 OID 91241)
 -- Name: empresas_representante empresas_representante_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8931,7 +9216,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5870 (class 2606 OID 25458)
+-- TOC entry 5891 (class 2606 OID 25458)
 -- Name: empresas_transporte empresas_transporte_creado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8940,7 +9225,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5871 (class 2606 OID 25453)
+-- TOC entry 5892 (class 2606 OID 25453)
 -- Name: empresas_transporte empresas_transporte_verificado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8949,7 +9234,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5834 (class 2606 OID 17045)
+-- TOC entry 5855 (class 2606 OID 17045)
 -- Name: documentos_conductor_historial fk_doc_historial_conductor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8958,7 +9243,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5835 (class 2606 OID 66396)
+-- TOC entry 5856 (class 2606 OID 66396)
 -- Name: documentos_conductor_historial fk_doc_historial_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8967,7 +9252,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5836 (class 2606 OID 17050)
+-- TOC entry 5857 (class 2606 OID 17050)
 -- Name: historial_precios fk_historial_config; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8976,7 +9261,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5837 (class 2606 OID 17055)
+-- TOC entry 5858 (class 2606 OID 17055)
 -- Name: historial_precios fk_historial_usuario; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8985,7 +9270,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5840 (class 2606 OID 17070)
+-- TOC entry 5861 (class 2606 OID 17070)
 -- Name: logs_auditoria fk_logs_usuario; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8994,7 +9279,7 @@ ALTER TABLE ONLY public.logs_auditoria
 
 
 --
--- TOC entry 5842 (class 2606 OID 17080)
+-- TOC entry 5863 (class 2606 OID 17080)
 -- Name: paradas_solicitud fk_paradas_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9003,7 +9288,7 @@ ALTER TABLE ONLY public.paradas_solicitud
 
 
 --
--- TOC entry 5830 (class 2606 OID 50014)
+-- TOC entry 5851 (class 2606 OID 50014)
 -- Name: configuracion_precios fk_precios_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9012,7 +9297,7 @@ ALTER TABLE ONLY public.configuracion_precios
 
 
 --
--- TOC entry 5843 (class 2606 OID 17085)
+-- TOC entry 5864 (class 2606 OID 17085)
 -- Name: reportes_usuarios fk_reporte_admin; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9021,7 +9306,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5844 (class 2606 OID 17090)
+-- TOC entry 5865 (class 2606 OID 17090)
 -- Name: reportes_usuarios fk_reporte_reportado; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9030,7 +9315,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5845 (class 2606 OID 17095)
+-- TOC entry 5866 (class 2606 OID 17095)
 -- Name: reportes_usuarios fk_reporte_reportante; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9039,7 +9324,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5846 (class 2606 OID 17100)
+-- TOC entry 5867 (class 2606 OID 17100)
 -- Name: reportes_usuarios fk_reporte_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9048,7 +9333,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5895 (class 2606 OID 123822)
+-- TOC entry 5916 (class 2606 OID 123822)
 -- Name: viaje_resumen_tracking fk_resumen_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9057,7 +9342,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5847 (class 2606 OID 123844)
+-- TOC entry 5868 (class 2606 OID 123844)
 -- Name: solicitudes_servicio fk_solicitudes_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9066,7 +9351,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5886 (class 2606 OID 115600)
+-- TOC entry 5907 (class 2606 OID 115600)
 -- Name: empresa_tipos_vehiculo fk_tipo_vehiculo_catalogo; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9075,7 +9360,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5893 (class 2606 OID 123788)
+-- TOC entry 5914 (class 2606 OID 123788)
 -- Name: viaje_tracking_realtime fk_tracking_conductor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9084,7 +9369,25 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5894 (class 2606 OID 123783)
+-- TOC entry 5917 (class 2606 OID 123884)
+-- Name: viaje_resumen_tracking fk_tracking_config_precios; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.viaje_resumen_tracking
+    ADD CONSTRAINT fk_tracking_config_precios FOREIGN KEY (config_precios_id) REFERENCES public.configuracion_precios(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 5918 (class 2606 OID 123879)
+-- Name: viaje_resumen_tracking fk_tracking_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.viaje_resumen_tracking
+    ADD CONSTRAINT fk_tracking_empresa FOREIGN KEY (empresa_id) REFERENCES public.empresas_transporte(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 5915 (class 2606 OID 123783)
 -- Name: viaje_tracking_realtime fk_tracking_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9093,7 +9396,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5861 (class 2606 OID 17209)
+-- TOC entry 5882 (class 2606 OID 17209)
 -- Name: historial_confianza historial_confianza_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9102,7 +9405,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5862 (class 2606 OID 17204)
+-- TOC entry 5883 (class 2606 OID 17204)
 -- Name: historial_confianza historial_confianza_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9111,7 +9414,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5838 (class 2606 OID 17060)
+-- TOC entry 5859 (class 2606 OID 17060)
 -- Name: historial_seguimiento historial_seguimiento_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9120,7 +9423,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5839 (class 2606 OID 17065)
+-- TOC entry 5860 (class 2606 OID 17065)
 -- Name: historial_seguimiento historial_seguimiento_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9129,7 +9432,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5863 (class 2606 OID 17269)
+-- TOC entry 5884 (class 2606 OID 17269)
 -- Name: mensajes_chat mensajes_chat_destinatario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9138,7 +9441,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5864 (class 2606 OID 17264)
+-- TOC entry 5885 (class 2606 OID 17264)
 -- Name: mensajes_chat mensajes_chat_remitente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9147,7 +9450,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5865 (class 2606 OID 17259)
+-- TOC entry 5886 (class 2606 OID 17259)
 -- Name: mensajes_chat mensajes_chat_solicitud_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9156,7 +9459,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5892 (class 2606 OID 115729)
+-- TOC entry 5913 (class 2606 OID 115729)
 -- Name: mensajes_ticket mensajes_ticket_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9165,7 +9468,7 @@ ALTER TABLE ONLY public.mensajes_ticket
 
 
 --
--- TOC entry 5841 (class 2606 OID 17075)
+-- TOC entry 5862 (class 2606 OID 17075)
 -- Name: metodos_pago_usuario metodos_pago_usuario_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9174,7 +9477,7 @@ ALTER TABLE ONLY public.metodos_pago_usuario
 
 
 --
--- TOC entry 5875 (class 2606 OID 91000)
+-- TOC entry 5896 (class 2606 OID 91000)
 -- Name: notificaciones_usuario notificaciones_usuario_tipo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9183,7 +9486,7 @@ ALTER TABLE ONLY public.notificaciones_usuario
 
 
 --
--- TOC entry 5873 (class 2606 OID 58215)
+-- TOC entry 5894 (class 2606 OID 58215)
 -- Name: pagos_empresas pagos_empresas_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9192,7 +9495,7 @@ ALTER TABLE ONLY public.pagos_empresas
 
 
 --
--- TOC entry 5874 (class 2606 OID 82791)
+-- TOC entry 5895 (class 2606 OID 82791)
 -- Name: plantillas_bloqueadas plantillas_bloqueadas_usuario_origen_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9201,7 +9504,7 @@ ALTER TABLE ONLY public.plantillas_bloqueadas
 
 
 --
--- TOC entry 5848 (class 2606 OID 17320)
+-- TOC entry 5869 (class 2606 OID 17320)
 -- Name: solicitudes_servicio solicitudes_servicio_disputa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9210,7 +9513,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5849 (class 2606 OID 17105)
+-- TOC entry 5870 (class 2606 OID 17105)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9219,7 +9522,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5850 (class 2606 OID 17110)
+-- TOC entry 5871 (class 2606 OID 17110)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9228,7 +9531,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5851 (class 2606 OID 17115)
+-- TOC entry 5872 (class 2606 OID 17115)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9237,7 +9540,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5876 (class 2606 OID 91170)
+-- TOC entry 5897 (class 2606 OID 91170)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9246,7 +9549,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5877 (class 2606 OID 91175)
+-- TOC entry 5898 (class 2606 OID 91175)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9255,7 +9558,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5878 (class 2606 OID 91180)
+-- TOC entry 5899 (class 2606 OID 91180)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_procesado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9264,7 +9567,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5891 (class 2606 OID 115705)
+-- TOC entry 5912 (class 2606 OID 115705)
 -- Name: tickets_soporte tickets_soporte_categoria_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9273,7 +9576,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5852 (class 2606 OID 17120)
+-- TOC entry 5873 (class 2606 OID 17120)
 -- Name: transacciones transacciones_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9282,7 +9585,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5853 (class 2606 OID 17125)
+-- TOC entry 5874 (class 2606 OID 17125)
 -- Name: transacciones transacciones_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9291,7 +9594,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5854 (class 2606 OID 17130)
+-- TOC entry 5875 (class 2606 OID 17130)
 -- Name: transacciones transacciones_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9300,7 +9603,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5855 (class 2606 OID 17135)
+-- TOC entry 5876 (class 2606 OID 17135)
 -- Name: ubicaciones_usuario ubicaciones_usuario_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9309,7 +9612,7 @@ ALTER TABLE ONLY public.ubicaciones_usuario
 
 
 --
--- TOC entry 5856 (class 2606 OID 17326)
+-- TOC entry 5877 (class 2606 OID 17326)
 -- Name: usuarios usuarios_disputa_activa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9318,7 +9621,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5857 (class 2606 OID 25467)
+-- TOC entry 5878 (class 2606 OID 25467)
 -- Name: usuarios usuarios_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9327,7 +9630,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5858 (class 2606 OID 25473)
+-- TOC entry 5879 (class 2606 OID 25473)
 -- Name: usuarios usuarios_empresa_preferida_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9335,11 +9638,11 @@ ALTER TABLE ONLY public.usuarios
     ADD CONSTRAINT usuarios_empresa_preferida_id_fkey FOREIGN KEY (empresa_preferida_id) REFERENCES public.empresas_transporte(id);
 
 
--- Completed on 2026-01-20 20:50:48
+-- Completed on 2026-01-21 15:08:48
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Dq3oD9jINVut0lUKABlMd9ADHtI5cuvjIbq7nWdarCIibKXRE12hetzNNYge0ca
+\unrestrict dzKh0yaX1IH1Ho9AvuTBQCbUxaj7lxhQz3O3yfC673NJF4lU4ialfU9FZnHeHFJ
 
