@@ -7,6 +7,7 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'company_financial_history_sheet.dart';
 
 class CompanyCommissionsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -73,84 +74,25 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
     }
   }
 
-  Future<void> _registrarPago(Map<String, dynamic> conductor) async {
-    final conductorId = int.tryParse(conductor['id']?.toString() ?? '');
-    if (conductorId == null) return;
-
-    final deuda = double.tryParse(conductor['deuda_actual']?.toString() ?? '0') ?? 0;
-    final controller = TextEditingController(text: deuda.toStringAsFixed(0));
-    final nombre = '${conductor['nombre']} ${conductor['apellido'] ?? ''}';
-
-    final confirm = await showDialog<bool>(
+  Future<void> _showFinancialHistory(Map<String, dynamic> conductor) async {
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Pago de $nombre'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Deuda actual: ${_currencyFormat.format(deuda)}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Monto a pagar',
-                prefixText: '\$ ',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => DriverFinancialHistorySheet(
+          driver: conductor,
+          onPaymentRegistered: () {
+            _loadDebtors(); // Reload main list
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Registrar'),
-          ),
-        ],
       ),
     );
-
-    if (confirm == true) {
-      final monto = double.tryParse(controller.text) ?? 0;
-      if (monto <= 0) return;
-
-      if (!mounted) return;
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      try {
-        final result = await AdminService.registrarPagoComision(
-          adminId: 0,
-          conductorId: conductorId,
-          monto: monto,
-          notas: 'Pago registrado desde Comisiones empresa',
-        );
-
-        if (!mounted) return;
-        Navigator.pop(context);
-
-        if (result['success'] == true) {
-          CustomSnackbar.showSuccess(context, message: 'Pago de ${_currencyFormat.format(monto)} registrado');
-          _loadDebtors();
-        } else {
-          CustomSnackbar.showError(context, message: result['message'] ?? 'Error');
-        }
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context);
-        CustomSnackbar.showError(context, message: 'Error: $e');
-      }
-    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -346,7 +288,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: hasDebt ? () => _registrarPago(debtor) : null,
+          onTap: () => _showFinancialHistory(debtor),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

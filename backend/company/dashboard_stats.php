@@ -69,9 +69,9 @@ try {
     // El conductor está en asignaciones_conductor, no en solicitudes_servicio
     $viajes_sql = "SELECT 
                     COUNT(DISTINCT ss.id) as total_viajes,
-                    COUNT(DISTINCT CASE WHEN ss.estado = 'completado' THEN ss.id END) as viajes_completados,
+                    COUNT(DISTINCT CASE WHEN ss.estado IN ('completada', 'entregado') THEN ss.id END) as viajes_completados,
                     COUNT(DISTINCT CASE WHEN ss.estado IN ('pendiente', 'aceptada', 'en_camino', 'en_progreso') THEN ss.id END) as viajes_activos,
-                    COUNT(DISTINCT CASE WHEN ss.estado = 'cancelado' THEN ss.id END) as viajes_cancelados
+                    COUNT(DISTINCT CASE WHEN ss.estado IN ('cancelado', 'cancelada') THEN ss.id END) as viajes_cancelados
                    FROM solicitudes_servicio ss
                    JOIN asignaciones_conductor ac ON ss.id = ac.solicitud_id
                    JOIN usuarios u ON ac.conductor_id = u.id
@@ -100,21 +100,18 @@ try {
     $stmt->execute();
     $conductores_stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // 3. Ganancias (comisiones de la empresa)
-    // Las ganancias son el porcentaje de comisión que se queda la empresa de cada viaje
+    // 3. Ganancias (comisiones RECIBIDAS/COBRADAS de conductores)
+    // Se calcula sumando los pagos registrados en pagos_comision
     $ganancias_sql = "SELECT 
-                       COALESCE(SUM(pv.monto), 0) as ingresos_totales,
-                       COALESCE(SUM(pv.monto * :comision / 100), 0) as ganancias_empresa,
-                       COUNT(pv.id) as viajes_pagados
-                      FROM pagos_viaje pv
-                      JOIN usuarios u ON pv.conductor_id = u.id
+                       COALESCE(SUM(pc.monto), 0) as ganancias_empresa,
+                       COUNT(pc.id) as viajes_pagados
+                      FROM pagos_comision pc
+                      JOIN usuarios u ON pc.conductor_id = u.id
                       WHERE u.empresa_id = :empresa_id
-                      AND pv.estado = 'completado'
-                      AND DATE(pv.created_at) >= :fecha_inicio
-                      AND DATE(pv.created_at) <= :fecha_fin";
+                      AND DATE(pc.fecha_pago) >= :fecha_inicio
+                      AND DATE(pc.fecha_pago) <= :fecha_fin";
     
     $stmt = $db->prepare($ganancias_sql);
-    $stmt->bindValue(':comision', $comision_empresa);
     $stmt->bindParam(':empresa_id', $empresa_id, PDO::PARAM_INT);
     $stmt->bindParam(':fecha_inicio', $fecha_inicio);
     $stmt->bindParam(':fecha_fin', $fecha_fin);

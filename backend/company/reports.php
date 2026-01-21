@@ -65,7 +65,7 @@ function getReportsOverview($pdo, $empresaId) {
         $tripStats = getTripStats($pdo, $empresaId, $dateFilter);
         
         // Estadísticas de ganancias
-        $earningsStats = getEarningsStats($pdo, $empresaId, $dateFilter);
+        $earningsStats = getEarningsStats($pdo, $empresaId, $periodo);
         
         // Estadísticas de conductores
         $driverStats = getDriverStats($pdo, $empresaId);
@@ -129,9 +129,9 @@ function getDateFilter($periodo) {
 function getTripStats($pdo, $empresaId, $dateFilter) {
     $sql = "SELECT 
                 COUNT(*) as total_viajes,
-                COUNT(CASE WHEN s.estado = 'completado' THEN 1 END) as completados,
-                COUNT(CASE WHEN s.estado = 'cancelado' THEN 1 END) as cancelados,
-                COUNT(CASE WHEN s.estado IN ('pendiente', 'aceptado', 'en_camino', 'en_progreso') THEN 1 END) as en_progreso,
+                COUNT(CASE WHEN s.estado IN ('completada', 'entregado') THEN 1 END) as completados,
+                COUNT(CASE WHEN s.estado IN ('cancelado', 'cancelada') THEN 1 END) as cancelados,
+                COUNT(CASE WHEN s.estado IN ('pendiente', 'aceptada', 'en_camino', 'en_progreso') THEN 1 END) as en_progreso,
                 COALESCE(AVG(s.distancia_estimada), 0) as distancia_promedio,
                 COALESCE(SUM(s.distancia_estimada), 0) as distancia_total,
                 COALESCE(AVG(EXTRACT(EPOCH FROM (s.completado_en - s.aceptado_en))/60), 0) as duracion_promedio
@@ -164,7 +164,10 @@ function getTripStats($pdo, $empresaId, $dateFilter) {
 /**
  * Estadísticas de ganancias
  */
-function getEarningsStats($pdo, $empresaId, $dateFilter) {
+function getEarningsStats($pdo, $empresaId, $periodo) {
+    $dateFilter = getDateFilter($periodo);
+    
+    // 1. GMV (Volumen Bruto) - Base: Viajes completados
     $sql = "SELECT 
                 COALESCE(SUM(s.precio_final), 0) as ingresos_totales,
                 COALESCE(AVG(s.precio_final), 0) as ingreso_promedio,
@@ -174,23 +177,43 @@ function getEarningsStats($pdo, $empresaId, $dateFilter) {
             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
             INNER JOIN usuarios u ON ac.conductor_id = u.id
             WHERE u.empresa_id = :empresa_id
-            AND s.estado = 'completado'
+            AND s.estado IN ('completada', 'entregado')
             $dateFilter";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['empresa_id' => $empresaId]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Calcular comisión de la empresa
-    $comisionEmpresa = calcularComisionEmpresa($pdo, $empresaId, $result['ingresos_totales']);
+    // 2. Ganancia Real (Comisiones Cobradas) - Base: Pagos registrados
+    $pagoFilter = "";
+    switch ($periodo) {
+        case '7d': $pagoFilter = "AND pc.fecha_pago >= NOW() - INTERVAL '7 days'"; break;
+        case '30d': $pagoFilter = "AND pc.fecha_pago >= NOW() - INTERVAL '30 days'"; break;
+        case '90d': $pagoFilter = "AND pc.fecha_pago >= NOW() - INTERVAL '90 days'"; break;
+        case '1y': $pagoFilter = "AND pc.fecha_pago >= NOW() - INTERVAL '1 year'"; break;
+    }
+    
+    $sqlRealized = "SELECT COALESCE(SUM(pc.monto), 0) as ganancia_real
+                    FROM pagos_comision pc
+                    INNER JOIN usuarios u ON pc.conductor_id = u.id
+                    WHERE u.empresa_id = :empresa_id
+                    $pagoFilter";
+                    
+    $stmtRealized = $pdo->prepare($sqlRealized);
+    $stmtRealized->execute(['empresa_id' => $empresaId]);
+    $realized = $stmtRealized->fetchColumn();
+    
+    // Estimación de comisiones (teórica, basada en GMV)
+    $comisionTeorica = calcularComisionEmpresa($pdo, $empresaId, $result['ingresos_totales']);
     
     return [
-        'ingresos_totales' => round($result['ingresos_totales'], 2),
+        'ingresos_totales' => round($result['ingresos_totales'], 2), // GMV
         'ingreso_promedio' => round($result['ingreso_promedio'], 2),
         'ingreso_maximo' => round($result['ingreso_maximo'], 2),
         'ingreso_minimo' => round($result['ingreso_minimo'], 2),
-        'comision_empresa' => round($comisionEmpresa, 2),
-        'ganancia_neta' => round($result['ingresos_totales'] - $comisionEmpresa, 2),
+        'comision_empresa' => round($realized, 2), // Usamos REALIZADA para mostrar en métricas
+        'ganancia_neta' => round($realized, 2),    // REALIZADA
+        'comision_teorica' => round($comisionTeorica, 2) // Para referencia interna si se necesita
     ];
 }
 
@@ -249,7 +272,7 @@ function calculateTrends($pdo, $empresaId, $periodo) {
     // Periodo actual
     $sqlActual = "SELECT 
                     COUNT(*) as viajes,
-                    COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos
+                    COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos
                 FROM solicitudes_servicio s
                 INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
                 INNER JOIN usuarios u ON ac.conductor_id = u.id
@@ -263,7 +286,7 @@ function calculateTrends($pdo, $empresaId, $periodo) {
     // Periodo anterior
     $sqlAnterior = "SELECT 
                     COUNT(*) as viajes,
-                    COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos
+                    COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos
                 FROM solicitudes_servicio s
                 INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
                 INNER JOIN usuarios u ON ac.conductor_id = u.id
@@ -317,8 +340,8 @@ function getChartData($pdo, $empresaId, $periodo) {
     $sql = "SELECT 
                 $groupBy as fecha,
                 COUNT(*) as viajes,
-                COUNT(CASE WHEN s.estado = 'completado' THEN 1 END) as completados,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos
+                COUNT(CASE WHEN s.estado IN ('completada', 'entregado') THEN 1 END) as completados,
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos
             FROM solicitudes_servicio s
             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
             INNER JOIN usuarios u ON ac.conductor_id = u.id
@@ -358,7 +381,7 @@ function getTopDrivers($pdo, $empresaId, $dateFilter, $limit = 5) {
                 u.nombre,
                 u.foto_perfil,
                 COUNT(s.id) as total_viajes,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos,
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos,
                 COALESCE(AVG(r.calificacion), 0) as rating
             FROM usuarios u
             LEFT JOIN asignaciones_conductor ac ON u.id = ac.conductor_id
@@ -395,7 +418,7 @@ function getVehicleDistribution($pdo, $empresaId, $dateFilter) {
     $sql = "SELECT 
                 COALESCE(s.tipo_servicio, 'otro') as tipo,
                 COUNT(*) as viajes,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos
             FROM solicitudes_servicio s
             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
             INNER JOIN usuarios u ON ac.conductor_id = u.id
@@ -537,9 +560,9 @@ function getDriversReport($pdo, $empresaId) {
                 u.es_activo as estado,
                 u.fecha_registro,
                 COUNT(s.id) as total_viajes,
-                COUNT(CASE WHEN s.estado = 'completado' THEN 1 END) as viajes_completados,
-                COUNT(CASE WHEN s.estado = 'cancelado' THEN 1 END) as viajes_cancelados,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos,
+                COUNT(CASE WHEN s.estado IN ('completada', 'entregado') THEN 1 END) as viajes_completados,
+                COUNT(CASE WHEN s.estado IN ('cancelada', 'cancelado') THEN 1 END) as viajes_cancelados,
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos,
                 COALESCE(AVG(r.calificacion), 0) as rating,
                 COUNT(r.id) as total_ratings
             FROM usuarios u
@@ -600,9 +623,9 @@ function getEarningsReport($pdo, $empresaId) {
     
     $sql = "SELECT 
                 $groupBy as fecha,
-                COUNT(CASE WHEN s.estado = 'completado' THEN 1 END) as viajes,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos_brutos,
-                COALESCE(AVG(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingreso_promedio
+                COUNT(CASE WHEN s.estado IN ('completada', 'entregado') THEN 1 END) as viajes,
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos_brutos,
+                COALESCE(AVG(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingreso_promedio
             FROM solicitudes_servicio s
             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
             INNER JOIN usuarios u ON ac.conductor_id = u.id
@@ -616,7 +639,7 @@ function getEarningsReport($pdo, $empresaId) {
     $ganancias = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Totales
-    $totales = getEarningsStats($pdo, $empresaId, $dateFilter);
+    $totales = getEarningsStats($pdo, $empresaId, $periodo);
     
     echo json_encode([
         'success' => true,
@@ -644,10 +667,10 @@ function getVehicleTypesReport($pdo, $empresaId) {
     $sql = "SELECT 
                 COALESCE(s.tipo_servicio, 'otro') as tipo,
                 COUNT(*) as total_viajes,
-                COUNT(CASE WHEN s.estado = 'completado' THEN 1 END) as completados,
-                COUNT(CASE WHEN s.estado = 'cancelado' THEN 1 END) as cancelados,
-                COALESCE(SUM(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingresos,
-                COALESCE(AVG(CASE WHEN s.estado = 'completado' THEN s.precio_final END), 0) as ingreso_promedio,
+                COUNT(CASE WHEN s.estado IN ('completada', 'entregado') THEN 1 END) as completados,
+                COUNT(CASE WHEN s.estado IN ('cancelada', 'cancelado') THEN 1 END) as cancelados,
+                COALESCE(SUM(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingresos,
+                COALESCE(AVG(CASE WHEN s.estado IN ('completada', 'entregado') THEN s.precio_final END), 0) as ingreso_promedio,
                 COALESCE(AVG(s.distancia_estimada), 0) as distancia_promedio
             FROM solicitudes_servicio s
             INNER JOIN asignaciones_conductor ac ON s.id = ac.solicitud_id
