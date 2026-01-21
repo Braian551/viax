@@ -7,11 +7,13 @@ import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 class CompanyDriverDetailsSheet extends StatefulWidget {
   final Map<String, dynamic> driver;
   final VoidCallback? onViewDocuments;
+  final VoidCallback? onViewCommissions;
 
   const CompanyDriverDetailsSheet({
     super.key,
     required this.driver,
     this.onViewDocuments,
+    this.onViewCommissions,
   });
 
   @override
@@ -309,6 +311,25 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
                   const SizedBox(height: 32),
                   
                   // Actions
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: widget.onViewCommissions ?? () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.receipt_long_rounded),
+                      label: const Text('Ver Historial Financiero'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(

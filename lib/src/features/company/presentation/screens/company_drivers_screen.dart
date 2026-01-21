@@ -7,6 +7,7 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_card.dart';
 import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_details_sheet.dart';
 import 'package:viax/src/features/company/presentation/screens/company_conductores_documentos_screen.dart';
+import 'package:viax/src/features/company/presentation/screens/company_financial_history_sheet.dart';
 
 class CompanyDriversTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -184,6 +185,29 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
           Navigator.pop(context);
           _navigateToDocuments(driver);
         },
+        onViewCommissions: () {
+          Navigator.pop(context);
+          _showFinancialHistory(driver);
+        },
+      ),
+    );
+  }
+
+  Future<void> _showFinancialHistory(Map<String, dynamic> conductor) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => DriverFinancialHistorySheet(
+          driver: conductor,
+          onPaymentRegistered: () {
+            _loadDrivers();
+          },
+        ),
       ),
     );
   }
