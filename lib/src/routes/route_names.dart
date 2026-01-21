@@ -40,6 +40,7 @@
   static const String adminConductorDocs = '/admin/conductor-docs';
 
   static const String adminEmpresas = '/admin/empresas';
+  static const String adminPlatformEarnings = '/admin/platform-earnings';
   
   // Rutas de empresa
   static const String companyHome = '/company/home';

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/features/admin/presentation/widgets/empresa_payment_sheet.dart';
 
 /// Pantalla de Ganancias de la Plataforma (Admin)
 /// Muestra:
@@ -442,7 +442,7 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: saldo > 0 ? () => _showPaymentDialog(empresaId, nombre, saldo) : null,
+          onTap: () => _showPaymentDialog(empresaId, nombre, saldo, comision),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -609,84 +609,24 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
     );
   }
 
-  Future<void> _showPaymentDialog(int empresaId, String empresaNombre, double saldoActual) async {
-    final controller = TextEditingController(text: saldoActual.toStringAsFixed(0));
-    
-    final result = await showDialog<bool>(
+  Future<void> _showPaymentDialog(int empresaId, String empresaNombre, double saldoActual, double comisionPorcentaje) async {
+    await showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Registrar Pago'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Empresa: $empresaNombre'),
-            Text('Saldo actual: ${_currencyFormat.format(saldoActual)}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Monto a registrar',
-                prefixText: '\$ ',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => EmpresaPaymentSheet(
+          empresaId: empresaId,
+          empresaNombre: empresaNombre,
+          saldoPendiente: saldoActual,
+          comisionPorcentaje: comisionPorcentaje,
+          adminId: widget.adminId,
+          onPaymentRegistered: _loadData,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Registrar'),
-          ),
-        ],
       ),
     );
-
-    if (result == true) {
-      final monto = double.tryParse(controller.text) ?? 0;
-      if (monto <= 0) {
-        if (mounted) {
-          CustomSnackbar.showError(context, message: 'Ingrese un monto válido');
-        }
-        return;
-      }
-
-      // Show loading
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-
-      try {
-        final response = await AdminService.registrarPagoEmpresa(
-          empresaId: empresaId,
-          monto: monto,
-          adminId: widget.adminId,
-        );
-
-        if (!mounted) return;
-        Navigator.pop(context); // Close loading
-
-        if (response['success'] == true) {
-          CustomSnackbar.showSuccess(context, message: 'Pago registrado correctamente');
-          _loadData(); // Reload data
-        } else {
-          CustomSnackbar.showError(context, message: response['message'] ?? 'Error');
-        }
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context);
-        CustomSnackbar.showError(context, message: 'Error: $e');
-      }
-    }
-    
-    controller.dispose();
   }
 }

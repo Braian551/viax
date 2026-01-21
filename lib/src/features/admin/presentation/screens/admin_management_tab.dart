@@ -106,6 +106,25 @@ class _AdminManagementTabState extends State<AdminManagementTab> with AutomaticK
           ),
           const SizedBox(height: 24),
           _buildSection(
+            title: 'Finanzas',
+            items: [
+              _ManagementItem(
+                title: 'Cobros a Empresas',
+                subtitle: 'Ver saldos pendientes y registrar pagos de empresas',
+                icon: Icons.account_balance_wallet_rounded,
+                accentColor: AppColors.success,
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    RouteNames.adminPlatformEarnings,
+                    arguments: {'admin_id': adminId},
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
             title: 'Reportes y Auditoría',
             items: [
               _ManagementItem(
