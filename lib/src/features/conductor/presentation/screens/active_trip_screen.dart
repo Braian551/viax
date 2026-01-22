@@ -895,13 +895,15 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       Navigator.pop(context);
     } else {
       // Si no hay nada en el stack (ej. recuperación desde Splash),
-      // debemos ir explícitamente al Home
+      // forzar navegación al home
       final session = await UserService.getSavedSession();
-      if (mounted && session != null) {
-        Navigator.pushReplacementNamed(
+      if (mounted) {
+        // Usar pushNamedAndRemoveUntil para asegurar un stack limpio
+        Navigator.pushNamedAndRemoveUntil(
           context,
           RouteNames.conductorHome,
-          arguments: {'conductor_user': session},
+          (route) => false,
+          arguments: {'conductor_user': session ?? {}}, // Pasar mapa vacío como fallback seguro
         );
       }
     }
