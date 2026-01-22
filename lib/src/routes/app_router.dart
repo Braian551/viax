@@ -35,6 +35,7 @@ import 'package:viax/src/features/conductor/presentation/screens/conductor_vehic
 import 'package:viax/src/features/conductor/presentation/screens/conductor_documents_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_settings_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_help_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/active_trip_screen.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/routes/animated_routes.dart';
 import 'package:viax/src/widgets/auth_wrapper.dart';
@@ -179,6 +180,50 @@ class AppRouter {
             settings: settings,
           );
         }
+      
+      // Ruta alternativa para navegación desde FAB flotante (cliente)
+      case '/user/active-trip':
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => UserActiveTripScreen(
+              solicitudId: args?['solicitudId'] ?? 0,
+              clienteId: args?['clienteId'] ?? 0,
+              origenLat: (args?['origenLat'] as num?)?.toDouble() ?? 0,
+              origenLng: (args?['origenLng'] as num?)?.toDouble() ?? 0,
+              direccionOrigen: args?['direccionOrigen'] ?? 'Origen',
+              destinoLat: (args?['destinoLat'] as num?)?.toDouble() ?? 0,
+              destinoLng: (args?['destinoLng'] as num?)?.toDouble() ?? 0,
+              direccionDestino: args?['direccionDestino'] ?? 'Destino',
+              conductorInfo: args?['conductorInfo'],
+            ),
+            settings: settings,
+          );
+        }
+      
+      // Ruta para navegación desde FAB flotante (conductor)
+      case '/conductor/active-trip':
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => ConductorActiveTripScreen(
+              conductorId: args?['conductorId'] ?? 0,
+              solicitudId: args?['solicitudId'],
+              clienteId: args?['clienteId'],
+              origenLat: (args?['origenLat'] as num?)?.toDouble() ?? 0,
+              origenLng: (args?['origenLng'] as num?)?.toDouble() ?? 0,
+              destinoLat: (args?['destinoLat'] as num?)?.toDouble() ?? 0,
+              destinoLng: (args?['destinoLng'] as num?)?.toDouble() ?? 0,
+              direccionOrigen: args?['direccionOrigen'] ?? 'Origen',
+              direccionDestino: args?['direccionDestino'] ?? 'Destino',
+              clienteNombre: args?['clienteNombre'],
+              clienteFoto: args?['clienteFoto'],
+              initialTripStatus: args?['initialTripStatus'],
+            ),
+            settings: settings,
+          );
+        }
+      
       case RouteNames.userProfile:
         return MaterialPageRoute(builder: (_) => const UserProfileScreen());
       case RouteNames.tripHistory:

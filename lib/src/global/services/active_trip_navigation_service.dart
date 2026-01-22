@@ -1,0 +1,161 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+
+/// Datos del viaje activo necesarios para navegar de vuelta
+class ActiveTripData {
+  final int solicitudId;
+  final int userId;
+  final String userRole; // 'cliente' o 'conductor'
+  final double origenLat;
+  final double origenLng;
+  final String direccionOrigen;
+  final double destinoLat;
+  final double destinoLng;
+  final String direccionDestino;
+  final Map<String, dynamic>? conductorInfo;
+  final Map<String, dynamic>? clienteInfo;
+  final String? clienteNombre;
+  final String? clienteFoto;
+  final String? initialTripStatus;
+
+  const ActiveTripData({
+    required this.solicitudId,
+    required this.userId,
+    required this.userRole,
+    required this.origenLat,
+    required this.origenLng,
+    required this.direccionOrigen,
+    required this.destinoLat,
+    required this.destinoLng,
+    required this.direccionDestino,
+    this.conductorInfo,
+    this.clienteInfo,
+    this.clienteNombre,
+    this.clienteFoto,
+    this.initialTripStatus,
+  });
+
+  bool get isClient => userRole == 'cliente';
+  bool get isDriver => userRole == 'conductor';
+}
+
+/// Servicio singleton que gestiona la navegación cuando hay un viaje activo.
+/// 
+/// Permite que el usuario navegue libremente por la app mientras hay un viaje
+/// en curso, mostrando un FAB flotante para regresar a la pantalla del viaje.
+class ActiveTripNavigationService extends ChangeNotifier {
+  // Singleton
+  static final ActiveTripNavigationService _instance = ActiveTripNavigationService._internal();
+  factory ActiveTripNavigationService() => _instance;
+  ActiveTripNavigationService._internal();
+
+  /// Navigator key global para navegación desde cualquier parte
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  /// Datos del viaje activo actual
+  ActiveTripData? _activeTripData;
+  ActiveTripData? get activeTripData => _activeTripData;
+
+  /// Indica si el usuario está actualmente en la pantalla del viaje
+  bool _isOnTripScreen = false;
+  bool get isOnTripScreen => _isOnTripScreen;
+
+  /// Indica si hay un viaje activo
+  bool get hasActiveTrip => _activeTripData != null;
+
+  /// Indica si debe mostrarse el FAB flotante
+  /// (hay viaje activo Y el usuario NO está en la pantalla del viaje)
+  bool get shouldShowFloatingFab => hasActiveTrip && !_isOnTripScreen;
+
+  /// Stream controller para notificar cambios
+  final _stateController = StreamController<bool>.broadcast();
+  Stream<bool> get stateStream => _stateController.stream;
+
+  /// Registra un viaje activo
+  void registerActiveTrip(ActiveTripData tripData) {
+    _activeTripData = tripData;
+    _isOnTripScreen = true;
+    _notifyChange();
+    debugPrint('🚗 [ActiveTripNav] Viaje registrado: ${tripData.solicitudId}');
+  }
+
+  /// Actualiza el estado cuando el usuario entra/sale de la pantalla de viaje
+  void setOnTripScreen(bool isOnScreen) {
+    if (_isOnTripScreen != isOnScreen) {
+      _isOnTripScreen = isOnScreen;
+      _notifyChange();
+      debugPrint('📍 [ActiveTripNav] En pantalla de viaje: $isOnScreen');
+    }
+  }
+
+  /// Limpia el viaje activo (al finalizar o cancelar)
+  void clearActiveTrip() {
+    _activeTripData = null;
+    _isOnTripScreen = false;
+    _notifyChange();
+    debugPrint('🗑️ [ActiveTripNav] Viaje activo eliminado');
+  }
+
+  /// Navega de vuelta a la pantalla del viaje activo
+  void navigateToActiveTrip(BuildContext context) {
+    if (_activeTripData == null) return;
+
+    final data = _activeTripData!;
+    
+    if (data.isClient) {
+      _navigateToClientTrip(data);
+    } else {
+      _navigateToDriverTrip(data);
+    }
+  }
+
+  void _navigateToClientTrip(ActiveTripData data) {
+    // Usar key global para asegurar que navegamos en el navigator principal
+    navigatorKey.currentState?.pushNamed(
+      '/user/active-trip',
+      arguments: {
+        'solicitudId': data.solicitudId,
+        'clienteId': data.userId,
+        'origenLat': data.origenLat,
+        'origenLng': data.origenLng,
+        'direccionOrigen': data.direccionOrigen,
+        'destinoLat': data.destinoLat,
+        'destinoLng': data.destinoLng,
+        'direccionDestino': data.direccionDestino,
+        'conductorInfo': data.conductorInfo,
+      },
+    );
+  }
+
+  void _navigateToDriverTrip(ActiveTripData data) {
+    // Usar key global para asegurar que navegamos en el navigator principal
+    navigatorKey.currentState?.pushNamed(
+      '/conductor/active-trip',
+      arguments: {
+        'conductorId': data.userId,
+        'solicitudId': data.solicitudId,
+        'origenLat': data.origenLat,
+        'origenLng': data.origenLng,
+        'destinoLat': data.destinoLat,
+        'destinoLng': data.destinoLng,
+        'direccionOrigen': data.direccionOrigen,
+        'direccionDestino': data.direccionDestino,
+        'clienteNombre': data.clienteNombre,
+        'clienteFoto': data.clienteFoto,
+        'clienteId': data.clienteInfo?['id'],
+        'initialTripStatus': data.initialTripStatus,
+      },
+    );
+  }
+
+  void _notifyChange() {
+    _stateController.add(shouldShowFloatingFab);
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _stateController.close();
+    super.dispose();
+  }
+}

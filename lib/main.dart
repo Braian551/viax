@@ -18,7 +18,9 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 import 'package:viax/src/global/services/local_notification_service.dart';
+import 'package:viax/src/global/widgets/floating_trip_fab.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -228,6 +230,7 @@ class MyApp extends StatelessWidget {
     }
 
     return MaterialApp(
+      navigatorKey: ActiveTripNavigationService.navigatorKey, // KEY GLOBAL PARA NAVEGACIÓN
       scaffoldMessengerKey: AppConfig.scaffoldMessengerKey,
       title: 'Viax',
       debugShowCheckedModeBanner: false,
@@ -247,6 +250,12 @@ class MyApp extends StatelessWidget {
         Locale('es', 'ES'), // Spanish
         Locale('en', 'US'), // English
       ],
+      // Agregar el overlay del FAB flotante usando builder
+      builder: (context, child) {
+        return ActiveTripOverlay(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

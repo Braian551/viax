@@ -9,6 +9,7 @@ import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/rating_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/local_notification_service.dart';
+import '../../../../global/services/active_trip_navigation_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../global/widgets/trip_completion/trip_completion_widgets.dart';
 import '../../../../theme/app_colors.dart';
@@ -105,12 +106,33 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _setupAnimations();
     _initializeTrip();
     _startClientTracking();
+    _registerActiveTripNavigation();
+  }
+
+  /// Registra este viaje en el servicio de navegación global
+  void _registerActiveTripNavigation() {
+    ActiveTripNavigationService().registerActiveTrip(
+      ActiveTripData(
+        solicitudId: widget.solicitudId,
+        userId: widget.clienteId,
+        userRole: 'cliente',
+        origenLat: widget.origenLat,
+        origenLng: widget.origenLng,
+        direccionOrigen: widget.direccionOrigen,
+        destinoLat: widget.destinoLat,
+        destinoLng: widget.destinoLng,
+        direccionDestino: widget.direccionDestino,
+        conductorInfo: widget.conductorInfo,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _disposed = true;
     _tripCompleted = true; // Prevent any further status checks
+    // Notificar que salimos de la pantalla de viaje
+    ActiveTripNavigationService().setOnTripScreen(false);
     SoundService.stopDriverArrivedSound();
     _statusTimer?.cancel();
     _statusTimer = null;
@@ -575,6 +597,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _tripCompleted = true;
     _statusTimer?.cancel();
     ChatService.stopPolling();
+    
+    // Limpiar viaje activo
+    TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
 
     showDialog(
       context: context,
@@ -606,6 +632,194 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     );
   }
 
+  /// Muestra las opciones del viaje (cancelar, soporte, etc.)
+  void _showOptionsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildOptionItem(
+              icon: Icons.cancel_outlined,
+              label: 'Cancelar viaje',
+              color: AppColors.error,
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCancelConfirmation();
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildOptionItem(
+              icon: Icons.share_location_rounded,
+              label: 'Compartir ubicación',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                // TODO: Implementar compartir ubicación
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildOptionItem(
+              icon: Icons.support_agent_rounded,
+              label: 'Contactar soporte',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                // TODO: Implementar soporte
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionItem({
+    required IconData icon,
+    required String label,
+    Color? color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final itemColor = color ?? (isDark ? Colors.white : Colors.grey[800]);
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: itemColor, size: 22),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: TextStyle(
+                  color: itemColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? Colors.white38 : Colors.grey[400],
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Muestra confirmación antes de cancelar el viaje
+  void _showCancelConfirmation() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '¿Cancelar viaje?',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.grey[900],
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer. Se notificará al conductor.',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[600]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Volver',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _cancelTripByClient();
+            },
+            child: Text(
+              'Cancelar viaje',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Cancela el viaje por iniciativa del cliente
+  Future<void> _cancelTripByClient() async {
+    setState(() => _isLoading = true);
+    
+    final result = await TripRequestService.cancelTripRequestWithReason(
+      solicitudId: widget.solicitudId,
+      clienteId: widget.clienteId,
+      motivo: 'Cancelado por el cliente',
+    );
+    
+    if (result['success'] == true) {
+      _onTripCancelled();
+    } else {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Error al cancelar'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Navega al home del usuario
+  void _navigateToHome() {
+    // Marcar que salimos de la pantalla de viaje pero el viaje sigue activo
+    ActiveTripNavigationService().setOnTripScreen(false);
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
+
   void _showCompletionDialog() {
     // Navegar a pantalla de completación en lugar de diálogo
     _navigateToTripCompletion();
@@ -613,6 +827,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
   /// Navega a la pantalla de completación del viaje.
   void _navigateToTripCompletion() {
+    // Limpiar el viaje activo al completar
+    TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
+    
     // Usar precio real del tracking si está disponible, sino tarifa mínima
     final precioFinal = _precioActual > 0 
         ? _precioActual 
@@ -740,7 +958,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               child: TripStatusHeader(
                 tripState: _tripState,
                 isDark: isDark,
-                onBack: () => Navigator.pop(context),
+                onBack: _navigateToHome,
+                onOptions: _showOptionsMenu,
               ),
             ),
 

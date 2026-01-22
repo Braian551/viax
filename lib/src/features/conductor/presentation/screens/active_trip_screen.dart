@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import 'package:viax/src/features/conductor/services/trip_tracking_service.dart'
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
+import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/sound_service.dart';
@@ -90,6 +92,30 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _initController();
     _checkRecovery();
     _startTripStatusPolling();
+    _registerActiveTripNavigation();
+  }
+
+  /// Registra este viaje en el servicio de navegación global
+  void _registerActiveTripNavigation() {
+    if (widget.solicitudId == null) return;
+    
+    ActiveTripNavigationService().registerActiveTrip(
+      ActiveTripData(
+        solicitudId: widget.solicitudId!,
+        userId: widget.conductorId,
+        userRole: 'conductor',
+        origenLat: widget.origenLat,
+        origenLng: widget.origenLng,
+        direccionOrigen: widget.direccionOrigen,
+        destinoLat: widget.destinoLat,
+        destinoLng: widget.destinoLng,
+        direccionDestino: widget.direccionDestino,
+        clienteNombre: widget.clienteNombre,
+        clienteFoto: widget.clienteFoto,
+        clienteInfo: widget.clienteId != null ? {'id': widget.clienteId} : null,
+        initialTripStatus: widget.initialTripStatus,
+      ),
+    );
   }
 
   void _startTripStatusPolling() {
@@ -124,6 +150,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     // Detener tracking
     TripTrackingService().stopTracking();
     TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
 
     // Reproducir sonido de cancelación si existe
     // SoundService.playCancelSound();
@@ -212,6 +239,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Notificar que salimos de la pantalla de viaje
+    ActiveTripNavigationService().setOnTripScreen(false);
     _controller.dispose();
     _messagesSubscription.cancel();
     _unreadSubscription.cancel();
@@ -428,6 +457,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
 
     // Limpiar persistencia
     await TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
 
     if (!mounted) return;
 
@@ -638,6 +668,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       // Limpiar estado
       TripTrackingService().stopTracking();
       TripPersistenceService().clearActiveTrip();
+      ActiveTripNavigationService().clearActiveTrip();
 
       if (mounted) {
         _navigateToHome(); // Ir al home
@@ -813,9 +844,10 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Widget _buildTopControls(bool isDark) {
     return Row(
       children: [
+        // Botón de regresar al home (el viaje sigue activo)
         FloatingButton(
-          icon: Icons.close_rounded,
-          onTap: () => _showCancelDialog(isDark),
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: _navigateToHomeKeepingTrip,
           isDark: isDark,
           size: 44,
         ),
@@ -836,6 +868,29 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         ),
       ],
     );
+  }
+
+  /// Navega al home pero mantiene el viaje activo (FAB flotante aparecerá)
+  Future<void> _navigateToHomeKeepingTrip() async {
+    HapticFeedback.lightImpact();
+    // Marcar que salimos de la pantalla de viaje pero el viaje sigue activo
+    ActiveTripNavigationService().setOnTripScreen(false);
+    
+    // Si podemos hacer pop, genial (caso normal)
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      // Si no hay nada en el stack (ej. recuperación desde Splash),
+      // debemos ir explícitamente al Home
+      final session = await UserService.getSavedSession();
+      if (mounted && session != null) {
+        Navigator.pushReplacementNamed(
+          context,
+          RouteNames.conductorHome,
+          arguments: {'conductor_user': session},
+        );
+      }
+    }
   }
 
   Widget _buildNavigationCard(bool isDark) {

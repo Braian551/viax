@@ -7,12 +7,16 @@ class TripStatusHeader extends StatelessWidget {
   final String tripState;
   final bool isDark;
   final VoidCallback onBack;
+  final VoidCallback? onCancel;
+  final VoidCallback? onOptions;
 
   const TripStatusHeader({
     super.key,
     required this.tripState,
     required this.isDark,
     required this.onBack,
+    this.onCancel,
+    this.onOptions,
   });
 
   String get _statusText {
@@ -137,7 +141,36 @@ class TripStatusHeader extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 56), // Espacio para balance
+        const SizedBox(width: 12),
+
+        // Botón de opciones/cancelar
+        Material(
+          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          elevation: 2,
+          shadowColor: Colors.black26,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              if (onOptions != null) {
+                onOptions!();
+              } else if (onCancel != null) {
+                onCancel!();
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.more_vert_rounded,
+                color: isDark ? Colors.white : Colors.grey[800],
+                size: 22,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
