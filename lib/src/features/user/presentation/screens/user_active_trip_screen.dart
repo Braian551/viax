@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:latlong2/latlong.dart';
 import '../../../../global/services/mapbox_service.dart';
@@ -817,7 +818,14 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void _navigateToHome() {
     // Marcar que salimos de la pantalla de viaje pero el viaje sigue activo
     ActiveTripNavigationService().setOnTripScreen(false);
-    Navigator.popUntil(context, (route) => route.isFirst);
+    
+    // Si hay historial, volvemos al inicio (HomeUser debería estar abajo)
+    if (Navigator.canPop(context)) {
+       Navigator.popUntil(context, (route) => route.isFirst);
+    } else {
+       // Si no podemos hacer pop (estamos en la raiz por recuperación), ir explícitamente al home
+       Navigator.pushReplacementNamed(context, RouteNames.home);
+    }
   }
 
   void _showCompletionDialog() {
