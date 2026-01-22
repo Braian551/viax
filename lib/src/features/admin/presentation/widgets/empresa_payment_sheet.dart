@@ -6,6 +6,7 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 /// Bottom Sheet para gestionar pagos de una empresa
 /// Similar al DriverFinancialHistorySheet pero para empresas
@@ -16,6 +17,7 @@ class EmpresaPaymentSheet extends StatefulWidget {
   final double comisionPorcentaje;
   final int adminId;
   final VoidCallback? onPaymentRegistered;
+  final String? logoKey;
 
   const EmpresaPaymentSheet({
     super.key,
@@ -25,6 +27,7 @@ class EmpresaPaymentSheet extends StatefulWidget {
     required this.comisionPorcentaje,
     required this.adminId,
     this.onPaymentRegistered,
+    this.logoKey,
   });
 
   @override
@@ -250,25 +253,11 @@ class _EmpresaPaymentSheetState extends State<EmpresaPaymentSheet> {
             child: Column(
               children: [
                 // Logo / Avatar
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      widget.empresaNombre.isNotEmpty 
-                          ? widget.empresaNombre[0].toUpperCase() 
-                          : 'E',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                CompanyLogo(
+                  logoKey: widget.logoKey,
+                  nombreEmpresa: widget.empresaNombre,
+                  size: 60,
+                  fontSize: 24,
                 ),
                 const SizedBox(height: 12),
                 Text(

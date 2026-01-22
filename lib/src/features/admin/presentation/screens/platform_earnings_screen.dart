@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_payment_sheet.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 /// Pantalla de Ganancias de la Plataforma (Admin)
 /// Muestra:
@@ -44,10 +45,24 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
     {'value': 'todo', 'label': 'Todo'},
   ];
 
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
+    });
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -116,8 +131,8 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
       padding: const EdgeInsets.all(20),
       children: [
         Shimmer.fromColors(
-          baseColor: Colors.grey.withValues(alpha: 0.1),
-          highlightColor: Colors.grey.withValues(alpha: 0.05),
+          baseColor: Colors.grey.withOpacity(0.1),
+          highlightColor: Colors.grey.withOpacity(0.05),
           child: Container(
             height: 120,
             decoration: BoxDecoration(
@@ -135,8 +150,8 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Shimmer.fromColors(
-            baseColor: Colors.grey.withValues(alpha: 0.1),
-            highlightColor: Colors.grey.withValues(alpha: 0.05),
+            baseColor: Colors.grey.withOpacity(0.1),
+            highlightColor: Colors.grey.withOpacity(0.05),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -201,10 +216,17 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
           // Empresas Deudoras Section
           _buildSectionHeader('Empresas con Saldo Pendiente', Icons.business_rounded),
           const SizedBox(height: 12),
+          
+          // Search Bar
+          _buildSearchBar(isDark),
+          const SizedBox(height: 16),
+
           if (empresas.isEmpty)
             _buildEmptyCard('No hay empresas con saldo pendiente 🎉')
+          else if (empresas.where((e) => (e['nombre'] ?? '').toLowerCase().contains(_searchQuery)).isEmpty)
+             _buildEmptyCard('no se encontraron empresas :( ')
           else
-            ...empresas.map((e) => _buildEmpresaCard(e, isDark)),
+            ...empresas.where((e) => (e['nombre'] ?? '').toLowerCase().contains(_searchQuery)).map((e) => _buildEmpresaCard(e, isDark)),
 
           const SizedBox(height: 24),
 
@@ -426,6 +448,7 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
     final comision = double.tryParse(empresa['comision_porcentaje']?.toString() ?? '0') ?? 0;
     final totalViajes = int.tryParse(empresa['total_viajes']?.toString() ?? '0') ?? 0;
     final empresaId = int.tryParse(empresa['id']?.toString() ?? '0') ?? 0;
+    final logoKey = empresa['logo_url']; // Extract logo key
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -442,28 +465,16 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showPaymentDialog(empresaId, nombre, saldo, comision),
+          onTap: () => _showPaymentDialog(empresaId, nombre, saldo, comision, logoKey),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      nombre.isNotEmpty ? nombre[0].toUpperCase() : 'E',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                CompanyLogo(
+                  logoKey: logoKey,
+                  nombreEmpresa: nombre,
+                  size: 48,
+                  fontSize: 18,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -609,7 +620,7 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
     );
   }
 
-  Future<void> _showPaymentDialog(int empresaId, String empresaNombre, double saldoActual, double comisionPorcentaje) async {
+  Future<void> _showPaymentDialog(int empresaId, String empresaNombre, double saldoActual, double comisionPorcentaje, String? logoKey) async {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -625,6 +636,45 @@ class _PlatformEarningsScreenState extends State<PlatformEarningsScreen> {
           comisionPorcentaje: comisionPorcentaje,
           adminId: widget.adminId,
           onPaymentRegistered: _loadData,
+          logoKey: logoKey,
+        ),
+      ),
+    );
+  }
+  Widget _buildSearchBar(bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Buscar empresa...',
+          hintStyle: TextStyle(
+            color: isDark ? Colors.white54 : Colors.grey[500],
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: isDark ? Colors.white54 : Colors.grey[500],
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear_rounded, size: 20),
+                  onPressed: () {
+                     _searchController.clear();
+                     // Listener updates state automatically
+                  },
+                )
+              : null,
         ),
       ),
     );
