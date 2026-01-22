@@ -108,6 +108,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _initializeTrip();
     _startClientTracking();
     _registerActiveTripNavigation();
+    // Solicitar permiso de overlay al iniciar el viaje
+    _requestSystemOverlayPermission();
+  }
+
+  /// Solicita permiso para el overlay del sistema
+  Future<void> _requestSystemOverlayPermission() async {
+    // Esperamos un poco para que la UI se estabilice
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    
+    final hasPermission = await ActiveTripNavigationService().hasSystemOverlayPermission();
+    if (!hasPermission && mounted) {
+      await ActiveTripNavigationService().requestSystemOverlayPermission(context);
+    }
   }
 
   /// Registra este viaje en el servicio de navegación global

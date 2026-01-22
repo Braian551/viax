@@ -201,10 +201,51 @@ void main() async {
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final bool enableDatabaseInit;
 
   const MyApp({super.key, this.enableDatabaseInit = true});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final tripNavService = ActiveTripNavigationService();
+    
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        // App va a segundo plano - mostrar overlay del sistema si hay viaje
+        if (tripNavService.hasActiveTrip) {
+          tripNavService.showSystemOverlay();
+          debugPrint('📱 [App] Pasando a segundo plano - mostrando overlay');
+        }
+        break;
+      case AppLifecycleState.resumed:
+        // App vuelve a primer plano - ocultar overlay del sistema
+        // El overlay se ocultará automáticamente cuando se navegue al viaje
+        debugPrint('📱 [App] Volviendo a primer plano');
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +258,7 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     // Inicializar la base de datos en background cuando se carga la app
-    if (enableDatabaseInit) {
+    if (widget.enableDatabaseInit) {
       // No bloqueamos la UI: inicializamos en background y dejamos que el RouterScreen se muestre.
       Future.microtask(() async {
         try {

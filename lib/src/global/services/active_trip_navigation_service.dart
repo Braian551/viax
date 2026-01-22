@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'system_overlay_service.dart';
 
 /// Datos del viaje activo necesarios para navegar de vuelta
 class ActiveTripData {
@@ -43,14 +45,24 @@ class ActiveTripData {
 /// 
 /// Permite que el usuario navegue libremente por la app mientras hay un viaje
 /// en curso, mostrando un FAB flotante para regresar a la pantalla del viaje.
+/// También maneja el overlay del sistema cuando el usuario sale de la app.
 class ActiveTripNavigationService extends ChangeNotifier {
   // Singleton
   static final ActiveTripNavigationService _instance = ActiveTripNavigationService._internal();
   factory ActiveTripNavigationService() => _instance;
-  ActiveTripNavigationService._internal();
+  ActiveTripNavigationService._internal() {
+    _initSystemOverlay();
+  }
 
   /// Navigator key global para navegación desde cualquier parte
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  /// Servicio de overlay del sistema
+  final SystemOverlayService _systemOverlay = SystemOverlayService();
+
+  /// Indica si el overlay del sistema está habilitado
+  bool _systemOverlayEnabled = true;
+  bool get systemOverlayEnabled => _systemOverlayEnabled;
 
   /// Datos del viaje activo actual
   ActiveTripData? _activeTripData;
@@ -70,6 +82,33 @@ class ActiveTripNavigationService extends ChangeNotifier {
   /// Stream controller para notificar cambios
   final _stateController = StreamController<bool>.broadcast();
   Stream<bool> get stateStream => _stateController.stream;
+
+  /// Inicializa el overlay del sistema
+  void _initSystemOverlay() {
+    // Configurar callback para navegación desde el overlay del sistema
+    _systemOverlay.setNavigationCallback((userRole, solicitudId) {
+      debugPrint('🔵 [ActiveTripNav] Navegando desde overlay del sistema');
+      _navigateFromSystemOverlay();
+    });
+
+    // Callback cuando el usuario elimina el overlay
+    _systemOverlay.setOverlayRemovedCallback(() {
+      _systemOverlayEnabled = false;
+      notifyListeners();
+    });
+  }
+
+  /// Navega al viaje activo desde el overlay del sistema
+  void _navigateFromSystemOverlay() {
+    if (_activeTripData == null) return;
+    
+    final data = _activeTripData!;
+    if (data.isClient) {
+      _navigateToClientTrip(data);
+    } else {
+      _navigateToDriverTrip(data);
+    }
+  }
 
   /// Registra un viaje activo
   void registerActiveTrip(ActiveTripData tripData) {
@@ -92,8 +131,50 @@ class ActiveTripNavigationService extends ChangeNotifier {
   void clearActiveTrip() {
     _activeTripData = null;
     _isOnTripScreen = false;
+    // Ocultar overlay del sistema
+    _hideSystemOverlay();
     _notifyChange();
     debugPrint('🗑️ [ActiveTripNav] Viaje activo eliminado');
+  }
+
+  /// Muestra el overlay del sistema (cuando el usuario minimiza la app)
+  Future<void> showSystemOverlay() async {
+    if (!Platform.isAndroid) return;
+    if (_activeTripData == null) return;
+    if (!_systemOverlayEnabled) return;
+
+    final data = _activeTripData!;
+    await _systemOverlay.showOverlay(
+      userRole: data.userRole,
+      solicitudId: data.solicitudId,
+    );
+  }
+
+  /// Oculta el overlay del sistema
+  Future<void> _hideSystemOverlay() async {
+    if (!Platform.isAndroid) return;
+    await _systemOverlay.hideOverlay();
+  }
+
+  /// Solicita permiso para el overlay del sistema
+  Future<bool> requestSystemOverlayPermission(BuildContext context) async {
+    if (!Platform.isAndroid) return false;
+    return await _systemOverlay.showPermissionDialog(context);
+  }
+
+  /// Verifica si tiene permiso para overlay del sistema
+  Future<bool> hasSystemOverlayPermission() async {
+    if (!Platform.isAndroid) return false;
+    return await _systemOverlay.hasOverlayPermission();
+  }
+
+  /// Habilita/deshabilita el overlay del sistema
+  void setSystemOverlayEnabled(bool enabled) {
+    _systemOverlayEnabled = enabled;
+    if (!enabled) {
+      _hideSystemOverlay();
+    }
+    notifyListeners();
   }
 
   /// Navega de vuelta a la pantalla del viaje activo
