@@ -5,43 +5,53 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.util.DisplayMetrics
-import android.view.GestureDetector
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 /**
  * Servicio de overlay flotante para mostrar un botón fuera de la app
  * cuando hay un viaje en curso. Permite al usuario volver a la app
  * con un solo toque.
+ * 
+ * Características:
+ * - Solo aparece cuando la app está en segundo plano
+ * - Se puede arrastrar a cualquier posición
+ * - Muestra un basurero al arrastrar para eliminar
+ * - Se auto-oculta cuando la app vuelve al frente
  */
 class FloatingOverlayService : Service() {
 
     private var windowManager: WindowManager? = null
     private var floatingView: View? = null
-    private var gestureDetector: GestureDetector? = null
+    private var deleteZoneView: View? = null
     
-    // Posición inicial
+    // Posición inicial del touch
     private var initialX = 0
     private var initialY = 0
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     
-    // Para detectar si es un click o drag
+    // Estado
     private var isDragging = false
-    private var isLongPress = false
+    private var isInDeleteZone = false
     
     // Constantes
     companion object {
@@ -52,8 +62,9 @@ class FloatingOverlayService : Service() {
         const val EXTRA_USER_ROLE = "user_role"
         const val EXTRA_SOLICITUD_ID = "solicitud_id"
         
-        private const val CLICK_THRESHOLD = 10f // píxeles
-        private const val LONG_PRESS_DURATION = 500L // ms
+        private const val CLICK_THRESHOLD = 15f // píxeles para detectar drag
+        private const val DELETE_ZONE_HEIGHT = 120 // dp
+        private const val BUTTON_SIZE = 56 // dp
     }
     
     // Datos del viaje
@@ -75,7 +86,7 @@ class FloatingOverlayService : Service() {
                 startForeground(NOTIFICATION_ID, createNotification())
             }
             ACTION_HIDE -> {
-                hideFloatingButton()
+                hideAll()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -87,7 +98,7 @@ class FloatingOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        hideFloatingButton()
+        hideAll()
     }
 
     private fun createNotificationChannel() {
@@ -131,12 +142,11 @@ class FloatingOverlayService : Service() {
     private fun showFloatingButton() {
         if (floatingView != null) return
         
-        // Crear el view programáticamente para evitar dependencias de layout XML
-        floatingView = createFloatingView()
+        floatingView = createFloatingButtonView()
         
         val layoutParams = WindowManager.LayoutParams().apply {
-            width = dpToPx(60)
-            height = dpToPx(60)
+            width = dpToPx(BUTTON_SIZE)
+            height = dpToPx(BUTTON_SIZE)
             type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             } else {
@@ -147,26 +157,45 @@ class FloatingOverlayService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
             format = PixelFormat.TRANSLUCENT
             gravity = Gravity.TOP or Gravity.START
-            x = dpToPx(16)
-            y = dpToPx(100)
+            x = dpToPx(12)
+            y = dpToPx(150)
         }
 
         setupTouchListener(floatingView!!, layoutParams)
         windowManager?.addView(floatingView, layoutParams)
+        
+        // Animación de entrada
+        floatingView?.alpha = 0f
+        floatingView?.scaleX = 0.5f
+        floatingView?.scaleY = 0.5f
+        floatingView?.animate()
+            ?.alpha(1f)
+            ?.scaleX(1f)
+            ?.scaleY(1f)
+            ?.setDuration(300)
+            ?.setInterpolator(OvershootInterpolator())
+            ?.start()
     }
 
-    private fun createFloatingView(): View {
-        // Crear un FrameLayout con fondo circular blanco
+    private fun createFloatingButtonView(): View {
+        // Contenedor principal con sombra
         val container = FrameLayout(this).apply {
-            setBackgroundResource(R.drawable.floating_button_bg)
-            elevation = dpToPx(8).toFloat()
+            elevation = dpToPx(6).toFloat()
         }
         
-        // Agregar el logo de la app
+        // Fondo circular blanco
+        val background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(Color.WHITE)
+            setStroke(dpToPx(1), Color.parseColor("#E0E0E0"))
+        }
+        container.background = background
+        
+        // Logo de la app
         val imageView = ImageView(this).apply {
             setImageResource(R.mipmap.launcher_icon)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            val padding = dpToPx(10)
+            val padding = dpToPx(8)
             setPadding(padding, padding, padding, padding)
         }
         
@@ -178,86 +207,200 @@ class FloatingOverlayService : Service() {
         return container
     }
 
-    private fun setupTouchListener(view: View, layoutParams: WindowManager.LayoutParams) {
-        var longPressRunnable: Runnable? = null
+    private fun createDeleteZoneView(): View {
+        val displayMetrics = DisplayMetrics()
+        windowManager?.defaultDisplay?.getMetrics(displayMetrics)
         
+        // Contenedor de la zona de eliminación
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            
+            // Gradiente rojo de abajo hacia arriba
+            val gradient = GradientDrawable(
+                GradientDrawable.Orientation.BOTTOM_TOP,
+                intArrayOf(
+                    Color.parseColor("#E53935"), // Rojo intenso abajo
+                    Color.parseColor("#00E53935") // Transparente arriba
+                )
+            )
+            background = gradient
+        }
+        
+        // Ícono de basurero
+        val trashIcon = ImageView(this).apply {
+            setImageResource(android.R.drawable.ic_menu_delete)
+            setColorFilter(Color.WHITE)
+            val size = dpToPx(36)
+            layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                bottomMargin = dpToPx(4)
+            }
+        }
+        
+        // Texto "Eliminar"
+        val label = TextView(this).apply {
+            text = "Soltar para eliminar"
+            setTextColor(Color.WHITE)
+            textSize = 12f
+        }
+        
+        container.addView(trashIcon)
+        container.addView(label)
+        
+        return container
+    }
+
+    private fun showDeleteZone() {
+        if (deleteZoneView != null) return
+        
+        val displayMetrics = DisplayMetrics()
+        windowManager?.defaultDisplay?.getMetrics(displayMetrics)
+        
+        deleteZoneView = createDeleteZoneView()
+        
+        val layoutParams = WindowManager.LayoutParams().apply {
+            width = displayMetrics.widthPixels
+            height = dpToPx(DELETE_ZONE_HEIGHT)
+            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                @Suppress("DEPRECATION")
+                WindowManager.LayoutParams.TYPE_PHONE
+            }
+            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+            format = PixelFormat.TRANSLUCENT
+            gravity = Gravity.BOTTOM or Gravity.START
+        }
+        
+        windowManager?.addView(deleteZoneView, layoutParams)
+        
+        // Animación de entrada desde abajo
+        deleteZoneView?.translationY = dpToPx(DELETE_ZONE_HEIGHT).toFloat()
+        deleteZoneView?.animate()
+            ?.translationY(0f)
+            ?.setDuration(200)
+            ?.setInterpolator(AccelerateDecelerateInterpolator())
+            ?.start()
+    }
+
+    private fun hideDeleteZone() {
+        deleteZoneView?.let { view ->
+            view.animate()
+                .translationY(dpToPx(DELETE_ZONE_HEIGHT).toFloat())
+                .setDuration(150)
+                .withEndAction {
+                    try {
+                        windowManager?.removeView(view)
+                    } catch (e: Exception) { }
+                    deleteZoneView = null
+                }
+                .start()
+        }
+    }
+
+    private fun setupTouchListener(view: View, layoutParams: WindowManager.LayoutParams) {
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     isDragging = false
-                    isLongPress = false
+                    isInDeleteZone = false
                     initialX = layoutParams.x
                     initialY = layoutParams.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     
-                    // Detectar long press para eliminar
-                    longPressRunnable = Runnable {
-                        isLongPress = true
-                        // Mostrar visual feedback que se puede eliminar
-                        showDeleteMode(v)
-                    }
-                    v.postDelayed(longPressRunnable, LONG_PRESS_DURATION)
+                    // Pequeño efecto de presión
+                    v.animate()
+                        .scaleX(0.9f)
+                        .scaleY(0.9f)
+                        .setDuration(100)
+                        .start()
                     true
                 }
                 
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = event.rawX - initialTouchX
                     val deltaY = event.rawY - initialTouchY
+                    val distance = sqrt(deltaX * deltaX + deltaY * deltaY)
                     
-                    if (abs(deltaX) > CLICK_THRESHOLD || abs(deltaY) > CLICK_THRESHOLD) {
-                        isDragging = true
-                        longPressRunnable?.let { v.removeCallbacks(it) }
-                    }
-                    
-                    if (isDragging || isLongPress) {
+                    if (distance > CLICK_THRESHOLD) {
+                        if (!isDragging) {
+                            isDragging = true
+                            showDeleteZone()
+                            v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(100).start()
+                        }
+                        
                         layoutParams.x = initialX + deltaX.toInt()
                         layoutParams.y = initialY + deltaY.toInt()
                         windowManager?.updateViewLayout(v, layoutParams)
                         
-                        // Verificar si está en zona de eliminación (parte inferior)
+                        // Verificar si está sobre la zona de eliminación
                         val displayMetrics = DisplayMetrics()
                         windowManager?.defaultDisplay?.getMetrics(displayMetrics)
                         val screenHeight = displayMetrics.heightPixels
+                        val deleteZoneTop = screenHeight - dpToPx(DELETE_ZONE_HEIGHT)
                         
-                        if (layoutParams.y > screenHeight - dpToPx(150)) {
-                            v.alpha = 0.5f // Visual feedback de eliminación
-                        } else {
-                            v.alpha = 1.0f
-                            if (isLongPress) {
-                                hideDeleteMode(v)
+                        val buttonBottom = layoutParams.y + dpToPx(BUTTON_SIZE)
+                        val wasInDeleteZone = isInDeleteZone
+                        isInDeleteZone = buttonBottom > deleteZoneTop
+                        
+                        // Cambio visual cuando entra/sale de zona de eliminación
+                        if (isInDeleteZone != wasInDeleteZone) {
+                            if (isInDeleteZone) {
+                                v.animate()
+                                    .scaleX(0.7f)
+                                    .scaleY(0.7f)
+                                    .alpha(0.6f)
+                                    .setDuration(150)
+                                    .start()
+                            } else {
+                                v.animate()
+                                    .scaleX(1.1f)
+                                    .scaleY(1.1f)
+                                    .alpha(1f)
+                                    .setDuration(150)
+                                    .start()
                             }
                         }
                     }
                     true
                 }
                 
-                MotionEvent.ACTION_UP -> {
-                    longPressRunnable?.let { v.removeCallbacks(it) }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    hideDeleteZone()
                     
-                    // Verificar si está en zona de eliminación
-                    val displayMetrics = DisplayMetrics()
-                    windowManager?.defaultDisplay?.getMetrics(displayMetrics)
-                    val screenHeight = displayMetrics.heightPixels
-                    
-                    if (isLongPress && layoutParams.y > screenHeight - dpToPx(150)) {
-                        // Eliminar el overlay
-                        hideFloatingButton()
-                        sendBroadcastToFlutter("overlay_removed")
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
+                    if (isInDeleteZone) {
+                        // Animación de eliminación
+                        v.animate()
+                            .scaleX(0f)
+                            .scaleY(0f)
+                            .alpha(0f)
+                            .setDuration(200)
+                            .withEndAction {
+                                hideAll()
+                                sendBroadcastToFlutter("overlay_removed")
+                                stopForeground(STOP_FOREGROUND_REMOVE)
+                                stopSelf()
+                            }
+                            .start()
                         return@setOnTouchListener true
                     }
                     
-                    // Restaurar alpha
-                    v.alpha = 1.0f
-                    hideDeleteMode(v)
+                    // Restaurar escala normal
+                    v.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .alpha(1f)
+                        .setDuration(150)
+                        .start()
                     
-                    // Si no fue drag ni long press, es un click
-                    if (!isDragging && !isLongPress) {
+                    if (!isDragging) {
+                        // Fue un click - abrir la app
                         openApp()
                     } else {
-                        // Snap to edge
+                        // Snap a los bordes
                         snapToEdge(layoutParams, v)
                     }
                     true
@@ -268,36 +411,40 @@ class FloatingOverlayService : Service() {
         }
     }
 
-    private fun showDeleteMode(view: View) {
-        // Agregar efecto visual de que se puede eliminar
-        view.animate()
-            .scaleX(1.2f)
-            .scaleY(1.2f)
-            .setDuration(200)
-            .start()
-    }
-
-    private fun hideDeleteMode(view: View) {
-        view.animate()
-            .scaleX(1.0f)
-            .scaleY(1.0f)
-            .setDuration(200)
-            .start()
-    }
-
     private fun snapToEdge(layoutParams: WindowManager.LayoutParams, view: View) {
         val displayMetrics = DisplayMetrics()
         windowManager?.defaultDisplay?.getMetrics(displayMetrics)
         val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
         
-        val targetX = if (layoutParams.x < screenWidth / 2) {
-            dpToPx(8) // Snap a la izquierda
+        // Snap horizontal al borde más cercano
+        val buttonCenter = layoutParams.x + dpToPx(BUTTON_SIZE) / 2
+        val targetX = if (buttonCenter < screenWidth / 2) {
+            dpToPx(8) // Izquierda
         } else {
-            screenWidth - dpToPx(68) // Snap a la derecha
+            screenWidth - dpToPx(BUTTON_SIZE + 8) // Derecha
         }
         
-        layoutParams.x = targetX
-        windowManager?.updateViewLayout(view, layoutParams)
+        // Mantener dentro de límites verticales
+        val margin = dpToPx(50)
+        val targetY = layoutParams.y.coerceIn(margin, screenHeight - dpToPx(BUTTON_SIZE) - margin)
+        
+        // Animar hacia la posición final
+        val startX = layoutParams.x
+        val startY = layoutParams.y
+        
+        view.animate()
+            .setDuration(200)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setUpdateListener { animator ->
+                val fraction = animator.animatedFraction
+                layoutParams.x = (startX + (targetX - startX) * fraction).toInt()
+                layoutParams.y = (startY + (targetY - startY) * fraction).toInt()
+                try {
+                    windowManager?.updateViewLayout(view, layoutParams)
+                } catch (e: Exception) { }
+            }
+            .start()
     }
 
     private fun openApp() {
@@ -310,6 +457,9 @@ class FloatingOverlayService : Service() {
             putExtra(EXTRA_SOLICITUD_ID, solicitudId)
         }
         startActivity(intent)
+        
+        // Ocultar el overlay cuando se abre la app
+        hideAll()
     }
 
     private fun sendBroadcastToFlutter(action: String) {
@@ -319,14 +469,18 @@ class FloatingOverlayService : Service() {
         sendBroadcast(intent)
     }
 
-    private fun hideFloatingButton() {
+    private fun hideAll() {
         floatingView?.let {
             try {
                 windowManager?.removeView(it)
-            } catch (e: Exception) {
-                // View already removed
-            }
+            } catch (e: Exception) { }
             floatingView = null
+        }
+        deleteZoneView?.let {
+            try {
+                windowManager?.removeView(it)
+            } catch (e: Exception) { }
+            deleteZoneView = null
         }
     }
 

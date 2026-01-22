@@ -132,7 +132,7 @@ class ActiveTripNavigationService extends ChangeNotifier {
     _activeTripData = null;
     _isOnTripScreen = false;
     // Ocultar overlay del sistema
-    _hideSystemOverlay();
+    hideSystemOverlay();
     _notifyChange();
     debugPrint('🗑️ [ActiveTripNav] Viaje activo eliminado');
   }
@@ -150,8 +150,8 @@ class ActiveTripNavigationService extends ChangeNotifier {
     );
   }
 
-  /// Oculta el overlay del sistema
-  Future<void> _hideSystemOverlay() async {
+  /// Oculta el overlay del sistema (cuando la app vuelve a primer plano)
+  Future<void> hideSystemOverlay() async {
     if (!Platform.isAndroid) return;
     await _systemOverlay.hideOverlay();
   }
@@ -172,7 +172,7 @@ class ActiveTripNavigationService extends ChangeNotifier {
   void setSystemOverlayEnabled(bool enabled) {
     _systemOverlayEnabled = enabled;
     if (!enabled) {
-      _hideSystemOverlay();
+      hideSystemOverlay();
     }
     notifyListeners();
   }
