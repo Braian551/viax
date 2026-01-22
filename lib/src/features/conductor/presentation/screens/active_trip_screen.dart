@@ -36,6 +36,7 @@ class ConductorActiveTripScreen extends StatefulWidget {
   final String direccionDestino;
   final String? clienteNombre;
   final String? clienteFoto;
+  final String? initialTripStatus; // NUEVO: Estado inicial del viaje
 
   const ConductorActiveTripScreen({
     super.key,
@@ -51,6 +52,7 @@ class ConductorActiveTripScreen extends StatefulWidget {
     required this.direccionDestino,
     this.clienteNombre,
     this.clienteFoto,
+    this.initialTripStatus,
   });
 
   @override
@@ -183,6 +185,28 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       destinoLng: widget.destinoLng,
       onStateChanged: _onControllerStateChanged,
     );
+
+    // Configurar estado inicial según el status del backend
+    if (widget.initialTripStatus == 'conductor_llego') {
+      _controller.toPickup = false;
+      _controller.arrivedAtPickup = true;
+    } else if (widget.initialTripStatus == 'en_curso') {
+      _controller.toPickup = false;
+      _controller.arrivedAtPickup = false;
+      // Asegurar que comience el tracking real si no se ha hecho
+      if (widget.solicitudId != null) {
+         // Pequeño delay para asegurar que el controller esté listo
+         Future.delayed(Duration.zero, () {
+           if (mounted) {
+             _controller.startRealTimeTracking(
+                solicitudId: widget.solicitudId!, 
+                conductorId: widget.conductorId,
+                startTime: _tripStartTime, // Si recuperamos persistencia, usar ese tiempo
+             );
+           }
+         });
+      }
+    }
   }
 
   @override

@@ -258,10 +258,20 @@ class _SplashScreenState extends State<SplashScreen>
             if (mounted) {
               if (userRole == 'conductor') {
                  // Recuperar datos para conductor
+                 int conductorId = int.tryParse(tripToRecover!['conductor_id']?.toString() ?? '') ?? 0;
+                 
+                 // Fallback: Si no viene el ID del conductor en el viaje, usar el de la sesión
+                 if (conductorId == 0) {
+                    final session = await UserService.getSavedSession();
+                    if (session != null && session['tipo_usuario'] == 'conductor') {
+                       conductorId = session['id'];
+                    }
+                 }
+
                  Navigator.of(context).pushReplacement(
                    MaterialPageRoute(
                      builder: (context) => ConductorActiveTripScreen(
-                       conductorId: int.tryParse(tripToRecover!['conductor_id']?.toString() ?? '') ?? 0,
+                       conductorId: conductorId,
                        solicitudId: int.tryParse(tripToRecover!['id']?.toString() ?? '') ?? 0,
                        clienteId: int.tryParse(tripToRecover!['cliente_id']?.toString() ?? '') ?? 0,
                        origenLat: double.tryParse(tripToRecover!['origen']?['latitud']?.toString() ?? '') ?? 0.0,
@@ -270,6 +280,7 @@ class _SplashScreenState extends State<SplashScreen>
                        destinoLat: double.tryParse(tripToRecover!['destino']?['latitud']?.toString() ?? '') ?? 0.0,
                        destinoLng: double.tryParse(tripToRecover!['destino']?['longitud']?.toString() ?? '') ?? 0.0,
                        direccionDestino: tripToRecover!['destino']?['direccion']?.toString() ?? '',
+                       initialTripStatus: tripToRecover['estado'],
                      ),
                    ),
                  );
