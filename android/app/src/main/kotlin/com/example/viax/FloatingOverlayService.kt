@@ -133,7 +133,7 @@ class FloatingOverlayService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Viaje en curso")
             .setContentText("Toca para volver a la app")
-            .setSmallIcon(R.mipmap.launcher_icon)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Servicio para mostrar notificaciones locales del dispositivo.
@@ -23,7 +24,7 @@ class LocalNotificationService {
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const androidSettings = AndroidInitializationSettings('ic_notification');
     
     const initSettings = InitializationSettings(
       android: androidSettings,
@@ -77,7 +78,8 @@ class LocalNotificationService {
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
-      icon: '@mipmap/launcher_icon',
+      icon: 'ic_notification',
+      color: Color(0xFF2196F3), // Color primario para el icono (ajustar si es necesario)
       // Vibración
       enableVibration: true,
       // Sonido (usa el del canal)
