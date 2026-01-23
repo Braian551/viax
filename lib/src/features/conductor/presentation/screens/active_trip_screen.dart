@@ -77,6 +77,20 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
   late final StreamSubscription<int> _unreadSubscription;
   int _unreadCount = 0;
+  bool? _lastIsDark; // Para detectar cambios de tema
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (_lastIsDark != isDark) {
+      _lastIsDark = isDark;
+      // Si el mapa ya está listo, actualizar el estilo
+      if (_controller.mapReady) {
+        _controller.updateStyle(isDark);
+      }
+    }
+  }
 
   @override
   void initState() {

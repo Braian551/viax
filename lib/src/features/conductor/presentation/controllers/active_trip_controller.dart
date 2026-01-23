@@ -140,6 +140,23 @@ class ActiveTripController {
     } catch (_) {}
   }
 
+  /// Actualiza el estilo del mapa dinámicamente
+  Future<void> updateStyle(bool isDark) async {
+    if (mapboxMap == null || isDisposed) return;
+    try {
+      final styleUri = isDark
+          ? 'mapbox://styles/mapbox/navigation-night-v1'
+          : 'mapbox://styles/mapbox/navigation-day-v1';
+      
+      await mapboxMap!.loadStyleURI(styleUri);
+      
+      // Esperar a que el estilo cargue antes de restaurar elementos
+      // Nota: onStyleLoaded listener se disparará también
+    } catch (e) {
+      debugPrint('Error actualizando estilo: $e');
+    }
+  }
+
   // =========================================================================
   // MAPA - INICIALIZACIÓN
   // =========================================================================
