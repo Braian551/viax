@@ -231,21 +231,15 @@ class FloatingOverlayService : Service() {
         val trashIcon = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_menu_delete)
             setColorFilter(Color.WHITE)
-            val size = dpToPx(36)
+            val size = dpToPx(40) // Un poco más grande
             layoutParams = LinearLayout.LayoutParams(size, size).apply {
-                bottomMargin = dpToPx(4)
+                bottomMargin = dpToPx(16) // Más margen ya que no hay texto
             }
-        }
-        
-        // Texto "Eliminar"
-        val label = TextView(this).apply {
-            text = "Soltar para eliminar"
-            setTextColor(Color.WHITE)
-            textSize = 12f
+            tag = "trash_icon" // Tag para encontrarlo fácil
         }
         
         container.addView(trashIcon)
-        container.addView(label)
+        // Eliminado: Texto "Soltar para eliminar"
         
         return container
     }
@@ -300,10 +294,18 @@ class FloatingOverlayService : Service() {
         }
     }
 
-    private fun setupTouchListener(view: View, layoutParams: WindowManager.LayoutParams) {
+    private fun setupTouchListener(view: View, originalLayoutParams: WindowManager.LayoutParams) {
+        var layoutParams = originalLayoutParams
+        
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    // DETENER cualquier animación en curso (snap)
+                    v.animate().cancel()
+                    
+                    // Actualizar referencia de layoutParams por si acaso
+                    layoutParams = v.layoutParams as WindowManager.LayoutParams
+                    
                     isDragging = false
                     isInDeleteZone = false
                     initialX = layoutParams.x
@@ -342,26 +344,45 @@ class FloatingOverlayService : Service() {
                         val screenHeight = displayMetrics.heightPixels
                         val deleteZoneTop = screenHeight - dpToPx(DELETE_ZONE_HEIGHT)
                         
-                        val buttonBottom = layoutParams.y + dpToPx(BUTTON_SIZE)
+                        val buttonCenterY = layoutParams.y + dpToPx(BUTTON_SIZE) / 2
                         val wasInDeleteZone = isInDeleteZone
-                        isInDeleteZone = buttonBottom > deleteZoneTop
+                        isInDeleteZone = buttonCenterY > deleteZoneTop
                         
                         // Cambio visual cuando entra/sale de zona de eliminación
                         if (isInDeleteZone != wasInDeleteZone) {
+                            // Buscar el ícono del basurero
+                            val trashIcon = (deleteZoneView as? LinearLayout)?.findViewWithTag<View>("trash_icon")
+                            
                             if (isInDeleteZone) {
+                                // El botón se encoge y se vuelve rojo translúcido
                                 v.animate()
-                                    .scaleX(0.7f)
-                                    .scaleY(0.7f)
-                                    .alpha(0.6f)
-                                    .setDuration(150)
+                                    .scaleX(0.6f)
+                                    .scaleY(0.6f)
+                                    .alpha(0.5f)
+                                    .setDuration(200)
                                     .start()
+                                    
+                                // El basurero crece
+                                trashIcon?.animate()
+                                    ?.scaleX(1.5f)
+                                    ?.scaleY(1.5f)
+                                    ?.setDuration(200)
+                                    ?.start()
                             } else {
+                                // Restaurar botón
                                 v.animate()
                                     .scaleX(1.1f)
                                     .scaleY(1.1f)
                                     .alpha(1f)
-                                    .setDuration(150)
+                                    .setDuration(200)
                                     .start()
+                                    
+                                // Restaurar basurero
+                                trashIcon?.animate()
+                                    ?.scaleX(1.0f)
+                                    ?.scaleY(1.0f)
+                                    ?.setDuration(200)
+                                    ?.start()
                             }
                         }
                     }
@@ -420,9 +441,9 @@ class FloatingOverlayService : Service() {
         // Snap horizontal al borde más cercano
         val buttonCenter = layoutParams.x + dpToPx(BUTTON_SIZE) / 2
         val targetX = if (buttonCenter < screenWidth / 2) {
-            dpToPx(8) // Izquierda
+            dpToPx(12) // Izquierda
         } else {
-            screenWidth - dpToPx(BUTTON_SIZE + 8) // Derecha
+            screenWidth - dpToPx(BUTTON_SIZE + 12) // Derecha
         }
         
         // Mantener dentro de límites verticales
@@ -434,8 +455,8 @@ class FloatingOverlayService : Service() {
         val startY = layoutParams.y
         
         view.animate()
-            .setDuration(200)
-            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setDuration(300) // Un poco más lento para que sea visible
+            .setInterpolator(OvershootInterpolator(0.8f)) // Efecto rebote suave
             .setUpdateListener { animator ->
                 val fraction = animator.animatedFraction
                 layoutParams.x = (startX + (targetX - startX) * fraction).toInt()
