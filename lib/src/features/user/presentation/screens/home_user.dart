@@ -11,11 +11,14 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
+import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/notifications/notifications.dart';
 import 'package:viax/src/features/user/presentation/widgets/home/map_loading_shimmer.dart';
+import 'package:viax/src/global/widgets/active_trip_alert.dart';
+import 'package:viax/src/features/user/services/user_trips_service.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -505,6 +508,31 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                           isDark: isDark,
                           isDestination: true,
                           onTap: () async {
+                            // Verificar viaje activo
+                            // 1. Verificación local (más rápida y fiable si la app sigue vivía)
+                            if (ActiveTripNavigationService().hasActiveTrip) {
+                               showActiveTripAlert(context, isConductor: false);
+                               return;
+                            }
+
+                            // 2. Verificación remota
+                            if (_userId != null) {
+                              try {
+                                final result = await UserTripsService.getHistorial(userId: _userId!, limit: 5);
+                                if (result['success'] == true) {
+                                  final trips = result['viajes'] as List<UserTripModel>;
+                                  // Un viaje se considera activo si no está completado ni cancelado
+                                  final hasActive = trips.any((t) => !t.isCompletado && !t.isCancelado);
+                                  
+                                  if (hasActive) {
+                                    if (!mounted) return;
+                                    showActiveTripAlert(context, isConductor: false);
+                                    return;
+                                  }
+                                }
+                              } catch (_) {}
+                            }
+
                             // Animación: ocultar el overlay para que no se vean duplicados
                             await _animationController.reverse();
                             await Navigator.pushNamed(

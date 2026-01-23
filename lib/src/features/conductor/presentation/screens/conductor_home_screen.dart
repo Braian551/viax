@@ -1,3 +1,5 @@
+import '../../services/trip_tracking_service.dart';
+import '../../../../global/widgets/active_trip_alert.dart';
 import 'dart:async';
 import '../../services/conductor_profile_service.dart';
 import '../../services/conductor_service.dart';
@@ -573,6 +575,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final conductorId = widget.conductorUser['id'] as int;
     
     if (!_isOnline) {
+      // Verificar si hay viaje activo antes de conectar
+      // 1. Verificación local (más rápida y fiable si la app sigue vivía)
+      if (TripTrackingService().isTracking) {
+         showActiveTripAlert(context, isConductor: true);
+         return;
+      }
+
+      // 2. Verificación remota
+      try {
+        final activeTrips = await ConductorService.getViajesActivos(conductorId);
+        if (activeTrips.isNotEmpty) {
+          if (!mounted) return;
+          showActiveTripAlert(context, isConductor: true);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error checking active trips: $e');
+      }
+
       // Conectarse: Actualizar en backend y luego iniciar búsqueda
       try {
         // Primero actualizar en el backend
@@ -610,6 +631,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         _showStatusSnackbar('Error de conexión: $e', Colors.red);
       }
     } else {
+      // Verificar si hay viaje activo antes de desconectar
+      // 1. Verificación local
+      if (TripTrackingService().isTracking) {
+         showActiveTripAlert(context, isConductor: true);
+         return;
+      }
+
+      // 2. Verificación remota
+      try {
+        final activeTrips = await ConductorService.getViajesActivos(conductorId);
+        if (activeTrips.isNotEmpty) {
+          if (!mounted) return;
+          showActiveTripAlert(context, isConductor: true);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error checking active trips: $e');
+      }
+
       // Desconectarse: Actualizar en backend y detener búsqueda
       try {
         // Primero actualizar en el backend

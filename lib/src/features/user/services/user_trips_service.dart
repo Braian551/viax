@@ -236,8 +236,16 @@ class UserTripModel {
     }
   }
 
-  bool get isCompletado => estado == 'completada' || estado == 'entregado';
-  bool get isCancelado => estado == 'cancelada';
+  bool get isCompletado => 
+      estado == 'completada' || 
+      estado == 'completado' || 
+      estado == 'entregado' || 
+      estado == 'finalizada' || 
+      estado == 'finalizado';
+
+  bool get isCancelado => 
+      estado == 'cancelada' || 
+      estado == 'cancelado';
 }
 
 /// Resumen de pagos del usuario
