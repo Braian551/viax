@@ -722,6 +722,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       return;
     }
 
+    // Optimismo: marcar como leído localmente para ocultar el badge inmediatamente
+    setState(() => _unreadCount = 0);
+
     final conductorNombre = _conductor?['nombre'] as String? ?? 'Conductor';
     final conductorFoto = _conductor?['foto'] as String?;
     final vehiculo = _conductor?['vehiculo'] as Map<String, dynamic>?;
@@ -744,7 +747,15 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               : 'Tu conductor',
         ),
       ),
-    );
+    ).then((_) {
+      // Al volver, forzar actualización del estado (aunque el polling debería encargarse)
+      ChatService.getUnreadCount(
+        solicitudId: widget.solicitudId,
+        usuarioId: widget.clienteId,
+      ).then((count) {
+        if (mounted) setState(() => _unreadCount = count);
+      });
+    });
   }
 
   void _showCancelledDialog() {
