@@ -805,15 +805,31 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
   /// Cancela el viaje por iniciativa del cliente
   Future<void> _cancelTripByClient() async {
+    // Obtener el ID del conductor del viaje activo
+    final conductorId = _conductor?['id'] as int?;
+    if (conductorId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se puede cancelar: información del conductor no disponible'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
+    
     setState(() => _isLoading = true);
     
     final result = await TripRequestService.cancelTripRequestWithReason(
       solicitudId: widget.solicitudId,
-      clienteId: widget.clienteId,
+      conductorId: conductorId,
       motivo: 'Cancelado por el cliente',
+      canceladoPor: 'cliente',
     );
     
     if (result['success'] == true) {
+      setState(() => _isLoading = false);
       _onTripCancelled();
     } else {
       setState(() => _isLoading = false);

@@ -227,29 +227,59 @@ class TripRequestService {
   }
 
   /// Cancelar solicitud con parámetros completos
+  /// Usa el mismo endpoint que el conductor para consistencia
+  /// Cancelar solicitud con parámetros completos.
+  /// Maneja tanto viajes activos (con conductor) como solicitudes en espera.
   static Future<Map<String, dynamic>> cancelTripRequestWithReason({
     required int solicitudId,
-    required int clienteId,
+    int? clienteId,
+    int? conductorId,
     String motivo = 'Cliente canceló',
+    String canceladoPor = 'cliente',
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/user/cancel_trip_request.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      print('🚫 [TripRequestService] Cancelando solicitud ID: $solicitudId por: $canceladoPor');
+      
+      // Si tenemos conductorId, usamos el endpoint de actualización de estado (más robusto para viajes en curso)
+      if (conductorId != null && conductorId > 0) {
+        final body = {
+          'solicitud_id': solicitudId,
+          'conductor_id': conductorId,
+          'nuevo_estado': 'cancelada',
+          'motivo_cancelacion': motivo,
+          'cancelado_por': canceladoPor,
+        };
+        
+        print('📦 [TripRequestService] Usando endpoint conductor (update_trip_status). Body: $body');
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/conductor/update_trip_status.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        print('📥 [TripRequestService] Respuesta (conductor): ${response.statusCode} - ${response.body}');
+        return jsonDecode(response.body);
+      } 
+      // Si no hay conductor (ej. aún buscando), usamos el endpoint de cancelación simple del cliente
+      else {
+        final body = {
           'solicitud_id': solicitudId,
           'cliente_id': clienteId,
           'motivo': motivo,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {
-          'success': false,
-          'message': 'Error del servidor: ${response.statusCode}',
+          'cancelado_por': canceladoPor,
         };
+        
+        print('📦 [TripRequestService] Usando endpoint cliente (cancel_trip_request). Body: $body');
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/user/cancel_trip_request.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        print('📥 [TripRequestService] Respuesta (cliente): ${response.statusCode} - ${response.body}');
+        return jsonDecode(response.body);
       }
     } catch (e) {
       print('❌ Error cancelando solicitud: $e');
