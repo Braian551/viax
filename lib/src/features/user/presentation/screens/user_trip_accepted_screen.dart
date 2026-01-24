@@ -16,6 +16,7 @@ import '../widgets/user_trip_accepted/draggable_driver_panel.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_focus_button.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_header.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_map.dart';
+import '../widgets/user_active_trip/driver_detail_sheet.dart';
 
 /// Pantalla que muestra cuando el conductor aceptó el viaje
 /// El cliente debe dirigirse al punto de encuentro
@@ -939,6 +940,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             conductorDistanceKm: _conductorDistanceKm,
             onCall: _callDriver,
             onMessage: _openChat,
+            onProfileTap: _showDriverProfile,
             isDark: isDark,
             unreadCount: _unreadCount,
             onSizeChanged: (size) {
@@ -957,6 +959,27 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  void _showDriverProfile() {
+    if (_conductor == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => DriverDetailSheet(
+          conductor: _conductor!,
+          isDark: isDark,
+          scrollController: controller,
+        ),
       ),
     );
   }

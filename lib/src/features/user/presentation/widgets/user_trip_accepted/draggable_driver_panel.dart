@@ -13,6 +13,7 @@ class DraggableDriverPanel extends StatefulWidget {
   final double? conductorDistanceKm;
   final VoidCallback onCall;
   final VoidCallback onMessage;
+  final VoidCallback? onProfileTap;
   final bool isDark;
   final int unreadCount;
   
@@ -27,6 +28,7 @@ class DraggableDriverPanel extends StatefulWidget {
     required this.conductorDistanceKm,
     required this.onCall,
     required this.onMessage,
+    this.onProfileTap,
     required this.isDark,
     this.unreadCount = 0,
     this.onSizeChanged,
@@ -150,8 +152,8 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Fila principal: avatar, nombre, botones
-                  _buildDriverRow(nombre, foto, calificacion),
+                  // Fila principal: avatar, nombre, botones (tap para ver perfil)
+                  _buildDriverRow(nombre, foto, calificacion, onProfileTap: widget.onProfileTap),
                   
                   const SizedBox(height: 16),
                   
@@ -199,37 +201,72 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  Widget _buildDriverRow(String nombre, String? foto, double calificacion) {
+  Widget _buildDriverRow(String nombre, String? foto, double calificacion, {VoidCallback? onProfileTap}) {
     return Row(
       children: [
-        // Avatar
-        _buildAvatar(foto),
-        const SizedBox(width: 14),
+        // Avatar y nombre (tappable para ver perfil)
+        _buildTappableProfile(foto, nombre, calificacion, onProfileTap),
 
-        // Nombre y calificación
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                nombre,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: widget.isDark ? Colors.white : Colors.black87,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              _buildRating(calificacion),
-            ],
-          ),
-        ),
 
         // Botones de acción
         _buildActionButtons(),
       ],
+    );
+  }
+
+  /// Widget que muestra avatar y nombre del conductor, tappable para ver perfil completo
+  Widget _buildTappableProfile(String? foto, String nombre, double calificacion, VoidCallback? onProfileTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (onProfileTap != null) {
+            HapticFeedback.lightImpact();
+            onProfileTap();
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            // Avatar
+            _buildAvatar(foto),
+            const SizedBox(width: 14),
+
+            // Nombre y calificación
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          nombre,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: widget.isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Indicador de que es tappable
+                      if (onProfileTap != null)
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: widget.isDark ? Colors.white38 : Colors.grey[400],
+                          size: 20,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  _buildRating(calificacion),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
