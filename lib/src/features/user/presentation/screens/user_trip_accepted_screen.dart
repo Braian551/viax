@@ -12,7 +12,7 @@ import '../../../../global/services/sound_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
-import '../widgets/user_trip_accepted/user_trip_accepted_driver_panel.dart';
+import '../widgets/user_trip_accepted/draggable_driver_panel.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_focus_button.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_header.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_map.dart';
@@ -102,32 +102,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   StreamSubscription<int>? _unreadSubscription;
   int _unreadCount = 0;
 
-  // Key y altura del panel para posicionar botones flotantes
-  final GlobalKey _driverPanelKey = GlobalKey();
-  double? _driverPanelHeight;
-  // Offset extra para separar el botón de enfoque del panel (aumenta para subirlo más)
-  double _focusButtonExtraOffset = 40.0;
-
-  void _measureDriverPanel() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        final ctx = _driverPanelKey.currentContext;
-        if (ctx == null) return;
-        final box = ctx.findRenderObject() as RenderBox?;
-        if (box == null) return;
-        final h = box.size.height;
-        if (mounted &&
-            (_driverPanelHeight == null ||
-                (_driverPanelHeight! - h).abs() > 1)) {
-          setState(() {
-            _driverPanelHeight = h;
-          });
-        }
-      } catch (e) {
-        // no-op
-      }
-    });
-  }
+  // Tamaño actual del panel draggable para posicionar el botón de enfoque
+  double _currentPanelSize = 0.38; // Valor inicial (midSize)
 
   @override
   void initState() {
@@ -138,8 +114,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _startStatusPolling();
     _startChatPolling(); // Iniciar polling del chat
 
-    // Medir panel después del primer frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measureDriverPanel());
+
   }
 
   /// Iniciar el polling del chat para recibir mensajes
@@ -606,8 +581,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           }
         });
 
-        // Re-medir panel en caso de que su tamaño haya cambiado al actualizar datos
-        _measureDriverPanel();
+
 
         // Actualizar ruta si la ubicación cambió
         if (shouldUpdateRoute && newConductorLocation != null) {
@@ -911,7 +885,6 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final pickupPoint = LatLng(widget.latitudOrigen, widget.longitudOrigen);
 
     return Scaffold(
@@ -948,37 +921,31 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             ),
           ),
 
-          // PANEL DE INFO DEL CONDUCTOR
-          Positioned(
-            bottom: bottomPadding + 16,
-            left: 16,
-            right: 16,
-            child: Container(
-              key: _driverPanelKey,
-              child: UserTripAcceptedDriverPanel(
-                conductor: _conductor,
-                conductorEtaMinutes: _conductorEtaMinutes,
-                conductorDistanceKm: _conductorDistanceKm,
-                onCall: _callDriver,
-                onCancelChat: _openChat,
-                isDark: isDark,
-                unreadCount: _unreadCount,
-              ),
-            ),
-          ),
-
-          // BOTÓN DE ENFOQUE (toggle) - arriba del panel (posicionado dinámicamente según altura del panel)
+          // BOTÓN DE ENFOQUE (toggle) - posicionado arriba del panel arrastrable
           Positioned(
             right: 16,
-            bottom:
-                bottomPadding +
-                (_driverPanelHeight ?? 220) +
-                _focusButtonExtraOffset,
+            bottom: MediaQuery.of(context).size.height * _currentPanelSize + 16,
             child: UserTripAcceptedFocusButton(
               isDark: isDark,
               isFocusedOnClient: _isFocusedOnClient,
               onTap: _toggleFocus,
             ),
+          ),
+
+          // PANEL DE INFO DEL CONDUCTOR (Draggable)
+          DraggableDriverPanel(
+            conductor: _conductor,
+            conductorEtaMinutes: _conductorEtaMinutes,
+            conductorDistanceKm: _conductorDistanceKm,
+            onCall: _callDriver,
+            onMessage: _openChat,
+            isDark: isDark,
+            unreadCount: _unreadCount,
+            onSizeChanged: (size) {
+              if (mounted) {
+                setState(() => _currentPanelSize = size);
+              }
+            },
           ),
 
           // LOADING

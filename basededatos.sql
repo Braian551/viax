@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict dzKh0yaX1IH1Ho9AvuTBQCbUxaj7lxhQz3O3yfC673NJF4lU4ialfU9FZnHeHFJ
+\restrict QeM0ERkUHyKM2WujXs5WuQ9Am3Zony2TtMaSwyKOrbUVnLBo9iZT9gjkokN0WpH
 
 -- Dumped from database version 17.7
 -- Dumped by pg_dump version 17.7
 
--- Started on 2026-01-21 15:08:47
+-- Started on 2026-01-23 19:28:52
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -22,7 +22,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 349 (class 1255 OID 91304)
+-- TOC entry 351 (class 1255 OID 91304)
 -- Name: actualizar_metricas_empresa(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -76,7 +76,7 @@ $$;
 ALTER FUNCTION public.actualizar_metricas_empresa() OWNER TO postgres;
 
 --
--- TOC entry 351 (class 1255 OID 123830)
+-- TOC entry 353 (class 1255 OID 123830)
 -- Name: actualizar_resumen_tracking(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -135,7 +135,7 @@ $$;
 ALTER FUNCTION public.actualizar_resumen_tracking() OWNER TO postgres;
 
 --
--- TOC entry 348 (class 1255 OID 91195)
+-- TOC entry 350 (class 1255 OID 91195)
 -- Name: aprobar_vinculacion_conductor(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -194,7 +194,7 @@ CREATE FUNCTION public.aprobar_vinculacion_conductor(p_solicitud_id bigint, p_ap
 ALTER FUNCTION public.aprobar_vinculacion_conductor(p_solicitud_id bigint, p_aprobado_por bigint) OWNER TO postgres;
 
 --
--- TOC entry 350 (class 1255 OID 123829)
+-- TOC entry 352 (class 1255 OID 123829)
 -- Name: calcular_precio_por_tracking(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -282,8 +282,8 @@ $$;
 ALTER FUNCTION public.calcular_precio_por_tracking(p_solicitud_id bigint) OWNER TO postgres;
 
 --
--- TOC entry 6187 (class 0 OID 0)
--- Dependencies: 350
+-- TOC entry 6203 (class 0 OID 0)
+-- Dependencies: 352
 -- Name: FUNCTION calcular_precio_por_tracking(p_solicitud_id bigint); Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -291,7 +291,7 @@ COMMENT ON FUNCTION public.calcular_precio_por_tracking(p_solicitud_id bigint) I
 
 
 --
--- TOC entry 344 (class 1255 OID 91051)
+-- TOC entry 346 (class 1255 OID 91051)
 -- Name: contar_notificaciones_no_leidas(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -313,8 +313,8 @@ $$;
 ALTER FUNCTION public.contar_notificaciones_no_leidas(p_usuario_id integer) OWNER TO postgres;
 
 --
--- TOC entry 6188 (class 0 OID 0)
--- Dependencies: 344
+-- TOC entry 6204 (class 0 OID 0)
+-- Dependencies: 346
 -- Name: FUNCTION contar_notificaciones_no_leidas(p_usuario_id integer); Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -322,7 +322,7 @@ COMMENT ON FUNCTION public.contar_notificaciones_no_leidas(p_usuario_id integer)
 
 
 --
--- TOC entry 343 (class 1255 OID 91050)
+-- TOC entry 345 (class 1255 OID 91050)
 -- Name: crear_notificacion(integer, character varying, character varying, text, character varying, integer, jsonb); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -362,8 +362,8 @@ $$;
 ALTER FUNCTION public.crear_notificacion(p_usuario_id integer, p_tipo_codigo character varying, p_titulo character varying, p_mensaje text, p_referencia_tipo character varying, p_referencia_id integer, p_data jsonb) OWNER TO postgres;
 
 --
--- TOC entry 6189 (class 0 OID 0)
--- Dependencies: 343
+-- TOC entry 6205 (class 0 OID 0)
+-- Dependencies: 345
 -- Name: FUNCTION crear_notificacion(p_usuario_id integer, p_tipo_codigo character varying, p_titulo character varying, p_mensaje text, p_referencia_tipo character varying, p_referencia_id integer, p_data jsonb); Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -371,7 +371,7 @@ COMMENT ON FUNCTION public.crear_notificacion(p_usuario_id integer, p_tipo_codig
 
 
 --
--- TOC entry 330 (class 1255 OID 115710)
+-- TOC entry 332 (class 1255 OID 115710)
 -- Name: generar_numero_ticket(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -388,7 +388,7 @@ $$;
 ALTER FUNCTION public.generar_numero_ticket() OWNER TO postgres;
 
 --
--- TOC entry 329 (class 1255 OID 91306)
+-- TOC entry 331 (class 1255 OID 91306)
 -- Name: get_empresa_stats(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -431,7 +431,7 @@ $$;
 ALTER FUNCTION public.get_empresa_stats(p_empresa_id bigint) OWNER TO postgres;
 
 --
--- TOC entry 327 (class 1255 OID 115658)
+-- TOC entry 329 (class 1255 OID 115658)
 -- Name: log_empresa_tipo_vehiculo_change(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -469,7 +469,7 @@ $$;
 ALTER FUNCTION public.log_empresa_tipo_vehiculo_change() OWNER TO postgres;
 
 --
--- TOC entry 346 (class 1255 OID 91196)
+-- TOC entry 348 (class 1255 OID 91196)
 -- Name: rechazar_vinculacion_conductor(bigint, bigint, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -496,7 +496,7 @@ $$;
 ALTER FUNCTION public.rechazar_vinculacion_conductor(p_solicitud_id bigint, p_rechazado_por bigint, p_razon text) OWNER TO postgres;
 
 --
--- TOC entry 323 (class 1255 OID 17237)
+-- TOC entry 325 (class 1255 OID 17237)
 -- Name: set_actualizado_en(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -513,7 +513,7 @@ $$;
 ALTER FUNCTION public.set_actualizado_en() OWNER TO postgres;
 
 --
--- TOC entry 345 (class 1255 OID 91052)
+-- TOC entry 347 (class 1255 OID 91052)
 -- Name: update_config_notif_timestamp(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -530,7 +530,7 @@ $$;
 ALTER FUNCTION public.update_config_notif_timestamp() OWNER TO postgres;
 
 --
--- TOC entry 328 (class 1255 OID 115660)
+-- TOC entry 330 (class 1255 OID 115660)
 -- Name: update_empresa_tipo_vehiculo_conductores(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -558,7 +558,7 @@ $$;
 ALTER FUNCTION public.update_empresa_tipo_vehiculo_conductores() OWNER TO postgres;
 
 --
--- TOC entry 326 (class 1255 OID 115656)
+-- TOC entry 328 (class 1255 OID 115656)
 -- Name: update_empresa_tipos_vehiculo_timestamp(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -575,7 +575,7 @@ $$;
 ALTER FUNCTION public.update_empresa_tipos_vehiculo_timestamp() OWNER TO postgres;
 
 --
--- TOC entry 325 (class 1255 OID 25479)
+-- TOC entry 327 (class 1255 OID 25479)
 -- Name: update_empresas_transporte_timestamp(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -592,7 +592,7 @@ $$;
 ALTER FUNCTION public.update_empresas_transporte_timestamp() OWNER TO postgres;
 
 --
--- TOC entry 324 (class 1255 OID 17279)
+-- TOC entry 326 (class 1255 OID 17279)
 -- Name: update_mensajes_chat_timestamp(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -609,7 +609,7 @@ $$;
 ALTER FUNCTION public.update_mensajes_chat_timestamp() OWNER TO postgres;
 
 --
--- TOC entry 331 (class 1255 OID 115751)
+-- TOC entry 333 (class 1255 OID 115751)
 -- Name: update_support_timestamp(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -626,7 +626,7 @@ $$;
 ALTER FUNCTION public.update_support_timestamp() OWNER TO postgres;
 
 --
--- TOC entry 347 (class 1255 OID 91197)
+-- TOC entry 349 (class 1255 OID 91197)
 -- Name: validar_conductor_nueva_empresa(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -689,7 +689,7 @@ CREATE SEQUENCE public.asignaciones_conductor_id_seq
 ALTER SEQUENCE public.asignaciones_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6190 (class 0 OID 0)
+-- TOC entry 6206 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: asignaciones_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -736,7 +736,7 @@ CREATE SEQUENCE public.cache_direcciones_id_seq
 ALTER SEQUENCE public.cache_direcciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6191 (class 0 OID 0)
+-- TOC entry 6207 (class 0 OID 0)
 -- Dependencies: 254
 -- Name: cache_direcciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -780,7 +780,7 @@ CREATE SEQUENCE public.cache_geocodificacion_id_seq
 ALTER SEQUENCE public.cache_geocodificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6192 (class 0 OID 0)
+-- TOC entry 6208 (class 0 OID 0)
 -- Dependencies: 255
 -- Name: cache_geocodificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -811,7 +811,7 @@ CREATE TABLE public.calificaciones (
 ALTER TABLE public.calificaciones OWNER TO postgres;
 
 --
--- TOC entry 6193 (class 0 OID 0)
+-- TOC entry 6209 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: TABLE calificaciones; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -835,7 +835,7 @@ CREATE SEQUENCE public.calificaciones_id_seq
 ALTER SEQUENCE public.calificaciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6194 (class 0 OID 0)
+-- TOC entry 6210 (class 0 OID 0)
 -- Dependencies: 246
 -- Name: calificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -863,12 +863,21 @@ CREATE TABLE public.catalogo_tipos_vehiculo (
 ALTER TABLE public.catalogo_tipos_vehiculo OWNER TO postgres;
 
 --
--- TOC entry 6195 (class 0 OID 0)
+-- TOC entry 6211 (class 0 OID 0)
 -- Dependencies: 300
 -- Name: TABLE catalogo_tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
 
 COMMENT ON TABLE public.catalogo_tipos_vehiculo IS 'Catálogo maestro de tipos de vehículo disponibles';
+
+
+--
+-- TOC entry 6212 (class 0 OID 0)
+-- Dependencies: 300
+-- Name: COLUMN catalogo_tipos_vehiculo.codigo; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.catalogo_tipos_vehiculo.codigo IS 'Tipos vÃ¡lidos: moto, motocarro, taxi, carro';
 
 
 --
@@ -888,7 +897,7 @@ CREATE SEQUENCE public.catalogo_tipos_vehiculo_id_seq
 ALTER SEQUENCE public.catalogo_tipos_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6196 (class 0 OID 0)
+-- TOC entry 6213 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: catalogo_tipos_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -917,7 +926,7 @@ CREATE TABLE public.categorias_soporte (
 ALTER TABLE public.categorias_soporte OWNER TO postgres;
 
 --
--- TOC entry 6197 (class 0 OID 0)
+-- TOC entry 6214 (class 0 OID 0)
 -- Dependencies: 310
 -- Name: TABLE categorias_soporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -942,7 +951,7 @@ CREATE SEQUENCE public.categorias_soporte_id_seq
 ALTER SEQUENCE public.categorias_soporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6198 (class 0 OID 0)
+-- TOC entry 6215 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: categorias_soporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -982,7 +991,7 @@ CREATE SEQUENCE public.colores_vehiculo_id_seq
 ALTER SEQUENCE public.colores_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6199 (class 0 OID 0)
+-- TOC entry 6216 (class 0 OID 0)
 -- Dependencies: 272
 -- Name: colores_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1069,7 +1078,7 @@ CREATE TABLE public.detalles_conductor (
 ALTER TABLE public.detalles_conductor OWNER TO postgres;
 
 --
--- TOC entry 6200 (class 0 OID 0)
+-- TOC entry 6217 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: COLUMN detalles_conductor.foto_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1142,7 +1151,7 @@ CREATE TABLE public.usuarios (
 ALTER TABLE public.usuarios OWNER TO postgres;
 
 --
--- TOC entry 6201 (class 0 OID 0)
+-- TOC entry 6218 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.google_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1151,7 +1160,7 @@ COMMENT ON COLUMN public.usuarios.google_id IS 'ID único del usuario en Google 
 
 
 --
--- TOC entry 6202 (class 0 OID 0)
+-- TOC entry 6219 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.apple_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1160,7 +1169,7 @@ COMMENT ON COLUMN public.usuarios.apple_id IS 'ID único del usuario en Apple pa
 
 
 --
--- TOC entry 6203 (class 0 OID 0)
+-- TOC entry 6220 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: COLUMN usuarios.auth_provider; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1169,7 +1178,7 @@ COMMENT ON COLUMN public.usuarios.auth_provider IS 'Método de autenticación or
 
 
 --
--- TOC entry 6204 (class 0 OID 0)
+-- TOC entry 6221 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: CONSTRAINT chk_conductor_empresa_required ON usuarios; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1232,7 +1241,7 @@ CREATE SEQUENCE public.conductores_favoritos_id_seq
 ALTER SEQUENCE public.conductores_favoritos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6205 (class 0 OID 0)
+-- TOC entry 6222 (class 0 OID 0)
 -- Dependencies: 256
 -- Name: conductores_favoritos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1281,7 +1290,7 @@ CREATE TABLE public.empresas_transporte (
 ALTER TABLE public.empresas_transporte OWNER TO postgres;
 
 --
--- TOC entry 6206 (class 0 OID 0)
+-- TOC entry 6223 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: TABLE empresas_transporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1290,7 +1299,7 @@ COMMENT ON TABLE public.empresas_transporte IS 'Tabla para almacenar empresas de
 
 
 --
--- TOC entry 6207 (class 0 OID 0)
+-- TOC entry 6224 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1299,7 +1308,7 @@ COMMENT ON COLUMN public.empresas_transporte.tipos_vehiculo IS 'Array de tipos d
 
 
 --
--- TOC entry 6208 (class 0 OID 0)
+-- TOC entry 6225 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1308,7 +1317,7 @@ COMMENT ON COLUMN public.empresas_transporte.estado IS 'Estado de la empresa: ac
 
 
 --
--- TOC entry 6209 (class 0 OID 0)
+-- TOC entry 6226 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.comision_admin_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1317,7 +1326,7 @@ COMMENT ON COLUMN public.empresas_transporte.comision_admin_porcentaje IS 'Porce
 
 
 --
--- TOC entry 6210 (class 0 OID 0)
+-- TOC entry 6227 (class 0 OID 0)
 -- Dependencies: 269
 -- Name: COLUMN empresas_transporte.saldo_pendiente; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1346,7 +1355,7 @@ CREATE TABLE public.solicitudes_vinculacion_conductor (
 ALTER TABLE public.solicitudes_vinculacion_conductor OWNER TO postgres;
 
 --
--- TOC entry 6211 (class 0 OID 0)
+-- TOC entry 6228 (class 0 OID 0)
 -- Dependencies: 289
 -- Name: TABLE solicitudes_vinculacion_conductor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1385,7 +1394,7 @@ CREATE VIEW public.conductores_pendientes_vinculacion AS
 ALTER VIEW public.conductores_pendientes_vinculacion OWNER TO postgres;
 
 --
--- TOC entry 6212 (class 0 OID 0)
+-- TOC entry 6229 (class 0 OID 0)
 -- Dependencies: 290
 -- Name: VIEW conductores_pendientes_vinculacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1419,7 +1428,7 @@ CREATE TABLE public.configuracion_notificaciones_usuario (
 ALTER TABLE public.configuracion_notificaciones_usuario OWNER TO postgres;
 
 --
--- TOC entry 6213 (class 0 OID 0)
+-- TOC entry 6230 (class 0 OID 0)
 -- Dependencies: 284
 -- Name: TABLE configuracion_notificaciones_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1444,7 +1453,7 @@ CREATE SEQUENCE public.configuracion_notificaciones_usuario_id_seq
 ALTER SEQUENCE public.configuracion_notificaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6214 (class 0 OID 0)
+-- TOC entry 6231 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: configuracion_notificaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1508,7 +1517,7 @@ CREATE SEQUENCE public.configuracion_precios_id_seq
 ALTER SEQUENCE public.configuracion_precios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6215 (class 0 OID 0)
+-- TOC entry 6232 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: configuracion_precios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1554,7 +1563,7 @@ CREATE SEQUENCE public.configuraciones_app_id_seq
 ALTER SEQUENCE public.configuraciones_app_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6216 (class 0 OID 0)
+-- TOC entry 6233 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: configuraciones_app_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1578,7 +1587,7 @@ CREATE SEQUENCE public.detalles_conductor_id_seq
 ALTER SEQUENCE public.detalles_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6217 (class 0 OID 0)
+-- TOC entry 6234 (class 0 OID 0)
 -- Dependencies: 249
 -- Name: detalles_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1655,7 +1664,7 @@ CREATE TABLE public.disputas_pago (
 ALTER TABLE public.disputas_pago OWNER TO postgres;
 
 --
--- TOC entry 6218 (class 0 OID 0)
+-- TOC entry 6235 (class 0 OID 0)
 -- Dependencies: 264
 -- Name: TABLE disputas_pago; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1664,7 +1673,7 @@ COMMENT ON TABLE public.disputas_pago IS 'Registro de disputas de pago entre cli
 
 
 --
--- TOC entry 6219 (class 0 OID 0)
+-- TOC entry 6236 (class 0 OID 0)
 -- Dependencies: 264
 -- Name: COLUMN disputas_pago.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1688,7 +1697,7 @@ CREATE SEQUENCE public.disputas_pago_id_seq
 ALTER SEQUENCE public.disputas_pago_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6220 (class 0 OID 0)
+-- TOC entry 6237 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: disputas_pago_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1723,7 +1732,7 @@ CREATE TABLE public.documentos_conductor_historial (
 ALTER TABLE public.documentos_conductor_historial OWNER TO postgres;
 
 --
--- TOC entry 6221 (class 0 OID 0)
+-- TOC entry 6238 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: COLUMN documentos_conductor_historial.asignado_empresa_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1732,7 +1741,7 @@ COMMENT ON COLUMN public.documentos_conductor_historial.asignado_empresa_id IS '
 
 
 --
--- TOC entry 6222 (class 0 OID 0)
+-- TOC entry 6239 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: COLUMN documentos_conductor_historial.verificado_por_admin; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1776,7 +1785,7 @@ CREATE SEQUENCE public.documentos_verificacion_id_seq
 ALTER SEQUENCE public.documentos_verificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6223 (class 0 OID 0)
+-- TOC entry 6240 (class 0 OID 0)
 -- Dependencies: 270
 -- Name: documentos_verificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1809,7 +1818,7 @@ CREATE TABLE public.empresa_tipos_vehiculo (
 ALTER TABLE public.empresa_tipos_vehiculo OWNER TO postgres;
 
 --
--- TOC entry 6224 (class 0 OID 0)
+-- TOC entry 6241 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: TABLE empresa_tipos_vehiculo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1818,7 +1827,7 @@ COMMENT ON TABLE public.empresa_tipos_vehiculo IS 'Tipos de vehículo habilitado
 
 
 --
--- TOC entry 6225 (class 0 OID 0)
+-- TOC entry 6242 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: COLUMN empresa_tipos_vehiculo.activo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1827,7 +1836,7 @@ COMMENT ON COLUMN public.empresa_tipos_vehiculo.activo IS 'TRUE si el tipo de ve
 
 
 --
--- TOC entry 6226 (class 0 OID 0)
+-- TOC entry 6243 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: COLUMN empresa_tipos_vehiculo.motivo_desactivacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1860,7 +1869,7 @@ CREATE TABLE public.empresa_tipos_vehiculo_historial (
 ALTER TABLE public.empresa_tipos_vehiculo_historial OWNER TO postgres;
 
 --
--- TOC entry 6227 (class 0 OID 0)
+-- TOC entry 6244 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: TABLE empresa_tipos_vehiculo_historial; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1884,7 +1893,7 @@ CREATE SEQUENCE public.empresa_tipos_vehiculo_historial_id_seq
 ALTER SEQUENCE public.empresa_tipos_vehiculo_historial_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6228 (class 0 OID 0)
+-- TOC entry 6245 (class 0 OID 0)
 -- Dependencies: 303
 -- Name: empresa_tipos_vehiculo_historial_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1908,7 +1917,7 @@ CREATE SEQUENCE public.empresa_tipos_vehiculo_id_seq
 ALTER SEQUENCE public.empresa_tipos_vehiculo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6229 (class 0 OID 0)
+-- TOC entry 6246 (class 0 OID 0)
 -- Dependencies: 301
 -- Name: empresa_tipos_vehiculo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1941,7 +1950,7 @@ CREATE TABLE public.empresa_vehiculo_notificaciones (
 ALTER TABLE public.empresa_vehiculo_notificaciones OWNER TO postgres;
 
 --
--- TOC entry 6230 (class 0 OID 0)
+-- TOC entry 6247 (class 0 OID 0)
 -- Dependencies: 306
 -- Name: TABLE empresa_vehiculo_notificaciones; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -1965,7 +1974,7 @@ CREATE SEQUENCE public.empresa_vehiculo_notificaciones_id_seq
 ALTER SEQUENCE public.empresa_vehiculo_notificaciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6231 (class 0 OID 0)
+-- TOC entry 6248 (class 0 OID 0)
 -- Dependencies: 305
 -- Name: empresa_vehiculo_notificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -1999,7 +2008,7 @@ CREATE TABLE public.empresas_configuracion (
 ALTER TABLE public.empresas_configuracion OWNER TO postgres;
 
 --
--- TOC entry 6232 (class 0 OID 0)
+-- TOC entry 6249 (class 0 OID 0)
 -- Dependencies: 298
 -- Name: TABLE empresas_configuracion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2023,7 +2032,7 @@ CREATE SEQUENCE public.empresas_configuracion_id_seq
 ALTER SEQUENCE public.empresas_configuracion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6233 (class 0 OID 0)
+-- TOC entry 6250 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: empresas_configuracion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2053,7 +2062,7 @@ CREATE TABLE public.empresas_contacto (
 ALTER TABLE public.empresas_contacto OWNER TO postgres;
 
 --
--- TOC entry 6234 (class 0 OID 0)
+-- TOC entry 6251 (class 0 OID 0)
 -- Dependencies: 292
 -- Name: TABLE empresas_contacto; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2077,7 +2086,7 @@ CREATE SEQUENCE public.empresas_contacto_id_seq
 ALTER SEQUENCE public.empresas_contacto_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6235 (class 0 OID 0)
+-- TOC entry 6252 (class 0 OID 0)
 -- Dependencies: 291
 -- Name: empresas_contacto_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2110,7 +2119,7 @@ CREATE TABLE public.empresas_metricas (
 ALTER TABLE public.empresas_metricas OWNER TO postgres;
 
 --
--- TOC entry 6236 (class 0 OID 0)
+-- TOC entry 6253 (class 0 OID 0)
 -- Dependencies: 296
 -- Name: TABLE empresas_metricas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2134,7 +2143,7 @@ CREATE SEQUENCE public.empresas_metricas_id_seq
 ALTER SEQUENCE public.empresas_metricas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6237 (class 0 OID 0)
+-- TOC entry 6254 (class 0 OID 0)
 -- Dependencies: 295
 -- Name: empresas_metricas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2163,7 +2172,7 @@ CREATE TABLE public.empresas_representante (
 ALTER TABLE public.empresas_representante OWNER TO postgres;
 
 --
--- TOC entry 6238 (class 0 OID 0)
+-- TOC entry 6255 (class 0 OID 0)
 -- Dependencies: 294
 -- Name: TABLE empresas_representante; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2187,7 +2196,7 @@ CREATE SEQUENCE public.empresas_representante_id_seq
 ALTER SEQUENCE public.empresas_representante_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6239 (class 0 OID 0)
+-- TOC entry 6256 (class 0 OID 0)
 -- Dependencies: 293
 -- Name: empresas_representante_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2211,7 +2220,7 @@ CREATE SEQUENCE public.empresas_transporte_id_seq
 ALTER SEQUENCE public.empresas_transporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6240 (class 0 OID 0)
+-- TOC entry 6257 (class 0 OID 0)
 -- Dependencies: 268
 -- Name: empresas_transporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2271,7 +2280,7 @@ CREATE SEQUENCE public.historial_confianza_id_seq
 ALTER SEQUENCE public.historial_confianza_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6241 (class 0 OID 0)
+-- TOC entry 6258 (class 0 OID 0)
 -- Dependencies: 258
 -- Name: historial_confianza_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2365,7 +2374,7 @@ CREATE SEQUENCE public.logs_auditoria_id_seq
 ALTER SEQUENCE public.logs_auditoria_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6242 (class 0 OID 0)
+-- TOC entry 6259 (class 0 OID 0)
 -- Dependencies: 274
 -- Name: logs_auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2399,7 +2408,7 @@ CREATE TABLE public.mensajes_chat (
 ALTER TABLE public.mensajes_chat OWNER TO postgres;
 
 --
--- TOC entry 6243 (class 0 OID 0)
+-- TOC entry 6260 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: TABLE mensajes_chat; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2408,7 +2417,7 @@ COMMENT ON TABLE public.mensajes_chat IS 'Mensajes de chat entre conductores y c
 
 
 --
--- TOC entry 6244 (class 0 OID 0)
+-- TOC entry 6261 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.solicitud_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2417,7 +2426,7 @@ COMMENT ON COLUMN public.mensajes_chat.solicitud_id IS 'ID de la solicitud/viaje
 
 
 --
--- TOC entry 6245 (class 0 OID 0)
+-- TOC entry 6262 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.tipo_remitente; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2426,7 +2435,7 @@ COMMENT ON COLUMN public.mensajes_chat.tipo_remitente IS 'Tipo de usuario que en
 
 
 --
--- TOC entry 6246 (class 0 OID 0)
+-- TOC entry 6263 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.tipo_mensaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2435,7 +2444,7 @@ COMMENT ON COLUMN public.mensajes_chat.tipo_mensaje IS 'Tipo de contenido: texto
 
 
 --
--- TOC entry 6247 (class 0 OID 0)
+-- TOC entry 6264 (class 0 OID 0)
 -- Dependencies: 262
 -- Name: COLUMN mensajes_chat.leido; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2460,7 +2469,7 @@ CREATE SEQUENCE public.mensajes_chat_id_seq
 ALTER SEQUENCE public.mensajes_chat_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6248 (class 0 OID 0)
+-- TOC entry 6265 (class 0 OID 0)
 -- Dependencies: 261
 -- Name: mensajes_chat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2489,7 +2498,7 @@ CREATE TABLE public.mensajes_ticket (
 ALTER TABLE public.mensajes_ticket OWNER TO postgres;
 
 --
--- TOC entry 6249 (class 0 OID 0)
+-- TOC entry 6266 (class 0 OID 0)
 -- Dependencies: 314
 -- Name: TABLE mensajes_ticket; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2514,7 +2523,7 @@ CREATE SEQUENCE public.mensajes_ticket_id_seq
 ALTER SEQUENCE public.mensajes_ticket_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6250 (class 0 OID 0)
+-- TOC entry 6267 (class 0 OID 0)
 -- Dependencies: 313
 -- Name: mensajes_ticket_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2573,7 +2582,7 @@ CREATE TABLE public.notificaciones_usuario (
 ALTER TABLE public.notificaciones_usuario OWNER TO postgres;
 
 --
--- TOC entry 6251 (class 0 OID 0)
+-- TOC entry 6268 (class 0 OID 0)
 -- Dependencies: 282
 -- Name: TABLE notificaciones_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2601,7 +2610,7 @@ CREATE TABLE public.tipos_notificacion (
 ALTER TABLE public.tipos_notificacion OWNER TO postgres;
 
 --
--- TOC entry 6252 (class 0 OID 0)
+-- TOC entry 6269 (class 0 OID 0)
 -- Dependencies: 280
 -- Name: TABLE tipos_notificacion; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2637,7 +2646,7 @@ CREATE VIEW public.notificaciones_completas AS
 ALTER VIEW public.notificaciones_completas OWNER TO postgres;
 
 --
--- TOC entry 6253 (class 0 OID 0)
+-- TOC entry 6270 (class 0 OID 0)
 -- Dependencies: 287
 -- Name: VIEW notificaciones_completas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2662,12 +2671,56 @@ CREATE SEQUENCE public.notificaciones_usuario_id_seq
 ALTER SEQUENCE public.notificaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6254 (class 0 OID 0)
+-- TOC entry 6271 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: notificaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.notificaciones_usuario_id_seq OWNED BY public.notificaciones_usuario.id;
+
+
+--
+-- TOC entry 324 (class 1259 OID 123896)
+-- Name: pagos_comision; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.pagos_comision (
+    id integer NOT NULL,
+    conductor_id integer NOT NULL,
+    monto numeric(10,2) NOT NULL,
+    metodo_pago character varying(50) DEFAULT 'efectivo'::character varying NOT NULL,
+    referencia character varying(255) DEFAULT NULL::character varying,
+    admin_id integer,
+    fecha_pago timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    notas text
+);
+
+
+ALTER TABLE public.pagos_comision OWNER TO postgres;
+
+--
+-- TOC entry 323 (class 1259 OID 123895)
+-- Name: pagos_comision_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.pagos_comision_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.pagos_comision_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 6272 (class 0 OID 0)
+-- Dependencies: 323
+-- Name: pagos_comision_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.pagos_comision_id_seq OWNED BY public.pagos_comision.id;
 
 
 --
@@ -2691,7 +2744,7 @@ CREATE TABLE public.pagos_empresas (
 ALTER TABLE public.pagos_empresas OWNER TO postgres;
 
 --
--- TOC entry 6255 (class 0 OID 0)
+-- TOC entry 6273 (class 0 OID 0)
 -- Dependencies: 276
 -- Name: TABLE pagos_empresas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2715,7 +2768,7 @@ CREATE SEQUENCE public.pagos_empresas_id_seq
 ALTER SEQUENCE public.pagos_empresas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6256 (class 0 OID 0)
+-- TOC entry 6274 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: pagos_empresas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2744,7 +2797,7 @@ CREATE TABLE public.pagos_viaje (
 ALTER TABLE public.pagos_viaje OWNER TO postgres;
 
 --
--- TOC entry 6257 (class 0 OID 0)
+-- TOC entry 6275 (class 0 OID 0)
 -- Dependencies: 266
 -- Name: TABLE pagos_viaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2769,7 +2822,7 @@ CREATE SEQUENCE public.pagos_viaje_id_seq
 ALTER SEQUENCE public.pagos_viaje_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6258 (class 0 OID 0)
+-- TOC entry 6276 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: pagos_viaje_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2815,7 +2868,7 @@ CREATE SEQUENCE public.paradas_solicitud_id_seq
 ALTER SEQUENCE public.paradas_solicitud_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6259 (class 0 OID 0)
+-- TOC entry 6277 (class 0 OID 0)
 -- Dependencies: 253
 -- Name: paradas_solicitud_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2858,7 +2911,7 @@ CREATE SEQUENCE public.plantillas_bloqueadas_id_seq
 ALTER SEQUENCE public.plantillas_bloqueadas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6260 (class 0 OID 0)
+-- TOC entry 6278 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: plantillas_bloqueadas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -2965,7 +3018,7 @@ CREATE TABLE public.solicitudes_callback (
 ALTER TABLE public.solicitudes_callback OWNER TO postgres;
 
 --
--- TOC entry 6261 (class 0 OID 0)
+-- TOC entry 6279 (class 0 OID 0)
 -- Dependencies: 316
 -- Name: TABLE solicitudes_callback; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -2990,7 +3043,7 @@ CREATE SEQUENCE public.solicitudes_callback_id_seq
 ALTER SEQUENCE public.solicitudes_callback_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6262 (class 0 OID 0)
+-- TOC entry 6280 (class 0 OID 0)
 -- Dependencies: 315
 -- Name: solicitudes_callback_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3054,7 +3107,7 @@ CREATE TABLE public.solicitudes_servicio (
 ALTER TABLE public.solicitudes_servicio OWNER TO postgres;
 
 --
--- TOC entry 6263 (class 0 OID 0)
+-- TOC entry 6281 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_final; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3063,7 +3116,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_final IS 'Precio final del 
 
 
 --
--- TOC entry 6264 (class 0 OID 0)
+-- TOC entry 6282 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_estimado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3072,7 +3125,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_estimado IS 'Precio calcula
 
 
 --
--- TOC entry 6265 (class 0 OID 0)
+-- TOC entry 6283 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.precio_ajustado_por_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3081,7 +3134,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.precio_ajustado_por_tracking IS 'I
 
 
 --
--- TOC entry 6266 (class 0 OID 0)
+-- TOC entry 6284 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.tuvo_desvio_ruta; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3090,7 +3143,7 @@ COMMENT ON COLUMN public.solicitudes_servicio.tuvo_desvio_ruta IS 'Indica si el 
 
 
 --
--- TOC entry 6267 (class 0 OID 0)
+-- TOC entry 6285 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN solicitudes_servicio.desglose_precio; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3114,7 +3167,7 @@ CREATE SEQUENCE public.solicitudes_servicio_id_seq
 ALTER SEQUENCE public.solicitudes_servicio_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6268 (class 0 OID 0)
+-- TOC entry 6286 (class 0 OID 0)
 -- Dependencies: 244
 -- Name: solicitudes_servicio_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3138,7 +3191,7 @@ CREATE SEQUENCE public.solicitudes_vinculacion_conductor_id_seq
 ALTER SEQUENCE public.solicitudes_vinculacion_conductor_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6269 (class 0 OID 0)
+-- TOC entry 6287 (class 0 OID 0)
 -- Dependencies: 288
 -- Name: solicitudes_vinculacion_conductor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3174,7 +3227,7 @@ CREATE TABLE public.tickets_soporte (
 ALTER TABLE public.tickets_soporte OWNER TO postgres;
 
 --
--- TOC entry 6270 (class 0 OID 0)
+-- TOC entry 6288 (class 0 OID 0)
 -- Dependencies: 312
 -- Name: TABLE tickets_soporte; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3235,7 +3288,7 @@ CREATE SEQUENCE public.tickets_soporte_id_seq
 ALTER SEQUENCE public.tickets_soporte_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6271 (class 0 OID 0)
+-- TOC entry 6289 (class 0 OID 0)
 -- Dependencies: 311
 -- Name: tickets_soporte_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3260,7 +3313,7 @@ CREATE SEQUENCE public.tipos_notificacion_id_seq
 ALTER SEQUENCE public.tipos_notificacion_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6272 (class 0 OID 0)
+-- TOC entry 6290 (class 0 OID 0)
 -- Dependencies: 279
 -- Name: tipos_notificacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3289,7 +3342,7 @@ CREATE TABLE public.tokens_push_usuario (
 ALTER TABLE public.tokens_push_usuario OWNER TO postgres;
 
 --
--- TOC entry 6273 (class 0 OID 0)
+-- TOC entry 6291 (class 0 OID 0)
 -- Dependencies: 286
 -- Name: TABLE tokens_push_usuario; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3314,7 +3367,7 @@ CREATE SEQUENCE public.tokens_push_usuario_id_seq
 ALTER SEQUENCE public.tokens_push_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6274 (class 0 OID 0)
+-- TOC entry 6292 (class 0 OID 0)
 -- Dependencies: 285
 -- Name: tokens_push_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3358,7 +3411,7 @@ CREATE TABLE public.transacciones (
 ALTER TABLE public.transacciones OWNER TO postgres;
 
 --
--- TOC entry 6275 (class 0 OID 0)
+-- TOC entry 6293 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: COLUMN transacciones.estado; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3367,7 +3420,7 @@ COMMENT ON COLUMN public.transacciones.estado IS 'Estado de la transacción: pen
 
 
 --
--- TOC entry 6276 (class 0 OID 0)
+-- TOC entry 6294 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: COLUMN transacciones.monto_conductor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3391,7 +3444,7 @@ CREATE SEQUENCE public.transacciones_id_seq
 ALTER SEQUENCE public.transacciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6277 (class 0 OID 0)
+-- TOC entry 6295 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: transacciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3440,7 +3493,7 @@ CREATE SEQUENCE public.ubicaciones_usuario_id_seq
 ALTER SEQUENCE public.ubicaciones_usuario_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6278 (class 0 OID 0)
+-- TOC entry 6296 (class 0 OID 0)
 -- Dependencies: 251
 -- Name: ubicaciones_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3485,7 +3538,7 @@ CREATE SEQUENCE public.user_devices_id_seq
 ALTER SEQUENCE public.user_devices_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6279 (class 0 OID 0)
+-- TOC entry 6297 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: user_devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3537,7 +3590,7 @@ CREATE SEQUENCE public.usuarios_id_seq
 ALTER SEQUENCE public.usuarios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6280 (class 0 OID 0)
+-- TOC entry 6298 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3629,7 +3682,7 @@ CREATE VIEW public.v_empresas_completas AS
 ALTER VIEW public.v_empresas_completas OWNER TO postgres;
 
 --
--- TOC entry 6281 (class 0 OID 0)
+-- TOC entry 6299 (class 0 OID 0)
 -- Dependencies: 308
 -- Name: VIEW v_empresas_completas; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3708,7 +3761,7 @@ CREATE TABLE public.viaje_resumen_tracking (
 ALTER TABLE public.viaje_resumen_tracking OWNER TO postgres;
 
 --
--- TOC entry 6282 (class 0 OID 0)
+-- TOC entry 6300 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: TABLE viaje_resumen_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3717,7 +3770,7 @@ COMMENT ON TABLE public.viaje_resumen_tracking IS 'Resumen consolidado del track
 
 
 --
--- TOC entry 6283 (class 0 OID 0)
+-- TOC entry 6301 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.tarifa_base; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3726,7 +3779,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.tarifa_base IS 'Tarifa base del 
 
 
 --
--- TOC entry 6284 (class 0 OID 0)
+-- TOC entry 6302 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.precio_distancia; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3735,7 +3788,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.precio_distancia IS 'Precio calc
 
 
 --
--- TOC entry 6285 (class 0 OID 0)
+-- TOC entry 6303 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.precio_tiempo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3744,7 +3797,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.precio_tiempo IS 'Precio calcula
 
 
 --
--- TOC entry 6286 (class 0 OID 0)
+-- TOC entry 6304 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.recargo_nocturno; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3753,7 +3806,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_nocturno IS 'Recargo apl
 
 
 --
--- TOC entry 6287 (class 0 OID 0)
+-- TOC entry 6305 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.recargo_hora_pico; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3762,7 +3815,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_hora_pico IS 'Recargo ap
 
 
 --
--- TOC entry 6288 (class 0 OID 0)
+-- TOC entry 6306 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.recargo_festivo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3771,7 +3824,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_festivo IS 'Recargo apli
 
 
 --
--- TOC entry 6289 (class 0 OID 0)
+-- TOC entry 6307 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.recargo_espera; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3780,7 +3833,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.recargo_espera IS 'Recargo por t
 
 
 --
--- TOC entry 6290 (class 0 OID 0)
+-- TOC entry 6308 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.tiempo_espera_min; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3789,7 +3842,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.tiempo_espera_min IS 'Tiempo de 
 
 
 --
--- TOC entry 6291 (class 0 OID 0)
+-- TOC entry 6309 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.descuento_distancia_larga; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3798,7 +3851,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.descuento_distancia_larga IS 'De
 
 
 --
--- TOC entry 6292 (class 0 OID 0)
+-- TOC entry 6310 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.subtotal_sin_recargos; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3807,7 +3860,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.subtotal_sin_recargos IS 'Suma d
 
 
 --
--- TOC entry 6293 (class 0 OID 0)
+-- TOC entry 6311 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.total_recargos; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3816,7 +3869,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.total_recargos IS 'Suma total de
 
 
 --
--- TOC entry 6294 (class 0 OID 0)
+-- TOC entry 6312 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.tipo_recargo; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3825,7 +3878,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.tipo_recargo IS 'Tipo de recargo
 
 
 --
--- TOC entry 6295 (class 0 OID 0)
+-- TOC entry 6313 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.aplico_tarifa_minima; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3834,7 +3887,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.aplico_tarifa_minima IS 'Indica 
 
 
 --
--- TOC entry 6296 (class 0 OID 0)
+-- TOC entry 6314 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.comision_plataforma_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3843,7 +3896,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.comision_plataforma_porcentaje I
 
 
 --
--- TOC entry 6297 (class 0 OID 0)
+-- TOC entry 6315 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.comision_plataforma_valor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3852,7 +3905,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.comision_plataforma_valor IS 'Va
 
 
 --
--- TOC entry 6298 (class 0 OID 0)
+-- TOC entry 6316 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.ganancia_conductor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3861,7 +3914,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.ganancia_conductor IS 'Ganancia 
 
 
 --
--- TOC entry 6299 (class 0 OID 0)
+-- TOC entry 6317 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.empresa_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3870,7 +3923,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.empresa_id IS 'ID de la empresa 
 
 
 --
--- TOC entry 6300 (class 0 OID 0)
+-- TOC entry 6318 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.config_precios_id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3879,7 +3932,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.config_precios_id IS 'ID de la c
 
 
 --
--- TOC entry 6301 (class 0 OID 0)
+-- TOC entry 6319 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.comision_admin_porcentaje; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3888,7 +3941,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.comision_admin_porcentaje IS 'Po
 
 
 --
--- TOC entry 6302 (class 0 OID 0)
+-- TOC entry 6320 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.comision_admin_valor; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3897,7 +3950,7 @@ COMMENT ON COLUMN public.viaje_resumen_tracking.comision_admin_valor IS 'Valor e
 
 
 --
--- TOC entry 6303 (class 0 OID 0)
+-- TOC entry 6321 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: COLUMN viaje_resumen_tracking.ganancia_empresa; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3921,7 +3974,7 @@ CREATE SEQUENCE public.viaje_resumen_tracking_id_seq
 ALTER SEQUENCE public.viaje_resumen_tracking_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6304 (class 0 OID 0)
+-- TOC entry 6322 (class 0 OID 0)
 -- Dependencies: 320
 -- Name: viaje_resumen_tracking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -3959,7 +4012,7 @@ CREATE TABLE public.viaje_tracking_realtime (
 ALTER TABLE public.viaje_tracking_realtime OWNER TO postgres;
 
 --
--- TOC entry 6305 (class 0 OID 0)
+-- TOC entry 6323 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: TABLE viaje_tracking_realtime; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3968,7 +4021,7 @@ COMMENT ON TABLE public.viaje_tracking_realtime IS 'Tracking GPS en tiempo real 
 
 
 --
--- TOC entry 6306 (class 0 OID 0)
+-- TOC entry 6324 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.distancia_acumulada_km; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3977,7 +4030,7 @@ COMMENT ON COLUMN public.viaje_tracking_realtime.distancia_acumulada_km IS 'Dist
 
 
 --
--- TOC entry 6307 (class 0 OID 0)
+-- TOC entry 6325 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.tiempo_transcurrido_seg; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -3986,7 +4039,7 @@ COMMENT ON COLUMN public.viaje_tracking_realtime.tiempo_transcurrido_seg IS 'Tie
 
 
 --
--- TOC entry 6308 (class 0 OID 0)
+-- TOC entry 6326 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: COLUMN viaje_tracking_realtime.precio_parcial; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -4010,7 +4063,7 @@ CREATE SEQUENCE public.viaje_tracking_realtime_id_seq
 ALTER SEQUENCE public.viaje_tracking_realtime_id_seq OWNER TO postgres;
 
 --
--- TOC entry 6309 (class 0 OID 0)
+-- TOC entry 6327 (class 0 OID 0)
 -- Dependencies: 318
 -- Name: viaje_tracking_realtime_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -4058,7 +4111,7 @@ CREATE VIEW public.viajes_con_tracking AS
 ALTER VIEW public.viajes_con_tracking OWNER TO postgres;
 
 --
--- TOC entry 6310 (class 0 OID 0)
+-- TOC entry 6328 (class 0 OID 0)
 -- Dependencies: 322
 -- Name: VIEW viajes_con_tracking; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -4119,7 +4172,7 @@ CREATE VIEW public.vista_precios_activos AS
 ALTER VIEW public.vista_precios_activos OWNER TO postgres;
 
 --
--- TOC entry 5050 (class 2604 OID 41821)
+-- TOC entry 5055 (class 2604 OID 41821)
 -- Name: asignaciones_conductor id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4127,7 +4180,7 @@ ALTER TABLE ONLY public.asignaciones_conductor ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5054 (class 2604 OID 41830)
+-- TOC entry 5059 (class 2604 OID 41830)
 -- Name: cache_direcciones id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4135,7 +4188,7 @@ ALTER TABLE ONLY public.cache_direcciones ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 5056 (class 2604 OID 41831)
+-- TOC entry 5061 (class 2604 OID 41831)
 -- Name: cache_geocodificacion id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4143,7 +4196,7 @@ ALTER TABLE ONLY public.cache_geocodificacion ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 5059 (class 2604 OID 41822)
+-- TOC entry 5064 (class 2604 OID 41822)
 -- Name: calificaciones id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4151,7 +4204,7 @@ ALTER TABLE ONLY public.calificaciones ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 5369 (class 2604 OID 115558)
+-- TOC entry 5374 (class 2604 OID 115558)
 -- Name: catalogo_tipos_vehiculo id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4159,7 +4212,7 @@ ALTER TABLE ONLY public.catalogo_tipos_vehiculo ALTER COLUMN id SET DEFAULT next
 
 
 --
--- TOC entry 5387 (class 2604 OID 115676)
+-- TOC entry 5392 (class 2604 OID 115676)
 -- Name: categorias_soporte id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4167,7 +4220,7 @@ ALTER TABLE ONLY public.categorias_soporte ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 5303 (class 2604 OID 33661)
+-- TOC entry 5308 (class 2604 OID 33661)
 -- Name: colores_vehiculo id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4175,7 +4228,7 @@ ALTER TABLE ONLY public.colores_vehiculo ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 5261 (class 2604 OID 17169)
+-- TOC entry 5266 (class 2604 OID 17169)
 -- Name: conductores_favoritos id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4183,7 +4236,7 @@ ALTER TABLE ONLY public.conductores_favoritos ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 5322 (class 2604 OID 91014)
+-- TOC entry 5327 (class 2604 OID 91014)
 -- Name: configuracion_notificaciones_usuario id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4191,7 +4244,7 @@ ALTER TABLE ONLY public.configuracion_notificaciones_usuario ALTER COLUMN id SET
 
 
 --
--- TOC entry 5067 (class 2604 OID 41823)
+-- TOC entry 5072 (class 2604 OID 41823)
 -- Name: configuracion_precios id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4199,7 +4252,7 @@ ALTER TABLE ONLY public.configuracion_precios ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 5061 (class 2604 OID 41824)
+-- TOC entry 5066 (class 2604 OID 41824)
 -- Name: configuraciones_app id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4207,7 +4260,7 @@ ALTER TABLE ONLY public.configuraciones_app ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 5094 (class 2604 OID 41825)
+-- TOC entry 5099 (class 2604 OID 41825)
 -- Name: detalles_conductor id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4215,7 +4268,7 @@ ALTER TABLE ONLY public.detalles_conductor ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 5280 (class 2604 OID 17285)
+-- TOC entry 5285 (class 2604 OID 17285)
 -- Name: disputas_pago id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4223,7 +4276,7 @@ ALTER TABLE ONLY public.disputas_pago ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 5300 (class 2604 OID 33643)
+-- TOC entry 5305 (class 2604 OID 33643)
 -- Name: documentos_verificacion id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4231,7 +4284,7 @@ ALTER TABLE ONLY public.documentos_verificacion ALTER COLUMN id SET DEFAULT next
 
 
 --
--- TOC entry 5373 (class 2604 OID 115572)
+-- TOC entry 5378 (class 2604 OID 115572)
 -- Name: empresa_tipos_vehiculo id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4239,7 +4292,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5380 (class 2604 OID 115613)
+-- TOC entry 5385 (class 2604 OID 115613)
 -- Name: empresa_tipos_vehiculo_historial id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4247,7 +4300,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial ALTER COLUMN id SET DEF
 
 
 --
--- TOC entry 5383 (class 2604 OID 115636)
+-- TOC entry 5388 (class 2604 OID 115636)
 -- Name: empresa_vehiculo_notificaciones id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4255,7 +4308,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones ALTER COLUMN id SET DEFA
 
 
 --
--- TOC entry 5359 (class 2604 OID 91277)
+-- TOC entry 5364 (class 2604 OID 91277)
 -- Name: empresas_configuracion id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4263,7 +4316,7 @@ ALTER TABLE ONLY public.empresas_configuracion ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5340 (class 2604 OID 91211)
+-- TOC entry 5345 (class 2604 OID 91211)
 -- Name: empresas_contacto id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4271,7 +4324,7 @@ ALTER TABLE ONLY public.empresas_contacto ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 5347 (class 2604 OID 91251)
+-- TOC entry 5352 (class 2604 OID 91251)
 -- Name: empresas_metricas id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4279,7 +4332,7 @@ ALTER TABLE ONLY public.empresas_metricas ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 5343 (class 2604 OID 91231)
+-- TOC entry 5348 (class 2604 OID 91231)
 -- Name: empresas_representante id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4287,7 +4340,7 @@ ALTER TABLE ONLY public.empresas_representante ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5290 (class 2604 OID 25439)
+-- TOC entry 5295 (class 2604 OID 25439)
 -- Name: empresas_transporte id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4295,7 +4348,7 @@ ALTER TABLE ONLY public.empresas_transporte ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 5264 (class 2604 OID 17190)
+-- TOC entry 5269 (class 2604 OID 17190)
 -- Name: historial_confianza id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4303,7 +4356,7 @@ ALTER TABLE ONLY public.historial_confianza ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 5163 (class 2604 OID 50013)
+-- TOC entry 5168 (class 2604 OID 50013)
 -- Name: logs_auditoria id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4311,7 +4364,7 @@ ALTER TABLE ONLY public.logs_auditoria ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 5274 (class 2604 OID 17247)
+-- TOC entry 5279 (class 2604 OID 17247)
 -- Name: mensajes_chat id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4319,7 +4372,7 @@ ALTER TABLE ONLY public.mensajes_chat ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 5398 (class 2604 OID 115720)
+-- TOC entry 5403 (class 2604 OID 115720)
 -- Name: mensajes_ticket id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4327,7 +4380,7 @@ ALTER TABLE ONLY public.mensajes_ticket ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 5316 (class 2604 OID 90990)
+-- TOC entry 5321 (class 2604 OID 90990)
 -- Name: notificaciones_usuario id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4335,7 +4388,15 @@ ALTER TABLE ONLY public.notificaciones_usuario ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5305 (class 2604 OID 58209)
+-- TOC entry 5463 (class 2604 OID 123899)
+-- Name: pagos_comision id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pagos_comision ALTER COLUMN id SET DEFAULT nextval('public.pagos_comision_id_seq'::regclass);
+
+
+--
+-- TOC entry 5310 (class 2604 OID 58209)
 -- Name: pagos_empresas id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4343,7 +4404,7 @@ ALTER TABLE ONLY public.pagos_empresas ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 5286 (class 2604 OID 17351)
+-- TOC entry 5291 (class 2604 OID 17351)
 -- Name: pagos_viaje id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4351,7 +4412,7 @@ ALTER TABLE ONLY public.pagos_viaje ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 5175 (class 2604 OID 41829)
+-- TOC entry 5180 (class 2604 OID 41829)
 -- Name: paradas_solicitud id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4359,7 +4420,7 @@ ALTER TABLE ONLY public.paradas_solicitud ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 5307 (class 2604 OID 82783)
+-- TOC entry 5312 (class 2604 OID 82783)
 -- Name: plantillas_bloqueadas id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4367,7 +4428,7 @@ ALTER TABLE ONLY public.plantillas_bloqueadas ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 5403 (class 2604 OID 115740)
+-- TOC entry 5408 (class 2604 OID 115740)
 -- Name: solicitudes_callback id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4375,7 +4436,7 @@ ALTER TABLE ONLY public.solicitudes_callback ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 5191 (class 2604 OID 41820)
+-- TOC entry 5196 (class 2604 OID 41820)
 -- Name: solicitudes_servicio id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4383,7 +4444,7 @@ ALTER TABLE ONLY public.solicitudes_servicio ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 5337 (class 2604 OID 91161)
+-- TOC entry 5342 (class 2604 OID 91161)
 -- Name: solicitudes_vinculacion_conductor id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4391,7 +4452,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor ALTER COLUMN id SET DE
 
 
 --
--- TOC entry 5393 (class 2604 OID 115692)
+-- TOC entry 5398 (class 2604 OID 115692)
 -- Name: tickets_soporte id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4399,7 +4460,7 @@ ALTER TABLE ONLY public.tickets_soporte ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 5311 (class 2604 OID 90975)
+-- TOC entry 5316 (class 2604 OID 90975)
 -- Name: tipos_notificacion id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4407,7 +4468,7 @@ ALTER TABLE ONLY public.tipos_notificacion ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 5333 (class 2604 OID 91034)
+-- TOC entry 5338 (class 2604 OID 91034)
 -- Name: tokens_push_usuario id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4415,7 +4476,7 @@ ALTER TABLE ONLY public.tokens_push_usuario ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 5214 (class 2604 OID 41826)
+-- TOC entry 5219 (class 2604 OID 41826)
 -- Name: transacciones id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4423,7 +4484,7 @@ ALTER TABLE ONLY public.transacciones ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 5227 (class 2604 OID 41827)
+-- TOC entry 5232 (class 2604 OID 41827)
 -- Name: ubicaciones_usuario id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4431,7 +4492,7 @@ ALTER TABLE ONLY public.ubicaciones_usuario ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 5234 (class 2604 OID 17367)
+-- TOC entry 5239 (class 2604 OID 17367)
 -- Name: user_devices id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4439,7 +4500,7 @@ ALTER TABLE ONLY public.user_devices ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- TOC entry 5240 (class 2604 OID 41828)
+-- TOC entry 5245 (class 2604 OID 41828)
 -- Name: usuarios id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4447,7 +4508,7 @@ ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usu
 
 
 --
--- TOC entry 5421 (class 2604 OID 123800)
+-- TOC entry 5426 (class 2604 OID 123800)
 -- Name: viaje_resumen_tracking id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4455,7 +4516,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 5407 (class 2604 OID 123767)
+-- TOC entry 5412 (class 2604 OID 123767)
 -- Name: viaje_tracking_realtime id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4463,7 +4524,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime ALTER COLUMN id SET DEFAULT next
 
 
 --
--- TOC entry 6084 (class 0 OID 16508)
+-- TOC entry 6098 (class 0 OID 16508)
 -- Dependencies: 217
 -- Data for Name: asignaciones_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4598,13 +4659,17 @@ COPY public.asignaciones_conductor (id, solicitud_id, conductor_id, asignado_en,
 207	791	277	2026-01-21 03:39:57	\N	completado
 190	769	277	2026-01-19 22:21:23	\N	completado
 191	772	277	2026-01-19 22:49:59	\N	completado
+208	792	277	2026-01-22 03:55:07	\N	cancelado
 192	775	277	2026-01-19 22:59:39	\N	completado
 193	776	277	2026-01-19 23:18:39	\N	completado
+209	793	277	2026-01-22 21:31:40	\N	cancelado
 194	777	277	2026-01-19 23:21:45	\N	cancelado
 195	778	277	2026-01-19 23:22:32	\N	completado
+210	794	277	2026-01-23 19:35:53	\N	cancelado
 196	779	277	2026-01-20 00:02:32	\N	completado
 197	780	277	2026-01-20 00:32:52	\N	completado
 198	781	277	2026-01-20 00:46:55	\N	cancelado
+211	796	277	2026-01-23 21:56:21	\N	cancelado
 199	782	277	2026-01-20 00:51:39	\N	completado
 200	783	277	2026-01-20 01:03:50	\N	completado
 201	784	277	2026-01-20 01:19:07	\N	completado
@@ -4615,7 +4680,7 @@ COPY public.asignaciones_conductor (id, solicitud_id, conductor_id, asignado_en,
 
 
 --
--- TOC entry 6085 (class 0 OID 16518)
+-- TOC entry 6099 (class 0 OID 16518)
 -- Dependencies: 218
 -- Data for Name: cache_direcciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4625,7 +4690,7 @@ COPY public.cache_direcciones (id, latitud_origen, longitud_origen, latitud_dest
 
 
 --
--- TOC entry 6086 (class 0 OID 16525)
+-- TOC entry 6100 (class 0 OID 16525)
 -- Dependencies: 219
 -- Data for Name: cache_geocodificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4635,7 +4700,7 @@ COPY public.cache_geocodificacion (id, latitud, longitud, direccion_formateada, 
 
 
 --
--- TOC entry 6087 (class 0 OID 16533)
+-- TOC entry 6101 (class 0 OID 16533)
 -- Dependencies: 220
 -- Data for Name: calificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4727,21 +4792,22 @@ COPY public.calificaciones (id, solicitud_id, usuario_calificador_id, usuario_ca
 
 
 --
--- TOC entry 6163 (class 0 OID 115555)
+-- TOC entry 6177 (class 0 OID 115555)
 -- Dependencies: 300
 -- Data for Name: catalogo_tipos_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.catalogo_tipos_vehiculo (id, codigo, nombre, descripcion, icono, orden, activo, creado_en) FROM stdin;
 1	moto	Moto	Motocicletas para transporte rápido	two_wheeler	1	t	2026-01-11 01:02:14.525081
-2	auto	Auto	Automóviles sedan y similares	directions_car	2	t	2026-01-11 01:02:14.525081
-3	motocarro	Motocarro	Motocarros de carga y pasajeros	electric_rickshaw	3	t	2026-01-11 01:02:14.525081
-4	taxi	Taxi	Taxis tradicionales amarillos	local_taxi	4	t	2026-01-12 01:44:51.005649
+3	motocarro	Motocarro	Motocarros de carga y pasajeros	electric_rickshaw	2	t	2026-01-11 01:02:14.525081
+4	taxi	Taxi	Taxis tradicionales amarillos	local_taxi	3	t	2026-01-12 01:44:51.005649
+6	carro	Carro	AutomÃ³viles particulares	directions_car	4	t	2026-01-21 22:20:31.899464
+2	auto	Auto	Automóviles sedan y similares	directions_car	2	f	2026-01-11 01:02:14.525081
 \.
 
 
 --
--- TOC entry 6171 (class 0 OID 115673)
+-- TOC entry 6185 (class 0 OID 115673)
 -- Dependencies: 310
 -- Data for Name: categorias_soporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4759,7 +4825,7 @@ COPY public.categorias_soporte (id, codigo, nombre, descripcion, icono, color, o
 
 
 --
--- TOC entry 6138 (class 0 OID 33658)
+-- TOC entry 6152 (class 0 OID 33658)
 -- Dependencies: 273
 -- Data for Name: colores_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4795,7 +4861,7 @@ COPY public.colores_vehiculo (id, nombre, hex_code, activo) FROM stdin;
 
 
 --
--- TOC entry 6123 (class 0 OID 17166)
+-- TOC entry 6137 (class 0 OID 17166)
 -- Dependencies: 257
 -- Data for Name: conductores_favoritos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4805,7 +4871,7 @@ COPY public.conductores_favoritos (id, usuario_id, conductor_id, es_favorito, fe
 
 
 --
--- TOC entry 6149 (class 0 OID 91011)
+-- TOC entry 6163 (class 0 OID 91011)
 -- Dependencies: 284
 -- Data for Name: configuracion_notificaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4818,24 +4884,24 @@ COPY public.configuracion_notificaciones_usuario (id, usuario_id, push_enabled, 
 
 
 --
--- TOC entry 6089 (class 0 OID 16555)
+-- TOC entry 6103 (class 0 OID 16555)
 -- Dependencies: 222
 -- Data for Name: configuracion_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.configuracion_precios (id, tipo_vehiculo, tarifa_base, costo_por_km, costo_por_minuto, tarifa_minima, tarifa_maxima, recargo_hora_pico, recargo_nocturno, recargo_festivo, descuento_distancia_larga, umbral_km_descuento, hora_pico_inicio_manana, hora_pico_fin_manana, hora_pico_inicio_tarde, hora_pico_fin_tarde, hora_nocturna_inicio, hora_nocturna_fin, comision_plataforma, comision_metodo_pago, distancia_minima, distancia_maxima, tiempo_espera_gratis, costo_tiempo_espera, activo, fecha_creacion, fecha_actualizacion, notas, empresa_id) FROM stdin;
 5	moto	4000.00	2000.00	250.00	6000.00	\N	15.00	20.00	25.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2025-10-26 18:40:23	2025-12-29 16:30:09	Configuraci├│n inicial para servicio de moto - Octubre 2025 | Comisiones establecidas a 0 - Dic 2025	\N
-7	auto	6000.00	3000.00	400.00	9000.00	\N	20.00	25.00	30.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2025-12-04 17:39:01	2025-12-29 16:30:09	Configuracion para servicio de auto - Diciembre 2025 | Comisiones establecidas a 0 - Dic 2025	\N
 8	motocarro	5500.00	2500.00	350.00	8000.00	\N	18.00	22.00	28.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2025-12-04 17:39:01	2025-12-29 16:30:09	Configuracion para servicio de motocarro - Diciembre 2025 | Comisiones establecidas a 0 - Dic 2025	\N
 11	motocarro	5500.00	2500.00	350.00	8000.00	\N	18.00	22.00	28.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:24	2026-01-11 01:04:24	\N	1
 13	taxi	7000.00	3200.00	450.00	10000.00	\N	22.00	28.00	35.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	2.50	0.50	100.00	3	500.00	1	2026-01-12 01:46:28	2026-01-12 01:46:28	Configuración global para taxi - Enero 2026	\N
-10	auto	7000.00	3000.00	400.00	9000.00	\N	20.00	25.00	30.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:23	2026-01-13 15:58:26	\N	1
 9	moto	4000.00	2000.00	250.00	6000.00	\N	15.00	20.00	25.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	20.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:22	2026-01-21 03:37:20	\N	1
+7	carro	6000.00	3000.00	400.00	9000.00	\N	20.00	25.00	30.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2025-12-04 17:39:01	2025-12-29 16:30:09	Configuracion para servicio de auto - Diciembre 2025 | Comisiones establecidas a 0 - Dic 2025	\N
+10	carro	7000.00	3000.00	400.00	9000.00	\N	20.00	25.00	30.00	10.00	15.00	07:00:00	09:00:00	17:00:00	19:00:00	22:00:00	06:00:00	0.00	0.00	1.00	50.00	3	500.00	1	2026-01-11 01:04:23	2026-01-13 15:58:26	\N	1
 \.
 
 
 --
--- TOC entry 6088 (class 0 OID 16543)
+-- TOC entry 6102 (class 0 OID 16543)
 -- Dependencies: 221
 -- Data for Name: configuraciones_app; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4853,7 +4919,7 @@ COPY public.configuraciones_app (id, clave, valor, tipo, categoria, descripcion,
 
 
 --
--- TOC entry 6090 (class 0 OID 16588)
+-- TOC entry 6104 (class 0 OID 16588)
 -- Dependencies: 223
 -- Data for Name: detalles_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4872,13 +4938,13 @@ COPY public.detalles_conductor (id, usuario_id, licencia_conduccion, licencia_ve
 8	226	53566265	2028-01-01	2023-01-01	A2	documents/226/licencia_conduccion_1767315114.pdf	moto	KRJRJJR	NRNEBEN	53626	Blanco	JDJDJJDJ	\N	\N	\N	\N	nfnfnen	2026-04-30	documents/226/soat_1767315115.pdf	3562626	2026-04-30	documents/226/tecnomecanica_1767315117.jpg	62626	documents/226/tarjeta_propiedad_1767315118.jpg	0	pendiente	0.00	0	2026-01-02 00:51:53	2026-01-02 00:51:54	0	\N	\N	\N	0	en_revision	\N	2026-01-02 00:51:53	0.00	verificado	\N	pdf	pdf	imagen	imagen	imagen	\N	\N	\N
 9	229	232323	2028-01-01	2023-01-01	A2	documents/229/licencia_conduccion_1767317141.pdf	moto	JDNDJDJ	JEJEJ	32616	Blanco	EYHEJ	\N	\N	\N	\N	rkejje	2026-04-30	documents/229/soat_1767317142.pdf	61313313	2026-04-30	documents/229/tecnomecanica_1767317143.jpg	616166	documents/229/tarjeta_propiedad_1767317144.jpg	0	pendiente	0.00	0	2026-01-02 01:23:41	2026-01-02 01:25:41	0	\N	\N	\N	0	en_revision	\N	2026-01-02 01:23:41	0.00	verificado	\N	pdf	pdf	imagen	imagen	imagen	[-0.014154002112392908,0.13878557807251007,0.12114906065178616,-1.146990277783971e-5,-0.054372059889417734,-0.013036560998471112,-0.11013189809041396,-0.1014506580735102,0.07814676290138686,-0.002921558368388029,0.04397632357149718,0.1202801459940315,-0.023838811498149082,-0.004304123267855671,0.0538689684431653,0.11115673082325653,-0.11753100568113661,-0.1620427367571341,0.02234129779282041,-0.066358406774732,0.14228772674049273,-0.12454962943787325,-0.0226294126159212,-0.0507257865558256,-0.0911665647386725,-0.0807119262039186,0.07945817691991651,-0.06016276405632172,0.07010724266658351,0.04096924720038901,-0.025922368194851116,0.14024559601537,0.03432638518065596,-0.12111177655471067,-0.08585651856874754,-0.05634162909596229,0.06927655848862112,-0.06355789969097984,-0.030394639481324783,-0.003883191658608394,-0.09004121140799613,-0.05224167577908491,0.02684574305852709,-0.11290631458427863,0.12234198113303144,0.0852292604285185,0.022974942213156477,0.14979784693354828,0.06506674034130248,0.051627472939707576,0.019029196289090368,-0.017944179190202973,0.028176926479320342,-0.03448965553003597,0.04444089911253181,0.19956713592882172,0.11826681009228297,-0.050305523508501274,0.06761396821122669,0.009258874904252066,0.029500763888709522,0.12281578294278153,0.16727562009763963,-0.05960962898719803,-0.02498015283364656,0.058762606348458035,0.015439811134451146,0.04639800841122785,-0.037591575211750605,0.18532031855766185,0.1344080793555887,0.11172573095942416,-0.1355311370340216,0.07535012438960854,0.19921570150497608,-0.07757804047940987,-0.014861887095180274,-0.09368833708245838,0.0667365103786024,0.057313224450412474,0.04929075959501025,0.13855167393121337,0.047939285905550306,-0.0952215247881514,-0.07957156387404823,0.012390171601571775,-0.09964943839628171,-0.010635870550328856,0.09633694681793989,-0.17390790455206337,-0.07722386202991238,-0.026738346839337547,-0.10493305044415124,-0.11638189870592391,-0.08178835599876377,-0.03976030988442432,0.033122981717242185,-0.06676403027227515,-0.029236296913857058,-0.11362446748779187,0.0023708727220440456,-0.11387948176984813,0.03252542976399429,0.019093520339560785,-0.09579135838829962,-0.012589325071290661,0.004548893415308443,-0.08372866912045895,-0.038374750095038726,0.08324006369510117,0.03623051497641402,-0.02774878472840918,-0.1276136849197387,-0.1418081652297384,-0.23125737598261834,-0.04503818924431019,-0.05452415713961614,-0.07455634778050231,0.12324856761701292,0.1363750403623348,-0.1119920826543786,-0.23438195738689524,0.06467523027016267,-0.11974010671481908,0.1956615149342431,0.09687336589529508,-0.052035024780524755,0.16280484545114518]	2026-01-02 01:25:47.515255	\N
 7	6	6532626	2028-01-01	2023-01-01	A2	documents/6/licencia_conduccion_1767300416.jpg	moto	FLLRLRL	KRKRKKR	236262	Beige	KGKRKRK	\N	\N	\N	\N	kriirir	2026-04-30	documents/6/soat_1767300418.jpg	656262662	2026-04-30	documents/6/tecnomecanica_1767300419.jpg	6262323233	documents/6/tarjeta_propiedad_1767300421.jpg	0	pendiente	0.00	0	2026-01-01 20:46:56	2026-01-01 20:46:56	0	\N	\N	\N	0	en_revision	\N	2026-01-01 20:46:56	0.00	verificado	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
+20	277	65564646	2028-01-01	2023-01-01	A2	documents/277/licencia_conduccion_1768322945.jpg	moto	FERRARI	VOLCAN11	2020	Negro	HDDHDU	\N	\N	\N	\N	jddjdjjjdd	2026-02-28	documents/277/soat_1768322946.jpg	34343	2026-04-30	documents/277/tecnomecanica_1768322947.jpg	65656645	documents/277/tarjeta_propiedad_1768322948.jpg	1	aprobado	4.88	17	2026-01-13 16:49:03	2026-01-14 22:43:48	0	6.25461830	-75.53955670	2026-01-24 00:25:50	38	aprobado	2026-01-13 20:48:12	2026-01-13 16:49:03	262296.76	verificado	vehicle/277_1768322944.jpg	imagen	imagen	imagen	imagen	imagen	[-0.02198266636817153,0.08118854439106869,-0.15134703669439734,0.09400863493486929,0.1430922866040471,-0.10769984928838956,0.2532615964559309,0.006454133603568187,-0.05963281054568396,0.13033529184109824,-0.17059385697477214,0.06258115683244449,0.08843000849485341,-0.11286166062853885,-0.036042190552170214,0.0680902380865547,0.1418954508464828,-0.2848853932835627,0.02634503142717344,0.005799642140664835,-0.21373742784493227,0.08952500597659185,-0.11642419018415336,0.12341300721318425,-0.09209776228555473,-0.03765305889052175,0.05925028409029159,-0.06778579451920462,0.048158269483613896,0.21234609527139595,0.07432419112437506,-0.2039775785132934,-0.07930836186899588,0.020992036370863484,-0.189597679522125,0.0012616195733990622,-0.023259334000801213,0.11694855907245466,-0.0259067181524517,0.13862078691093224,-0.031996498059407165,-0.06669367722882429,-0.0016231349902908476,0.07802691621336023,-0.01372937506200167,0.07614873907582027,0.13698042507703842,-0.04385676549284473,-0.053166980385005475,-0.005149956177844757,0.09581979880441256,0.006075493966404885,0.0037821960084418733,-0.011259255508114328,0.10520638600354398,-0.002433192710948574,0.16282834554971806,0.1037574027680318,0.03657130801175542,-0.09557571140238613,0.05273103206439499,-0.057142851557288155,0.014307818102591595,-0.08320638014218074,-0.11029828080862612,-0.03715329376239424,-0.015733164308572297,-0.08368091203928407,-0.21390279469749685,-0.06417938504525808,0.15593142553135128,0.007901315127039888,-0.03800845692093727,-0.07230604943459125,-0.08796046913574523,-0.1395405476348696,-0.042387122202096,0.25308718355428084,0.04975147712622939,-0.049625096157900055,0.1148979410668221,-0.1912101297237323,0.0680880957953568,-0.11344283242605735,-0.09798674684274307,0.087694557148006,0.03295511715289056,0.10691257025978183,-0.03023187205037363,-0.10937847257553378,0.08657365466263062,-0.022097298178281065,-0.1074216279247453,-0.03381857096788278,-0.16069527092085048,-0.10107678517480197,0.050611557571712186,-0.16542083931461846,-0.0619488319589121,-0.1106126829452438,0.08064075848079333,-0.12055090824880972,0.07026001902275412,-0.016932005187664655,0.041943836740266,0.10456002613193556,-0.14573089007921075,0.05419790901820698,0.09838042421943566,-0.035019862654241,-0.04860770383498092,0.02063709826372452,-0.03039991268754351,-0.15674899905998005,0.12498571759874642,-0.16184763432026728,-0.022354009029222337,0.0640674753787169,0.08229415538281465,-0.17525525283276536,0.05721913680611791,-0.021397909529529607,0.015339747494722708,-0.02704050795590391,0.14542137270446553,-0.024735401880913235,0.03998275079670499,0.023739270407349033]	2026-01-13 16:49:11.177031	\N
 14	234	65662	2028-01-01	2023-01-01	A2	documents/234/licencia_conduccion_1767488583.pdf	moto	JJDJ	FUURUR	2020	Blanco	FKFKJF	\N	\N	\N	\N	kfkfjrj	2026-04-30	documents/234/soat_1767488584.jpg	6562626	2026-04-30	documents/234/tecnomecanica_1767488585.pdf	9592962	documents/234/tarjeta_propiedad_1767488587.jpg	0	pendiente	0.00	0	2026-01-04 01:03:02	2026-01-04 01:03:03	0	\N	\N	\N	0	en_revision	\N	2026-01-04 01:03:02	0.00	verificado	vehicle/234_1767488582.jpg	imagen	imagen	imagen	imagen	imagen	[-0.010752628735122394,0.15488318885208852,0.12000132646194646,-0.1541489917068979,0.012290385649119445,0.06581765036081777,0.06734024045391067,0.11187677238341186,-0.023095687405169534,0.021458730628447286,0.014518646640446676,-0.0689775510270663,0.039816248855482926,-0.1382205949103448,0.08320348542747635,0.20616374353169215,0.19024795233527977,-0.12454548632447093,0.05753429284301325,-0.022261071835100104,0.09002614269001424,0.08591056214375754,0.1132650660233544,-0.23939162477171794,-0.17902758026035295,-0.13675851297945843,-0.16002647636740053,-0.0009019594182845044,-0.011236596741708056,-0.10004266603938905,0.07706936494764652,0.050480393341653496,-0.24407750660459746,0.14587236085857266,0.05390410703615988,-0.0008463250557250599,0.07567586592133771,0.015799670048255263,-0.006871713039388813,-0.02132325175166923,0.09256697893930971,0.10336525431726012,0.24703204764394648,-0.08441260170989803,0.08803500151966902,-0.2293186216161991,-0.08521324956454211,0.01913540766864935,0.11163259083407423,-0.17417540937631049,0.09861592715052854,0.0012624237785443598,-0.05494552366767241,-0.047289521210046224,-0.2140169384238942,0.044565860217745557,0.09144577888325096,0.014843763764854905,0.09643905191551376,-0.06971387916527595,-0.09236423860689691,-0.08881819171211947,0.09072951076077476,-0.05750539996258139,-0.07569212627007842,-0.06440841476177707,-0.04077628397736643,0.1338243476231618,0.1618111871117266,0.11376200258178636,-0.07193379189002942,0.08048776477939903,0.11229504007746471,0.09450725330421866,0.08162173380815409,-0.049245246690005795,-0.06873240857631294,-0.11637715196586339,0.017222843142399306,0.12846111050895623,-0.06072316778098862,0.2118842465524906,0.0048911776922060625,0.03023800462676264,-0.1603147726880508,0.08825272643090648,0.08935204806579672,-0.02424256437147777,-0.04336588618327283,-0.06345377164567802,0.1220206071937414,0.15954404984362516,-0.12950224819141756,-0.15651577810084016,-0.03860828488534778,-0.05068644420960984,0.18530336740945644,-0.029496889148479963,-0.10600129906781047,0.0934906660849974,-0.06768721797304966,-0.08365398070554139,0.04024409336375002,-0.024651212041868223,0.04441516436859095,-0.06776592257113451,-0.02657164832436994,0.06339209501293518,0.05923278759438079,0.03549253574821185,-0.2203772707421522,0.16992678794023636,0.17277463898025786,-0.15008898800766932,-0.0076040483928646666,0.11762976321542934,-0.10905352462691387,-0.016676136197457232,0.08317988539213392,-0.09382503832609215,0.07715025052297264,0.11820463016828736,0.1488858603516749,-0.021124320120935496,0.21910865773687005,0.005991704334232829,0.22772134604063457,0.05900803721726691]	2026-01-04 01:03:09.649303	\N
 13	233	65659	2028-01-01	2023-01-01	A2	documents/233/licencia_conduccion_1767323815.jpg	moto	JEJNFND	FJJDJE	65656	Blanco	JRNNFJF	\N	\N	\N	\N	irkfkf	2026-04-30	documents/233/soat_1767323816.pdf	6565626	2026-04-30	documents/233/tecnomecanica_1767323817.jpg	266262	documents/233/tarjeta_propiedad_1767323818.jpg	0	pendiente	0.00	0	2026-01-02 03:16:54	2026-01-02 03:16:55	0	\N	\N	\N	0	en_revision	\N	2026-01-02 03:16:54	0.00	verificado	vehicle/233_1767323814.jpg	imagen	imagen	imagen	imagen	imagen	[-0.016588675080919168,0.09923995161211742,0.006923094478129281,-0.024923124336983973,-0.02865273047264208,0.05942041385706173,0.04018104807054203,-0.12279943814767952,0.08126736576989552,-0.1237890774737831,-0.04234394464357635,-0.12166788703317231,-0.2058046347560615,-0.06375418920070157,0.07366458175537548,0.043642478435247135,-0.13718626658526373,0.08963245986562955,-0.18595888261977467,-0.08034406375369174,-0.08318878356382962,0.029595944654660308,0.02345417316370224,0.023584036252565495,-0.013961658976299036,-0.015344483976620808,-0.08084464659085736,0.037811465040469026,-0.10746763372863632,0.021339489314782495,0.006658469391720313,-0.21441786170809507,-0.023148448700789807,-0.018293756024907765,0.05141554689172401,0.07965796871860295,0.05661881349317743,0.14771496441204837,0.18364583635406365,0.08355597435998617,0.18110055125843638,-0.03434896881513844,0.1060073753080268,0.040827513496615446,-0.10387279744793232,0.08154996341141227,0.09933284321444219,-0.06565783906835351,0.19064664158258723,-0.03382026697765294,-0.047826319050463494,-0.09157188440935532,0.14368191562598406,0.01260588113761804,0.13888148207021192,0.01097230030032956,0.011552515619975116,0.01866943399166373,0.18563349382038588,-0.12220910230771609,0.09880038772065666,-0.09514976172467585,0.16816028603520713,0.0715255922434442,0.05819647046783588,0.13060486122894155,0.08848916116029815,0.1617945995776548,-0.06562780938981548,0.0023590439002961223,0.023276775963036202,-0.016068896774387782,0.11697483175987347,-0.10616954816805634,-0.0445647030070867,0.13485820769912427,0.0008394709131292126,-0.011223664412005015,-0.15491639886933095,-0.009013633651131501,0.00541838784572613,-0.10205932492093105,0.09046345620460894,-0.0028727623690147346,0.0789018784825456,-0.07537138979795154,0.03863346404000415,-0.13101330626223057,0.1197373926993302,-0.02830062791123887,0.028309616656422773,0.12727520256808897,-0.05029156118827051,0.007549923333345267,0.044378520298070316,-0.12690059470848347,-0.15193923016321786,-0.06714268122952279,0.005541955698090688,0.018092957292315484,-0.06837539202196831,-0.02635420433017953,0.18457176218102603,0.010363208220432768,0.10093053137579958,0.01897967131981071,0.04751187993296957,0.0073877149798510485,0.06528550048379238,0.04003684775645072,-0.03857386436946783,-0.09101918954348162,-0.09661958111195686,-0.08627776630548971,0.06797119472539286,0.0531448113505849,0.10999899579889849,0.06945624046101936,0.05345324144443064,0.019885060841251318,0.004135301488281082,0.0711052793564994,0.033212499946152836,0.04881556614135138,0.05204736546713571,0.15132805672205582,-0.13202258077700899,0.031028638263126018]	2026-01-02 03:17:01.298993	\N
 12	232	265656	2028-01-01	2023-01-01	A2	documents/232/licencia_conduccion_1767323347.jpg	moto	RNFNDN	RKFIKD	65653	Blanco	UBDJD	\N	\N	\N	\N	ridkd	2026-04-30	documents/232/soat_1767323349.jpg	326656	2026-04-30	documents/232/tecnomecanica_1767323350.pdf	326262	documents/232/tarjeta_propiedad_1767323352.jpg	0	rechazado	0.00	0	2026-01-02 03:09:07	2026-01-02 23:17:35	0	\N	\N	\N	0	rechazado	2026-01-02 23:17:35	2026-01-02 03:09:07	0.00	verificado	\N	imagen	imagen	imagen	imagen	imagen	[0.11805780160971013,-0.11389751637974244,-0.1044039933593143,0.28917767459859545,0.1740117541591018,0.07487427447443243,0.09034230440225577,0.019367138162584487,0.022349326004863213,-0.14355770939353543,-0.07124092671557922,0.1298399750742221,0.15327411164080737,0.044523055263113835,-0.08451649224656814,0.055699307199017105,0.04693858916751194,0.14866937069758454,-0.05883511968587584,-0.0007197192044541553,0.05419567364916024,-0.09766679532074396,0.040293565404195604,0.10424029222553935,0.09385161418008041,-0.12216269143337782,0.002480915507053486,0.1465426405362474,-0.10347640131430419,-0.18838323306414495,-0.17772685194259227,0.0486252388778347,0.027270297204250244,0.13061262276318805,0.005670535057284979,0.05109929113028742,0.0369328417303429,-0.02597028922927877,-0.05544025536347938,-0.055878272584521084,-0.13322546109554154,0.06773462699130947,0.028541407407487025,0.08034668442171557,-0.16173404762589763,0.05585554999926581,-0.023672737795324764,-0.035687567462664764,-0.05966846555622138,0.20949875528571052,0.11313141770718052,0.06750878256307695,-0.10414899593793042,0.05122986751648239,0.04231323118302919,0.026664598942706265,0.02032272954534209,-0.08725699022244643,0.02633888739270489,0.02274595942783325,0.04035714805717886,0.16288361873788396,0.007825190266329059,-0.028134642194193156,-0.025106884020261955,0.07786785321648783,0.038090994536746886,0.11962747760218631,-0.08728441737730891,0.014742570456485433,0.00412469775069923,-0.17159359226105803,-0.01839990036214424,0.027208728055063903,0.12678638013779103,-0.06451763403726712,0.018767090270462642,0.09836804795477722,0.04970246587489202,-0.06256230331139406,-0.01118226819162722,-0.05895691704893361,-0.06809661412590139,-0.0016570710570436567,0.10269086176237552,0.2523106952828272,-0.0591826379206045,0.03667821225674368,-0.1800917934626397,0.05822425940795406,0.07134996108582899,-0.08964698109472252,0.050001316154393384,0.0822911469790118,-0.015059063053316746,0.13885156436181126,0.13543871424515277,0.02849644603955445,0.003909004721517207,0.1084640459945919,-0.051037495167388716,-0.2579686593909661,0.04232053168947633,-0.0016818412171365777,0.04242884151529865,-0.1648895653250417,0.014208121330235588,-0.1620920331055747,-0.044972658108470884,-0.061757852203220165,-0.11901379812876896,-0.06451511271887804,0.1808006420627034,-0.04658579311771391,0.08937246760953035,0.0787701395617885,-0.05433227043901952,0.005554848459876812,-0.08952445506772458,-0.09432149014354096,-0.07221122922712474,0.11834152823860129,-0.09140184339298843,-0.1560457291462889,0.006237804158945968,-0.1962086456725296,0.04317948054184414,-0.04583888469392261]	2026-01-02 03:09:14.561879	\N
 18	5	PENDIENTE	2030-01-01	\N	C1	\N	auto	\N	\N	\N	\N	PENDIENTE	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	0.00	0	2026-01-04 17:45:27	2026-01-04 17:45:27	0	\N	\N	\N	0	rechazado	2026-01-04 17:45:27	2026-01-04 17:45:27	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	w
 19	11	PENDIENTE	2030-01-01	\N	C1	\N	auto	\N	\N	\N	\N	PENDIENTE	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	0.00	0	2026-01-04 17:56:32	2026-01-04 17:56:32	0	\N	\N	\N	0	aprobado	2026-01-04 17:56:32	2026-01-04 17:56:32	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 15	235	265665	2028-01-01	2023-01-01	A2	documents/235/licencia_conduccion_1767495096.pdf	moto	JDJDJ	EHEJ	2020	Blanco	GDHHDH	\N	\N	\N	\N	rufjjf	2026-04-30	documents/235/soat_1767495097.jpg	6562632	2026-04-30	documents/235/tecnomecanica_1767495099.jpg	65656	documents/235/tarjeta_propiedad_1767495100.jpg	0	pendiente	0.00	0	2026-01-04 02:51:35	2026-01-04 17:58:56	0	\N	\N	\N	0	aprobado	2026-01-04 17:58:56	2026-01-04 02:51:35	0.00	verificado	vehicle/235_1767495094.jpg	imagen	imagen	imagen	imagen	imagen	[0.10712268379144835,-0.12813128744547242,-0.1515694798710023,0.0560848253925513,-0.20460121647040852,-0.05154047135669626,-0.10681627429275908,-0.15839945694042837,-0.058944630261466874,-0.21564334582921224,-0.03693879524274278,-0.04891054600053267,0.06076358100077905,0.04163567861208249,0.21697704287013253,0.12848009426358237,-0.055685114392792945,-0.04315841591409123,0.12025309392345612,0.08677381497925689,0.011072914643354836,-0.06817737434900413,0.12411886710280495,-0.043760914147058114,-0.04549563624148264,0.06457622728080133,-0.10393121791309326,-0.014582509106188642,0.08579349028413367,-0.06335843255941782,0.17769395137244448,-0.05906646945875141,-0.08695530941226746,-0.18515236549084568,-0.039873317369713196,0.0723447011486767,-0.0012275221352925803,-0.0980514942927531,0.07067345192956287,0.036808951648656385,-0.14134235798967806,-0.15859591490126682,0.03551941868534899,0.13635107710988567,-0.07681660491229816,-0.0013386531152784242,-0.0073200586661886745,0.009771078186152533,0.045701364263334626,0.1261268566910709,-0.02060283343781147,0.010382517693263517,0.2349803740938218,-0.09033730051473338,-0.08027273003836186,0.16497791076995824,0.05899405941156724,-0.0082357924576219,0.0021705907951377374,0.10653040504048286,-0.04460227021504559,0.005993277353304076,0.17303090749452163,0.0008412234787578745,0.11985685664263279,0.06258320641719227,-0.09519732792427764,-0.06505177159863616,0.009620695192118889,0.10616518268397963,-0.13203818830635966,0.14929188350760822,-0.0478686185130802,0.05214075383002127,-0.11592631308076085,-0.05877511896381715,0.1013777530881975,0.05680464627936635,0.061367719602792886,0.13858586209919588,0.051004907562212966,0.034555634215054254,0.07693931418301657,0.030668355192639954,0.04007018406531962,0.1179461446027841,-0.06786603680805497,-0.035370134871729894,-0.13661223958866084,0.06111465918747821,-0.321291802586909,0.09061192748143608,-0.16496344741950203,0.04032612701563909,0.13180152194034886,-0.001472068482878503,0.03907458658164641,0.1301175359410745,0.08703214268945472,-0.09771973024535131,-0.12405765572408048,0.07476951133643983,-0.044019540463488604,-0.015126171610006964,-0.032862258296019124,0.12992175482653504,0.0972521911061727,-0.18897128273725775,-0.13058459040201595,0.11304442583581585,0.010691078283745478,0.017695127025521586,-0.05690824169126096,-0.06537582745498416,0.08608468137750808,0.0032174662659955645,-0.04541626095712019,0.0372435717796494,-0.0061304010952890065,-0.13603309334173047,0.09221728509815805,0.09662355395814401,-0.07613932141181701,0.22132366263771389,0.055613727671965096,0.12885183560480906,0.003762468044567579,-0.1791516646250979]	2026-01-04 02:51:42.974727	\N
-20	277	65564646	2028-01-01	2023-01-01	A2	documents/277/licencia_conduccion_1768322945.jpg	moto	FERRARI	VOLCAN11	2020	Negro	HDDHDU	\N	\N	\N	\N	jddjdjjjdd	2026-02-28	documents/277/soat_1768322946.jpg	34343	2026-04-30	documents/277/tecnomecanica_1768322947.jpg	65656645	documents/277/tarjeta_propiedad_1768322948.jpg	1	aprobado	4.88	17	2026-01-13 16:49:03	2026-01-14 22:43:48	0	6.25373000	-75.53883670	2026-01-21 19:47:48	38	aprobado	2026-01-13 20:48:12	2026-01-13 16:49:03	262296.76	verificado	vehicle/277_1768322944.jpg	imagen	imagen	imagen	imagen	imagen	[-0.02198266636817153,0.08118854439106869,-0.15134703669439734,0.09400863493486929,0.1430922866040471,-0.10769984928838956,0.2532615964559309,0.006454133603568187,-0.05963281054568396,0.13033529184109824,-0.17059385697477214,0.06258115683244449,0.08843000849485341,-0.11286166062853885,-0.036042190552170214,0.0680902380865547,0.1418954508464828,-0.2848853932835627,0.02634503142717344,0.005799642140664835,-0.21373742784493227,0.08952500597659185,-0.11642419018415336,0.12341300721318425,-0.09209776228555473,-0.03765305889052175,0.05925028409029159,-0.06778579451920462,0.048158269483613896,0.21234609527139595,0.07432419112437506,-0.2039775785132934,-0.07930836186899588,0.020992036370863484,-0.189597679522125,0.0012616195733990622,-0.023259334000801213,0.11694855907245466,-0.0259067181524517,0.13862078691093224,-0.031996498059407165,-0.06669367722882429,-0.0016231349902908476,0.07802691621336023,-0.01372937506200167,0.07614873907582027,0.13698042507703842,-0.04385676549284473,-0.053166980385005475,-0.005149956177844757,0.09581979880441256,0.006075493966404885,0.0037821960084418733,-0.011259255508114328,0.10520638600354398,-0.002433192710948574,0.16282834554971806,0.1037574027680318,0.03657130801175542,-0.09557571140238613,0.05273103206439499,-0.057142851557288155,0.014307818102591595,-0.08320638014218074,-0.11029828080862612,-0.03715329376239424,-0.015733164308572297,-0.08368091203928407,-0.21390279469749685,-0.06417938504525808,0.15593142553135128,0.007901315127039888,-0.03800845692093727,-0.07230604943459125,-0.08796046913574523,-0.1395405476348696,-0.042387122202096,0.25308718355428084,0.04975147712622939,-0.049625096157900055,0.1148979410668221,-0.1912101297237323,0.0680880957953568,-0.11344283242605735,-0.09798674684274307,0.087694557148006,0.03295511715289056,0.10691257025978183,-0.03023187205037363,-0.10937847257553378,0.08657365466263062,-0.022097298178281065,-0.1074216279247453,-0.03381857096788278,-0.16069527092085048,-0.10107678517480197,0.050611557571712186,-0.16542083931461846,-0.0619488319589121,-0.1106126829452438,0.08064075848079333,-0.12055090824880972,0.07026001902275412,-0.016932005187664655,0.041943836740266,0.10456002613193556,-0.14573089007921075,0.05419790901820698,0.09838042421943566,-0.035019862654241,-0.04860770383498092,0.02063709826372452,-0.03039991268754351,-0.15674899905998005,0.12498571759874642,-0.16184763432026728,-0.022354009029222337,0.0640674753787169,0.08229415538281465,-0.17525525283276536,0.05721913680611791,-0.021397909529529607,0.015339747494722708,-0.02704050795590391,0.14542137270446553,-0.024735401880913235,0.03998275079670499,0.023739270407349033]	2026-01-13 16:49:11.177031	\N
 32	295	LIC10002	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC102	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 33	296	LIC10003	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC103	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
 34	297	LIC10004	2030-01-01	\N	C1	\N	moto	Honda	CBR	2022	Negro	ABC104	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	0	pendiente	4.50	0	2026-01-14 02:33:10	\N	1	6.25180000	-75.56360000	\N	0	aprobado	\N	2026-01-14 02:33:10	0.00	pendiente	\N	imagen	imagen	imagen	imagen	imagen	\N	\N	\N
@@ -4888,7 +4954,7 @@ COPY public.detalles_conductor (id, usuario_id, licencia_conduccion, licencia_ve
 
 
 --
--- TOC entry 6091 (class 0 OID 16627)
+-- TOC entry 6105 (class 0 OID 16627)
 -- Dependencies: 224
 -- Data for Name: detalles_paquete; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4898,7 +4964,7 @@ COPY public.detalles_paquete (id, solicitud_id, tipo_paquete, descripcion_paquet
 
 
 --
--- TOC entry 6092 (class 0 OID 16643)
+-- TOC entry 6106 (class 0 OID 16643)
 -- Dependencies: 225
 -- Data for Name: detalles_viaje; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4908,7 +4974,7 @@ COPY public.detalles_viaje (id, solicitud_id, numero_pasajeros, opciones_viaje, 
 
 
 --
--- TOC entry 6129 (class 0 OID 17282)
+-- TOC entry 6143 (class 0 OID 17282)
 -- Dependencies: 264
 -- Data for Name: disputas_pago; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4921,7 +4987,7 @@ COPY public.disputas_pago (id, solicitud_id, cliente_id, conductor_id, cliente_c
 
 
 --
--- TOC entry 6093 (class 0 OID 16653)
+-- TOC entry 6107 (class 0 OID 16653)
 -- Dependencies: 226
 -- Data for Name: documentos_conductor_historial; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4935,7 +5001,7 @@ COPY public.documentos_conductor_historial (id, conductor_id, tipo_documento, ur
 
 
 --
--- TOC entry 6136 (class 0 OID 33640)
+-- TOC entry 6150 (class 0 OID 33640)
 -- Dependencies: 271
 -- Data for Name: documentos_verificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5004,43 +5070,47 @@ COPY public.documentos_verificacion (id, conductor_id, tipo_documento, ruta_arch
 
 
 --
--- TOC entry 6165 (class 0 OID 115569)
+-- TOC entry 6179 (class 0 OID 115569)
 -- Dependencies: 302
 -- Data for Name: empresa_tipos_vehiculo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.empresa_tipos_vehiculo (id, empresa_id, tipo_vehiculo_codigo, activo, fecha_activacion, fecha_desactivacion, activado_por, desactivado_por, motivo_desactivacion, conductores_activos, viajes_completados, creado_en, actualizado_en) FROM stdin;
 4	11	moto	t	2026-01-11 01:07:31.381959	\N	\N	\N	\N	0	0	2026-01-11 01:07:31.381959	2026-01-11 01:07:31.381959
-5	11	auto	t	2026-01-11 01:07:31.390262	\N	\N	\N	\N	0	0	2026-01-11 01:07:31.390262	2026-01-11 01:07:31.390262
 6	11	motocarro	t	2026-01-11 01:07:31.391075	\N	\N	\N	\N	0	0	2026-01-11 01:07:31.391075	2026-01-11 01:07:31.391075
 1	1	moto	t	2026-01-11 01:04:21.845836	\N	\N	\N	\N	0	0	2026-01-11 01:04:21.845836	2026-01-11 01:08:16.535609
-2	1	auto	t	2026-01-11 01:04:22.746251	\N	\N	\N	\N	0	0	2026-01-11 01:04:22.746251	2026-01-11 01:08:16.535609
 3	1	motocarro	t	2026-01-11 01:04:23.538481	\N	\N	\N	\N	0	0	2026-01-11 01:04:23.538481	2026-01-11 01:08:16.535609
 13	12	moto	t	2026-01-14 01:37:23.478268	\N	1	\N	\N	0	0	2026-01-14 00:40:54.855458	2026-01-14 01:37:23.478268
-14	12	auto	t	2026-01-14 01:37:23.479803	\N	1	\N	\N	0	0	2026-01-14 00:40:54.855458	2026-01-14 01:37:23.479803
 15	12	motocarro	t	2026-01-14 01:37:23.480502	\N	1	\N	\N	0	0	2026-01-14 00:40:54.855458	2026-01-14 01:37:23.480502
 16	12	taxi	t	2026-01-14 01:37:23.481157	\N	1	\N	\N	0	0	2026-01-14 00:40:54.855458	2026-01-14 01:37:23.481157
 17	13	moto	t	2026-01-14 01:37:26.030991	\N	1	\N	\N	0	0	2026-01-14 00:45:55.299546	2026-01-14 01:37:26.030991
-18	13	auto	t	2026-01-14 01:37:26.031921	\N	1	\N	\N	0	0	2026-01-14 00:45:55.299546	2026-01-14 01:37:26.031921
 19	13	motocarro	t	2026-01-14 01:37:26.032385	\N	1	\N	\N	0	0	2026-01-14 00:45:55.299546	2026-01-14 01:37:26.032385
 20	13	taxi	t	2026-01-14 01:37:26.032859	\N	1	\N	\N	0	0	2026-01-14 00:45:55.299546	2026-01-14 01:37:26.032859
 21	14	moto	t	2026-01-14 01:37:29.85869	\N	1	\N	\N	0	0	2026-01-14 01:22:46.418438	2026-01-14 01:37:29.85869
-22	14	auto	t	2026-01-14 01:37:29.859797	\N	1	\N	\N	0	0	2026-01-14 01:22:46.418438	2026-01-14 01:37:29.859797
 23	14	motocarro	t	2026-01-14 01:37:29.860357	\N	1	\N	\N	0	0	2026-01-14 01:22:46.418438	2026-01-14 01:37:29.860357
 24	14	taxi	t	2026-01-14 01:37:29.860907	\N	1	\N	\N	0	0	2026-01-14 01:22:46.418438	2026-01-14 01:37:29.860907
 25	15	moto	t	2026-01-14 01:37:32.526826	\N	1	\N	\N	0	0	2026-01-14 01:27:46.039417	2026-01-14 01:37:32.526826
-26	15	auto	t	2026-01-14 01:37:32.527702	\N	1	\N	\N	0	0	2026-01-14 01:27:46.039417	2026-01-14 01:37:32.527702
 27	15	motocarro	t	2026-01-14 01:37:32.528186	\N	1	\N	\N	0	0	2026-01-14 01:27:46.039417	2026-01-14 01:37:32.528186
 28	15	taxi	t	2026-01-14 01:37:32.528489	\N	1	\N	\N	0	0	2026-01-14 01:27:46.039417	2026-01-14 01:37:32.528489
 29	16	moto	t	2026-01-14 01:37:43.566415	\N	1	\N	\N	0	0	2026-01-14 01:32:03.278549	2026-01-14 01:37:43.566415
-30	16	auto	t	2026-01-14 01:37:43.567168	\N	1	\N	\N	0	0	2026-01-14 01:32:03.278549	2026-01-14 01:37:43.567168
 31	16	motocarro	t	2026-01-14 01:37:43.567701	\N	1	\N	\N	0	0	2026-01-14 01:32:03.278549	2026-01-14 01:37:43.567701
 32	16	taxi	t	2026-01-14 01:37:43.568132	\N	1	\N	\N	0	0	2026-01-14 01:32:03.278549	2026-01-14 01:37:43.568132
+2	1	carro	t	2026-01-11 01:04:22.746251	\N	\N	\N	\N	0	0	2026-01-11 01:04:22.746251	2026-01-21 22:20:31.927999
+5	11	carro	t	2026-01-11 01:07:31.390262	\N	\N	\N	\N	0	0	2026-01-11 01:07:31.390262	2026-01-21 22:20:31.927999
+14	12	carro	t	2026-01-14 01:37:23.479803	\N	1	\N	\N	0	0	2026-01-14 00:40:54.855458	2026-01-21 22:20:31.927999
+18	13	carro	t	2026-01-14 01:37:26.031921	\N	1	\N	\N	0	0	2026-01-14 00:45:55.299546	2026-01-21 22:20:31.927999
+22	14	carro	t	2026-01-14 01:37:29.859797	\N	1	\N	\N	0	0	2026-01-14 01:22:46.418438	2026-01-21 22:20:31.927999
+26	15	carro	t	2026-01-14 01:37:32.527702	\N	1	\N	\N	0	0	2026-01-14 01:27:46.039417	2026-01-21 22:20:31.927999
+30	16	carro	t	2026-01-14 01:37:43.567168	\N	1	\N	\N	0	0	2026-01-14 01:32:03.278549	2026-01-21 22:20:31.927999
+53	17	moto	t	2026-01-22 00:39:36.315615	\N	1	\N	\N	0	0	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.315615
+54	17	motocarro	t	2026-01-22 00:39:36.318644	\N	1	\N	\N	0	0	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.318644
+55	17	taxi	t	2026-01-22 00:39:36.319271	\N	1	\N	\N	0	0	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.319271
+56	17	carro	t	2026-01-22 00:39:36.320229	\N	1	\N	\N	0	0	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.320229
 \.
 
 
 --
--- TOC entry 6167 (class 0 OID 115610)
+-- TOC entry 6181 (class 0 OID 115610)
 -- Dependencies: 304
 -- Data for Name: empresa_tipos_vehiculo_historial; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5050,7 +5120,7 @@ COPY public.empresa_tipos_vehiculo_historial (id, empresa_tipo_vehiculo_id, empr
 
 
 --
--- TOC entry 6169 (class 0 OID 115633)
+-- TOC entry 6183 (class 0 OID 115633)
 -- Dependencies: 306
 -- Data for Name: empresa_vehiculo_notificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5060,7 +5130,7 @@ COPY public.empresa_vehiculo_notificaciones (id, historial_id, conductor_id, emp
 
 
 --
--- TOC entry 6161 (class 0 OID 91274)
+-- TOC entry 6175 (class 0 OID 91274)
 -- Dependencies: 298
 -- Data for Name: empresas_configuracion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5073,11 +5143,12 @@ COPY public.empresas_configuracion (id, empresa_id, tipos_vehiculo, zona_operaci
 6	16	\N	{Cañasgordas,Antioquia}	\N	t	f	f	50	15	t	t	2026-01-14 01:58:41.220079	2026-01-14 01:58:41.220079
 7	15	\N	{Cañasgordas,Antioquia}	\N	t	f	f	50	15	t	t	2026-01-14 01:58:41.220826	2026-01-14 01:58:41.220826
 8	12	\N	{Cañasgordas,Antioquia}	\N	t	f	f	50	15	t	t	2026-01-14 01:58:41.221842	2026-01-14 01:58:41.221842
+9	17	\N	{Cañasgordas,Antioquia}	\N	t	f	f	50	15	t	t	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.323755
 \.
 
 
 --
--- TOC entry 6155 (class 0 OID 91208)
+-- TOC entry 6169 (class 0 OID 91208)
 -- Dependencies: 292
 -- Data for Name: empresas_contacto; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5090,11 +5161,12 @@ COPY public.empresas_contacto (id, empresa_id, email, telefono, telefono_secunda
 6	16	\N	\N	\N	\N	Cañasgordas	Antioquia	2026-01-14 01:58:41.220456	2026-01-14 01:58:41.220456
 7	15	\N	\N	\N	\N	Cañasgordas	Antioquia	2026-01-14 01:58:41.221172	2026-01-14 01:58:41.221172
 8	12	\N	\N	\N	\N	Cañasgordas	Antioquia	2026-01-14 01:58:41.222681	2026-01-14 01:58:41.222681
+9	17	paradise@gmail.com	5435345	3425423534	Cra 16d	Cañasgordas	Antioquia	2026-01-22 00:34:38.435283	2026-01-22 00:34:38.435283
 \.
 
 
 --
--- TOC entry 6159 (class 0 OID 91248)
+-- TOC entry 6173 (class 0 OID 91248)
 -- Dependencies: 296
 -- Data for Name: empresas_metricas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5111,7 +5183,7 @@ COPY public.empresas_metricas (id, empresa_id, total_conductores, conductores_ac
 
 
 --
--- TOC entry 6157 (class 0 OID 91228)
+-- TOC entry 6171 (class 0 OID 91228)
 -- Dependencies: 294
 -- Data for Name: empresas_representante; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5123,24 +5195,25 @@ COPY public.empresas_representante (id, empresa_id, nombre, telefono, email, doc
 
 
 --
--- TOC entry 6134 (class 0 OID 25436)
+-- TOC entry 6148 (class 0 OID 25436)
 -- Dependencies: 269
 -- Data for Name: empresas_transporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.empresas_transporte (id, nombre, nit, razon_social, email, telefono, telefono_secundario, direccion, municipio, departamento, representante_nombre, representante_telefono, representante_email, tipos_vehiculo, logo_url, descripcion, estado, verificada, fecha_verificacion, verificado_por, total_conductores, total_viajes_completados, calificacion_promedio, creado_en, actualizado_en, creado_por, notas_admin, comision_admin_porcentaje, saldo_pendiente) FROM stdin;
+1	Bird	342234234234	Bird SAS	bird@gmail.com	2434234	432434	Cra 16d	Cañasgordas	Antioquia	Braian Andres Oquendo Durango	233232	traconmaster@gmail.com	{moto,motocarro,carro}	http://192.168.18.68/viax/backend/r2_proxy.php?key=empresas%2Fregistros%2F2026%2F01%2Flogo_1768012079_fed5ce304cb2c4b4.webp	addsad	activo	t	2026-01-10 20:51:42.678888	1	6	0	0.00	2026-01-10 02:28:00.353123	2026-01-22 00:25:00.872482	254	Registro desde app móvil - pendiente de verificación	10.00	0.00
 11	Aguila 	323243342	Aguila sas3	aguila@gmail.com4	32424	4234342	Cra 16d 	Cañasgordas	Antioquia	Juan Oquendo	43434553	angelow2025sen@gmail.com	{moto,motocarro,carro}	http://192.168.18.68/viax/backend/r2_proxy.php?key=empresas%2Flogos%2Flogo_6962e6306db9c.jpg	sas	activo	t	2026-01-10 23:52:45.356995	1	0	0	0.00	2026-01-10 23:52:17.473911	2026-01-11 00:20:14.198995	274	sas	15.00	0.00
+17	Paradise	4342443	Paradise SAS	paradise@gmail.com	5435345	3425423534	Cra 16d	Cañasgordas	Antioquia	Cristian Agudelo	4324345	leidytracon@gmail.com	{motocarro}	empresas/logos/logo_6971709d37662.jpg	Increíble empresa	activo	t	2026-01-22 00:39:36.304872	1	0	0	0.00	2026-01-22 00:34:38.435283	2026-01-22 00:39:36.304872	299	\N	0.00	0.00
 12	Humany	34435543	Humany SAS	humany@gmail.com	45535435	4555646	cra 16d	Cañasgordas	Antioquia	Braian Andres Gonzales	5435365	humanypersonal@gmail.com	{moto,motocarro,carro,taxi}	empresas/logos/logo_6966e61576e23.jpg	Empresa dedicada al transporte	activo	t	2026-01-14 01:37:23.471688	1	0	0	0.00	2026-01-14 00:40:54.855458	2026-01-14 01:37:23.471688	279	\N	0.00	0.00
 13	Elite	34545	Elite SAS	elite@gmail.com	5646465	435353455	cra 16d	Cañasgordas	Antioquia	Cristian Zapata	4554665	elitepersonal@gmail.com	{moto,motocarro,taxi,carro}	empresas/logos/logo_6966e7421d2bf.jpg	Empresa elite	activo	t	2026-01-14 01:37:26.026664	1	0	0	0.00	2026-01-14 00:45:55.299546	2026-01-14 01:37:26.026664	281	\N	0.00	0.00
 14	Acard	4342423423	Acard SAS	acard@gmail.com	43424	453545	Cra 16d	Cañasgordas	Antioquia	Pablo Arrumedo	4553453	arcardpersonal@gmail.com	{moto,motocarro,carro,taxi}	empresas/logos/logo_6966efe51e46c.jpg	Empresa	activo	t	2026-01-14 01:37:29.85157	1	0	0	0.00	2026-01-14 01:22:46.418438	2026-01-14 01:37:29.85157	283	\N	0.00	0.00
 15	Halal	3454353	Halal SAS	halal@gmail.com	4342423356	424342	Cra 16d	Cañasgordas	Antioquia	Victor Proto	42345345	Halalpersonal@gmail.com	{moto,motocarro,carro,taxi}	empresas/logos/logo_6966f110ae306.jpg	HALAL EMPRESA	activo	t	2026-01-14 01:37:32.515851	1	0	0	0.00	2026-01-14 01:27:46.039417	2026-01-14 01:37:32.515851	285	\N	0.00	0.00
 16	Friends	543535342	Friends SAS	friends@gmail.com	3243453	53456543	Cra 16d	Cañasgordas	Antioquia	Hector Gustavo	5423	friendspersonal@gmail.com	{moto,taxi,motocarro,carro}	empresas/logos/logo_6966f2121704e.jpg	Friends SAS empresa	activo	t	2026-01-14 01:37:43.558331	1	0	0	0.00	2026-01-14 01:32:03.278549	2026-01-14 01:37:43.558331	287	\N	0.00	0.00
-1	Bird	342234234234	Bird SAS	bird@gmail.com	2434234	432434	Cra 16d	Cañasgordas	Antioquia	Braian Andres Oquendo Durango	233232	traconmaster@gmail.com	{moto,motocarro,carro}	http://192.168.18.68/viax/backend/r2_proxy.php?key=empresas%2Fregistros%2F2026%2F01%2Flogo_1768012079_fed5ce304cb2c4b4.webp	addsad	activo	t	2026-01-10 20:51:42.678888	1	6	0	0.00	2026-01-10 02:28:00.353123	2026-01-20 03:29:49.121648	254	Registro desde app móvil - pendiente de verificación	10.00	0.00
 \.
 
 
 --
--- TOC entry 6094 (class 0 OID 16664)
+-- TOC entry 6108 (class 0 OID 16664)
 -- Dependencies: 227
 -- Data for Name: estadisticas_sistema; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5150,7 +5223,7 @@ COPY public.estadisticas_sistema (id, fecha, total_usuarios, total_clientes, tot
 
 
 --
--- TOC entry 6125 (class 0 OID 17187)
+-- TOC entry 6139 (class 0 OID 17187)
 -- Dependencies: 259
 -- Data for Name: historial_confianza; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5160,7 +5233,7 @@ COPY public.historial_confianza (id, usuario_id, conductor_id, total_viajes, via
 
 
 --
--- TOC entry 6095 (class 0 OID 16690)
+-- TOC entry 6109 (class 0 OID 16690)
 -- Dependencies: 228
 -- Data for Name: historial_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5170,7 +5243,7 @@ COPY public.historial_precios (id, configuracion_id, campo_modificado, valor_ant
 
 
 --
--- TOC entry 6096 (class 0 OID 16699)
+-- TOC entry 6110 (class 0 OID 16699)
 -- Dependencies: 229
 -- Data for Name: historial_seguimiento; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5180,7 +5253,7 @@ COPY public.historial_seguimiento (id, solicitud_id, conductor_id, latitud, long
 
 
 --
--- TOC entry 6097 (class 0 OID 16708)
+-- TOC entry 6111 (class 0 OID 16708)
 -- Dependencies: 230
 -- Data for Name: logs_auditoria; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5317,7 +5390,7 @@ COPY public.logs_auditoria (id, usuario_id, accion, entidad, entidad_id, descrip
 
 
 --
--- TOC entry 6127 (class 0 OID 17244)
+-- TOC entry 6141 (class 0 OID 17244)
 -- Dependencies: 262
 -- Data for Name: mensajes_chat; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5375,7 +5448,7 @@ COPY public.mensajes_chat (id, solicitud_id, remitente_id, destinatario_id, tipo
 
 
 --
--- TOC entry 6175 (class 0 OID 115717)
+-- TOC entry 6189 (class 0 OID 115717)
 -- Dependencies: 314
 -- Data for Name: mensajes_ticket; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5385,7 +5458,7 @@ COPY public.mensajes_ticket (id, ticket_id, remitente_id, es_agente, mensaje, ad
 
 
 --
--- TOC entry 6098 (class 0 OID 16720)
+-- TOC entry 6112 (class 0 OID 16720)
 -- Dependencies: 231
 -- Data for Name: metodos_pago_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5395,7 +5468,7 @@ COPY public.metodos_pago_usuario (id, usuario_id, tipo_pago, ultimos_cuatro_digi
 
 
 --
--- TOC entry 6147 (class 0 OID 90987)
+-- TOC entry 6161 (class 0 OID 90987)
 -- Dependencies: 282
 -- Data for Name: notificaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5411,17 +5484,30 @@ COPY public.notificaciones_usuario (id, usuario_id, tipo_id, titulo, mensaje, re
 
 
 --
--- TOC entry 6141 (class 0 OID 58206)
+-- TOC entry 6197 (class 0 OID 123896)
+-- Dependencies: 324
+-- Data for Name: pagos_comision; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.pagos_comision (id, conductor_id, monto, metodo_pago, referencia, admin_id, fecha_pago, notas) FROM stdin;
+1	277	131712.00	efectivo	\N	0	2026-01-21 21:34:52.982788	Pago registrado desde historial detallado
+\.
+
+
+--
+-- TOC entry 6155 (class 0 OID 58206)
 -- Dependencies: 276
 -- Data for Name: pagos_empresas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.pagos_empresas (id, empresa_id, monto, tipo, descripcion, viaje_id, saldo_anterior, saldo_nuevo, creado_en) FROM stdin;
+1	1	240.00	cargo	Migración: Comisión acumulada de 3 viajes finalizados	\N	\N	\N	2026-01-21 23:27:30.911286
+2	1	240.00	pago	Pago recibido (transferencia) - Pago registrado por admin	\N	240.00	0.00	2026-01-22 00:25:00.872482
 \.
 
 
 --
--- TOC entry 6131 (class 0 OID 17348)
+-- TOC entry 6145 (class 0 OID 17348)
 -- Dependencies: 266
 -- Data for Name: pagos_viaje; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5445,7 +5531,7 @@ COPY public.pagos_viaje (id, solicitud_id, conductor_id, cliente_id, monto, meto
 
 
 --
--- TOC entry 6099 (class 0 OID 16733)
+-- TOC entry 6113 (class 0 OID 16733)
 -- Dependencies: 232
 -- Data for Name: paradas_solicitud; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5455,7 +5541,7 @@ COPY public.paradas_solicitud (id, solicitud_id, latitud, longitud, direccion, o
 
 
 --
--- TOC entry 6143 (class 0 OID 82780)
+-- TOC entry 6157 (class 0 OID 82780)
 -- Dependencies: 278
 -- Data for Name: plantillas_bloqueadas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5465,7 +5551,7 @@ COPY public.plantillas_bloqueadas (id, plantilla_hash, plantilla, usuario_origen
 
 
 --
--- TOC entry 6100 (class 0 OID 16743)
+-- TOC entry 6114 (class 0 OID 16743)
 -- Dependencies: 233
 -- Data for Name: proveedores_mapa; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5475,7 +5561,7 @@ COPY public.proveedores_mapa (id, nombre, api_key, activo, contador_solicitudes,
 
 
 --
--- TOC entry 6101 (class 0 OID 16751)
+-- TOC entry 6115 (class 0 OID 16751)
 -- Dependencies: 234
 -- Data for Name: reglas_precios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5485,7 +5571,7 @@ COPY public.reglas_precios (id, tipo_servicio, tipo_vehiculo, tarifa_base, costo
 
 
 --
--- TOC entry 6102 (class 0 OID 16763)
+-- TOC entry 6116 (class 0 OID 16763)
 -- Dependencies: 235
 -- Data for Name: reportes_usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5495,7 +5581,7 @@ COPY public.reportes_usuarios (id, usuario_reportante_id, usuario_reportado_id, 
 
 
 --
--- TOC entry 6177 (class 0 OID 115737)
+-- TOC entry 6191 (class 0 OID 115737)
 -- Dependencies: 316
 -- Data for Name: solicitudes_callback; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5505,7 +5591,7 @@ COPY public.solicitudes_callback (id, usuario_id, telefono, motivo, estado, nota
 
 
 --
--- TOC entry 6103 (class 0 OID 16778)
+-- TOC entry 6117 (class 0 OID 16778)
 -- Dependencies: 236
 -- Data for Name: solicitudes_servicio; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5660,20 +5746,25 @@ COPY public.solicitudes_servicio (id, uuid_solicitud, cliente_id, tipo_servicio,
 782	48501c44-14b7-42d2-b415-540fe6067fd2	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 00:51:36	2026-01-20 00:51:36	2026-01-20 00:51:39	2026-01-20 00:51:53	2026-01-20 00:52:14	2026-01-20 00:52:14	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 00:51:48.727922	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
 775	b838c07f-0a34-4d03-9fe3-ea38b493f274	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 22:59:29	2026-01-19 22:59:29	2026-01-19 22:59:39	2026-01-19 23:00:00	2026-01-19 23:00:59	2026-01-19 23:00:59	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 22:59:51.132407	\N	92.96	1	t	t	moto	1	\N	6000.00	\N
 776	35e52b2a-74c9-4e56-8393-70b2a1d300fb	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-19 23:18:32	2026-01-19 23:18:32	2026-01-19 23:18:39	2026-01-19 23:18:48	2026-01-19 23:19:18	2026-01-19 23:19:18	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-19 23:18:46.369879	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+796	745d6bd8-a949-4925-9070-31586b3d27bd	276	transporte	\N	\N	6.25375700	-75.53893500	Carrera 18B 59c 88, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-23 21:56:13	2026-01-23 21:56:13	2026-01-23 21:56:21	2026-01-23 21:56:36	\N	\N	2026-01-23 23:15:59	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	2026-01-23 21:56:32.626786	\N	0.00	1430	f	f	moto	1	\N	9958.33	\N
 790	fc9c8552-6468-4e4a-8447-49f8cfe90c7e	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-21 03:39:14	2026-01-21 03:39:14	\N	\N	\N	\N	2026-01-21 03:39:33	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	75869.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
 786	13b4ab22-c287-418a-a0e7-eb2fe2dda0fc	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:53:00	2026-01-20 01:53:00	2026-01-20 01:53:11	2026-01-20 01:53:39	2026-01-20 01:54:07	2026-01-20 01:54:07	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:53:27.943106	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
 785	a42f7a19-8b30-400f-94a1-63ff829262e0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:33:39	2026-01-20 01:33:39	2026-01-20 01:33:53	2026-01-20 01:35:17	2026-01-20 01:36:38	2026-01-20 01:36:38	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:35:09.349548	\N	0.00	2	t	t	moto	1	\N	6000.00	\N
 783	0e85a3a7-cc39-4e1c-83b6-6bf66bd40376	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:03:45	2026-01-20 01:03:45	2026-01-20 01:03:50	2026-01-20 01:04:12	2026-01-20 01:04:46	2026-01-20 01:04:46	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:04:05.379051	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
 784	35291d5e-210d-4e3e-ae58-819403bcc8e3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-20 01:19:02	2026-01-20 01:19:02	2026-01-20 01:19:07	2026-01-20 01:19:42	2026-01-20 01:20:29	2026-01-20 01:20:29	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-20 01:19:34.502432	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
+795	983ea031-84b9-4ec7-9194-c77c96914b1c	276	transporte	\N	\N	6.25375700	-75.53893500	Carrera 18B 59c 88, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-23 19:53:38	2026-01-23 19:53:38	\N	\N	\N	\N	2026-01-23 19:53:58	Cancelado por el cliente	f	f	f	\N	0.00	efectivo	f	\N	63225.00	\N	\N	0.00	0	f	f	moto	1	\N	\N	\N
 787	ed00a03f-70dc-42e8-9042-5a8baa95807b	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 01:37:12	2026-01-21 01:37:12	2026-01-21 01:37:24	2026-01-21 01:37:49	2026-01-21 01:38:49	2026-01-21 01:38:49	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 01:37:38.047449	\N	0.00	1	t	t	moto	1	\N	6000.00	\N
 788	145d915e-8295-4f89-8b10-cea9480129d3	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:19:36	2026-01-21 03:19:36	2026-01-21 03:19:42	2026-01-21 03:20:10	2026-01-21 03:21:32	2026-01-21 03:21:32	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:20:03.90948	\N	92.96	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 2, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 500, "recargo_espera": 0, "total_recargos": 900, "recargo_festivo": 0, "ganancia_empresa": 540, "precio_distancia": 0, "recargo_nocturno": 900, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 5400, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 60, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4500, "subtotal_con_descuento": 4500, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 600, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 10}
+794	672aa2f5-494c-49dd-8131-540d282d6b8f	276	transporte	\N	\N	6.25375700	-75.53893500	Carrera 18B 59c 88, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-23 19:35:41	2026-01-23 19:35:41	2026-01-23 19:35:53	2026-01-23 19:36:51	\N	\N	2026-01-23 21:54:44	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	63225.00	2026-01-23 19:36:34.752498	\N	0.00	8268	f	f	moto	1	\N	38450.00	\N
 791	ad60e234-c8bf-4958-adb7-ed93ab9b3ac0	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:39:41	2026-01-21 03:39:41	2026-01-21 03:39:57	2026-01-21 03:40:12	2026-01-21 03:40:53	2026-01-21 03:40:53	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:40:09.046565	\N	0.00	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 1, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 250, "recargo_espera": 0, "total_recargos": 850, "recargo_festivo": 0, "ganancia_empresa": 1080, "precio_distancia": 0, "recargo_nocturno": 850, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 4800, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 120, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4250, "subtotal_con_descuento": 4250, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 1200, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 20}
 789	63082c51-cce2-46bb-aeb6-09c28a952462	276	transporte	\N	\N	6.25462700	-75.53948800	Carrera 18B 62-185, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	completada	2026-01-21 03:33:48	2026-01-21 03:33:48	2026-01-21 03:34:04	2026-01-21 03:34:22	2026-01-21 03:35:02	2026-01-21 03:35:02	\N	\N	f	f	f	\N	6000.00	efectivo	f	\N	75869.00	2026-01-21 03:34:09.899847	\N	0.00	1	t	t	moto	1	\N	6000.00	{"empresa_id": 1, "tiempo_min": 1, "tarifa_base": 4000, "distancia_km": 0, "precio_final": 6000, "tipo_recargo": "nocturno", "precio_tiempo": 250, "recargo_espera": 0, "total_recargos": 850, "recargo_festivo": 0, "ganancia_empresa": 540, "precio_distancia": 0, "recargo_nocturno": 850, "config_precios_id": 9, "recargo_hora_pico": 0, "tiempo_espera_min": 0, "ganancia_conductor": 5400, "recargo_porcentaje": 20, "aplico_tarifa_minima": true, "comision_admin_valor": 60, "precio_antes_redondeo": 6000, "subtotal_sin_recargos": 4250, "subtotal_con_descuento": 4250, "comision_admin_porcentaje": 10, "comision_plataforma_valor": 600, "descuento_distancia_larga": 0, "comision_plataforma_porcentaje": 10}
+793	7e4fc722-c3f9-4ae7-a46e-f56e4bebfd5b	276	transporte	\N	\N	6.25375700	-75.53893500	Carrera 18B 59c 88, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-22 21:31:35	2026-01-22 21:31:35	2026-01-22 21:31:40	2026-01-22 21:32:03	\N	\N	2026-01-22 23:44:33	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	63225.00	2026-01-22 21:31:58.875942	\N	0.00	7944	f	f	moto	1	\N	37100.00	\N
+792	2fb665db-01ae-48b1-b900-45499c0d616d	276	transporte	\N	\N	6.25375700	-75.53893500	Carrera 18B 59c 88, 050013 Medellín, Antioquia, Colombia	6.68540050	-75.93167500	Sta. Fe de Antioquia - Cañasgordas, Giraldo, Antioquia, Colombia	24.49	41	cancelada	2026-01-22 03:54:51	2026-01-22 03:54:51	2026-01-22 03:55:07	2026-01-22 04:02:25	\N	\N	2026-01-22 21:23:58	Cancelado por el conductor	f	f	f	\N	0.00	efectivo	f	\N	75869.00	2026-01-22 04:02:18.737066	\N	0.00	62485	f	f	moto	1	\N	264354.17	\N
 \.
 
 
 --
--- TOC entry 6153 (class 0 OID 91158)
+-- TOC entry 6167 (class 0 OID 91158)
 -- Dependencies: 289
 -- Data for Name: solicitudes_vinculacion_conductor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5687,7 +5778,7 @@ COPY public.solicitudes_vinculacion_conductor (id, conductor_id, empresa_id, est
 
 
 --
--- TOC entry 6173 (class 0 OID 115689)
+-- TOC entry 6187 (class 0 OID 115689)
 -- Dependencies: 312
 -- Data for Name: tickets_soporte; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5697,7 +5788,7 @@ COPY public.tickets_soporte (id, numero_ticket, usuario_id, categoria_id, asunto
 
 
 --
--- TOC entry 6145 (class 0 OID 90972)
+-- TOC entry 6159 (class 0 OID 90972)
 -- Dependencies: 280
 -- Data for Name: tipos_notificacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5719,7 +5810,7 @@ COPY public.tipos_notificacion (id, codigo, nombre, descripcion, icono, color, a
 
 
 --
--- TOC entry 6151 (class 0 OID 91031)
+-- TOC entry 6165 (class 0 OID 91031)
 -- Dependencies: 286
 -- Data for Name: tokens_push_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5729,7 +5820,7 @@ COPY public.tokens_push_usuario (id, usuario_id, token, plataforma, device_id, d
 
 
 --
--- TOC entry 6104 (class 0 OID 16798)
+-- TOC entry 6118 (class 0 OID 16798)
 -- Dependencies: 237
 -- Data for Name: transacciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5753,7 +5844,7 @@ COPY public.transacciones (id, solicitud_id, cliente_id, conductor_id, monto_tar
 
 
 --
--- TOC entry 6105 (class 0 OID 16812)
+-- TOC entry 6119 (class 0 OID 16812)
 -- Dependencies: 238
 -- Data for Name: ubicaciones_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5772,7 +5863,7 @@ COPY public.ubicaciones_usuario (id, usuario_id, latitud, longitud, direccion, c
 
 
 --
--- TOC entry 6106 (class 0 OID 16825)
+-- TOC entry 6120 (class 0 OID 16825)
 -- Dependencies: 239
 -- Data for Name: user_devices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -5783,6 +5874,7 @@ COPY public.user_devices (id, user_id, device_uuid, first_seen, last_seen, trust
 13	226	5b6c1bac-2efb-55ae-8e03-4448fb1f52b5	2025-12-25 21:24:28	2026-01-01 23:03:08	1	0	\N
 42	280	e381cf27-557a-56e6-b75b-8db8018535ea	2026-01-14 01:36:43	2026-01-14 01:42:23	1	0	\N
 43	298	5b6c1bac-2efb-55ae-8e03-4448fb1f52b5	2026-01-20 03:06:50	2026-01-20 03:07:03	1	0	\N
+44	299	e381cf27-557a-56e6-b75b-8db8018535ea	2026-01-22 00:34:38	\N	1	0	\N
 20	236	5b6c1bac-2efb-55ae-8e03-4448fb1f52b5	2026-01-04 03:14:10	2026-01-04 03:14:25	0	0	\N
 21	236	e381cf27-557a-56e6-b75b-8db8018535ea	2026-01-04 15:56:45	2026-01-04 15:56:54	1	0	\N
 9	6	5b6c1bac-2efb-55ae-8e03-4448fb1f52b5	2025-12-23 02:52:15	2026-01-01 20:32:05	0	0	\N
@@ -5807,7 +5899,7 @@ COPY public.user_devices (id, user_id, device_uuid, first_seen, last_seen, trust
 
 
 --
--- TOC entry 6107 (class 0 OID 16835)
+-- TOC entry 6121 (class 0 OID 16835)
 -- Dependencies: 240
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6036,6 +6128,7 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 2	user_68e44706c14db4.53994811	braian890	oquendo	braian890@gmail.com	32323232	$2y$10$NB9S4hWQLrK7HhTjc9yneu9RTb6otip3dtZ1muEgukWWLKcSpxRF6	cliente	\N	\N	0	1	2025-10-06 22:47:34	\N	\N	t	1	\N	\N	5.00	activo	\N	\N	email
 298	user_696eeadd6c00d8.47929678	Santiago	Zapata	conductorbird@gmail.com	3532323	$2y$10$J0lYEf0yvUkbE78448B.LObZi4NjDJg3H0gEnnGvwKPo8j12T5Sg6	conductor	\N	\N	1	1	2026-01-20 02:39:25	2026-01-20 03:29:49	\N	f	\N	1	\N	5.00	vinculado	\N	\N	email
 255	empresa_rep_6961b9306f2bf2.66858089	Braian Andres	Oquendo Durango	traconmaster@gmail.com	233232	$2y$10$ING2VgbKD.eXwpwDGnyAteGr/Ave0qV/q5Mpm/xoBzP18hgz5.zGK	empresa	https://lh3.googleusercontent.com/a/ACg8ocK3-3Zs26o26dpSe0Lkf4ZPUfGkj2RaGNbJy-Yn5YBtz-uw_eM=s96-c	\N	1	1	2026-01-10 02:28:00	\N	2026-01-21 19:51:54	f	\N	1	\N	5.00	activo	116860906216950009498	\N	email
+277	user_696676b59b57a9.80699283	Oscar Alejandro	Oquendo Durango	secretoestoico8052@gmail.com	326556566566	$2y$10$IklqjVXZNcgq/uEaK0S41OhwI7MPjrIB18i1pp9zVjJJJi8t/BhFy	conductor	https://lh3.googleusercontent.com/a/ACg8ocKrSsyN6lq-gOoqsHTzRMsi5aFdjM4yd1az8I9CZwF4ztJNnQ=s96-c	\N	1	1	2026-01-13 16:45:42	2026-01-13 20:48:12	2026-01-22 03:52:00	f	\N	1	\N	5.00	pendiente_aprobacion	114135017006116447797	\N	email
 226	user_694d686fc4d124.55220713	andres	oquendo	andresoquendo@gmail.com	313131313	$2y$10$rfpnS5Io8spwxDdnKsrvReiAHR49v0thMTYzPBx4Asj.AEqaPPPdq	cliente	\N	\N	0	1	2025-12-25 16:38:08	\N	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
 215	6aaaf173-e3e3-4ab5-a4b0-92258f9f9fff	ClienteHot	Test3	cliente_hot_3_1764713418_60@test.local	+5006699882	$2y$12$HBvylQXLdwYwToSMyAx2geMxdEWxOc.LsjvCnfJLxFYe8GdjRhjma	cliente	\N	\N	0	0	2025-12-02 22:10:19	2025-12-27 22:36:55	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
 229	user_69571dbb2a3174.00297676	oquendo	Durango	oquendo@gmail.com	3535343343	$2y$10$veHd5T/xGZL/p8Rjk2I7kOZ9xdF/IW7VysMV1u8ZYZc79RODeMdlS	cliente	\N	\N	0	1	2026-01-02 01:22:03	\N	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
@@ -6046,11 +6139,12 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 7	user_68f8e5efd5f888.59258279	braianoquen2	oqeundo	braianoquen2@gmail.com	3242442	$2y$10$DUUZdDrKiyespZGSJfk9JeGYuvOkAjrlMemg9BA/BZfyXlamgobjW	conductor	\N	\N	1	0	2025-10-22 14:10:55	2025-10-26 16:22:01	\N	f	\N	\N	\N	5.00	pendiente_empresa	\N	\N	email
 227	user_694d69a68b8bf6.31096667	pruebawlcomer	oquendo	pruebawlcomer@gmail.com	233232323	$2y$10$EmEY5aQeDhwOGMHU.VNoVOtPVHoOJUWWy0BjmS/iCCIORH1p5l8L6	cliente	\N	\N	0	1	2025-12-25 16:43:19	2025-12-28 01:03:31	\N	f	\N	\N	\N	5.00	activo	\N	\N	email
 234	user_6959a0ec74b016.75842336	victor	oquendo	victor@gmail.com	2332323	$2y$10$jl/x0XD7o4LJe1L4rNi0JehjW6dn/XT2hkRSZ/Zg7ereiG3xdREia	cliente	\N	\N	0	1	2026-01-03 23:06:20	\N	\N	f	\N	\N	\N	5.00	pendiente_aprobacion	\N	\N	email
-1	user_68daf618780e50.65802566	braian	oquendo	braianoquen@gmail.com	3013636902	$2y$10$H2Un4DmxCsM6XOGA1fiX8.5VB42Z9v8uwqERrGBms83dk2CQVQKnO	administrador	https://lh3.googleusercontent.com/a/ACg8ocLGRW44x3yOuEc2Cto3I434ck4B-Zz8UBVPRWSAVXTUUM_KFw=s96-c	\N	1	1	2025-09-29 21:11:52	2025-10-22 14:16:12	2026-01-20 03:28:42	f	\N	\N	\N	5.00	activo	100021586628962750893	\N	email
+299	empresa_6971709e71e062.33209990	Cristian	Agudelo	paradise@gmail.com	5435345	$2y$10$dO3JejBijtUlKUabiHHqvuGU3Y0H2Po1Dg9KAqKjDZgGEt9srWtGi	empresa	\N	\N	0	1	2026-01-22 00:34:38	\N	\N	f	\N	17	\N	5.00	activo	\N	\N	email
 11	bd852c00-8127-49ab-a6b1-17bc1128f0cd	Conductor	Prueba	conductor.prueba@test.com	+573009876543	$2y$12$t5I6QV69PHlcY4ozF2G5wObcdn8MK6vOawu0U./aLdWvWrhfxNBvS	conductor	\N	\N	1	0	2025-10-27 00:27:44	2026-01-04 17:52:26	\N	f	\N	\N	\N	5.00	pendiente_empresa	\N	\N	email
 235	user_6959ce1194cf04.53594144	victor2	oquendo	victor2@gmail.com	323232	$2y$10$eoEK5r6Eq1NArh/imHFfGeZHKoYj2hRd60YHDUjVg4OsWn73nc6D.	conductor	\N	\N	1	0	2026-01-04 02:18:58	2026-01-04 17:58:45	\N	f	\N	\N	\N	5.00	pendiente_empresa	\N	\N	email
-277	user_696676b59b57a9.80699283	Oscar Alejandro	Oquendo Durango	secretoestoico8052@gmail.com	326556566566	$2y$10$IklqjVXZNcgq/uEaK0S41OhwI7MPjrIB18i1pp9zVjJJJi8t/BhFy	conductor	https://lh3.googleusercontent.com/a/ACg8ocKrSsyN6lq-gOoqsHTzRMsi5aFdjM4yd1az8I9CZwF4ztJNnQ=s96-c	\N	1	1	2026-01-13 16:45:42	2026-01-13 20:48:12	2026-01-21 03:38:27	f	\N	1	\N	5.00	pendiente_aprobacion	114135017006116447797	\N	email
-276	user_69642016735491.91239396	Alejandro	Zapata	tracongamescorreos@gmail.com	3213243222	$2y$10$59XENVeFt0FKg6mtRHiQI.pWRKPkpsdZGulpHTksiCcwzV7wdnYjC	cliente	profile/276_1768176614.jpg	\N	1	1	2026-01-11 22:11:34	2026-01-12 00:10:16	2026-01-20 01:16:11	f	\N	\N	\N	5.00	activo	102784292193798397096	\N	email
+276	user_69642016735491.91239396	Alejandro	Zapata	tracongamescorreos@gmail.com	3213243222	$2y$10$59XENVeFt0FKg6mtRHiQI.pWRKPkpsdZGulpHTksiCcwzV7wdnYjC	cliente	profile/276_1768176614.jpg	\N	1	1	2026-01-11 22:11:34	2026-01-12 00:10:16	2026-01-23 21:52:56	f	\N	\N	\N	5.00	activo	102784292193798397096	\N	email
+300	empresa_rep_6971709e895391.74113991	Cristian	Agudelo	leidytracon@gmail.com	4324345	$2y$10$NWCn.cKYVj7NuaD5OdMuLOVx2uw7k7BU/CdB/hZoh9oVJL7Kxq7VS	empresa	https://lh3.googleusercontent.com/a/ACg8ocJxR4fdykhLH-ZiK3dHDgCbX8EzpqH-i5tQTrh54h9Zkjq8IbQ=s96-c	\N	1	1	2026-01-22 00:34:38	\N	2026-01-22 00:43:25	f	\N	17	\N	5.00	activo	106567561567845530341	\N	email
+1	user_68daf618780e50.65802566	braian	oquendo	braianoquen@gmail.com	3013636902	$2y$10$H2Un4DmxCsM6XOGA1fiX8.5VB42Z9v8uwqERrGBms83dk2CQVQKnO	administrador	https://lh3.googleusercontent.com/a/ACg8ocLGRW44x3yOuEc2Cto3I434ck4B-Zz8UBVPRWSAVXTUUM_KFw=s96-c	\N	1	1	2025-09-29 21:11:52	2025-10-22 14:16:12	2026-01-22 00:38:39	f	\N	\N	\N	5.00	activo	100021586628962750893	\N	email
 254	empresa_6961b9305a4592.56020642	Braian Andres	Oquendo Durango	bird@gmail.com	2434234	$2y$10$3s1NTs62TgFqYRp17ZjvSumjcEJ36O174Idez/L0lNmypKr2Mr6z.	empresa	\N	\N	0	1	2026-01-10 02:28:00	\N	\N	f	\N	1	\N	5.00	activo	\N	\N	email
 274	empresa_6962e6317693b2.08987946	Juan	Oquendo	aguila@gmail.com4	32424	$2y$10$9r7ZRx1IeERSk6MRmEbYg.MD2ewf1/bUzEw0Xk.L1hZzdBPl9kTAW	empresa	\N	\N	0	1	2026-01-10 23:52:17	\N	\N	f	\N	11	\N	5.00	activo	\N	\N	email
 275	empresa_rep_6962e6318a5930.51368404	Juan	Oquendo	angelow2025sen@gmail.com	43434553	$2y$10$BECzTxh9eKPMKfVjkFfHfuWHvGndfYMlV01YH7VYwILuB9lpV5b4u	empresa	\N	\N	0	1	2026-01-10 23:52:17	\N	\N	f	\N	11	\N	5.00	activo	\N	\N	email
@@ -6077,7 +6171,7 @@ COPY public.usuarios (id, uuid, nombre, apellido, email, telefono, hash_contrase
 
 
 --
--- TOC entry 6108 (class 0 OID 16849)
+-- TOC entry 6122 (class 0 OID 16849)
 -- Dependencies: 241
 -- Data for Name: usuarios_backup_20251023; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6094,7 +6188,7 @@ COPY public.usuarios_backup_20251023 (id, uuid, nombre, apellido, email, telefon
 
 
 --
--- TOC entry 6109 (class 0 OID 16863)
+-- TOC entry 6123 (class 0 OID 16863)
 -- Dependencies: 242
 -- Data for Name: verification_codes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6194,7 +6288,7 @@ COPY public.verification_codes (id, email, code, created_at, expires_at, used) F
 
 
 --
--- TOC entry 6181 (class 0 OID 123797)
+-- TOC entry 6195 (class 0 OID 123797)
 -- Dependencies: 321
 -- Data for Name: viaje_resumen_tracking; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6216,6 +6310,7 @@ COPY public.viaje_resumen_tracking (id, solicitud_id, distancia_real_km, tiempo_
 244	776	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476	2026-01-19 23:18:50.45494	2026-01-19 23:19:17.708476	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 23	745	0.000	1	24.490	41	-24.490	-40	-100.00	63225.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496	2026-01-18 13:56:55.778445	2026-01-18 14:04:36.323496	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 285	782	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	5	t	0.000	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434	2026-01-20 00:51:55.333611	2026-01-20 00:52:14.293434	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+389	792	0.000	1042	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	125	f	0.000	2026-01-22 04:02:30.643534	\N	2026-01-22 04:02:30.643534	2026-01-22 21:23:54.529007	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 252	777	0.000	1	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	6	f	0.000	2026-01-19 23:21:50.83374	\N	2026-01-19 23:21:50.83374	2026-01-19 23:22:15.924989	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 204	769	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	13	t	0.000	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625	2026-01-19 22:22:22.573852	2026-01-19 22:23:21.801625	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 379	791	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	9	t	0.000	2026-01-21 03:40:15.838256	2026-01-21 03:40:52.715984	2026-01-21 03:40:15.838256	2026-01-21 03:40:52.715984	4000.00	0.00	250.00	850.00	0.00	0.00	0.00	0	0.00	4250.00	850.00	nocturno	t	20.00	1200.00	4800.00	1	9	10.00	120.00	1080.00
@@ -6228,11 +6323,14 @@ COPY public.viaje_resumen_tracking (id, solicitud_id, distancia_real_km, tiempo_
 264	779	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	12	t	0.000	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989	2026-01-20 00:02:47.909505	2026-01-20 00:03:40.321989	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 329	786	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	7	t	0.000	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444	2026-01-20 01:53:41.13328	2026-01-20 01:54:06.776444	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 300	784	0.000	1	24.490	41	-24.490	-40	-100.00	75869.00	6000.00	6000.00	0.00	0.00	10	t	0.000	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069	2026-01-20 01:19:44.970697	2026-01-20 01:20:28.971069	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+524	793	0.000	133	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	358	f	0.000	2026-01-22 21:32:07.704713	\N	2026-01-22 21:32:07.704713	2026-01-22 23:44:32.85898	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+882	794	0.000	138	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	637	f	0.000	2026-01-23 19:36:51.946122	\N	2026-01-23 19:36:51.946122	2026-01-23 21:54:41.020244	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
+1519	796	0.000	24	0.000	0	0.000	0	0.00	0.00	0.00	0.00	0.00	0.00	288	f	0.000	2026-01-23 21:56:37.343148	\N	2026-01-23 21:56:37.343148	2026-01-23 22:20:27.665834	0.00	0.00	0.00	0.00	0.00	0.00	0.00	0	0.00	0.00	0.00	normal	f	0.00	0.00	0.00	\N	\N	0.00	0.00	0.00
 \.
 
 
 --
--- TOC entry 6179 (class 0 OID 123764)
+-- TOC entry 6193 (class 0 OID 123764)
 -- Dependencies: 319
 -- Data for Name: viaje_tracking_realtime; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -6602,20 +6700,1428 @@ COPY public.viaje_tracking_realtime (id, solicitud_id, conductor_id, latitud, lo
 362	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-21 03:40:46.240336	2026-01-21 03:40:46.240336	hacia_destino	\N	t
 363	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-21 03:40:51.342335	2026-01-21 03:40:51.342335	hacia_destino	\N	t
 364	791	277	6.25373000	-75.53883670	5.00	0.00	0.00	0.00	0.000	36	0.00	6000.00	2026-01-21 03:40:52.414397	2026-01-21 03:40:52.414397	hacia_destino	fin	t
+365	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-22 04:02:30.643534	2026-01-22 04:02:30.643534	hacia_destino	inicio	t
+366	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-22 04:02:35.801611	2026-01-22 04:02:35.801611	hacia_destino	\N	t
+367	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-22 04:02:40.759228	2026-01-22 04:02:40.759228	hacia_destino	\N	t
+368	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-22 04:02:45.78199	2026-01-22 04:02:45.78199	hacia_destino	\N	t
+369	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-22 04:02:50.772859	2026-01-22 04:02:50.772859	hacia_destino	\N	t
+370	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-22 04:02:55.778204	2026-01-22 04:02:55.778204	hacia_destino	\N	t
+371	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-22 04:03:00.7725	2026-01-22 04:03:00.7725	hacia_destino	\N	t
+372	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-22 04:03:05.758674	2026-01-22 04:03:05.758674	hacia_destino	\N	t
+373	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	40	0.00	6000.00	2026-01-22 04:03:10.782198	2026-01-22 04:03:10.782198	hacia_destino	\N	t
+374	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	45	0.00	6000.00	2026-01-22 04:03:15.771658	2026-01-22 04:03:15.771658	hacia_destino	\N	t
+375	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-22 04:03:20.758239	2026-01-22 04:03:20.758239	hacia_destino	\N	t
+376	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-22 04:03:25.769264	2026-01-22 04:03:25.769264	hacia_destino	\N	t
+377	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	60	0.00	6000.00	2026-01-22 04:03:30.777736	2026-01-22 04:03:30.777736	hacia_destino	\N	t
+378	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	65	0.00	6000.00	2026-01-22 04:03:35.766557	2026-01-22 04:03:35.766557	hacia_destino	\N	t
+379	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	70	0.00	6000.00	2026-01-22 04:03:40.767376	2026-01-22 04:03:40.767376	hacia_destino	\N	t
+380	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	75	0.00	6000.00	2026-01-22 04:03:45.780231	2026-01-22 04:03:45.780231	hacia_destino	\N	t
+381	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	80	0.00	6000.00	2026-01-22 04:03:50.793569	2026-01-22 04:03:50.793569	hacia_destino	\N	t
+382	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	85	0.00	6000.00	2026-01-22 04:03:55.785401	2026-01-22 04:03:55.785401	hacia_destino	\N	t
+383	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	90	0.00	6000.00	2026-01-22 04:04:00.769417	2026-01-22 04:04:00.769417	hacia_destino	\N	t
+384	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	95	0.00	6000.00	2026-01-22 04:04:05.767791	2026-01-22 04:04:05.767791	hacia_destino	\N	t
+385	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	100	0.00	6000.00	2026-01-22 04:04:10.776317	2026-01-22 04:04:10.776317	hacia_destino	\N	t
+386	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	105	0.00	6000.00	2026-01-22 04:04:15.766588	2026-01-22 04:04:15.766588	hacia_destino	\N	t
+387	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	110	0.00	6000.00	2026-01-22 04:04:20.760212	2026-01-22 04:04:20.760212	hacia_destino	\N	t
+388	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	115	0.00	6000.00	2026-01-22 04:04:25.766735	2026-01-22 04:04:25.766735	hacia_destino	\N	t
+389	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	120	0.00	6000.00	2026-01-22 04:04:30.867267	2026-01-22 04:04:30.867267	hacia_destino	\N	t
+390	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	125	0.00	6000.00	2026-01-22 04:04:35.762119	2026-01-22 04:04:35.762119	hacia_destino	\N	t
+391	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	130	0.00	6000.00	2026-01-22 04:04:40.777072	2026-01-22 04:04:40.777072	hacia_destino	\N	t
+392	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	135	0.00	6000.00	2026-01-22 04:04:45.778712	2026-01-22 04:04:45.778712	hacia_destino	\N	t
+393	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	140	0.00	6000.00	2026-01-22 04:04:50.768241	2026-01-22 04:04:50.768241	hacia_destino	\N	t
+394	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	145	0.00	6000.00	2026-01-22 04:04:55.766331	2026-01-22 04:04:55.766331	hacia_destino	\N	t
+395	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	150	0.00	6000.00	2026-01-22 04:05:00.774153	2026-01-22 04:05:00.774153	hacia_destino	\N	t
+396	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	155	0.00	6000.00	2026-01-22 04:05:05.773276	2026-01-22 04:05:05.773276	hacia_destino	\N	t
+397	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	160	0.00	6000.00	2026-01-22 04:05:10.779249	2026-01-22 04:05:10.779249	hacia_destino	\N	t
+398	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	165	0.00	6000.00	2026-01-22 04:05:15.777305	2026-01-22 04:05:15.777305	hacia_destino	\N	t
+399	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	170	0.00	6000.00	2026-01-22 04:05:20.767801	2026-01-22 04:05:20.767801	hacia_destino	\N	t
+400	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	175	0.00	6000.00	2026-01-22 04:05:25.765914	2026-01-22 04:05:25.765914	hacia_destino	\N	t
+401	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	180	0.00	6000.00	2026-01-22 04:05:30.76387	2026-01-22 04:05:30.76387	hacia_destino	\N	t
+402	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	185	0.00	6000.00	2026-01-22 04:05:35.762182	2026-01-22 04:05:35.762182	hacia_destino	\N	t
+403	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	190	0.00	6000.00	2026-01-22 04:05:40.767358	2026-01-22 04:05:40.767358	hacia_destino	\N	t
+404	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	195	0.00	6000.00	2026-01-22 04:05:45.772034	2026-01-22 04:05:45.772034	hacia_destino	\N	t
+405	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	200	0.00	6000.00	2026-01-22 04:05:50.772346	2026-01-22 04:05:50.772346	hacia_destino	\N	t
+406	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	205	0.00	6000.00	2026-01-22 04:05:55.754207	2026-01-22 04:05:55.754207	hacia_destino	\N	t
+407	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	210	0.00	6000.00	2026-01-22 04:06:00.778919	2026-01-22 04:06:00.778919	hacia_destino	\N	t
+408	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	215	0.00	6000.00	2026-01-22 04:06:05.768002	2026-01-22 04:06:05.768002	hacia_destino	\N	t
+409	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	220	0.00	6000.00	2026-01-22 04:06:10.767949	2026-01-22 04:06:10.767949	hacia_destino	\N	t
+410	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	225	0.00	6000.00	2026-01-22 04:06:15.777588	2026-01-22 04:06:15.777588	hacia_destino	\N	t
+411	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	230	0.00	6000.00	2026-01-22 04:06:20.762277	2026-01-22 04:06:20.762277	hacia_destino	\N	t
+412	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	235	0.00	6000.00	2026-01-22 04:06:25.768674	2026-01-22 04:06:25.768674	hacia_destino	\N	t
+413	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	240	0.00	6000.00	2026-01-22 04:06:30.768783	2026-01-22 04:06:30.768783	hacia_destino	\N	t
+414	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	245	0.00	6000.00	2026-01-22 04:06:35.865246	2026-01-22 04:06:35.865246	hacia_destino	\N	t
+415	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	250	0.00	6000.00	2026-01-22 04:06:40.759871	2026-01-22 04:06:40.759871	hacia_destino	\N	t
+416	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	255	0.00	6000.00	2026-01-22 04:06:45.808677	2026-01-22 04:06:45.808677	hacia_destino	\N	t
+417	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	260	0.00	6000.00	2026-01-22 04:06:50.771076	2026-01-22 04:06:50.771076	hacia_destino	\N	t
+418	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	265	0.00	6000.00	2026-01-22 04:06:55.759603	2026-01-22 04:06:55.759603	hacia_destino	\N	t
+419	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	270	0.00	6000.00	2026-01-22 04:07:00.773318	2026-01-22 04:07:00.773318	hacia_destino	\N	t
+420	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	275	0.00	6000.00	2026-01-22 04:07:05.766749	2026-01-22 04:07:05.766749	hacia_destino	\N	t
+421	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	280	0.00	6000.00	2026-01-22 04:07:10.890522	2026-01-22 04:07:10.890522	hacia_destino	\N	t
+422	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	285	0.00	6000.00	2026-01-22 04:07:15.765494	2026-01-22 04:07:15.765494	hacia_destino	\N	t
+423	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	290	0.00	6000.00	2026-01-22 04:07:20.769282	2026-01-22 04:07:20.769282	hacia_destino	\N	t
+424	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	295	0.00	6000.00	2026-01-22 04:07:25.775119	2026-01-22 04:07:25.775119	hacia_destino	\N	t
+425	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	300	0.00	6000.00	2026-01-22 04:07:30.897057	2026-01-22 04:07:30.897057	hacia_destino	\N	t
+426	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	305	0.00	6000.00	2026-01-22 04:07:35.767202	2026-01-22 04:07:35.767202	hacia_destino	\N	t
+427	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	310	0.00	6000.00	2026-01-22 04:07:40.766108	2026-01-22 04:07:40.766108	hacia_destino	\N	t
+428	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	315	0.00	6000.00	2026-01-22 04:07:45.780683	2026-01-22 04:07:45.780683	hacia_destino	\N	t
+429	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	320	0.00	6000.00	2026-01-22 04:07:50.764217	2026-01-22 04:07:50.764217	hacia_destino	\N	t
+430	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	325	0.00	6000.00	2026-01-22 04:07:55.766187	2026-01-22 04:07:55.766187	hacia_destino	\N	t
+431	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	330	0.00	6000.00	2026-01-22 04:08:00.786598	2026-01-22 04:08:00.786598	hacia_destino	\N	t
+432	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	335	0.00	6000.00	2026-01-22 04:08:05.766544	2026-01-22 04:08:05.766544	hacia_destino	\N	t
+433	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	340	0.00	6000.00	2026-01-22 04:08:10.77005	2026-01-22 04:08:10.77005	hacia_destino	\N	t
+434	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	345	0.00	6000.00	2026-01-22 04:08:15.892066	2026-01-22 04:08:15.892066	hacia_destino	\N	t
+435	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	350	0.00	6000.00	2026-01-22 04:08:20.773019	2026-01-22 04:08:20.773019	hacia_destino	\N	t
+436	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	355	0.00	6000.00	2026-01-22 04:08:25.760719	2026-01-22 04:08:25.760719	hacia_destino	\N	t
+437	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	360	0.00	6000.00	2026-01-22 04:08:30.772721	2026-01-22 04:08:30.772721	hacia_destino	\N	t
+438	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	365	0.00	6000.00	2026-01-22 04:08:35.775297	2026-01-22 04:08:35.775297	hacia_destino	\N	t
+439	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	370	0.00	6000.00	2026-01-22 04:08:40.775843	2026-01-22 04:08:40.775843	hacia_destino	\N	t
+440	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	375	0.00	6000.00	2026-01-22 04:08:45.76584	2026-01-22 04:08:45.76584	hacia_destino	\N	t
+441	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	380	0.00	6000.00	2026-01-22 04:08:50.783772	2026-01-22 04:08:50.783772	hacia_destino	\N	t
+442	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	385	0.00	6000.00	2026-01-22 04:08:55.77693	2026-01-22 04:08:55.77693	hacia_destino	\N	t
+443	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	390	0.00	6000.00	2026-01-22 04:09:00.773966	2026-01-22 04:09:00.773966	hacia_destino	\N	t
+444	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	395	0.00	6000.00	2026-01-22 04:09:05.768293	2026-01-22 04:09:05.768293	hacia_destino	\N	t
+445	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	400	0.00	6000.00	2026-01-22 04:09:10.76977	2026-01-22 04:09:10.76977	hacia_destino	\N	t
+446	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	405	0.00	6000.00	2026-01-22 04:09:15.76729	2026-01-22 04:09:15.76729	hacia_destino	\N	t
+447	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	410	0.00	6000.00	2026-01-22 04:09:20.762946	2026-01-22 04:09:20.762946	hacia_destino	\N	t
+448	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	415	0.00	6000.00	2026-01-22 04:09:25.769299	2026-01-22 04:09:25.769299	hacia_destino	\N	t
+449	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	420	0.00	6000.00	2026-01-22 04:09:30.77396	2026-01-22 04:09:30.77396	hacia_destino	\N	t
+450	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	425	0.00	6000.00	2026-01-22 04:09:35.863585	2026-01-22 04:09:35.863585	hacia_destino	\N	t
+451	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	430	0.00	6000.00	2026-01-22 04:09:40.779344	2026-01-22 04:09:40.779344	hacia_destino	\N	t
+452	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	435	0.00	6000.00	2026-01-22 04:09:45.792115	2026-01-22 04:09:45.792115	hacia_destino	\N	t
+453	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	440	0.00	6000.00	2026-01-22 04:09:50.779261	2026-01-22 04:09:50.779261	hacia_destino	\N	t
+454	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	445	0.00	6000.00	2026-01-22 04:09:55.773867	2026-01-22 04:09:55.773867	hacia_destino	\N	t
+455	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	450	0.00	6000.00	2026-01-22 04:10:00.767918	2026-01-22 04:10:00.767918	hacia_destino	\N	t
+456	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	455	0.00	6000.00	2026-01-22 04:10:05.76638	2026-01-22 04:10:05.76638	hacia_destino	\N	t
+457	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	460	0.00	6000.00	2026-01-22 04:10:10.787502	2026-01-22 04:10:10.787502	hacia_destino	\N	t
+468	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58069	0.00	245954.17	2026-01-22 20:10:18.999675	2026-01-22 20:10:18.999675	hacia_destino	inicio	t
+469	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58075	0.00	245979.17	2026-01-22 20:10:24.196236	2026-01-22 20:10:24.196236	hacia_destino	\N	t
+470	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58080	0.00	246000.00	2026-01-22 20:10:29.224312	2026-01-22 20:10:29.224312	hacia_destino	\N	t
+471	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58085	0.00	246020.83	2026-01-22 20:10:34.177439	2026-01-22 20:10:34.177439	hacia_destino	\N	t
+472	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58090	0.00	246041.67	2026-01-22 20:10:39.296439	2026-01-22 20:10:39.296439	hacia_destino	\N	t
+473	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58095	0.00	246062.50	2026-01-22 20:10:44.168252	2026-01-22 20:10:44.168252	hacia_destino	\N	t
+474	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58100	0.00	246083.33	2026-01-22 20:10:49.278812	2026-01-22 20:10:49.278812	hacia_destino	\N	t
+475	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58105	0.00	246104.17	2026-01-22 20:10:54.182424	2026-01-22 20:10:54.182424	hacia_destino	\N	t
+476	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	58110	0.00	246125.00	2026-01-22 20:10:59.166853	2026-01-22 20:10:59.166853	hacia_destino	\N	t
+477	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62366	0.00	263858.33	2026-01-22 21:21:55.375091	2026-01-22 21:21:55.375091	hacia_destino	inicio	t
+478	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62371	0.00	263879.17	2026-01-22 21:22:00.688042	2026-01-22 21:22:00.688042	hacia_destino	\N	t
+479	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62376	0.00	263900.00	2026-01-22 21:22:05.698356	2026-01-22 21:22:05.698356	hacia_destino	\N	t
+480	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62381	0.00	263920.83	2026-01-22 21:22:10.660201	2026-01-22 21:22:10.660201	hacia_destino	\N	t
+481	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62386	0.00	263941.67	2026-01-22 21:22:15.644501	2026-01-22 21:22:15.644501	hacia_destino	\N	t
+482	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62391	0.00	263962.50	2026-01-22 21:22:20.632841	2026-01-22 21:22:20.632841	hacia_destino	\N	t
+483	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62396	0.00	263983.33	2026-01-22 21:22:25.644863	2026-01-22 21:22:25.644863	hacia_destino	\N	t
+484	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62401	0.00	264004.17	2026-01-22 21:22:30.652883	2026-01-22 21:22:30.652883	hacia_destino	\N	t
+485	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62406	0.00	264025.00	2026-01-22 21:22:35.648262	2026-01-22 21:22:35.648262	hacia_destino	\N	t
+486	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62411	0.00	264045.83	2026-01-22 21:22:40.650499	2026-01-22 21:22:40.650499	hacia_destino	\N	t
+487	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62416	0.00	264066.67	2026-01-22 21:22:45.653866	2026-01-22 21:22:45.653866	hacia_destino	\N	t
+488	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62421	0.00	264087.50	2026-01-22 21:22:50.642652	2026-01-22 21:22:50.642652	hacia_destino	\N	t
+489	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62426	0.00	264108.33	2026-01-22 21:22:55.6291	2026-01-22 21:22:55.6291	hacia_destino	\N	t
+490	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62431	0.00	264129.17	2026-01-22 21:23:00.666453	2026-01-22 21:23:00.666453	hacia_destino	\N	t
+491	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62436	0.00	264150.00	2026-01-22 21:23:05.644114	2026-01-22 21:23:05.644114	hacia_destino	\N	t
+492	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62441	0.00	264170.83	2026-01-22 21:23:10.664657	2026-01-22 21:23:10.664657	hacia_destino	\N	t
+493	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62446	0.00	264191.67	2026-01-22 21:23:15.752374	2026-01-22 21:23:15.752374	hacia_destino	\N	t
+494	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62451	0.00	264212.50	2026-01-22 21:23:20.666039	2026-01-22 21:23:20.666039	hacia_destino	\N	t
+495	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62465	0.00	264270.83	2026-01-22 21:23:34.325592	2026-01-22 21:23:34.325592	hacia_destino	inicio	t
+496	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62470	0.00	264291.67	2026-01-22 21:23:39.536255	2026-01-22 21:23:39.536255	hacia_destino	\N	t
+497	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62475	0.00	264312.50	2026-01-22 21:23:44.562854	2026-01-22 21:23:44.562854	hacia_destino	\N	t
+498	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62480	0.00	264333.33	2026-01-22 21:23:49.544643	2026-01-22 21:23:49.544643	hacia_destino	\N	t
+499	792	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	62485	0.00	264354.17	2026-01-22 21:23:54.529007	2026-01-22 21:23:54.529007	hacia_destino	\N	t
+500	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-22 21:32:07.704713	2026-01-22 21:32:07.704713	hacia_destino	inicio	t
+501	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-22 21:32:12.836669	2026-01-22 21:32:12.836669	hacia_destino	\N	t
+502	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-22 21:32:17.876648	2026-01-22 21:32:17.876648	hacia_destino	\N	t
+503	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-22 21:32:22.859443	2026-01-22 21:32:22.859443	hacia_destino	\N	t
+504	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-22 21:32:28.04453	2026-01-22 21:32:28.04453	hacia_destino	\N	t
+505	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-22 21:32:33.124193	2026-01-22 21:32:33.124193	hacia_destino	\N	t
+506	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-22 21:32:38.048616	2026-01-22 21:32:38.048616	hacia_destino	\N	t
+507	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-22 21:32:42.875786	2026-01-22 21:32:42.875786	hacia_destino	\N	t
+508	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	40	0.00	6000.00	2026-01-22 21:32:47.858468	2026-01-22 21:32:47.858468	hacia_destino	\N	t
+509	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	45	0.00	6000.00	2026-01-22 21:32:52.889142	2026-01-22 21:32:52.889142	hacia_destino	\N	t
+510	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-22 21:32:57.916491	2026-01-22 21:32:57.916491	hacia_destino	\N	t
+511	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-22 21:33:02.887832	2026-01-22 21:33:02.887832	hacia_destino	\N	t
+512	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	60	0.00	6000.00	2026-01-22 21:33:07.895883	2026-01-22 21:33:07.895883	hacia_destino	\N	t
+513	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	65	0.00	6000.00	2026-01-22 21:33:12.882627	2026-01-22 21:33:12.882627	hacia_destino	\N	t
+514	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	70	0.00	6000.00	2026-01-22 21:33:18.076102	2026-01-22 21:33:18.076102	hacia_destino	\N	t
+515	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	75	0.00	6000.00	2026-01-22 21:33:22.924196	2026-01-22 21:33:22.924196	hacia_destino	\N	t
+516	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	80	0.00	6000.00	2026-01-22 21:33:27.927573	2026-01-22 21:33:27.927573	hacia_destino	\N	t
+517	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	85	0.00	6000.00	2026-01-22 21:33:32.889858	2026-01-22 21:33:32.889858	hacia_destino	\N	t
+518	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	90	0.00	6000.00	2026-01-22 21:33:37.828291	2026-01-22 21:33:37.828291	hacia_destino	\N	t
+519	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	95	0.00	6000.00	2026-01-22 21:33:42.832556	2026-01-22 21:33:42.832556	hacia_destino	\N	t
+520	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	100	0.00	6000.00	2026-01-22 21:33:47.878555	2026-01-22 21:33:47.878555	hacia_destino	\N	t
+521	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	105	0.00	6000.00	2026-01-22 21:33:52.852506	2026-01-22 21:33:52.852506	hacia_destino	\N	t
+522	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	110	0.00	6000.00	2026-01-22 21:33:57.970096	2026-01-22 21:33:57.970096	hacia_destino	\N	t
+523	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	115	0.00	6000.00	2026-01-22 21:34:02.920851	2026-01-22 21:34:02.920851	hacia_destino	\N	t
+524	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	120	0.00	6000.00	2026-01-22 21:34:07.839343	2026-01-22 21:34:07.839343	hacia_destino	\N	t
+525	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	125	0.00	6000.00	2026-01-22 21:34:12.858528	2026-01-22 21:34:12.858528	hacia_destino	\N	t
+526	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	130	0.00	6000.00	2026-01-22 21:34:17.893101	2026-01-22 21:34:17.893101	hacia_destino	\N	t
+527	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	135	0.00	6000.00	2026-01-22 21:34:22.850392	2026-01-22 21:34:22.850392	hacia_destino	\N	t
+528	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	140	0.00	6000.00	2026-01-22 21:34:27.880253	2026-01-22 21:34:27.880253	hacia_destino	\N	t
+529	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	145	0.00	6000.00	2026-01-22 21:34:32.954467	2026-01-22 21:34:32.954467	hacia_destino	\N	t
+530	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	150	0.00	6000.00	2026-01-22 21:34:37.835908	2026-01-22 21:34:37.835908	hacia_destino	\N	t
+531	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	155	0.00	6000.00	2026-01-22 21:34:42.810633	2026-01-22 21:34:42.810633	hacia_destino	\N	t
+532	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	160	0.00	6000.00	2026-01-22 21:34:47.834242	2026-01-22 21:34:47.834242	hacia_destino	\N	t
+533	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	165	0.00	6000.00	2026-01-22 21:34:52.842497	2026-01-22 21:34:52.842497	hacia_destino	\N	t
+534	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	170	0.00	6000.00	2026-01-22 21:34:57.817156	2026-01-22 21:34:57.817156	hacia_destino	\N	t
+535	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	175	0.00	6000.00	2026-01-22 21:35:02.821404	2026-01-22 21:35:02.821404	hacia_destino	\N	t
+536	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	180	0.00	6000.00	2026-01-22 21:35:07.82312	2026-01-22 21:35:07.82312	hacia_destino	\N	t
+537	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	185	0.00	6000.00	2026-01-22 21:35:12.812224	2026-01-22 21:35:12.812224	hacia_destino	\N	t
+538	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	190	0.00	6000.00	2026-01-22 21:35:17.823816	2026-01-22 21:35:17.823816	hacia_destino	\N	t
+539	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	195	0.00	6000.00	2026-01-22 21:35:22.834589	2026-01-22 21:35:22.834589	hacia_destino	\N	t
+540	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	200	0.00	6000.00	2026-01-22 21:35:27.845073	2026-01-22 21:35:27.845073	hacia_destino	\N	t
+541	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	205	0.00	6000.00	2026-01-22 21:35:32.826076	2026-01-22 21:35:32.826076	hacia_destino	\N	t
+542	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	210	0.00	6000.00	2026-01-22 21:35:37.822608	2026-01-22 21:35:37.822608	hacia_destino	\N	t
+543	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	215	0.00	6000.00	2026-01-22 21:35:42.837346	2026-01-22 21:35:42.837346	hacia_destino	\N	t
+544	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	220	0.00	6000.00	2026-01-22 21:35:47.81747	2026-01-22 21:35:47.81747	hacia_destino	\N	t
+545	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	225	0.00	6000.00	2026-01-22 21:35:52.820735	2026-01-22 21:35:52.820735	hacia_destino	\N	t
+546	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	230	0.00	6000.00	2026-01-22 21:35:57.809399	2026-01-22 21:35:57.809399	hacia_destino	\N	t
+547	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	235	0.00	6000.00	2026-01-22 21:36:02.848656	2026-01-22 21:36:02.848656	hacia_destino	\N	t
+548	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	240	0.00	6000.00	2026-01-22 21:36:07.834129	2026-01-22 21:36:07.834129	hacia_destino	\N	t
+549	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	245	0.00	6000.00	2026-01-22 21:36:12.837838	2026-01-22 21:36:12.837838	hacia_destino	\N	t
+550	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	250	0.00	6000.00	2026-01-22 21:36:17.835667	2026-01-22 21:36:17.835667	hacia_destino	\N	t
+551	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	255	0.00	6000.00	2026-01-22 21:36:22.877565	2026-01-22 21:36:22.877565	hacia_destino	\N	t
+552	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	260	0.00	6000.00	2026-01-22 21:36:27.887276	2026-01-22 21:36:27.887276	hacia_destino	\N	t
+553	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	265	0.00	6000.00	2026-01-22 21:36:32.829846	2026-01-22 21:36:32.829846	hacia_destino	\N	t
+554	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	270	0.00	6000.00	2026-01-22 21:36:37.842616	2026-01-22 21:36:37.842616	hacia_destino	\N	t
+555	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	275	0.00	6000.00	2026-01-22 21:36:42.87237	2026-01-22 21:36:42.87237	hacia_destino	\N	t
+556	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1456	0.00	10066.67	2026-01-22 21:56:23.893162	2026-01-22 21:56:23.893162	hacia_destino	inicio	t
+557	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1461	0.00	10087.50	2026-01-22 21:56:29.302876	2026-01-22 21:56:29.302876	hacia_destino	\N	t
+558	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1466	0.00	10108.33	2026-01-22 21:56:34.461906	2026-01-22 21:56:34.461906	hacia_destino	\N	t
+559	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1471	0.00	10129.17	2026-01-22 21:56:39.307751	2026-01-22 21:56:39.307751	hacia_destino	\N	t
+560	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1476	0.00	10150.00	2026-01-22 21:56:44.30731	2026-01-22 21:56:44.30731	hacia_destino	\N	t
+561	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1481	0.00	10170.83	2026-01-22 21:56:49.364104	2026-01-22 21:56:49.364104	hacia_destino	\N	t
+562	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1486	0.00	10191.67	2026-01-22 21:56:54.281055	2026-01-22 21:56:54.281055	hacia_destino	\N	t
+563	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1491	0.00	10212.50	2026-01-22 21:56:59.274614	2026-01-22 21:56:59.274614	hacia_destino	\N	t
+564	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2422	0.00	14091.67	2026-01-22 22:12:30.244514	2026-01-22 22:12:30.244514	hacia_destino	inicio	t
+565	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2427	0.00	14112.50	2026-01-22 22:12:35.466951	2026-01-22 22:12:35.466951	hacia_destino	\N	t
+566	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2432	0.00	14133.33	2026-01-22 22:12:40.451164	2026-01-22 22:12:40.451164	hacia_destino	\N	t
+567	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2437	0.00	14154.17	2026-01-22 22:12:45.446285	2026-01-22 22:12:45.446285	hacia_destino	\N	t
+568	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2442	0.00	14175.00	2026-01-22 22:12:50.464643	2026-01-22 22:12:50.464643	hacia_destino	\N	t
+569	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2447	0.00	14195.83	2026-01-22 22:12:55.472379	2026-01-22 22:12:55.472379	hacia_destino	\N	t
+570	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2452	0.00	14216.67	2026-01-22 22:13:00.450041	2026-01-22 22:13:00.450041	hacia_destino	\N	t
+571	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2457	0.00	14237.50	2026-01-22 22:13:05.56376	2026-01-22 22:13:05.56376	hacia_destino	\N	t
+572	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2462	0.00	14258.33	2026-01-22 22:13:10.469934	2026-01-22 22:13:10.469934	hacia_destino	\N	t
+573	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2467	0.00	14279.17	2026-01-22 22:13:15.442056	2026-01-22 22:13:15.442056	hacia_destino	\N	t
+574	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2472	0.00	14300.00	2026-01-22 22:13:20.451983	2026-01-22 22:13:20.451983	hacia_destino	\N	t
+575	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2477	0.00	14320.83	2026-01-22 22:13:25.483514	2026-01-22 22:13:25.483514	hacia_destino	\N	t
+576	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2482	0.00	14341.67	2026-01-22 22:13:30.459908	2026-01-22 22:13:30.459908	hacia_destino	\N	t
+577	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2487	0.00	14362.50	2026-01-22 22:13:35.459694	2026-01-22 22:13:35.459694	hacia_destino	\N	t
+578	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2492	0.00	14383.33	2026-01-22 22:13:40.435893	2026-01-22 22:13:40.435893	hacia_destino	\N	t
+579	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2497	0.00	14404.17	2026-01-22 22:13:45.445958	2026-01-22 22:13:45.445958	hacia_destino	\N	t
+580	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2502	0.00	14425.00	2026-01-22 22:13:50.479702	2026-01-22 22:13:50.479702	hacia_destino	\N	t
+581	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2507	0.00	14445.83	2026-01-22 22:13:55.445872	2026-01-22 22:13:55.445872	hacia_destino	\N	t
+582	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2512	0.00	14466.67	2026-01-22 22:14:00.453142	2026-01-22 22:14:00.453142	hacia_destino	\N	t
+583	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2517	0.00	14487.50	2026-01-22 22:14:05.468992	2026-01-22 22:14:05.468992	hacia_destino	\N	t
+584	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2522	0.00	14508.33	2026-01-22 22:14:10.437887	2026-01-22 22:14:10.437887	hacia_destino	\N	t
+585	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2527	0.00	14529.17	2026-01-22 22:14:15.442101	2026-01-22 22:14:15.442101	hacia_destino	\N	t
+586	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2532	0.00	14550.00	2026-01-22 22:14:20.448712	2026-01-22 22:14:20.448712	hacia_destino	\N	t
+587	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2537	0.00	14570.83	2026-01-22 22:14:25.447232	2026-01-22 22:14:25.447232	hacia_destino	\N	t
+588	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2542	0.00	14591.67	2026-01-22 22:14:30.432435	2026-01-22 22:14:30.432435	hacia_destino	\N	t
+589	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2547	0.00	14612.50	2026-01-22 22:14:35.54636	2026-01-22 22:14:35.54636	hacia_destino	\N	t
+590	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2552	0.00	14633.33	2026-01-22 22:14:40.440975	2026-01-22 22:14:40.440975	hacia_destino	\N	t
+591	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2557	0.00	14654.17	2026-01-22 22:14:45.464847	2026-01-22 22:14:45.464847	hacia_destino	\N	t
+592	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2562	0.00	14675.00	2026-01-22 22:14:50.443821	2026-01-22 22:14:50.443821	hacia_destino	\N	t
+593	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2567	0.00	14695.83	2026-01-22 22:14:55.445896	2026-01-22 22:14:55.445896	hacia_destino	\N	t
+594	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2572	0.00	14716.67	2026-01-22 22:15:00.456023	2026-01-22 22:15:00.456023	hacia_destino	\N	t
+595	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2577	0.00	14737.50	2026-01-22 22:15:05.467926	2026-01-22 22:15:05.467926	hacia_destino	\N	t
+596	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2583	0.00	14762.50	2026-01-22 22:15:10.718135	2026-01-22 22:15:10.718135	hacia_destino	\N	t
+597	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2587	0.00	14779.17	2026-01-22 22:15:15.464139	2026-01-22 22:15:15.464139	hacia_destino	\N	t
+598	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2592	0.00	14800.00	2026-01-22 22:15:20.457714	2026-01-22 22:15:20.457714	hacia_destino	\N	t
+599	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2597	0.00	14820.83	2026-01-22 22:15:25.454799	2026-01-22 22:15:25.454799	hacia_destino	\N	t
+600	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2602	0.00	14841.67	2026-01-22 22:15:30.465602	2026-01-22 22:15:30.465602	hacia_destino	\N	t
+601	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2607	0.00	14862.50	2026-01-22 22:15:35.440356	2026-01-22 22:15:35.440356	hacia_destino	\N	t
+602	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2612	0.00	14883.33	2026-01-22 22:15:40.441111	2026-01-22 22:15:40.441111	hacia_destino	\N	t
+603	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2617	0.00	14904.17	2026-01-22 22:15:45.43969	2026-01-22 22:15:45.43969	hacia_destino	\N	t
+604	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2622	0.00	14925.00	2026-01-22 22:15:50.444399	2026-01-22 22:15:50.444399	hacia_destino	\N	t
+605	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2627	0.00	14945.83	2026-01-22 22:15:55.445136	2026-01-22 22:15:55.445136	hacia_destino	\N	t
+606	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2632	0.00	14966.67	2026-01-22 22:16:00.459509	2026-01-22 22:16:00.459509	hacia_destino	\N	t
+607	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2637	0.00	14987.50	2026-01-22 22:16:05.435796	2026-01-22 22:16:05.435796	hacia_destino	\N	t
+608	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2642	0.00	15008.33	2026-01-22 22:16:10.441895	2026-01-22 22:16:10.441895	hacia_destino	\N	t
+609	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2647	0.00	15029.17	2026-01-22 22:16:15.437192	2026-01-22 22:16:15.437192	hacia_destino	\N	t
+610	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2652	0.00	15050.00	2026-01-22 22:16:20.440446	2026-01-22 22:16:20.440446	hacia_destino	\N	t
+611	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2657	0.00	15070.83	2026-01-22 22:16:25.436069	2026-01-22 22:16:25.436069	hacia_destino	\N	t
+612	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2662	0.00	15091.67	2026-01-22 22:16:30.446773	2026-01-22 22:16:30.446773	hacia_destino	\N	t
+613	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2667	0.00	15112.50	2026-01-22 22:16:35.442083	2026-01-22 22:16:35.442083	hacia_destino	\N	t
+614	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2672	0.00	15133.33	2026-01-22 22:16:40.458494	2026-01-22 22:16:40.458494	hacia_destino	\N	t
+615	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2677	0.00	15154.17	2026-01-22 22:16:45.459672	2026-01-22 22:16:45.459672	hacia_destino	\N	t
+616	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2682	0.00	15175.00	2026-01-22 22:16:50.44704	2026-01-22 22:16:50.44704	hacia_destino	\N	t
+617	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2687	0.00	15195.83	2026-01-22 22:16:55.44533	2026-01-22 22:16:55.44533	hacia_destino	\N	t
+618	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2692	0.00	15216.67	2026-01-22 22:17:00.439916	2026-01-22 22:17:00.439916	hacia_destino	\N	t
+619	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2697	0.00	15237.50	2026-01-22 22:17:05.438929	2026-01-22 22:17:05.438929	hacia_destino	\N	t
+620	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2702	0.00	15258.33	2026-01-22 22:17:10.440045	2026-01-22 22:17:10.440045	hacia_destino	\N	t
+621	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2707	0.00	15279.17	2026-01-22 22:17:15.443542	2026-01-22 22:17:15.443542	hacia_destino	\N	t
+622	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2712	0.00	15300.00	2026-01-22 22:17:20.461004	2026-01-22 22:17:20.461004	hacia_destino	\N	t
+623	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2717	0.00	15320.83	2026-01-22 22:17:25.444595	2026-01-22 22:17:25.444595	hacia_destino	\N	t
+624	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2722	0.00	15341.67	2026-01-22 22:17:30.441424	2026-01-22 22:17:30.441424	hacia_destino	\N	t
+625	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2727	0.00	15362.50	2026-01-22 22:17:35.552666	2026-01-22 22:17:35.552666	hacia_destino	\N	t
+626	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2732	0.00	15383.33	2026-01-22 22:17:40.442425	2026-01-22 22:17:40.442425	hacia_destino	\N	t
+627	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2737	0.00	15404.17	2026-01-22 22:17:45.433698	2026-01-22 22:17:45.433698	hacia_destino	\N	t
+628	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2742	0.00	15425.00	2026-01-22 22:17:50.452407	2026-01-22 22:17:50.452407	hacia_destino	\N	t
+629	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2747	0.00	15445.83	2026-01-22 22:17:55.437826	2026-01-22 22:17:55.437826	hacia_destino	\N	t
+630	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2752	0.00	15466.67	2026-01-22 22:18:00.447534	2026-01-22 22:18:00.447534	hacia_destino	\N	t
+631	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2757	0.00	15487.50	2026-01-22 22:18:05.439725	2026-01-22 22:18:05.439725	hacia_destino	\N	t
+632	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2762	0.00	15508.33	2026-01-22 22:18:10.446216	2026-01-22 22:18:10.446216	hacia_destino	\N	t
+633	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2767	0.00	15529.17	2026-01-22 22:18:15.437172	2026-01-22 22:18:15.437172	hacia_destino	\N	t
+634	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2772	0.00	15550.00	2026-01-22 22:18:20.433873	2026-01-22 22:18:20.433873	hacia_destino	\N	t
+635	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2777	0.00	15570.83	2026-01-22 22:18:25.474383	2026-01-22 22:18:25.474383	hacia_destino	\N	t
+636	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2782	0.00	15591.67	2026-01-22 22:18:30.433066	2026-01-22 22:18:30.433066	hacia_destino	\N	t
+637	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2787	0.00	15612.50	2026-01-22 22:18:35.44554	2026-01-22 22:18:35.44554	hacia_destino	\N	t
+638	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2792	0.00	15633.33	2026-01-22 22:18:40.469223	2026-01-22 22:18:40.469223	hacia_destino	\N	t
+639	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2797	0.00	15654.17	2026-01-22 22:18:45.44214	2026-01-22 22:18:45.44214	hacia_destino	\N	t
+640	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2802	0.00	15675.00	2026-01-22 22:18:50.465322	2026-01-22 22:18:50.465322	hacia_destino	\N	t
+641	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2807	0.00	15695.83	2026-01-22 22:18:55.442856	2026-01-22 22:18:55.442856	hacia_destino	\N	t
+642	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2812	0.00	15716.67	2026-01-22 22:19:00.45342	2026-01-22 22:19:00.45342	hacia_destino	\N	t
+643	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2817	0.00	15737.50	2026-01-22 22:19:05.459671	2026-01-22 22:19:05.459671	hacia_destino	\N	t
+644	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2822	0.00	15758.33	2026-01-22 22:19:10.442221	2026-01-22 22:19:10.442221	hacia_destino	\N	t
+645	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2827	0.00	15779.17	2026-01-22 22:19:15.447365	2026-01-22 22:19:15.447365	hacia_destino	\N	t
+646	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2832	0.00	15800.00	2026-01-22 22:19:20.44058	2026-01-22 22:19:20.44058	hacia_destino	\N	t
+647	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2837	0.00	15820.83	2026-01-22 22:19:25.51999	2026-01-22 22:19:25.51999	hacia_destino	\N	t
+648	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2842	0.00	15841.67	2026-01-22 22:19:30.447904	2026-01-22 22:19:30.447904	hacia_destino	\N	t
+649	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2847	0.00	15862.50	2026-01-22 22:19:35.434943	2026-01-22 22:19:35.434943	hacia_destino	\N	t
+650	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2852	0.00	15883.33	2026-01-22 22:19:40.541987	2026-01-22 22:19:40.541987	hacia_destino	\N	t
+651	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3566	0.00	18858.33	2026-01-22 22:31:33.912969	2026-01-22 22:31:33.912969	hacia_destino	inicio	t
+652	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3571	0.00	18879.17	2026-01-22 22:31:39.103918	2026-01-22 22:31:39.103918	hacia_destino	\N	t
+653	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3576	0.00	18900.00	2026-01-22 22:31:44.117165	2026-01-22 22:31:44.117165	hacia_destino	\N	t
+654	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3581	0.00	18920.83	2026-01-22 22:31:49.103109	2026-01-22 22:31:49.103109	hacia_destino	\N	t
+655	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3586	0.00	18941.67	2026-01-22 22:31:54.104447	2026-01-22 22:31:54.104447	hacia_destino	\N	t
+656	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3591	0.00	18962.50	2026-01-22 22:31:59.127013	2026-01-22 22:31:59.127013	hacia_destino	\N	t
+657	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3596	0.00	18983.33	2026-01-22 22:32:04.103474	2026-01-22 22:32:04.103474	hacia_destino	\N	t
+658	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3601	0.00	19004.17	2026-01-22 22:32:09.123754	2026-01-22 22:32:09.123754	hacia_destino	\N	t
+659	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3606	0.00	19025.00	2026-01-22 22:32:14.118316	2026-01-22 22:32:14.118316	hacia_destino	\N	t
+660	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3611	0.00	19045.83	2026-01-22 22:32:19.094555	2026-01-22 22:32:19.094555	hacia_destino	\N	t
+661	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3616	0.00	19066.67	2026-01-22 22:32:24.088401	2026-01-22 22:32:24.088401	hacia_destino	\N	t
+662	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3621	0.00	19087.50	2026-01-22 22:32:29.10457	2026-01-22 22:32:29.10457	hacia_destino	\N	t
+663	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3626	0.00	19108.33	2026-01-22 22:32:34.089138	2026-01-22 22:32:34.089138	hacia_destino	\N	t
+664	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3631	0.00	19129.17	2026-01-22 22:32:39.093114	2026-01-22 22:32:39.093114	hacia_destino	\N	t
+665	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3636	0.00	19150.00	2026-01-22 22:32:44.094022	2026-01-22 22:32:44.094022	hacia_destino	\N	t
+666	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3641	0.00	19170.83	2026-01-22 22:32:49.094179	2026-01-22 22:32:49.094179	hacia_destino	\N	t
+667	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3646	0.00	19191.67	2026-01-22 22:32:54.090834	2026-01-22 22:32:54.090834	hacia_destino	\N	t
+668	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3651	0.00	19212.50	2026-01-22 22:32:59.086726	2026-01-22 22:32:59.086726	hacia_destino	\N	t
+669	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3656	0.00	19233.33	2026-01-22 22:33:04.089173	2026-01-22 22:33:04.089173	hacia_destino	\N	t
+670	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3661	0.00	19254.17	2026-01-22 22:33:09.104612	2026-01-22 22:33:09.104612	hacia_destino	\N	t
+671	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3666	0.00	19275.00	2026-01-22 22:33:14.099697	2026-01-22 22:33:14.099697	hacia_destino	\N	t
+672	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3671	0.00	19295.83	2026-01-22 22:33:19.088023	2026-01-22 22:33:19.088023	hacia_destino	\N	t
+673	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3676	0.00	19316.67	2026-01-22 22:33:24.10883	2026-01-22 22:33:24.10883	hacia_destino	\N	t
+674	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3681	0.00	19337.50	2026-01-22 22:33:29.113501	2026-01-22 22:33:29.113501	hacia_destino	\N	t
+675	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3686	0.00	19358.33	2026-01-22 22:33:34.093278	2026-01-22 22:33:34.093278	hacia_destino	\N	t
+676	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3691	0.00	19379.17	2026-01-22 22:33:39.084113	2026-01-22 22:33:39.084113	hacia_destino	\N	t
+677	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3696	0.00	19400.00	2026-01-22 22:33:44.099575	2026-01-22 22:33:44.099575	hacia_destino	\N	t
+678	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3701	0.00	19420.83	2026-01-22 22:33:49.146129	2026-01-22 22:33:49.146129	hacia_destino	\N	t
+679	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3706	0.00	19441.67	2026-01-22 22:33:54.112719	2026-01-22 22:33:54.112719	hacia_destino	\N	t
+680	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3711	0.00	19462.50	2026-01-22 22:33:59.082193	2026-01-22 22:33:59.082193	hacia_destino	\N	t
+681	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3716	0.00	19483.33	2026-01-22 22:34:04.12264	2026-01-22 22:34:04.12264	hacia_destino	\N	t
+682	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3721	0.00	19504.17	2026-01-22 22:34:09.127534	2026-01-22 22:34:09.127534	hacia_destino	\N	t
+683	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3726	0.00	19525.00	2026-01-22 22:34:14.208219	2026-01-22 22:34:14.208219	hacia_destino	\N	t
+684	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3731	0.00	19545.83	2026-01-22 22:34:19.105331	2026-01-22 22:34:19.105331	hacia_destino	\N	t
+685	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3736	0.00	19566.67	2026-01-22 22:34:24.208872	2026-01-22 22:34:24.208872	hacia_destino	\N	t
+686	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3741	0.00	19587.50	2026-01-22 22:34:29.090941	2026-01-22 22:34:29.090941	hacia_destino	\N	t
+687	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3746	0.00	19608.33	2026-01-22 22:34:34.105744	2026-01-22 22:34:34.105744	hacia_destino	\N	t
+688	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3751	0.00	19629.17	2026-01-22 22:34:39.112855	2026-01-22 22:34:39.112855	hacia_destino	\N	t
+689	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3756	0.00	19650.00	2026-01-22 22:34:44.110212	2026-01-22 22:34:44.110212	hacia_destino	\N	t
+690	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3761	0.00	19670.83	2026-01-22 22:34:49.113087	2026-01-22 22:34:49.113087	hacia_destino	\N	t
+691	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3766	0.00	19691.67	2026-01-22 22:34:54.10583	2026-01-22 22:34:54.10583	hacia_destino	\N	t
+692	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3771	0.00	19712.50	2026-01-22 22:34:59.084674	2026-01-22 22:34:59.084674	hacia_destino	\N	t
+693	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3776	0.00	19733.33	2026-01-22 22:35:04.082687	2026-01-22 22:35:04.082687	hacia_destino	\N	t
+694	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3781	0.00	19754.17	2026-01-22 22:35:09.104242	2026-01-22 22:35:09.104242	hacia_destino	\N	t
+695	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3786	0.00	19775.00	2026-01-22 22:35:14.090101	2026-01-22 22:35:14.090101	hacia_destino	\N	t
+696	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3791	0.00	19795.83	2026-01-22 22:35:19.085063	2026-01-22 22:35:19.085063	hacia_destino	\N	t
+697	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3796	0.00	19816.67	2026-01-22 22:35:24.089681	2026-01-22 22:35:24.089681	hacia_destino	\N	t
+698	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3801	0.00	19837.50	2026-01-22 22:35:29.09846	2026-01-22 22:35:29.09846	hacia_destino	\N	t
+699	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3806	0.00	19858.33	2026-01-22 22:35:34.090766	2026-01-22 22:35:34.090766	hacia_destino	\N	t
+700	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3811	0.00	19879.17	2026-01-22 22:35:39.099098	2026-01-22 22:35:39.099098	hacia_destino	\N	t
+701	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3816	0.00	19900.00	2026-01-22 22:35:44.191889	2026-01-22 22:35:44.191889	hacia_destino	\N	t
+702	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3821	0.00	19920.83	2026-01-22 22:35:49.099422	2026-01-22 22:35:49.099422	hacia_destino	\N	t
+703	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3826	0.00	19941.67	2026-01-22 22:35:54.268394	2026-01-22 22:35:54.268394	hacia_destino	\N	t
+704	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3831	0.00	19962.50	2026-01-22 22:35:59.103421	2026-01-22 22:35:59.103421	hacia_destino	\N	t
+705	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3836	0.00	19983.33	2026-01-22 22:36:04.090385	2026-01-22 22:36:04.090385	hacia_destino	\N	t
+706	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3841	0.00	20004.17	2026-01-22 22:36:09.121493	2026-01-22 22:36:09.121493	hacia_destino	\N	t
+707	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3846	0.00	20025.00	2026-01-22 22:36:14.104614	2026-01-22 22:36:14.104614	hacia_destino	\N	t
+708	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3851	0.00	20045.83	2026-01-22 22:36:19.134097	2026-01-22 22:36:19.134097	hacia_destino	\N	t
+709	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3856	0.00	20066.67	2026-01-22 22:36:24.092146	2026-01-22 22:36:24.092146	hacia_destino	\N	t
+710	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3861	0.00	20087.50	2026-01-22 22:36:29.100827	2026-01-22 22:36:29.100827	hacia_destino	\N	t
+711	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3866	0.00	20108.33	2026-01-22 22:36:34.103662	2026-01-22 22:36:34.103662	hacia_destino	\N	t
+712	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3871	0.00	20129.17	2026-01-22 22:36:39.087251	2026-01-22 22:36:39.087251	hacia_destino	\N	t
+713	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3876	0.00	20150.00	2026-01-22 22:36:44.189324	2026-01-22 22:36:44.189324	hacia_destino	\N	t
+714	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3881	0.00	20170.83	2026-01-22 22:36:49.178607	2026-01-22 22:36:49.178607	hacia_destino	\N	t
+715	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3886	0.00	20191.67	2026-01-22 22:36:54.104276	2026-01-22 22:36:54.104276	hacia_destino	\N	t
+716	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3891	0.00	20212.50	2026-01-22 22:36:59.129494	2026-01-22 22:36:59.129494	hacia_destino	\N	t
+717	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3896	0.00	20233.33	2026-01-22 22:37:04.098133	2026-01-22 22:37:04.098133	hacia_destino	\N	t
+718	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3901	0.00	20254.17	2026-01-22 22:37:09.116957	2026-01-22 22:37:09.116957	hacia_destino	\N	t
+719	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3906	0.00	20275.00	2026-01-22 22:37:14.220083	2026-01-22 22:37:14.220083	hacia_destino	\N	t
+720	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3911	0.00	20295.83	2026-01-22 22:37:19.104765	2026-01-22 22:37:19.104765	hacia_destino	\N	t
+721	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3916	0.00	20316.67	2026-01-22 22:37:24.122864	2026-01-22 22:37:24.122864	hacia_destino	\N	t
+722	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3921	0.00	20337.50	2026-01-22 22:37:29.089356	2026-01-22 22:37:29.089356	hacia_destino	\N	t
+723	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3926	0.00	20358.33	2026-01-22 22:37:34.101495	2026-01-22 22:37:34.101495	hacia_destino	\N	t
+724	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3931	0.00	20379.17	2026-01-22 22:37:39.151658	2026-01-22 22:37:39.151658	hacia_destino	\N	t
+725	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3936	0.00	20400.00	2026-01-22 22:37:44.103658	2026-01-22 22:37:44.103658	hacia_destino	\N	t
+726	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3941	0.00	20420.83	2026-01-22 22:37:49.243577	2026-01-22 22:37:49.243577	hacia_destino	\N	t
+727	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3946	0.00	20441.67	2026-01-22 22:37:54.112848	2026-01-22 22:37:54.112848	hacia_destino	\N	t
+728	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3951	0.00	20462.50	2026-01-22 22:37:59.102286	2026-01-22 22:37:59.102286	hacia_destino	\N	t
+729	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3956	0.00	20483.33	2026-01-22 22:38:04.106221	2026-01-22 22:38:04.106221	hacia_destino	\N	t
+730	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3961	0.00	20504.17	2026-01-22 22:38:09.106709	2026-01-22 22:38:09.106709	hacia_destino	\N	t
+731	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3966	0.00	20525.00	2026-01-22 22:38:14.089362	2026-01-22 22:38:14.089362	hacia_destino	\N	t
+732	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3971	0.00	20545.83	2026-01-22 22:38:19.100491	2026-01-22 22:38:19.100491	hacia_destino	\N	t
+733	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3976	0.00	20566.67	2026-01-22 22:38:24.098078	2026-01-22 22:38:24.098078	hacia_destino	\N	t
+734	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3981	0.00	20587.50	2026-01-22 22:38:29.101059	2026-01-22 22:38:29.101059	hacia_destino	\N	t
+735	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3986	0.00	20608.33	2026-01-22 22:38:34.094111	2026-01-22 22:38:34.094111	hacia_destino	\N	t
+736	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3991	0.00	20629.17	2026-01-22 22:38:39.087514	2026-01-22 22:38:39.087514	hacia_destino	\N	t
+737	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	3996	0.00	20650.00	2026-01-22 22:38:44.083972	2026-01-22 22:38:44.083972	hacia_destino	\N	t
+738	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4001	0.00	20670.83	2026-01-22 22:38:49.114833	2026-01-22 22:38:49.114833	hacia_destino	\N	t
+739	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4006	0.00	20691.67	2026-01-22 22:38:54.084041	2026-01-22 22:38:54.084041	hacia_destino	\N	t
+740	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4011	0.00	20712.50	2026-01-22 22:38:59.090583	2026-01-22 22:38:59.090583	hacia_destino	\N	t
+741	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4016	0.00	20733.33	2026-01-22 22:39:04.098287	2026-01-22 22:39:04.098287	hacia_destino	\N	t
+742	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4021	0.00	20754.17	2026-01-22 22:39:09.100017	2026-01-22 22:39:09.100017	hacia_destino	\N	t
+743	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4026	0.00	20775.00	2026-01-22 22:39:14.089878	2026-01-22 22:39:14.089878	hacia_destino	\N	t
+744	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4031	0.00	20795.83	2026-01-22 22:39:19.107626	2026-01-22 22:39:19.107626	hacia_destino	\N	t
+745	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4036	0.00	20816.67	2026-01-22 22:39:24.122089	2026-01-22 22:39:24.122089	hacia_destino	\N	t
+746	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4041	0.00	20837.50	2026-01-22 22:39:29.300497	2026-01-22 22:39:29.300497	hacia_destino	\N	t
+747	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4046	0.00	20858.33	2026-01-22 22:39:34.100367	2026-01-22 22:39:34.100367	hacia_destino	\N	t
+748	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4366	0.00	22191.67	2026-01-22 22:44:54.546116	2026-01-22 22:44:54.546116	hacia_destino	inicio	t
+749	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4372	0.00	22216.67	2026-01-22 22:44:59.764111	2026-01-22 22:44:59.764111	hacia_destino	\N	t
+750	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4377	0.00	22237.50	2026-01-22 22:45:04.70842	2026-01-22 22:45:04.70842	hacia_destino	\N	t
+751	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4382	0.00	22258.33	2026-01-22 22:45:09.68405	2026-01-22 22:45:09.68405	hacia_destino	\N	t
+752	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4387	0.00	22279.17	2026-01-22 22:45:14.797791	2026-01-22 22:45:14.797791	hacia_destino	\N	t
+753	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4392	0.00	22300.00	2026-01-22 22:45:19.818031	2026-01-22 22:45:19.818031	hacia_destino	\N	t
+754	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4397	0.00	22320.83	2026-01-22 22:45:24.772588	2026-01-22 22:45:24.772588	hacia_destino	\N	t
+755	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4402	0.00	22341.67	2026-01-22 22:45:29.684583	2026-01-22 22:45:29.684583	hacia_destino	\N	t
+756	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4407	0.00	22362.50	2026-01-22 22:45:34.750946	2026-01-22 22:45:34.750946	hacia_destino	\N	t
+757	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4412	0.00	22383.33	2026-01-22 22:45:39.687625	2026-01-22 22:45:39.687625	hacia_destino	\N	t
+758	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4417	0.00	22404.17	2026-01-22 22:45:44.728393	2026-01-22 22:45:44.728393	hacia_destino	\N	t
+759	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4422	0.00	22425.00	2026-01-22 22:45:49.701817	2026-01-22 22:45:49.701817	hacia_destino	\N	t
+760	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4427	0.00	22445.83	2026-01-22 22:45:54.686483	2026-01-22 22:45:54.686483	hacia_destino	\N	t
+761	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4432	0.00	22466.67	2026-01-22 22:45:59.690842	2026-01-22 22:45:59.690842	hacia_destino	\N	t
+762	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4437	0.00	22487.50	2026-01-22 22:46:04.71126	2026-01-22 22:46:04.71126	hacia_destino	\N	t
+763	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4442	0.00	22508.33	2026-01-22 22:46:09.771551	2026-01-22 22:46:09.771551	hacia_destino	\N	t
+764	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4447	0.00	22529.17	2026-01-22 22:46:14.746893	2026-01-22 22:46:14.746893	hacia_destino	\N	t
+765	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4452	0.00	22550.00	2026-01-22 22:46:19.751108	2026-01-22 22:46:19.751108	hacia_destino	\N	t
+766	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4457	0.00	22570.83	2026-01-22 22:46:24.817471	2026-01-22 22:46:24.817471	hacia_destino	\N	t
+767	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4462	0.00	22591.67	2026-01-22 22:46:29.856222	2026-01-22 22:46:29.856222	hacia_destino	\N	t
+768	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4467	0.00	22612.50	2026-01-22 22:46:34.984075	2026-01-22 22:46:34.984075	hacia_destino	\N	t
+769	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4472	0.00	22633.33	2026-01-22 22:46:39.744564	2026-01-22 22:46:39.744564	hacia_destino	\N	t
+770	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4477	0.00	22654.17	2026-01-22 22:46:44.707257	2026-01-22 22:46:44.707257	hacia_destino	\N	t
+771	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4482	0.00	22675.00	2026-01-22 22:46:49.736736	2026-01-22 22:46:49.736736	hacia_destino	\N	t
+772	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4487	0.00	22695.83	2026-01-22 22:46:54.691893	2026-01-22 22:46:54.691893	hacia_destino	\N	t
+773	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4492	0.00	22716.67	2026-01-22 22:46:59.763496	2026-01-22 22:46:59.763496	hacia_destino	\N	t
+774	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4497	0.00	22737.50	2026-01-22 22:47:05.638681	2026-01-22 22:47:05.638681	hacia_destino	\N	t
+775	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4502	0.00	22758.33	2026-01-22 22:47:09.851233	2026-01-22 22:47:09.851233	hacia_destino	\N	t
+776	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4507	0.00	22779.17	2026-01-22 22:47:14.760191	2026-01-22 22:47:14.760191	hacia_destino	\N	t
+777	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4512	0.00	22800.00	2026-01-22 22:47:19.927751	2026-01-22 22:47:19.927751	hacia_destino	\N	t
+778	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4517	0.00	22820.83	2026-01-22 22:47:24.763575	2026-01-22 22:47:24.763575	hacia_destino	\N	t
+779	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4522	0.00	22841.67	2026-01-22 22:47:29.736899	2026-01-22 22:47:29.736899	hacia_destino	\N	t
+780	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4527	0.00	22862.50	2026-01-22 22:47:34.851328	2026-01-22 22:47:34.851328	hacia_destino	\N	t
+781	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4532	0.00	22883.33	2026-01-22 22:47:39.894659	2026-01-22 22:47:39.894659	hacia_destino	\N	t
+782	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4537	0.00	22904.17	2026-01-22 22:47:44.851263	2026-01-22 22:47:44.851263	hacia_destino	\N	t
+783	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4542	0.00	22925.00	2026-01-22 22:47:50.055213	2026-01-22 22:47:50.055213	hacia_destino	\N	t
+784	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4547	0.00	22945.83	2026-01-22 22:47:54.735617	2026-01-22 22:47:54.735617	hacia_destino	\N	t
+785	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4552	0.00	22966.67	2026-01-22 22:47:59.745464	2026-01-22 22:47:59.745464	hacia_destino	\N	t
+786	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4557	0.00	22987.50	2026-01-22 22:48:04.782367	2026-01-22 22:48:04.782367	hacia_destino	\N	t
+787	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4562	0.00	23008.33	2026-01-22 22:48:09.751326	2026-01-22 22:48:09.751326	hacia_destino	\N	t
+788	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4567	0.00	23029.17	2026-01-22 22:48:14.741565	2026-01-22 22:48:14.741565	hacia_destino	\N	t
+789	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4572	0.00	23050.00	2026-01-22 22:48:19.751866	2026-01-22 22:48:19.751866	hacia_destino	\N	t
+790	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4577	0.00	23070.83	2026-01-22 22:48:24.749224	2026-01-22 22:48:24.749224	hacia_destino	\N	t
+791	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4582	0.00	23091.67	2026-01-22 22:48:29.726147	2026-01-22 22:48:29.726147	hacia_destino	\N	t
+792	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4587	0.00	23112.50	2026-01-22 22:48:34.738168	2026-01-22 22:48:34.738168	hacia_destino	\N	t
+793	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4592	0.00	23133.33	2026-01-22 22:48:39.740626	2026-01-22 22:48:39.740626	hacia_destino	\N	t
+794	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4597	0.00	23154.17	2026-01-22 22:48:44.735689	2026-01-22 22:48:44.735689	hacia_destino	\N	t
+795	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4602	0.00	23175.00	2026-01-22 22:48:49.757503	2026-01-22 22:48:49.757503	hacia_destino	\N	t
+796	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4607	0.00	23195.83	2026-01-22 22:48:54.709436	2026-01-22 22:48:54.709436	hacia_destino	\N	t
+797	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4612	0.00	23216.67	2026-01-22 22:48:59.741364	2026-01-22 22:48:59.741364	hacia_destino	\N	t
+798	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4617	0.00	23237.50	2026-01-22 22:49:04.726806	2026-01-22 22:49:04.726806	hacia_destino	\N	t
+799	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4622	0.00	23258.33	2026-01-22 22:49:09.733176	2026-01-22 22:49:09.733176	hacia_destino	\N	t
+800	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4627	0.00	23279.17	2026-01-22 22:49:14.771741	2026-01-22 22:49:14.771741	hacia_destino	\N	t
+801	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4632	0.00	23300.00	2026-01-22 22:49:19.815081	2026-01-22 22:49:19.815081	hacia_destino	\N	t
+802	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4637	0.00	23320.83	2026-01-22 22:49:24.830034	2026-01-22 22:49:24.830034	hacia_destino	\N	t
+803	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4642	0.00	23341.67	2026-01-22 22:49:29.766178	2026-01-22 22:49:29.766178	hacia_destino	\N	t
+804	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4647	0.00	23362.50	2026-01-22 22:49:34.896593	2026-01-22 22:49:34.896593	hacia_destino	\N	t
+805	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4652	0.00	23383.33	2026-01-22 22:49:39.9341	2026-01-22 22:49:39.9341	hacia_destino	\N	t
+806	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4657	0.00	23404.17	2026-01-22 22:49:44.912786	2026-01-22 22:49:44.912786	hacia_destino	\N	t
+807	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4662	0.00	23425.00	2026-01-22 22:49:49.838969	2026-01-22 22:49:49.838969	hacia_destino	\N	t
+808	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4667	0.00	23445.83	2026-01-22 22:49:54.836219	2026-01-22 22:49:54.836219	hacia_destino	\N	t
+809	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4672	0.00	23466.67	2026-01-22 22:49:59.923537	2026-01-22 22:49:59.923537	hacia_destino	\N	t
+810	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4677	0.00	23487.50	2026-01-22 22:50:04.80838	2026-01-22 22:50:04.80838	hacia_destino	\N	t
+811	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4682	0.00	23508.33	2026-01-22 22:50:09.919182	2026-01-22 22:50:09.919182	hacia_destino	\N	t
+812	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4687	0.00	23529.17	2026-01-22 22:50:15.115799	2026-01-22 22:50:15.115799	hacia_destino	\N	t
+813	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4692	0.00	23550.00	2026-01-22 22:50:20.389909	2026-01-22 22:50:20.389909	hacia_destino	\N	t
+814	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4697	0.00	23570.83	2026-01-22 22:50:24.906863	2026-01-22 22:50:24.906863	hacia_destino	\N	t
+815	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4702	0.00	23591.67	2026-01-22 22:50:29.865973	2026-01-22 22:50:29.865973	hacia_destino	\N	t
+816	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4707	0.00	23612.50	2026-01-22 22:50:34.915034	2026-01-22 22:50:34.915034	hacia_destino	\N	t
+817	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4712	0.00	23633.33	2026-01-22 22:50:39.974868	2026-01-22 22:50:39.974868	hacia_destino	\N	t
+818	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4717	0.00	23654.17	2026-01-22 22:50:44.909487	2026-01-22 22:50:44.909487	hacia_destino	\N	t
+819	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4722	0.00	23675.00	2026-01-22 22:50:50.013553	2026-01-22 22:50:50.013553	hacia_destino	\N	t
+820	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4727	0.00	23695.83	2026-01-22 22:50:54.86794	2026-01-22 22:50:54.86794	hacia_destino	\N	t
+821	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4732	0.00	23716.67	2026-01-22 22:50:59.813941	2026-01-22 22:50:59.813941	hacia_destino	\N	t
+822	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4737	0.00	23737.50	2026-01-22 22:51:04.833897	2026-01-22 22:51:04.833897	hacia_destino	\N	t
+823	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4742	0.00	23758.33	2026-01-22 22:51:09.791184	2026-01-22 22:51:09.791184	hacia_destino	\N	t
+824	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4747	0.00	23779.17	2026-01-22 22:51:14.86572	2026-01-22 22:51:14.86572	hacia_destino	\N	t
+825	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4752	0.00	23800.00	2026-01-22 22:51:20.386832	2026-01-22 22:51:20.386832	hacia_destino	\N	t
+826	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4757	0.00	23820.83	2026-01-22 22:51:24.813933	2026-01-22 22:51:24.813933	hacia_destino	\N	t
+827	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4762	0.00	23841.67	2026-01-22 22:51:30.061549	2026-01-22 22:51:30.061549	hacia_destino	\N	t
+828	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4767	0.00	23862.50	2026-01-22 22:51:34.779297	2026-01-22 22:51:34.779297	hacia_destino	\N	t
+829	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4772	0.00	23883.33	2026-01-22 22:51:39.874434	2026-01-22 22:51:39.874434	hacia_destino	\N	t
+830	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4777	0.00	23904.17	2026-01-22 22:51:44.90668	2026-01-22 22:51:44.90668	hacia_destino	\N	t
+831	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4782	0.00	23925.00	2026-01-22 22:51:50.082833	2026-01-22 22:51:50.082833	hacia_destino	\N	t
+832	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4787	0.00	23945.83	2026-01-22 22:51:56.033079	2026-01-22 22:51:56.033079	hacia_destino	\N	t
+833	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4792	0.00	23966.67	2026-01-22 22:51:59.800786	2026-01-22 22:51:59.800786	hacia_destino	\N	t
+834	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4797	0.00	23987.50	2026-01-22 22:52:04.792012	2026-01-22 22:52:04.792012	hacia_destino	\N	t
+835	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4802	0.00	24008.33	2026-01-22 22:52:09.784324	2026-01-22 22:52:09.784324	hacia_destino	\N	t
+836	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4827	0.00	24112.50	2026-01-22 22:52:34.736425	2026-01-22 22:52:34.736425	hacia_destino	inicio	t
+837	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4832	0.00	24133.33	2026-01-22 22:52:40.381709	2026-01-22 22:52:40.381709	hacia_destino	\N	t
+838	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4837	0.00	24154.17	2026-01-22 22:52:46.998578	2026-01-22 22:52:46.998578	hacia_destino	\N	t
+839	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4842	0.00	24175.00	2026-01-22 22:52:50.124358	2026-01-22 22:52:50.124358	hacia_destino	\N	t
+840	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4847	0.00	24195.83	2026-01-22 22:52:55.115225	2026-01-22 22:52:55.115225	hacia_destino	\N	t
+841	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4852	0.00	24216.67	2026-01-22 22:53:00.08908	2026-01-22 22:53:00.08908	hacia_destino	\N	t
+842	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4857	0.00	24237.50	2026-01-22 22:53:05.014995	2026-01-22 22:53:05.014995	hacia_destino	\N	t
+843	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4862	0.00	24258.33	2026-01-22 22:53:10.298196	2026-01-22 22:53:10.298196	hacia_destino	\N	t
+844	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4867	0.00	24279.17	2026-01-22 22:53:17.481318	2026-01-22 22:53:17.481318	hacia_destino	\N	t
+845	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4872	0.00	24300.00	2026-01-22 22:53:20.514338	2026-01-22 22:53:20.514338	hacia_destino	\N	t
+846	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4877	0.00	24320.83	2026-01-22 22:53:25.081761	2026-01-22 22:53:25.081761	hacia_destino	\N	t
+847	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4882	0.00	24341.67	2026-01-22 22:53:30.015814	2026-01-22 22:53:30.015814	hacia_destino	\N	t
+848	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4887	0.00	24362.50	2026-01-22 22:53:35.233873	2026-01-22 22:53:35.233873	hacia_destino	\N	t
+849	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4892	0.00	24383.33	2026-01-22 22:53:40.026505	2026-01-22 22:53:40.026505	hacia_destino	\N	t
+850	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4897	0.00	24404.17	2026-01-22 22:53:45.037932	2026-01-22 22:53:45.037932	hacia_destino	\N	t
+851	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4902	0.00	24425.00	2026-01-22 22:53:50.184983	2026-01-22 22:53:50.184983	hacia_destino	\N	t
+852	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4907	0.00	24445.83	2026-01-22 22:53:55.211761	2026-01-22 22:53:55.211761	hacia_destino	\N	t
+853	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4912	0.00	24466.67	2026-01-22 22:54:00.713847	2026-01-22 22:54:00.713847	hacia_destino	\N	t
+854	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4917	0.00	24487.50	2026-01-22 22:54:05.684908	2026-01-22 22:54:05.684908	hacia_destino	\N	t
+855	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4922	0.00	24508.33	2026-01-22 22:54:10.162884	2026-01-22 22:54:10.162884	hacia_destino	\N	t
+856	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4927	0.00	24529.17	2026-01-22 22:54:15.203899	2026-01-22 22:54:15.203899	hacia_destino	\N	t
+857	793	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	7944	0.00	37100.00	2026-01-22 23:44:32.85898	2026-01-22 23:44:32.85898	hacia_destino	inicio	t
+858	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-23 19:36:51.946122	2026-01-23 19:36:51.946122	hacia_destino	inicio	t
+859	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-23 19:36:57.098407	2026-01-23 19:36:57.098407	hacia_destino	\N	t
+860	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-23 19:37:02.094754	2026-01-23 19:37:02.094754	hacia_destino	\N	t
+861	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-23 19:37:07.065942	2026-01-23 19:37:07.065942	hacia_destino	\N	t
+862	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-23 19:37:12.071283	2026-01-23 19:37:12.071283	hacia_destino	\N	t
+863	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-23 19:37:17.048919	2026-01-23 19:37:17.048919	hacia_destino	\N	t
+864	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-23 19:37:22.073466	2026-01-23 19:37:22.073466	hacia_destino	\N	t
+865	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-23 19:37:27.061457	2026-01-23 19:37:27.061457	hacia_destino	\N	t
+866	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	40	0.00	6000.00	2026-01-23 19:37:32.059284	2026-01-23 19:37:32.059284	hacia_destino	\N	t
+867	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	45	0.00	6000.00	2026-01-23 19:37:37.076595	2026-01-23 19:37:37.076595	hacia_destino	\N	t
+868	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-23 19:37:42.053609	2026-01-23 19:37:42.053609	hacia_destino	\N	t
+869	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-23 19:37:47.061582	2026-01-23 19:37:47.061582	hacia_destino	\N	t
+870	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	60	0.00	6000.00	2026-01-23 19:37:52.050236	2026-01-23 19:37:52.050236	hacia_destino	\N	t
+871	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	65	0.00	6000.00	2026-01-23 19:37:57.062231	2026-01-23 19:37:57.062231	hacia_destino	\N	t
+872	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	70	0.00	6000.00	2026-01-23 19:38:02.066179	2026-01-23 19:38:02.066179	hacia_destino	\N	t
+873	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	75	0.00	6000.00	2026-01-23 19:38:07.056362	2026-01-23 19:38:07.056362	hacia_destino	\N	t
+874	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	80	0.00	6000.00	2026-01-23 19:38:12.063146	2026-01-23 19:38:12.063146	hacia_destino	\N	t
+875	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	85	0.00	6000.00	2026-01-23 19:38:17.176859	2026-01-23 19:38:17.176859	hacia_destino	\N	t
+876	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	90	0.00	6000.00	2026-01-23 19:38:22.059364	2026-01-23 19:38:22.059364	hacia_destino	\N	t
+877	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	95	0.00	6000.00	2026-01-23 19:38:27.0557	2026-01-23 19:38:27.0557	hacia_destino	\N	t
+878	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	100	0.00	6000.00	2026-01-23 19:38:32.062495	2026-01-23 19:38:32.062495	hacia_destino	\N	t
+879	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	105	0.00	6000.00	2026-01-23 19:38:37.166419	2026-01-23 19:38:37.166419	hacia_destino	\N	t
+880	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	110	0.00	6000.00	2026-01-23 19:38:42.053231	2026-01-23 19:38:42.053231	hacia_destino	\N	t
+881	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	115	0.00	6000.00	2026-01-23 19:38:47.081101	2026-01-23 19:38:47.081101	hacia_destino	\N	t
+882	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	120	0.00	6000.00	2026-01-23 19:38:52.051626	2026-01-23 19:38:52.051626	hacia_destino	\N	t
+883	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	125	0.00	6000.00	2026-01-23 19:38:57.056805	2026-01-23 19:38:57.056805	hacia_destino	\N	t
+884	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	130	0.00	6000.00	2026-01-23 19:39:02.062321	2026-01-23 19:39:02.062321	hacia_destino	\N	t
+885	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	135	0.00	6000.00	2026-01-23 19:39:07.051324	2026-01-23 19:39:07.051324	hacia_destino	\N	t
+886	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	140	0.00	6000.00	2026-01-23 19:39:12.048405	2026-01-23 19:39:12.048405	hacia_destino	\N	t
+887	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	145	0.00	6000.00	2026-01-23 19:39:17.05164	2026-01-23 19:39:17.05164	hacia_destino	\N	t
+888	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	150	0.00	6000.00	2026-01-23 19:39:22.056862	2026-01-23 19:39:22.056862	hacia_destino	\N	t
+889	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	155	0.00	6000.00	2026-01-23 19:39:27.055989	2026-01-23 19:39:27.055989	hacia_destino	\N	t
+890	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	160	0.00	6000.00	2026-01-23 19:39:32.061506	2026-01-23 19:39:32.061506	hacia_destino	\N	t
+891	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	165	0.00	6000.00	2026-01-23 19:39:37.062656	2026-01-23 19:39:37.062656	hacia_destino	\N	t
+892	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	170	0.00	6000.00	2026-01-23 19:39:42.053554	2026-01-23 19:39:42.053554	hacia_destino	\N	t
+893	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	175	0.00	6000.00	2026-01-23 19:39:47.051139	2026-01-23 19:39:47.051139	hacia_destino	\N	t
+894	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	180	0.00	6000.00	2026-01-23 19:39:52.050194	2026-01-23 19:39:52.050194	hacia_destino	\N	t
+895	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	185	0.00	6000.00	2026-01-23 19:39:57.154268	2026-01-23 19:39:57.154268	hacia_destino	\N	t
+896	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	190	0.00	6000.00	2026-01-23 19:40:02.15513	2026-01-23 19:40:02.15513	hacia_destino	\N	t
+897	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	195	0.00	6000.00	2026-01-23 19:40:07.049479	2026-01-23 19:40:07.049479	hacia_destino	\N	t
+898	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	200	0.00	6000.00	2026-01-23 19:40:12.049717	2026-01-23 19:40:12.049717	hacia_destino	\N	t
+899	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	205	0.00	6000.00	2026-01-23 19:40:17.057237	2026-01-23 19:40:17.057237	hacia_destino	\N	t
+900	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	210	0.00	6000.00	2026-01-23 19:40:22.056923	2026-01-23 19:40:22.056923	hacia_destino	\N	t
+901	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	215	0.00	6000.00	2026-01-23 19:40:27.058442	2026-01-23 19:40:27.058442	hacia_destino	\N	t
+902	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	220	0.00	6000.00	2026-01-23 19:40:32.079045	2026-01-23 19:40:32.079045	hacia_destino	\N	t
+903	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	225	0.00	6000.00	2026-01-23 19:40:37.053446	2026-01-23 19:40:37.053446	hacia_destino	\N	t
+904	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	230	0.00	6000.00	2026-01-23 19:40:42.23225	2026-01-23 19:40:42.23225	hacia_destino	\N	t
+905	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	235	0.00	6000.00	2026-01-23 19:40:47.137367	2026-01-23 19:40:47.137367	hacia_destino	\N	t
+906	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	240	0.00	6000.00	2026-01-23 19:40:52.071775	2026-01-23 19:40:52.071775	hacia_destino	\N	t
+907	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	245	0.00	6000.00	2026-01-23 19:40:57.050649	2026-01-23 19:40:57.050649	hacia_destino	\N	t
+908	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	250	0.00	6000.00	2026-01-23 19:41:02.057189	2026-01-23 19:41:02.057189	hacia_destino	\N	t
+909	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	255	0.00	6000.00	2026-01-23 19:41:07.078942	2026-01-23 19:41:07.078942	hacia_destino	\N	t
+910	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	260	0.00	6000.00	2026-01-23 19:41:12.084624	2026-01-23 19:41:12.084624	hacia_destino	\N	t
+911	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	265	0.00	6000.00	2026-01-23 19:41:17.081419	2026-01-23 19:41:17.081419	hacia_destino	\N	t
+912	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	270	0.00	6000.00	2026-01-23 19:41:22.058192	2026-01-23 19:41:22.058192	hacia_destino	\N	t
+913	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	275	0.00	6000.00	2026-01-23 19:41:27.125992	2026-01-23 19:41:27.125992	hacia_destino	\N	t
+914	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	280	0.00	6000.00	2026-01-23 19:41:32.120907	2026-01-23 19:41:32.120907	hacia_destino	\N	t
+915	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	285	0.00	6000.00	2026-01-23 19:41:37.107479	2026-01-23 19:41:37.107479	hacia_destino	\N	t
+916	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	290	0.00	6000.00	2026-01-23 19:41:42.091704	2026-01-23 19:41:42.091704	hacia_destino	\N	t
+917	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	295	0.00	6000.00	2026-01-23 19:41:47.101575	2026-01-23 19:41:47.101575	hacia_destino	\N	t
+918	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	300	0.00	6000.00	2026-01-23 19:41:52.072365	2026-01-23 19:41:52.072365	hacia_destino	\N	t
+919	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	305	0.00	6000.00	2026-01-23 19:41:57.089513	2026-01-23 19:41:57.089513	hacia_destino	\N	t
+920	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	310	0.00	6000.00	2026-01-23 19:42:02.067036	2026-01-23 19:42:02.067036	hacia_destino	\N	t
+921	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	315	0.00	6000.00	2026-01-23 19:42:07.127577	2026-01-23 19:42:07.127577	hacia_destino	\N	t
+922	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	320	0.00	6000.00	2026-01-23 19:42:12.089674	2026-01-23 19:42:12.089674	hacia_destino	\N	t
+923	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	325	0.00	6000.00	2026-01-23 19:42:17.126889	2026-01-23 19:42:17.126889	hacia_destino	\N	t
+924	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	330	0.00	6000.00	2026-01-23 19:42:22.098745	2026-01-23 19:42:22.098745	hacia_destino	\N	t
+925	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	335	0.00	6000.00	2026-01-23 19:42:27.071681	2026-01-23 19:42:27.071681	hacia_destino	\N	t
+926	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	340	0.00	6000.00	2026-01-23 19:42:32.097154	2026-01-23 19:42:32.097154	hacia_destino	\N	t
+927	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	345	0.00	6000.00	2026-01-23 19:42:37.103324	2026-01-23 19:42:37.103324	hacia_destino	\N	t
+928	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	350	0.00	6000.00	2026-01-23 19:42:42.13192	2026-01-23 19:42:42.13192	hacia_destino	\N	t
+929	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	355	0.00	6000.00	2026-01-23 19:42:47.090062	2026-01-23 19:42:47.090062	hacia_destino	\N	t
+930	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	360	0.00	6000.00	2026-01-23 19:42:52.094165	2026-01-23 19:42:52.094165	hacia_destino	\N	t
+931	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	365	0.00	6000.00	2026-01-23 19:42:57.06533	2026-01-23 19:42:57.06533	hacia_destino	\N	t
+932	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	370	0.00	6000.00	2026-01-23 19:43:02.066571	2026-01-23 19:43:02.066571	hacia_destino	\N	t
+933	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	375	0.00	6000.00	2026-01-23 19:43:07.119493	2026-01-23 19:43:07.119493	hacia_destino	\N	t
+934	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	380	0.00	6000.00	2026-01-23 19:43:12.130615	2026-01-23 19:43:12.130615	hacia_destino	\N	t
+935	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	385	0.00	6000.00	2026-01-23 19:43:17.11918	2026-01-23 19:43:17.11918	hacia_destino	\N	t
+936	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	390	0.00	6000.00	2026-01-23 19:43:22.120196	2026-01-23 19:43:22.120196	hacia_destino	\N	t
+937	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	395	0.00	6000.00	2026-01-23 19:43:27.066869	2026-01-23 19:43:27.066869	hacia_destino	\N	t
+938	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	400	0.00	6000.00	2026-01-23 19:43:32.109645	2026-01-23 19:43:32.109645	hacia_destino	\N	t
+939	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	405	0.00	6000.00	2026-01-23 19:43:37.101616	2026-01-23 19:43:37.101616	hacia_destino	\N	t
+940	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	410	0.00	6000.00	2026-01-23 19:43:42.117275	2026-01-23 19:43:42.117275	hacia_destino	\N	t
+941	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	415	0.00	6000.00	2026-01-23 19:43:47.110266	2026-01-23 19:43:47.110266	hacia_destino	\N	t
+942	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	420	0.00	6000.00	2026-01-23 19:43:52.158526	2026-01-23 19:43:52.158526	hacia_destino	\N	t
+943	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	425	0.00	6000.00	2026-01-23 19:43:57.099143	2026-01-23 19:43:57.099143	hacia_destino	\N	t
+944	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	430	0.00	6000.00	2026-01-23 19:44:02.095531	2026-01-23 19:44:02.095531	hacia_destino	\N	t
+945	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	435	0.00	6000.00	2026-01-23 19:44:07.120882	2026-01-23 19:44:07.120882	hacia_destino	\N	t
+946	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	440	0.00	6000.00	2026-01-23 19:44:12.100126	2026-01-23 19:44:12.100126	hacia_destino	\N	t
+947	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	445	0.00	6000.00	2026-01-23 19:44:17.131812	2026-01-23 19:44:17.131812	hacia_destino	\N	t
+948	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	450	0.00	6000.00	2026-01-23 19:44:22.070339	2026-01-23 19:44:22.070339	hacia_destino	\N	t
+949	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	455	0.00	6000.00	2026-01-23 19:44:27.092139	2026-01-23 19:44:27.092139	hacia_destino	\N	t
+950	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	460	0.00	6000.00	2026-01-23 19:44:32.067213	2026-01-23 19:44:32.067213	hacia_destino	\N	t
+951	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	465	0.00	6000.00	2026-01-23 19:44:37.094596	2026-01-23 19:44:37.094596	hacia_destino	\N	t
+952	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	470	0.00	6000.00	2026-01-23 19:44:42.071921	2026-01-23 19:44:42.071921	hacia_destino	\N	t
+953	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	475	0.00	6000.00	2026-01-23 19:44:47.179875	2026-01-23 19:44:47.179875	hacia_destino	\N	t
+954	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	480	0.00	6000.00	2026-01-23 19:44:52.082115	2026-01-23 19:44:52.082115	hacia_destino	\N	t
+955	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	485	0.00	6020.83	2026-01-23 19:44:57.065356	2026-01-23 19:44:57.065356	hacia_destino	\N	t
+956	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	490	0.00	6041.67	2026-01-23 19:45:02.062936	2026-01-23 19:45:02.062936	hacia_destino	\N	t
+957	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	495	0.00	6062.50	2026-01-23 19:45:07.079017	2026-01-23 19:45:07.079017	hacia_destino	\N	t
+958	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	500	0.00	6083.33	2026-01-23 19:45:12.072934	2026-01-23 19:45:12.072934	hacia_destino	\N	t
+959	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	505	0.00	6104.17	2026-01-23 19:45:17.096739	2026-01-23 19:45:17.096739	hacia_destino	\N	t
+960	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	510	0.00	6125.00	2026-01-23 19:45:22.062516	2026-01-23 19:45:22.062516	hacia_destino	\N	t
+961	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	515	0.00	6145.83	2026-01-23 19:45:27.048132	2026-01-23 19:45:27.048132	hacia_destino	\N	t
+962	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	520	0.00	6166.67	2026-01-23 19:45:32.062024	2026-01-23 19:45:32.062024	hacia_destino	\N	t
+963	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	525	0.00	6187.50	2026-01-23 19:45:37.055215	2026-01-23 19:45:37.055215	hacia_destino	\N	t
+964	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	530	0.00	6208.33	2026-01-23 19:45:42.054821	2026-01-23 19:45:42.054821	hacia_destino	\N	t
+965	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	535	0.00	6229.17	2026-01-23 19:45:47.084561	2026-01-23 19:45:47.084561	hacia_destino	\N	t
+966	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	540	0.00	6250.00	2026-01-23 19:45:52.0691	2026-01-23 19:45:52.0691	hacia_destino	\N	t
+967	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	545	0.00	6270.83	2026-01-23 19:45:57.062958	2026-01-23 19:45:57.062958	hacia_destino	\N	t
+968	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	550	0.00	6291.67	2026-01-23 19:46:02.066343	2026-01-23 19:46:02.066343	hacia_destino	\N	t
+969	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	555	0.00	6312.50	2026-01-23 19:46:07.063402	2026-01-23 19:46:07.063402	hacia_destino	\N	t
+970	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	560	0.00	6333.33	2026-01-23 19:46:12.063734	2026-01-23 19:46:12.063734	hacia_destino	\N	t
+971	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	565	0.00	6354.17	2026-01-23 19:46:17.064417	2026-01-23 19:46:17.064417	hacia_destino	\N	t
+972	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	570	0.00	6375.00	2026-01-23 19:46:22.130083	2026-01-23 19:46:22.130083	hacia_destino	\N	t
+973	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	575	0.00	6395.83	2026-01-23 19:46:27.066817	2026-01-23 19:46:27.066817	hacia_destino	\N	t
+974	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	580	0.00	6416.67	2026-01-23 19:46:32.060554	2026-01-23 19:46:32.060554	hacia_destino	\N	t
+975	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	585	0.00	6437.50	2026-01-23 19:46:37.163866	2026-01-23 19:46:37.163866	hacia_destino	\N	t
+976	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	590	0.00	6458.33	2026-01-23 19:46:42.051234	2026-01-23 19:46:42.051234	hacia_destino	\N	t
+977	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	595	0.00	6479.17	2026-01-23 19:46:47.064736	2026-01-23 19:46:47.064736	hacia_destino	\N	t
+978	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	600	0.00	6500.00	2026-01-23 19:46:52.067073	2026-01-23 19:46:52.067073	hacia_destino	\N	t
+979	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	605	0.00	6520.83	2026-01-23 19:46:57.061945	2026-01-23 19:46:57.061945	hacia_destino	\N	t
+980	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	610	0.00	6541.67	2026-01-23 19:47:02.064781	2026-01-23 19:47:02.064781	hacia_destino	\N	t
+981	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	615	0.00	6562.50	2026-01-23 19:47:07.060134	2026-01-23 19:47:07.060134	hacia_destino	\N	t
+982	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	620	0.00	6583.33	2026-01-23 19:47:12.158068	2026-01-23 19:47:12.158068	hacia_destino	\N	t
+983	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	625	0.00	6604.17	2026-01-23 19:47:17.126459	2026-01-23 19:47:17.126459	hacia_destino	\N	t
+984	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	630	0.00	6625.00	2026-01-23 19:47:22.053586	2026-01-23 19:47:22.053586	hacia_destino	\N	t
+985	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	635	0.00	6645.83	2026-01-23 19:47:27.057513	2026-01-23 19:47:27.057513	hacia_destino	\N	t
+986	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	640	0.00	6666.67	2026-01-23 19:47:32.072957	2026-01-23 19:47:32.072957	hacia_destino	\N	t
+987	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	645	0.00	6687.50	2026-01-23 19:47:37.065022	2026-01-23 19:47:37.065022	hacia_destino	\N	t
+988	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	650	0.00	6708.33	2026-01-23 19:47:42.168862	2026-01-23 19:47:42.168862	hacia_destino	\N	t
+989	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	655	0.00	6729.17	2026-01-23 19:47:47.059503	2026-01-23 19:47:47.059503	hacia_destino	\N	t
+990	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	660	0.00	6750.00	2026-01-23 19:47:52.069641	2026-01-23 19:47:52.069641	hacia_destino	\N	t
+991	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	665	0.00	6770.83	2026-01-23 19:47:57.06062	2026-01-23 19:47:57.06062	hacia_destino	\N	t
+992	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	670	0.00	6791.67	2026-01-23 19:48:02.073501	2026-01-23 19:48:02.073501	hacia_destino	\N	t
+993	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	675	0.00	6812.50	2026-01-23 19:48:07.052875	2026-01-23 19:48:07.052875	hacia_destino	\N	t
+994	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	680	0.00	6833.33	2026-01-23 19:48:12.064644	2026-01-23 19:48:12.064644	hacia_destino	\N	t
+995	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	685	0.00	6854.17	2026-01-23 19:48:17.091003	2026-01-23 19:48:17.091003	hacia_destino	\N	t
+996	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	690	0.00	6875.00	2026-01-23 19:48:22.059165	2026-01-23 19:48:22.059165	hacia_destino	\N	t
+997	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	695	0.00	6895.83	2026-01-23 19:48:27.152831	2026-01-23 19:48:27.152831	hacia_destino	\N	t
+998	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	700	0.00	6916.67	2026-01-23 19:48:32.043296	2026-01-23 19:48:32.043296	hacia_destino	\N	t
+999	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	705	0.00	6937.50	2026-01-23 19:48:37.044006	2026-01-23 19:48:37.044006	hacia_destino	\N	t
+1000	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	710	0.00	6958.33	2026-01-23 19:48:42.148975	2026-01-23 19:48:42.148975	hacia_destino	\N	t
+1001	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	715	0.00	6979.17	2026-01-23 19:48:47.051079	2026-01-23 19:48:47.051079	hacia_destino	\N	t
+1002	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	720	0.00	7000.00	2026-01-23 19:48:52.151286	2026-01-23 19:48:52.151286	hacia_destino	\N	t
+1003	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	725	0.00	7020.83	2026-01-23 19:48:57.055335	2026-01-23 19:48:57.055335	hacia_destino	\N	t
+1004	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	730	0.00	7041.67	2026-01-23 19:49:02.112295	2026-01-23 19:49:02.112295	hacia_destino	\N	t
+1005	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	735	0.00	7062.50	2026-01-23 19:49:07.05775	2026-01-23 19:49:07.05775	hacia_destino	\N	t
+1006	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	740	0.00	7083.33	2026-01-23 19:49:12.066779	2026-01-23 19:49:12.066779	hacia_destino	\N	t
+1007	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	745	0.00	7104.17	2026-01-23 19:49:17.081597	2026-01-23 19:49:17.081597	hacia_destino	\N	t
+1008	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	750	0.00	7125.00	2026-01-23 19:49:22.062904	2026-01-23 19:49:22.062904	hacia_destino	\N	t
+1009	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	755	0.00	7145.83	2026-01-23 19:49:27.066291	2026-01-23 19:49:27.066291	hacia_destino	\N	t
+1010	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	760	0.00	7166.67	2026-01-23 19:49:32.06883	2026-01-23 19:49:32.06883	hacia_destino	\N	t
+1011	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	765	0.00	7187.50	2026-01-23 19:49:37.063875	2026-01-23 19:49:37.063875	hacia_destino	\N	t
+1012	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	770	0.00	7208.33	2026-01-23 19:49:42.059289	2026-01-23 19:49:42.059289	hacia_destino	\N	t
+1013	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	775	0.00	7229.17	2026-01-23 19:49:47.131767	2026-01-23 19:49:47.131767	hacia_destino	\N	t
+1014	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	780	0.00	7250.00	2026-01-23 19:49:52.117825	2026-01-23 19:49:52.117825	hacia_destino	\N	t
+1015	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	785	0.00	7270.83	2026-01-23 19:49:57.111192	2026-01-23 19:49:57.111192	hacia_destino	\N	t
+1016	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	790	0.00	7291.67	2026-01-23 19:50:02.167694	2026-01-23 19:50:02.167694	hacia_destino	\N	t
+1017	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	795	0.00	7312.50	2026-01-23 19:50:07.073741	2026-01-23 19:50:07.073741	hacia_destino	\N	t
+1018	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	800	0.00	7333.33	2026-01-23 19:50:12.099112	2026-01-23 19:50:12.099112	hacia_destino	\N	t
+1019	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	805	0.00	7354.17	2026-01-23 19:50:17.069897	2026-01-23 19:50:17.069897	hacia_destino	\N	t
+1020	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	810	0.00	7375.00	2026-01-23 19:50:22.100405	2026-01-23 19:50:22.100405	hacia_destino	\N	t
+1021	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	815	0.00	7395.83	2026-01-23 19:50:27.074175	2026-01-23 19:50:27.074175	hacia_destino	\N	t
+1022	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	820	0.00	7416.67	2026-01-23 19:50:32.064202	2026-01-23 19:50:32.064202	hacia_destino	\N	t
+1023	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	825	0.00	7437.50	2026-01-23 19:50:37.086306	2026-01-23 19:50:37.086306	hacia_destino	\N	t
+1024	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	830	0.00	7458.33	2026-01-23 19:50:42.128262	2026-01-23 19:50:42.128262	hacia_destino	\N	t
+1025	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	835	0.00	7479.17	2026-01-23 19:50:47.138045	2026-01-23 19:50:47.138045	hacia_destino	\N	t
+1026	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	840	0.00	7500.00	2026-01-23 19:50:52.129802	2026-01-23 19:50:52.129802	hacia_destino	\N	t
+1027	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	845	0.00	7520.83	2026-01-23 19:50:57.094818	2026-01-23 19:50:57.094818	hacia_destino	\N	t
+1028	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	850	0.00	7541.67	2026-01-23 19:51:02.11747	2026-01-23 19:51:02.11747	hacia_destino	\N	t
+1029	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	855	0.00	7562.50	2026-01-23 19:51:07.103472	2026-01-23 19:51:07.103472	hacia_destino	\N	t
+1030	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	860	0.00	7583.33	2026-01-23 19:51:12.143351	2026-01-23 19:51:12.143351	hacia_destino	\N	t
+1031	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	865	0.00	7604.17	2026-01-23 19:51:17.187938	2026-01-23 19:51:17.187938	hacia_destino	\N	t
+1032	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	870	0.00	7625.00	2026-01-23 19:51:22.126127	2026-01-23 19:51:22.126127	hacia_destino	\N	t
+1033	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	875	0.00	7645.83	2026-01-23 19:51:27.086406	2026-01-23 19:51:27.086406	hacia_destino	\N	t
+1034	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	880	0.00	7666.67	2026-01-23 19:51:32.16363	2026-01-23 19:51:32.16363	hacia_destino	\N	t
+1035	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	885	0.00	7687.50	2026-01-23 19:51:37.089479	2026-01-23 19:51:37.089479	hacia_destino	\N	t
+1036	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	890	0.00	7708.33	2026-01-23 19:51:42.20803	2026-01-23 19:51:42.20803	hacia_destino	\N	t
+1037	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	895	0.00	7729.17	2026-01-23 19:51:47.066406	2026-01-23 19:51:47.066406	hacia_destino	\N	t
+1038	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	900	0.00	7750.00	2026-01-23 19:51:52.083846	2026-01-23 19:51:52.083846	hacia_destino	\N	t
+1039	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	905	0.00	7770.83	2026-01-23 19:51:57.169301	2026-01-23 19:51:57.169301	hacia_destino	\N	t
+1040	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	910	0.00	7791.67	2026-01-23 19:52:02.085554	2026-01-23 19:52:02.085554	hacia_destino	\N	t
+1041	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	915	0.00	7812.50	2026-01-23 19:52:07.064323	2026-01-23 19:52:07.064323	hacia_destino	\N	t
+1042	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	920	0.00	7833.33	2026-01-23 19:52:12.063142	2026-01-23 19:52:12.063142	hacia_destino	\N	t
+1043	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	925	0.00	7854.17	2026-01-23 19:52:17.216303	2026-01-23 19:52:17.216303	hacia_destino	\N	t
+1044	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	930	0.00	7875.00	2026-01-23 19:52:22.096066	2026-01-23 19:52:22.096066	hacia_destino	\N	t
+1045	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	935	0.00	7895.83	2026-01-23 19:52:27.074398	2026-01-23 19:52:27.074398	hacia_destino	\N	t
+1046	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	940	0.00	7916.67	2026-01-23 19:52:32.08143	2026-01-23 19:52:32.08143	hacia_destino	\N	t
+1047	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	945	0.00	7937.50	2026-01-23 19:52:37.090302	2026-01-23 19:52:37.090302	hacia_destino	\N	t
+1048	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	950	0.00	7958.33	2026-01-23 19:52:42.097484	2026-01-23 19:52:42.097484	hacia_destino	\N	t
+1049	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	955	0.00	7979.17	2026-01-23 19:52:47.161431	2026-01-23 19:52:47.161431	hacia_destino	\N	t
+1050	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	960	0.00	8000.00	2026-01-23 19:52:52.113164	2026-01-23 19:52:52.113164	hacia_destino	\N	t
+1051	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	965	0.00	8020.83	2026-01-23 19:52:57.075207	2026-01-23 19:52:57.075207	hacia_destino	\N	t
+1052	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	970	0.00	8041.67	2026-01-23 19:53:02.124562	2026-01-23 19:53:02.124562	hacia_destino	\N	t
+1053	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	975	0.00	8062.50	2026-01-23 19:53:07.06745	2026-01-23 19:53:07.06745	hacia_destino	\N	t
+1054	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	980	0.00	8083.33	2026-01-23 19:53:12.067618	2026-01-23 19:53:12.067618	hacia_destino	\N	t
+1055	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	985	0.00	8104.17	2026-01-23 19:53:17.088075	2026-01-23 19:53:17.088075	hacia_destino	\N	t
+1056	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	990	0.00	8125.00	2026-01-23 19:53:22.122417	2026-01-23 19:53:22.122417	hacia_destino	\N	t
+1057	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	995	0.00	8145.83	2026-01-23 19:53:27.090157	2026-01-23 19:53:27.090157	hacia_destino	\N	t
+1058	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1000	0.00	8166.67	2026-01-23 19:53:32.101467	2026-01-23 19:53:32.101467	hacia_destino	\N	t
+1059	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1005	0.00	8187.50	2026-01-23 19:53:37.108859	2026-01-23 19:53:37.108859	hacia_destino	\N	t
+1060	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1010	0.00	8208.33	2026-01-23 19:53:42.103925	2026-01-23 19:53:42.103925	hacia_destino	\N	t
+1061	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1015	0.00	8229.17	2026-01-23 19:53:47.169902	2026-01-23 19:53:47.169902	hacia_destino	\N	t
+1062	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1020	0.00	8250.00	2026-01-23 19:53:52.24287	2026-01-23 19:53:52.24287	hacia_destino	\N	t
+1063	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1025	0.00	8270.83	2026-01-23 19:53:57.059665	2026-01-23 19:53:57.059665	hacia_destino	\N	t
+1064	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1030	0.00	8291.67	2026-01-23 19:54:02.05277	2026-01-23 19:54:02.05277	hacia_destino	\N	t
+1065	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1035	0.00	8312.50	2026-01-23 19:54:07.039394	2026-01-23 19:54:07.039394	hacia_destino	\N	t
+1066	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1040	0.00	8333.33	2026-01-23 19:54:12.048073	2026-01-23 19:54:12.048073	hacia_destino	\N	t
+1067	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1045	0.00	8354.17	2026-01-23 19:54:17.060356	2026-01-23 19:54:17.060356	hacia_destino	\N	t
+1068	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1050	0.00	8375.00	2026-01-23 19:54:22.062705	2026-01-23 19:54:22.062705	hacia_destino	\N	t
+1069	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1055	0.00	8395.83	2026-01-23 19:54:27.181532	2026-01-23 19:54:27.181532	hacia_destino	\N	t
+1070	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1060	0.00	8416.67	2026-01-23 19:54:32.094702	2026-01-23 19:54:32.094702	hacia_destino	\N	t
+1071	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1065	0.00	8437.50	2026-01-23 19:54:37.064625	2026-01-23 19:54:37.064625	hacia_destino	\N	t
+1072	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1070	0.00	8458.33	2026-01-23 19:54:42.043859	2026-01-23 19:54:42.043859	hacia_destino	\N	t
+1073	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1075	0.00	8479.17	2026-01-23 19:54:47.049009	2026-01-23 19:54:47.049009	hacia_destino	\N	t
+1074	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1080	0.00	8500.00	2026-01-23 19:54:52.056602	2026-01-23 19:54:52.056602	hacia_destino	\N	t
+1075	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1085	0.00	8520.83	2026-01-23 19:54:57.063958	2026-01-23 19:54:57.063958	hacia_destino	\N	t
+1076	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1090	0.00	8541.67	2026-01-23 19:55:02.0633	2026-01-23 19:55:02.0633	hacia_destino	\N	t
+1077	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1095	0.00	8562.50	2026-01-23 19:55:07.108057	2026-01-23 19:55:07.108057	hacia_destino	\N	t
+1078	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1100	0.00	8583.33	2026-01-23 19:55:12.057653	2026-01-23 19:55:12.057653	hacia_destino	\N	t
+1079	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1105	0.00	8604.17	2026-01-23 19:55:17.240454	2026-01-23 19:55:17.240454	hacia_destino	\N	t
+1080	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1110	0.00	8625.00	2026-01-23 19:55:22.053792	2026-01-23 19:55:22.053792	hacia_destino	\N	t
+1081	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1115	0.00	8645.83	2026-01-23 19:55:27.335712	2026-01-23 19:55:27.335712	hacia_destino	\N	t
+1082	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1145	0.00	8770.83	2026-01-23 19:55:57.587137	2026-01-23 19:55:57.587137	hacia_destino	inicio	t
+1083	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1150	0.00	8791.67	2026-01-23 19:56:02.660164	2026-01-23 19:56:02.660164	hacia_destino	\N	t
+1084	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1155	0.00	8812.50	2026-01-23 19:56:07.682195	2026-01-23 19:56:07.682195	hacia_destino	\N	t
+1085	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1160	0.00	8833.33	2026-01-23 19:56:12.684267	2026-01-23 19:56:12.684267	hacia_destino	\N	t
+1086	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1165	0.00	8854.17	2026-01-23 19:56:17.689607	2026-01-23 19:56:17.689607	hacia_destino	\N	t
+1087	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1170	0.00	8875.00	2026-01-23 19:56:22.750055	2026-01-23 19:56:22.750055	hacia_destino	\N	t
+1088	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1175	0.00	8895.83	2026-01-23 19:56:27.695334	2026-01-23 19:56:27.695334	hacia_destino	\N	t
+1089	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1180	0.00	8916.67	2026-01-23 19:56:32.688406	2026-01-23 19:56:32.688406	hacia_destino	\N	t
+1090	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1185	0.00	8937.50	2026-01-23 19:56:37.690109	2026-01-23 19:56:37.690109	hacia_destino	\N	t
+1091	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1190	0.00	8958.33	2026-01-23 19:56:42.697128	2026-01-23 19:56:42.697128	hacia_destino	\N	t
+1092	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1195	0.00	8979.17	2026-01-23 19:56:47.67421	2026-01-23 19:56:47.67421	hacia_destino	\N	t
+1093	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1200	0.00	9000.00	2026-01-23 19:56:52.667885	2026-01-23 19:56:52.667885	hacia_destino	\N	t
+1094	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1205	0.00	9020.83	2026-01-23 19:56:57.700658	2026-01-23 19:56:57.700658	hacia_destino	\N	t
+1095	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1210	0.00	9041.67	2026-01-23 19:57:02.69027	2026-01-23 19:57:02.69027	hacia_destino	\N	t
+1096	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1215	0.00	9062.50	2026-01-23 19:57:07.69059	2026-01-23 19:57:07.69059	hacia_destino	\N	t
+1097	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1220	0.00	9083.33	2026-01-23 19:57:12.680143	2026-01-23 19:57:12.680143	hacia_destino	\N	t
+1098	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1225	0.00	9104.17	2026-01-23 19:57:17.67763	2026-01-23 19:57:17.67763	hacia_destino	\N	t
+1099	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1230	0.00	9125.00	2026-01-23 19:57:22.687545	2026-01-23 19:57:22.687545	hacia_destino	\N	t
+1100	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1235	0.00	9145.83	2026-01-23 19:57:27.793615	2026-01-23 19:57:27.793615	hacia_destino	\N	t
+1101	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1240	0.00	9166.67	2026-01-23 19:57:32.674307	2026-01-23 19:57:32.674307	hacia_destino	\N	t
+1102	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1245	0.00	9187.50	2026-01-23 19:57:37.682497	2026-01-23 19:57:37.682497	hacia_destino	\N	t
+1103	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1250	0.00	9208.33	2026-01-23 19:57:42.730849	2026-01-23 19:57:42.730849	hacia_destino	\N	t
+1104	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1255	0.00	9229.17	2026-01-23 19:57:47.814274	2026-01-23 19:57:47.814274	hacia_destino	\N	t
+1105	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1260	0.00	9250.00	2026-01-23 19:57:52.697305	2026-01-23 19:57:52.697305	hacia_destino	\N	t
+1106	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1265	0.00	9270.83	2026-01-23 19:57:57.719077	2026-01-23 19:57:57.719077	hacia_destino	\N	t
+1107	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1270	0.00	9291.67	2026-01-23 19:58:02.708171	2026-01-23 19:58:02.708171	hacia_destino	\N	t
+1108	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1275	0.00	9312.50	2026-01-23 19:58:07.707973	2026-01-23 19:58:07.707973	hacia_destino	\N	t
+1109	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1280	0.00	9333.33	2026-01-23 19:58:12.712844	2026-01-23 19:58:12.712844	hacia_destino	\N	t
+1110	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1285	0.00	9354.17	2026-01-23 19:58:17.712959	2026-01-23 19:58:17.712959	hacia_destino	\N	t
+1111	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1290	0.00	9375.00	2026-01-23 19:58:22.7169	2026-01-23 19:58:22.7169	hacia_destino	\N	t
+1112	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1295	0.00	9395.83	2026-01-23 19:58:27.87338	2026-01-23 19:58:27.87338	hacia_destino	\N	t
+1113	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1300	0.00	9416.67	2026-01-23 19:58:32.716626	2026-01-23 19:58:32.716626	hacia_destino	\N	t
+1114	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1305	0.00	9437.50	2026-01-23 19:58:37.670055	2026-01-23 19:58:37.670055	hacia_destino	\N	t
+1115	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1310	0.00	9458.33	2026-01-23 19:58:42.701808	2026-01-23 19:58:42.701808	hacia_destino	\N	t
+1116	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1315	0.00	9479.17	2026-01-23 19:58:47.699519	2026-01-23 19:58:47.699519	hacia_destino	\N	t
+1117	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1320	0.00	9500.00	2026-01-23 19:58:52.699657	2026-01-23 19:58:52.699657	hacia_destino	\N	t
+1118	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1325	0.00	9520.83	2026-01-23 19:58:57.673009	2026-01-23 19:58:57.673009	hacia_destino	\N	t
+1119	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1330	0.00	9541.67	2026-01-23 19:59:02.814099	2026-01-23 19:59:02.814099	hacia_destino	\N	t
+1120	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1335	0.00	9562.50	2026-01-23 19:59:07.716446	2026-01-23 19:59:07.716446	hacia_destino	\N	t
+1121	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1340	0.00	9583.33	2026-01-23 19:59:12.669788	2026-01-23 19:59:12.669788	hacia_destino	\N	t
+1122	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1345	0.00	9604.17	2026-01-23 19:59:17.694131	2026-01-23 19:59:17.694131	hacia_destino	\N	t
+1123	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1350	0.00	9625.00	2026-01-23 19:59:22.77501	2026-01-23 19:59:22.77501	hacia_destino	\N	t
+1124	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1355	0.00	9645.83	2026-01-23 19:59:27.669071	2026-01-23 19:59:27.669071	hacia_destino	\N	t
+1125	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1360	0.00	9666.67	2026-01-23 19:59:32.663867	2026-01-23 19:59:32.663867	hacia_destino	\N	t
+1126	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1365	0.00	9687.50	2026-01-23 19:59:37.785157	2026-01-23 19:59:37.785157	hacia_destino	\N	t
+1127	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1370	0.00	9708.33	2026-01-23 19:59:42.684576	2026-01-23 19:59:42.684576	hacia_destino	\N	t
+1128	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1375	0.00	9729.17	2026-01-23 19:59:47.667648	2026-01-23 19:59:47.667648	hacia_destino	\N	t
+1129	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1380	0.00	9750.00	2026-01-23 19:59:52.684039	2026-01-23 19:59:52.684039	hacia_destino	\N	t
+1130	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1385	0.00	9770.83	2026-01-23 19:59:57.683267	2026-01-23 19:59:57.683267	hacia_destino	\N	t
+1131	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1390	0.00	9791.67	2026-01-23 20:00:02.747021	2026-01-23 20:00:02.747021	hacia_destino	\N	t
+1132	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1395	0.00	9812.50	2026-01-23 20:00:07.691789	2026-01-23 20:00:07.691789	hacia_destino	\N	t
+1133	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1400	0.00	9833.33	2026-01-23 20:00:12.667825	2026-01-23 20:00:12.667825	hacia_destino	\N	t
+1134	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1405	0.00	9854.17	2026-01-23 20:00:17.682131	2026-01-23 20:00:17.682131	hacia_destino	\N	t
+1135	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1410	0.00	9875.00	2026-01-23 20:00:22.682929	2026-01-23 20:00:22.682929	hacia_destino	\N	t
+1136	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1415	0.00	9895.83	2026-01-23 20:00:27.699558	2026-01-23 20:00:27.699558	hacia_destino	\N	t
+1137	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1420	0.00	9916.67	2026-01-23 20:00:32.697007	2026-01-23 20:00:32.697007	hacia_destino	\N	t
+1138	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1425	0.00	9937.50	2026-01-23 20:00:37.677663	2026-01-23 20:00:37.677663	hacia_destino	\N	t
+1139	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1430	0.00	9958.33	2026-01-23 20:00:42.66755	2026-01-23 20:00:42.66755	hacia_destino	\N	t
+1140	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1435	0.00	9979.17	2026-01-23 20:00:47.674404	2026-01-23 20:00:47.674404	hacia_destino	\N	t
+1141	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1440	0.00	10000.00	2026-01-23 20:00:52.672835	2026-01-23 20:00:52.672835	hacia_destino	\N	t
+1142	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1445	0.00	10020.83	2026-01-23 20:00:57.698377	2026-01-23 20:00:57.698377	hacia_destino	\N	t
+1143	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1450	0.00	10041.67	2026-01-23 20:01:02.697108	2026-01-23 20:01:02.697108	hacia_destino	\N	t
+1144	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1455	0.00	10062.50	2026-01-23 20:01:07.811591	2026-01-23 20:01:07.811591	hacia_destino	\N	t
+1145	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1460	0.00	10083.33	2026-01-23 20:01:12.713036	2026-01-23 20:01:12.713036	hacia_destino	\N	t
+1146	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1465	0.00	10104.17	2026-01-23 20:01:17.702332	2026-01-23 20:01:17.702332	hacia_destino	\N	t
+1147	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1470	0.00	10125.00	2026-01-23 20:01:22.792859	2026-01-23 20:01:22.792859	hacia_destino	\N	t
+1148	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1475	0.00	10145.83	2026-01-23 20:01:27.674119	2026-01-23 20:01:27.674119	hacia_destino	\N	t
+1149	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1480	0.00	10166.67	2026-01-23 20:01:32.686909	2026-01-23 20:01:32.686909	hacia_destino	\N	t
+1150	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1485	0.00	10187.50	2026-01-23 20:01:37.686512	2026-01-23 20:01:37.686512	hacia_destino	\N	t
+1151	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1490	0.00	10208.33	2026-01-23 20:01:42.690897	2026-01-23 20:01:42.690897	hacia_destino	\N	t
+1152	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1495	0.00	10229.17	2026-01-23 20:01:47.794914	2026-01-23 20:01:47.794914	hacia_destino	\N	t
+1153	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1500	0.00	10250.00	2026-01-23 20:01:52.697237	2026-01-23 20:01:52.697237	hacia_destino	\N	t
+1154	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1505	0.00	10270.83	2026-01-23 20:01:57.692147	2026-01-23 20:01:57.692147	hacia_destino	\N	t
+1155	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1510	0.00	10291.67	2026-01-23 20:02:02.709934	2026-01-23 20:02:02.709934	hacia_destino	\N	t
+1156	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1515	0.00	10312.50	2026-01-23 20:02:07.710169	2026-01-23 20:02:07.710169	hacia_destino	\N	t
+1157	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1520	0.00	10333.33	2026-01-23 20:02:12.730239	2026-01-23 20:02:12.730239	hacia_destino	\N	t
+1158	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1525	0.00	10354.17	2026-01-23 20:02:17.690429	2026-01-23 20:02:17.690429	hacia_destino	\N	t
+1159	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1530	0.00	10375.00	2026-01-23 20:02:22.713496	2026-01-23 20:02:22.713496	hacia_destino	\N	t
+1160	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1535	0.00	10395.83	2026-01-23 20:02:27.688864	2026-01-23 20:02:27.688864	hacia_destino	\N	t
+1161	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1540	0.00	10416.67	2026-01-23 20:02:32.669412	2026-01-23 20:02:32.669412	hacia_destino	\N	t
+1162	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1545	0.00	10437.50	2026-01-23 20:02:37.679795	2026-01-23 20:02:37.679795	hacia_destino	\N	t
+1163	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1550	0.00	10458.33	2026-01-23 20:02:42.808235	2026-01-23 20:02:42.808235	hacia_destino	\N	t
+1164	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1555	0.00	10479.17	2026-01-23 20:02:47.867705	2026-01-23 20:02:47.867705	hacia_destino	\N	t
+1165	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1570	0.00	10541.67	2026-01-23 20:03:02.809001	2026-01-23 20:03:02.809001	hacia_destino	inicio	t
+1166	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1576	0.00	10566.67	2026-01-23 20:03:08.07026	2026-01-23 20:03:08.07026	hacia_destino	\N	t
+1167	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1581	0.00	10587.50	2026-01-23 20:03:13.038417	2026-01-23 20:03:13.038417	hacia_destino	\N	t
+1168	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1586	0.00	10608.33	2026-01-23 20:03:18.506695	2026-01-23 20:03:18.506695	hacia_destino	\N	t
+1169	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1591	0.00	10629.17	2026-01-23 20:03:23.042981	2026-01-23 20:03:23.042981	hacia_destino	\N	t
+1170	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1596	0.00	10650.00	2026-01-23 20:03:28.084282	2026-01-23 20:03:28.084282	hacia_destino	\N	t
+1171	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1601	0.00	10670.83	2026-01-23 20:03:33.077945	2026-01-23 20:03:33.077945	hacia_destino	\N	t
+1172	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1606	0.00	10691.67	2026-01-23 20:03:38.092557	2026-01-23 20:03:38.092557	hacia_destino	\N	t
+1173	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1611	0.00	10712.50	2026-01-23 20:03:43.029408	2026-01-23 20:03:43.029408	hacia_destino	\N	t
+1174	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1616	0.00	10733.33	2026-01-23 20:03:48.00842	2026-01-23 20:03:48.00842	hacia_destino	\N	t
+1175	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1621	0.00	10754.17	2026-01-23 20:03:53.034043	2026-01-23 20:03:53.034043	hacia_destino	\N	t
+1176	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1626	0.00	10775.00	2026-01-23 20:03:58.132158	2026-01-23 20:03:58.132158	hacia_destino	\N	t
+1177	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1631	0.00	10795.83	2026-01-23 20:04:03.051783	2026-01-23 20:04:03.051783	hacia_destino	\N	t
+1178	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1636	0.00	10816.67	2026-01-23 20:04:08.020689	2026-01-23 20:04:08.020689	hacia_destino	\N	t
+1179	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1641	0.00	10837.50	2026-01-23 20:04:13.051343	2026-01-23 20:04:13.051343	hacia_destino	\N	t
+1180	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1646	0.00	10858.33	2026-01-23 20:04:18.022723	2026-01-23 20:04:18.022723	hacia_destino	\N	t
+1181	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1651	0.00	10879.17	2026-01-23 20:04:23.107134	2026-01-23 20:04:23.107134	hacia_destino	\N	t
+1182	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1656	0.00	10900.00	2026-01-23 20:04:28.116351	2026-01-23 20:04:28.116351	hacia_destino	\N	t
+1183	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1661	0.00	10920.83	2026-01-23 20:04:33.09747	2026-01-23 20:04:33.09747	hacia_destino	\N	t
+1184	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1666	0.00	10941.67	2026-01-23 20:04:38.018802	2026-01-23 20:04:38.018802	hacia_destino	\N	t
+1185	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1671	0.00	10962.50	2026-01-23 20:04:43.040967	2026-01-23 20:04:43.040967	hacia_destino	\N	t
+1186	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1676	0.00	10983.33	2026-01-23 20:04:48.125728	2026-01-23 20:04:48.125728	hacia_destino	\N	t
+1187	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1681	0.00	11004.17	2026-01-23 20:04:53.011804	2026-01-23 20:04:53.011804	hacia_destino	\N	t
+1188	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1686	0.00	11025.00	2026-01-23 20:04:58.062001	2026-01-23 20:04:58.062001	hacia_destino	\N	t
+1189	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1691	0.00	11045.83	2026-01-23 20:05:03.087575	2026-01-23 20:05:03.087575	hacia_destino	\N	t
+1190	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1696	0.00	11066.67	2026-01-23 20:05:08.053759	2026-01-23 20:05:08.053759	hacia_destino	\N	t
+1191	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1701	0.00	11087.50	2026-01-23 20:05:13.076681	2026-01-23 20:05:13.076681	hacia_destino	\N	t
+1192	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1706	0.00	11108.33	2026-01-23 20:05:18.059339	2026-01-23 20:05:18.059339	hacia_destino	\N	t
+1193	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1711	0.00	11129.17	2026-01-23 20:05:23.022999	2026-01-23 20:05:23.022999	hacia_destino	\N	t
+1194	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1716	0.00	11150.00	2026-01-23 20:05:28.183208	2026-01-23 20:05:28.183208	hacia_destino	\N	t
+1195	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1721	0.00	11170.83	2026-01-23 20:05:33.040343	2026-01-23 20:05:33.040343	hacia_destino	\N	t
+1196	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1726	0.00	11191.67	2026-01-23 20:05:38.033543	2026-01-23 20:05:38.033543	hacia_destino	\N	t
+1197	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1731	0.00	11212.50	2026-01-23 20:05:43.043973	2026-01-23 20:05:43.043973	hacia_destino	\N	t
+1198	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1736	0.00	11233.33	2026-01-23 20:05:48.017747	2026-01-23 20:05:48.017747	hacia_destino	\N	t
+1199	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1741	0.00	11254.17	2026-01-23 20:05:53.023711	2026-01-23 20:05:53.023711	hacia_destino	\N	t
+1200	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1746	0.00	11275.00	2026-01-23 20:05:58.132402	2026-01-23 20:05:58.132402	hacia_destino	\N	t
+1201	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1751	0.00	11295.83	2026-01-23 20:06:03.026231	2026-01-23 20:06:03.026231	hacia_destino	\N	t
+1202	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1756	0.00	11316.67	2026-01-23 20:06:08.047795	2026-01-23 20:06:08.047795	hacia_destino	\N	t
+1203	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1761	0.00	11337.50	2026-01-23 20:06:13.031719	2026-01-23 20:06:13.031719	hacia_destino	\N	t
+1204	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1766	0.00	11358.33	2026-01-23 20:06:18.047705	2026-01-23 20:06:18.047705	hacia_destino	\N	t
+1205	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1771	0.00	11379.17	2026-01-23 20:06:23.021483	2026-01-23 20:06:23.021483	hacia_destino	\N	t
+1206	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1776	0.00	11400.00	2026-01-23 20:06:28.033194	2026-01-23 20:06:28.033194	hacia_destino	\N	t
+1207	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1781	0.00	11420.83	2026-01-23 20:06:33.031886	2026-01-23 20:06:33.031886	hacia_destino	\N	t
+1208	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1786	0.00	11441.67	2026-01-23 20:06:38.023031	2026-01-23 20:06:38.023031	hacia_destino	\N	t
+1209	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1791	0.00	11462.50	2026-01-23 20:06:43.022519	2026-01-23 20:06:43.022519	hacia_destino	\N	t
+1210	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1796	0.00	11483.33	2026-01-23 20:06:48.054203	2026-01-23 20:06:48.054203	hacia_destino	\N	t
+1211	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1801	0.00	11504.17	2026-01-23 20:06:53.040186	2026-01-23 20:06:53.040186	hacia_destino	\N	t
+1212	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1806	0.00	11525.00	2026-01-23 20:06:58.046489	2026-01-23 20:06:58.046489	hacia_destino	\N	t
+1213	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1811	0.00	11545.83	2026-01-23 20:07:03.040697	2026-01-23 20:07:03.040697	hacia_destino	\N	t
+1214	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1816	0.00	11566.67	2026-01-23 20:07:08.031322	2026-01-23 20:07:08.031322	hacia_destino	\N	t
+1215	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1821	0.00	11587.50	2026-01-23 20:07:13.041518	2026-01-23 20:07:13.041518	hacia_destino	\N	t
+1216	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1826	0.00	11608.33	2026-01-23 20:07:18.091008	2026-01-23 20:07:18.091008	hacia_destino	\N	t
+1217	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1831	0.00	11629.17	2026-01-23 20:07:23.020286	2026-01-23 20:07:23.020286	hacia_destino	\N	t
+1218	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1836	0.00	11650.00	2026-01-23 20:07:28.130928	2026-01-23 20:07:28.130928	hacia_destino	\N	t
+1219	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1841	0.00	11670.83	2026-01-23 20:07:33.016097	2026-01-23 20:07:33.016097	hacia_destino	\N	t
+1220	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1846	0.00	11691.67	2026-01-23 20:07:38.02686	2026-01-23 20:07:38.02686	hacia_destino	\N	t
+1221	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1851	0.00	11712.50	2026-01-23 20:07:43.083876	2026-01-23 20:07:43.083876	hacia_destino	\N	t
+1222	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1856	0.00	11733.33	2026-01-23 20:07:48.036964	2026-01-23 20:07:48.036964	hacia_destino	\N	t
+1223	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1861	0.00	11754.17	2026-01-23 20:07:53.073309	2026-01-23 20:07:53.073309	hacia_destino	\N	t
+1224	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1866	0.00	11775.00	2026-01-23 20:07:58.052228	2026-01-23 20:07:58.052228	hacia_destino	\N	t
+1225	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1871	0.00	11795.83	2026-01-23 20:08:03.016626	2026-01-23 20:08:03.016626	hacia_destino	\N	t
+1226	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1876	0.00	11816.67	2026-01-23 20:08:08.144101	2026-01-23 20:08:08.144101	hacia_destino	\N	t
+1227	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1881	0.00	11837.50	2026-01-23 20:08:13.023532	2026-01-23 20:08:13.023532	hacia_destino	\N	t
+1228	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1886	0.00	11858.33	2026-01-23 20:08:18.033603	2026-01-23 20:08:18.033603	hacia_destino	\N	t
+1229	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1891	0.00	11879.17	2026-01-23 20:08:23.016708	2026-01-23 20:08:23.016708	hacia_destino	\N	t
+1230	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1896	0.00	11900.00	2026-01-23 20:08:28.132462	2026-01-23 20:08:28.132462	hacia_destino	\N	t
+1231	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1901	0.00	11920.83	2026-01-23 20:08:33.016133	2026-01-23 20:08:33.016133	hacia_destino	\N	t
+1232	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1906	0.00	11941.67	2026-01-23 20:08:38.014702	2026-01-23 20:08:38.014702	hacia_destino	\N	t
+1233	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1911	0.00	11962.50	2026-01-23 20:08:43.074217	2026-01-23 20:08:43.074217	hacia_destino	\N	t
+1234	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1916	0.00	11983.33	2026-01-23 20:08:48.021355	2026-01-23 20:08:48.021355	hacia_destino	\N	t
+1235	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1921	0.00	12004.17	2026-01-23 20:08:53.030416	2026-01-23 20:08:53.030416	hacia_destino	\N	t
+1236	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1926	0.00	12025.00	2026-01-23 20:08:58.037447	2026-01-23 20:08:58.037447	hacia_destino	\N	t
+1237	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1931	0.00	12045.83	2026-01-23 20:09:03.021526	2026-01-23 20:09:03.021526	hacia_destino	\N	t
+1238	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1936	0.00	12066.67	2026-01-23 20:09:08.027045	2026-01-23 20:09:08.027045	hacia_destino	\N	t
+1239	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1941	0.00	12087.50	2026-01-23 20:09:13.041083	2026-01-23 20:09:13.041083	hacia_destino	\N	t
+1240	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1946	0.00	12108.33	2026-01-23 20:09:18.129873	2026-01-23 20:09:18.129873	hacia_destino	\N	t
+1241	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1951	0.00	12129.17	2026-01-23 20:09:23.023267	2026-01-23 20:09:23.023267	hacia_destino	\N	t
+1242	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1956	0.00	12150.00	2026-01-23 20:09:28.023162	2026-01-23 20:09:28.023162	hacia_destino	\N	t
+1243	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1961	0.00	12170.83	2026-01-23 20:09:33.044354	2026-01-23 20:09:33.044354	hacia_destino	\N	t
+1244	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1966	0.00	12191.67	2026-01-23 20:09:38.03075	2026-01-23 20:09:38.03075	hacia_destino	\N	t
+1245	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1971	0.00	12212.50	2026-01-23 20:09:43.117449	2026-01-23 20:09:43.117449	hacia_destino	\N	t
+1246	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1976	0.00	12233.33	2026-01-23 20:09:48.066085	2026-01-23 20:09:48.066085	hacia_destino	\N	t
+1247	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1981	0.00	12254.17	2026-01-23 20:09:53.062304	2026-01-23 20:09:53.062304	hacia_destino	\N	t
+1248	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1986	0.00	12275.00	2026-01-23 20:09:58.029864	2026-01-23 20:09:58.029864	hacia_destino	\N	t
+1249	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1997	0.00	12320.83	2026-01-23 20:10:09.48734	2026-01-23 20:10:09.48734	hacia_destino	inicio	t
+1250	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2002	0.00	12341.67	2026-01-23 20:10:14.734538	2026-01-23 20:10:14.734538	hacia_destino	\N	t
+1251	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2007	0.00	12362.50	2026-01-23 20:10:19.748818	2026-01-23 20:10:19.748818	hacia_destino	\N	t
+1252	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2012	0.00	12383.33	2026-01-23 20:10:24.759156	2026-01-23 20:10:24.759156	hacia_destino	\N	t
+1253	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2017	0.00	12404.17	2026-01-23 20:10:29.706653	2026-01-23 20:10:29.706653	hacia_destino	\N	t
+1254	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2022	0.00	12425.00	2026-01-23 20:10:34.702816	2026-01-23 20:10:34.702816	hacia_destino	\N	t
+1255	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2027	0.00	12445.83	2026-01-23 20:10:39.709837	2026-01-23 20:10:39.709837	hacia_destino	\N	t
+1256	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2032	0.00	12466.67	2026-01-23 20:10:44.704005	2026-01-23 20:10:44.704005	hacia_destino	\N	t
+1257	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2037	0.00	12487.50	2026-01-23 20:10:49.699564	2026-01-23 20:10:49.699564	hacia_destino	\N	t
+1258	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2042	0.00	12508.33	2026-01-23 20:10:54.755778	2026-01-23 20:10:54.755778	hacia_destino	\N	t
+1259	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2047	0.00	12529.17	2026-01-23 20:10:59.731583	2026-01-23 20:10:59.731583	hacia_destino	\N	t
+1260	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2052	0.00	12550.00	2026-01-23 20:11:04.703361	2026-01-23 20:11:04.703361	hacia_destino	\N	t
+1261	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2057	0.00	12570.83	2026-01-23 20:11:09.728517	2026-01-23 20:11:09.728517	hacia_destino	\N	t
+1262	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2062	0.00	12591.67	2026-01-23 20:11:14.707517	2026-01-23 20:11:14.707517	hacia_destino	\N	t
+1263	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2067	0.00	12612.50	2026-01-23 20:11:19.709254	2026-01-23 20:11:19.709254	hacia_destino	\N	t
+1264	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2072	0.00	12633.33	2026-01-23 20:11:24.729694	2026-01-23 20:11:24.729694	hacia_destino	\N	t
+1265	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2077	0.00	12654.17	2026-01-23 20:11:29.697897	2026-01-23 20:11:29.697897	hacia_destino	\N	t
+1266	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2082	0.00	12675.00	2026-01-23 20:11:34.690146	2026-01-23 20:11:34.690146	hacia_destino	\N	t
+1267	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2087	0.00	12695.83	2026-01-23 20:11:39.704402	2026-01-23 20:11:39.704402	hacia_destino	\N	t
+1268	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2092	0.00	12716.67	2026-01-23 20:11:44.773729	2026-01-23 20:11:44.773729	hacia_destino	\N	t
+1269	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2097	0.00	12737.50	2026-01-23 20:11:49.700762	2026-01-23 20:11:49.700762	hacia_destino	\N	t
+1270	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2102	0.00	12758.33	2026-01-23 20:11:54.72373	2026-01-23 20:11:54.72373	hacia_destino	\N	t
+1271	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2107	0.00	12779.17	2026-01-23 20:11:59.698479	2026-01-23 20:11:59.698479	hacia_destino	\N	t
+1272	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2112	0.00	12800.00	2026-01-23 20:12:04.705757	2026-01-23 20:12:04.705757	hacia_destino	\N	t
+1273	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2117	0.00	12820.83	2026-01-23 20:12:09.710945	2026-01-23 20:12:09.710945	hacia_destino	\N	t
+1274	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2122	0.00	12841.67	2026-01-23 20:12:14.69474	2026-01-23 20:12:14.69474	hacia_destino	\N	t
+1275	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2127	0.00	12862.50	2026-01-23 20:12:19.703061	2026-01-23 20:12:19.703061	hacia_destino	\N	t
+1276	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2132	0.00	12883.33	2026-01-23 20:12:24.808809	2026-01-23 20:12:24.808809	hacia_destino	\N	t
+1277	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2137	0.00	12904.17	2026-01-23 20:12:29.738919	2026-01-23 20:12:29.738919	hacia_destino	\N	t
+1278	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2143	0.00	12929.17	2026-01-23 20:12:34.941836	2026-01-23 20:12:34.941836	hacia_destino	\N	t
+1279	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2147	0.00	12945.83	2026-01-23 20:12:39.710069	2026-01-23 20:12:39.710069	hacia_destino	\N	t
+1280	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2152	0.00	12966.67	2026-01-23 20:12:44.722584	2026-01-23 20:12:44.722584	hacia_destino	\N	t
+1281	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2157	0.00	12987.50	2026-01-23 20:12:49.792652	2026-01-23 20:12:49.792652	hacia_destino	\N	t
+1282	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2162	0.00	13008.33	2026-01-23 20:12:54.691839	2026-01-23 20:12:54.691839	hacia_destino	\N	t
+1283	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2167	0.00	13029.17	2026-01-23 20:12:59.690342	2026-01-23 20:12:59.690342	hacia_destino	\N	t
+1284	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	2172	0.00	13050.00	2026-01-23 20:13:04.692843	2026-01-23 20:13:04.692843	hacia_destino	\N	t
+1285	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4793	0.00	23970.83	2026-01-23 20:56:45.168664	2026-01-23 20:56:45.168664	hacia_destino	inicio	t
+1286	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4798	0.00	23991.67	2026-01-23 20:56:50.399384	2026-01-23 20:56:50.399384	hacia_destino	\N	t
+1287	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4803	0.00	24012.50	2026-01-23 20:56:55.401727	2026-01-23 20:56:55.401727	hacia_destino	\N	t
+1288	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4808	0.00	24033.33	2026-01-23 20:57:00.342393	2026-01-23 20:57:00.342393	hacia_destino	\N	t
+1289	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4813	0.00	24054.17	2026-01-23 20:57:05.460722	2026-01-23 20:57:05.460722	hacia_destino	\N	t
+1290	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4818	0.00	24075.00	2026-01-23 20:57:10.428863	2026-01-23 20:57:10.428863	hacia_destino	\N	t
+1291	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4823	0.00	24095.83	2026-01-23 20:57:15.492429	2026-01-23 20:57:15.492429	hacia_destino	\N	t
+1292	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4828	0.00	24116.67	2026-01-23 20:57:20.396444	2026-01-23 20:57:20.396444	hacia_destino	\N	t
+1293	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4833	0.00	24137.50	2026-01-23 20:57:25.352184	2026-01-23 20:57:25.352184	hacia_destino	\N	t
+1294	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4838	0.00	24158.33	2026-01-23 20:57:30.354314	2026-01-23 20:57:30.354314	hacia_destino	\N	t
+1295	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4843	0.00	24179.17	2026-01-23 20:57:35.3488	2026-01-23 20:57:35.3488	hacia_destino	\N	t
+1296	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4848	0.00	24200.00	2026-01-23 20:57:40.357435	2026-01-23 20:57:40.357435	hacia_destino	\N	t
+1297	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4853	0.00	24220.83	2026-01-23 20:57:45.368151	2026-01-23 20:57:45.368151	hacia_destino	\N	t
+1298	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4858	0.00	24241.67	2026-01-23 20:57:50.451924	2026-01-23 20:57:50.451924	hacia_destino	\N	t
+1299	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4863	0.00	24262.50	2026-01-23 20:57:55.330619	2026-01-23 20:57:55.330619	hacia_destino	\N	t
+1300	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4868	0.00	24283.33	2026-01-23 20:58:00.351184	2026-01-23 20:58:00.351184	hacia_destino	\N	t
+1301	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4873	0.00	24304.17	2026-01-23 20:58:05.415192	2026-01-23 20:58:05.415192	hacia_destino	\N	t
+1302	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4878	0.00	24325.00	2026-01-23 20:58:10.552109	2026-01-23 20:58:10.552109	hacia_destino	\N	t
+1303	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4883	0.00	24345.83	2026-01-23 20:58:15.324379	2026-01-23 20:58:15.324379	hacia_destino	\N	t
+1304	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4888	0.00	24366.67	2026-01-23 20:58:20.451491	2026-01-23 20:58:20.451491	hacia_destino	\N	t
+1305	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4893	0.00	24387.50	2026-01-23 20:58:25.336314	2026-01-23 20:58:25.336314	hacia_destino	\N	t
+1306	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4898	0.00	24408.33	2026-01-23 20:58:30.389461	2026-01-23 20:58:30.389461	hacia_destino	\N	t
+1307	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4903	0.00	24429.17	2026-01-23 20:58:35.346543	2026-01-23 20:58:35.346543	hacia_destino	\N	t
+1308	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4908	0.00	24450.00	2026-01-23 20:58:40.337956	2026-01-23 20:58:40.337956	hacia_destino	\N	t
+1309	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4913	0.00	24470.83	2026-01-23 20:58:45.31786	2026-01-23 20:58:45.31786	hacia_destino	\N	t
+1310	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4918	0.00	24491.67	2026-01-23 20:58:50.431968	2026-01-23 20:58:50.431968	hacia_destino	\N	t
+1311	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4923	0.00	24512.50	2026-01-23 20:58:55.31884	2026-01-23 20:58:55.31884	hacia_destino	\N	t
+1312	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4928	0.00	24533.33	2026-01-23 20:59:00.33055	2026-01-23 20:59:00.33055	hacia_destino	\N	t
+1313	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4933	0.00	24554.17	2026-01-23 20:59:05.32384	2026-01-23 20:59:05.32384	hacia_destino	\N	t
+1314	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4938	0.00	24575.00	2026-01-23 20:59:10.317125	2026-01-23 20:59:10.317125	hacia_destino	\N	t
+1315	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4943	0.00	24595.83	2026-01-23 20:59:15.333023	2026-01-23 20:59:15.333023	hacia_destino	\N	t
+1316	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4948	0.00	24616.67	2026-01-23 20:59:20.325362	2026-01-23 20:59:20.325362	hacia_destino	\N	t
+1317	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4953	0.00	24637.50	2026-01-23 20:59:25.317285	2026-01-23 20:59:25.317285	hacia_destino	\N	t
+1318	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4958	0.00	24658.33	2026-01-23 20:59:30.32121	2026-01-23 20:59:30.32121	hacia_destino	\N	t
+1319	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4963	0.00	24679.17	2026-01-23 20:59:35.324005	2026-01-23 20:59:35.324005	hacia_destino	\N	t
+1320	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4968	0.00	24700.00	2026-01-23 20:59:40.331409	2026-01-23 20:59:40.331409	hacia_destino	\N	t
+1321	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4973	0.00	24720.83	2026-01-23 20:59:45.32405	2026-01-23 20:59:45.32405	hacia_destino	\N	t
+1322	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4978	0.00	24741.67	2026-01-23 20:59:50.318009	2026-01-23 20:59:50.318009	hacia_destino	\N	t
+1323	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4983	0.00	24762.50	2026-01-23 20:59:55.325023	2026-01-23 20:59:55.325023	hacia_destino	\N	t
+1324	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4988	0.00	24783.33	2026-01-23 21:00:00.330254	2026-01-23 21:00:00.330254	hacia_destino	\N	t
+1325	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4993	0.00	24804.17	2026-01-23 21:00:05.318837	2026-01-23 21:00:05.318837	hacia_destino	\N	t
+1326	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	4998	0.00	24825.00	2026-01-23 21:00:10.424128	2026-01-23 21:00:10.424128	hacia_destino	\N	t
+1327	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5003	0.00	24845.83	2026-01-23 21:00:15.319358	2026-01-23 21:00:15.319358	hacia_destino	\N	t
+1328	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5008	0.00	24866.67	2026-01-23 21:00:20.321569	2026-01-23 21:00:20.321569	hacia_destino	\N	t
+1329	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5013	0.00	24887.50	2026-01-23 21:00:25.318129	2026-01-23 21:00:25.318129	hacia_destino	\N	t
+1330	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5018	0.00	24908.33	2026-01-23 21:00:30.336148	2026-01-23 21:00:30.336148	hacia_destino	\N	t
+1331	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5023	0.00	24929.17	2026-01-23 21:00:35.335718	2026-01-23 21:00:35.335718	hacia_destino	\N	t
+1332	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5028	0.00	24950.00	2026-01-23 21:00:40.414517	2026-01-23 21:00:40.414517	hacia_destino	\N	t
+1333	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5033	0.00	24970.83	2026-01-23 21:00:45.431757	2026-01-23 21:00:45.431757	hacia_destino	\N	t
+1334	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5038	0.00	24991.67	2026-01-23 21:00:50.323059	2026-01-23 21:00:50.323059	hacia_destino	\N	t
+1335	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5043	0.00	25012.50	2026-01-23 21:00:55.329032	2026-01-23 21:00:55.329032	hacia_destino	\N	t
+1336	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5048	0.00	25033.33	2026-01-23 21:01:00.336928	2026-01-23 21:01:00.336928	hacia_destino	\N	t
+1337	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5053	0.00	25054.17	2026-01-23 21:01:05.320138	2026-01-23 21:01:05.320138	hacia_destino	\N	t
+1338	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5058	0.00	25075.00	2026-01-23 21:01:10.322916	2026-01-23 21:01:10.322916	hacia_destino	\N	t
+1339	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5063	0.00	25095.83	2026-01-23 21:01:15.31908	2026-01-23 21:01:15.31908	hacia_destino	\N	t
+1340	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5068	0.00	25116.67	2026-01-23 21:01:20.333588	2026-01-23 21:01:20.333588	hacia_destino	\N	t
+1341	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5073	0.00	25137.50	2026-01-23 21:01:25.342686	2026-01-23 21:01:25.342686	hacia_destino	\N	t
+1342	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5078	0.00	25158.33	2026-01-23 21:01:30.325038	2026-01-23 21:01:30.325038	hacia_destino	\N	t
+1343	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5083	0.00	25179.17	2026-01-23 21:01:35.32051	2026-01-23 21:01:35.32051	hacia_destino	\N	t
+1344	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5088	0.00	25200.00	2026-01-23 21:01:40.32047	2026-01-23 21:01:40.32047	hacia_destino	\N	t
+1345	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5093	0.00	25220.83	2026-01-23 21:01:45.422503	2026-01-23 21:01:45.422503	hacia_destino	\N	t
+1346	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5098	0.00	25241.67	2026-01-23 21:01:50.323776	2026-01-23 21:01:50.323776	hacia_destino	\N	t
+1347	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5103	0.00	25262.50	2026-01-23 21:01:55.319807	2026-01-23 21:01:55.319807	hacia_destino	\N	t
+1348	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5108	0.00	25283.33	2026-01-23 21:02:00.328187	2026-01-23 21:02:00.328187	hacia_destino	\N	t
+1349	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5113	0.00	25304.17	2026-01-23 21:02:05.336243	2026-01-23 21:02:05.336243	hacia_destino	\N	t
+1350	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5118	0.00	25325.00	2026-01-23 21:02:10.331873	2026-01-23 21:02:10.331873	hacia_destino	\N	t
+1351	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5123	0.00	25345.83	2026-01-23 21:02:15.320611	2026-01-23 21:02:15.320611	hacia_destino	\N	t
+1352	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5128	0.00	25366.67	2026-01-23 21:02:20.32261	2026-01-23 21:02:20.32261	hacia_destino	\N	t
+1353	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5133	0.00	25387.50	2026-01-23 21:02:25.318813	2026-01-23 21:02:25.318813	hacia_destino	\N	t
+1354	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5138	0.00	25408.33	2026-01-23 21:02:30.31713	2026-01-23 21:02:30.31713	hacia_destino	\N	t
+1355	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5143	0.00	25429.17	2026-01-23 21:02:35.321677	2026-01-23 21:02:35.321677	hacia_destino	\N	t
+1356	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5148	0.00	25450.00	2026-01-23 21:02:40.318358	2026-01-23 21:02:40.318358	hacia_destino	\N	t
+1357	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5153	0.00	25470.83	2026-01-23 21:02:45.315696	2026-01-23 21:02:45.315696	hacia_destino	\N	t
+1358	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5158	0.00	25491.67	2026-01-23 21:02:50.317161	2026-01-23 21:02:50.317161	hacia_destino	\N	t
+1359	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5163	0.00	25512.50	2026-01-23 21:02:55.331	2026-01-23 21:02:55.331	hacia_destino	\N	t
+1360	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5168	0.00	25533.33	2026-01-23 21:03:00.327292	2026-01-23 21:03:00.327292	hacia_destino	\N	t
+1361	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5173	0.00	25554.17	2026-01-23 21:03:05.320994	2026-01-23 21:03:05.320994	hacia_destino	\N	t
+1362	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5178	0.00	25575.00	2026-01-23 21:03:10.321009	2026-01-23 21:03:10.321009	hacia_destino	\N	t
+1363	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5183	0.00	25595.83	2026-01-23 21:03:15.32608	2026-01-23 21:03:15.32608	hacia_destino	\N	t
+1364	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5188	0.00	25616.67	2026-01-23 21:03:20.427134	2026-01-23 21:03:20.427134	hacia_destino	\N	t
+1365	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5193	0.00	25637.50	2026-01-23 21:03:25.333065	2026-01-23 21:03:25.333065	hacia_destino	\N	t
+1366	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5198	0.00	25658.33	2026-01-23 21:03:30.323789	2026-01-23 21:03:30.323789	hacia_destino	\N	t
+1367	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5203	0.00	25679.17	2026-01-23 21:03:35.3188	2026-01-23 21:03:35.3188	hacia_destino	\N	t
+1368	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5208	0.00	25700.00	2026-01-23 21:03:40.320902	2026-01-23 21:03:40.320902	hacia_destino	\N	t
+1369	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5213	0.00	25720.83	2026-01-23 21:03:45.317751	2026-01-23 21:03:45.317751	hacia_destino	\N	t
+1370	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5218	0.00	25741.67	2026-01-23 21:03:50.319273	2026-01-23 21:03:50.319273	hacia_destino	\N	t
+1371	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5223	0.00	25762.50	2026-01-23 21:03:55.339136	2026-01-23 21:03:55.339136	hacia_destino	\N	t
+1372	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5228	0.00	25783.33	2026-01-23 21:04:00.430189	2026-01-23 21:04:00.430189	hacia_destino	\N	t
+1373	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5233	0.00	25804.17	2026-01-23 21:04:05.32396	2026-01-23 21:04:05.32396	hacia_destino	\N	t
+1374	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5238	0.00	25825.00	2026-01-23 21:04:10.320002	2026-01-23 21:04:10.320002	hacia_destino	\N	t
+1375	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5243	0.00	25845.83	2026-01-23 21:04:15.319917	2026-01-23 21:04:15.319917	hacia_destino	\N	t
+1376	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5248	0.00	25866.67	2026-01-23 21:04:20.323664	2026-01-23 21:04:20.323664	hacia_destino	\N	t
+1377	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5253	0.00	25887.50	2026-01-23 21:04:25.436107	2026-01-23 21:04:25.436107	hacia_destino	\N	t
+1378	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5258	0.00	25908.33	2026-01-23 21:04:30.326096	2026-01-23 21:04:30.326096	hacia_destino	\N	t
+1379	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5263	0.00	25929.17	2026-01-23 21:04:35.323208	2026-01-23 21:04:35.323208	hacia_destino	\N	t
+1380	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5268	0.00	25950.00	2026-01-23 21:04:40.321808	2026-01-23 21:04:40.321808	hacia_destino	\N	t
+1381	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5273	0.00	25970.83	2026-01-23 21:04:45.328617	2026-01-23 21:04:45.328617	hacia_destino	\N	t
+1382	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5278	0.00	25991.67	2026-01-23 21:04:50.429152	2026-01-23 21:04:50.429152	hacia_destino	\N	t
+1383	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5283	0.00	26012.50	2026-01-23 21:04:55.320372	2026-01-23 21:04:55.320372	hacia_destino	\N	t
+1384	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5288	0.00	26033.33	2026-01-23 21:05:00.353375	2026-01-23 21:05:00.353375	hacia_destino	\N	t
+1385	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5293	0.00	26054.17	2026-01-23 21:05:05.340354	2026-01-23 21:05:05.340354	hacia_destino	\N	t
+1386	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5298	0.00	26075.00	2026-01-23 21:05:10.357929	2026-01-23 21:05:10.357929	hacia_destino	\N	t
+1387	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5303	0.00	26095.83	2026-01-23 21:05:15.377843	2026-01-23 21:05:15.377843	hacia_destino	\N	t
+1388	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5308	0.00	26116.67	2026-01-23 21:05:20.337877	2026-01-23 21:05:20.337877	hacia_destino	\N	t
+1389	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5313	0.00	26137.50	2026-01-23 21:05:25.343121	2026-01-23 21:05:25.343121	hacia_destino	\N	t
+1390	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5318	0.00	26158.33	2026-01-23 21:05:30.340342	2026-01-23 21:05:30.340342	hacia_destino	\N	t
+1391	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5323	0.00	26179.17	2026-01-23 21:05:35.344274	2026-01-23 21:05:35.344274	hacia_destino	\N	t
+1392	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5328	0.00	26200.00	2026-01-23 21:05:40.32955	2026-01-23 21:05:40.32955	hacia_destino	\N	t
+1393	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5333	0.00	26220.83	2026-01-23 21:05:45.337355	2026-01-23 21:05:45.337355	hacia_destino	\N	t
+1394	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5338	0.00	26241.67	2026-01-23 21:05:50.357817	2026-01-23 21:05:50.357817	hacia_destino	\N	t
+1395	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5343	0.00	26262.50	2026-01-23 21:05:55.337142	2026-01-23 21:05:55.337142	hacia_destino	\N	t
+1396	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5348	0.00	26283.33	2026-01-23 21:06:00.343597	2026-01-23 21:06:00.343597	hacia_destino	\N	t
+1397	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5353	0.00	26304.17	2026-01-23 21:06:05.33636	2026-01-23 21:06:05.33636	hacia_destino	\N	t
+1398	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5358	0.00	26325.00	2026-01-23 21:06:10.348467	2026-01-23 21:06:10.348467	hacia_destino	\N	t
+1399	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5363	0.00	26345.83	2026-01-23 21:06:15.404462	2026-01-23 21:06:15.404462	hacia_destino	\N	t
+1400	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5368	0.00	26366.67	2026-01-23 21:06:20.467504	2026-01-23 21:06:20.467504	hacia_destino	\N	t
+1401	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5373	0.00	26387.50	2026-01-23 21:06:25.350536	2026-01-23 21:06:25.350536	hacia_destino	\N	t
+1402	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5378	0.00	26408.33	2026-01-23 21:06:30.350468	2026-01-23 21:06:30.350468	hacia_destino	\N	t
+1403	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5383	0.00	26429.17	2026-01-23 21:06:35.32371	2026-01-23 21:06:35.32371	hacia_destino	\N	t
+1404	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5388	0.00	26450.00	2026-01-23 21:06:40.341138	2026-01-23 21:06:40.341138	hacia_destino	\N	t
+1405	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5393	0.00	26470.83	2026-01-23 21:06:45.341122	2026-01-23 21:06:45.341122	hacia_destino	\N	t
+1406	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5398	0.00	26491.67	2026-01-23 21:06:50.3519	2026-01-23 21:06:50.3519	hacia_destino	\N	t
+1407	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5403	0.00	26512.50	2026-01-23 21:06:55.37784	2026-01-23 21:06:55.37784	hacia_destino	\N	t
+1408	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5408	0.00	26533.33	2026-01-23 21:07:00.374584	2026-01-23 21:07:00.374584	hacia_destino	\N	t
+1409	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5413	0.00	26554.17	2026-01-23 21:07:05.330453	2026-01-23 21:07:05.330453	hacia_destino	\N	t
+1410	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5418	0.00	26575.00	2026-01-23 21:07:10.391822	2026-01-23 21:07:10.391822	hacia_destino	\N	t
+1411	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5423	0.00	26595.83	2026-01-23 21:07:16.267193	2026-01-23 21:07:16.267193	hacia_destino	\N	t
+1412	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5428	0.00	26616.67	2026-01-23 21:07:20.437351	2026-01-23 21:07:20.437351	hacia_destino	\N	t
+1413	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5433	0.00	26637.50	2026-01-23 21:07:25.428883	2026-01-23 21:07:25.428883	hacia_destino	\N	t
+1414	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5438	0.00	26658.33	2026-01-23 21:07:30.350862	2026-01-23 21:07:30.350862	hacia_destino	\N	t
+1415	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5443	0.00	26679.17	2026-01-23 21:07:35.363233	2026-01-23 21:07:35.363233	hacia_destino	\N	t
+1416	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5448	0.00	26700.00	2026-01-23 21:07:40.381871	2026-01-23 21:07:40.381871	hacia_destino	\N	t
+1417	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5453	0.00	26720.83	2026-01-23 21:07:45.339317	2026-01-23 21:07:45.339317	hacia_destino	\N	t
+1418	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5458	0.00	26741.67	2026-01-23 21:07:50.342532	2026-01-23 21:07:50.342532	hacia_destino	\N	t
+1419	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5463	0.00	26762.50	2026-01-23 21:07:55.355844	2026-01-23 21:07:55.355844	hacia_destino	\N	t
+1420	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5468	0.00	26783.33	2026-01-23 21:08:00.371295	2026-01-23 21:08:00.371295	hacia_destino	\N	t
+1421	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5473	0.00	26804.17	2026-01-23 21:08:05.332382	2026-01-23 21:08:05.332382	hacia_destino	\N	t
+1422	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5478	0.00	26825.00	2026-01-23 21:08:10.362969	2026-01-23 21:08:10.362969	hacia_destino	\N	t
+1423	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5483	0.00	26845.83	2026-01-23 21:08:15.34335	2026-01-23 21:08:15.34335	hacia_destino	\N	t
+1424	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5488	0.00	26866.67	2026-01-23 21:08:20.390314	2026-01-23 21:08:20.390314	hacia_destino	\N	t
+1425	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5493	0.00	26887.50	2026-01-23 21:08:25.423806	2026-01-23 21:08:25.423806	hacia_destino	\N	t
+1426	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5498	0.00	26908.33	2026-01-23 21:08:30.343189	2026-01-23 21:08:30.343189	hacia_destino	\N	t
+1427	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5503	0.00	26929.17	2026-01-23 21:08:35.331546	2026-01-23 21:08:35.331546	hacia_destino	\N	t
+1428	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5508	0.00	26950.00	2026-01-23 21:08:40.342334	2026-01-23 21:08:40.342334	hacia_destino	\N	t
+1429	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5552	0.00	27133.33	2026-01-23 21:09:24.776585	2026-01-23 21:09:24.776585	hacia_destino	inicio	t
+1430	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5558	0.00	27158.33	2026-01-23 21:09:29.938446	2026-01-23 21:09:29.938446	hacia_destino	\N	t
+1431	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5563	0.00	27179.17	2026-01-23 21:09:35.107406	2026-01-23 21:09:35.107406	hacia_destino	\N	t
+1432	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5568	0.00	27200.00	2026-01-23 21:09:39.942095	2026-01-23 21:09:39.942095	hacia_destino	\N	t
+1433	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5573	0.00	27220.83	2026-01-23 21:09:44.979904	2026-01-23 21:09:44.979904	hacia_destino	\N	t
+1434	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5578	0.00	27241.67	2026-01-23 21:09:49.970588	2026-01-23 21:09:49.970588	hacia_destino	\N	t
+1435	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5583	0.00	27262.50	2026-01-23 21:09:54.963476	2026-01-23 21:09:54.963476	hacia_destino	\N	t
+1436	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5588	0.00	27283.33	2026-01-23 21:09:59.958909	2026-01-23 21:09:59.958909	hacia_destino	\N	t
+1437	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5593	0.00	27304.17	2026-01-23 21:10:05.044771	2026-01-23 21:10:05.044771	hacia_destino	\N	t
+1438	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5598	0.00	27325.00	2026-01-23 21:10:09.96842	2026-01-23 21:10:09.96842	hacia_destino	\N	t
+1439	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5603	0.00	27345.83	2026-01-23 21:10:15.067869	2026-01-23 21:10:15.067869	hacia_destino	\N	t
+1440	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5608	0.00	27366.67	2026-01-23 21:10:19.931682	2026-01-23 21:10:19.931682	hacia_destino	\N	t
+1441	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5613	0.00	27387.50	2026-01-23 21:10:24.972593	2026-01-23 21:10:24.972593	hacia_destino	\N	t
+1442	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5618	0.00	27408.33	2026-01-23 21:10:29.947363	2026-01-23 21:10:29.947363	hacia_destino	\N	t
+1443	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5623	0.00	27429.17	2026-01-23 21:10:35.002738	2026-01-23 21:10:35.002738	hacia_destino	\N	t
+1444	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5628	0.00	27450.00	2026-01-23 21:10:39.95781	2026-01-23 21:10:39.95781	hacia_destino	\N	t
+1445	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5633	0.00	27470.83	2026-01-23 21:10:45.05397	2026-01-23 21:10:45.05397	hacia_destino	\N	t
+1446	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5638	0.00	27491.67	2026-01-23 21:10:49.971267	2026-01-23 21:10:49.971267	hacia_destino	\N	t
+1447	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5643	0.00	27512.50	2026-01-23 21:10:54.97912	2026-01-23 21:10:54.97912	hacia_destino	\N	t
+1448	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5648	0.00	27533.33	2026-01-23 21:11:00.116011	2026-01-23 21:11:00.116011	hacia_destino	\N	t
+1449	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5653	0.00	27554.17	2026-01-23 21:11:05.070915	2026-01-23 21:11:05.070915	hacia_destino	\N	t
+1450	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5658	0.00	27575.00	2026-01-23 21:11:09.949494	2026-01-23 21:11:09.949494	hacia_destino	\N	t
+1451	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5663	0.00	27595.83	2026-01-23 21:11:14.976012	2026-01-23 21:11:14.976012	hacia_destino	\N	t
+1452	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5668	0.00	27616.67	2026-01-23 21:11:20.080729	2026-01-23 21:11:20.080729	hacia_destino	\N	t
+1453	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5673	0.00	27637.50	2026-01-23 21:11:24.997642	2026-01-23 21:11:24.997642	hacia_destino	\N	t
+1454	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5678	0.00	27658.33	2026-01-23 21:11:30.009239	2026-01-23 21:11:30.009239	hacia_destino	\N	t
+1455	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5683	0.00	27679.17	2026-01-23 21:11:35.032562	2026-01-23 21:11:35.032562	hacia_destino	\N	t
+1456	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5688	0.00	27700.00	2026-01-23 21:11:39.969891	2026-01-23 21:11:39.969891	hacia_destino	\N	t
+1457	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5693	0.00	27720.83	2026-01-23 21:11:45.060101	2026-01-23 21:11:45.060101	hacia_destino	\N	t
+1458	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5698	0.00	27741.67	2026-01-23 21:11:49.978176	2026-01-23 21:11:49.978176	hacia_destino	\N	t
+1459	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5703	0.00	27762.50	2026-01-23 21:11:54.990545	2026-01-23 21:11:54.990545	hacia_destino	\N	t
+1460	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5708	0.00	27783.33	2026-01-23 21:12:00.001809	2026-01-23 21:12:00.001809	hacia_destino	\N	t
+1461	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5713	0.00	27804.17	2026-01-23 21:12:05.07989	2026-01-23 21:12:05.07989	hacia_destino	\N	t
+1462	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5718	0.00	27825.00	2026-01-23 21:12:09.97634	2026-01-23 21:12:09.97634	hacia_destino	\N	t
+1463	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5723	0.00	27845.83	2026-01-23 21:12:14.947647	2026-01-23 21:12:14.947647	hacia_destino	\N	t
+1464	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5728	0.00	27866.67	2026-01-23 21:12:19.962432	2026-01-23 21:12:19.962432	hacia_destino	\N	t
+1465	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5733	0.00	27887.50	2026-01-23 21:12:24.973102	2026-01-23 21:12:24.973102	hacia_destino	\N	t
+1466	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5738	0.00	27908.33	2026-01-23 21:12:29.99266	2026-01-23 21:12:29.99266	hacia_destino	\N	t
+1467	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5743	0.00	27929.17	2026-01-23 21:12:34.968753	2026-01-23 21:12:34.968753	hacia_destino	\N	t
+1468	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5748	0.00	27950.00	2026-01-23 21:12:39.947247	2026-01-23 21:12:39.947247	hacia_destino	\N	t
+1469	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5753	0.00	27970.83	2026-01-23 21:12:44.988482	2026-01-23 21:12:44.988482	hacia_destino	\N	t
+1470	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5758	0.00	27991.67	2026-01-23 21:12:49.95514	2026-01-23 21:12:49.95514	hacia_destino	\N	t
+1471	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5763	0.00	28012.50	2026-01-23 21:12:54.955177	2026-01-23 21:12:54.955177	hacia_destino	\N	t
+1472	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5768	0.00	28033.33	2026-01-23 21:13:00.121566	2026-01-23 21:13:00.121566	hacia_destino	\N	t
+1473	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5773	0.00	28054.17	2026-01-23 21:13:05.225185	2026-01-23 21:13:05.225185	hacia_destino	\N	t
+1474	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5778	0.00	28075.00	2026-01-23 21:13:10.129437	2026-01-23 21:13:10.129437	hacia_destino	\N	t
+1475	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5783	0.00	28095.83	2026-01-23 21:13:15.03214	2026-01-23 21:13:15.03214	hacia_destino	\N	t
+1476	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5788	0.00	28116.67	2026-01-23 21:13:20.041356	2026-01-23 21:13:20.041356	hacia_destino	\N	t
+1477	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5793	0.00	28137.50	2026-01-23 21:13:25.08781	2026-01-23 21:13:25.08781	hacia_destino	\N	t
+1478	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5798	0.00	28158.33	2026-01-23 21:13:30.02127	2026-01-23 21:13:30.02127	hacia_destino	\N	t
+1479	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5803	0.00	28179.17	2026-01-23 21:13:34.988277	2026-01-23 21:13:34.988277	hacia_destino	\N	t
+1480	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5808	0.00	28200.00	2026-01-23 21:13:39.956591	2026-01-23 21:13:39.956591	hacia_destino	\N	t
+1481	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5813	0.00	28220.83	2026-01-23 21:13:44.971235	2026-01-23 21:13:44.971235	hacia_destino	\N	t
+1482	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5818	0.00	28241.67	2026-01-23 21:13:49.960632	2026-01-23 21:13:49.960632	hacia_destino	\N	t
+1483	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5823	0.00	28262.50	2026-01-23 21:13:54.959337	2026-01-23 21:13:54.959337	hacia_destino	\N	t
+1484	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5828	0.00	28283.33	2026-01-23 21:13:59.969506	2026-01-23 21:13:59.969506	hacia_destino	\N	t
+1485	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5833	0.00	28304.17	2026-01-23 21:14:04.954828	2026-01-23 21:14:04.954828	hacia_destino	\N	t
+1486	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5838	0.00	28325.00	2026-01-23 21:14:10.018151	2026-01-23 21:14:10.018151	hacia_destino	\N	t
+1487	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5843	0.00	28345.83	2026-01-23 21:14:14.982434	2026-01-23 21:14:14.982434	hacia_destino	\N	t
+1488	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5848	0.00	28366.67	2026-01-23 21:14:19.961618	2026-01-23 21:14:19.961618	hacia_destino	\N	t
+1489	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5853	0.00	28387.50	2026-01-23 21:14:24.976274	2026-01-23 21:14:24.976274	hacia_destino	\N	t
+1490	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5858	0.00	28408.33	2026-01-23 21:14:29.96943	2026-01-23 21:14:29.96943	hacia_destino	\N	t
+1491	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5863	0.00	28429.17	2026-01-23 21:14:34.983435	2026-01-23 21:14:34.983435	hacia_destino	\N	t
+1492	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	8257	0.00	38404.17	2026-01-23 21:54:29.688584	2026-01-23 21:54:29.688584	hacia_destino	inicio	t
+1493	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	8263	0.00	38429.17	2026-01-23 21:54:35.624587	2026-01-23 21:54:35.624587	hacia_destino	\N	t
+1494	794	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	8268	0.00	38450.00	2026-01-23 21:54:41.020244	2026-01-23 21:54:41.020244	hacia_destino	\N	t
+1495	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	0	0.00	6000.00	2026-01-23 21:56:37.343148	2026-01-23 21:56:37.343148	hacia_destino	inicio	t
+1496	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	5	0.00	6000.00	2026-01-23 21:56:42.508692	2026-01-23 21:56:42.508692	hacia_destino	\N	t
+1497	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	10	0.00	6000.00	2026-01-23 21:56:47.482954	2026-01-23 21:56:47.482954	hacia_destino	\N	t
+1498	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	15	0.00	6000.00	2026-01-23 21:56:52.483096	2026-01-23 21:56:52.483096	hacia_destino	\N	t
+1499	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	20	0.00	6000.00	2026-01-23 21:56:57.471047	2026-01-23 21:56:57.471047	hacia_destino	\N	t
+1500	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	25	0.00	6000.00	2026-01-23 21:57:02.508778	2026-01-23 21:57:02.508778	hacia_destino	\N	t
+1501	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	30	0.00	6000.00	2026-01-23 21:57:07.516874	2026-01-23 21:57:07.516874	hacia_destino	\N	t
+1502	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	35	0.00	6000.00	2026-01-23 21:57:12.562052	2026-01-23 21:57:12.562052	hacia_destino	\N	t
+1503	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	40	0.00	6000.00	2026-01-23 21:57:17.564331	2026-01-23 21:57:17.564331	hacia_destino	\N	t
+1504	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	45	0.00	6000.00	2026-01-23 21:57:22.483731	2026-01-23 21:57:22.483731	hacia_destino	\N	t
+1505	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	50	0.00	6000.00	2026-01-23 21:57:27.518044	2026-01-23 21:57:27.518044	hacia_destino	\N	t
+1506	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	55	0.00	6000.00	2026-01-23 21:57:32.550079	2026-01-23 21:57:32.550079	hacia_destino	\N	t
+1507	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	60	0.00	6000.00	2026-01-23 21:57:37.809046	2026-01-23 21:57:37.809046	hacia_destino	\N	t
+1508	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	65	0.00	6000.00	2026-01-23 21:57:42.593442	2026-01-23 21:57:42.593442	hacia_destino	\N	t
+1509	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	70	0.00	6000.00	2026-01-23 21:57:47.603069	2026-01-23 21:57:47.603069	hacia_destino	\N	t
+1510	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	75	0.00	6000.00	2026-01-23 21:57:52.498594	2026-01-23 21:57:52.498594	hacia_destino	\N	t
+1511	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	80	0.00	6000.00	2026-01-23 21:57:57.496773	2026-01-23 21:57:57.496773	hacia_destino	\N	t
+1512	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	85	0.00	6000.00	2026-01-23 21:58:02.509292	2026-01-23 21:58:02.509292	hacia_destino	\N	t
+1513	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	90	0.00	6000.00	2026-01-23 21:58:07.474501	2026-01-23 21:58:07.474501	hacia_destino	\N	t
+1514	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	95	0.00	6000.00	2026-01-23 21:58:12.536412	2026-01-23 21:58:12.536412	hacia_destino	\N	t
+1515	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	100	0.00	6000.00	2026-01-23 21:58:17.563645	2026-01-23 21:58:17.563645	hacia_destino	\N	t
+1516	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	105	0.00	6000.00	2026-01-23 21:58:22.573043	2026-01-23 21:58:22.573043	hacia_destino	\N	t
+1517	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	110	0.00	6000.00	2026-01-23 21:58:27.503433	2026-01-23 21:58:27.503433	hacia_destino	\N	t
+1518	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	115	0.00	6000.00	2026-01-23 21:58:32.489045	2026-01-23 21:58:32.489045	hacia_destino	\N	t
+1519	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	120	0.00	6000.00	2026-01-23 21:58:37.479781	2026-01-23 21:58:37.479781	hacia_destino	\N	t
+1520	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	125	0.00	6000.00	2026-01-23 21:58:42.500874	2026-01-23 21:58:42.500874	hacia_destino	\N	t
+1521	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	130	0.00	6000.00	2026-01-23 21:58:47.490224	2026-01-23 21:58:47.490224	hacia_destino	\N	t
+1522	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	135	0.00	6000.00	2026-01-23 21:58:52.49492	2026-01-23 21:58:52.49492	hacia_destino	\N	t
+1523	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	140	0.00	6000.00	2026-01-23 21:58:57.589787	2026-01-23 21:58:57.589787	hacia_destino	\N	t
+1524	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	145	0.00	6000.00	2026-01-23 21:59:02.48563	2026-01-23 21:59:02.48563	hacia_destino	\N	t
+1525	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	150	0.00	6000.00	2026-01-23 21:59:07.618343	2026-01-23 21:59:07.618343	hacia_destino	\N	t
+1526	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	155	0.00	6000.00	2026-01-23 21:59:12.481131	2026-01-23 21:59:12.481131	hacia_destino	\N	t
+1527	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	160	0.00	6000.00	2026-01-23 21:59:17.521885	2026-01-23 21:59:17.521885	hacia_destino	\N	t
+1528	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	165	0.00	6000.00	2026-01-23 21:59:22.484313	2026-01-23 21:59:22.484313	hacia_destino	\N	t
+1529	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	170	0.00	6000.00	2026-01-23 21:59:27.478208	2026-01-23 21:59:27.478208	hacia_destino	\N	t
+1530	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	175	0.00	6000.00	2026-01-23 21:59:32.509777	2026-01-23 21:59:32.509777	hacia_destino	\N	t
+1531	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	180	0.00	6000.00	2026-01-23 21:59:37.478223	2026-01-23 21:59:37.478223	hacia_destino	\N	t
+1532	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	185	0.00	6000.00	2026-01-23 21:59:42.480532	2026-01-23 21:59:42.480532	hacia_destino	\N	t
+1533	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	190	0.00	6000.00	2026-01-23 21:59:47.511983	2026-01-23 21:59:47.511983	hacia_destino	\N	t
+1534	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	195	0.00	6000.00	2026-01-23 21:59:52.477767	2026-01-23 21:59:52.477767	hacia_destino	\N	t
+1535	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	200	0.00	6000.00	2026-01-23 21:59:57.48182	2026-01-23 21:59:57.48182	hacia_destino	\N	t
+1536	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	205	0.00	6000.00	2026-01-23 22:00:02.542863	2026-01-23 22:00:02.542863	hacia_destino	\N	t
+1537	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	210	0.00	6000.00	2026-01-23 22:00:07.522471	2026-01-23 22:00:07.522471	hacia_destino	\N	t
+1538	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	215	0.00	6000.00	2026-01-23 22:00:12.477857	2026-01-23 22:00:12.477857	hacia_destino	\N	t
+1539	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	220	0.00	6000.00	2026-01-23 22:00:17.525726	2026-01-23 22:00:17.525726	hacia_destino	\N	t
+1540	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	225	0.00	6000.00	2026-01-23 22:00:22.475867	2026-01-23 22:00:22.475867	hacia_destino	\N	t
+1541	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	230	0.00	6000.00	2026-01-23 22:00:27.484502	2026-01-23 22:00:27.484502	hacia_destino	\N	t
+1542	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	235	0.00	6000.00	2026-01-23 22:00:32.532399	2026-01-23 22:00:32.532399	hacia_destino	\N	t
+1543	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	240	0.00	6000.00	2026-01-23 22:00:37.469641	2026-01-23 22:00:37.469641	hacia_destino	\N	t
+1544	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	245	0.00	6000.00	2026-01-23 22:00:42.465778	2026-01-23 22:00:42.465778	hacia_destino	\N	t
+1545	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	250	0.00	6000.00	2026-01-23 22:00:47.522196	2026-01-23 22:00:47.522196	hacia_destino	\N	t
+1546	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	255	0.00	6000.00	2026-01-23 22:00:52.465232	2026-01-23 22:00:52.465232	hacia_destino	\N	t
+1547	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	260	0.00	6000.00	2026-01-23 22:00:57.471278	2026-01-23 22:00:57.471278	hacia_destino	\N	t
+1548	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	265	0.00	6000.00	2026-01-23 22:01:02.606994	2026-01-23 22:01:02.606994	hacia_destino	\N	t
+1549	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	270	0.00	6000.00	2026-01-23 22:01:07.526014	2026-01-23 22:01:07.526014	hacia_destino	\N	t
+1550	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	275	0.00	6000.00	2026-01-23 22:01:12.5015	2026-01-23 22:01:12.5015	hacia_destino	\N	t
+1551	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	280	0.00	6000.00	2026-01-23 22:01:17.521283	2026-01-23 22:01:17.521283	hacia_destino	\N	t
+1552	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	285	0.00	6000.00	2026-01-23 22:01:22.579824	2026-01-23 22:01:22.579824	hacia_destino	\N	t
+1553	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	290	0.00	6000.00	2026-01-23 22:01:27.471676	2026-01-23 22:01:27.471676	hacia_destino	\N	t
+1554	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	295	0.00	6000.00	2026-01-23 22:01:32.525488	2026-01-23 22:01:32.525488	hacia_destino	\N	t
+1555	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	300	0.00	6000.00	2026-01-23 22:01:37.469804	2026-01-23 22:01:37.469804	hacia_destino	\N	t
+1556	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	305	0.00	6000.00	2026-01-23 22:01:42.48951	2026-01-23 22:01:42.48951	hacia_destino	\N	t
+1557	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	310	0.00	6000.00	2026-01-23 22:01:47.5029	2026-01-23 22:01:47.5029	hacia_destino	\N	t
+1558	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	315	0.00	6000.00	2026-01-23 22:01:52.469397	2026-01-23 22:01:52.469397	hacia_destino	\N	t
+1559	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	320	0.00	6000.00	2026-01-23 22:01:57.46926	2026-01-23 22:01:57.46926	hacia_destino	\N	t
+1560	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	325	0.00	6000.00	2026-01-23 22:02:02.479513	2026-01-23 22:02:02.479513	hacia_destino	\N	t
+1561	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	330	0.00	6000.00	2026-01-23 22:02:07.618658	2026-01-23 22:02:07.618658	hacia_destino	\N	t
+1562	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	335	0.00	6000.00	2026-01-23 22:02:12.527317	2026-01-23 22:02:12.527317	hacia_destino	\N	t
+1563	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	340	0.00	6000.00	2026-01-23 22:02:17.539467	2026-01-23 22:02:17.539467	hacia_destino	\N	t
+1564	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	345	0.00	6000.00	2026-01-23 22:02:22.481151	2026-01-23 22:02:22.481151	hacia_destino	\N	t
+1565	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	350	0.00	6000.00	2026-01-23 22:02:27.675826	2026-01-23 22:02:27.675826	hacia_destino	\N	t
+1566	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	355	0.00	6000.00	2026-01-23 22:02:32.470074	2026-01-23 22:02:32.470074	hacia_destino	\N	t
+1567	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	360	0.00	6000.00	2026-01-23 22:02:37.48383	2026-01-23 22:02:37.48383	hacia_destino	\N	t
+1568	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	365	0.00	6000.00	2026-01-23 22:02:42.481487	2026-01-23 22:02:42.481487	hacia_destino	\N	t
+1569	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	370	0.00	6000.00	2026-01-23 22:02:47.488337	2026-01-23 22:02:47.488337	hacia_destino	\N	t
+1570	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	375	0.00	6000.00	2026-01-23 22:02:52.487643	2026-01-23 22:02:52.487643	hacia_destino	\N	t
+1571	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	380	0.00	6000.00	2026-01-23 22:02:57.484136	2026-01-23 22:02:57.484136	hacia_destino	\N	t
+1572	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	385	0.00	6000.00	2026-01-23 22:03:02.471796	2026-01-23 22:03:02.471796	hacia_destino	\N	t
+1573	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	390	0.00	6000.00	2026-01-23 22:03:07.633867	2026-01-23 22:03:07.633867	hacia_destino	\N	t
+1574	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	395	0.00	6000.00	2026-01-23 22:03:12.472532	2026-01-23 22:03:12.472532	hacia_destino	\N	t
+1575	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	400	0.00	6000.00	2026-01-23 22:03:17.474893	2026-01-23 22:03:17.474893	hacia_destino	\N	t
+1576	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	405	0.00	6000.00	2026-01-23 22:03:22.471449	2026-01-23 22:03:22.471449	hacia_destino	\N	t
+1577	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	410	0.00	6000.00	2026-01-23 22:03:27.471328	2026-01-23 22:03:27.471328	hacia_destino	\N	t
+1578	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	415	0.00	6000.00	2026-01-23 22:03:32.467574	2026-01-23 22:03:32.467574	hacia_destino	\N	t
+1579	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	420	0.00	6000.00	2026-01-23 22:03:37.60079	2026-01-23 22:03:37.60079	hacia_destino	\N	t
+1580	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	425	0.00	6000.00	2026-01-23 22:03:42.474117	2026-01-23 22:03:42.474117	hacia_destino	\N	t
+1581	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	430	0.00	6000.00	2026-01-23 22:03:47.471872	2026-01-23 22:03:47.471872	hacia_destino	\N	t
+1582	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	435	0.00	6000.00	2026-01-23 22:03:52.497254	2026-01-23 22:03:52.497254	hacia_destino	\N	t
+1583	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	440	0.00	6000.00	2026-01-23 22:03:57.472656	2026-01-23 22:03:57.472656	hacia_destino	\N	t
+1584	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	445	0.00	6000.00	2026-01-23 22:04:02.495182	2026-01-23 22:04:02.495182	hacia_destino	\N	t
+1585	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	450	0.00	6000.00	2026-01-23 22:04:07.534682	2026-01-23 22:04:07.534682	hacia_destino	\N	t
+1586	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	455	0.00	6000.00	2026-01-23 22:04:12.471794	2026-01-23 22:04:12.471794	hacia_destino	\N	t
+1587	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	460	0.00	6000.00	2026-01-23 22:04:17.48299	2026-01-23 22:04:17.48299	hacia_destino	\N	t
+1588	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	465	0.00	6000.00	2026-01-23 22:04:22.487425	2026-01-23 22:04:22.487425	hacia_destino	\N	t
+1589	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	470	0.00	6000.00	2026-01-23 22:04:27.492565	2026-01-23 22:04:27.492565	hacia_destino	\N	t
+1590	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	475	0.00	6000.00	2026-01-23 22:04:32.469783	2026-01-23 22:04:32.469783	hacia_destino	\N	t
+1591	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	480	0.00	6000.00	2026-01-23 22:04:37.481678	2026-01-23 22:04:37.481678	hacia_destino	\N	t
+1592	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	485	0.00	6020.83	2026-01-23 22:04:42.492625	2026-01-23 22:04:42.492625	hacia_destino	\N	t
+1593	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	490	0.00	6041.67	2026-01-23 22:04:47.473472	2026-01-23 22:04:47.473472	hacia_destino	\N	t
+1594	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	495	0.00	6062.50	2026-01-23 22:04:52.46839	2026-01-23 22:04:52.46839	hacia_destino	\N	t
+1595	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	500	0.00	6083.33	2026-01-23 22:04:57.469413	2026-01-23 22:04:57.469413	hacia_destino	\N	t
+1596	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	505	0.00	6104.17	2026-01-23 22:05:02.477814	2026-01-23 22:05:02.477814	hacia_destino	\N	t
+1597	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	510	0.00	6125.00	2026-01-23 22:05:07.541177	2026-01-23 22:05:07.541177	hacia_destino	\N	t
+1598	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	515	0.00	6145.83	2026-01-23 22:05:12.476122	2026-01-23 22:05:12.476122	hacia_destino	\N	t
+1599	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	520	0.00	6166.67	2026-01-23 22:05:17.485272	2026-01-23 22:05:17.485272	hacia_destino	\N	t
+1600	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	525	0.00	6187.50	2026-01-23 22:05:22.475815	2026-01-23 22:05:22.475815	hacia_destino	\N	t
+1601	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	530	0.00	6208.33	2026-01-23 22:05:27.476791	2026-01-23 22:05:27.476791	hacia_destino	\N	t
+1602	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	535	0.00	6229.17	2026-01-23 22:05:32.46991	2026-01-23 22:05:32.46991	hacia_destino	\N	t
+1603	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	540	0.00	6250.00	2026-01-23 22:05:37.525445	2026-01-23 22:05:37.525445	hacia_destino	\N	t
+1604	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	545	0.00	6270.83	2026-01-23 22:05:42.52865	2026-01-23 22:05:42.52865	hacia_destino	\N	t
+1605	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	550	0.00	6291.67	2026-01-23 22:05:47.474806	2026-01-23 22:05:47.474806	hacia_destino	\N	t
+1606	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	555	0.00	6312.50	2026-01-23 22:05:52.491064	2026-01-23 22:05:52.491064	hacia_destino	\N	t
+1607	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	560	0.00	6333.33	2026-01-23 22:05:57.562157	2026-01-23 22:05:57.562157	hacia_destino	\N	t
+1608	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	565	0.00	6354.17	2026-01-23 22:06:02.490849	2026-01-23 22:06:02.490849	hacia_destino	\N	t
+1609	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	570	0.00	6375.00	2026-01-23 22:06:07.546614	2026-01-23 22:06:07.546614	hacia_destino	\N	t
+1610	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	575	0.00	6395.83	2026-01-23 22:06:12.590816	2026-01-23 22:06:12.590816	hacia_destino	\N	t
+1611	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	580	0.00	6416.67	2026-01-23 22:06:17.596068	2026-01-23 22:06:17.596068	hacia_destino	\N	t
+1612	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	585	0.00	6437.50	2026-01-23 22:06:22.492735	2026-01-23 22:06:22.492735	hacia_destino	\N	t
+1613	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	590	0.00	6458.33	2026-01-23 22:06:27.493057	2026-01-23 22:06:27.493057	hacia_destino	\N	t
+1614	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	595	0.00	6479.17	2026-01-23 22:06:32.477151	2026-01-23 22:06:32.477151	hacia_destino	\N	t
+1615	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	600	0.00	6500.00	2026-01-23 22:06:37.48631	2026-01-23 22:06:37.48631	hacia_destino	\N	t
+1616	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	605	0.00	6520.83	2026-01-23 22:06:42.53615	2026-01-23 22:06:42.53615	hacia_destino	\N	t
+1617	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	610	0.00	6541.67	2026-01-23 22:06:47.494665	2026-01-23 22:06:47.494665	hacia_destino	\N	t
+1618	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	615	0.00	6562.50	2026-01-23 22:06:52.501645	2026-01-23 22:06:52.501645	hacia_destino	\N	t
+1619	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	620	0.00	6583.33	2026-01-23 22:06:57.477636	2026-01-23 22:06:57.477636	hacia_destino	\N	t
+1620	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	625	0.00	6604.17	2026-01-23 22:07:02.474105	2026-01-23 22:07:02.474105	hacia_destino	\N	t
+1621	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	630	0.00	6625.00	2026-01-23 22:07:07.532617	2026-01-23 22:07:07.532617	hacia_destino	\N	t
+1622	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	635	0.00	6645.83	2026-01-23 22:07:12.543841	2026-01-23 22:07:12.543841	hacia_destino	\N	t
+1623	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	640	0.00	6666.67	2026-01-23 22:07:17.54338	2026-01-23 22:07:17.54338	hacia_destino	\N	t
+1624	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	645	0.00	6687.50	2026-01-23 22:07:22.495594	2026-01-23 22:07:22.495594	hacia_destino	\N	t
+1625	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	650	0.00	6708.33	2026-01-23 22:07:27.504903	2026-01-23 22:07:27.504903	hacia_destino	\N	t
+1626	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	655	0.00	6729.17	2026-01-23 22:07:32.485831	2026-01-23 22:07:32.485831	hacia_destino	\N	t
+1627	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	660	0.00	6750.00	2026-01-23 22:07:37.47779	2026-01-23 22:07:37.47779	hacia_destino	\N	t
+1628	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	665	0.00	6770.83	2026-01-23 22:07:42.48113	2026-01-23 22:07:42.48113	hacia_destino	\N	t
+1629	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	670	0.00	6791.67	2026-01-23 22:07:47.479404	2026-01-23 22:07:47.479404	hacia_destino	\N	t
+1630	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	675	0.00	6812.50	2026-01-23 22:07:52.47782	2026-01-23 22:07:52.47782	hacia_destino	\N	t
+1631	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	680	0.00	6833.33	2026-01-23 22:07:57.469953	2026-01-23 22:07:57.469953	hacia_destino	\N	t
+1632	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	685	0.00	6854.17	2026-01-23 22:08:02.468099	2026-01-23 22:08:02.468099	hacia_destino	\N	t
+1633	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	690	0.00	6875.00	2026-01-23 22:08:07.519085	2026-01-23 22:08:07.519085	hacia_destino	\N	t
+1634	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	695	0.00	6895.83	2026-01-23 22:08:12.490852	2026-01-23 22:08:12.490852	hacia_destino	\N	t
+1635	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	700	0.00	6916.67	2026-01-23 22:08:17.472579	2026-01-23 22:08:17.472579	hacia_destino	\N	t
+1636	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	705	0.00	6937.50	2026-01-23 22:08:22.468553	2026-01-23 22:08:22.468553	hacia_destino	\N	t
+1637	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	710	0.00	6958.33	2026-01-23 22:08:27.470256	2026-01-23 22:08:27.470256	hacia_destino	\N	t
+1638	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	715	0.00	6979.17	2026-01-23 22:08:32.47297	2026-01-23 22:08:32.47297	hacia_destino	\N	t
+1639	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	720	0.00	7000.00	2026-01-23 22:08:37.573343	2026-01-23 22:08:37.573343	hacia_destino	\N	t
+1640	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	725	0.00	7020.83	2026-01-23 22:08:42.533624	2026-01-23 22:08:42.533624	hacia_destino	\N	t
+1641	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	730	0.00	7041.67	2026-01-23 22:08:47.469911	2026-01-23 22:08:47.469911	hacia_destino	\N	t
+1642	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	735	0.00	7062.50	2026-01-23 22:08:52.462589	2026-01-23 22:08:52.462589	hacia_destino	\N	t
+1643	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	740	0.00	7083.33	2026-01-23 22:08:57.480948	2026-01-23 22:08:57.480948	hacia_destino	\N	t
+1644	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	745	0.00	7104.17	2026-01-23 22:09:02.469763	2026-01-23 22:09:02.469763	hacia_destino	\N	t
+1645	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	750	0.00	7125.00	2026-01-23 22:09:07.494492	2026-01-23 22:09:07.494492	hacia_destino	\N	t
+1646	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	755	0.00	7145.83	2026-01-23 22:09:12.479843	2026-01-23 22:09:12.479843	hacia_destino	\N	t
+1647	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	760	0.00	7166.67	2026-01-23 22:09:17.494932	2026-01-23 22:09:17.494932	hacia_destino	\N	t
+1648	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	765	0.00	7187.50	2026-01-23 22:09:22.493975	2026-01-23 22:09:22.493975	hacia_destino	\N	t
+1649	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	770	0.00	7208.33	2026-01-23 22:09:27.480581	2026-01-23 22:09:27.480581	hacia_destino	\N	t
+1650	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	775	0.00	7229.17	2026-01-23 22:09:32.494277	2026-01-23 22:09:32.494277	hacia_destino	\N	t
+1651	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	780	0.00	7250.00	2026-01-23 22:09:37.610095	2026-01-23 22:09:37.610095	hacia_destino	\N	t
+1652	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	785	0.00	7270.83	2026-01-23 22:09:42.590806	2026-01-23 22:09:42.590806	hacia_destino	\N	t
+1653	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	790	0.00	7291.67	2026-01-23 22:09:47.493027	2026-01-23 22:09:47.493027	hacia_destino	\N	t
+1654	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	795	0.00	7312.50	2026-01-23 22:09:52.498203	2026-01-23 22:09:52.498203	hacia_destino	\N	t
+1655	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	800	0.00	7333.33	2026-01-23 22:09:57.47574	2026-01-23 22:09:57.47574	hacia_destino	\N	t
+1656	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	805	0.00	7354.17	2026-01-23 22:10:02.513117	2026-01-23 22:10:02.513117	hacia_destino	\N	t
+1657	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	810	0.00	7375.00	2026-01-23 22:10:07.548453	2026-01-23 22:10:07.548453	hacia_destino	\N	t
+1658	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	815	0.00	7395.83	2026-01-23 22:10:12.484553	2026-01-23 22:10:12.484553	hacia_destino	\N	t
+1659	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	820	0.00	7416.67	2026-01-23 22:10:17.472732	2026-01-23 22:10:17.472732	hacia_destino	\N	t
+1660	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	825	0.00	7437.50	2026-01-23 22:10:22.475325	2026-01-23 22:10:22.475325	hacia_destino	\N	t
+1661	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	830	0.00	7458.33	2026-01-23 22:10:27.48639	2026-01-23 22:10:27.48639	hacia_destino	\N	t
+1662	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	835	0.00	7479.17	2026-01-23 22:10:32.481129	2026-01-23 22:10:32.481129	hacia_destino	\N	t
+1663	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	840	0.00	7500.00	2026-01-23 22:10:37.469231	2026-01-23 22:10:37.469231	hacia_destino	\N	t
+1664	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	845	0.00	7520.83	2026-01-23 22:10:42.477167	2026-01-23 22:10:42.477167	hacia_destino	\N	t
+1665	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	850	0.00	7541.67	2026-01-23 22:10:47.468798	2026-01-23 22:10:47.468798	hacia_destino	\N	t
+1666	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	855	0.00	7562.50	2026-01-23 22:10:52.46801	2026-01-23 22:10:52.46801	hacia_destino	\N	t
+1667	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	860	0.00	7583.33	2026-01-23 22:10:57.470571	2026-01-23 22:10:57.470571	hacia_destino	\N	t
+1668	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	865	0.00	7604.17	2026-01-23 22:11:02.474337	2026-01-23 22:11:02.474337	hacia_destino	\N	t
+1669	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	870	0.00	7625.00	2026-01-23 22:11:07.520679	2026-01-23 22:11:07.520679	hacia_destino	\N	t
+1670	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	875	0.00	7645.83	2026-01-23 22:11:12.600784	2026-01-23 22:11:12.600784	hacia_destino	\N	t
+1671	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	880	0.00	7666.67	2026-01-23 22:11:17.524637	2026-01-23 22:11:17.524637	hacia_destino	\N	t
+1672	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	885	0.00	7687.50	2026-01-23 22:11:22.493981	2026-01-23 22:11:22.493981	hacia_destino	\N	t
+1673	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	890	0.00	7708.33	2026-01-23 22:11:27.500313	2026-01-23 22:11:27.500313	hacia_destino	\N	t
+1674	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	895	0.00	7729.17	2026-01-23 22:11:32.48529	2026-01-23 22:11:32.48529	hacia_destino	\N	t
+1675	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	900	0.00	7750.00	2026-01-23 22:11:37.4799	2026-01-23 22:11:37.4799	hacia_destino	\N	t
+1676	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	905	0.00	7770.83	2026-01-23 22:11:42.481592	2026-01-23 22:11:42.481592	hacia_destino	\N	t
+1677	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	910	0.00	7791.67	2026-01-23 22:11:47.482476	2026-01-23 22:11:47.482476	hacia_destino	\N	t
+1678	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	915	0.00	7812.50	2026-01-23 22:11:52.486568	2026-01-23 22:11:52.486568	hacia_destino	\N	t
+1679	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	920	0.00	7833.33	2026-01-23 22:11:57.49753	2026-01-23 22:11:57.49753	hacia_destino	\N	t
+1680	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	925	0.00	7854.17	2026-01-23 22:12:02.48176	2026-01-23 22:12:02.48176	hacia_destino	\N	t
+1681	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	930	0.00	7875.00	2026-01-23 22:12:07.514175	2026-01-23 22:12:07.514175	hacia_destino	\N	t
+1682	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	935	0.00	7895.83	2026-01-23 22:12:12.476359	2026-01-23 22:12:12.476359	hacia_destino	\N	t
+1683	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	940	0.00	7916.67	2026-01-23 22:12:17.499167	2026-01-23 22:12:17.499167	hacia_destino	\N	t
+1684	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	945	0.00	7937.50	2026-01-23 22:12:22.491458	2026-01-23 22:12:22.491458	hacia_destino	\N	t
+1685	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	950	0.00	7958.33	2026-01-23 22:12:27.482914	2026-01-23 22:12:27.482914	hacia_destino	\N	t
+1686	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	955	0.00	7979.17	2026-01-23 22:12:32.492512	2026-01-23 22:12:32.492512	hacia_destino	\N	t
+1687	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	960	0.00	8000.00	2026-01-23 22:12:37.471982	2026-01-23 22:12:37.471982	hacia_destino	\N	t
+1688	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	965	0.00	8020.83	2026-01-23 22:12:42.49348	2026-01-23 22:12:42.49348	hacia_destino	\N	t
+1689	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	970	0.00	8041.67	2026-01-23 22:12:47.471896	2026-01-23 22:12:47.471896	hacia_destino	\N	t
+1690	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	975	0.00	8062.50	2026-01-23 22:12:52.480037	2026-01-23 22:12:52.480037	hacia_destino	\N	t
+1691	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	980	0.00	8083.33	2026-01-23 22:12:57.482177	2026-01-23 22:12:57.482177	hacia_destino	\N	t
+1692	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	985	0.00	8104.17	2026-01-23 22:13:02.518516	2026-01-23 22:13:02.518516	hacia_destino	\N	t
+1693	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	990	0.00	8125.00	2026-01-23 22:13:07.545674	2026-01-23 22:13:07.545674	hacia_destino	\N	t
+1694	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	995	0.00	8145.83	2026-01-23 22:13:12.48198	2026-01-23 22:13:12.48198	hacia_destino	\N	t
+1695	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1000	0.00	8166.67	2026-01-23 22:13:17.489799	2026-01-23 22:13:17.489799	hacia_destino	\N	t
+1696	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1005	0.00	8187.50	2026-01-23 22:13:22.461508	2026-01-23 22:13:22.461508	hacia_destino	\N	t
+1697	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1010	0.00	8208.33	2026-01-23 22:13:27.585839	2026-01-23 22:13:27.585839	hacia_destino	\N	t
+1698	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1015	0.00	8229.17	2026-01-23 22:13:32.476634	2026-01-23 22:13:32.476634	hacia_destino	\N	t
+1699	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1020	0.00	8250.00	2026-01-23 22:13:37.4758	2026-01-23 22:13:37.4758	hacia_destino	\N	t
+1700	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1025	0.00	8270.83	2026-01-23 22:13:42.483417	2026-01-23 22:13:42.483417	hacia_destino	\N	t
+1701	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1030	0.00	8291.67	2026-01-23 22:13:47.483875	2026-01-23 22:13:47.483875	hacia_destino	\N	t
+1702	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1035	0.00	8312.50	2026-01-23 22:13:52.474636	2026-01-23 22:13:52.474636	hacia_destino	\N	t
+1703	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1040	0.00	8333.33	2026-01-23 22:13:57.485736	2026-01-23 22:13:57.485736	hacia_destino	\N	t
+1704	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1045	0.00	8354.17	2026-01-23 22:14:02.489988	2026-01-23 22:14:02.489988	hacia_destino	\N	t
+1705	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1050	0.00	8375.00	2026-01-23 22:14:07.592025	2026-01-23 22:14:07.592025	hacia_destino	\N	t
+1706	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1055	0.00	8395.83	2026-01-23 22:14:12.522871	2026-01-23 22:14:12.522871	hacia_destino	\N	t
+1707	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1060	0.00	8416.67	2026-01-23 22:14:17.48289	2026-01-23 22:14:17.48289	hacia_destino	\N	t
+1708	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1065	0.00	8437.50	2026-01-23 22:14:22.492591	2026-01-23 22:14:22.492591	hacia_destino	\N	t
+1709	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1070	0.00	8458.33	2026-01-23 22:14:27.48518	2026-01-23 22:14:27.48518	hacia_destino	\N	t
+1710	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1075	0.00	8479.17	2026-01-23 22:14:32.533249	2026-01-23 22:14:32.533249	hacia_destino	\N	t
+1711	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1080	0.00	8500.00	2026-01-23 22:14:37.484874	2026-01-23 22:14:37.484874	hacia_destino	\N	t
+1712	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1085	0.00	8520.83	2026-01-23 22:14:42.578741	2026-01-23 22:14:42.578741	hacia_destino	\N	t
+1713	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1090	0.00	8541.67	2026-01-23 22:14:47.467658	2026-01-23 22:14:47.467658	hacia_destino	\N	t
+1714	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1095	0.00	8562.50	2026-01-23 22:14:52.483556	2026-01-23 22:14:52.483556	hacia_destino	\N	t
+1715	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1100	0.00	8583.33	2026-01-23 22:14:57.501222	2026-01-23 22:14:57.501222	hacia_destino	\N	t
+1716	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1105	0.00	8604.17	2026-01-23 22:15:02.480438	2026-01-23 22:15:02.480438	hacia_destino	\N	t
+1717	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1110	0.00	8625.00	2026-01-23 22:15:07.488862	2026-01-23 22:15:07.488862	hacia_destino	\N	t
+1718	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1115	0.00	8645.83	2026-01-23 22:15:12.471188	2026-01-23 22:15:12.471188	hacia_destino	\N	t
+1719	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1120	0.00	8666.67	2026-01-23 22:15:17.469214	2026-01-23 22:15:17.469214	hacia_destino	\N	t
+1720	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1125	0.00	8687.50	2026-01-23 22:15:22.472515	2026-01-23 22:15:22.472515	hacia_destino	\N	t
+1721	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1130	0.00	8708.33	2026-01-23 22:15:27.610113	2026-01-23 22:15:27.610113	hacia_destino	\N	t
+1722	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1135	0.00	8729.17	2026-01-23 22:15:32.599807	2026-01-23 22:15:32.599807	hacia_destino	\N	t
+1723	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1140	0.00	8750.00	2026-01-23 22:15:37.513937	2026-01-23 22:15:37.513937	hacia_destino	\N	t
+1724	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1145	0.00	8770.83	2026-01-23 22:15:42.504719	2026-01-23 22:15:42.504719	hacia_destino	\N	t
+1725	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1150	0.00	8791.67	2026-01-23 22:15:47.497852	2026-01-23 22:15:47.497852	hacia_destino	\N	t
+1726	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1155	0.00	8812.50	2026-01-23 22:15:52.492498	2026-01-23 22:15:52.492498	hacia_destino	\N	t
+1727	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1160	0.00	8833.33	2026-01-23 22:15:57.506545	2026-01-23 22:15:57.506545	hacia_destino	\N	t
+1728	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1165	0.00	8854.17	2026-01-23 22:16:02.809753	2026-01-23 22:16:02.809753	hacia_destino	\N	t
+1729	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1170	0.00	8875.00	2026-01-23 22:16:07.689438	2026-01-23 22:16:07.689438	hacia_destino	\N	t
+1730	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1175	0.00	8895.83	2026-01-23 22:16:13.816072	2026-01-23 22:16:13.816072	hacia_destino	\N	t
+1731	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1180	0.00	8916.67	2026-01-23 22:16:17.5709	2026-01-23 22:16:17.5709	hacia_destino	\N	t
+1732	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1175	0.00	8895.83	2026-01-23 22:16:22.533106	2026-01-23 22:16:22.533106	hacia_destino	\N	t
+1733	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1185	0.00	8937.50	2026-01-23 22:16:22.759646	2026-01-23 22:16:22.759646	hacia_destino	\N	t
+1734	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1190	0.00	8958.33	2026-01-23 22:16:27.665198	2026-01-23 22:16:27.665198	hacia_destino	\N	t
+1735	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1195	0.00	8979.17	2026-01-23 22:16:32.675877	2026-01-23 22:16:32.675877	hacia_destino	\N	t
+1736	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1200	0.00	9000.00	2026-01-23 22:16:38.375511	2026-01-23 22:16:38.375511	hacia_destino	\N	t
+1737	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1205	0.00	9020.83	2026-01-23 22:16:42.495754	2026-01-23 22:16:42.495754	hacia_destino	\N	t
+1738	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1210	0.00	9041.67	2026-01-23 22:16:47.495959	2026-01-23 22:16:47.495959	hacia_destino	\N	t
+1739	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1215	0.00	9062.50	2026-01-23 22:16:52.521655	2026-01-23 22:16:52.521655	hacia_destino	\N	t
+1740	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1220	0.00	9083.33	2026-01-23 22:16:57.515469	2026-01-23 22:16:57.515469	hacia_destino	\N	t
+1741	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1225	0.00	9104.17	2026-01-23 22:17:02.479097	2026-01-23 22:17:02.479097	hacia_destino	\N	t
+1742	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1230	0.00	9125.00	2026-01-23 22:17:07.498618	2026-01-23 22:17:07.498618	hacia_destino	\N	t
+1743	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1235	0.00	9145.83	2026-01-23 22:17:12.507507	2026-01-23 22:17:12.507507	hacia_destino	\N	t
+1744	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1240	0.00	9166.67	2026-01-23 22:17:17.550679	2026-01-23 22:17:17.550679	hacia_destino	\N	t
+1745	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1245	0.00	9187.50	2026-01-23 22:17:22.488373	2026-01-23 22:17:22.488373	hacia_destino	\N	t
+1746	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1250	0.00	9208.33	2026-01-23 22:17:27.488306	2026-01-23 22:17:27.488306	hacia_destino	\N	t
+1747	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1255	0.00	9229.17	2026-01-23 22:17:32.477851	2026-01-23 22:17:32.477851	hacia_destino	\N	t
+1748	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1260	0.00	9250.00	2026-01-23 22:17:37.517912	2026-01-23 22:17:37.517912	hacia_destino	\N	t
+1749	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1265	0.00	9270.83	2026-01-23 22:17:42.480216	2026-01-23 22:17:42.480216	hacia_destino	\N	t
+1750	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1270	0.00	9291.67	2026-01-23 22:17:47.496349	2026-01-23 22:17:47.496349	hacia_destino	\N	t
+1751	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1275	0.00	9312.50	2026-01-23 22:17:52.55847	2026-01-23 22:17:52.55847	hacia_destino	\N	t
+1752	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1280	0.00	9333.33	2026-01-23 22:17:57.497542	2026-01-23 22:17:57.497542	hacia_destino	\N	t
+1753	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1285	0.00	9354.17	2026-01-23 22:18:02.480861	2026-01-23 22:18:02.480861	hacia_destino	\N	t
+1754	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1290	0.00	9375.00	2026-01-23 22:18:07.540605	2026-01-23 22:18:07.540605	hacia_destino	\N	t
+1755	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1295	0.00	9395.83	2026-01-23 22:18:12.549835	2026-01-23 22:18:12.549835	hacia_destino	\N	t
+1756	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1300	0.00	9416.67	2026-01-23 22:18:17.55892	2026-01-23 22:18:17.55892	hacia_destino	\N	t
+1757	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1305	0.00	9437.50	2026-01-23 22:18:22.556172	2026-01-23 22:18:22.556172	hacia_destino	\N	t
+1758	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1310	0.00	9458.33	2026-01-23 22:18:27.538419	2026-01-23 22:18:27.538419	hacia_destino	\N	t
+1759	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1315	0.00	9479.17	2026-01-23 22:18:32.495708	2026-01-23 22:18:32.495708	hacia_destino	\N	t
+1760	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1320	0.00	9500.00	2026-01-23 22:18:37.542243	2026-01-23 22:18:37.542243	hacia_destino	\N	t
+1761	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1325	0.00	9520.83	2026-01-23 22:18:42.496142	2026-01-23 22:18:42.496142	hacia_destino	\N	t
+1762	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1330	0.00	9541.67	2026-01-23 22:18:47.50395	2026-01-23 22:18:47.50395	hacia_destino	\N	t
+1763	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1335	0.00	9562.50	2026-01-23 22:18:52.492791	2026-01-23 22:18:52.492791	hacia_destino	\N	t
+1764	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1340	0.00	9583.33	2026-01-23 22:18:57.556018	2026-01-23 22:18:57.556018	hacia_destino	\N	t
+1765	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1345	0.00	9604.17	2026-01-23 22:19:02.481242	2026-01-23 22:19:02.481242	hacia_destino	\N	t
+1766	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1350	0.00	9625.00	2026-01-23 22:19:07.52618	2026-01-23 22:19:07.52618	hacia_destino	\N	t
+1767	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1355	0.00	9645.83	2026-01-23 22:19:12.676623	2026-01-23 22:19:12.676623	hacia_destino	\N	t
+1768	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1360	0.00	9666.67	2026-01-23 22:19:17.520667	2026-01-23 22:19:17.520667	hacia_destino	\N	t
+1769	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1365	0.00	9687.50	2026-01-23 22:19:22.488596	2026-01-23 22:19:22.488596	hacia_destino	\N	t
+1770	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1370	0.00	9708.33	2026-01-23 22:19:27.635379	2026-01-23 22:19:27.635379	hacia_destino	\N	t
+1771	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1375	0.00	9729.17	2026-01-23 22:19:32.490059	2026-01-23 22:19:32.490059	hacia_destino	\N	t
+1772	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1380	0.00	9750.00	2026-01-23 22:19:37.534025	2026-01-23 22:19:37.534025	hacia_destino	\N	t
+1773	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1385	0.00	9770.83	2026-01-23 22:19:42.515227	2026-01-23 22:19:42.515227	hacia_destino	\N	t
+1774	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1390	0.00	9791.67	2026-01-23 22:19:47.542586	2026-01-23 22:19:47.542586	hacia_destino	\N	t
+1775	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1395	0.00	9812.50	2026-01-23 22:19:52.517551	2026-01-23 22:19:52.517551	hacia_destino	\N	t
+1776	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1400	0.00	9833.33	2026-01-23 22:19:57.593006	2026-01-23 22:19:57.593006	hacia_destino	\N	t
+1777	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1405	0.00	9854.17	2026-01-23 22:20:02.624358	2026-01-23 22:20:02.624358	hacia_destino	\N	t
+1778	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1410	0.00	9875.00	2026-01-23 22:20:07.600602	2026-01-23 22:20:07.600602	hacia_destino	\N	t
+1779	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1415	0.00	9895.83	2026-01-23 22:20:12.751152	2026-01-23 22:20:12.751152	hacia_destino	\N	t
+1780	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1420	0.00	9916.67	2026-01-23 22:20:17.6368	2026-01-23 22:20:17.6368	hacia_destino	\N	t
+1781	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1425	0.00	9937.50	2026-01-23 22:20:22.596626	2026-01-23 22:20:22.596626	hacia_destino	\N	t
+1782	796	277	6.25461830	-75.53955670	5.00	0.00	0.00	0.00	0.000	1430	0.00	9958.33	2026-01-23 22:20:27.665834	2026-01-23 22:20:27.665834	hacia_destino	\N	t
 \.
 
 
 --
--- TOC entry 6311 (class 0 OID 0)
+-- TOC entry 6329 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: asignaciones_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.asignaciones_conductor_id_seq', 207, true);
+SELECT pg_catalog.setval('public.asignaciones_conductor_id_seq', 211, true);
 
 
 --
--- TOC entry 6312 (class 0 OID 0)
+-- TOC entry 6330 (class 0 OID 0)
 -- Dependencies: 254
 -- Name: cache_direcciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6624,7 +8130,7 @@ SELECT pg_catalog.setval('public.cache_direcciones_id_seq', 1, false);
 
 
 --
--- TOC entry 6313 (class 0 OID 0)
+-- TOC entry 6331 (class 0 OID 0)
 -- Dependencies: 255
 -- Name: cache_geocodificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6633,7 +8139,7 @@ SELECT pg_catalog.setval('public.cache_geocodificacion_id_seq', 1, false);
 
 
 --
--- TOC entry 6314 (class 0 OID 0)
+-- TOC entry 6332 (class 0 OID 0)
 -- Dependencies: 246
 -- Name: calificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6642,16 +8148,16 @@ SELECT pg_catalog.setval('public.calificaciones_id_seq', 82, true);
 
 
 --
--- TOC entry 6315 (class 0 OID 0)
+-- TOC entry 6333 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: catalogo_tipos_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.catalogo_tipos_vehiculo_id_seq', 4, true);
+SELECT pg_catalog.setval('public.catalogo_tipos_vehiculo_id_seq', 6, true);
 
 
 --
--- TOC entry 6316 (class 0 OID 0)
+-- TOC entry 6334 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: categorias_soporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6660,7 +8166,7 @@ SELECT pg_catalog.setval('public.categorias_soporte_id_seq', 8, true);
 
 
 --
--- TOC entry 6317 (class 0 OID 0)
+-- TOC entry 6335 (class 0 OID 0)
 -- Dependencies: 272
 -- Name: colores_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6669,7 +8175,7 @@ SELECT pg_catalog.setval('public.colores_vehiculo_id_seq', 26, true);
 
 
 --
--- TOC entry 6318 (class 0 OID 0)
+-- TOC entry 6336 (class 0 OID 0)
 -- Dependencies: 256
 -- Name: conductores_favoritos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6678,7 +8184,7 @@ SELECT pg_catalog.setval('public.conductores_favoritos_id_seq', 1, false);
 
 
 --
--- TOC entry 6319 (class 0 OID 0)
+-- TOC entry 6337 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: configuracion_notificaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6687,7 +8193,7 @@ SELECT pg_catalog.setval('public.configuracion_notificaciones_usuario_id_seq', 3
 
 
 --
--- TOC entry 6320 (class 0 OID 0)
+-- TOC entry 6338 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: configuracion_precios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6696,7 +8202,7 @@ SELECT pg_catalog.setval('public.configuracion_precios_id_seq', 13, true);
 
 
 --
--- TOC entry 6321 (class 0 OID 0)
+-- TOC entry 6339 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: configuraciones_app_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6705,7 +8211,7 @@ SELECT pg_catalog.setval('public.configuraciones_app_id_seq', 9, false);
 
 
 --
--- TOC entry 6322 (class 0 OID 0)
+-- TOC entry 6340 (class 0 OID 0)
 -- Dependencies: 249
 -- Name: detalles_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6714,7 +8220,7 @@ SELECT pg_catalog.setval('public.detalles_conductor_id_seq', 35, true);
 
 
 --
--- TOC entry 6323 (class 0 OID 0)
+-- TOC entry 6341 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: disputas_pago_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6723,7 +8229,7 @@ SELECT pg_catalog.setval('public.disputas_pago_id_seq', 5, true);
 
 
 --
--- TOC entry 6324 (class 0 OID 0)
+-- TOC entry 6342 (class 0 OID 0)
 -- Dependencies: 270
 -- Name: documentos_verificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6732,7 +8238,7 @@ SELECT pg_catalog.setval('public.documentos_verificacion_id_seq', 119, true);
 
 
 --
--- TOC entry 6325 (class 0 OID 0)
+-- TOC entry 6343 (class 0 OID 0)
 -- Dependencies: 303
 -- Name: empresa_tipos_vehiculo_historial_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6741,16 +8247,16 @@ SELECT pg_catalog.setval('public.empresa_tipos_vehiculo_historial_id_seq', 1, fa
 
 
 --
--- TOC entry 6326 (class 0 OID 0)
+-- TOC entry 6344 (class 0 OID 0)
 -- Dependencies: 301
 -- Name: empresa_tipos_vehiculo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.empresa_tipos_vehiculo_id_seq', 52, true);
+SELECT pg_catalog.setval('public.empresa_tipos_vehiculo_id_seq', 60, true);
 
 
 --
--- TOC entry 6327 (class 0 OID 0)
+-- TOC entry 6345 (class 0 OID 0)
 -- Dependencies: 305
 -- Name: empresa_vehiculo_notificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6759,25 +8265,25 @@ SELECT pg_catalog.setval('public.empresa_vehiculo_notificaciones_id_seq', 1, fal
 
 
 --
--- TOC entry 6328 (class 0 OID 0)
+-- TOC entry 6346 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: empresas_configuracion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.empresas_configuracion_id_seq', 8, true);
+SELECT pg_catalog.setval('public.empresas_configuracion_id_seq', 9, true);
 
 
 --
--- TOC entry 6329 (class 0 OID 0)
+-- TOC entry 6347 (class 0 OID 0)
 -- Dependencies: 291
 -- Name: empresas_contacto_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.empresas_contacto_id_seq', 8, true);
+SELECT pg_catalog.setval('public.empresas_contacto_id_seq', 9, true);
 
 
 --
--- TOC entry 6330 (class 0 OID 0)
+-- TOC entry 6348 (class 0 OID 0)
 -- Dependencies: 295
 -- Name: empresas_metricas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6786,7 +8292,7 @@ SELECT pg_catalog.setval('public.empresas_metricas_id_seq', 38, true);
 
 
 --
--- TOC entry 6331 (class 0 OID 0)
+-- TOC entry 6349 (class 0 OID 0)
 -- Dependencies: 293
 -- Name: empresas_representante_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6795,16 +8301,16 @@ SELECT pg_catalog.setval('public.empresas_representante_id_seq', 3, true);
 
 
 --
--- TOC entry 6332 (class 0 OID 0)
+-- TOC entry 6350 (class 0 OID 0)
 -- Dependencies: 268
 -- Name: empresas_transporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.empresas_transporte_id_seq', 16, true);
+SELECT pg_catalog.setval('public.empresas_transporte_id_seq', 17, true);
 
 
 --
--- TOC entry 6333 (class 0 OID 0)
+-- TOC entry 6351 (class 0 OID 0)
 -- Dependencies: 258
 -- Name: historial_confianza_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6813,7 +8319,7 @@ SELECT pg_catalog.setval('public.historial_confianza_id_seq', 1, false);
 
 
 --
--- TOC entry 6334 (class 0 OID 0)
+-- TOC entry 6352 (class 0 OID 0)
 -- Dependencies: 274
 -- Name: logs_auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6822,7 +8328,7 @@ SELECT pg_catalog.setval('public.logs_auditoria_id_seq', 159, true);
 
 
 --
--- TOC entry 6335 (class 0 OID 0)
+-- TOC entry 6353 (class 0 OID 0)
 -- Dependencies: 261
 -- Name: mensajes_chat_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6831,7 +8337,7 @@ SELECT pg_catalog.setval('public.mensajes_chat_id_seq', 48, true);
 
 
 --
--- TOC entry 6336 (class 0 OID 0)
+-- TOC entry 6354 (class 0 OID 0)
 -- Dependencies: 313
 -- Name: mensajes_ticket_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6840,7 +8346,7 @@ SELECT pg_catalog.setval('public.mensajes_ticket_id_seq', 1, false);
 
 
 --
--- TOC entry 6337 (class 0 OID 0)
+-- TOC entry 6355 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: notificaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6849,16 +8355,25 @@ SELECT pg_catalog.setval('public.notificaciones_usuario_id_seq', 6, true);
 
 
 --
--- TOC entry 6338 (class 0 OID 0)
+-- TOC entry 6356 (class 0 OID 0)
+-- Dependencies: 323
+-- Name: pagos_comision_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.pagos_comision_id_seq', 1, true);
+
+
+--
+-- TOC entry 6357 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: pagos_empresas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pagos_empresas_id_seq', 1, false);
+SELECT pg_catalog.setval('public.pagos_empresas_id_seq', 2, true);
 
 
 --
--- TOC entry 6339 (class 0 OID 0)
+-- TOC entry 6358 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: pagos_viaje_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6867,7 +8382,7 @@ SELECT pg_catalog.setval('public.pagos_viaje_id_seq', 14, true);
 
 
 --
--- TOC entry 6340 (class 0 OID 0)
+-- TOC entry 6359 (class 0 OID 0)
 -- Dependencies: 253
 -- Name: paradas_solicitud_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6876,7 +8391,7 @@ SELECT pg_catalog.setval('public.paradas_solicitud_id_seq', 3, false);
 
 
 --
--- TOC entry 6341 (class 0 OID 0)
+-- TOC entry 6360 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: plantillas_bloqueadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6885,7 +8400,7 @@ SELECT pg_catalog.setval('public.plantillas_bloqueadas_id_seq', 1, false);
 
 
 --
--- TOC entry 6342 (class 0 OID 0)
+-- TOC entry 6361 (class 0 OID 0)
 -- Dependencies: 315
 -- Name: solicitudes_callback_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6894,16 +8409,16 @@ SELECT pg_catalog.setval('public.solicitudes_callback_id_seq', 1, false);
 
 
 --
--- TOC entry 6343 (class 0 OID 0)
+-- TOC entry 6362 (class 0 OID 0)
 -- Dependencies: 244
 -- Name: solicitudes_servicio_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.solicitudes_servicio_id_seq', 791, true);
+SELECT pg_catalog.setval('public.solicitudes_servicio_id_seq', 796, true);
 
 
 --
--- TOC entry 6344 (class 0 OID 0)
+-- TOC entry 6363 (class 0 OID 0)
 -- Dependencies: 288
 -- Name: solicitudes_vinculacion_conductor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6912,7 +8427,7 @@ SELECT pg_catalog.setval('public.solicitudes_vinculacion_conductor_id_seq', 34, 
 
 
 --
--- TOC entry 6345 (class 0 OID 0)
+-- TOC entry 6364 (class 0 OID 0)
 -- Dependencies: 311
 -- Name: tickets_soporte_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6921,7 +8436,7 @@ SELECT pg_catalog.setval('public.tickets_soporte_id_seq', 1, false);
 
 
 --
--- TOC entry 6346 (class 0 OID 0)
+-- TOC entry 6365 (class 0 OID 0)
 -- Dependencies: 279
 -- Name: tipos_notificacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6930,7 +8445,7 @@ SELECT pg_catalog.setval('public.tipos_notificacion_id_seq', 12, true);
 
 
 --
--- TOC entry 6347 (class 0 OID 0)
+-- TOC entry 6366 (class 0 OID 0)
 -- Dependencies: 285
 -- Name: tokens_push_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6939,7 +8454,7 @@ SELECT pg_catalog.setval('public.tokens_push_usuario_id_seq', 1, false);
 
 
 --
--- TOC entry 6348 (class 0 OID 0)
+-- TOC entry 6367 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: transacciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6948,7 +8463,7 @@ SELECT pg_catalog.setval('public.transacciones_id_seq', 24, true);
 
 
 --
--- TOC entry 6349 (class 0 OID 0)
+-- TOC entry 6368 (class 0 OID 0)
 -- Dependencies: 251
 -- Name: ubicaciones_usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -6957,43 +8472,43 @@ SELECT pg_catalog.setval('public.ubicaciones_usuario_id_seq', 10, false);
 
 
 --
--- TOC entry 6350 (class 0 OID 0)
+-- TOC entry 6369 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: user_devices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.user_devices_id_seq', 43, true);
+SELECT pg_catalog.setval('public.user_devices_id_seq', 44, true);
 
 
 --
--- TOC entry 6351 (class 0 OID 0)
+-- TOC entry 6370 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 298, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 300, true);
 
 
 --
--- TOC entry 6352 (class 0 OID 0)
+-- TOC entry 6371 (class 0 OID 0)
 -- Dependencies: 320
 -- Name: viaje_resumen_tracking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.viaje_resumen_tracking_id_seq', 388, true);
+SELECT pg_catalog.setval('public.viaje_resumen_tracking_id_seq', 1806, true);
 
 
 --
--- TOC entry 6353 (class 0 OID 0)
+-- TOC entry 6372 (class 0 OID 0)
 -- Dependencies: 318
 -- Name: viaje_tracking_realtime_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.viaje_tracking_realtime_id_seq', 364, true);
+SELECT pg_catalog.setval('public.viaje_tracking_realtime_id_seq', 1782, true);
 
 
 --
--- TOC entry 5536 (class 2606 OID 16881)
+-- TOC entry 5545 (class 2606 OID 16881)
 -- Name: asignaciones_conductor asignaciones_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7002,7 +8517,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5540 (class 2606 OID 16885)
+-- TOC entry 5549 (class 2606 OID 16885)
 -- Name: cache_direcciones cache_direcciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7011,7 +8526,7 @@ ALTER TABLE ONLY public.cache_direcciones
 
 
 --
--- TOC entry 5543 (class 2606 OID 16888)
+-- TOC entry 5552 (class 2606 OID 16888)
 -- Name: cache_geocodificacion cache_geocodificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7020,7 +8535,7 @@ ALTER TABLE ONLY public.cache_geocodificacion
 
 
 --
--- TOC entry 5546 (class 2606 OID 16891)
+-- TOC entry 5555 (class 2606 OID 16891)
 -- Name: calificaciones calificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7029,7 +8544,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5795 (class 2606 OID 115567)
+-- TOC entry 5804 (class 2606 OID 115567)
 -- Name: catalogo_tipos_vehiculo catalogo_tipos_vehiculo_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7038,7 +8553,7 @@ ALTER TABLE ONLY public.catalogo_tipos_vehiculo
 
 
 --
--- TOC entry 5797 (class 2606 OID 115565)
+-- TOC entry 5806 (class 2606 OID 115565)
 -- Name: catalogo_tipos_vehiculo catalogo_tipos_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7047,7 +8562,7 @@ ALTER TABLE ONLY public.catalogo_tipos_vehiculo
 
 
 --
--- TOC entry 5815 (class 2606 OID 115687)
+-- TOC entry 5824 (class 2606 OID 115687)
 -- Name: categorias_soporte categorias_soporte_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7056,7 +8571,7 @@ ALTER TABLE ONLY public.categorias_soporte
 
 
 --
--- TOC entry 5817 (class 2606 OID 115685)
+-- TOC entry 5826 (class 2606 OID 115685)
 -- Name: categorias_soporte categorias_soporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7065,7 +8580,7 @@ ALTER TABLE ONLY public.categorias_soporte
 
 
 --
--- TOC entry 5734 (class 2606 OID 33664)
+-- TOC entry 5743 (class 2606 OID 33664)
 -- Name: colores_vehiculo colores_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7074,7 +8589,7 @@ ALTER TABLE ONLY public.colores_vehiculo
 
 
 --
--- TOC entry 5690 (class 2606 OID 17173)
+-- TOC entry 5699 (class 2606 OID 17173)
 -- Name: conductores_favoritos conductores_favoritos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7083,7 +8598,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5756 (class 2606 OID 91026)
+-- TOC entry 5765 (class 2606 OID 91026)
 -- Name: configuracion_notificaciones_usuario configuracion_notificaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7092,7 +8607,7 @@ ALTER TABLE ONLY public.configuracion_notificaciones_usuario
 
 
 --
--- TOC entry 5758 (class 2606 OID 91028)
+-- TOC entry 5767 (class 2606 OID 91028)
 -- Name: configuracion_notificaciones_usuario configuracion_notificaciones_usuario_usuario_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7101,7 +8616,7 @@ ALTER TABLE ONLY public.configuracion_notificaciones_usuario
 
 
 --
--- TOC entry 5560 (class 2606 OID 16901)
+-- TOC entry 5569 (class 2606 OID 16901)
 -- Name: configuracion_precios configuracion_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7110,7 +8625,7 @@ ALTER TABLE ONLY public.configuracion_precios
 
 
 --
--- TOC entry 5555 (class 2606 OID 16896)
+-- TOC entry 5564 (class 2606 OID 16896)
 -- Name: configuraciones_app configuraciones_app_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7119,7 +8634,7 @@ ALTER TABLE ONLY public.configuraciones_app
 
 
 --
--- TOC entry 5566 (class 2606 OID 16905)
+-- TOC entry 5575 (class 2606 OID 16905)
 -- Name: detalles_conductor detalles_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7128,7 +8643,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5580 (class 2606 OID 16917)
+-- TOC entry 5589 (class 2606 OID 16917)
 -- Name: detalles_paquete detalles_paquete_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7137,7 +8652,7 @@ ALTER TABLE ONLY public.detalles_paquete
 
 
 --
--- TOC entry 5583 (class 2606 OID 16920)
+-- TOC entry 5592 (class 2606 OID 16920)
 -- Name: detalles_viaje detalles_viaje_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7146,7 +8661,7 @@ ALTER TABLE ONLY public.detalles_viaje
 
 
 --
--- TOC entry 5711 (class 2606 OID 17294)
+-- TOC entry 5720 (class 2606 OID 17294)
 -- Name: disputas_pago disputas_pago_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7155,7 +8670,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5713 (class 2606 OID 17296)
+-- TOC entry 5722 (class 2606 OID 17296)
 -- Name: disputas_pago disputas_pago_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7164,7 +8679,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5586 (class 2606 OID 16923)
+-- TOC entry 5595 (class 2606 OID 16923)
 -- Name: documentos_conductor_historial documentos_conductor_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7173,7 +8688,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5731 (class 2606 OID 33649)
+-- TOC entry 5740 (class 2606 OID 33649)
 -- Name: documentos_verificacion documentos_verificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7182,7 +8697,7 @@ ALTER TABLE ONLY public.documentos_verificacion
 
 
 --
--- TOC entry 5807 (class 2606 OID 115619)
+-- TOC entry 5816 (class 2606 OID 115619)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7191,7 +8706,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5799 (class 2606 OID 115582)
+-- TOC entry 5808 (class 2606 OID 115582)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7200,7 +8715,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5811 (class 2606 OID 115643)
+-- TOC entry 5820 (class 2606 OID 115643)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7209,7 +8724,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5790 (class 2606 OID 91290)
+-- TOC entry 5799 (class 2606 OID 91290)
 -- Name: empresas_configuracion empresas_configuracion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7218,7 +8733,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5774 (class 2606 OID 91217)
+-- TOC entry 5783 (class 2606 OID 91217)
 -- Name: empresas_contacto empresas_contacto_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7227,7 +8742,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5785 (class 2606 OID 91264)
+-- TOC entry 5794 (class 2606 OID 91264)
 -- Name: empresas_metricas empresas_metricas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7236,7 +8751,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5780 (class 2606 OID 91238)
+-- TOC entry 5789 (class 2606 OID 91238)
 -- Name: empresas_representante empresas_representante_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7245,7 +8760,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5723 (class 2606 OID 25452)
+-- TOC entry 5732 (class 2606 OID 25452)
 -- Name: empresas_transporte empresas_transporte_nit_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7254,7 +8769,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5725 (class 2606 OID 25450)
+-- TOC entry 5734 (class 2606 OID 25450)
 -- Name: empresas_transporte empresas_transporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7263,7 +8778,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5593 (class 2606 OID 16928)
+-- TOC entry 5602 (class 2606 OID 16928)
 -- Name: estadisticas_sistema estadisticas_sistema_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7272,7 +8787,7 @@ ALTER TABLE ONLY public.estadisticas_sistema
 
 
 --
--- TOC entry 5696 (class 2606 OID 17201)
+-- TOC entry 5705 (class 2606 OID 17201)
 -- Name: historial_confianza historial_confianza_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7281,7 +8796,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5597 (class 2606 OID 16932)
+-- TOC entry 5606 (class 2606 OID 16932)
 -- Name: historial_precios historial_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7290,7 +8805,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5602 (class 2606 OID 16937)
+-- TOC entry 5611 (class 2606 OID 16937)
 -- Name: historial_seguimiento historial_seguimiento_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7299,7 +8814,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5557 (class 2606 OID 16898)
+-- TOC entry 5566 (class 2606 OID 16898)
 -- Name: configuraciones_app idx_clave; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7308,7 +8823,7 @@ ALTER TABLE ONLY public.configuraciones_app
 
 
 --
--- TOC entry 5578 (class 2606 OID 16907)
+-- TOC entry 5587 (class 2606 OID 16907)
 -- Name: detalles_conductor idx_detalles_conductor_usuario; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7317,7 +8832,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5595 (class 2606 OID 16930)
+-- TOC entry 5604 (class 2606 OID 16930)
 -- Name: estadisticas_sistema idx_fecha; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7326,7 +8841,7 @@ ALTER TABLE ONLY public.estadisticas_sistema
 
 
 --
--- TOC entry 5652 (class 2606 OID 16977)
+-- TOC entry 5661 (class 2606 OID 16977)
 -- Name: transacciones idx_transacciones_solicitud; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7335,7 +8850,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5610 (class 2606 OID 16942)
+-- TOC entry 5619 (class 2606 OID 16942)
 -- Name: logs_auditoria logs_auditoria_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7344,7 +8859,7 @@ ALTER TABLE ONLY public.logs_auditoria
 
 
 --
--- TOC entry 5709 (class 2606 OID 17258)
+-- TOC entry 5718 (class 2606 OID 17258)
 -- Name: mensajes_chat mensajes_chat_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7353,7 +8868,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5829 (class 2606 OID 115728)
+-- TOC entry 5838 (class 2606 OID 115728)
 -- Name: mensajes_ticket mensajes_ticket_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7362,7 +8877,7 @@ ALTER TABLE ONLY public.mensajes_ticket
 
 
 --
--- TOC entry 5613 (class 2606 OID 16947)
+-- TOC entry 5622 (class 2606 OID 16947)
 -- Name: metodos_pago_usuario metodos_pago_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7371,7 +8886,7 @@ ALTER TABLE ONLY public.metodos_pago_usuario
 
 
 --
--- TOC entry 5754 (class 2606 OID 90999)
+-- TOC entry 5763 (class 2606 OID 90999)
 -- Name: notificaciones_usuario notificaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7380,7 +8895,16 @@ ALTER TABLE ONLY public.notificaciones_usuario
 
 
 --
--- TOC entry 5739 (class 2606 OID 58214)
+-- TOC entry 5858 (class 2606 OID 123906)
+-- Name: pagos_comision pagos_comision_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pagos_comision
+    ADD CONSTRAINT pagos_comision_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 5748 (class 2606 OID 58214)
 -- Name: pagos_empresas pagos_empresas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7389,7 +8913,7 @@ ALTER TABLE ONLY public.pagos_empresas
 
 
 --
--- TOC entry 5719 (class 2606 OID 17356)
+-- TOC entry 5728 (class 2606 OID 17356)
 -- Name: pagos_viaje pagos_viaje_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7398,7 +8922,7 @@ ALTER TABLE ONLY public.pagos_viaje
 
 
 --
--- TOC entry 5721 (class 2606 OID 17358)
+-- TOC entry 5730 (class 2606 OID 17358)
 -- Name: pagos_viaje pagos_viaje_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7407,7 +8931,7 @@ ALTER TABLE ONLY public.pagos_viaje
 
 
 --
--- TOC entry 5616 (class 2606 OID 16950)
+-- TOC entry 5625 (class 2606 OID 16950)
 -- Name: paradas_solicitud paradas_solicitud_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7416,7 +8940,7 @@ ALTER TABLE ONLY public.paradas_solicitud
 
 
 --
--- TOC entry 5743 (class 2606 OID 82790)
+-- TOC entry 5752 (class 2606 OID 82790)
 -- Name: plantillas_bloqueadas plantillas_bloqueadas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7425,7 +8949,7 @@ ALTER TABLE ONLY public.plantillas_bloqueadas
 
 
 --
--- TOC entry 5618 (class 2606 OID 16955)
+-- TOC entry 5627 (class 2606 OID 16955)
 -- Name: proveedores_mapa proveedores_mapa_nombre_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7434,7 +8958,7 @@ ALTER TABLE ONLY public.proveedores_mapa
 
 
 --
--- TOC entry 5620 (class 2606 OID 16953)
+-- TOC entry 5629 (class 2606 OID 16953)
 -- Name: proveedores_mapa proveedores_mapa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7443,7 +8967,7 @@ ALTER TABLE ONLY public.proveedores_mapa
 
 
 --
--- TOC entry 5622 (class 2606 OID 16957)
+-- TOC entry 5631 (class 2606 OID 16957)
 -- Name: reglas_precios reglas_precios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7452,7 +8976,7 @@ ALTER TABLE ONLY public.reglas_precios
 
 
 --
--- TOC entry 5629 (class 2606 OID 16959)
+-- TOC entry 5638 (class 2606 OID 16959)
 -- Name: reportes_usuarios reportes_usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7461,7 +8985,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5833 (class 2606 OID 115748)
+-- TOC entry 5842 (class 2606 OID 115748)
 -- Name: solicitudes_callback solicitudes_callback_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7470,7 +8994,7 @@ ALTER TABLE ONLY public.solicitudes_callback
 
 
 --
--- TOC entry 5642 (class 2606 OID 16966)
+-- TOC entry 5651 (class 2606 OID 16966)
 -- Name: solicitudes_servicio solicitudes_servicio_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7479,7 +9003,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5770 (class 2606 OID 91167)
+-- TOC entry 5779 (class 2606 OID 91167)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7488,7 +9012,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5823 (class 2606 OID 115704)
+-- TOC entry 5832 (class 2606 OID 115704)
 -- Name: tickets_soporte tickets_soporte_numero_ticket_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7497,7 +9021,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5825 (class 2606 OID 115702)
+-- TOC entry 5834 (class 2606 OID 115702)
 -- Name: tickets_soporte tickets_soporte_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7506,7 +9030,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5745 (class 2606 OID 90985)
+-- TOC entry 5754 (class 2606 OID 90985)
 -- Name: tipos_notificacion tipos_notificacion_codigo_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7515,7 +9039,7 @@ ALTER TABLE ONLY public.tipos_notificacion
 
 
 --
--- TOC entry 5747 (class 2606 OID 90983)
+-- TOC entry 5756 (class 2606 OID 90983)
 -- Name: tipos_notificacion tipos_notificacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7524,7 +9048,7 @@ ALTER TABLE ONLY public.tipos_notificacion
 
 
 --
--- TOC entry 5762 (class 2606 OID 91041)
+-- TOC entry 5771 (class 2606 OID 91041)
 -- Name: tokens_push_usuario tokens_push_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7533,7 +9057,7 @@ ALTER TABLE ONLY public.tokens_push_usuario
 
 
 --
--- TOC entry 5764 (class 2606 OID 91043)
+-- TOC entry 5773 (class 2606 OID 91043)
 -- Name: tokens_push_usuario tokens_push_usuario_usuario_id_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7542,7 +9066,7 @@ ALTER TABLE ONLY public.tokens_push_usuario
 
 
 --
--- TOC entry 5654 (class 2606 OID 16975)
+-- TOC entry 5663 (class 2606 OID 16975)
 -- Name: transacciones transacciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7551,7 +9075,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5657 (class 2606 OID 16982)
+-- TOC entry 5666 (class 2606 OID 16982)
 -- Name: ubicaciones_usuario ubicaciones_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7560,7 +9084,7 @@ ALTER TABLE ONLY public.ubicaciones_usuario
 
 
 --
--- TOC entry 5553 (class 2606 OID 123860)
+-- TOC entry 5562 (class 2606 OID 123860)
 -- Name: calificaciones unique_calificacion_por_usuario_solicitud; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7569,7 +9093,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5661 (class 2606 OID 16985)
+-- TOC entry 5670 (class 2606 OID 16985)
 -- Name: user_devices user_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7578,7 +9102,7 @@ ALTER TABLE ONLY public.user_devices
 
 
 --
--- TOC entry 5663 (class 2606 OID 16987)
+-- TOC entry 5672 (class 2606 OID 16987)
 -- Name: user_devices user_devices_user_id_device_uuid_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7587,7 +9111,7 @@ ALTER TABLE ONLY public.user_devices
 
 
 --
--- TOC entry 5674 (class 2606 OID 99167)
+-- TOC entry 5683 (class 2606 OID 99167)
 -- Name: usuarios usuarios_apple_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7596,7 +9120,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5676 (class 2606 OID 16995)
+-- TOC entry 5685 (class 2606 OID 16995)
 -- Name: usuarios usuarios_email_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7605,7 +9129,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5678 (class 2606 OID 99164)
+-- TOC entry 5687 (class 2606 OID 99164)
 -- Name: usuarios usuarios_google_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7614,7 +9138,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5680 (class 2606 OID 16991)
+-- TOC entry 5689 (class 2606 OID 16991)
 -- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7623,7 +9147,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5682 (class 2606 OID 16997)
+-- TOC entry 5691 (class 2606 OID 16997)
 -- Name: usuarios usuarios_telefono_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7632,7 +9156,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5684 (class 2606 OID 16993)
+-- TOC entry 5693 (class 2606 OID 16993)
 -- Name: usuarios usuarios_uuid_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7641,7 +9165,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5644 (class 2606 OID 16968)
+-- TOC entry 5653 (class 2606 OID 16968)
 -- Name: solicitudes_servicio uuid_solicitud_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7650,7 +9174,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5694 (class 2606 OID 17175)
+-- TOC entry 5703 (class 2606 OID 17175)
 -- Name: conductores_favoritos ux_conductores_favoritos_usuario_conductor; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7659,7 +9183,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5793 (class 2606 OID 91292)
+-- TOC entry 5802 (class 2606 OID 91292)
 -- Name: empresas_configuracion ux_empresa_configuracion; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7668,7 +9192,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5778 (class 2606 OID 91219)
+-- TOC entry 5787 (class 2606 OID 91219)
 -- Name: empresas_contacto ux_empresa_contacto; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7677,7 +9201,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5788 (class 2606 OID 91266)
+-- TOC entry 5797 (class 2606 OID 91266)
 -- Name: empresas_metricas ux_empresa_metricas; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7686,7 +9210,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5783 (class 2606 OID 91240)
+-- TOC entry 5792 (class 2606 OID 91240)
 -- Name: empresas_representante ux_empresa_representante; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7695,7 +9219,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5805 (class 2606 OID 115584)
+-- TOC entry 5814 (class 2606 OID 115584)
 -- Name: empresa_tipos_vehiculo ux_empresa_tipo_vehiculo; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7704,7 +9228,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5702 (class 2606 OID 17203)
+-- TOC entry 5711 (class 2606 OID 17203)
 -- Name: historial_confianza ux_historial_confianza_usuario_conductor; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7713,7 +9237,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5772 (class 2606 OID 91169)
+-- TOC entry 5781 (class 2606 OID 91169)
 -- Name: solicitudes_vinculacion_conductor ux_solicitud_pendiente; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7722,7 +9246,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5688 (class 2606 OID 17002)
+-- TOC entry 5697 (class 2606 OID 17002)
 -- Name: verification_codes verification_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7731,7 +9255,7 @@ ALTER TABLE ONLY public.verification_codes
 
 
 --
--- TOC entry 5843 (class 2606 OID 123819)
+-- TOC entry 5852 (class 2606 OID 123819)
 -- Name: viaje_resumen_tracking viaje_resumen_tracking_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7740,7 +9264,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5845 (class 2606 OID 123821)
+-- TOC entry 5854 (class 2606 OID 123821)
 -- Name: viaje_resumen_tracking viaje_resumen_tracking_solicitud_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7749,7 +9273,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5839 (class 2606 OID 123782)
+-- TOC entry 5848 (class 2606 OID 123782)
 -- Name: viaje_tracking_realtime viaje_tracking_realtime_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7758,7 +9282,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5537 (class 1259 OID 16883)
+-- TOC entry 5546 (class 1259 OID 16883)
 -- Name: idx_asignaciones_conductor_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7766,7 +9290,7 @@ CREATE INDEX idx_asignaciones_conductor_conductor_id ON public.asignaciones_cond
 
 
 --
--- TOC entry 5538 (class 1259 OID 16882)
+-- TOC entry 5547 (class 1259 OID 16882)
 -- Name: idx_asignaciones_conductor_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7774,7 +9298,7 @@ CREATE INDEX idx_asignaciones_conductor_solicitud_id ON public.asignaciones_cond
 
 
 --
--- TOC entry 5541 (class 1259 OID 16886)
+-- TOC entry 5550 (class 1259 OID 16886)
 -- Name: idx_cache_dir_ruta; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7782,7 +9306,7 @@ CREATE INDEX idx_cache_dir_ruta ON public.cache_direcciones USING btree (latitud
 
 
 --
--- TOC entry 5544 (class 1259 OID 16889)
+-- TOC entry 5553 (class 1259 OID 16889)
 -- Name: idx_cache_geo_coordenadas; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7790,7 +9314,7 @@ CREATE INDEX idx_cache_geo_coordenadas ON public.cache_geocodificacion USING btr
 
 
 --
--- TOC entry 5547 (class 1259 OID 41836)
+-- TOC entry 5556 (class 1259 OID 41836)
 -- Name: idx_calificaciones_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7798,7 +9322,7 @@ CREATE INDEX idx_calificaciones_solicitud ON public.calificaciones USING btree (
 
 
 --
--- TOC entry 5548 (class 1259 OID 123861)
+-- TOC entry 5557 (class 1259 OID 123861)
 -- Name: idx_calificaciones_solicitud_calificador; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7806,7 +9330,7 @@ CREATE INDEX idx_calificaciones_solicitud_calificador ON public.calificaciones U
 
 
 --
--- TOC entry 5549 (class 1259 OID 16892)
+-- TOC entry 5558 (class 1259 OID 16892)
 -- Name: idx_calificaciones_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7814,7 +9338,7 @@ CREATE INDEX idx_calificaciones_solicitud_id ON public.calificaciones USING btre
 
 
 --
--- TOC entry 5550 (class 1259 OID 16894)
+-- TOC entry 5559 (class 1259 OID 16894)
 -- Name: idx_calificaciones_usuario_calificado_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7822,7 +9346,7 @@ CREATE INDEX idx_calificaciones_usuario_calificado_id ON public.calificaciones U
 
 
 --
--- TOC entry 5551 (class 1259 OID 16893)
+-- TOC entry 5560 (class 1259 OID 16893)
 -- Name: idx_calificaciones_usuario_calificador_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7830,7 +9354,7 @@ CREATE INDEX idx_calificaciones_usuario_calificador_id ON public.calificaciones 
 
 
 --
--- TOC entry 5830 (class 1259 OID 115750)
+-- TOC entry 5839 (class 1259 OID 115750)
 -- Name: idx_callback_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7838,7 +9362,7 @@ CREATE INDEX idx_callback_estado ON public.solicitudes_callback USING btree (est
 
 
 --
--- TOC entry 5831 (class 1259 OID 115749)
+-- TOC entry 5840 (class 1259 OID 115749)
 -- Name: idx_callback_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7846,7 +9370,7 @@ CREATE INDEX idx_callback_usuario ON public.solicitudes_callback USING btree (us
 
 
 --
--- TOC entry 5735 (class 1259 OID 33665)
+-- TOC entry 5744 (class 1259 OID 33665)
 -- Name: idx_color_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7854,7 +9378,7 @@ CREATE INDEX idx_color_activo ON public.colores_vehiculo USING btree (activo);
 
 
 --
--- TOC entry 5697 (class 1259 OID 17233)
+-- TOC entry 5706 (class 1259 OID 17233)
 -- Name: idx_conductor_confianza; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7862,7 +9386,7 @@ CREATE INDEX idx_conductor_confianza ON public.historial_confianza USING btree (
 
 
 --
--- TOC entry 5691 (class 1259 OID 17231)
+-- TOC entry 5700 (class 1259 OID 17231)
 -- Name: idx_conductor_favoritos; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7870,7 +9394,15 @@ CREATE INDEX idx_conductor_favoritos ON public.conductores_favoritos USING btree
 
 
 --
--- TOC entry 5698 (class 1259 OID 17236)
+-- TOC entry 5855 (class 1259 OID 123912)
+-- Name: idx_conductor_pago; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_conductor_pago ON public.pagos_comision USING btree (conductor_id);
+
+
+--
+-- TOC entry 5707 (class 1259 OID 17236)
 -- Name: idx_confianza_score_viajes; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7878,7 +9410,7 @@ CREATE INDEX idx_confianza_score_viajes ON public.historial_confianza USING btre
 
 
 --
--- TOC entry 5759 (class 1259 OID 91029)
+-- TOC entry 5768 (class 1259 OID 91029)
 -- Name: idx_config_notif_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7886,7 +9418,7 @@ CREATE INDEX idx_config_notif_usuario ON public.configuracion_notificaciones_usu
 
 
 --
--- TOC entry 5561 (class 1259 OID 16903)
+-- TOC entry 5570 (class 1259 OID 16903)
 -- Name: idx_configuracion_precios_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7894,7 +9426,7 @@ CREATE INDEX idx_configuracion_precios_activo ON public.configuracion_precios US
 
 
 --
--- TOC entry 5562 (class 1259 OID 16902)
+-- TOC entry 5571 (class 1259 OID 16902)
 -- Name: idx_configuracion_precios_tipo_vehiculo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7902,7 +9434,7 @@ CREATE INDEX idx_configuracion_precios_tipo_vehiculo ON public.configuracion_pre
 
 
 --
--- TOC entry 5558 (class 1259 OID 16899)
+-- TOC entry 5567 (class 1259 OID 16899)
 -- Name: idx_configuraciones_app_categoria; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7910,7 +9442,7 @@ CREATE INDEX idx_configuraciones_app_categoria ON public.configuraciones_app USI
 
 
 --
--- TOC entry 5567 (class 1259 OID 82796)
+-- TOC entry 5576 (class 1259 OID 82796)
 -- Name: idx_dc_estado_bio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7918,7 +9450,7 @@ CREATE INDEX idx_dc_estado_bio ON public.detalles_conductor USING btree (estado_
 
 
 --
--- TOC entry 5568 (class 1259 OID 82797)
+-- TOC entry 5577 (class 1259 OID 82797)
 -- Name: idx_dc_plantilla_exists; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7926,7 +9458,7 @@ CREATE INDEX idx_dc_plantilla_exists ON public.detalles_conductor USING btree (u
 
 
 --
--- TOC entry 5569 (class 1259 OID 16908)
+-- TOC entry 5578 (class 1259 OID 16908)
 -- Name: idx_detalles_conductor_disponible; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7934,7 +9466,7 @@ CREATE INDEX idx_detalles_conductor_disponible ON public.detalles_conductor USIN
 
 
 --
--- TOC entry 5570 (class 1259 OID 16912)
+-- TOC entry 5579 (class 1259 OID 16912)
 -- Name: idx_detalles_conductor_estado_verificacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7942,7 +9474,7 @@ CREATE INDEX idx_detalles_conductor_estado_verificacion ON public.detalles_condu
 
 
 --
--- TOC entry 5571 (class 1259 OID 16910)
+-- TOC entry 5580 (class 1259 OID 16910)
 -- Name: idx_detalles_conductor_licencia; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7950,7 +9482,7 @@ CREATE INDEX idx_detalles_conductor_licencia ON public.detalles_conductor USING 
 
 
 --
--- TOC entry 5572 (class 1259 OID 16913)
+-- TOC entry 5581 (class 1259 OID 16913)
 -- Name: idx_detalles_conductor_licencia_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7958,7 +9490,7 @@ CREATE INDEX idx_detalles_conductor_licencia_vencimiento ON public.detalles_cond
 
 
 --
--- TOC entry 5573 (class 1259 OID 16911)
+-- TOC entry 5582 (class 1259 OID 16911)
 -- Name: idx_detalles_conductor_placa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7966,7 +9498,7 @@ CREATE INDEX idx_detalles_conductor_placa ON public.detalles_conductor USING btr
 
 
 --
--- TOC entry 5574 (class 1259 OID 16914)
+-- TOC entry 5583 (class 1259 OID 16914)
 -- Name: idx_detalles_conductor_soat_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7974,7 +9506,7 @@ CREATE INDEX idx_detalles_conductor_soat_vencimiento ON public.detalles_conducto
 
 
 --
--- TOC entry 5575 (class 1259 OID 16915)
+-- TOC entry 5584 (class 1259 OID 16915)
 -- Name: idx_detalles_conductor_tecnomecanica_vencimiento; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7982,7 +9514,7 @@ CREATE INDEX idx_detalles_conductor_tecnomecanica_vencimiento ON public.detalles
 
 
 --
--- TOC entry 5576 (class 1259 OID 16909)
+-- TOC entry 5585 (class 1259 OID 16909)
 -- Name: idx_detalles_conductor_ubicacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7990,7 +9522,7 @@ CREATE INDEX idx_detalles_conductor_ubicacion ON public.detalles_conductor USING
 
 
 --
--- TOC entry 5581 (class 1259 OID 16918)
+-- TOC entry 5590 (class 1259 OID 16918)
 -- Name: idx_detalles_paquete_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -7998,7 +9530,7 @@ CREATE INDEX idx_detalles_paquete_solicitud_id ON public.detalles_paquete USING 
 
 
 --
--- TOC entry 5584 (class 1259 OID 16921)
+-- TOC entry 5593 (class 1259 OID 16921)
 -- Name: idx_detalles_viaje_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8006,7 +9538,7 @@ CREATE INDEX idx_detalles_viaje_solicitud_id ON public.detalles_viaje USING btre
 
 
 --
--- TOC entry 5714 (class 1259 OID 17332)
+-- TOC entry 5723 (class 1259 OID 17332)
 -- Name: idx_disputas_cliente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8014,7 +9546,7 @@ CREATE INDEX idx_disputas_cliente ON public.disputas_pago USING btree (cliente_i
 
 
 --
--- TOC entry 5715 (class 1259 OID 17333)
+-- TOC entry 5724 (class 1259 OID 17333)
 -- Name: idx_disputas_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8022,7 +9554,7 @@ CREATE INDEX idx_disputas_conductor ON public.disputas_pago USING btree (conduct
 
 
 --
--- TOC entry 5716 (class 1259 OID 17334)
+-- TOC entry 5725 (class 1259 OID 17334)
 -- Name: idx_disputas_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8030,7 +9562,7 @@ CREATE INDEX idx_disputas_estado ON public.disputas_pago USING btree (estado);
 
 
 --
--- TOC entry 5717 (class 1259 OID 17331)
+-- TOC entry 5726 (class 1259 OID 17331)
 -- Name: idx_disputas_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8038,7 +9570,7 @@ CREATE INDEX idx_disputas_solicitud ON public.disputas_pago USING btree (solicit
 
 
 --
--- TOC entry 5587 (class 1259 OID 66401)
+-- TOC entry 5596 (class 1259 OID 66401)
 -- Name: idx_doc_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8046,7 +9578,7 @@ CREATE INDEX idx_doc_empresa ON public.documentos_conductor_historial USING btre
 
 
 --
--- TOC entry 5732 (class 1259 OID 33656)
+-- TOC entry 5741 (class 1259 OID 33656)
 -- Name: idx_docs_tipo_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8054,7 +9586,7 @@ CREATE INDEX idx_docs_tipo_estado ON public.documentos_verificacion USING btree 
 
 
 --
--- TOC entry 5588 (class 1259 OID 16926)
+-- TOC entry 5597 (class 1259 OID 16926)
 -- Name: idx_documentos_conductor_historial_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8062,7 +9594,7 @@ CREATE INDEX idx_documentos_conductor_historial_activo ON public.documentos_cond
 
 
 --
--- TOC entry 5589 (class 1259 OID 16924)
+-- TOC entry 5598 (class 1259 OID 16924)
 -- Name: idx_documentos_conductor_historial_conductor_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8070,7 +9602,7 @@ CREATE INDEX idx_documentos_conductor_historial_conductor_tipo ON public.documen
 
 
 --
--- TOC entry 5590 (class 1259 OID 16925)
+-- TOC entry 5599 (class 1259 OID 16925)
 -- Name: idx_documentos_conductor_historial_fecha_carga; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8078,7 +9610,7 @@ CREATE INDEX idx_documentos_conductor_historial_fecha_carga ON public.documentos
 
 
 --
--- TOC entry 5591 (class 1259 OID 74593)
+-- TOC entry 5600 (class 1259 OID 74593)
 -- Name: idx_documentos_historial_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8086,7 +9618,7 @@ CREATE INDEX idx_documentos_historial_tipo ON public.documentos_conductor_histor
 
 
 --
--- TOC entry 5791 (class 1259 OID 91298)
+-- TOC entry 5800 (class 1259 OID 91298)
 -- Name: idx_empresas_configuracion_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8094,7 +9626,7 @@ CREATE INDEX idx_empresas_configuracion_empresa ON public.empresas_configuracion
 
 
 --
--- TOC entry 5775 (class 1259 OID 91225)
+-- TOC entry 5784 (class 1259 OID 91225)
 -- Name: idx_empresas_contacto_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8102,7 +9634,7 @@ CREATE INDEX idx_empresas_contacto_empresa ON public.empresas_contacto USING btr
 
 
 --
--- TOC entry 5776 (class 1259 OID 91226)
+-- TOC entry 5785 (class 1259 OID 91226)
 -- Name: idx_empresas_contacto_municipio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8110,7 +9642,7 @@ CREATE INDEX idx_empresas_contacto_municipio ON public.empresas_contacto USING b
 
 
 --
--- TOC entry 5786 (class 1259 OID 91272)
+-- TOC entry 5795 (class 1259 OID 91272)
 -- Name: idx_empresas_metricas_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8118,7 +9650,7 @@ CREATE INDEX idx_empresas_metricas_empresa ON public.empresas_metricas USING btr
 
 
 --
--- TOC entry 5781 (class 1259 OID 91246)
+-- TOC entry 5790 (class 1259 OID 91246)
 -- Name: idx_empresas_representante_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8126,7 +9658,7 @@ CREATE INDEX idx_empresas_representante_empresa ON public.empresas_representante
 
 
 --
--- TOC entry 5726 (class 1259 OID 25465)
+-- TOC entry 5735 (class 1259 OID 25465)
 -- Name: idx_empresas_transporte_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8134,7 +9666,7 @@ CREATE INDEX idx_empresas_transporte_estado ON public.empresas_transporte USING 
 
 
 --
--- TOC entry 5727 (class 1259 OID 25466)
+-- TOC entry 5736 (class 1259 OID 25466)
 -- Name: idx_empresas_transporte_municipio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8142,7 +9674,7 @@ CREATE INDEX idx_empresas_transporte_municipio ON public.empresas_transporte USI
 
 
 --
--- TOC entry 5728 (class 1259 OID 25464)
+-- TOC entry 5737 (class 1259 OID 25464)
 -- Name: idx_empresas_transporte_nit; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8150,7 +9682,7 @@ CREATE INDEX idx_empresas_transporte_nit ON public.empresas_transporte USING btr
 
 
 --
--- TOC entry 5729 (class 1259 OID 25463)
+-- TOC entry 5738 (class 1259 OID 25463)
 -- Name: idx_empresas_transporte_nombre; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8158,7 +9690,7 @@ CREATE INDEX idx_empresas_transporte_nombre ON public.empresas_transporte USING 
 
 
 --
--- TOC entry 5692 (class 1259 OID 17232)
+-- TOC entry 5701 (class 1259 OID 17232)
 -- Name: idx_es_favorito; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8166,7 +9698,7 @@ CREATE INDEX idx_es_favorito ON public.conductores_favoritos USING btree (es_fav
 
 
 --
--- TOC entry 5800 (class 1259 OID 115607)
+-- TOC entry 5809 (class 1259 OID 115607)
 -- Name: idx_etv_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8174,7 +9706,7 @@ CREATE INDEX idx_etv_activo ON public.empresa_tipos_vehiculo USING btree (activo
 
 
 --
--- TOC entry 5801 (class 1259 OID 115605)
+-- TOC entry 5810 (class 1259 OID 115605)
 -- Name: idx_etv_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8182,7 +9714,7 @@ CREATE INDEX idx_etv_empresa ON public.empresa_tipos_vehiculo USING btree (empre
 
 
 --
--- TOC entry 5802 (class 1259 OID 115608)
+-- TOC entry 5811 (class 1259 OID 115608)
 -- Name: idx_etv_empresa_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8190,7 +9722,7 @@ CREATE INDEX idx_etv_empresa_activo ON public.empresa_tipos_vehiculo USING btree
 
 
 --
--- TOC entry 5803 (class 1259 OID 115606)
+-- TOC entry 5812 (class 1259 OID 115606)
 -- Name: idx_etv_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8198,7 +9730,7 @@ CREATE INDEX idx_etv_tipo ON public.empresa_tipos_vehiculo USING btree (tipo_veh
 
 
 --
--- TOC entry 5808 (class 1259 OID 115630)
+-- TOC entry 5817 (class 1259 OID 115630)
 -- Name: idx_etvh_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8206,7 +9738,7 @@ CREATE INDEX idx_etvh_empresa ON public.empresa_tipos_vehiculo_historial USING b
 
 
 --
--- TOC entry 5809 (class 1259 OID 115631)
+-- TOC entry 5818 (class 1259 OID 115631)
 -- Name: idx_etvh_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8214,7 +9746,7 @@ CREATE INDEX idx_etvh_fecha ON public.empresa_tipos_vehiculo_historial USING btr
 
 
 --
--- TOC entry 5812 (class 1259 OID 115654)
+-- TOC entry 5821 (class 1259 OID 115654)
 -- Name: idx_evn_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8222,7 +9754,7 @@ CREATE INDEX idx_evn_conductor ON public.empresa_vehiculo_notificaciones USING b
 
 
 --
--- TOC entry 5813 (class 1259 OID 115655)
+-- TOC entry 5822 (class 1259 OID 115655)
 -- Name: idx_evn_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8230,7 +9762,15 @@ CREATE INDEX idx_evn_estado ON public.empresa_vehiculo_notificaciones USING btre
 
 
 --
--- TOC entry 5598 (class 1259 OID 16933)
+-- TOC entry 5856 (class 1259 OID 123913)
+-- Name: idx_fecha_pago; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_fecha_pago ON public.pagos_comision USING btree (fecha_pago);
+
+
+--
+-- TOC entry 5607 (class 1259 OID 16933)
 -- Name: idx_historial_precios_configuracion_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8238,7 +9778,7 @@ CREATE INDEX idx_historial_precios_configuracion_id ON public.historial_precios 
 
 
 --
--- TOC entry 5599 (class 1259 OID 16934)
+-- TOC entry 5608 (class 1259 OID 16934)
 -- Name: idx_historial_precios_fecha_cambio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8246,7 +9786,7 @@ CREATE INDEX idx_historial_precios_fecha_cambio ON public.historial_precios USIN
 
 
 --
--- TOC entry 5600 (class 1259 OID 16935)
+-- TOC entry 5609 (class 1259 OID 16935)
 -- Name: idx_historial_precios_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8254,7 +9794,7 @@ CREATE INDEX idx_historial_precios_usuario_id ON public.historial_precios USING 
 
 
 --
--- TOC entry 5603 (class 1259 OID 16938)
+-- TOC entry 5612 (class 1259 OID 16938)
 -- Name: idx_historial_seguimiento_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8262,7 +9802,7 @@ CREATE INDEX idx_historial_seguimiento_conductor_id ON public.historial_seguimie
 
 
 --
--- TOC entry 5604 (class 1259 OID 16939)
+-- TOC entry 5613 (class 1259 OID 16939)
 -- Name: idx_historial_seguimiento_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8270,7 +9810,7 @@ CREATE INDEX idx_historial_seguimiento_solicitud_id ON public.historial_seguimie
 
 
 --
--- TOC entry 5605 (class 1259 OID 16940)
+-- TOC entry 5614 (class 1259 OID 16940)
 -- Name: idx_historial_seguimiento_timestamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8278,7 +9818,7 @@ CREATE INDEX idx_historial_seguimiento_timestamp ON public.historial_seguimiento
 
 
 --
--- TOC entry 5606 (class 1259 OID 16944)
+-- TOC entry 5615 (class 1259 OID 16944)
 -- Name: idx_logs_auditoria_accion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8286,7 +9826,7 @@ CREATE INDEX idx_logs_auditoria_accion ON public.logs_auditoria USING btree (acc
 
 
 --
--- TOC entry 5607 (class 1259 OID 16945)
+-- TOC entry 5616 (class 1259 OID 16945)
 -- Name: idx_logs_auditoria_fecha_creacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8294,7 +9834,7 @@ CREATE INDEX idx_logs_auditoria_fecha_creacion ON public.logs_auditoria USING bt
 
 
 --
--- TOC entry 5608 (class 1259 OID 16943)
+-- TOC entry 5617 (class 1259 OID 16943)
 -- Name: idx_logs_auditoria_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8302,7 +9842,7 @@ CREATE INDEX idx_logs_auditoria_usuario_id ON public.logs_auditoria USING btree 
 
 
 --
--- TOC entry 5826 (class 1259 OID 115735)
+-- TOC entry 5835 (class 1259 OID 115735)
 -- Name: idx_mensajes_created; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8310,7 +9850,7 @@ CREATE INDEX idx_mensajes_created ON public.mensajes_ticket USING btree (created
 
 
 --
--- TOC entry 5703 (class 1259 OID 17276)
+-- TOC entry 5712 (class 1259 OID 17276)
 -- Name: idx_mensajes_destinatario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8318,7 +9858,7 @@ CREATE INDEX idx_mensajes_destinatario ON public.mensajes_chat USING btree (dest
 
 
 --
--- TOC entry 5704 (class 1259 OID 17277)
+-- TOC entry 5713 (class 1259 OID 17277)
 -- Name: idx_mensajes_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8326,7 +9866,7 @@ CREATE INDEX idx_mensajes_fecha ON public.mensajes_chat USING btree (fecha_creac
 
 
 --
--- TOC entry 5705 (class 1259 OID 17278)
+-- TOC entry 5714 (class 1259 OID 17278)
 -- Name: idx_mensajes_no_leidos; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8334,7 +9874,7 @@ CREATE INDEX idx_mensajes_no_leidos ON public.mensajes_chat USING btree (destina
 
 
 --
--- TOC entry 5706 (class 1259 OID 17275)
+-- TOC entry 5715 (class 1259 OID 17275)
 -- Name: idx_mensajes_remitente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8342,7 +9882,7 @@ CREATE INDEX idx_mensajes_remitente ON public.mensajes_chat USING btree (remiten
 
 
 --
--- TOC entry 5707 (class 1259 OID 17274)
+-- TOC entry 5716 (class 1259 OID 17274)
 -- Name: idx_mensajes_solicitud; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8350,7 +9890,7 @@ CREATE INDEX idx_mensajes_solicitud ON public.mensajes_chat USING btree (solicit
 
 
 --
--- TOC entry 5827 (class 1259 OID 115734)
+-- TOC entry 5836 (class 1259 OID 115734)
 -- Name: idx_mensajes_ticket; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8358,7 +9898,7 @@ CREATE INDEX idx_mensajes_ticket ON public.mensajes_ticket USING btree (ticket_i
 
 
 --
--- TOC entry 5611 (class 1259 OID 16948)
+-- TOC entry 5620 (class 1259 OID 16948)
 -- Name: idx_metodos_pago_usuario_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8366,7 +9906,7 @@ CREATE INDEX idx_metodos_pago_usuario_usuario_id ON public.metodos_pago_usuario 
 
 
 --
--- TOC entry 5748 (class 1259 OID 91009)
+-- TOC entry 5757 (class 1259 OID 91009)
 -- Name: idx_notif_created_at; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8374,7 +9914,7 @@ CREATE INDEX idx_notif_created_at ON public.notificaciones_usuario USING btree (
 
 
 --
--- TOC entry 5749 (class 1259 OID 91008)
+-- TOC entry 5758 (class 1259 OID 91008)
 -- Name: idx_notif_referencia; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8382,7 +9922,7 @@ CREATE INDEX idx_notif_referencia ON public.notificaciones_usuario USING btree (
 
 
 --
--- TOC entry 5750 (class 1259 OID 91007)
+-- TOC entry 5759 (class 1259 OID 91007)
 -- Name: idx_notif_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8390,7 +9930,7 @@ CREATE INDEX idx_notif_tipo ON public.notificaciones_usuario USING btree (tipo_i
 
 
 --
--- TOC entry 5751 (class 1259 OID 91005)
+-- TOC entry 5760 (class 1259 OID 91005)
 -- Name: idx_notif_usuario_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8398,7 +9938,7 @@ CREATE INDEX idx_notif_usuario_fecha ON public.notificaciones_usuario USING btre
 
 
 --
--- TOC entry 5752 (class 1259 OID 91006)
+-- TOC entry 5761 (class 1259 OID 91006)
 -- Name: idx_notif_usuario_no_leidas; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8406,7 +9946,7 @@ CREATE INDEX idx_notif_usuario_no_leidas ON public.notificaciones_usuario USING 
 
 
 --
--- TOC entry 5736 (class 1259 OID 58220)
+-- TOC entry 5745 (class 1259 OID 58220)
 -- Name: idx_pagos_empresas_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8414,7 +9954,7 @@ CREATE INDEX idx_pagos_empresas_empresa ON public.pagos_empresas USING btree (em
 
 
 --
--- TOC entry 5737 (class 1259 OID 58221)
+-- TOC entry 5746 (class 1259 OID 58221)
 -- Name: idx_pagos_empresas_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8422,7 +9962,7 @@ CREATE INDEX idx_pagos_empresas_fecha ON public.pagos_empresas USING btree (crea
 
 
 --
--- TOC entry 5614 (class 1259 OID 16951)
+-- TOC entry 5623 (class 1259 OID 16951)
 -- Name: idx_paradas_solicitud_solicitud_orden; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8430,7 +9970,7 @@ CREATE INDEX idx_paradas_solicitud_solicitud_orden ON public.paradas_solicitud U
 
 
 --
--- TOC entry 5740 (class 1259 OID 82799)
+-- TOC entry 5749 (class 1259 OID 82799)
 -- Name: idx_pb_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8438,7 +9978,7 @@ CREATE INDEX idx_pb_activo ON public.plantillas_bloqueadas USING btree (activo) 
 
 
 --
--- TOC entry 5741 (class 1259 OID 82798)
+-- TOC entry 5750 (class 1259 OID 82798)
 -- Name: idx_pb_hash; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8446,7 +9986,7 @@ CREATE UNIQUE INDEX idx_pb_hash ON public.plantillas_bloqueadas USING btree (pla
 
 
 --
--- TOC entry 5563 (class 1259 OID 50020)
+-- TOC entry 5572 (class 1259 OID 50020)
 -- Name: idx_precios_empresa_unique; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8454,7 +9994,7 @@ CREATE UNIQUE INDEX idx_precios_empresa_unique ON public.configuracion_precios U
 
 
 --
--- TOC entry 5564 (class 1259 OID 50019)
+-- TOC entry 5573 (class 1259 OID 50019)
 -- Name: idx_precios_global_unique; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8462,7 +10002,7 @@ CREATE UNIQUE INDEX idx_precios_global_unique ON public.configuracion_precios US
 
 
 --
--- TOC entry 5623 (class 1259 OID 16964)
+-- TOC entry 5632 (class 1259 OID 16964)
 -- Name: idx_reportes_usuarios_admin_revisor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8470,7 +10010,7 @@ CREATE INDEX idx_reportes_usuarios_admin_revisor_id ON public.reportes_usuarios 
 
 
 --
--- TOC entry 5624 (class 1259 OID 16962)
+-- TOC entry 5633 (class 1259 OID 16962)
 -- Name: idx_reportes_usuarios_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8478,7 +10018,7 @@ CREATE INDEX idx_reportes_usuarios_estado ON public.reportes_usuarios USING btre
 
 
 --
--- TOC entry 5625 (class 1259 OID 16961)
+-- TOC entry 5634 (class 1259 OID 16961)
 -- Name: idx_reportes_usuarios_reportado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8486,7 +10026,7 @@ CREATE INDEX idx_reportes_usuarios_reportado ON public.reportes_usuarios USING b
 
 
 --
--- TOC entry 5626 (class 1259 OID 16960)
+-- TOC entry 5635 (class 1259 OID 16960)
 -- Name: idx_reportes_usuarios_reportante; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8494,7 +10034,7 @@ CREATE INDEX idx_reportes_usuarios_reportante ON public.reportes_usuarios USING 
 
 
 --
--- TOC entry 5627 (class 1259 OID 16963)
+-- TOC entry 5636 (class 1259 OID 16963)
 -- Name: idx_reportes_usuarios_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8502,7 +10042,7 @@ CREATE INDEX idx_reportes_usuarios_solicitud_id ON public.reportes_usuarios USIN
 
 
 --
--- TOC entry 5840 (class 1259 OID 123838)
+-- TOC entry 5849 (class 1259 OID 123838)
 -- Name: idx_resumen_con_desvio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8510,7 +10050,7 @@ CREATE INDEX idx_resumen_con_desvio ON public.viaje_resumen_tracking USING btree
 
 
 --
--- TOC entry 5699 (class 1259 OID 17234)
+-- TOC entry 5708 (class 1259 OID 17234)
 -- Name: idx_score_confianza; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8518,7 +10058,7 @@ CREATE INDEX idx_score_confianza ON public.historial_confianza USING btree (scor
 
 
 --
--- TOC entry 5765 (class 1259 OID 91185)
+-- TOC entry 5774 (class 1259 OID 91185)
 -- Name: idx_solicitud_vinc_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8526,7 +10066,7 @@ CREATE INDEX idx_solicitud_vinc_conductor ON public.solicitudes_vinculacion_cond
 
 
 --
--- TOC entry 5766 (class 1259 OID 91188)
+-- TOC entry 5775 (class 1259 OID 91188)
 -- Name: idx_solicitud_vinc_creado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8534,7 +10074,7 @@ CREATE INDEX idx_solicitud_vinc_creado ON public.solicitudes_vinculacion_conduct
 
 
 --
--- TOC entry 5767 (class 1259 OID 91186)
+-- TOC entry 5776 (class 1259 OID 91186)
 -- Name: idx_solicitud_vinc_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8542,7 +10082,7 @@ CREATE INDEX idx_solicitud_vinc_empresa ON public.solicitudes_vinculacion_conduc
 
 
 --
--- TOC entry 5768 (class 1259 OID 91187)
+-- TOC entry 5777 (class 1259 OID 91187)
 -- Name: idx_solicitud_vinc_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8550,7 +10090,7 @@ CREATE INDEX idx_solicitud_vinc_estado ON public.solicitudes_vinculacion_conduct
 
 
 --
--- TOC entry 5630 (class 1259 OID 41832)
+-- TOC entry 5639 (class 1259 OID 41832)
 -- Name: idx_solicitudes_conductor_llego; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8558,7 +10098,7 @@ CREATE INDEX idx_solicitudes_conductor_llego ON public.solicitudes_servicio USIN
 
 
 --
--- TOC entry 5631 (class 1259 OID 123890)
+-- TOC entry 5640 (class 1259 OID 123890)
 -- Name: idx_solicitudes_desglose; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8566,7 +10106,7 @@ CREATE INDEX idx_solicitudes_desglose ON public.solicitudes_servicio USING gin (
 
 
 --
--- TOC entry 5632 (class 1259 OID 123841)
+-- TOC entry 5641 (class 1259 OID 123841)
 -- Name: idx_solicitudes_empresa_vehiculo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8574,7 +10114,7 @@ CREATE INDEX idx_solicitudes_empresa_vehiculo ON public.solicitudes_servicio USI
 
 
 --
--- TOC entry 5633 (class 1259 OID 17343)
+-- TOC entry 5642 (class 1259 OID 17343)
 -- Name: idx_solicitudes_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8582,7 +10122,7 @@ CREATE INDEX idx_solicitudes_estado ON public.solicitudes_servicio USING btree (
 
 
 --
--- TOC entry 5634 (class 1259 OID 123842)
+-- TOC entry 5643 (class 1259 OID 123842)
 -- Name: idx_solicitudes_estado_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8590,7 +10130,7 @@ CREATE INDEX idx_solicitudes_estado_fecha ON public.solicitudes_servicio USING b
 
 
 --
--- TOC entry 5635 (class 1259 OID 17344)
+-- TOC entry 5644 (class 1259 OID 17344)
 -- Name: idx_solicitudes_precio; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8598,7 +10138,7 @@ CREATE INDEX idx_solicitudes_precio ON public.solicitudes_servicio USING btree (
 
 
 --
--- TOC entry 5636 (class 1259 OID 16971)
+-- TOC entry 5645 (class 1259 OID 16971)
 -- Name: idx_solicitudes_servicio_cliente_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8606,7 +10146,7 @@ CREATE INDEX idx_solicitudes_servicio_cliente_id ON public.solicitudes_servicio 
 
 
 --
--- TOC entry 5637 (class 1259 OID 16972)
+-- TOC entry 5646 (class 1259 OID 16972)
 -- Name: idx_solicitudes_servicio_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8614,7 +10154,7 @@ CREATE INDEX idx_solicitudes_servicio_estado ON public.solicitudes_servicio USIN
 
 
 --
--- TOC entry 5638 (class 1259 OID 16973)
+-- TOC entry 5647 (class 1259 OID 16973)
 -- Name: idx_solicitudes_servicio_solicitado_en; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8622,7 +10162,7 @@ CREATE INDEX idx_solicitudes_servicio_solicitado_en ON public.solicitudes_servic
 
 
 --
--- TOC entry 5639 (class 1259 OID 16970)
+-- TOC entry 5648 (class 1259 OID 16970)
 -- Name: idx_solicitudes_servicio_ubicacion_destino_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8630,7 +10170,7 @@ CREATE INDEX idx_solicitudes_servicio_ubicacion_destino_id ON public.solicitudes
 
 
 --
--- TOC entry 5640 (class 1259 OID 16969)
+-- TOC entry 5649 (class 1259 OID 16969)
 -- Name: idx_solicitudes_servicio_ubicacion_recogida_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8638,7 +10178,7 @@ CREATE INDEX idx_solicitudes_servicio_ubicacion_recogida_id ON public.solicitude
 
 
 --
--- TOC entry 5818 (class 1259 OID 115714)
+-- TOC entry 5827 (class 1259 OID 115714)
 -- Name: idx_tickets_categoria; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8646,7 +10186,7 @@ CREATE INDEX idx_tickets_categoria ON public.tickets_soporte USING btree (catego
 
 
 --
--- TOC entry 5819 (class 1259 OID 115715)
+-- TOC entry 5828 (class 1259 OID 115715)
 -- Name: idx_tickets_created; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8654,7 +10194,7 @@ CREATE INDEX idx_tickets_created ON public.tickets_soporte USING btree (created_
 
 
 --
--- TOC entry 5820 (class 1259 OID 115713)
+-- TOC entry 5829 (class 1259 OID 115713)
 -- Name: idx_tickets_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8662,7 +10202,7 @@ CREATE INDEX idx_tickets_estado ON public.tickets_soporte USING btree (estado);
 
 
 --
--- TOC entry 5821 (class 1259 OID 115712)
+-- TOC entry 5830 (class 1259 OID 115712)
 -- Name: idx_tickets_usuario; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8670,7 +10210,7 @@ CREATE INDEX idx_tickets_usuario ON public.tickets_soporte USING btree (usuario_
 
 
 --
--- TOC entry 5760 (class 1259 OID 91044)
+-- TOC entry 5769 (class 1259 OID 91044)
 -- Name: idx_tokens_push_usuario_activo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8678,7 +10218,7 @@ CREATE INDEX idx_tokens_push_usuario_activo ON public.tokens_push_usuario USING 
 
 
 --
--- TOC entry 5834 (class 1259 OID 123795)
+-- TOC entry 5843 (class 1259 OID 123795)
 -- Name: idx_tracking_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8686,7 +10226,7 @@ CREATE INDEX idx_tracking_conductor_id ON public.viaje_tracking_realtime USING b
 
 
 --
--- TOC entry 5841 (class 1259 OID 123889)
+-- TOC entry 5850 (class 1259 OID 123889)
 -- Name: idx_tracking_empresa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8694,7 +10234,7 @@ CREATE INDEX idx_tracking_empresa ON public.viaje_resumen_tracking USING btree (
 
 
 --
--- TOC entry 5835 (class 1259 OID 123794)
+-- TOC entry 5844 (class 1259 OID 123794)
 -- Name: idx_tracking_solicitud_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8702,7 +10242,7 @@ CREATE INDEX idx_tracking_solicitud_id ON public.viaje_tracking_realtime USING b
 
 
 --
--- TOC entry 5836 (class 1259 OID 123793)
+-- TOC entry 5845 (class 1259 OID 123793)
 -- Name: idx_tracking_solicitud_tiempo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8710,7 +10250,7 @@ CREATE INDEX idx_tracking_solicitud_tiempo ON public.viaje_tracking_realtime USI
 
 
 --
--- TOC entry 5837 (class 1259 OID 123837)
+-- TOC entry 5846 (class 1259 OID 123837)
 -- Name: idx_tracking_timestamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8718,7 +10258,7 @@ CREATE INDEX idx_tracking_timestamp ON public.viaje_tracking_realtime USING btre
 
 
 --
--- TOC entry 5645 (class 1259 OID 16978)
+-- TOC entry 5654 (class 1259 OID 16978)
 -- Name: idx_transacciones_cliente_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8726,7 +10266,7 @@ CREATE INDEX idx_transacciones_cliente_id ON public.transacciones USING btree (c
 
 
 --
--- TOC entry 5646 (class 1259 OID 17359)
+-- TOC entry 5655 (class 1259 OID 17359)
 -- Name: idx_transacciones_conductor; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8734,7 +10274,7 @@ CREATE INDEX idx_transacciones_conductor ON public.transacciones USING btree (co
 
 
 --
--- TOC entry 5647 (class 1259 OID 16979)
+-- TOC entry 5656 (class 1259 OID 16979)
 -- Name: idx_transacciones_conductor_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8742,7 +10282,7 @@ CREATE INDEX idx_transacciones_conductor_id ON public.transacciones USING btree 
 
 
 --
--- TOC entry 5648 (class 1259 OID 17341)
+-- TOC entry 5657 (class 1259 OID 17341)
 -- Name: idx_transacciones_estado; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8750,7 +10290,7 @@ CREATE INDEX idx_transacciones_estado ON public.transacciones USING btree (estad
 
 
 --
--- TOC entry 5649 (class 1259 OID 16980)
+-- TOC entry 5658 (class 1259 OID 16980)
 -- Name: idx_transacciones_estado_pago; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8758,7 +10298,7 @@ CREATE INDEX idx_transacciones_estado_pago ON public.transacciones USING btree (
 
 
 --
--- TOC entry 5650 (class 1259 OID 17342)
+-- TOC entry 5659 (class 1259 OID 17342)
 -- Name: idx_transacciones_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8766,7 +10306,7 @@ CREATE INDEX idx_transacciones_fecha ON public.transacciones USING btree (fecha_
 
 
 --
--- TOC entry 5655 (class 1259 OID 16983)
+-- TOC entry 5664 (class 1259 OID 16983)
 -- Name: idx_ubicaciones_usuario_usuario_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8774,7 +10314,7 @@ CREATE INDEX idx_ubicaciones_usuario_usuario_id ON public.ubicaciones_usuario US
 
 
 --
--- TOC entry 5658 (class 1259 OID 16988)
+-- TOC entry 5667 (class 1259 OID 16988)
 -- Name: idx_user_devices_device_uuid; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8782,7 +10322,7 @@ CREATE INDEX idx_user_devices_device_uuid ON public.user_devices USING btree (de
 
 
 --
--- TOC entry 5659 (class 1259 OID 16989)
+-- TOC entry 5668 (class 1259 OID 16989)
 -- Name: idx_user_devices_trusted; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8790,7 +10330,7 @@ CREATE INDEX idx_user_devices_trusted ON public.user_devices USING btree (truste
 
 
 --
--- TOC entry 5664 (class 1259 OID 99168)
+-- TOC entry 5673 (class 1259 OID 99168)
 -- Name: idx_usuarios_apple_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8798,7 +10338,7 @@ CREATE INDEX idx_usuarios_apple_id ON public.usuarios USING btree (apple_id) WHE
 
 
 --
--- TOC entry 5665 (class 1259 OID 17335)
+-- TOC entry 5674 (class 1259 OID 17335)
 -- Name: idx_usuarios_disputa; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8806,7 +10346,7 @@ CREATE INDEX idx_usuarios_disputa ON public.usuarios USING btree (tiene_disputa_
 
 
 --
--- TOC entry 5666 (class 1259 OID 16998)
+-- TOC entry 5675 (class 1259 OID 16998)
 -- Name: idx_usuarios_email; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8814,7 +10354,7 @@ CREATE INDEX idx_usuarios_email ON public.usuarios USING btree (email);
 
 
 --
--- TOC entry 5667 (class 1259 OID 25472)
+-- TOC entry 5676 (class 1259 OID 25472)
 -- Name: idx_usuarios_empresa_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8822,7 +10362,7 @@ CREATE INDEX idx_usuarios_empresa_id ON public.usuarios USING btree (empresa_id)
 
 
 --
--- TOC entry 5668 (class 1259 OID 25478)
+-- TOC entry 5677 (class 1259 OID 25478)
 -- Name: idx_usuarios_empresa_preferida; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8830,7 +10370,7 @@ CREATE INDEX idx_usuarios_empresa_preferida ON public.usuarios USING btree (empr
 
 
 --
--- TOC entry 5669 (class 1259 OID 91156)
+-- TOC entry 5678 (class 1259 OID 91156)
 -- Name: idx_usuarios_estado_vinculacion; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8838,7 +10378,7 @@ CREATE INDEX idx_usuarios_estado_vinculacion ON public.usuarios USING btree (est
 
 
 --
--- TOC entry 5670 (class 1259 OID 99165)
+-- TOC entry 5679 (class 1259 OID 99165)
 -- Name: idx_usuarios_google_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8846,7 +10386,7 @@ CREATE INDEX idx_usuarios_google_id ON public.usuarios USING btree (google_id) W
 
 
 --
--- TOC entry 5671 (class 1259 OID 16999)
+-- TOC entry 5680 (class 1259 OID 16999)
 -- Name: idx_usuarios_telefono; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8854,7 +10394,7 @@ CREATE INDEX idx_usuarios_telefono ON public.usuarios USING btree (telefono);
 
 
 --
--- TOC entry 5672 (class 1259 OID 17000)
+-- TOC entry 5681 (class 1259 OID 17000)
 -- Name: idx_usuarios_tipo; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8862,7 +10402,7 @@ CREATE INDEX idx_usuarios_tipo ON public.usuarios USING btree (tipo_usuario);
 
 
 --
--- TOC entry 5685 (class 1259 OID 17004)
+-- TOC entry 5694 (class 1259 OID 17004)
 -- Name: idx_verification_codes_code; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8870,7 +10410,7 @@ CREATE INDEX idx_verification_codes_code ON public.verification_codes USING btre
 
 
 --
--- TOC entry 5686 (class 1259 OID 17003)
+-- TOC entry 5695 (class 1259 OID 17003)
 -- Name: idx_verification_codes_email; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8878,7 +10418,7 @@ CREATE INDEX idx_verification_codes_email ON public.verification_codes USING btr
 
 
 --
--- TOC entry 5700 (class 1259 OID 17235)
+-- TOC entry 5709 (class 1259 OID 17235)
 -- Name: idx_zona_frecuente; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -8886,7 +10426,7 @@ CREATE INDEX idx_zona_frecuente ON public.historial_confianza USING btree (zona_
 
 
 --
--- TOC entry 5930 (class 2620 OID 123831)
+-- TOC entry 5944 (class 2620 OID 123831)
 -- Name: viaje_tracking_realtime trg_actualizar_resumen_tracking; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8894,7 +10434,7 @@ CREATE TRIGGER trg_actualizar_resumen_tracking AFTER INSERT ON public.viaje_trac
 
 
 --
--- TOC entry 5921 (class 2620 OID 17238)
+-- TOC entry 5935 (class 2620 OID 17238)
 -- Name: historial_confianza trg_historial_confianza_actualizado_en; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8902,7 +10442,7 @@ CREATE TRIGGER trg_historial_confianza_actualizado_en BEFORE UPDATE ON public.hi
 
 
 --
--- TOC entry 5919 (class 2620 OID 115671)
+-- TOC entry 5933 (class 2620 OID 115671)
 -- Name: usuarios trigger_actualizar_metricas_empresa; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8910,7 +10450,7 @@ CREATE TRIGGER trigger_actualizar_metricas_empresa AFTER INSERT OR UPDATE OF emp
 
 
 --
--- TOC entry 5927 (class 2620 OID 115711)
+-- TOC entry 5941 (class 2620 OID 115711)
 -- Name: tickets_soporte trigger_generar_numero_ticket; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8918,7 +10458,7 @@ CREATE TRIGGER trigger_generar_numero_ticket BEFORE INSERT ON public.tickets_sop
 
 
 --
--- TOC entry 5925 (class 2620 OID 115659)
+-- TOC entry 5939 (class 2620 OID 115659)
 -- Name: empresa_tipos_vehiculo trigger_log_etv_change; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8926,7 +10466,7 @@ CREATE TRIGGER trigger_log_etv_change AFTER UPDATE ON public.empresa_tipos_vehic
 
 
 --
--- TOC entry 5929 (class 2620 OID 115753)
+-- TOC entry 5943 (class 2620 OID 115753)
 -- Name: solicitudes_callback trigger_update_callback_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8934,7 +10474,7 @@ CREATE TRIGGER trigger_update_callback_timestamp BEFORE UPDATE ON public.solicit
 
 
 --
--- TOC entry 5924 (class 2620 OID 91053)
+-- TOC entry 5938 (class 2620 OID 91053)
 -- Name: configuracion_notificaciones_usuario trigger_update_config_notif_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8942,7 +10482,7 @@ CREATE TRIGGER trigger_update_config_notif_timestamp BEFORE UPDATE ON public.con
 
 
 --
--- TOC entry 5923 (class 2620 OID 41837)
+-- TOC entry 5937 (class 2620 OID 41837)
 -- Name: empresas_transporte trigger_update_empresas_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8950,7 +10490,7 @@ CREATE TRIGGER trigger_update_empresas_timestamp BEFORE UPDATE ON public.empresa
 
 
 --
--- TOC entry 5926 (class 2620 OID 115657)
+-- TOC entry 5940 (class 2620 OID 115657)
 -- Name: empresa_tipos_vehiculo trigger_update_etv_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8958,7 +10498,7 @@ CREATE TRIGGER trigger_update_etv_timestamp BEFORE UPDATE ON public.empresa_tipo
 
 
 --
--- TOC entry 5922 (class 2620 OID 41834)
+-- TOC entry 5936 (class 2620 OID 41834)
 -- Name: mensajes_chat trigger_update_mensajes_chat; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8966,7 +10506,7 @@ CREATE TRIGGER trigger_update_mensajes_chat BEFORE UPDATE ON public.mensajes_cha
 
 
 --
--- TOC entry 5928 (class 2620 OID 115752)
+-- TOC entry 5942 (class 2620 OID 115752)
 -- Name: tickets_soporte trigger_update_ticket_timestamp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8974,7 +10514,7 @@ CREATE TRIGGER trigger_update_ticket_timestamp BEFORE UPDATE ON public.tickets_s
 
 
 --
--- TOC entry 5920 (class 2620 OID 91205)
+-- TOC entry 5934 (class 2620 OID 91205)
 -- Name: usuarios trigger_validar_conductor_empresa; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -8982,7 +10522,7 @@ CREATE TRIGGER trigger_validar_conductor_empresa BEFORE INSERT OR UPDATE ON publ
 
 
 --
--- TOC entry 5846 (class 2606 OID 17005)
+-- TOC entry 5859 (class 2606 OID 17005)
 -- Name: asignaciones_conductor asignaciones_conductor_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -8991,7 +10531,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5847 (class 2606 OID 17010)
+-- TOC entry 5860 (class 2606 OID 17010)
 -- Name: asignaciones_conductor asignaciones_conductor_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9000,7 +10540,7 @@ ALTER TABLE ONLY public.asignaciones_conductor
 
 
 --
--- TOC entry 5848 (class 2606 OID 17015)
+-- TOC entry 5861 (class 2606 OID 17015)
 -- Name: calificaciones calificaciones_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9009,7 +10549,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5849 (class 2606 OID 17020)
+-- TOC entry 5862 (class 2606 OID 17020)
 -- Name: calificaciones calificaciones_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9018,7 +10558,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5850 (class 2606 OID 17025)
+-- TOC entry 5863 (class 2606 OID 17025)
 -- Name: calificaciones calificaciones_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9027,7 +10567,7 @@ ALTER TABLE ONLY public.calificaciones
 
 
 --
--- TOC entry 5880 (class 2606 OID 17181)
+-- TOC entry 5893 (class 2606 OID 17181)
 -- Name: conductores_favoritos conductores_favoritos_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9036,7 +10576,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5881 (class 2606 OID 17176)
+-- TOC entry 5894 (class 2606 OID 17176)
 -- Name: conductores_favoritos conductores_favoritos_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9045,7 +10585,7 @@ ALTER TABLE ONLY public.conductores_favoritos
 
 
 --
--- TOC entry 5852 (class 2606 OID 17030)
+-- TOC entry 5865 (class 2606 OID 17030)
 -- Name: detalles_conductor detalles_conductor_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9054,7 +10594,7 @@ ALTER TABLE ONLY public.detalles_conductor
 
 
 --
--- TOC entry 5853 (class 2606 OID 17035)
+-- TOC entry 5866 (class 2606 OID 17035)
 -- Name: detalles_paquete detalles_paquete_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9063,7 +10603,7 @@ ALTER TABLE ONLY public.detalles_paquete
 
 
 --
--- TOC entry 5854 (class 2606 OID 17040)
+-- TOC entry 5867 (class 2606 OID 17040)
 -- Name: detalles_viaje detalles_viaje_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9072,7 +10612,7 @@ ALTER TABLE ONLY public.detalles_viaje
 
 
 --
--- TOC entry 5887 (class 2606 OID 17302)
+-- TOC entry 5900 (class 2606 OID 17302)
 -- Name: disputas_pago disputas_pago_cliente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9081,7 +10621,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5888 (class 2606 OID 17307)
+-- TOC entry 5901 (class 2606 OID 17307)
 -- Name: disputas_pago disputas_pago_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9090,7 +10630,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5889 (class 2606 OID 17312)
+-- TOC entry 5902 (class 2606 OID 17312)
 -- Name: disputas_pago disputas_pago_resuelto_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9099,7 +10639,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5890 (class 2606 OID 17297)
+-- TOC entry 5903 (class 2606 OID 17297)
 -- Name: disputas_pago disputas_pago_solicitud_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9108,7 +10648,7 @@ ALTER TABLE ONLY public.disputas_pago
 
 
 --
--- TOC entry 5893 (class 2606 OID 33650)
+-- TOC entry 5906 (class 2606 OID 33650)
 -- Name: documentos_verificacion documentos_verificacion_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9117,7 +10657,7 @@ ALTER TABLE ONLY public.documentos_verificacion
 
 
 --
--- TOC entry 5904 (class 2606 OID 115590)
+-- TOC entry 5917 (class 2606 OID 115590)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_activado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9126,7 +10666,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5905 (class 2606 OID 115595)
+-- TOC entry 5918 (class 2606 OID 115595)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_desactivado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9135,7 +10675,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5906 (class 2606 OID 115585)
+-- TOC entry 5919 (class 2606 OID 115585)
 -- Name: empresa_tipos_vehiculo empresa_tipos_vehiculo_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9144,7 +10684,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5908 (class 2606 OID 115620)
+-- TOC entry 5921 (class 2606 OID 115620)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_empresa_tipo_vehiculo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9153,7 +10693,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5909 (class 2606 OID 115625)
+-- TOC entry 5922 (class 2606 OID 115625)
 -- Name: empresa_tipos_vehiculo_historial empresa_tipos_vehiculo_historial_realizado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9162,7 +10702,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo_historial
 
 
 --
--- TOC entry 5910 (class 2606 OID 115649)
+-- TOC entry 5923 (class 2606 OID 115649)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9171,7 +10711,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5911 (class 2606 OID 115644)
+-- TOC entry 5924 (class 2606 OID 115644)
 -- Name: empresa_vehiculo_notificaciones empresa_vehiculo_notificaciones_historial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9180,7 +10720,7 @@ ALTER TABLE ONLY public.empresa_vehiculo_notificaciones
 
 
 --
--- TOC entry 5903 (class 2606 OID 91293)
+-- TOC entry 5916 (class 2606 OID 91293)
 -- Name: empresas_configuracion empresas_configuracion_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9189,7 +10729,7 @@ ALTER TABLE ONLY public.empresas_configuracion
 
 
 --
--- TOC entry 5900 (class 2606 OID 91220)
+-- TOC entry 5913 (class 2606 OID 91220)
 -- Name: empresas_contacto empresas_contacto_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9198,7 +10738,7 @@ ALTER TABLE ONLY public.empresas_contacto
 
 
 --
--- TOC entry 5902 (class 2606 OID 91267)
+-- TOC entry 5915 (class 2606 OID 91267)
 -- Name: empresas_metricas empresas_metricas_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9207,7 +10747,7 @@ ALTER TABLE ONLY public.empresas_metricas
 
 
 --
--- TOC entry 5901 (class 2606 OID 91241)
+-- TOC entry 5914 (class 2606 OID 91241)
 -- Name: empresas_representante empresas_representante_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9216,7 +10756,7 @@ ALTER TABLE ONLY public.empresas_representante
 
 
 --
--- TOC entry 5891 (class 2606 OID 25458)
+-- TOC entry 5904 (class 2606 OID 25458)
 -- Name: empresas_transporte empresas_transporte_creado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9225,7 +10765,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5892 (class 2606 OID 25453)
+-- TOC entry 5905 (class 2606 OID 25453)
 -- Name: empresas_transporte empresas_transporte_verificado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9234,7 +10774,7 @@ ALTER TABLE ONLY public.empresas_transporte
 
 
 --
--- TOC entry 5855 (class 2606 OID 17045)
+-- TOC entry 5868 (class 2606 OID 17045)
 -- Name: documentos_conductor_historial fk_doc_historial_conductor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9243,7 +10783,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5856 (class 2606 OID 66396)
+-- TOC entry 5869 (class 2606 OID 66396)
 -- Name: documentos_conductor_historial fk_doc_historial_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9252,7 +10792,7 @@ ALTER TABLE ONLY public.documentos_conductor_historial
 
 
 --
--- TOC entry 5857 (class 2606 OID 17050)
+-- TOC entry 5870 (class 2606 OID 17050)
 -- Name: historial_precios fk_historial_config; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9261,7 +10801,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5858 (class 2606 OID 17055)
+-- TOC entry 5871 (class 2606 OID 17055)
 -- Name: historial_precios fk_historial_usuario; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9270,7 +10810,7 @@ ALTER TABLE ONLY public.historial_precios
 
 
 --
--- TOC entry 5861 (class 2606 OID 17070)
+-- TOC entry 5874 (class 2606 OID 17070)
 -- Name: logs_auditoria fk_logs_usuario; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9279,7 +10819,16 @@ ALTER TABLE ONLY public.logs_auditoria
 
 
 --
--- TOC entry 5863 (class 2606 OID 17080)
+-- TOC entry 5932 (class 2606 OID 123907)
+-- Name: pagos_comision fk_pagos_conductor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pagos_comision
+    ADD CONSTRAINT fk_pagos_conductor FOREIGN KEY (conductor_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 5876 (class 2606 OID 17080)
 -- Name: paradas_solicitud fk_paradas_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9288,7 +10837,7 @@ ALTER TABLE ONLY public.paradas_solicitud
 
 
 --
--- TOC entry 5851 (class 2606 OID 50014)
+-- TOC entry 5864 (class 2606 OID 50014)
 -- Name: configuracion_precios fk_precios_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9297,7 +10846,7 @@ ALTER TABLE ONLY public.configuracion_precios
 
 
 --
--- TOC entry 5864 (class 2606 OID 17085)
+-- TOC entry 5877 (class 2606 OID 17085)
 -- Name: reportes_usuarios fk_reporte_admin; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9306,7 +10855,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5865 (class 2606 OID 17090)
+-- TOC entry 5878 (class 2606 OID 17090)
 -- Name: reportes_usuarios fk_reporte_reportado; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9315,7 +10864,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5866 (class 2606 OID 17095)
+-- TOC entry 5879 (class 2606 OID 17095)
 -- Name: reportes_usuarios fk_reporte_reportante; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9324,7 +10873,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5867 (class 2606 OID 17100)
+-- TOC entry 5880 (class 2606 OID 17100)
 -- Name: reportes_usuarios fk_reporte_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9333,7 +10882,7 @@ ALTER TABLE ONLY public.reportes_usuarios
 
 
 --
--- TOC entry 5916 (class 2606 OID 123822)
+-- TOC entry 5929 (class 2606 OID 123822)
 -- Name: viaje_resumen_tracking fk_resumen_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9342,7 +10891,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5868 (class 2606 OID 123844)
+-- TOC entry 5881 (class 2606 OID 123844)
 -- Name: solicitudes_servicio fk_solicitudes_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9351,7 +10900,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5907 (class 2606 OID 115600)
+-- TOC entry 5920 (class 2606 OID 115600)
 -- Name: empresa_tipos_vehiculo fk_tipo_vehiculo_catalogo; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9360,7 +10909,7 @@ ALTER TABLE ONLY public.empresa_tipos_vehiculo
 
 
 --
--- TOC entry 5914 (class 2606 OID 123788)
+-- TOC entry 5927 (class 2606 OID 123788)
 -- Name: viaje_tracking_realtime fk_tracking_conductor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9369,7 +10918,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5917 (class 2606 OID 123884)
+-- TOC entry 5930 (class 2606 OID 123884)
 -- Name: viaje_resumen_tracking fk_tracking_config_precios; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9378,7 +10927,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5918 (class 2606 OID 123879)
+-- TOC entry 5931 (class 2606 OID 123879)
 -- Name: viaje_resumen_tracking fk_tracking_empresa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9387,7 +10936,7 @@ ALTER TABLE ONLY public.viaje_resumen_tracking
 
 
 --
--- TOC entry 5915 (class 2606 OID 123783)
+-- TOC entry 5928 (class 2606 OID 123783)
 -- Name: viaje_tracking_realtime fk_tracking_solicitud; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9396,7 +10945,7 @@ ALTER TABLE ONLY public.viaje_tracking_realtime
 
 
 --
--- TOC entry 5882 (class 2606 OID 17209)
+-- TOC entry 5895 (class 2606 OID 17209)
 -- Name: historial_confianza historial_confianza_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9405,7 +10954,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5883 (class 2606 OID 17204)
+-- TOC entry 5896 (class 2606 OID 17204)
 -- Name: historial_confianza historial_confianza_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9414,7 +10963,7 @@ ALTER TABLE ONLY public.historial_confianza
 
 
 --
--- TOC entry 5859 (class 2606 OID 17060)
+-- TOC entry 5872 (class 2606 OID 17060)
 -- Name: historial_seguimiento historial_seguimiento_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9423,7 +10972,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5860 (class 2606 OID 17065)
+-- TOC entry 5873 (class 2606 OID 17065)
 -- Name: historial_seguimiento historial_seguimiento_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9432,7 +10981,7 @@ ALTER TABLE ONLY public.historial_seguimiento
 
 
 --
--- TOC entry 5884 (class 2606 OID 17269)
+-- TOC entry 5897 (class 2606 OID 17269)
 -- Name: mensajes_chat mensajes_chat_destinatario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9441,7 +10990,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5885 (class 2606 OID 17264)
+-- TOC entry 5898 (class 2606 OID 17264)
 -- Name: mensajes_chat mensajes_chat_remitente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9450,7 +10999,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5886 (class 2606 OID 17259)
+-- TOC entry 5899 (class 2606 OID 17259)
 -- Name: mensajes_chat mensajes_chat_solicitud_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9459,7 +11008,7 @@ ALTER TABLE ONLY public.mensajes_chat
 
 
 --
--- TOC entry 5913 (class 2606 OID 115729)
+-- TOC entry 5926 (class 2606 OID 115729)
 -- Name: mensajes_ticket mensajes_ticket_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9468,7 +11017,7 @@ ALTER TABLE ONLY public.mensajes_ticket
 
 
 --
--- TOC entry 5862 (class 2606 OID 17075)
+-- TOC entry 5875 (class 2606 OID 17075)
 -- Name: metodos_pago_usuario metodos_pago_usuario_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9477,7 +11026,7 @@ ALTER TABLE ONLY public.metodos_pago_usuario
 
 
 --
--- TOC entry 5896 (class 2606 OID 91000)
+-- TOC entry 5909 (class 2606 OID 91000)
 -- Name: notificaciones_usuario notificaciones_usuario_tipo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9486,7 +11035,7 @@ ALTER TABLE ONLY public.notificaciones_usuario
 
 
 --
--- TOC entry 5894 (class 2606 OID 58215)
+-- TOC entry 5907 (class 2606 OID 58215)
 -- Name: pagos_empresas pagos_empresas_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9495,7 +11044,7 @@ ALTER TABLE ONLY public.pagos_empresas
 
 
 --
--- TOC entry 5895 (class 2606 OID 82791)
+-- TOC entry 5908 (class 2606 OID 82791)
 -- Name: plantillas_bloqueadas plantillas_bloqueadas_usuario_origen_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9504,7 +11053,7 @@ ALTER TABLE ONLY public.plantillas_bloqueadas
 
 
 --
--- TOC entry 5869 (class 2606 OID 17320)
+-- TOC entry 5882 (class 2606 OID 17320)
 -- Name: solicitudes_servicio solicitudes_servicio_disputa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9513,7 +11062,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5870 (class 2606 OID 17105)
+-- TOC entry 5883 (class 2606 OID 17105)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9522,7 +11071,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5871 (class 2606 OID 17110)
+-- TOC entry 5884 (class 2606 OID 17110)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9531,7 +11080,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5872 (class 2606 OID 17115)
+-- TOC entry 5885 (class 2606 OID 17115)
 -- Name: solicitudes_servicio solicitudes_servicio_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9540,7 +11089,7 @@ ALTER TABLE ONLY public.solicitudes_servicio
 
 
 --
--- TOC entry 5897 (class 2606 OID 91170)
+-- TOC entry 5910 (class 2606 OID 91170)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_conductor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9549,7 +11098,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5898 (class 2606 OID 91175)
+-- TOC entry 5911 (class 2606 OID 91175)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9558,7 +11107,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5899 (class 2606 OID 91180)
+-- TOC entry 5912 (class 2606 OID 91180)
 -- Name: solicitudes_vinculacion_conductor solicitudes_vinculacion_conductor_procesado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9567,7 +11116,7 @@ ALTER TABLE ONLY public.solicitudes_vinculacion_conductor
 
 
 --
--- TOC entry 5912 (class 2606 OID 115705)
+-- TOC entry 5925 (class 2606 OID 115705)
 -- Name: tickets_soporte tickets_soporte_categoria_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9576,7 +11125,7 @@ ALTER TABLE ONLY public.tickets_soporte
 
 
 --
--- TOC entry 5873 (class 2606 OID 17120)
+-- TOC entry 5886 (class 2606 OID 17120)
 -- Name: transacciones transacciones_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9585,7 +11134,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5874 (class 2606 OID 17125)
+-- TOC entry 5887 (class 2606 OID 17125)
 -- Name: transacciones transacciones_ibfk_2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9594,7 +11143,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5875 (class 2606 OID 17130)
+-- TOC entry 5888 (class 2606 OID 17130)
 -- Name: transacciones transacciones_ibfk_3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9603,7 +11152,7 @@ ALTER TABLE ONLY public.transacciones
 
 
 --
--- TOC entry 5876 (class 2606 OID 17135)
+-- TOC entry 5889 (class 2606 OID 17135)
 -- Name: ubicaciones_usuario ubicaciones_usuario_ibfk_1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9612,7 +11161,7 @@ ALTER TABLE ONLY public.ubicaciones_usuario
 
 
 --
--- TOC entry 5877 (class 2606 OID 17326)
+-- TOC entry 5890 (class 2606 OID 17326)
 -- Name: usuarios usuarios_disputa_activa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9621,7 +11170,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5878 (class 2606 OID 25467)
+-- TOC entry 5891 (class 2606 OID 25467)
 -- Name: usuarios usuarios_empresa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9630,7 +11179,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- TOC entry 5879 (class 2606 OID 25473)
+-- TOC entry 5892 (class 2606 OID 25473)
 -- Name: usuarios usuarios_empresa_preferida_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -9638,11 +11187,11 @@ ALTER TABLE ONLY public.usuarios
     ADD CONSTRAINT usuarios_empresa_preferida_id_fkey FOREIGN KEY (empresa_preferida_id) REFERENCES public.empresas_transporte(id);
 
 
--- Completed on 2026-01-21 15:08:48
+-- Completed on 2026-01-23 19:28:52
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dzKh0yaX1IH1Ho9AvuTBQCbUxaj7lxhQz3O3yfC673NJF4lU4ialfU9FZnHeHFJ
+\unrestrict QeM0ERkUHyKM2WujXs5WuQ9Am3Zony2TtMaSwyKOrbUVnLBo9iZT9gjkokN0WpH
 
