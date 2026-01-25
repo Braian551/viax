@@ -115,13 +115,13 @@ try {
             u.foto_perfil as conductor_foto,
             u.telefono as conductor_telefono,
             COALESCE(dc.calificacion_promedio, 0) as calificacion_conductor,
-            COALESCE(dc.placa, '') as conductor_placa,
-            COALESCE(dc.marca_vehiculo, '') as conductor_marca,
-            COALESCE(dc.modelo_vehiculo, '') as conductor_modelo,
-            COALESCE(dc.color_vehiculo, '') as conductor_color,
+            COALESCE(dc.vehiculo_placa, '') as conductor_placa,
+            COALESCE(dc.vehiculo_marca, '') as conductor_marca,
+            COALESCE(dc.vehiculo_modelo, '') as conductor_modelo,
+            COALESCE(dc.vehiculo_color, '') as conductor_color,
             -- Calificación dada
             cal.calificacion as calificacion_dada,
-            cal.comentario as comentario_dado
+            cal.comentarios as comentario_dado
         FROM solicitudes_servicio ss
         LEFT JOIN viaje_resumen_tracking vrt ON ss.id = vrt.solicitud_id
         LEFT JOIN asignaciones_conductor ac ON ss.id = ac.solicitud_id AND ac.estado IN ('aceptada', 'completada', 'completado')
