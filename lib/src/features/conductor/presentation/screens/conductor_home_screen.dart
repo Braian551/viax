@@ -28,6 +28,7 @@ import '../widgets/demand_zones_overlay.dart';
 import '../widgets/common/radar_indicator.dart';
 import 'package:intl/intl.dart';
 import '../../../user/presentation/widgets/home/map_loading_shimmer.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -807,40 +808,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                           child: Row(
                             children: [
                               // Logo con efecto glass
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: (isDark
-                                        ? Colors.white.withValues(alpha: 0.15)
-                                        : AppColors.primary.withValues(
-                                            alpha: 0.1,
-                                          )),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-                                      width: 1,
-                                    ),
-                                    image: _companyInfo?['logo_url'] != null
-                                        ? DecorationImage(
-                                            image: NetworkImage(UserService.getR2ImageUrl(_companyInfo!['logo_url']) ?? ''),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
-                                  ),
-                                  child: _companyInfo?['logo_url'] != null
-                                      ? null
-                                      : Center(
-                                          child: Image.asset(
-                                            'assets/images/logo.png',
-                                            width: 24,
-                                            height: 24,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return const Icon(Icons.business, size: 24);
-                                            },
-                                          ),
-                                        ),
-                                ),
+                              // Logo con efecto glass use R2 component
+                              CompanyLogo(
+                                logoKey: _companyInfo?['logo_url'],
+                                nombreEmpresa: _companyInfo?['nombre'] ?? '',
+                                size: 44,
+                                fontSize: 18,
+                              ),
                               const SizedBox(width: 10),
                               // Saludo con nombre del conductor
                                 Expanded(

@@ -11,6 +11,7 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/routes/route_names.dart';
 import '../../../profile/presentation/screens/edit_profile_screen.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 class ConductorProfileScreen extends StatefulWidget {
   final int conductorId;
@@ -585,22 +586,11 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                     ),
                     child: Row(
                       children: [
-                         Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                            image: empresaLogoUrl != null
-                                ? DecorationImage(
-                                    image: NetworkImage(empresaLogoUrl),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: empresaLogoUrl == null
-                              ? const Icon(Icons.business_rounded, color: Colors.blue, size: 18)
-                              : null,
+                        CompanyLogo(
+                          logoKey: empresaLogo,
+                          nombreEmpresa: empresaName,
+                          size: 36,
+                          fontSize: 16,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

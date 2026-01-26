@@ -408,12 +408,9 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                         child: Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 240),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: RegisterStepIndicator(
-                                currentStep: _currentStep,
-                                totalSteps: _totalSteps,
-                              ),
+                            child: RegisterStepIndicator(
+                              currentStep: _currentStep,
+                              totalSteps: _totalSteps,
                             ),
                           ),
                         ),
