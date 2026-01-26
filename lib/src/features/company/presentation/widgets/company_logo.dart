@@ -21,13 +21,19 @@ class CompanyLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     String? logoUrl;
     if (logoKey != null && logoKey!.isNotEmpty) {
-      if (logoKey!.startsWith('http')) {
+      if (logoKey!.contains('r2_proxy.php') && logoKey!.contains('key=')) {
+        // Fix for malformed absolute URLs from backend (missing /viax prefix)
+        // Extract the key and reconstruct using correct baseUrl
+        final uri = Uri.parse(logoKey!);
+        final key = uri.queryParameters['key'];
+        if (key != null) {
+          logoUrl = '${AppConfig.baseUrl}/r2_proxy.php?key=$key';
+        } else {
+          logoUrl = logoKey;
+        }
+      } else if (logoKey!.startsWith('http')) {
         logoUrl = logoKey;
       } else {
-        // Handle relative paths by appending to base URL if not using R2
-        // Assuming AppConfig is the source of truth for base URL in this context
-        // If logoKey is a simple filename, it might need 'uploads/' prefix, 
-        // but based on other screens, it seems to be a path like 'uploads/foo.png'
         logoUrl = '${AppConfig.baseUrl}/$logoKey';
       }
     }

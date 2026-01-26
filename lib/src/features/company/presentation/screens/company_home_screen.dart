@@ -148,13 +148,18 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         padding: const EdgeInsets.all(8.0),
         child: _buildLogo(logoUrl, isDark),
       ),
-      title: Text(
-        companyName,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            companyName,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

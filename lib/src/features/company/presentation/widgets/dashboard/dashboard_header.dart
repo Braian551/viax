@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'package:viax/src/features/user/presentation/providers/user_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
@@ -66,15 +67,11 @@ class DashboardHeader extends StatelessWidget {
                         width: 2,
                       ),
                     ),
-                    child: CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      backgroundImage: provider.company?['logo_url'] != null 
-                          ? NetworkImage(provider.company!['logo_url']) 
-                          : null,
-                      child: provider.company?['logo_url'] == null
-                          ? const Icon(Icons.business, color: AppColors.primary)
-                          : null,
+                    child: CompanyLogo(
+                      logoKey: provider.company?['logo_url'],
+                      nombreEmpresa: provider.company?['nombre'] ?? 'Empresa',
+                      size: 48,
+                      fontSize: 20,
                     ),
                   ),
                 ],
