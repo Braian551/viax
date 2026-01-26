@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../trip_preview/trip_price_formatter.dart';
 import '../../../services/user_trips_service.dart';
+import 'trip_conductor_avatar.dart';
 
 /// Bottom Sheet con detalles del viaje
 class TripDetailBottomSheet extends StatefulWidget {
@@ -630,14 +631,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          TripConductorAvatar(
+            photoUrl: widget.trip.conductorFoto,
+            conductorName: widget.trip.conductorNombreCompleto,
             radius: 28,
-            backgroundColor: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-              size: 30,
-            ),
           ),
           const SizedBox(width: 14),
           Expanded(

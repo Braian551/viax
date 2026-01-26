@@ -576,6 +576,8 @@ try {
     
     $stmt = $db->prepare("
         UPDATE solicitudes_servicio SET
+            pago_confirmado = true,
+            pago_confirmado_en = NOW(),
             precio_final = :precio_final,
             distancia_recorrida = :distancia,
             tiempo_transcurrido = :tiempo,

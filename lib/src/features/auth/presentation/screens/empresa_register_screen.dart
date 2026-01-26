@@ -424,7 +424,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
                          child: RegisterStepIndicator(
                            currentStep: _currentStep, 
                            totalSteps: _totalSteps,
-                           lineWidth: 25,
                          ),
                        ),
                        const SizedBox(width: 40), // Balance the back button space

@@ -187,7 +187,6 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
               child: RegisterStepIndicator(
                 currentStep: _currentStep,
                 totalSteps: _totalSteps,
-                lineWidth: 40,
               ),
             ),
             

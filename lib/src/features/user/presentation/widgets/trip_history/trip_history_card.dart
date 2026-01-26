@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../services/user_trips_service.dart';
 import '../trip_preview/trip_price_formatter.dart';
+import 'trip_conductor_avatar.dart';
 
 /// Tarjeta de viaje con diseño glassmorphism y animaciones
 class TripHistoryCard extends StatefulWidget {
@@ -385,14 +386,10 @@ class _TripHistoryCardState extends State<TripHistoryCard>
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          TripConductorAvatar(
+            photoUrl: widget.trip.conductorFoto,
+            conductorName: widget.trip.conductorNombreCompleto,
             radius: 16,
-            backgroundColor: AppColors.primary.withOpacity(0.2),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-              size: 18,
-            ),
           ),
           const SizedBox(width: 10),
           Expanded(

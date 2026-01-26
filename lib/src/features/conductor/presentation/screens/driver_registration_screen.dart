@@ -413,7 +413,6 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                               child: RegisterStepIndicator(
                                 currentStep: _currentStep,
                                 totalSteps: _totalSteps,
-                                lineWidth: 24, // Slightly smaller line width
                               ),
                             ),
                           ),
