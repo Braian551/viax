@@ -265,11 +265,33 @@ class EmpresaRepository {
             $tableExists = $checkTable->fetchColumn();
             
             if ($tableExists) {
-                // Obtener todos los tipos de vehículo del catálogo
-                $stmt = $this->db->query("SELECT codigo FROM catalogo_tipos_vehiculo WHERE activo = true ORDER BY orden");
-                $tipos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                // Obtener tipos seleccionados en el registro
+                $stmt = $this->db->prepare("SELECT tipos_vehiculo FROM empresas_transporte WHERE id = ?");
+                $stmt->execute([$empresaId]);
+                $tiposRaw = $stmt->fetchColumn();
+
+                if (empty($tiposRaw)) {
+                     return 0;
+                }
+
+                $tiposSeleccionados = [];
+                // Parsear array de PostgreSQL
+                if (substr($tiposRaw, 0, 1) === '{') {
+                     $tiposSeleccionados = str_getcsv(trim($tiposRaw, '{}'));
+                } else {
+                     // Intento de fallback
+                     $tiposSeleccionados = explode(',', $tiposRaw);
+                }
                 
-                // Habilitar cada tipo
+                // Limpiar comillas
+                $tiposSeleccionados = array_map(function($t) { 
+                    return trim($t, '" '); 
+                }, $tiposSeleccionados);
+                $tiposSeleccionados = array_filter($tiposSeleccionados);
+
+                if (empty($tiposSeleccionados)) return 0;
+
+                // Habilitar cada tipo seleccionado
                 $insertStmt = $this->db->prepare("
                     INSERT INTO empresa_tipos_vehiculo 
                         (empresa_id, tipo_vehiculo_codigo, activo, fecha_activacion, activado_por)
@@ -281,11 +303,12 @@ class EmpresaRepository {
                         activado_por = EXCLUDED.activado_por
                 ");
                 
-                foreach ($tipos as $tipo) {
+                foreach ($tiposSeleccionados as $tipo) {
                     $insertStmt->execute([$empresaId, $tipo, $userId]);
                 }
                 
-                return count($tipos);
+                error_log("Vehículos habilitados repo: " . implode(',', $tiposSeleccionados));
+                return count($tiposSeleccionados);
             }
             
             return 0;

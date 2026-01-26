@@ -130,12 +130,15 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            'Empresas de Transporte',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              'Empresas de Transporte',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -273,79 +273,84 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
     final ingresos = _dashboardData?['ingresos'] ?? {};
     final reportes = _dashboardData?['reportes'] ?? {};
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Dashboard en vivo',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.displayMedium?.color,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
+        final size = MediaQuery.of(context).size;
+        final double itemWidth = (size.width - 40 - 16) / 2; // padding 20*2, spacing 16
+        const double desiredHeight = 165;
+        final double childAspectRatio = itemWidth / desiredHeight;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildModernStatCard(
-              title: 'Usuarios',
-              value: (users['total_usuarios'] ?? 0).toString(),
-              subtitle: 'Activos: ${users['usuarios_activos'] ?? 0}',
-              icon: Icons.people_rounded,
-              gradientColors: [AppColors.blue600, AppColors.blue800],
-              onTap: () {
-                final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
-                Navigator.pushNamed(
-                  context,
-                  RouteNames.adminUsers,
-                  arguments: {'admin_id': adminId, 'admin_user': widget.adminUser},
-                );
-              },
+            Text(
+              'Dashboard en vivo',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.displayMedium?.color,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
-            _buildModernStatCard(
-              title: 'Solicitudes',
-              value: (solicitudes['total_solicitudes'] ?? 0).toString(),
-              subtitle: 'Hoy: ${solicitudes['solicitudes_hoy'] ?? 0}',
-              icon: Icons.assignment_rounded,
-              gradientColors: [AppColors.accent, AppColors.accentDark],
-              onTap: () {
-                widget.onNavigateToTab?.call(2);
-              },
+            const SizedBox(height: 16),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: childAspectRatio,
+              children: [
+                _buildModernStatCard(
+                  title: 'Usuarios',
+                  value: (users['total_usuarios'] ?? 0).toString(),
+                  subtitle: 'Activos: ${users['usuarios_activos'] ?? 0}',
+                  icon: Icons.people_rounded,
+                  gradientColors: [AppColors.blue600, AppColors.blue800],
+                  onTap: () {
+                    final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+                    Navigator.pushNamed(
+                      context,
+                      RouteNames.adminUsers,
+                      arguments: {'admin_id': adminId, 'admin_user': widget.adminUser},
+                    );
+                  },
+                ),
+                _buildModernStatCard(
+                  title: 'Solicitudes',
+                  value: (solicitudes['total_solicitudes'] ?? 0).toString(),
+                  subtitle: 'Hoy: ${solicitudes['solicitudes_hoy'] ?? 0}',
+                  icon: Icons.assignment_rounded,
+                  gradientColors: [AppColors.accent, AppColors.accentDark],
+                  onTap: () {
+                    widget.onNavigateToTab?.call(2);
+                  },
+                ),
+                _buildModernStatCard(
+                  title: 'Ingresos',
+                  value: '\$${_formatNumber(ingresos['ingresos_totales'])}',
+                  subtitle: 'Hoy: \$${_formatNumber(ingresos['ingresos_hoy'])}',
+                  icon: Icons.attach_money_rounded,
+                  gradientColors: [AppColors.success, AppColors.success.withValues(alpha: 0.7)],
+                  onTap: () {
+                    widget.onNavigateToTab?.call(2);
+                  },
+                ),
+                _buildModernStatCard(
+                  title: 'Reportes',
+                  value: (reportes['reportes_pendientes'] ?? 0).toString(),
+                  subtitle: 'Pendientes',
+                  icon: Icons.report_problem_rounded,
+                  gradientColors: [AppColors.warning, AppColors.error],
+                  onTap: () {
+                    final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+                    Navigator.pushNamed(
+                      context,
+                      RouteNames.adminAuditLogs,
+                      arguments: {'admin_id': adminId},
+                    );
+                  },
+                ),
+              ],
             ),
-            _buildModernStatCard(
-              title: 'Ingresos',
-              value: '\$${_formatNumber(ingresos['ingresos_totales'])}',
-              subtitle: 'Hoy: \$${_formatNumber(ingresos['ingresos_hoy'])}',
-              icon: Icons.attach_money_rounded,
-              gradientColors: [AppColors.success, AppColors.success.withValues(alpha: 0.7)],
-              onTap: () {
-                widget.onNavigateToTab?.call(2);
-              },
-            ),
-            _buildModernStatCard(
-              title: 'Reportes',
-              value: (reportes['reportes_pendientes'] ?? 0).toString(),
-              subtitle: 'Pendientes',
-              icon: Icons.report_problem_rounded,
-              gradientColors: [AppColors.warning, AppColors.error],
-              onTap: () {
-                final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
-                Navigator.pushNamed(
-                  context,
-                  RouteNames.adminAuditLogs,
-                  arguments: {'admin_id': adminId},
-                );
-              },
-            ),
-          ],
-        ),
         const SizedBox(height: 16),
         // Tarjeta de Ganancias de Plataforma (full width)
         _buildPlatformEarningsCard(),
@@ -497,13 +502,17 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
                   ],
                 ),
                 const Spacer(),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.displayMedium?.color,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.displayMedium?.color,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

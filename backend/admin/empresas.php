@@ -1098,16 +1098,41 @@ function enableDefaultVehicleTypesForEmpresa($db, $empresaId, $adminId = null) {
             return 0;
         }
         
-        // Obtener todos los tipos de vehículo del catálogo
-        $stmt = $db->query("SELECT codigo FROM catalogo_tipos_vehiculo WHERE activo = true ORDER BY orden");
-        $tipos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        // Obtener los tipos de vehículo seleccionados por la empresa
+        $stmt = $db->prepare("SELECT tipos_vehiculo FROM empresas_transporte WHERE id = ?");
+        $stmt->execute([$empresaId]);
+        $tiposRaw = $stmt->fetchColumn();
         
-        if (empty($tipos)) {
-            error_log("No hay tipos de vehículo en el catálogo");
+        if (empty($tiposRaw)) {
+            error_log("Empresa $empresaId no tiene tipos de vehículo seleccionados");
+            return 0;
+        }
+
+        // Convertir array de Postgres o cadena JSON a array PHP
+        $tiposSeleccionados = [];
+        if (substr($tiposRaw, 0, 1) === '{') {
+            // Postgres array format {moto,carro}
+             $tiposSeleccionados = pgArrayToPhp($tiposRaw);
+        } else {
+             // JSON or comma separated
+            $decoded = json_decode($tiposRaw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $tiposSeleccionados = $decoded;
+            } else {
+                $tiposSeleccionados = explode(',', $tiposRaw);
+            }
+        }
+
+        // Limpiar
+        $tiposSeleccionados = array_map(function($t) { return trim($t, '" '); }, $tiposSeleccionados);
+        $tiposSeleccionados = array_filter($tiposSeleccionados);
+        
+        if (empty($tiposSeleccionados)) {
+            error_log("No se pudieron procesar tipos de vehículo para empresa $empresaId");
             return 0;
         }
         
-        // Habilitar cada tipo
+        // Habilitar CADA tipo seleccionado
         $insertStmt = $db->prepare("
             INSERT INTO empresa_tipos_vehiculo 
                 (empresa_id, tipo_vehiculo_codigo, activo, fecha_activacion, activado_por)
@@ -1120,12 +1145,12 @@ function enableDefaultVehicleTypesForEmpresa($db, $empresaId, $adminId = null) {
         ");
         
         $count = 0;
-        foreach ($tipos as $tipo) {
+        foreach ($tiposSeleccionados as $tipo) {
             $insertStmt->execute([$empresaId, $tipo, $adminId]);
             $count++;
         }
         
-        error_log("Habilitados $count tipos de vehículo para empresa $empresaId");
+        error_log("Habilitados $count tipos de vehículo seleccionados para empresa $empresaId: " . implode(',', $tiposSeleccionados));
         return $count;
         
     } catch (Exception $e) {
