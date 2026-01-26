@@ -6,6 +6,7 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
+import 'package:viax/src/core/config/app_config.dart';
 
 import 'tabs/company_dashboard_tab.dart';
 import 'tabs/company_profile_tab.dart';
@@ -13,6 +14,7 @@ import 'company_drivers_screen.dart'; // Contains CompanyDriversTab
 import 'company_pricing_screen.dart'; // Contains CompanyPricingTab
 import 'company_conductores_documentos_screen.dart';
 import 'company_commissions_screen.dart';
+import '../widgets/company_logo.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -158,39 +160,19 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   }
 
   Widget _buildLogo(String? logoUrl, bool isDark) {
-    if (logoUrl != null) {
-      return Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-             BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
-          ],
-        ),
-        child: ClipOval(
-          child: Image.network(
-            logoUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildPlaceholderLogo(isDark),
-          ),
-        ),
-      );
-    }
-    return _buildPlaceholderLogo(isDark);
-  }
-
-  Widget _buildPlaceholderLogo(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.business_rounded,
-        color: isDark ? Colors.white : AppColors.primary,
-        size: 20,
-      ),
+    return CompanyLogo(
+      logoKey: logoUrl,
+      nombreEmpresa: _companyName(), // Helper to get name safely
+      size: 40,
     );
   }
+  
+  String _companyName() {
+    final companyData = context.read<CompanyProvider>().company;
+    return companyData?['nombre'] ?? 'Empresa';
+  }
+
+
 
   Widget _buildBottomNav(bool isDark) {
     return ClipRRect(

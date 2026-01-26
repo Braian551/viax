@@ -238,7 +238,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
         break;
       case AppLifecycleState.resumed:
-        // App vuelve a primer plano - ocultar overlay del sistema SIEMPRE
+        // App vuelve a primer plano - ocultar overlay del sistema SIEMPRE      
         tripNavService.hideSystemOverlay();
         debugPrint('📱 [App] Volviendo a primer plano - ocultando overlay');
         break;

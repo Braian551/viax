@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/core/config/app_config.dart';
 
 class CompanyLogo extends StatelessWidget {
   final String? logoKey;
@@ -18,9 +19,18 @@ class CompanyLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoUrl = logoKey != null && logoKey!.isNotEmpty
-        ? UserService.getR2ImageUrl(logoKey)
-        : null;
+    String? logoUrl;
+    if (logoKey != null && logoKey!.isNotEmpty) {
+      if (logoKey!.startsWith('http')) {
+        logoUrl = logoKey;
+      } else {
+        // Handle relative paths by appending to base URL if not using R2
+        // Assuming AppConfig is the source of truth for base URL in this context
+        // If logoKey is a simple filename, it might need 'uploads/' prefix, 
+        // but based on other screens, it seems to be a path like 'uploads/foo.png'
+        logoUrl = '${AppConfig.baseUrl}/$logoKey';
+      }
+    }
 
     if (logoUrl != null) {
       return _buildImageWithFallback(logoUrl);

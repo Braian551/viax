@@ -14,6 +14,10 @@
  * @version 2.0
  */
 
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Disable display_errors to return clean JSON
+ini_set('log_errors', 1);
+
 require_once '../config/config.php';
 
 header('Access-Control-Allow-Origin: *');
@@ -28,30 +32,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
     $database = new Database();
     $db = $database->getConnection();
-    $method = $_SERVER['REQUEST_METHOD'];
+    $method = $_SERVER['REQUEST_METHOD'] ?? null;
     
-    if ($method === 'GET') {
-        $input = $_GET;
+    if (!$method) {
+        // Script was included, do nothing (for testing)
     } else {
-        $input = getJsonInput();
-    }
+        if ($method === 'GET') {
+            $input = $_GET;
+        } else {
+            $input = getJsonInput();
+        }
 
-    $empresaId = isset($input['empresa_id']) ? intval($input['empresa_id']) : null;
-    
-    if (!$empresaId) {
-        sendJsonResponse(false, 'Falta parámetro empresa_id');
-        exit();
-    }
+        $empresaId = isset($input['empresa_id']) ? intval($input['empresa_id']) : null;
+        
+        if (!$empresaId) {
+            sendJsonResponse(false, 'Falta parámetro empresa_id');
+            exit();
+        }
 
-    switch ($method) {
-        case 'GET':
-            handleGetVehicles($db, $empresaId);
-            break;
-        case 'POST':
-            handleToggleVehicle($db, $input, $empresaId);
-            break;
-        default:
-            sendJsonResponse(false, 'Método no permitido');
+        switch ($method) {
+            case 'GET':
+                handleGetVehicles($db, $empresaId);
+                break;
+            case 'POST':
+                handleToggleVehicle($db, $input, $empresaId);
+                break;
+            default:
+                sendJsonResponse(false, 'Método no permitido');
+        }
     }
 
 } catch (Exception $e) {
@@ -300,13 +308,14 @@ function getConductoresAfectados($db, $empresaId, $tipoVehiculo) {
                 u.nombre,
                 u.apellido,
                 u.email,
-                dc.tipo_vehiculo
+                u.email,
+                dc.vehiculo_tipo as tipo_vehiculo
               FROM usuarios u
               INNER JOIN detalles_conductor dc ON u.id = dc.usuario_id
               WHERE u.empresa_id = ?
-              AND dc.tipo_vehiculo = ?
+              AND dc.vehiculo_tipo = ?
               AND dc.estado_verificacion = 'aprobado'
-              AND u.es_activo = true";
+              AND u.es_activo = 1";
     
     $stmt = $db->prepare($query);
     $stmt->execute([$empresaId, $tipoVehiculo]);
