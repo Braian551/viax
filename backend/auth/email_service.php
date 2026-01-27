@@ -36,6 +36,7 @@ try {
     $email = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
     $code = $input['code'] ?? '';
     $userName = $input['userName'] ?? '';
+    $type = $input['type'] ?? 'verification'; // 'verification' o 'password_recovery'
 
     // Validar datos de entrada
     if (!$email || strlen($code) !== 4 || empty($userName)) {
@@ -45,7 +46,12 @@ try {
     // Usar el componente Mailer reutilizable
     require_once __DIR__ . '/../utils/Mailer.php';
 
-    $enviado = Mailer::sendVerificationCode($email, $userName, $code);
+    // Enviar según el tipo
+    if ($type === 'password_recovery') {
+        $enviado = Mailer::sendPasswordRecoveryCode($email, $userName, $code);
+    } else {
+        $enviado = Mailer::sendVerificationCode($email, $userName, $code);
+    }
 
     if ($enviado) {
         sendJsonResponse(true, 'Correo enviado correctamente');

@@ -49,6 +49,39 @@ class Mailer {
     }
 
     /**
+     * Envía un código para recuperación de contraseña.
+     */
+    public static function sendPasswordRecoveryCode($toEmail, $userName, $code) {
+        $subject = "Recupera tu contraseña - Viax: $code";
+        
+        // Contenido específico para recuperación de contraseña
+        $bodyContent = "
+            <div class='greeting'>Hola, $userName</div>
+            <p class='message'>Has solicitado restablecer tu contraseña en Viax. Usa el siguiente código para continuar con el proceso.</p>
+            
+            <div class='code-container'>
+                <div class='code'>$code</div>
+            </div>
+            
+            <p class='note'>Este código caduca en 10 minutos. No lo compartas con nadie.</p>
+            <p class='message' style='margin-top: 20px; color: #666;'>Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña actual seguirá siendo la misma.</p>
+        ";
+
+        // Envolvemos el contenido en el diseño base
+        $htmlBody = self::wrapLayout($bodyContent);
+        
+        // Versión texto plano
+        $altBody = "Código de recuperación de contraseña Viax: $code\n\n" .
+                   "Hola $userName, has solicitado restablecer tu contraseña.\n" .
+                   "Usa este código para crear una nueva contraseña.\n\n" .
+                   "Este código caduca en 10 minutos. No lo compartas con nadie.\n\n" .
+                   "Si no solicitaste este cambio, ignora este correo.\n\n" .
+                   "Saludos,\nEl equipo de Viax";
+        
+        return self::send($toEmail, $userName, $subject, $htmlBody, $altBody);
+    }
+
+    /**
      * Envía un correo genérico (para futuros usos).
      */
     public static function sendEmail($toEmail, $userName, $subject, $message) {

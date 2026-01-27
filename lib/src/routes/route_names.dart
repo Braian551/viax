@@ -11,6 +11,12 @@
   static const String welcomeSplash = '/welcome-splash';
   static const String phoneAuth = '/phone-auth';
   static const String phoneRequired = '/phone-required';
+  
+  // Rutas de recuperación de contraseña
+  static const String forgotPassword = '/forgot-password';
+  static const String passwordRecoveryVerification = '/password-recovery-verification';
+  static const String resetPassword = '/reset-password';
+  
   static const String home = '/home';
   static const String locationPicker = '/location-picker';
   static const String driverRegistration = '/driver-registration';

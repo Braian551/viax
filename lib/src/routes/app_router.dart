@@ -13,6 +13,9 @@ import 'package:viax/src/features/auth/presentation/screens/register_screen.dart
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/email_verification_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/password_recovery_verification_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:viax/src/features/onboarding/presentation/screens/onboarding_screen.dart';
 // import 'package:viax/src/features/map/presentation/screens/location_selection_screen.dart'; // COMENTADO - YA NO SE USA
 import 'package:viax/src/features/map/presentation/screens/location_picker_screen.dart';
@@ -91,6 +94,30 @@ class AppRouter {
           final args = settings.arguments as Map<String, dynamic>?;
           return FadeSlidePageRoute(
             page: EmailVerificationScreen(
+              email: args?['email'] ?? '',
+              userName: args?['userName'] ?? '',
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.forgotPassword:
+        return FadeSlidePageRoute(page: const ForgotPasswordScreen(), settings: settings);
+      case RouteNames.passwordRecoveryVerification:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return FadeSlidePageRoute(
+            page: PasswordRecoveryVerificationScreen(
+              email: args?['email'] ?? '',
+              userName: args?['userName'] ?? '',
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.resetPassword:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return FadeSlidePageRoute(
+            page: ResetPasswordScreen(
               email: args?['email'] ?? '',
               userName: args?['userName'] ?? '',
             ),

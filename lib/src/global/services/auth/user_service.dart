@@ -477,6 +477,65 @@ class UserService {
       return {'success': false, 'message': e.toString()};
     }
   }
+
+  /// Resetea la contraseña de un usuario (para flujo de olvidar contraseña)
+  /// 
+  /// [email] - Email del usuario
+  /// [newPassword] - Nueva contraseña
+  /// 
+  /// Usa el endpoint change_password.php con action=set_password
+  /// que no requiere la contraseña actual
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    try {
+      // Primero obtenemos el userId usando el email
+      final userExists = await checkUserExists(email);
+      if (!userExists) {
+        return {'success': false, 'message': 'Usuario no encontrado'};
+      }
+
+      // Obtener el perfil para tener el userId
+      final profile = await getProfile(email: email);
+      if (profile == null || profile['user'] == null) {
+        return {'success': false, 'message': 'No se pudo obtener el perfil del usuario'};
+      }
+
+      final userId = profile['user']['id'];
+      if (userId == null) {
+        return {'success': false, 'message': 'ID de usuario no encontrado'};
+      }
+
+      print('resetPassword: Resetting password for userId=$userId, email=$email');
+
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'user_id': userId,
+          'action': 'set_password',
+          'new_password': newPassword,
+        }),
+      );
+
+      print('resetPassword: Response (${resp.statusCode}): ${resp.body}');
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      } else {
+        return {'success': false, 'message': 'Error del servidor: ${resp.statusCode}'};
+      }
+    } catch (e) {
+      print('resetPassword: Error: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
   static Future<Map<String, dynamic>> registerDriverVehicle({
     required int userId, 
     required String type, 
