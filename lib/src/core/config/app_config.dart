@@ -1,108 +1,87 @@
 ﻿import 'package:flutter/material.dart';
 
-/// ConfiguraciÃ³n centralizada de la aplicaciÃ³n
+/// Configuración centralizada de la aplicación
 /// 
-/// Contiene constantes y configuraciones que pueden variar
-/// segÃºn el entorno (dev, staging, production).
+/// CONFIGURACIÓN DEL SERVIDOR:
+/// Para cambiar la URL del servidor, usa la variable de entorno API_BASE_URL:
 /// 
-/// MIGRACIÃ“N A MICROSERVICIOS:
-/// - Estas URLs cambiarÃ­an a endpoints de diferentes servicios
-/// - Usa variables de entorno para diferentes ambientes
-/// - Considera usar un API Gateway que enrute a los servicios
+/// ```bash
+/// # Desarrollo local (dispositivo físico)
+/// flutter run --dart-define=API_BASE_URL=http://192.168.18.68/viax/backend
 /// 
-/// EJEMPLO CONFIGURACIÃ“N MICROSERVICIOS:
-/// ```dart
-/// // Desarrollo local
-/// static const apiGateway = 'http://localhost:8080';
-/// static const conductorServiceUrl = '$apiGateway/conductor-service/v1';
-/// static const authServiceUrl = '$apiGateway/auth-service/v1';
-/// static const paymentServiceUrl = '$apiGateway/payment-service/v1';
+/// # Emulador Android
+/// flutter run --dart-define=API_BASE_URL=http://10.0.2.2/viax/backend
 /// 
-/// // ProducciÃ³n
-/// static const apiGateway = 'https://api.viax.com';
-/// static const conductorServiceUrl = '$apiGateway/conductor/v1';
+/// # Producción
+/// flutter run --dart-define=API_BASE_URL=https://viax-backend-production.up.railway.app
 /// ```
 class AppConfig {
   // Permite recordar el host que ya funcionó para evitar probar todos cada vez
   static String? _cachedWorkingBaseUrl;
 
-  // Override opcional por variable de entorno en tiempo de compilación
+  // Variable de entorno para la URL del servidor
+  // Configura esto al ejecutar: flutter run --dart-define=API_BASE_URL=http://tu-servidor.com
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: '',
+    defaultValue: 'http://192.168.18.68/viax/backend', // Default para desarrollo
   );
 
   // Key global para manejo de SnackBars sin contexto
   static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-  // Ambiente actual - CAMBIAR AQUÃ PARA ALTERNAR ENTRE LOCAL Y PRODUCCIÃ“N
-  static const Environment environment = Environment.development;
-
-  // URLs base segÃºn ambiente
-  static String get baseUrl {
-    if (_envBaseUrl.isNotEmpty) {
-      return _envBaseUrl;
+  // Ambiente actual (detectado automáticamente basado en la URL)
+  static Environment get environment {
+    if (_envBaseUrl.contains('localhost') || 
+        _envBaseUrl.contains('10.0.2.2') || 
+        _envBaseUrl.contains('192.168.')) {
+      return Environment.development;
+    } else if (_envBaseUrl.contains('staging')) {
+      return Environment.staging;
     }
+    return Environment.production;
+  }
 
+  // URL base del servidor - LEE DE LA VARIABLE DE ENTORNO
+  static String get baseUrl {
     // Si ya detectamos un host que responde, úsalo directo
     if (_cachedWorkingBaseUrl != null) {
       return _cachedWorkingBaseUrl!;
     }
-
-    switch (environment) {
-  case Environment.development:
-        // DESARROLLO LOCAL CON LARAGON
-        // Para navegador web o depuraciÃ³n desde VS Code: localhost
-        // Para emulador Android: 10.0.2.2 (IMPORTANTE: usar esta para emulador)
-        // Para dispositivo fÃ­sico: usar IP de tu mÃ¡quina (ej: 192.168.1.X)
-        
-        // DISPOSITIVO FÍSICO - usa tu IP local:
-       return 'http://192.168.18.68/viax/backend';
-        
-        // EMULADOR ANDROID - descomentar esta línea:
-        // return 'http://10.0.2.2/viax/backend';
-        
-      case Environment.staging:
-        return 'https://staging-api.viax.com';
-      case Environment.production:
-        // Railway backend URL - PRODUCCIÃ“N
-        return 'https://viax-backend-production.up.railway.app';
-    }
+    return _envBaseUrl;
   }
 
   /// Lista de candidatos para entorno local. El primero que responda se usa y se cachea.
   static List<String> get baseUrlCandidates {
-    if (_envBaseUrl.isNotEmpty) {
+    // Si es producción o staging, solo usar esa URL
+    if (!_envBaseUrl.contains('192.168.') && !_envBaseUrl.contains('10.0.2.2') && !_envBaseUrl.contains('localhost')) {
       return [_envBaseUrl];
     }
 
-    switch (environment) {
-      case Environment.development:
-        const candidates = [
-          // IP LAN de la máquina host (para dispositivo físico)
-          'http://192.168.18.68/viax/backend',
-          // Emulador Android (10.0.2.2 apunta a la máquina host)
-          'http://10.0.2.2/viax/backend',
-          // Loopback común para desktop
-          'http://127.0.0.1/viax/backend',
-          'http://localhost/viax/backend',
-        ];
+    // Para desarrollo, probar varios candidatos
+    const candidates = [
+      'http://192.168.18.68/viax/backend',
+      'http://10.0.2.2/viax/backend',
+      'http://127.0.0.1/viax/backend',
+      'http://localhost/viax/backend',
+    ];
 
-        if (_cachedWorkingBaseUrl != null && candidates.contains(_cachedWorkingBaseUrl!)) {
-          return [
-            _cachedWorkingBaseUrl!,
-            ...candidates.where((c) => c != _cachedWorkingBaseUrl!),
-          ];
-        }
-
-        return candidates;
-
-      case Environment.staging:
-        return ['https://staging-api.viax.com'];
-
-      case Environment.production:
-        return ['https://viax-backend-production.up.railway.app'];
+    // Poner el configurado primero
+    if (!candidates.contains(_envBaseUrl)) {
+      return [_envBaseUrl, ...candidates];
     }
+
+    if (_cachedWorkingBaseUrl != null && candidates.contains(_cachedWorkingBaseUrl!)) {
+      return [
+        _cachedWorkingBaseUrl!,
+        ...candidates.where((c) => c != _cachedWorkingBaseUrl!),
+      ];
+    }
+
+    // Mover la URL configurada al principio
+    return [
+      _envBaseUrl,
+      ...candidates.where((c) => c != _envBaseUrl),
+    ];
   }
 
   /// Guarda el host que respondió exitosamente para evitar timeouts repetidos

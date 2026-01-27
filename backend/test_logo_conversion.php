@@ -4,25 +4,20 @@ require_once 'config/database.php';
 $db = new Database();
 $conn = $db->getConnection();
 
-// Simular la función convertLogoUrl
+// Helper function to convert logo URL to R2 proxy format
 function convertLogoUrl($logoUrl) {
-    if (empty($logoUrl)) return null;
+    if (empty($logoUrl)) {
+        return null;
+    }
     
-    if (strpos($logoUrl, 'r2_proxy.php') !== false) {
+    // If already a full URL, extract the key
+    if (strpos($logoUrl, 'http') === 0) {
+        // Already a full URL, return as is
         return $logoUrl;
     }
     
-    if (strpos($logoUrl, 'r2.dev/') !== false) {
-        $parts = explode('r2.dev/', $logoUrl);
-        $logoUrl = end($parts);
-    }
-    
-    if (strpos($logoUrl, 'http://') === 0 || strpos($logoUrl, 'https://') === 0) {
-        return $logoUrl;
-    }
-    
-    // Usar IP del servidor
-    return 'http://192.168.18.68/viax/backend/r2_proxy.php?key=' . urlencode($logoUrl);
+    // Convert relative path to R2 proxy URL
+    return getR2ProxyUrl($logoUrl);
 }
 
 $stmt = $conn->query('SELECT id, nombre, logo_url FROM empresas_transporte ORDER BY id');

@@ -1,26 +1,20 @@
-﻿class ApiConfig {
-  // URL base del servidor - Laragon local
-  // Para desarrollo local con Laragon
-  // Para dispositivo físico: usar IP de tu PC en la red local
-  // Para emulador Android: usar 10.0.2.2
-  // Para navegador: usar localhost
-  // static const String baseUrl = 'http://192.168.18.68/viax/backend';
+﻿import 'package:viax/src/core/config/app_config.dart';
 
-  // Para emulador Android, cambiar a:
-  // Para emulador Android, cambiar a:
-  // static const String baseUrl = 'http://10.0.2.2/viax/backend';
-  static const String baseUrl = 'http://192.168.18.68/viax/backend';
+/// Configuración de API
+/// 
+/// Usa AppConfig.baseUrl que se configura via variable de entorno:
+/// flutter run --dart-define=API_BASE_URL=http://tu-servidor.com
+class ApiConfig {
+  // URL base - usa la configuración central
+  static String get baseUrl => AppConfig.baseUrl;
   
-  // Para producciÃ³n Railway, cambiar a:
-  // static const String baseUrl = 'https://viax-backend-production.up.railway.app';
-
   // Endpoints principales
-  static const String authEndpoint = '$baseUrl/auth';
-  static const String userEndpoint = '$baseUrl/user';
-  static const String conductorEndpoint = '$baseUrl/conductor';
-  static const String adminEndpoint = '$baseUrl/admin';
+  static String get authEndpoint => '$baseUrl/auth';
+  static String get userEndpoint => '$baseUrl/user';
+  static String get conductorEndpoint => '$baseUrl/conductor';
+  static String get adminEndpoint => '$baseUrl/admin';
 
-  // ConfiguraciÃ³n de timeouts
+  // Configuración de timeouts
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }
