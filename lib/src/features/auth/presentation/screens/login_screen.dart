@@ -193,6 +193,34 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleForgotPassword() async {
+    String emailToUse = _emailController.text.trim();
+
+    if (emailToUse.isEmpty) {
+      final sess = await UserService.getSavedSession();
+      if (sess != null && sess['email'] != null) {
+        emailToUse = sess['email'] as String;
+      }
+    }
+
+    if (!mounted) return;
+
+    if (emailToUse.isNotEmpty) {
+      // Si tenemos el email, saltamos directamente a la verificación (que envía el código)
+      Navigator.pushNamed(
+        context, 
+        RouteNames.passwordRecoveryVerification,
+        arguments: {
+          'email': emailToUse,
+          'userName': emailToUse.split('@')[0],
+        }
+      );
+    } else {
+      // Si no tenemos email, vamos a la pantalla que lo solicita
+      Navigator.pushNamed(context, RouteNames.forgotPassword);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -290,9 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, RouteNames.forgotPassword);
-                        },
+                        onPressed: _handleForgotPassword,
                         child: const Text(
                           '¿Olvidaste tu contraseña?',
                           style: TextStyle(

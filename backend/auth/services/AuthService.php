@@ -28,7 +28,6 @@ class AuthService {
             SELECT hash_contrasena, 
                    CASE 
                        WHEN google_id IS NOT NULL THEN 'google'
-                       WHEN facebook_id IS NOT NULL THEN 'facebook'
                        ELSE 'email'
                    END as auth_provider
             FROM usuarios 
@@ -99,19 +98,20 @@ class AuthService {
     }
     
     /**
-     * Set password for a user who doesn't have one (e.g., Google OAuth users)
+     * Set password for a user who doesn't have one or is resetting it
      * 
      * @param int $userId
      * @param string $newPassword
      * @return bool
      */
     public function setPassword($userId, $newPassword) {
-        // Check if user already has a password
+        // Check if user exists
         $status = $this->checkPasswordStatus($userId);
         
-        if ($status['has_password']) {
-            throw new Exception("El usuario ya tiene una contraseña. Usa changePassword para cambiarla.");
-        }
+        // REMOVED: Restriction on existing password to allow password recovery flow
+        // if ($status['has_password']) {
+        //    throw new Exception("El usuario ya tiene una contraseña. Usa changePassword para cambiarla.");
+        // }
         
         // Validate password strength
         if (strlen($newPassword) < 8) {
