@@ -247,20 +247,28 @@ class UserService {
       await prefs.setString(_kUserType, user['tipo_usuario'].toString());
     }
     // Guardar nombre
-    if (user.containsKey('nombre') && user['nombre'] != null) {
-      await prefs.setString(_kUserName, user['nombre'].toString());
+    if (user.containsKey('nombre')) {
+      if (user['nombre'] != null) {
+        await prefs.setString(_kUserName, user['nombre'].toString());
+      }
     }
     // Guardar apellido
-    if (user.containsKey('apellido') && user['apellido'] != null) {
-      await prefs.setString(_kUserLastName, user['apellido'].toString());
+    if (user.containsKey('apellido')) {
+      if (user['apellido'] != null) {
+        await prefs.setString(_kUserLastName, user['apellido'].toString());
+      }
     }
     // Guardar teléfono
     if (user.containsKey('telefono') && user['telefono'] != null) {
       await prefs.setString(_kUserPhone, user['telefono'].toString());
     }
     // Guardar foto perfil
-    if (user.containsKey('foto_perfil') && user['foto_perfil'] != null) {
-      await prefs.setString(_kUserPhoto, user['foto_perfil'].toString());
+    if (user.containsKey('foto_perfil')) {
+      if (user['foto_perfil'] != null && user['foto_perfil'].toString().isNotEmpty) {
+        await prefs.setString(_kUserPhoto, user['foto_perfil'].toString());
+      } else {
+        await prefs.remove(_kUserPhoto);
+      }
     }
     // Guardar fecha registro
     if (user.containsKey('fecha_registro') && user['fecha_registro'] != null) {
@@ -360,6 +368,9 @@ class UserService {
     await prefs.remove(_kUserType);
     await prefs.remove(_kUserName);
     await prefs.remove(_kUserPhone);
+    await prefs.remove(_kUserLastName); // Added missing clear
+    await prefs.remove(_kUserPhoto);    // Added missing clear
+    await prefs.remove(_kUserRegistrationDate); // Added missing clear
     await prefs.remove(_kUserEmpresaId);
     // También eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
@@ -797,8 +808,8 @@ class UserService {
           if (currentSession != null) {
             final mergedSession = {
               ...currentSession,
-              if (updatedUser['nombre'] != null) 'nombre': updatedUser['nombre'],
-              if (updatedUser['apellido'] != null) 'apellido': updatedUser['apellido'],
+              // Merge all fields from updatedUser, including foto_perfil
+              ...updatedUser,
             };
             await saveSession(mergedSession);
           }

@@ -4,15 +4,55 @@ import '../../../../theme/app_colors.dart';
 import '../../../../global/services/auth/user_service.dart';
 import '../../../../routes/route_names.dart';
 import '../../../../widgets/dialogs/logout_dialog.dart';
+import '../../services/conductor_service.dart';
 
 /// Menú hamburguesa del conductor con diseño moderno
-class ConductorDrawer extends StatelessWidget {
+class ConductorDrawer extends StatefulWidget {
   final Map<String, dynamic> conductorUser;
 
   const ConductorDrawer({
     super.key,
     required this.conductorUser,
   });
+
+  @override
+  State<ConductorDrawer> createState() => _ConductorDrawerState();
+}
+
+class _ConductorDrawerState extends State<ConductorDrawer> {
+  String? _fotoPerfil;
+
+  @override
+  void initState() {
+    super.initState();
+    _fotoPerfil = widget.conductorUser['foto_perfil']?.toString();
+    
+    // Si no hay foto en el conductorUser, intentar obtenerla del backend
+    if (_fotoPerfil == null || _fotoPerfil!.isEmpty) {
+      _fetchProfilePhoto();
+    }
+  }
+
+  Future<void> _fetchProfilePhoto() async {
+    final conductorId = widget.conductorUser['id'];
+    if (conductorId == null) return;
+
+    try {
+      final info = await ConductorService.getConductorInfo(
+        int.tryParse(conductorId.toString()) ?? 0,
+      );
+      if (info != null && info['conductor'] != null) {
+        final foto = info['conductor']['foto_perfil']?.toString();
+        if (foto != null && foto.isNotEmpty && mounted) {
+          setState(() {
+            _fotoPerfil = foto;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile photo for drawer: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +93,7 @@ class ConductorDrawer extends StatelessWidget {
                               context, 
                               RouteNames.conductorHome,
                               (route) => false,
-                              arguments: {'conductor_user': conductorUser},
+                              arguments: {'conductor_user': widget.conductorUser},
                             );
                           },
                           isDark: isDark,
@@ -68,7 +108,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context, 
                               RouteNames.conductorProfile,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -83,7 +123,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context, 
                               RouteNames.conductorTrips,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -98,7 +138,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context, 
                               RouteNames.conductorEarnings,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -115,7 +155,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context,
                               RouteNames.conductorVehicle,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -130,7 +170,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context,
                               RouteNames.conductorDocuments,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -147,7 +187,7 @@ class ConductorDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                               context,
                               RouteNames.conductorSettings,
-                              arguments: conductorUser,
+                              arguments: widget.conductorUser,
                             );
                           },
                           isDark: isDark,
@@ -162,7 +202,7 @@ class ConductorDrawer extends StatelessWidget {
                              Navigator.pushNamed(
                                context,
                                RouteNames.conductorHelp,
-                               arguments: conductorUser,
+                               arguments: widget.conductorUser,
                              );
                            },
                            isDark: isDark,
@@ -216,9 +256,9 @@ class ConductorDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
-    final nombre = conductorUser['nombre']?.toString() ?? 'Conductor';
-    final tipoVehiculo = conductorUser['tipo_vehiculo']?.toString() ?? 'Vehículo';
-    final placa = conductorUser['placa']?.toString() ?? '';
+    final nombre = widget.conductorUser['nombre']?.toString() ?? 'Conductor';
+    final tipoVehiculo = widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Vehículo';
+    final placa = widget.conductorUser['placa']?.toString() ?? '';
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -256,10 +296,10 @@ class ConductorDrawer extends StatelessWidget {
             ),
             child: CircleAvatar(
               backgroundColor: Colors.transparent,
-              backgroundImage: conductorUser['foto_perfil'] != null 
-                  ? NetworkImage(UserService.getR2ImageUrl(conductorUser['foto_perfil'].toString()))
+              backgroundImage: _fotoPerfil != null && _fotoPerfil!.isNotEmpty
+                  ? NetworkImage(UserService.getR2ImageUrl(_fotoPerfil!))
                   : null,
-              child: conductorUser['foto_perfil'] == null 
+              child: _fotoPerfil == null || _fotoPerfil!.isEmpty
                   ? Text(
                       nombre.isNotEmpty ? nombre[0].toUpperCase() : 'C',
                       style: const TextStyle(

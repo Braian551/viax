@@ -152,7 +152,8 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final fullName = '$name $lastName'.trim();
     // Use calificación from profile model (loaded from backend) instead of conductorUser
     final rating = profile.calificacionPromedio;
-    final photoUrlStr = _conductorUser?['foto_perfil'];
+    // Use fotoPerfil from profile model which is always fetched from backend API
+    final photoUrlStr = profile.fotoPerfil ?? _conductorUser?['foto_perfil'];
     final photoUrl = photoUrlStr != null ? UserService.getR2ImageUrl(photoUrlStr) : null;
   
     // Use data from provider 
