@@ -209,7 +209,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           // La solicitud fue cancelada
           _statusTimer?.cancel();
           _searchTimer?.cancel();
-          if (mounted) {
+          // Sólo mostrar el diálogo si NO estamos cancelando nosotros
+          if (mounted && !_isCancelling) {
             _showCancelledDialog();
           }
         }
