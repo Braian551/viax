@@ -53,4 +53,8 @@
   static const String conductorDocuments = '/conductor/documents';
   static const String conductorSettings = '/conductor/settings';
   static const String conductorHelp = '/conductor/help';
+  static const String conductorActiveTrip = '/conductor/active-trip';
+  
+  // Rutas de viaje activo
+  static const String userActiveTrip = '/user/active-trip';
 }

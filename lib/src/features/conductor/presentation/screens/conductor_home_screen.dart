@@ -579,7 +579,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       // Verificar si hay viaje activo antes de conectar
       // 1. Verificación local (más rápida y fiable si la app sigue vivía)
       if (TripTrackingService().isTracking) {
-         showActiveTripAlert(context, isConductor: true);
+         showActiveTripAlert(context, isConductor: true, userId: conductorId);
          return;
       }
 
@@ -588,7 +588,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         final activeTrips = await ConductorService.getViajesActivos(conductorId);
         if (activeTrips.isNotEmpty) {
           if (!mounted) return;
-          showActiveTripAlert(context, isConductor: true);
+          showActiveTripAlert(context, isConductor: true, userId: conductorId);
           return;
         }
       } catch (e) {
@@ -635,7 +635,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       // Verificar si hay viaje activo antes de desconectar
       // 1. Verificación local
       if (TripTrackingService().isTracking) {
-         showActiveTripAlert(context, isConductor: true);
+         showActiveTripAlert(context, isConductor: true, userId: conductorId);
          return;
       }
 
@@ -644,7 +644,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         final activeTrips = await ConductorService.getViajesActivos(conductorId);
         if (activeTrips.isNotEmpty) {
           if (!mounted) return;
-          showActiveTripAlert(context, isConductor: true);
+          showActiveTripAlert(context, isConductor: true, userId: conductorId);
           return;
         }
       } catch (e) {

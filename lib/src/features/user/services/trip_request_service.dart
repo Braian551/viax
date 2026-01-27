@@ -304,6 +304,7 @@ class TripRequestService {
       );
       
       if (response.statusCode == 200) {
+        print('📥 [TripRequestService] checkActiveTrip response: ${response.body}');
         return jsonDecode(response.body);
       } else {
         return {

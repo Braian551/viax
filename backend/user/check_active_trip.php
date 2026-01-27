@@ -16,11 +16,12 @@ try {
     $conn = $database->getConnection();
 
     // Estados considerados como "viaje activo"
+    // 'pendiente': Esperando conductor
     // 'aceptada': Conductor asignado, en camino a recoger (Para cliente y conductor)
     // 'en_camino': (Alias de aceptada en algunos contextos, pero verificamos)
     // 'conductor_llego': Conductor espera al cliente
     // 'en_curso': Viaje iniciado
-    $activeStatuses = "'aceptada', 'en_camino', 'conductor_llego', 'recogido', 'en_curso'";
+    $activeStatuses = "'pendiente', 'aceptada', 'en_camino', 'conductor_llego', 'recogido', 'en_curso'";
 
     $sql = "";
     if ($role === 'conductor') {
@@ -30,12 +31,12 @@ try {
                 WHERE ac.conductor_id = :userId 
                 AND s.estado IN ($activeStatuses) 
                 AND ac.estado IN ('asignado', 'llegado', 'en_curso')
-                ORDER BY s.created_at DESC LIMIT 1";
+                ORDER BY s.fecha_creacion DESC LIMIT 1";
     } else {
         $sql = "SELECT * FROM solicitudes_servicio 
                 WHERE cliente_id = :userId 
                 AND estado IN ($activeStatuses) 
-                ORDER BY created_at DESC LIMIT 1";
+                ORDER BY fecha_creacion DESC LIMIT 1";
     }
 
     $stmt = $conn->prepare($sql);
@@ -56,9 +57,9 @@ try {
         // Let's format it to match get_trip_status response structure partially
         $formattedTrip = $trip;
         $formattedTrip['origen'] = [
-            'latitud' => $trip['latitud_origen'],
-            'longitud' => $trip['longitud_origen'],
-            'direccion' => $trip['direccion_origen']
+            'latitud' => $trip['latitud_recogida'],
+            'longitud' => $trip['longitud_recogida'],
+            'direccion' => $trip['direccion_recogida']
         ];
         $formattedTrip['destino'] = [
             'latitud' => $trip['latitud_destino'],
@@ -78,6 +79,7 @@ try {
 
         $response = [
             'success' => true,
+            'has_active' => true,
             'trip' => $formattedTrip
         ];
         
@@ -87,7 +89,7 @@ try {
 
         echo json_encode($response);
     } else {
-        echo json_encode(['success' => false, 'message' => 'No hay viaje activo']);
+        echo json_encode(['success' => true, 'has_active' => false, 'message' => 'No hay viaje activo']);
     }
 
 } catch (PDOException $e) {

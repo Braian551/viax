@@ -511,7 +511,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                             // Verificar viaje activo
                             // 1. Verificación local (más rápida y fiable si la app sigue vivía)
                             if (ActiveTripNavigationService().hasActiveTrip) {
-                               showActiveTripAlert(context, isConductor: false);
+                               showActiveTripAlert(context, isConductor: false, userId: _userId);
                                return;
                             }
 
@@ -526,7 +526,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                   
                                   if (hasActive) {
                                     if (!mounted) return;
-                                    showActiveTripAlert(context, isConductor: false);
+                                    showActiveTripAlert(context, isConductor: false, userId: _userId);
                                     return;
                                   }
                                 }
