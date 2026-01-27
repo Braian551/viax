@@ -6,6 +6,7 @@ import 'star_rating_widget.dart';
 import 'trip_summary_card.dart';
 import 'payment_status_card.dart';
 import 'client_payment_confirm_card.dart';
+import '../../../features/user/presentation/widgets/trip_history/trip_conductor_avatar.dart';
 
 /// Tipo de usuario que ve la pantalla.
 enum TripCompletionUserType { cliente, conductor }
@@ -506,24 +507,14 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
           Row(
             children: [
               // Avatar
-              CircleAvatar(
+              // Usar TripConductorAvatar si es el cliente viendo al conductor,
+              // o si queremos soportar imágenes de R2 para ambos.
+              // Dado que el componente se llama TripConductorAvatar, lo usaremos principalmente
+              // cuando mostramos al conductor, pero su lógica de URL es útil para todos.
+              TripConductorAvatar(
+                photoUrl: widget.tripData.otroUsuarioFoto,
+                conductorName: targetName,
                 radius: 25,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                backgroundImage: widget.tripData.otroUsuarioFoto != null
-                    ? NetworkImage(widget.tripData.otroUsuarioFoto!)
-                    : null,
-                child: widget.tripData.otroUsuarioFoto == null
-                    ? Text(
-                        targetName.isNotEmpty
-                            ? targetName[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      )
-                    : null,
               ),
               const SizedBox(width: 12),
               // Info

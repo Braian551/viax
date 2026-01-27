@@ -55,10 +55,63 @@ try {
     $stmt->bindParam(':notas', $notas);
     
     if ($stmt->execute()) {
+        $id_pago = $db->lastInsertId();
+
+        // ---------------------------------------------------------
+        // LOGICA DE COMISIÓN EMPRESA - ADMIN (Actualización Solicitada)
+        // ---------------------------------------------------------
+        // Cuando la empresa "recibe" el dinero del conductor (registra pago),
+        // se debe calcular la comisión que la empresa le debe al admin.
+        
+        // 1. Obtener empresa del conductor
+        $stmtEmpresa = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = ?");
+        $stmtEmpresa->execute([$conductor_id]);
+        $conductorData = $stmtEmpresa->fetch(PDO::FETCH_ASSOC);
+        
+        if ($conductorData && !empty($conductorData['empresa_id'])) {
+            $empresa_id = $conductorData['empresa_id'];
+            
+            // 2. Obtener porcentaje de comisión del admin para esa empresa
+            $stmtConfig = $db->prepare("SELECT comision_admin_porcentaje, saldo_pendiente FROM empresas_transporte WHERE id = ?");
+            $stmtConfig->execute([$empresa_id]);
+            $configEmpresa = $stmtConfig->fetch(PDO::FETCH_ASSOC);
+            
+            if ($configEmpresa) {
+                $porcentaje = floatval($configEmpresa['comision_admin_porcentaje']);
+                
+                // Si hay una comisión configurada (> 0), aplicarla
+                if ($porcentaje > 0) {
+                    $comision_admin_valor = $monto * ($porcentaje / 100);
+                    
+                    // 3. Actualizar saldo de la empresa (AUMENTA su deuda con el admin)
+                    $nuevo_saldo = floatval($configEmpresa['saldo_pendiente']) + $comision_admin_valor;
+                    
+                    $stmtUpdateSaldo = $db->prepare("UPDATE empresas_transporte SET saldo_pendiente = :nuevo_saldo, actualizado_en = NOW() WHERE id = :id");
+                    $stmtUpdateSaldo->execute([':nuevo_saldo' => $nuevo_saldo, ':id' => $empresa_id]);
+                    
+                    // 4. Registrar el cargo en el historial de la empresa
+                    $stmtCargo = $db->prepare("
+                        INSERT INTO pagos_empresas (empresa_id, monto, tipo, descripcion, saldo_anterior, saldo_nuevo, creado_en)
+                        VALUES (:empresa_id, :monto, 'cargo', :descripcion, :saldo_anterior, :saldo_nuevo, NOW())
+                    ");
+                    
+                    $descripcion = "Comisión sobre recaudo conductor #$conductor_id ($porcentaje%)";
+                    
+                    $stmtCargo->execute([
+                        ':empresa_id' => $empresa_id,
+                        ':monto' => $comision_admin_valor, // El monto del cargo es la comisión calculada
+                        ':descripcion' => $descripcion,
+                        ':saldo_anterior' => $configEmpresa['saldo_pendiente'],
+                        ':saldo_nuevo' => $nuevo_saldo
+                    ]);
+                }
+            }
+        }
+
         echo json_encode([
             'success' => true,
             'message' => 'Pago registrado correctamente',
-            'id_pago' => $db->lastInsertId(),
+            'id_pago' => $id_pago,
             'monto' => $monto
         ]);
     } else {

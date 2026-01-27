@@ -21,6 +21,7 @@ class UserModel extends User {
     required super.creadoEn,
     super.actualizadoEn,
     super.ubicacionPrincipal,
+    super.calificacion,
   });
 
   /// Crear desde JSON (backend response)
@@ -40,6 +41,12 @@ class UserModel extends User {
       ubicacionPrincipal: json['location'] != null
           ? UserLocationModel.fromJson(json['location'] as Map<String, dynamic>)
           : null,
+      calificacion: _parseDouble(
+        json['calificacion'] ?? 
+        json['calificacion_promedio'] ?? 
+        json['rating'] ?? 
+        json['stars'],
+      ),
     );
   }
 
@@ -58,6 +65,7 @@ class UserModel extends User {
         'actualizado_en': actualizadoEn!.toIso8601String(),
       if (ubicacionPrincipal != null)
         'location': (ubicacionPrincipal as UserLocationModel).toJson(),
+      if (calificacion != null) 'calificacion': calificacion,
     };
   }
 
@@ -74,6 +82,7 @@ class UserModel extends User {
       creadoEn: creadoEn,
       actualizadoEn: actualizadoEn,
       ubicacionPrincipal: ubicacionPrincipal,
+      calificacion: calificacion,
     );
   }
 
@@ -90,6 +99,7 @@ class UserModel extends User {
       creadoEn: user.creadoEn,
       actualizadoEn: user.actualizadoEn,
       ubicacionPrincipal: user.ubicacionPrincipal,
+      calificacion: user.calificacion,
     );
   }
 
@@ -99,6 +109,14 @@ class UserModel extends User {
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static DateTime? _parseDateTime(dynamic value) {

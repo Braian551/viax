@@ -19,6 +19,7 @@ class User {
   final DateTime creadoEn;
   final DateTime? actualizadoEn;
   final UserLocation? ubicacionPrincipal;
+  final double? calificacion;
 
   const User({
     required this.id,
@@ -31,6 +32,7 @@ class User {
     required this.creadoEn,
     this.actualizadoEn,
     this.ubicacionPrincipal,
+    this.calificacion,
   });
 
   /// Nombre completo del usuario
@@ -83,6 +85,7 @@ class User {
     DateTime? creadoEn,
     DateTime? actualizadoEn,
     UserLocation? ubicacionPrincipal,
+    double? calificacion,
   }) {
     return User(
       id: id ?? this.id,
@@ -95,6 +98,7 @@ class User {
       creadoEn: creadoEn ?? this.creadoEn,
       actualizadoEn: actualizadoEn ?? this.actualizadoEn,
       ubicacionPrincipal: ubicacionPrincipal ?? this.ubicacionPrincipal,
+      calificacion: calificacion ?? this.calificacion,
     );
   }
 

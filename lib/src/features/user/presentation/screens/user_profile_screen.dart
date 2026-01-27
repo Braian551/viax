@@ -7,6 +7,8 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/features/user/presentation/widgets/profile/user_profile_shimmer.dart';
 import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
+import 'package:viax/src/features/user/data/models/user_model.dart';
+import 'package:viax/src/global/services/rating_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -89,11 +91,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 _lastName = userData['apellido'];
                 _photoKey = userData['foto_perfil'];
                 _phone = userData['telefono'];
-                // Parse rating safely
-                final rawRating = userData['calificacion_promedio'];
-                if (rawRating != null) {
-                  _rating = double.tryParse(rawRating.toString()) ?? 5.0;
+                
+                // Use UserModel to robustly parse the rating
+                try {
+                  // We wrap/ensure it's a Map<String, dynamic>
+                  final userModel = UserModel.fromJson(Map<String, dynamic>.from(userData));
+                  _rating = userModel.calificacion ?? 5.0;
+                } catch (e) {
+                  print('Error parsing user rating: $e');
+                  // Fallback to manual check if model parsing fails for some reason
+                  final rawRating = userData['calificacion'] ?? 
+                                   userData['calificacion_promedio'] ?? 
+                                   userData['rating'];
+                  if (rawRating != null) {
+                    _rating = double.tryParse(rawRating.toString()) ?? 5.0;
+                  }
                 }
+                
                 _userName = '$_firstName $_lastName'.trim();
                 _userEmail = userData['email'] ?? sess['email'];
               }
@@ -101,6 +115,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
              // Fallback to session data
              _userName = sess['nombre'] ?? 'Usuario';
              _userEmail = sess['email'] ?? 'usuario@viax.com';
+           }
+           
+           // 3. Fetch real average rating from RatingService (since profile might be cached or missing it)
+           try {
+             final ratingsData = await RatingService.obtenerCalificaciones(
+               usuarioId: _userId!,
+               tipoUsuario: 'cliente', // We are viewing the client profile
+               limit: 100, // Fetch enough to calculate a decent average if needed
+             );
+             
+             if (ratingsData['promedio'] != null) {
+               // If backend returns average specifically
+               _rating = double.tryParse(ratingsData['promedio'].toString()) ?? _rating;
+             } else if (ratingsData['calificaciones'] != null) {
+               final List list = ratingsData['calificaciones'];
+               if (list.isNotEmpty) {
+                 final total = list.fold(0.0, (sum, item) => sum + (double.tryParse(item['calificacion'].toString()) ?? 0.0));
+                 _rating = total / list.length;
+               }
+             }
+           } catch (e) {
+             print('Error fetching real rating: $e');
            }
         }
         

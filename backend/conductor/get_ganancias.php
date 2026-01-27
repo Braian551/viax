@@ -119,6 +119,7 @@ try {
     WHERE ac.conductor_id = :conductor_id
     AND s.estado IN ('completada', 'entregado')";
     
+    $stmt_comision = $db->prepare($query_comision_total);
     $stmt_comision->bindParam(':conductor_id', $conductor_id, PDO::PARAM_INT);
     $stmt_comision->execute();
     $comision_data = $stmt_comision->fetch(PDO::FETCH_ASSOC);

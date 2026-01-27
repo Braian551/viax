@@ -3,6 +3,7 @@ import '../../../../../theme/app_colors.dart';
 import '../../../../conductor/services/document_upload_service.dart';
 
 import 'package:viax/src/global/services/rating_service.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DriverDetailSheet extends StatefulWidget {
   final Map<String, dynamic> conductor;
@@ -205,10 +206,10 @@ class _DriverDetailSheetState extends State<DriverDetailSheet> {
                           color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          Icons.directions_car_filled_rounded,
+                        child: FaIcon(
+                         _getVehicleIcon(vehiculo?['tipo']),
                           color: AppColors.primary,
-                          size: 24,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -438,5 +439,18 @@ class _DriverDetailSheetState extends State<DriverDetailSheet> {
         ],
       ),
     );
+  }
+
+
+  IconData _getVehicleIcon(String? tipo) {
+    if (tipo == null) return FontAwesomeIcons.car;
+    final typeLower = tipo.toLowerCase().trim();
+    if (typeLower == 'motocarro') {
+      return FontAwesomeIcons.vanShuttle;
+    } else if (typeLower.contains('moto')) {
+      return FontAwesomeIcons.motorcycle;
+    } else {
+      return FontAwesomeIcons.car;
+    }
   }
 }

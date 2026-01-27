@@ -544,6 +544,8 @@ try {
     // ACTUALIZAR SALDO PENDIENTE DE LA EMPRESA CON ADMIN
     // =====================================================
     // La empresa debe al admin la comision_admin_valor de cada viaje
+    // MODIFICACION: Se comenta esto porque el cobro se hace ahora al REGISTRAR EL PAGO del conductor.
+    /*
     if ($empresa_id && $comision_admin_valor > 0) {
         // Obtener saldo actual de la empresa
         $stmtSaldo = $db->prepare("SELECT saldo_pendiente FROM empresas_transporte WHERE id = :id FOR UPDATE");
@@ -569,6 +571,7 @@ try {
             ':saldo_nuevo' => $nuevo_saldo
         ]);
     }
+    */
     
     // =====================================================
     // ACTUALIZAR SOLICITUD CON DESGLOSE JSON

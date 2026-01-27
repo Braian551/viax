@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../../conductor/services/document_upload_service.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Panel arrastrable con información del conductor.
@@ -301,7 +303,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
         child: ClipOval(
           child: foto != null && foto.isNotEmpty
               ? Image.network(
-                  foto,
+                  DocumentUploadService.getDocumentUrl(foto),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Icon(
                     Icons.person,
@@ -444,7 +446,16 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     final color = vehiculo['color'] as String? ?? '';
     final placa = vehiculo['placa'] as String? ?? '---';
     final tipo = vehiculo['tipo'] as String? ?? 'auto';
-    final isMoto = tipo.toLowerCase().contains('moto');
+    final typeLower = tipo.toLowerCase().trim();
+    
+    IconData iconData;
+    if (typeLower == 'motocarro') {
+      iconData = FontAwesomeIcons.vanShuttle;
+    } else if (typeLower.contains('moto')) {
+      iconData = FontAwesomeIcons.motorcycle;
+    } else {
+      iconData = FontAwesomeIcons.car;
+    }
 
     return Row(
       children: [
@@ -462,10 +473,10 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
             ),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(
-            isMoto ? Icons.two_wheeler : Icons.directions_car_rounded,
+          child: FaIcon(
+            iconData,
             color: AppColors.accent,
-            size: 24,
+            size: 20,
           ),
         ),
         const SizedBox(width: 14),
