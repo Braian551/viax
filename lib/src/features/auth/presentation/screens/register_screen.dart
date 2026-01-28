@@ -204,9 +204,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                            ),
                          ),
                        ),
-                       RegisterStepIndicator(
-                         currentStep: _currentStep, 
-                         totalSteps: _totalSteps,
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 60),
+                         child: RegisterStepIndicator(
+                           currentStep: _currentStep, 
+                           totalSteps: _totalSteps,
+                         ),
                        ),
                     ],
                   ),

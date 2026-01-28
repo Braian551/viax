@@ -441,7 +441,7 @@ class _DashedLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15, top: 0, bottom: 0),
+      padding: const EdgeInsets.only(left: 23, top: 0, bottom: 0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: SizedBox(
