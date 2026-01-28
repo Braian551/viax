@@ -478,7 +478,7 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     final companyInfo = provider.companyInfo;
     
     final empresaName = companyInfo?['nombre'] ?? _conductorUser?['empresa_nombre'] ?? 'Empresa';
-    final empresaLogo = companyInfo?['logo_url'];
+    final empresaLogo = companyInfo?['logo_url'] ?? companyInfo?['logo'];
     final empresaLogoUrl = empresaLogo != null ? UserService.getR2ImageUrl(empresaLogo) : null;
 
     return Container(

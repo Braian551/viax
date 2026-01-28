@@ -810,7 +810,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                               // Logo con efecto glass
                               // Logo con efecto glass use R2 component
                               CompanyLogo(
-                                logoKey: _companyInfo?['logo_url'],
+                                logoKey: _companyInfo?['logo_url'] ?? _companyInfo?['logo'],
                                 nombreEmpresa: _companyInfo?['nombre'] ?? '',
                                 size: 44,
                                 fontSize: 18,

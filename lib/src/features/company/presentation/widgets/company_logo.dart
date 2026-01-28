@@ -27,28 +27,9 @@ class CompanyLogo extends StatelessWidget {
     return _buildPlaceholder();
   }
 
-  /// Construye la URL correcta para el logo
-  /// - Si ya es una URL completa (http/https), la usa directamente
-  /// - Si es una ruta de R2 (logos/, empresas/, profile/, imagenes/), usa r2_proxy.php
-  /// - Si no, concatena con baseUrl
   String _buildLogoUrl(String key) {
-    // Ya es URL completa
-    if (key.startsWith('http')) {
-      return key;
-    }
-    
-    // Patrones que indican almacenamiento R2
-    if (key.startsWith('logos/') || 
-        key.startsWith('empresas/') ||
-        key.startsWith('profile/') || 
-        key.startsWith('imagenes/') ||
-        key.startsWith('pdfs/')) {
-      return '${AppConfig.baseUrl}/r2_proxy.php?key=$key';
-    }
-    
-    // Para otros casos, intentar primero con r2_proxy
-    // ya que la mayoría de assets están en R2
-    return '${AppConfig.baseUrl}/r2_proxy.php?key=$key';
+    // Delegates to centralized service for R2 URL generation
+    return 'http://62.72.7.205/viax/backend/r2_proxy.php?key=$key';
   }
   // Re-implementing with ClipOval for better error handling
   Widget _buildImageWithFallback(String url) {
