@@ -4,7 +4,8 @@ import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import 'company_details_sheet.dart';
 import 'trip_price_formatter.dart';
-import '../../../../../shared/widgets/company_logo.dart';
+import '../../../../../shared/widgets/company_logo.dart' hide CompanyLogo;
+import '../../../../../features/company/presentation/widgets/company_logo.dart';
 
 class CompanyPickerSheet extends StatefulWidget {
   const CompanyPickerSheet({
@@ -347,13 +348,12 @@ class _CompanyItem extends StatelessWidget {
                           color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
                         ),
                       ),
-                      child: CompanyLogo(
-                        logoUrl: company.logoUrl,
-                        size: 56,
-                        borderRadius: 16,
-                        backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                        iconColor: isDark ? Colors.white24 : Colors.grey.shade300,
-                      ),
+                        child: CompanyLogo(
+                          logoKey: company.logoUrl,
+                          nombreEmpresa: company.nombre,
+                          size: 56,
+                          fontSize: 24, // Adjusted for larger size
+                        ),
                     ),
                   ),
                 ),
