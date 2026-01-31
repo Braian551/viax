@@ -119,7 +119,7 @@ class ConductorService {
       print('📡 Actualizando disponibilidad: conductorId=$conductorId, disponible=$disponible');
       
       final response = await http.post(
-        Uri.parse('$baseUrl/conductor/actualizar_disponibilidad.php'),
+        Uri.parse('$baseUrl/actualizar_disponibilidad.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

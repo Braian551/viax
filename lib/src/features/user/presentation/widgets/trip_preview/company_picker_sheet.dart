@@ -4,6 +4,7 @@ import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import 'company_details_sheet.dart';
 import 'trip_price_formatter.dart';
+import '../../../../../shared/widgets/company_logo.dart';
 
 class CompanyPickerSheet extends StatefulWidget {
   const CompanyPickerSheet({
@@ -332,7 +333,8 @@ class _CompanyItem extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                        // Background handled by CompanyLogo but we keep this for the shadow container
+                        color: Colors.transparent, 
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -345,22 +347,13 @@ class _CompanyItem extends StatelessWidget {
                           color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
                         ),
                       ),
-                      child: company.logoUrl != null && company.logoUrl!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                company.logoUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.business_rounded,
-                                  color: isDark ? Colors.white24 : Colors.grey.shade300,
-                                ),
-                              ),
-                            )
-                          : Icon(
-                              Icons.business_rounded,
-                              color: isDark ? Colors.white24 : Colors.grey.shade300,
-                            ),
+                      child: CompanyLogo(
+                        logoUrl: company.logoUrl,
+                        size: 56,
+                        borderRadius: 16,
+                        backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                        iconColor: isDark ? Colors.white24 : Colors.grey.shade300,
+                      ),
                     ),
                   ),
                 ),

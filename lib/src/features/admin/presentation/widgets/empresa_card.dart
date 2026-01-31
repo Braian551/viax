@@ -3,6 +3,7 @@ import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart'
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/shared/widgets/company_logo.dart';
 import 'package:shimmer/shimmer.dart';
 
 /// Card que muestra información resumida de una empresa
@@ -89,25 +90,12 @@ class EmpresaCard extends StatelessWidget {
     return Row(
       children: [
         // Logo o icono
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: _getStatusColor(empresa.estado).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    empresa.logoUrl!.startsWith('http') 
-                        ? empresa.logoUrl!
-                        : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildDefaultLogo(),
-                  ),
-                )
-              : _buildDefaultLogo(),
+        CompanyLogo(
+          logoUrl: empresa.logoUrl,
+          size: 50,
+          borderRadius: 12,
+          backgroundColor: _getStatusColor(empresa.estado).withValues(alpha: 0.15),
+          iconColor: _getStatusColor(empresa.estado),
         ),
         const SizedBox(width: 12),
         // Nombre y estado
@@ -143,13 +131,7 @@ class EmpresaCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultLogo() {
-    return Icon(
-      Icons.business_rounded,
-      color: _getStatusColor(empresa.estado),
-      size: 28,
-    );
-  }
+
 
   Widget _buildStatusBadge(BuildContext context) {
     final color = _getStatusColor(empresa.estado);

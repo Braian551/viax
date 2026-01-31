@@ -64,3 +64,9 @@ backend/config/.env
 backend/config/google_oauth.php
 **/backend/config/.env
 
+# Production deployment - Security
+deployment_notes.md
+server_credentials.txt
+*.pem
+*.key
+tmp_*.conf

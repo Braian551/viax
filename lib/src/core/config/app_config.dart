@@ -21,9 +21,14 @@ class AppConfig {
 
   // Variable de entorno para la URL del servidor
   // Configura esto al ejecutar: flutter run --dart-define=API_BASE_URL=http://tu-servidor.com
+  // 
+  // AMBIENTES DISPONIBLES:
+  // - Producción (VPS):     http://76.13.114.194  (root ya es /var/www/viax/backend)
+  // - Desarrollo local:     http://192.168.18.68/viax/backend
+  // - Emulador Android:     http://10.0.2.2/viax/backend
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.18.68/viax/backend', // Default para desarrollo
+    defaultValue: 'http://76.13.114.194', // PRODUCCIÓN por defecto (sin /viax/backend)
   );
 
   // Key global para manejo de SnackBars sin contexto
@@ -59,8 +64,9 @@ class AppConfig {
 
     // Para desarrollo, probar varios candidatos
     const candidates = [
-      'http://192.168.18.68/viax/backend',
-      'http://10.0.2.2/viax/backend',
+      'http://76.13.114.194',                 // Producción VPS (sin sufijo)
+      'http://192.168.18.68/viax/backend',    // Desarrollo local
+      'http://10.0.2.2/viax/backend',         // Emulador Android
       'http://127.0.0.1/viax/backend',
       'http://localhost/viax/backend',
     ];
