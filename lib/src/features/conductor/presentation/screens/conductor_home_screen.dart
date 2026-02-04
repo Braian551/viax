@@ -768,7 +768,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     return PreferredSize(
-      preferredSize: const Size.fromHeight(80),
+      preferredSize: const Size.fromHeight(100),
       child: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
@@ -781,7 +781,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 children: [
                   // Contenedor principal con efecto glass

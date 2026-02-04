@@ -264,7 +264,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   PreferredSizeWidget _buildAppBar(bool isDark) {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(90),
+      preferredSize: const Size.fromHeight(110),
       child: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -274,7 +274,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
         ),
         flexibleSpace: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
                 // Contenedor principal con efecto glass (más ancho)
