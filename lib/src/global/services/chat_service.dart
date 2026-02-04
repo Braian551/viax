@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
+import '../../core/utils/date_time_utils.dart';
 
 /// Modelo de mensaje de chat
 class ChatMessage {
@@ -44,10 +45,8 @@ class ChatMessage {
       mensaje: json['mensaje'] as String,
       tipoMensaje: json['tipo_mensaje'] as String? ?? 'texto',
       leido: json['leido'] as bool? ?? false,
-      leidoEn: json['leido_en'] != null
-          ? DateTime.tryParse(json['leido_en'] as String)
-          : null,
-      fechaCreacion: DateTime.parse(json['fecha_creacion'] as String),
+      leidoEn: DateTimeUtils.parseServerDate(json['leido_en']?.toString()),
+      fechaCreacion: DateTimeUtils.parseServerDateOrNow(json['fecha_creacion']?.toString()),
       remitenteNombre: json['remitente']?['nombre'] as String?,
       remitenteFoto: json['remitente']?['foto'] as String?,
     );
@@ -210,7 +209,7 @@ class ChatService {
             mensaje: msgData['mensaje'] as String,
             tipoMensaje: msgData['tipo_mensaje'] as String,
             leido: false,
-            fechaCreacion: DateTime.parse(msgData['fecha_creacion'] as String),
+            fechaCreacion: DateTimeUtils.parseServerDateOrNow(msgData['fecha_creacion']?.toString()),
           );
         } else {
           throw Exception(data['message'] ?? 'Error al enviar mensaje');

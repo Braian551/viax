@@ -45,8 +45,12 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Ignore backend vendor directory
-backend/vendor/
+# ============================================
+# Backend - Es un repositorio separado
+# ============================================
+# El backend tiene su propio repositorio git: git@github.com:Braian551/viax_backend.git
+# NO debe ser parte del repositorio de la app Flutter
+backend/
 
 # ============================================
 # Security - API Keys and Environment Config

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../services/user_trips_service.dart';
 import '../trip_preview/trip_price_formatter.dart';
@@ -436,11 +437,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    final months = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    // Usar DateTimeUtils para formatear fechas ya convertidas a hora local
+    return DateTimeUtils.formatForHistoryCard(date);
   }
 }

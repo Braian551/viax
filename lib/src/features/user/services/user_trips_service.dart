@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/utils/date_time_utils.dart';
 
 /// Modelo para el desglose de precio de un viaje (para el usuario)
 class UserPriceBreakdownModel {
@@ -202,15 +203,10 @@ class UserTripModel {
       vehiculo: vehiculo,
       calificacionDada: json['calificacion_dada'],
       comentarioDado: json['comentario_dado'],
-      fechaSolicitud: json['fecha_solicitud'] != null 
-          ? DateTime.tryParse(json['fecha_solicitud']) 
-          : null,
-      fechaAceptado: json['fecha_aceptado'] != null 
-          ? DateTime.tryParse(json['fecha_aceptado']) 
-          : null,
-      fechaCompletado: json['fecha_completado'] != null 
-          ? DateTime.tryParse(json['fecha_completado']) 
-          : null,
+      // Usar DateTimeUtils para parsear fechas del servidor (UTC) a hora local
+      fechaSolicitud: DateTimeUtils.parseServerDate(json['fecha_solicitud']),
+      fechaAceptado: DateTimeUtils.parseServerDate(json['fecha_aceptado']),
+      fechaCompletado: DateTimeUtils.parseServerDate(json['fecha_completado']),
     );
   }
 

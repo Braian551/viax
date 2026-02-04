@@ -1,4 +1,5 @@
 ﻿import '../../domain/entities/trip.dart';
+import '../../../../core/utils/date_time_utils.dart';
 
 /// Modelo de Datos (DTO) para Trip
 /// 
@@ -41,16 +42,11 @@ class TripModel extends Trip {
       precioFinal: _parseDouble(json['precio_final']),
       distanciaKm: _parseDouble(json['distancia_km']),
       duracionEstimadaMinutos: _parseInt(json['duracion_estimada_minutos']),
-      fechaSolicitud: DateTime.parse(json['fecha_solicitud']),
-      fechaAceptacion: json['fecha_aceptacion'] != null
-          ? DateTime.parse(json['fecha_aceptacion'])
-          : null,
-      fechaInicio: json['fecha_inicio'] != null
-          ? DateTime.parse(json['fecha_inicio'])
-          : null,
-      fechaFin: json['fecha_fin'] != null
-          ? DateTime.parse(json['fecha_fin'])
-          : null,
+      // Usar DateTimeUtils para parsear fechas del servidor (UTC) a hora local
+      fechaSolicitud: DateTimeUtils.parseServerDateOrNow(json['fecha_solicitud']),
+      fechaAceptacion: DateTimeUtils.parseServerDate(json['fecha_aceptacion']),
+      fechaInicio: DateTimeUtils.parseServerDate(json['fecha_inicio']),
+      fechaFin: DateTimeUtils.parseServerDate(json['fecha_fin']),
       calificacionConductor: _parseInt(json['calificacion_conductor']),
       calificacionUsuario: _parseInt(json['calificacion_usuario']),
       comentarioConductor: json['comentario_conductor'],

@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/utils/date_time_utils.dart';
 
 /// Modelo para el desglose de precio de un viaje
 class PriceBreakdownModel {
@@ -152,14 +153,10 @@ class TripModel {
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
     try {
+      // Usar DateTimeUtils para parsear fechas del servidor (UTC) a hora local
       DateTime? parseDate(dynamic value) {
         if (value == null || value.toString().isEmpty) return null;
-        try {
-          return DateTime.parse(value.toString());
-        } catch (e) {
-          print('Error parsing date: $value - $e');
-          return null;
-        }
+        return DateTimeUtils.parseServerDate(value.toString());
       }
 
       double? parseDouble(dynamic value) {
