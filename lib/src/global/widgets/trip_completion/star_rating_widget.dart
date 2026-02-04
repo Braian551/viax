@@ -118,36 +118,39 @@ class _StarRatingWidgetState extends State<StarRatingWidget>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) {
-            final starNumber = index + 1;
-            final isSelected = starNumber <= _currentRating;
-            final isAnimating = _animatingIndex == index;
-
-            return GestureDetector(
-              onTap: () => _setRating(starNumber),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: widget.spacing),
-                child: AnimatedScale(
-                  scale: isAnimating ? 1.3 : (isSelected ? 1.1 : 1.0),
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.elasticOut,
-                  child: AnimatedContainer(
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final starNumber = index + 1;
+              final isSelected = starNumber <= _currentRating;
+              final isAnimating = _animatingIndex == index;
+          
+              return GestureDetector(
+                onTap: () => _setRating(starNumber),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: widget.spacing),
+                  child: AnimatedScale(
+                    scale: isAnimating ? 1.3 : (isSelected ? 1.1 : 1.0),
                     duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      isSelected 
-                          ? Icons.star_rounded 
-                          : Icons.star_outline_rounded,
-                      color: isSelected ? activeColor : inactiveColor,
-                      size: widget.starSize,
+                    curve: Curves.elasticOut,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        isSelected 
+                            ? Icons.star_rounded 
+                            : Icons.star_outline_rounded,
+                        color: isSelected ? activeColor : inactiveColor,
+                        size: widget.starSize,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
         if (widget.showLabel) ...[
           const SizedBox(height: 12),

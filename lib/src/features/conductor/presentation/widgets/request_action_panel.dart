@@ -590,48 +590,51 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             ),
           ),
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _infoChip(
-                icon: Icons.route_rounded,
-                value: '${widget.request.distanciaKm.toStringAsFixed(1)} km',
-                color: AppColors.primary,
-                isDark: isDark,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _infoChip(
+                      icon: Icons.route_rounded,
+                      value: '${widget.request.distanciaKm.toStringAsFixed(1)} km',
+                      color: AppColors.primary,
+                      isDark: isDark,
+                    ),
+                    Container(
+                      width: 1,
+                      height: 20,
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.grey.withValues(alpha: 0.3),
+                    ),
+                    _infoChip(
+                      icon: Icons.schedule_rounded,
+                      value: '${widget.request.duracionMinutos} min',
+                      color: AppColors.primary,
+                      isDark: isDark,
+                    ),
+                    Container(
+                      width: 1,
+                      height: 20,
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.grey.withValues(alpha: 0.3),
+                    ),
+                    _infoChip(
+                      icon: Icons.navigation_rounded,
+                      value: etaMinutos > 0
+                          ? '$etaMinutos min'
+                          : '${distanciaConductorCliente.toStringAsFixed(1)} km',
+                      color: const Color(0xFF4CAF50),
+                      label: etaMinutos > 0 ? 'hasta cliente' : 'distancia',
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
               ),
-              Container(
-                width: 1,
-                height: 20,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.grey.withValues(alpha: 0.3),
-              ),
-              _infoChip(
-                icon: Icons.schedule_rounded,
-                value: '${widget.request.duracionMinutos} min',
-                color: AppColors.primary,
-                isDark: isDark,
-              ),
-              Container(
-                width: 1,
-                height: 20,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.grey.withValues(alpha: 0.3),
-              ),
-              _infoChip(
-                icon: Icons.navigation_rounded,
-                value: etaMinutos > 0
-                    ? '$etaMinutos min'
-                    : '${distanciaConductorCliente.toStringAsFixed(1)} km',
-                color: const Color(0xFF4CAF50),
-                label: etaMinutos > 0 ? 'hasta cliente' : 'distancia',
-                isDark: isDark,
-              ),
-            ],
-          ),
         ],
       ),
     );
