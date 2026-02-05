@@ -6,6 +6,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/conductor/services/conductor_service.dart';
 import 'package:viax/src/features/conductor/services/trip_tracking_service.dart';
+import 'package:viax/src/features/conductor/services/resilient_conductor_service.dart';
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
@@ -73,6 +74,10 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Timer? _pollingTimer; // Timer para polling
   DateTime? _tripStartTime; // Para calcular duración real
   DateTime _lastBackendUpdate = DateTime.now(); // Rate limiting para backend
+  
+  // Estados de carga para acciones (evitar doble tap y dar feedback)
+  bool _isProcessingAction = false;
+  String? _processingActionType; // 'arrived', 'start', 'finish'
 
   late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
   late final StreamSubscription<int> _unreadSubscription;
@@ -380,38 +385,70 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
 
   /// Notifica al backend que el conductor llegó al punto de recogida.
   Future<void> _onArrivedPickup() async {
+    // Prevenir doble tap
+    if (_isProcessingAction) return;
+    
+    setState(() {
+      _isProcessingAction = true;
+      _processingActionType = 'arrived';
+    });
+    
     if (widget.solicitudId != null) {
       try {
-        await ConductorService.notificarLlegadaRecogida(
+        // Usar servicio resiliente con reintentos
+        await ResilientConductorService().notificarLlegadaRecogidaResilient(
           conductorId: widget.conductorId,
           solicitudId: widget.solicitudId!,
         );
       } catch (e) {
         debugPrint('Error notificando llegada: $e');
+        // Continuar de todos modos (optimistic update)
       }
     }
 
     await _controller.onArrivedPickup();
     if (!mounted || _controller.isDisposed) return;
 
+    setState(() {
+      _isProcessingAction = false;
+      _processingActionType = null;
+    });
+    
     _showStatus('¡Llegaste al punto! Espera al pasajero', AppColors.accent);
   }
 
   /// Inicia el viaje cuando el cliente se sube al vehículo.
   Future<void> _onStartTrip() async {
+    // Prevenir doble tap
+    if (_isProcessingAction) return;
+    
+    setState(() {
+      _isProcessingAction = true;
+      _processingActionType = 'start';
+    });
+    
     if (widget.solicitudId != null) {
       try {
-        final success = await ConductorService.iniciarViaje(
+        // Usar servicio resiliente
+        final success = await ResilientConductorService().iniciarViajeResilient(
           conductorId: widget.conductorId,
           solicitudId: widget.solicitudId!,
         );
         if (!success) {
           _showStatus('Error al iniciar el viaje', AppColors.error);
+          setState(() {
+            _isProcessingAction = false;
+            _processingActionType = null;
+          });
           return;
         }
       } catch (e) {
         debugPrint('Error iniciando viaje: $e');
         _showStatus('Error al iniciar el viaje', AppColors.error);
+        setState(() {
+          _isProcessingAction = false;
+          _processingActionType = null;
+        });
         return;
       }
     }
@@ -432,11 +469,27 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       );
     }
 
+    setState(() {
+      _isProcessingAction = false;
+      _processingActionType = null;
+    });
+    
     _showStatus('¡Viaje iniciado! Navegando al destino', AppColors.success);
   }
 
   /// Finaliza el viaje cuando se llega al destino.
   Future<void> _onFinishTrip() async {
+    // Prevenir doble tap - CRÍTICO para evitar múltiples finalizaciones
+    if (_isProcessingAction) {
+      debugPrint('⚠️ Ignorando tap duplicado - acción en progreso');
+      return;
+    }
+    
+    setState(() {
+      _isProcessingAction = true;
+      _processingActionType = 'finish';
+    });
+    
     // ========== CALCULAR TIEMPO REAL DEL CRONÓMETRO ==========
     // El tiempo se mide desde "comenzar viaje" hasta "finalizar viaje"
     // Este es el tiempo REAL que el conductor usó para el viaje
@@ -466,26 +519,33 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
 
     if (widget.solicitudId != null) {
       try {
-        final success = await ConductorService.completarViaje(
+        // Usar servicio resiliente para garantizar entrega
+        final result = await ResilientConductorService().completarViajeResilient(
           conductorId: widget.conductorId,
           solicitudId: widget.solicitudId!,
           distanceKm: distanciaKm,
           elapsedMinutes: duracionMin,
         );
-        if (!success) {
-          _showStatus('Error al finalizar el viaje', AppColors.error);
-          return;
+        
+        if (result['success'] != true && result['pending'] != true) {
+          _showStatus('Error al finalizar el viaje. Reintentando...', AppColors.warning);
+          // No retornar, continuar con la navegación de todos modos (optimistic)
         }
       } catch (e) {
         debugPrint('Error finalizando viaje: $e');
-        _showStatus('Error al finalizar el viaje', AppColors.error);
-        return;
+        _showStatus('Error al finalizar. Se sincronizará después.', AppColors.warning);
+        // Continuar de todos modos - la operación se sincronizará después
       }
     }
 
     // Limpiar persistencia
     await TripPersistenceService().clearActiveTrip();
     ActiveTripNavigationService().clearActiveTrip();
+
+    setState(() {
+      _isProcessingAction = false;
+      _processingActionType = null;
+    });
 
     if (!mounted) return;
 
@@ -1000,7 +1060,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       etaMinutes: _controller.etaMinutes,
       distanceKm: displayDistance,
       arrivalTime: arrivalLabel,
-      isLoading: _controller.loadingRoute,
+      isLoading: _isProcessingAction || _controller.loadingRoute,
       onArrivedPickup: _onArrivedPickup,
       onStartTrip: _onStartTrip,
       onFinishTrip: _onFinishTrip,

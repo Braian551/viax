@@ -7,6 +7,7 @@ import 'trip_price_formatter.dart';
 import 'company_selector_widget.dart'; // Mantener por compatibilidad o eliminar si ya no se usa
 import 'company_picker_sheet.dart';
 import '../../../domain/models/company_vehicle_models.dart';
+import '../../../../../global/services/auth/user_service.dart';
 
 class TripVehicleBottomSheet extends StatelessWidget {
   const TripVehicleBottomSheet({
@@ -473,7 +474,7 @@ class _VehicleListItem extends StatelessWidget {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
                                 child: Image.network(
-                                  selectedCompany.logoUrl!,
+                                  UserService.getR2ImageUrl(selectedCompany.logoUrl),
                                   width: 20,
                                   height: 20,
                                   fit: BoxFit.cover,

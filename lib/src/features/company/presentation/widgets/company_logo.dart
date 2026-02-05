@@ -28,27 +28,47 @@ class CompanyLogo extends StatelessWidget {
   }
 
   String _buildLogoUrl(String key) {
-    // If it's a full URL that points to our r2_proxy, we should normalize it
-    // to use the current AppConfig.baseUrl (fixing potential path/IP mismatches from backend)
+    String finalKey = key;
+
+    // Si viene con el formato antiguo de r2_proxy, extraemos la key real
     if (key.contains('r2_proxy.php') && key.contains('key=')) {
       try {
         final uri = Uri.parse(key);
         final extractedKey = uri.queryParameters['key'];
         if (extractedKey != null && extractedKey.isNotEmpty) {
-           return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(extractedKey)}';
+           finalKey = extractedKey;
         }
       } catch (e) {
         debugPrint('Error parsing logo URL: $e');
       }
     }
 
-    // If it's another full URL (e.g. external), return as is
-    if (key.startsWith('http')) {
-      return key;
+    // Si ya es una URL válida y no es legacy (localhost/192.168), retornarla
+    if (finalKey.startsWith('http') && 
+        !finalKey.contains('192.168.') && 
+        !finalKey.contains('localhost')) {
+      return finalKey;
     }
     
-    // Normal case: it's just the key path
-    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(key)}';
+    // Si es URL legacy, extraer solo el path
+    if (finalKey.startsWith('http')) {
+      final uri = Uri.tryParse(finalKey);
+      if (uri != null && uri.path.isNotEmpty) {
+        String path = uri.path;
+        if (path.startsWith('/viax/backend/')) {
+          path = path.substring('/viax/backend/'.length);
+        } else if (path.startsWith('/')) {
+          path = path.substring(1);
+        }
+        finalKey = path;
+      }
+    }
+    
+    // Remover slash inicial si existe
+    final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
+    
+    // Construir URL a través de r2_proxy.php
+    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
   }
   // Re-implementing with ClipOval for better error handling
   Widget _buildImageWithFallback(String url) {

@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import '../../../data/services/company_vehicle_service.dart';
+import '../../../../../global/services/auth/user_service.dart';
 
 /// Sheet para mostrar información detallada de una empresa - Rediseño Final Vibrant
 class CompanyDetailsSheet extends StatefulWidget {
@@ -184,7 +185,7 @@ class _CompanyDetailsSheetState extends State<CompanyDetailsSheet> {
               child: details.logoUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      child: Image.network(details.logoUrl!, fit: BoxFit.contain),
+                      child: Image.network(UserService.getR2ImageUrl(details.logoUrl), fit: BoxFit.contain),
                     )
                   : Icon(Icons.business_rounded, color: Colors.grey.shade400, size: 40),
             ),

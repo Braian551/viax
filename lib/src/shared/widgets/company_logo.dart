@@ -51,9 +51,42 @@ class CompanyLogo extends StatelessWidget {
   }
 
   String _getCorrectUrl(String url) {
-    if (url.startsWith('http')) {
-      return url;
+    String finalKey = url;
+
+    // Handle legacy r2_proxy.php URLs by extracting the R2 key
+    if (url.contains('r2_proxy.php') && url.contains('key=')) {
+      try {
+        final uri = Uri.parse(url);
+        final extractedKey = uri.queryParameters['key'];
+        if (extractedKey != null && extractedKey.isNotEmpty) {
+          finalKey = extractedKey;
+        }
+      } catch (_) {}
     }
-    return '${AppConfig.baseUrl}/$url';
+
+    // If already a valid full URL (not legacy localhost), return it
+    if (finalKey.startsWith('http') && !finalKey.contains('192.168.') && !finalKey.contains('localhost')) {
+      return finalKey;
+    }
+    
+    // If it's a legacy full URL, extract just the path
+    if (finalKey.startsWith('http')) {
+      final uri = Uri.tryParse(finalKey);
+      if (uri != null && uri.path.isNotEmpty) {
+        String path = uri.path;
+        if (path.startsWith('/viax/backend/')) {
+          path = path.substring('/viax/backend/'.length);
+        } else if (path.startsWith('/')) {
+          path = path.substring(1);
+        }
+        finalKey = path;
+      }
+    }
+    
+    // Remove leading slash if present
+    final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
+    
+    // Build URL through r2_proxy.php
+    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
   }
 }

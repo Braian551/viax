@@ -902,16 +902,53 @@ class UserService {
   /// Construir URL completa para una imagen de R2
   /// 
   /// [r2Key] - Clave/path de la imagen en R2 (ej: "profile/123_1234567890.jpg")
+  /// También maneja URLs legacy con r2_proxy.php de dominios antiguos
   /// Retorna la URL completa para acceder a la imagen via r2_proxy.php
   static String getR2ImageUrl(String? r2Key) {
     if (r2Key == null || r2Key.isEmpty) {
       return '';
     }
-    // Si ya es una URL completa, retornarla
-    if (r2Key.startsWith('http://') || r2Key.startsWith('https://')) {
-      return r2Key;
+    
+    String finalKey = r2Key;
+    
+    // Handle legacy r2_proxy.php URLs by extracting the R2 key
+    if (r2Key.contains('r2_proxy.php') && r2Key.contains('key=')) {
+      try {
+        final uri = Uri.parse(r2Key);
+        final extractedKey = uri.queryParameters['key'];
+        if (extractedKey != null && extractedKey.isNotEmpty) {
+          finalKey = extractedKey;
+        }
+      } catch (_) {}
     }
-    // Construir URL del proxy
-    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(r2Key)}';
+    
+    // If already a valid full URL (not legacy localhost/192.168), return it
+    if (finalKey.startsWith('http') && 
+        !finalKey.contains('192.168.') && 
+        !finalKey.contains('localhost') &&
+        !finalKey.contains('r2_proxy.php')) {
+      return finalKey;
+    }
+    
+    // If it's a legacy full URL, extract just the path
+    if (finalKey.startsWith('http')) {
+      final uri = Uri.tryParse(finalKey);
+      if (uri != null && uri.path.isNotEmpty) {
+        String path = uri.path;
+        // Remove /viax/backend prefix if present
+        if (path.startsWith('/viax/backend/')) {
+          path = path.substring('/viax/backend/'.length);
+        } else if (path.startsWith('/')) {
+          path = path.substring(1);
+        }
+        finalKey = path;
+      }
+    }
+    
+    // Remove leading slash if present
+    final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
+    
+    // Build URL through r2_proxy.php
+    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
   }
 }

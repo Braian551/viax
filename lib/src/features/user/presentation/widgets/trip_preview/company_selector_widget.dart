@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
+import '../../../../../global/services/auth/user_service.dart';
 
 /// Widget para seleccionar empresa manualmente
 /// Muestra chips con las empresas disponibles para el tipo de vehículo seleccionado
@@ -120,7 +121,7 @@ class _CompanyChip extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
-                  empresa.logoUrl!,
+                  UserService.getR2ImageUrl(empresa.logoUrl),
                   width: isCompact ? 18 : 24,
                   height: isCompact ? 18 : 24,
                   fit: BoxFit.cover,
