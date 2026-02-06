@@ -74,3 +74,31 @@ server_credentials.txt
 *.pem
 *.key
 tmp_*.conf
+
+# ============================================
+# Firebase / Sensitive configs
+# ============================================
+firebase.json
+google-services.json
+GoogleService-Info.plist
+
+# ============================================
+# Backend deployment configs (backend has its own repo)
+# ============================================
+render.yaml
+nixpacks.toml
+railway.json
+.htaccess
+
+# ============================================
+# Root-level PHP/PS1 scripts (tests, checks, migrations)
+# ============================================
+/*.php
+/*.ps1
+
+# ============================================
+# Misc files that should not be in repo
+# ============================================
+query
+cotizacion_proyecto_viax.html
+ -/
