@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'system_overlay_service.dart';
 
 /// Datos del viaje activo necesarios para navegar de vuelta
@@ -39,6 +40,40 @@ class ActiveTripData {
 
   bool get isClient => userRole == 'cliente';
   bool get isDriver => userRole == 'conductor';
+
+  ActiveTripData copyWith({
+    int? solicitudId,
+    int? userId,
+    String? userRole,
+    double? origenLat,
+    double? origenLng,
+    String? direccionOrigen,
+    double? destinoLat,
+    double? destinoLng,
+    String? direccionDestino,
+    Map<String, dynamic>? conductorInfo,
+    Map<String, dynamic>? clienteInfo,
+    String? clienteNombre,
+    String? clienteFoto,
+    String? initialTripStatus,
+  }) {
+    return ActiveTripData(
+      solicitudId: solicitudId ?? this.solicitudId,
+      userId: userId ?? this.userId,
+      userRole: userRole ?? this.userRole,
+      origenLat: origenLat ?? this.origenLat,
+      origenLng: origenLng ?? this.origenLng,
+      direccionOrigen: direccionOrigen ?? this.direccionOrigen,
+      destinoLat: destinoLat ?? this.destinoLat,
+      destinoLng: destinoLng ?? this.destinoLng,
+      direccionDestino: direccionDestino ?? this.direccionDestino,
+      conductorInfo: conductorInfo ?? this.conductorInfo,
+      clienteInfo: clienteInfo ?? this.clienteInfo,
+      clienteNombre: clienteNombre ?? this.clienteNombre,
+      clienteFoto: clienteFoto ?? this.clienteFoto,
+      initialTripStatus: initialTripStatus ?? this.initialTripStatus,
+    );
+  }
 }
 
 /// Servicio singleton que gestiona la navegación cuando hay un viaje activo.
@@ -47,6 +82,13 @@ class ActiveTripData {
 /// en curso, mostrando un FAB flotante para regresar a la pantalla del viaje.
 /// También maneja el overlay del sistema cuando el usuario sale de la app.
 class ActiveTripNavigationService extends ChangeNotifier {
+  static const Set<String> _clientMeetingPointStates = {
+    'aceptada',
+    'conductor_asignado',
+    'en_camino',
+    'conductor_llego',
+  };
+
   // Singleton
   static final ActiveTripNavigationService _instance = ActiveTripNavigationService._internal();
   factory ActiveTripNavigationService() => _instance;
@@ -116,6 +158,18 @@ class ActiveTripNavigationService extends ChangeNotifier {
     _isOnTripScreen = true;
     _notifyChange();
     debugPrint('🚗 [ActiveTripNav] Viaje registrado: ${tripData.solicitudId}');
+  }
+
+  /// Actualiza el estado del viaje activo sin perder contexto de navegación
+  void updateActiveTripStatus(String? status) {
+    if (_activeTripData == null || status == null || status.isEmpty) return;
+
+    final currentStatus = _activeTripData!.initialTripStatus;
+    if (currentStatus == status) return;
+
+    _activeTripData = _activeTripData!.copyWith(initialTripStatus: status);
+    _notifyChange();
+    debugPrint('🔄 [ActiveTripNav] Estado actualizado: $status');
   }
 
   /// Actualiza el estado cuando el usuario entra/sale de la pantalla de viaje
@@ -191,9 +245,29 @@ class ActiveTripNavigationService extends ChangeNotifier {
   }
 
   void _navigateToClientTrip(ActiveTripData data) {
+    final shouldOpenMeetingPoint = _clientMeetingPointStates.contains(data.initialTripStatus);
+
+    if (shouldOpenMeetingPoint) {
+      navigatorKey.currentState?.pushNamed(
+        RouteNames.userTripAccepted,
+        arguments: {
+          'solicitudId': data.solicitudId,
+          'clienteId': data.userId,
+          'latitudOrigen': data.origenLat,
+          'longitudOrigen': data.origenLng,
+          'direccionOrigen': data.direccionOrigen,
+          'latitudDestino': data.destinoLat,
+          'longitudDestino': data.destinoLng,
+          'direccionDestino': data.direccionDestino,
+          'conductorInfo': data.conductorInfo,
+        },
+      );
+      return;
+    }
+
     // Usar key global para asegurar que navegamos en el navigator principal
     navigatorKey.currentState?.pushNamed(
-      '/user/active-trip',
+      RouteNames.userActiveTrip,
       arguments: {
         'solicitudId': data.solicitudId,
         'clienteId': data.userId,
@@ -211,7 +285,7 @@ class ActiveTripNavigationService extends ChangeNotifier {
   void _navigateToDriverTrip(ActiveTripData data) {
     // Usar key global para asegurar que navegamos en el navigator principal
     navigatorKey.currentState?.pushNamed(
-      '/conductor/active-trip',
+      RouteNames.conductorActiveTrip,
       arguments: {
         'conductorId': data.userId,
         'solicitudId': data.solicitudId,

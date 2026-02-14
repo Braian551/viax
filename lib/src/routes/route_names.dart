@@ -63,4 +63,5 @@
   
   // Rutas de viaje activo
   static const String userActiveTrip = '/user/active-trip';
+  static const String userTripAccepted = '/user/trip-accepted';
 }

@@ -7,6 +7,7 @@ import 'package:viax/src/features/auth/presentation/widgets/logo_transition.dart
 import 'package:viax/src/global/services/trip_persistence_service.dart';
 import 'package:viax/src/features/user/services/trip_request_service.dart';
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/active_trip_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 
@@ -251,18 +252,20 @@ class _SplashScreenState extends State<SplashScreen>
 
       // 3. Procesar redirección si se encontró un viaje
       if (tripToRecover != null && userRole != null) {
-          final estado = tripToRecover['estado'];
+         final trip = tripToRecover;
+         final estado = trip['estado'];
           if (estado == 'en_curso' || estado == 'conductor_llego' || estado == 'recogido' || estado == 'aceptada' || estado == 'en_camino') {
             debugPrint('✅ Viaje activo validado ($estado). Redirigiendo como $userRole...');
             
             if (mounted) {
               if (userRole == 'conductor') {
                  // Recuperar datos para conductor
-                 int conductorId = int.tryParse(tripToRecover!['conductor_id']?.toString() ?? '') ?? 0;
+              int conductorId = int.tryParse(trip['conductor_id']?.toString() ?? '') ?? 0;
                  
                  // Fallback: Si no viene el ID del conductor en el viaje, usar el de la sesión
                  if (conductorId == 0) {
                     final session = await UserService.getSavedSession();
+                if (!mounted) return;
                     if (session != null && session['tipo_usuario'] == 'conductor') {
                        conductorId = session['id'];
                     }
@@ -272,36 +275,69 @@ class _SplashScreenState extends State<SplashScreen>
                    MaterialPageRoute(
                      builder: (context) => ConductorActiveTripScreen(
                        conductorId: conductorId,
-                       solicitudId: int.tryParse(tripToRecover!['id']?.toString() ?? '') ?? 0,
-                       clienteId: int.tryParse(tripToRecover!['cliente_id']?.toString() ?? '') ?? 0,
-                       origenLat: double.tryParse(tripToRecover!['origen']?['latitud']?.toString() ?? '') ?? 0.0,
-                       origenLng: double.tryParse(tripToRecover!['origen']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionOrigen: tripToRecover!['origen']?['direccion']?.toString() ?? '',
-                       destinoLat: double.tryParse(tripToRecover!['destino']?['latitud']?.toString() ?? '') ?? 0.0,
-                       destinoLng: double.tryParse(tripToRecover!['destino']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionDestino: tripToRecover!['destino']?['direccion']?.toString() ?? '',
-                       initialTripStatus: tripToRecover['estado'],
+                       solicitudId: int.tryParse(trip['id']?.toString() ?? '') ?? 0,
+                       clienteId: int.tryParse(trip['cliente_id']?.toString() ?? '') ?? 0,
+                       origenLat: double.tryParse(trip['origen']?['latitud']?.toString() ?? '') ?? 0.0,
+                       origenLng: double.tryParse(trip['origen']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionOrigen: trip['origen']?['direccion']?.toString() ?? '',
+                       destinoLat: double.tryParse(trip['destino']?['latitud']?.toString() ?? '') ?? 0.0,
+                       destinoLng: double.tryParse(trip['destino']?['longitud']?.toString() ?? '') ?? 0.0,
+                       direccionDestino: trip['destino']?['direccion']?.toString() ?? '',
+                       initialTripStatus: trip['estado'],
                      ),
                    ),
                  );
                  return;
               } else {
                 // Recuperar datos para cliente
-                Navigator.of(context).pushReplacement(
-                   MaterialPageRoute(
-                     builder: (context) => UserActiveTripScreen(
-                       solicitudId: int.tryParse(tripToRecover!['id']?.toString() ?? '') ?? 0,
-                       clienteId: int.tryParse(tripToRecover!['cliente_id']?.toString() ?? '') ?? 0,
-                       origenLat: double.tryParse(tripToRecover!['origen']?['latitud']?.toString() ?? '') ?? 0.0,
-                       origenLng: double.tryParse(tripToRecover!['origen']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionOrigen: tripToRecover!['origen']?['direccion']?.toString() ?? '',
-                       destinoLat: double.tryParse(tripToRecover!['destino']?['latitud']?.toString() ?? '') ?? 0.0,
-                       destinoLng: double.tryParse(tripToRecover!['destino']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionDestino: tripToRecover!['destino']?['direccion']?.toString() ?? '',
-                       conductorInfo: conductorInfo,
-                     ),
-                   ),
-                 );
+                final tripId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
+                final clienteId = int.tryParse(trip['cliente_id']?.toString() ?? '') ?? 0;
+                final origenLat = double.tryParse(trip['origen']?['latitud']?.toString() ?? '') ?? 0.0;
+                final origenLng = double.tryParse(trip['origen']?['longitud']?.toString() ?? '') ?? 0.0;
+                final direccionOrigen = trip['origen']?['direccion']?.toString() ?? '';
+                final destinoLat = double.tryParse(trip['destino']?['latitud']?.toString() ?? '') ?? 0.0;
+                final destinoLng = double.tryParse(trip['destino']?['longitud']?.toString() ?? '') ?? 0.0;
+                final direccionDestino = trip['destino']?['direccion']?.toString() ?? '';
+
+                final shouldGoToMeetingPoint =
+                    estado == 'aceptada' ||
+                    estado == 'conductor_asignado' ||
+                    estado == 'en_camino' ||
+                    estado == 'conductor_llego';
+
+                if (shouldGoToMeetingPoint) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => UserTripAcceptedScreen(
+                        solicitudId: tripId,
+                        clienteId: clienteId,
+                        latitudOrigen: origenLat,
+                        longitudOrigen: origenLng,
+                        direccionOrigen: direccionOrigen,
+                        latitudDestino: destinoLat,
+                        longitudDestino: destinoLng,
+                        direccionDestino: direccionDestino,
+                        conductorInfo: conductorInfo,
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => UserActiveTripScreen(
+                        solicitudId: tripId,
+                        clienteId: clienteId,
+                        origenLat: origenLat,
+                        origenLng: origenLng,
+                        direccionOrigen: direccionOrigen,
+                        destinoLat: destinoLat,
+                        destinoLng: destinoLng,
+                        direccionDestino: direccionDestino,
+                        conductorInfo: conductorInfo,
+                      ),
+                    ),
+                  );
+                }
                  return;
               }
             }

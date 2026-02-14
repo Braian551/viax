@@ -9,6 +9,7 @@ import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/local_notification_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
+import '../../../../global/services/active_trip_navigation_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
@@ -111,11 +112,42 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     super.initState();
     _initAnimations();
     _conductor = widget.conductorInfo;
+    _registerActiveTripNavigation();
     _startLocationTracking();
     _startStatusPolling();
     _startChatPolling(); // Iniciar polling del chat
 
 
+  }
+
+  void _registerActiveTripNavigation({String initialStatus = 'aceptada'}) {
+    ActiveTripNavigationService().registerActiveTrip(
+      ActiveTripData(
+        solicitudId: widget.solicitudId,
+        userId: widget.clienteId,
+        userRole: 'cliente',
+        origenLat: widget.latitudOrigen,
+        origenLng: widget.longitudOrigen,
+        direccionOrigen: widget.direccionOrigen,
+        destinoLat: widget.latitudDestino,
+        destinoLng: widget.longitudDestino,
+        direccionDestino: widget.direccionDestino,
+        conductorInfo: _conductor,
+        initialTripStatus: initialStatus,
+      ),
+    );
+  }
+
+  void _syncActiveTripNavigationState(String? estado) {
+    if (estado == null || estado.isEmpty) return;
+
+    final navService = ActiveTripNavigationService();
+    if (!navService.hasActiveTrip) {
+      _registerActiveTripNavigation(initialStatus: estado);
+      return;
+    }
+
+    navService.updateActiveTripStatus(estado);
   }
 
   /// Iniciar el polling del chat para recibir mensajes
@@ -582,6 +614,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           }
         });
 
+        _syncActiveTripNavigationState(estado);
+
 
 
         // Actualizar ruta si la ubicación cambió
@@ -777,6 +811,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         actions: [
           ElevatedButton(
             onPressed: () {
+              ActiveTripNavigationService().clearActiveTrip();
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
@@ -866,6 +901,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         widget.solicitudId,
       );
       if (mounted && success) {
+        ActiveTripNavigationService().clearActiveTrip();
         Navigator.pop(context);
       }
     }
@@ -873,6 +909,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   @override
   void dispose() {
+    ActiveTripNavigationService().setOnTripScreen(false);
+
     // Detener sonido si está reproduciéndose
     _stopDriverArrivedSound();
 

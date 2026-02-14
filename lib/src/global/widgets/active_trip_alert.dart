@@ -98,8 +98,13 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
             return double.tryParse(value.toString()) ?? 0.0;
           }
           
-          final navKey = ActiveTripNavigationService.navigatorKey;
-          final navigator = navKey.currentState ?? Navigator.of(widget.parentContext);
+          final navigator = ActiveTripNavigationService.navigatorKey.currentState;
+          if (navigator == null) {
+            if (mounted) {
+              Navigator.pop(context);
+            }
+            return;
+          }
 
           // Navegar a la pantalla correcta según el rol
           if (widget.isConductor) {
@@ -108,7 +113,6 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
               arguments: {
                 'conductorId': widget.userId,
                 'solicitudId': parseInt(tripData['id']),
-                'conductorId': widget.userId,
                 'origenLat': parseDouble(tripData['latitud_recogida'] ?? tripData['latitud_origen']),
                 'origenLng': parseDouble(tripData['longitud_recogida'] ?? tripData['longitud_origen']),
                 'destinoLat': parseDouble(tripData['latitud_destino']),
@@ -124,6 +128,11 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
           } else {
             // Para clientes, verificar el estado del viaje
             final tripStatus = tripData['estado']?.toString() ?? '';
+            final shouldGoToMeetingPoint =
+                tripStatus == 'aceptada' ||
+                tripStatus == 'conductor_asignado' ||
+                tripStatus == 'en_camino' ||
+                tripStatus == 'conductor_llego';
             
             if (tripStatus == 'pendiente') {
               // Viaje esperando conductor - ir a WaitingForDriverScreen
@@ -134,6 +143,21 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
                   'cliente_id': widget.userId,
                   'direccion_origen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
                   'direccion_destino': tripData['direccion_destino'] ?? '',
+                },
+              );
+            } else if (shouldGoToMeetingPoint) {
+              await navigator.pushNamed(
+                RouteNames.userTripAccepted,
+                arguments: {
+                  'solicitudId': parseInt(tripData['id']),
+                  'clienteId': widget.userId,
+                  'latitudOrigen': parseDouble(tripData['latitud_recogida'] ?? tripData['latitud_origen']),
+                  'longitudOrigen': parseDouble(tripData['longitud_recogida'] ?? tripData['longitud_origen']),
+                  'direccionOrigen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
+                  'latitudDestino': parseDouble(tripData['latitud_destino']),
+                  'longitudDestino': parseDouble(tripData['longitud_destino']),
+                  'direccionDestino': tripData['direccion_destino'] ?? '',
+                  'conductorInfo': tripData['conductor'],
                 },
               );
             } else {

@@ -138,6 +138,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         destinoLng: widget.destinoLng,
         direccionDestino: widget.direccionDestino,
         conductorInfo: widget.conductorInfo,
+        initialTripStatus: _tripState,
       ),
     );
   }
@@ -500,6 +501,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         // Solo actualizar UI si seguimos activos
         if (mounted && !_tripCompleted) {
           final previousState = _tripState;
+          if (estado != null && estado.isNotEmpty) {
+            ActiveTripNavigationService().updateActiveTripStatus(estado);
+          }
           setState(() {
             _tripState = estado ?? 'en_curso';
             if (conductor != null) {

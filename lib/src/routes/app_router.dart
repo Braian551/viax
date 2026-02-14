@@ -8,6 +8,7 @@ import 'package:viax/src/features/user/presentation/screens/trip_history_screen.
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/waiting_for_driver_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -221,6 +222,26 @@ class AppRouter {
               direccionOrigen: args?['direccionOrigen'] ?? 'Origen',
               destinoLat: (args?['destinoLat'] as num?)?.toDouble() ?? 0,
               destinoLng: (args?['destinoLng'] as num?)?.toDouble() ?? 0,
+              direccionDestino: args?['direccionDestino'] ?? 'Destino',
+              conductorInfo: args?['conductorInfo'],
+            ),
+            settings: settings,
+          );
+        }
+
+      // Ruta para navegación al punto de encuentro (cliente)
+      case RouteNames.userTripAccepted:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => UserTripAcceptedScreen(
+              solicitudId: args?['solicitudId'] ?? 0,
+              clienteId: args?['clienteId'] ?? 0,
+              latitudOrigen: (args?['latitudOrigen'] as num?)?.toDouble() ?? 0,
+              longitudOrigen: (args?['longitudOrigen'] as num?)?.toDouble() ?? 0,
+              direccionOrigen: args?['direccionOrigen'] ?? 'Origen',
+              latitudDestino: (args?['latitudDestino'] as num?)?.toDouble() ?? 0,
+              longitudDestino: (args?['longitudDestino'] as num?)?.toDouble() ?? 0,
               direccionDestino: args?['direccionDestino'] ?? 'Destino',
               conductorInfo: args?['conductorInfo'],
             ),

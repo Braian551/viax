@@ -6,9 +6,8 @@ import '../../../../../theme/app_colors.dart';
 
 /// Panel arrastrable con información del conductor.
 ///
-/// Implementa un DraggableScrollableSheet con snap points para
-/// permitir al usuario deslizar el panel hacia abajo y ver mejor el mapa,
-/// sin poder ocultarlo completamente.
+/// Diseño moderno consistente con el estilo de la app.
+/// Implementa un DraggableScrollableSheet con snap points.
 class DraggableDriverPanel extends StatefulWidget {
   final Map<String, dynamic>? conductor;
   final double? conductorEtaMinutes;
@@ -76,21 +75,18 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     final current = _dragController.size;
 
     if (current < _midSize - 0.05) {
-      // Si está en mínimo, ir a medio
       _dragController.animateTo(
         _midSize,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
       );
     } else if (current < _maxSize - 0.05) {
-      // Si está en medio, ir a máximo
       _dragController.animateTo(
         _maxSize,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
       );
     } else {
-      // Si está en máximo, volver a medio
       _dragController.animateTo(
         _midSize,
         duration: const Duration(milliseconds: 300),
@@ -128,14 +124,14 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     return Container(
       decoration: BoxDecoration(
         color: widget.isDark
-            ? const Color(0xFF1C1C1E).withValues(alpha: 0.95)
-            : Colors.white.withValues(alpha: 0.95),
+            ? const Color(0xFF1C1C1E)
+            : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
           ),
         ],
       ),
@@ -154,24 +150,25 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Fila principal: avatar, nombre, botones (tap para ver perfil)
-                  _buildDriverRow(nombre, foto, calificacion, onProfileTap: widget.onProfileTap),
+                  // Fila principal: avatar, nombre, botones
+                  _buildDriverRow(nombre, foto, calificacion,
+                      onProfileTap: widget.onProfileTap),
                   
                   const SizedBox(height: 16),
                   
-                  // Divider
-                  _buildDivider(),
+                  // Divider con gradiente
+                  _buildGradientDivider(),
                   
                   const SizedBox(height: 16),
                   
                   // Info del vehículo
-                  if (vehiculo != null) _buildVehicleRow(vehiculo),
+                  if (vehiculo != null) _buildVehicleCard(vehiculo),
                   
                   // ETA y distancia
                   if (widget.conductorEtaMinutes != null || 
                       widget.conductorDistanceKm != null) ...[
-                    const SizedBox(height: 16),
-                    _buildEtaCard(),
+                    const SizedBox(height: 12),
+                    _buildEtaRow(),
                   ],
                 ],
               ),
@@ -203,12 +200,12 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  Widget _buildDriverRow(String nombre, String? foto, double calificacion, {VoidCallback? onProfileTap}) {
+  Widget _buildDriverRow(String nombre, String? foto, double calificacion,
+      {VoidCallback? onProfileTap}) {
     return Row(
       children: [
         // Avatar y nombre (tappable para ver perfil)
         _buildTappableProfile(foto, nombre, calificacion, onProfileTap),
-
 
         // Botones de acción
         _buildActionButtons(),
@@ -216,8 +213,8 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  /// Widget que muestra avatar y nombre del conductor, tappable para ver perfil completo
-  Widget _buildTappableProfile(String? foto, String nombre, double calificacion, VoidCallback? onProfileTap) {
+  Widget _buildTappableProfile(
+      String? foto, String nombre, double calificacion, VoidCallback? onProfileTap) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -229,7 +226,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
         behavior: HitTestBehavior.opaque,
         child: Row(
           children: [
-            // Avatar
+            // Avatar con borde gradiente
             _buildAvatar(foto),
             const SizedBox(width: 14),
 
@@ -247,12 +244,12 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             color: widget.isDark ? Colors.white : Colors.black87,
+                            letterSpacing: -0.3,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Indicador de que es tappable
                       if (onProfileTap != null)
                         Icon(
                           Icons.chevron_right_rounded,
@@ -261,8 +258,8 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  _buildRating(calificacion),
+                  const SizedBox(height: 6),
+                  _buildRatingBadge(calificacion),
                 ],
               ),
             ),
@@ -282,44 +279,44 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.8),
-            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.7),
+            AppColors.primaryDark,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: AppColors.primary.withValues(alpha: 0.2),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(2.5),
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: widget.isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
         ),
         child: ClipOval(
           child: foto != null && foto.isNotEmpty
               ? Image.network(
                   DocumentUploadService.getDocumentUrl(foto),
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.person,
+                  errorBuilder: (context, err, stack) => Icon(
+                    Icons.person_rounded,
                     color: AppColors.primary,
                     size: 28,
                   ),
                 )
-              : Icon(Icons.person, color: AppColors.primary, size: 28),
+              : Icon(Icons.person_rounded, color: AppColors.primary, size: 28),
         ),
       ),
     );
   }
 
-  Widget _buildRating(double calificacion) {
+  Widget _buildRatingBadge(double calificacion) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
@@ -333,7 +330,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
             calificacion.toStringAsFixed(1),
             style: const TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: AppColors.accent,
             ),
           ),
@@ -372,7 +369,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: widget.isDark
-                          ? const Color(0xFF1E1E1E)
+                          ? const Color(0xFF1C1C1E)
                           : Colors.white,
                       width: 2,
                     ),
@@ -407,7 +404,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     VoidCallback? onTap,
   }) {
     return Material(
-      color: color.withValues(alpha: 0.15),
+      color: color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: () {
@@ -415,6 +412,8 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
           onTap?.call();
         },
         borderRadius: BorderRadius.circular(14),
+        splashColor: color.withValues(alpha: 0.2),
+        highlightColor: color.withValues(alpha: 0.08),
         child: Container(
           width: 48,
           height: 48,
@@ -425,7 +424,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildGradientDivider() {
     return Container(
       height: 1,
       decoration: BoxDecoration(
@@ -440,7 +439,7 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  Widget _buildVehicleRow(Map<String, dynamic> vehiculo) {
+  Widget _buildVehicleCard(Map<String, dynamic> vehiculo) {
     final marca = vehiculo['marca'] as String? ?? '';
     final modelo = vehiculo['modelo'] as String? ?? '';
     final color = vehiculo['color'] as String? ?? '';
@@ -457,60 +456,67 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
       iconData = FontAwesomeIcons.car;
     }
 
-    return Row(
-      children: [
-        // Icono del vehículo
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.accent.withValues(alpha: 0.2),
-                AppColors.accent.withValues(alpha: 0.1),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: FaIcon(
-            iconData,
-            color: AppColors.accent,
-            size: 20,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: widget.isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey[50],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: widget.isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.grey.withValues(alpha: 0.1),
         ),
-        const SizedBox(width: 14),
+      ),
+      child: Row(
+        children: [
+          // Icono del vehículo
+          Container(
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: FaIcon(
+              iconData,
+              color: AppColors.accent,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
 
-        // Marca, modelo, color
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$marca $modelo'.trim().isEmpty
-                    ? 'Vehículo'
-                    : '$marca $modelo',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: widget.isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              if (color.isNotEmpty)
+          // Marca, modelo, color
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  color,
+                  '$marca $modelo'.trim().isEmpty
+                      ? 'Vehículo'
+                      : '$marca $modelo',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: widget.isDark ? Colors.white60 : Colors.black54,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: widget.isDark ? Colors.white : Colors.black87,
                   ),
                 ),
-            ],
+                if (color.isNotEmpty)
+                  Text(
+                    color,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: widget.isDark ? Colors.white54 : Colors.grey[500],
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
 
-        // Placa
-        _buildPlacaBadge(placa),
-      ],
+          // Placa
+          _buildPlacaBadge(placa),
+        ],
+      ),
     );
   }
 
@@ -519,12 +525,12 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: widget.isDark
-            ? Colors.white.withValues(alpha: 0.1)
+            ? Colors.white.withValues(alpha: 0.08)
             : Colors.grey[100],
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: widget.isDark
-              ? Colors.white.withValues(alpha: 0.15)
+              ? Colors.white.withValues(alpha: 0.12)
               : Colors.grey[300]!,
           width: 1.5,
         ),
@@ -541,105 +547,92 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     );
   }
 
-  Widget _buildEtaCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.primary.withValues(alpha: 0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          if (widget.conductorEtaMinutes != null)
-            _buildEtaItem(
+  Widget _buildEtaRow() {
+    return Row(
+      children: [
+        if (widget.conductorEtaMinutes != null)
+          Expanded(
+            child: _buildEtaStatCard(
               icon: Icons.access_time_rounded,
               value: '${widget.conductorEtaMinutes!.round()}',
               unit: 'min',
               label: 'Llegada',
+              color: AppColors.primary,
             ),
-          if (widget.conductorEtaMinutes != null &&
-              widget.conductorDistanceKm != null)
-            Container(
-              width: 1,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    AppColors.primary.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          if (widget.conductorDistanceKm != null)
-            _buildEtaItem(
+          ),
+        if (widget.conductorEtaMinutes != null &&
+            widget.conductorDistanceKm != null)
+          const SizedBox(width: 12),
+        if (widget.conductorDistanceKm != null)
+          Expanded(
+            child: _buildEtaStatCard(
               icon: Icons.route_rounded,
               value: widget.conductorDistanceKm!.toStringAsFixed(1),
               unit: 'km',
               label: 'Distancia',
+              color: AppColors.blue600,
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
-  Widget _buildEtaItem({
+  Widget _buildEtaStatCard({
     required IconData icon,
     required String value,
     required String unit,
     required String label,
+    required Color color,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: AppColors.primary,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: widget.isDark ? Colors.white : Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      unit,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              unit,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: AppColors.primary.withValues(alpha: 0.8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: widget.isDark ? Colors.white54 : Colors.grey[500],
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: widget.isDark ? Colors.white60 : Colors.black54,
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
