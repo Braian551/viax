@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "879318355876-npariqm1jja54vrfrf54dev0qlgod9a5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.viax",
+            "certificate_hash": "59970d55f9c4130f210bab06655b5da220cb1d87"
+          }
+        },
+        {
           "client_id": "879318355876-ii7g05sqsun2fijeqe9mik186a3fbisb.apps.googleusercontent.com",
           "client_type": 3
         }
