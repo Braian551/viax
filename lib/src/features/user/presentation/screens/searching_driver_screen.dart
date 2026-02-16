@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../services/trip_request_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../theme/app_colors.dart';
 import 'user_trip_accepted_screen.dart';
 
@@ -328,55 +329,61 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
         fit: StackFit.expand,
         children: [
           // MAPA
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: origin,
-              initialZoom: 15.0,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+          MapRetryWrapper(
+            isDark: isDark,
+            builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+              key: mapKey,
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: origin,
+                initialZoom: 15.0,
+                onMapReady: onMapReady,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                ),
               ),
+              children: [
+                TileLayer(
+                  urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+                  userAgentPackageName: 'com.viax.app',
+                  errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+                ),
+                // Círculo del radio
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: origin,
+                      radius: _currentRadiusKm * 1000,
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderColor: AppColors.primary.withValues(alpha: 0.3),
+                      borderStrokeWidth: 2,
+                      useRadiusInMeter: true,
+                    ),
+                  ],
+                ),
+                // Marcadores
+                MarkerLayer(
+                  markers: [
+                    // Origen con animación
+                    Marker(
+                      point: origin,
+                      width: 180,
+                      height: 180,
+                      child: _buildAnimatedOrigin(),
+                    ),
+                    // Destino
+                    Marker(
+                      point: destination,
+                      width: 40,
+                      height: 40,
+                      child: _buildDestinationMarker(),
+                    ),
+                    // Conductores
+                    ..._buildDriverMarkers(),
+                  ],
+                ),
+              ],
             ),
-            children: [
-              TileLayer(
-                urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-                userAgentPackageName: 'com.viax.app',
-              ),
-              // Círculo del radio
-              CircleLayer(
-                circles: [
-                  CircleMarker(
-                    point: origin,
-                    radius: _currentRadiusKm * 1000,
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderColor: AppColors.primary.withValues(alpha: 0.3),
-                    borderStrokeWidth: 2,
-                    useRadiusInMeter: true,
-                  ),
-                ],
-              ),
-              // Marcadores
-              MarkerLayer(
-                markers: [
-                  // Origen con animación
-                  Marker(
-                    point: origin,
-                    width: 180,
-                    height: 180,
-                    child: _buildAnimatedOrigin(),
-                  ),
-                  // Destino
-                  Marker(
-                    point: destination,
-                    width: 40,
-                    height: 40,
-                    child: _buildDestinationMarker(),
-                  ),
-                  // Conductores
-                  ..._buildDriverMarkers(),
-                ],
-              ),
-            ],
           ),
           
           // HEADER

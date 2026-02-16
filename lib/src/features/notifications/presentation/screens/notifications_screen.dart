@@ -291,6 +291,8 @@ class _NotificationsContentState extends State<_NotificationsContent>
   }
 
   Widget _buildNotificationList(NotificationProvider provider, bool isDark) {
+    final notifications = provider.filteredNotifications;
+
     if (provider.loadState == NotificationLoadState.loading &&
         provider.notifications.isEmpty) {
       return NotificationLoadingShimmer(isDark: isDark);
@@ -301,7 +303,7 @@ class _NotificationsContentState extends State<_NotificationsContent>
       return _buildErrorState(provider, isDark);
     }
 
-    if (provider.notifications.isEmpty) {
+    if (notifications.isEmpty) {
       return NotificationEmptyState(
         filter: provider.selectedFilter,
         isDark: isDark,
@@ -314,16 +316,16 @@ class _NotificationsContentState extends State<_NotificationsContent>
       child: ListView.builder(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: provider.notifications.length + (provider.hasMore ? 1 : 0),
+        itemCount: notifications.length + (provider.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == provider.notifications.length) {
+          if (index == notifications.length) {
             return _buildLoadingMore(isDark);
           }
 
-          final notification = provider.notifications[index];
+          final notification = notifications[index];
           return NotificationCard(
             notification: notification,
-            showDivider: index < provider.notifications.length - 1,
+            showDivider: index < notifications.length - 1,
             onTap: () => _handleNotificationTap(notification, provider),
             onDismiss: () => _handleNotificationDismiss(notification, provider),
           );

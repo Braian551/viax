@@ -1,6 +1,7 @@
-﻿import 'package:http/http.dart' as http;
-import 'dart:convert';
+﻿import 'dart:convert';
 import '../../../core/config/app_config.dart';
+import '../../../core/network/network_request_executor.dart';
+import '../../../core/network/app_network_exception.dart';
 
 /// Servicio para operaciones de conductor
 /// 
@@ -10,23 +11,26 @@ import '../../../core/config/app_config.dart';
 class ConductorService {
   /// URL base del microservicio de conductores
   static String get baseUrl => AppConfig.conductorServiceUrl;
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Obtener informaciÃ³n completa del conductor
   static Future<Map<String, dynamic>?> getConductorInfo(int conductorId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/get_info.php?conductor_id=$conductorId'),
+      final result = await _network.getJson(
+        url: Uri.parse('$baseUrl/get_info.php?conductor_id=$conductorId'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('Conductor info response (${response.statusCode}): ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true) {
-          return data;
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data;
+      }
+
       return null;
     } catch (e) {
       print('Error obteniendo informaciÃ³n del conductor: $e');
@@ -37,17 +41,21 @@ class ConductorService {
   /// Obtener viajes activos del conductor
   static Future<List<Map<String, dynamic>>> getViajesActivos(int conductorId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/get_viajes_activos.php?conductor_id=$conductorId'),
+      final result = await _network.getJson(
+        url: Uri.parse('$baseUrl/get_viajes_activos.php?conductor_id=$conductorId'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true && data['viajes'] != null) {
-          return List<Map<String, dynamic>>.from(data['viajes']);
-        }
+      if (!result.success || result.json == null) {
+        return [];
       }
+
+      final data = result.json!;
+      if (data['success'] == true && data['viajes'] != null) {
+        return List<Map<String, dynamic>>.from(data['viajes']);
+      }
+
       return [];
     } catch (e) {
       print('Error obteniendo viajes activos: $e');
@@ -62,17 +70,21 @@ class ConductorService {
     int limit = 20,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/get_historial.php?conductor_id=$conductorId&page=$page&limit=$limit'),
+      final result = await _network.getJson(
+        url: Uri.parse('$baseUrl/get_historial.php?conductor_id=$conductorId&page=$page&limit=$limit'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true) {
-          return data;
-        }
+      if (!result.success || result.json == null) {
+        return {'success': false, 'viajes': [], 'total': 0};
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data;
+      }
+
       return {'success': false, 'viajes': [], 'total': 0};
     } catch (e) {
       print('Error obteniendo historial de viajes: $e');
@@ -83,17 +95,21 @@ class ConductorService {
   /// Obtener estadÃ­sticas del conductor
   static Future<Map<String, dynamic>> getEstadisticas(int conductorId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/get_estadisticas.php?conductor_id=$conductorId'),
+      final result = await _network.getJson(
+        url: Uri.parse('$baseUrl/get_estadisticas.php?conductor_id=$conductorId'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true) {
-          return data['estadisticas'] ?? {};
-        }
+      if (!result.success || result.json == null) {
+        return {};
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data['estadisticas'] ?? {};
+      }
+
       return {};
     } catch (e) {
       print('Error obteniendo estadÃ­sticas: $e');
@@ -118,27 +134,27 @@ class ConductorService {
 
       print('📡 Actualizando disponibilidad: conductorId=$conductorId, disponible=$disponible');
       
-      final response = await http.post(
-        Uri.parse('$baseUrl/actualizar_disponibilidad.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$baseUrl/actualizar_disponibilidad.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode(body),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('📥 Respuesta disponibilidad: ${response.statusCode} - ${response.body}');
+      print('📥 Respuesta disponibilidad: ${result.statusCode}');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true) {
-          return true;
-        } else {
-          // Lanzar excepción con el mensaje del servidor
-          throw Exception(data['message'] ?? 'Error desconocido del servidor');
-        }
+      if (!result.success || result.json == null) {
+        throw Exception(result.error?.userMessage ?? 'No se pudo actualizar la disponibilidad.');
+      }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return true;
       } else {
-        throw Exception('Error del servidor: ${response.statusCode}');
+        throw Exception(data['message'] ?? 'Error desconocido del servidor');
       }
     } catch (e) {
       print('❌ Error actualizando disponibilidad: $e');
@@ -152,8 +168,8 @@ class ConductorService {
     required int solicitudId,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/aceptar_solicitud.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$baseUrl/aceptar_solicitud.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -162,15 +178,18 @@ class ConductorService {
           'conductor_id': conductorId,
           'solicitud_id': solicitudId,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+      if (result.success && result.json != null) {
+        return result.json!;
       }
+
       return {'success': false, 'message': 'Error del servidor'};
     } catch (e) {
       print('Error aceptando solicitud: $e');
-      return {'success': false, 'message': e.toString()};
+      final mapped = AppNetworkException.fromError(e);
+      return {'success': false, 'message': mapped.userMessage, 'error_type': mapped.type.name};
     }
   }
 
@@ -194,20 +213,22 @@ class ConductorService {
         if (solicitudId != null) 'solicitud_id': solicitudId,
       };
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/actualizar_ubicacion.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$baseUrl/actualizar_ubicacion.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode(body),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return data['success'] == true;
+      if (!result.success || result.json == null) {
+        return false;
       }
-      return false;
+
+      final data = result.json!;
+      return data['success'] == true;
     } catch (e) {
       print('Error actualizando ubicaciÃ³n: $e');
       return false;
@@ -225,17 +246,21 @@ class ConductorService {
       if (fechaInicio != null) uri += '&fecha_inicio=$fechaInicio';
       if (fechaFin != null) uri += '&fecha_fin=$fechaFin';
 
-      final response = await http.get(
-        Uri.parse(uri),
+      final result = await _network.getJson(
+        url: Uri.parse(uri),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true) {
-          return data;
-        }
+      if (!result.success || result.json == null) {
+        return {'success': false, 'ganancias': {}};
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data;
+      }
+
       return {'success': false, 'ganancias': {}};
     } catch (e) {
       print('Error obteniendo ganancias: $e');
@@ -263,24 +288,31 @@ class ConductorService {
         if (elapsedMinutes != null) 'tiempo_transcurrido': elapsedMinutes,
       };
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/update_trip_status.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$baseUrl/update_trip_status.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode(body),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('Update trip status response (${response.statusCode}): ${response.body}');
+      print('Update trip status response (${result.statusCode})');
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+      if (result.success && result.json != null) {
+        return result.json!;
       }
-      return {'success': false, 'message': 'Error del servidor: ${response.statusCode}'};
+
+      return {
+        'success': false,
+        'message': result.error?.userMessage ?? 'Error del servidor',
+        'error_type': result.error?.type.name,
+      };
     } catch (e) {
       print('Error actualizando estado del viaje: $e');
-      return {'success': false, 'message': e.toString()};
+      final mapped = AppNetworkException.fromError(e);
+      return {'success': false, 'message': mapped.userMessage, 'error_type': mapped.type.name};
     }
   }
 
@@ -332,17 +364,21 @@ class ConductorService {
     try {
       // Usamos el endpoint de user/get_trip_status.php ya que es la fuente de verdad
       // y parece ser público/accesible
-      final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/user/get_trip_status.php?solicitud_id=$solicitudId'),
+      final result = await _network.getJson(
+        url: Uri.parse('${AppConfig.baseUrl}/user/get_trip_status.php?solicitud_id=$solicitudId'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['success'] == true && data['trip'] != null) {
-          return data['trip'] as Map<String, dynamic>;
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true && data['trip'] != null) {
+        return data['trip'] as Map<String, dynamic>;
+      }
+
       return null;
     } catch (e) {
       print('Error checking trip status: $e');

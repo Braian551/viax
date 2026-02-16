@@ -1,10 +1,25 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/network/network_request_executor.dart';
+import '../../../core/network/app_network_exception.dart';
 import '../../../global/models/simple_location.dart';
 
 class TripRequestService {
   static String get baseUrl => AppConfig.baseUrl;
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
+  static String _friendlyMessage(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación.'}) {
+    return result.error?.userMessage ?? fallback;
+  }
+
+  static Map<String, dynamic> _errorResponse(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación.'}) {
+    return {
+      'success': false,
+      'message': _friendlyMessage(result, fallback: fallback),
+      'error_type': result.error?.type.name,
+    };
+  }
 
   /// Crear una nueva solicitud de viaje
   static Future<Map<String, dynamic>> createTripRequest({
@@ -54,41 +69,29 @@ class TripRequestService {
       
       print('📦 Datos enviados: $requestBody');
       
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Tiempo de espera agotado. Verifica tu conexión.');
-        },
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('📥 Respuesta recibida - Status: ${response.statusCode}');
-      print('📄 Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          print('✅ Solicitud creada exitosamente');
-          return data;
-        } else {
-          final errorMsg = data['message'] ?? 'Error al crear solicitud';
-          print('❌ Error del servidor: $errorMsg');
-          throw Exception(errorMsg);
-        }
-      } else {
-        final errorMsg = 'Error del servidor: ${response.statusCode} - ${response.body}';
-        print('❌ $errorMsg');
-        throw Exception(errorMsg);
+      if (!result.success || result.json == null) {
+        throw Exception(_friendlyMessage(result, fallback: 'No pudimos crear tu solicitud de viaje.'));
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        print('✅ Solicitud creada exitosamente');
+        return data;
+      }
+
+      final backendMessage = data['message']?.toString() ?? 'No pudimos crear tu solicitud de viaje.';
+      throw Exception(backendMessage);
     } catch (e) {
       print('❌ Error en createTripRequest: $e');
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        throw Exception('No se pudo conectar al servidor. Verifica tu conexión.');
-      }
-      throw Exception('Error al crear solicitud de viaje: $e');
+      final networkError = AppNetworkException.fromError(e);
+      throw Exception(networkError.userMessage);
     }
   }
 
@@ -110,22 +113,23 @@ class TripRequestService {
         if (empresaId != null) 'empresa_id': empresaId,
       };
       
-      final response = await http.post(
-        Uri.parse('$baseUrl/user/find_nearby_drivers.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$baseUrl/user/find_nearby_drivers.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['conductores'] ?? []);
-        } else {
-          return [];
-        }
-      } else {
-        throw Exception('Error del servidor: ${response.statusCode}');
+      if (!result.success || result.json == null) {
+        return [];
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return List<Map<String, dynamic>>.from(data['conductores'] ?? []);
+      }
+
+      return [];
     } catch (e) {
       print('Error buscando conductores cercanos: $e');
       return [];
@@ -138,35 +142,26 @@ class TripRequestService {
       print('🚫 Cancelando solicitud ID: $solicitudId');
       
       final url = '$baseUrl/user/cancel_trip_request.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'solicitud_id': solicitudId,
         }),
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Tiempo de espera agotado al cancelar');
-        },
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('📥 Respuesta de cancelación - Status: ${response.statusCode}');
-      print('📄 Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          print('✅ Solicitud cancelada exitosamente');
-          return true;
-        } else {
-          print('❌ Error al cancelar: ${data['message']}');
-          throw Exception(data['message'] ?? 'Error al cancelar la solicitud');
-        }
-      } else {
-        print('❌ Error del servidor: ${response.statusCode}');
-        throw Exception('Error del servidor: ${response.statusCode}');
+      if (!result.success || result.json == null) {
+        throw Exception(_friendlyMessage(result, fallback: 'No pudimos cancelar la solicitud.'));
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        print('✅ Solicitud cancelada exitosamente');
+        return true;
+      }
+
+      throw Exception(data['message']?.toString() ?? 'No pudimos cancelar la solicitud.');
     } catch (e) {
       print('❌ Error cancelando solicitud: $e');
       rethrow;
@@ -176,16 +171,20 @@ class TripRequestService {
   /// Obtener estado de la solicitud
   static Future<Map<String, dynamic>?> getTripRequestStatus(int solicitudId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId'),
+      final result = await _network.getJson(
+        url: Uri.parse('$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId'),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['solicitud'];
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data['solicitud'];
+      }
+
       return null;
     } catch (e) {
       print('Error obteniendo estado de solicitud: $e');
@@ -201,27 +200,24 @@ class TripRequestService {
       final url = '$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId';
       print('🌐 [TripRequestService] GET: $url');
       
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
-      
-      print('📡 [TripRequestService] Status: ${response.statusCode}');
-      print('📄 [TripRequestService] Body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {
-          'success': false,
-          'message': 'Error al obtener estado: ${response.statusCode}',
-        };
+      if (!result.success || result.json == null) {
+        return _errorResponse(result, fallback: 'No pudimos consultar el estado del viaje.');
       }
+
+      return result.json!;
     } catch (e) {
       print('❌ Error obteniendo estado: $e');
+      final mapped = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error de conexión: $e',
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
       };
     }
   }
@@ -252,14 +248,18 @@ class TripRequestService {
         
         print('📦 [TripRequestService] Usando endpoint conductor (update_trip_status). Body: $body');
 
-        final response = await http.post(
-          Uri.parse('$baseUrl/conductor/update_trip_status.php'),
+        final result = await _network.postJson(
+          url: Uri.parse('$baseUrl/conductor/update_trip_status.php'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(body),
+          timeout: AppConfig.connectionTimeout,
         );
 
-        print('📥 [TripRequestService] Respuesta (conductor): ${response.statusCode} - ${response.body}');
-        return jsonDecode(response.body);
+        if (!result.success || result.json == null) {
+          return _errorResponse(result, fallback: 'No pudimos cancelar el viaje en este momento.');
+        }
+
+        return result.json!;
       } 
       // Si no hay conductor (ej. aún buscando), usamos el endpoint de cancelación simple del cliente
       else {
@@ -272,20 +272,26 @@ class TripRequestService {
         
         print('📦 [TripRequestService] Usando endpoint cliente (cancel_trip_request). Body: $body');
 
-        final response = await http.post(
-          Uri.parse('$baseUrl/user/cancel_trip_request.php'),
+        final result = await _network.postJson(
+          url: Uri.parse('$baseUrl/user/cancel_trip_request.php'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(body),
+          timeout: AppConfig.connectionTimeout,
         );
 
-        print('📥 [TripRequestService] Respuesta (cliente): ${response.statusCode} - ${response.body}');
-        return jsonDecode(response.body);
+        if (!result.success || result.json == null) {
+          return _errorResponse(result, fallback: 'No pudimos cancelar la solicitud en este momento.');
+        }
+
+        return result.json!;
       }
     } catch (e) {
       print('❌ Error cancelando solicitud: $e');
+      final mapped = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error de conexión: $e',
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
       };
     }
   }
@@ -298,25 +304,24 @@ class TripRequestService {
       final url = '$baseUrl/user/check_active_trip.php?user_id=$userId&role=$role';
       print('查询 [TripRequestService] check active: $url');
       
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
-      
-      if (response.statusCode == 200) {
-        print('📥 [TripRequestService] checkActiveTrip response: ${response.body}');
-        return jsonDecode(response.body);
-      } else {
-        return {
-          'success': false,
-          'message': 'Error del servidor: ${response.statusCode}',
-        };
+
+      if (!result.success || result.json == null) {
+        return _errorResponse(result, fallback: 'No pudimos validar si tienes un viaje activo.');
       }
+
+      return result.json!;
     } catch (e) {
       print('❌ Error check active trip: $e');
+      final mapped = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error de conexión: $e',
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
       };
     }
   }

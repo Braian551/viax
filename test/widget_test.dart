@@ -7,13 +7,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:viax/main.dart';
+import 'package:viax/src/providers/database_provider.dart';
+import 'package:viax/src/theme/theme_provider.dart';
 
 void main() {
   testWidgets('App smoke test builds without throwing', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp(enableDatabaseInit: false));
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => DatabaseProvider()),
+        ],
+        child: const MyApp(enableDatabaseInit: false),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 4));
     expect(find.byType(MaterialApp), findsOneWidget);
+
+    // Dispose tree to avoid pending timers from startup flows.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 200));
   });
 }

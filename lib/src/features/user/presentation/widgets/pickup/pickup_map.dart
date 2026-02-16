@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'dart:ui' as ui;
 
 import '../../../../../global/services/mapbox_service.dart';
+import '../../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../../theme/app_colors.dart';
 
 class PickupMap extends StatelessWidget {
@@ -30,39 +31,45 @@ class PickupMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: initialCenter,
-        initialZoom: 17.0,
-        minZoom: 10,
-        maxZoom: 19,
-        onPositionChanged: (position, hasGesture) {
-          if (hasGesture) onMapMoveStart();
-        },
-        onMapEvent: (event) {
-          if (event is MapEventMoveEnd || event is MapEventFlingAnimationEnd) {
-            onMapMoveEnd();
-          }
-        },
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: initialCenter,
+          initialZoom: 17.0,
+          minZoom: 10,
+          maxZoom: 19,
+          onMapReady: onMapReady,
+          onPositionChanged: (position, hasGesture) {
+            if (hasGesture) onMapMoveStart();
+          },
+          onMapEvent: (event) {
+            if (event is MapEventMoveEnd || event is MapEventFlingAnimationEnd) {
+              onMapMoveEnd();
+            }
+          },
         ),
-        if (clientLocation != null)
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: clientLocation!,
-                width: 70,
-                height: 70,
-                child: _ClientMarker(heading: clientHeading),
-              ),
-            ],
+        children: [
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.viax.app',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
           ),
-      ],
+          if (clientLocation != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: clientLocation!,
+                  width: 70,
+                  height: 70,
+                  child: _ClientMarker(heading: clientHeading),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

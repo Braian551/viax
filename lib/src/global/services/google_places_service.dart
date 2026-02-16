@@ -1,14 +1,15 @@
 // lib/src/global/services/google_places_service.dart
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
 import 'app_secrets_service.dart';
 
 /// Servicio para interactuar con la API de Google Places (New)
 /// Usa la nueva API v1 para autocompletado y detalles de lugares
 class GooglePlacesService {
   static const String _baseUrl = 'https://places.googleapis.com/v1';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
   
   // ============================================
   // AUTOCOMPLETE API (Nueva API v1)
@@ -69,30 +70,29 @@ class GooglePlacesService {
       
       final url = Uri.parse('$_baseUrl/places:autocomplete');
       
-      final response = await http.post(
-        url,
+      final result = await _network.postJson(
+        url: url,
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey,
           'X-Goog-FieldMask': 'suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat,suggestions.placePrediction.types,suggestions.placePrediction.distanceMeters',
         },
         body: json.encode(requestBody),
-      ).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (!result.success || result.json == null) {
+        debugPrint('GooglePlaces API error: ${result.error?.userMessage}');
+        return [];
+      }
+
+      final data = result.json!;
         final suggestions = data['suggestions'] as List<dynamic>? ?? [];
         
         return suggestions.map((suggestion) {
           final prediction = suggestion['placePrediction'] as Map<String, dynamic>? ?? {};
           return GooglePlace.fromNewApiPrediction(prediction);
         }).toList();
-      } else {
-        final errorData = json.decode(response.body);
-        debugPrint('GooglePlaces API error: ${response.statusCode} - ${errorData['error']?['message'] ?? response.body}');
-      }
-      
-      return [];
     } catch (e) {
       debugPrint('GooglePlacesService searchPlaces error: $e');
       return [];
@@ -132,16 +132,18 @@ class GooglePlacesService {
         headers['X-Goog-Session-Token'] = sessionToken;
       }
       
-      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return GooglePlaceDetails.fromNewApiJson(data);
-      } else {
-        debugPrint('GooglePlaces Details error: ${response.statusCode} - ${response.body}');
+      final result = await _network.getJson(
+        url: url,
+        headers: headers,
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (!result.success || result.json == null) {
+        debugPrint('GooglePlaces Details error: ${result.error?.userMessage}');
+        return null;
       }
-      
-      return null;
+
+      return GooglePlaceDetails.fromNewApiJson(result.json!);
     } catch (e) {
       debugPrint('GooglePlacesService getPlaceDetails error: $e');
       return null;
@@ -172,16 +174,20 @@ class GooglePlacesService {
         '&language=$language'
       );
       
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['status'] == 'OK' && data['results'] != null && (data['results'] as List).isNotEmpty) {
-          return GooglePlaceDetails.fromLegacyGeocodingJson(data['results'][0]);
-        }
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (!result.success || result.json == null) {
+        return null;
       }
-      
+
+      final data = result.json!;
+      if (data['status'] == 'OK' && data['results'] != null && (data['results'] as List).isNotEmpty) {
+        return GooglePlaceDetails.fromLegacyGeocodingJson(data['results'][0]);
+      }
+
       return null;
     } catch (e) {
       debugPrint('GooglePlacesService reverseGeocode error: $e');

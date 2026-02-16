@@ -11,6 +11,7 @@ import '../../../../global/services/rating_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/local_notification_service.dart';
 import '../../../../global/services/active_trip_navigation_service.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../global/widgets/trip_completion/trip_completion_widgets.dart';
 import '../../../../theme/app_colors.dart';
@@ -1054,19 +1055,24 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   Widget _buildMap(bool isDark) {
     final destination = LatLng(widget.destinoLat, widget.destinoLng);
 
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: destination,
-        initialZoom: 14,
-        minZoom: 10,
-        maxZoom: 18,
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: destination,
+          initialZoom: 14,
+          minZoom: 10,
+          maxZoom: 18,
+          onMapReady: onMapReady,
         ),
+        children: [
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.viax.app',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+          ),
 
         // Ruta animada
         if (_animatedRoute.length > 1)
@@ -1120,7 +1126,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             ),
           ],
         ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1154,19 +1161,19 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     return DraggableScrollableSheet(
       initialChildSize: 0.32,
       minChildSize: 0.18,
-      maxChildSize: 0.5,
+      maxChildSize: 0.55,
       snap: true,
-      snapSizes: const [0.18, 0.32, 0.5],
+      snapSizes: const [0.18, 0.32, 0.55],
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
               ),
             ],
           ),
@@ -1178,11 +1185,11 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               children: [
                 // Handle
                 Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 36,
+                  margin: const EdgeInsets.symmetric(vertical: 14),
+                  width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.grey[300],
+                    color: isDark ? Colors.white24 : Colors.grey[400],
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1200,7 +1207,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                   onDriverTap: _showDriverDetails,
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Botones de acción
                 Padding(
@@ -1216,7 +1223,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                           badgeCount: _unreadCount,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: _ActionButton(
                           icon: Icons.person_rounded,
@@ -1225,7 +1232,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                           isDark: isDark,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: _ActionButton(
                           icon: Icons.share_location_rounded,
@@ -1240,7 +1247,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
               ],
             ),
           ),
@@ -1396,18 +1403,29 @@ class _MapButton extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        elevation: 4,
-        shadowColor: Colors.black12,
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(14),
           child: Container(
             padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
             child: Icon(
               icon,
-              color: isDark ? Colors.white : Colors.grey[800],
-              size: 24,
+              color: isDark ? Colors.white : AppColors.primary,
+              size: 22,
             ),
           ),
         ),
@@ -1436,18 +1454,23 @@ class _ActionButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(14),
+        splashColor: AppColors.primary.withValues(alpha: 0.08),
+        highlightColor: AppColors.primary.withValues(alpha: 0.04),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.05)
-                : Colors.grey.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
+                : Colors.grey.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.05)
+                  ? Colors.white.withValues(alpha: 0.06)
                   : Colors.grey.withValues(alpha: 0.1),
             ),
           ),
@@ -1458,8 +1481,8 @@ class _ActionButton extends StatelessWidget {
                 children: [
                   Icon(
                     icon,
-                    color: isDark ? Colors.white : AppColors.primary,
-                    size: 24,
+                    color: isDark ? Colors.white70 : AppColors.primary,
+                    size: 22,
                   ),
                   if (badgeCount > 0)
                     Positioned(
@@ -1474,6 +1497,12 @@ class _ActionButton extends StatelessWidget {
                             color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
                             width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 16,
@@ -1500,7 +1529,7 @@ class _ActionButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : Colors.grey[700],
+                  color: isDark ? Colors.white60 : Colors.grey[600],
                 ),
               ),
             ],

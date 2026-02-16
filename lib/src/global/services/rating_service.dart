@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
+import '../../core/network/network_request_executor.dart';
+import '../../core/network/app_network_exception.dart';
 
 /// Resultado de enviar una calificación.
 class RatingResult {
@@ -46,6 +47,7 @@ class RatingResult {
 /// por la nueva, evitando duplicados en la base de datos.
 class RatingService {
   static String get _baseUrl => AppConfig.baseUrl;
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Enviar calificación de un viaje.
   /// 
@@ -74,8 +76,8 @@ class RatingService {
       debugPrint('   - calificacion: $calificacion');
       debugPrint('   - tipo_calificador: $tipoCalificador');
       
-      final response = await http.post(
-        Uri.parse('$_baseUrl/rating/submit_rating.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$_baseUrl/rating/submit_rating.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -88,32 +90,35 @@ class RatingService {
           'tipo_calificador': tipoCalificador,
           'comentario': comentario,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      debugPrint('📥 [RatingService] Response (${response.statusCode}): ${response.body}');
+      debugPrint('📥 [RatingService] Response (${result.statusCode})');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        
-        // Log si fue una actualización
-        if (data['updated'] == true) {
-          debugPrint('♻️ [RatingService] Calificación actualizada (anterior: ${data['previous_rating']})');
-        } else {
-          debugPrint('✅ [RatingService] Nueva calificación creada');
-        }
-        
-        return data;
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos enviar la calificación.',
+          'error_type': result.error?.type.name,
+        };
       }
-      
-      return {
-        'success': false,
-        'message': 'Error al enviar calificación: ${response.statusCode}',
-      };
+
+      final data = result.json!;
+
+      if (data['updated'] == true) {
+        debugPrint('♻️ [RatingService] Calificación actualizada (anterior: ${data['previous_rating']})');
+      } else {
+        debugPrint('✅ [RatingService] Nueva calificación creada');
+      }
+
+      return data;
     } catch (e) {
       debugPrint('❌ [RatingService] Error enviando calificación: $e');
+      final mapped = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error de conexión: $e',
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
       };
     }
   }
@@ -157,21 +162,22 @@ class RatingService {
       
       debugPrint('📥 [RatingService] Fetching ratings from: $url');
       
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      debugPrint('📥 [RatingService] Response status: ${response.statusCode}');
-      debugPrint('📥 [RatingService] Response body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}...');
+      debugPrint('📥 [RatingService] Response status: ${result.statusCode}');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        debugPrint('📥 [RatingService] Parsed ${(data['calificaciones'] as List?)?.length ?? 0} calificaciones');
-        return data;
+      if (!result.success || result.json == null) {
+        return {'success': false, 'calificaciones': []};
       }
-      
-      debugPrint('📥 [RatingService] Error: status ${response.statusCode}');
+
+      final data = result.json!;
+      debugPrint('📥 [RatingService] Parsed ${(data['calificaciones'] as List?)?.length ?? 0} calificaciones');
+      return data;
+
       return {'success': false, 'calificaciones': []};
     } catch (e) {
       debugPrint('📥 [RatingService] Exception: $e');
@@ -186,8 +192,8 @@ class RatingService {
     required double monto,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/rating/confirm_cash_payment.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$_baseUrl/rating/confirm_cash_payment.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -197,18 +203,19 @@ class RatingService {
           'conductor_id': conductorId,
           'monto': monto,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      debugPrint('Payment confirmation (${response.statusCode}): ${response.body}');
+      debugPrint('Payment confirmation (${result.statusCode})');
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos confirmar el pago.',
+        };
       }
-      
-      return {
-        'success': false,
-        'message': 'Error al confirmar pago',
-      };
+
+      return result.json!;
     } catch (e) {
       debugPrint('Error confirmando pago: $e');
       return {
@@ -223,13 +230,14 @@ class RatingService {
     required int solicitudId,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/rating/get_trip_summary.php?solicitud_id=$solicitudId'),
+      final result = await _network.getJson(
+        url: Uri.parse('$_baseUrl/rating/get_trip_summary.php?solicitud_id=$solicitudId'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+      if (result.success && result.json != null) {
+        return result.json!;
       }
       
       return {'success': false};

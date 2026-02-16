@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../../global/services/mapbox_service.dart';
+import '../../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../../theme/app_colors.dart';
 import '../map_markers.dart';
 
@@ -44,89 +45,95 @@ class UserTripAcceptedMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: pickupPoint,
-        initialZoom: 16.0,
-        interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
-      ),
-      children: [
-        // Capa de tiles
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: pickupPoint,
+          initialZoom: 16.0,
+          onMapReady: onMapReady,
+          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
         ),
-
-        // Sombra de la ruta (efecto de profundidad)
-        if (animatedRoute.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: animatedRoute,
-                strokeWidth: 8.0,
-                color: Colors.black.withValues(alpha: 0.15),
-              ),
-            ],
+        children: [
+          // Capa de tiles
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.viax.app',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
           ),
 
-        // Ruta del conductor al punto de encuentro (animada)
-        if (animatedRoute.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: animatedRoute,
-                strokeWidth: 5.0,
-                color: AppColors.primary,
-                borderStrokeWidth: 1.5,
-                borderColor: Colors.white,
-              ),
-            ],
-          ),
-
-        // Marcadores
-        MarkerLayer(
-          markers: [
-            // Marcador del conductor (primero, para que quede debajo)
-            if (conductorLocation != null)
-              Marker(
-                point: conductorLocation!,
-                width: 56,
-                height: 56,
-                child: DriverMarker(
-                  vehicleType: conductorVehicleType ?? 'auto',
-                  heading: conductorHeading,
-                  size: 56,
-                  showShadow: false,
+          // Sombra de la ruta (efecto de profundidad)
+          if (animatedRoute.length > 1)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: animatedRoute,
+                  strokeWidth: 8.0,
+                  color: Colors.black.withValues(alpha: 0.15),
                 ),
-              ),
-
-            // Punto de encuentro (aumentado para que la etiqueta no se recorte)
-            Marker(
-              point: pickupPoint,
-              width: 220,
-              height: 140,
-              child: PickupPointMarker(
-                waveAnimation: waveAnimation,
-                label: pickupLabel,
-                showLabel: true,
-              ),
+              ],
             ),
 
-            // Marcador del cliente con orientación (brújula) - encima de todo
-            if (clientLocation != null)
+          // Ruta del conductor al punto de encuentro (animada)
+          if (animatedRoute.length > 1)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: animatedRoute,
+                  strokeWidth: 5.0,
+                  color: AppColors.primary,
+                  borderStrokeWidth: 1.5,
+                  borderColor: Colors.white,
+                ),
+              ],
+            ),
+
+          // Marcadores
+          MarkerLayer(
+            markers: [
+              // Marcador del conductor (primero, para que quede debajo)
+              if (conductorLocation != null)
+                Marker(
+                  point: conductorLocation!,
+                  width: 56,
+                  height: 56,
+                  child: DriverMarker(
+                    vehicleType: conductorVehicleType ?? 'auto',
+                    heading: conductorHeading,
+                    size: 56,
+                    showShadow: false,
+                  ),
+                ),
+
+              // Punto de encuentro (aumentado para que la etiqueta no se recorte)
               Marker(
-                point: clientLocation!,
-                width: 70,
-                height: 70,
-                child: _ClientMarker(
-                  pulseAnimation: pulseAnimation,
-                  heading: clientHeading,
+                point: pickupPoint,
+                width: 220,
+                height: 140,
+                child: PickupPointMarker(
+                  waveAnimation: waveAnimation,
+                  label: pickupLabel,
+                  showLabel: true,
                 ),
               ),
-          ],
-        ),
-      ],
+
+              // Marcador del cliente con orientación (brújula) - encima de todo
+              if (clientLocation != null)
+                Marker(
+                  point: clientLocation!,
+                  width: 70,
+                  height: 70,
+                  child: _ClientMarker(
+                    pulseAnimation: pulseAnimation,
+                    heading: clientHeading,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

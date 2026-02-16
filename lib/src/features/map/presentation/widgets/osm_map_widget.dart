@@ -7,6 +7,7 @@ import '../../providers/map_provider.dart';
 import '../../../../global/services/app_secrets_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/quota_monitor_service.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 
 class OSMMapWidget extends StatefulWidget {
   final LatLng? initialLocation;
@@ -64,58 +65,63 @@ class _OSMMapWidgetState extends State<OSMMapWidget> {
   Widget build(BuildContext context) {
     final mapProvider = Provider.of<MapProvider>(context);
 
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: _currentCenter ?? const LatLng(4.6097, -74.0817), // BogotÃ¡ por defecto
-        initialZoom: 13.0,
-        maxZoom: 18.0,
-        minZoom: 3.0,
-        interactionOptions: InteractionOptions(
-          flags: widget.interactive ? InteractiveFlag.all : InteractiveFlag.none,
-        ),
-        onTap: widget.interactive ? _handleMapTap : null,
-        onPositionChanged: (position, hasGesture) {
-          if (!hasGesture) return;
-          _currentCenter = position.center;
+    return MapRetryWrapper(
+      isDark: Theme.of(context).brightness == Brightness.dark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: _currentCenter ?? const LatLng(4.6097, -74.0817), // BogotÃ¡ por defecto
+          initialZoom: 13.0,
+          maxZoom: 18.0,
+          minZoom: 3.0,
+          onMapReady: onMapReady,
+          interactionOptions: InteractionOptions(
+            flags: widget.interactive ? InteractiveFlag.all : InteractiveFlag.none,
+          ),
+          onTap: widget.interactive ? _handleMapTap : null,
+          onPositionChanged: (position, hasGesture) {
+            if (!hasGesture) return;
+            _currentCenter = position.center;
 
-          // Notify start of movement once
-          if (!_isMoving) {
-            _isMoving = true;
-            if (widget.onMapMoveStart != null) widget.onMapMoveStart!();
-          }
-
-          // Notify map moved (center is non-null per flutter_map contract)
-            if (widget.onMapMoved != null) {
-              widget.onMapMoved!(position.center);
+            // Notify start of movement once
+            if (!_isMoving) {
+              _isMoving = true;
+              if (widget.onMapMoveStart != null) widget.onMapMoveStart!();
             }
 
-          // Debounce to detect movement end
-          _moveEndDebounce?.cancel();
-          _moveEndDebounce = Timer(const Duration(milliseconds: 200), () {
-            _isMoving = false;
-            if (widget.onMapMoveEnd != null) widget.onMapMoveEnd!();
-          });
-        },
-      ),
-      children: [
-        // Capa de tiles de Mapbox (reemplaza OSM)
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
-          userAgentPackageName: 'com.viax.app',
-          additionalOptions: {
-            'accessToken': AppSecretsService.instance.mapboxToken,
-          },
-          tileProvider: NetworkTileProvider(),
-          // Callback para contar tiles cargados (monitoreo de cuotas)
-          tileBuilder: (context, widget, tile) {
-            // Incrementar contador cada 10 tiles para no saturar
-            if (tile.coordinates.z.hashCode % 10 == 0) {
-              QuotaMonitorService.incrementMapboxTiles(count: 1);
-            }
-            return widget;
+            // Notify map moved (center is non-null per flutter_map contract)
+              if (widget.onMapMoved != null) {
+                widget.onMapMoved!(position.center);
+              }
+
+            // Debounce to detect movement end
+            _moveEndDebounce?.cancel();
+            _moveEndDebounce = Timer(const Duration(milliseconds: 200), () {
+              _isMoving = false;
+              if (widget.onMapMoveEnd != null) widget.onMapMoveEnd!();
+            });
           },
         ),
+        children: [
+          // Capa de tiles de Mapbox (reemplaza OSM)
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
+            userAgentPackageName: 'com.viax.app',
+            additionalOptions: {
+              'accessToken': AppSecretsService.instance.mapboxToken,
+            },
+            tileProvider: NetworkTileProvider(),
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+            // Callback para contar tiles cargados (monitoreo de cuotas)
+            tileBuilder: (context, widget, tile) {
+              // Incrementar contador cada 10 tiles para no saturar
+              if (tile.coordinates.z.hashCode % 10 == 0) {
+                QuotaMonitorService.incrementMapboxTiles(count: 1);
+              }
+              return widget;
+            },
+          ),
         
         // Dibujar la ruta si existe
         if (mapProvider.currentRoute != null && mapProvider.currentRoute!.geometry.isNotEmpty)
@@ -224,7 +230,8 @@ class _OSMMapWidgetState extends State<OSMMapWidget> {
               );
             }).toList(),
           ),
-      ],
+        ],
+      ),
     );
   }
 

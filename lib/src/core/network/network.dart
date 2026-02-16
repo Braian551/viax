@@ -7,4 +7,7 @@
 /// - Detección y resolución de conflictos
 
 export 'network_resilience_service.dart';
+export 'connectivity_service.dart';
+export 'app_network_exception.dart';
+export 'network_request_executor.dart';
 export 'trip_sync_manager.dart';

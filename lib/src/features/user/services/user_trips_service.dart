@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 import '../../../core/utils/date_time_utils.dart';
+import '../../../core/network/network_request_executor.dart';
+import '../../../core/network/app_network_exception.dart';
 
 /// Modelo para el desglose de precio de un viaje (para el usuario)
 class UserPriceBreakdownModel {
@@ -260,6 +261,7 @@ class UserPaymentSummary {
 /// Servicio para obtener historial de viajes del usuario
 class UserTripsService {
   static String get baseUrl => '${AppConfig.baseUrl}/user';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Obtener historial de viajes del usuario
   static Future<Map<String, dynamic>> getHistorial({
@@ -282,29 +284,48 @@ class UserTripsService {
         uri += '&fecha_fin=${fechaFin.toIso8601String().split('T')[0]}';
       }
 
-      final response = await http.get(
-        Uri.parse(uri),
+      final result = await _network.getJson(
+        url: Uri.parse(uri),
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          final viajes = (data['viajes'] as List?)
-              ?.map((v) => UserTripModel.fromJson(v))
-              .toList() ?? [];
-          
-          return {
-            'success': true,
-            'viajes': viajes,
-            'pagination': data['pagination'],
-          };
-        }
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'viajes': <UserTripModel>[],
+          'error': result.error?.userMessage ?? 'No pudimos obtener tu historial de viajes.',
+          'error_type': result.error?.type.name,
+        };
       }
-      return {'success': false, 'viajes': <UserTripModel>[]};
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final viajes = (data['viajes'] as List?)
+            ?.map((v) => UserTripModel.fromJson(v))
+            .toList() ?? [];
+
+        return {
+          'success': true,
+          'viajes': viajes,
+          'pagination': data['pagination'],
+        };
+      }
+
+      return {
+        'success': false,
+        'viajes': <UserTripModel>[],
+        'error': data['message']?.toString() ?? 'No pudimos obtener tu historial de viajes.',
+      };
     } catch (e) {
       print('Error obteniendo historial de viajes: $e');
-      return {'success': false, 'viajes': <UserTripModel>[], 'error': e.toString()};
+      final mapped = AppNetworkException.fromError(e);
+      return {
+        'success': false,
+        'viajes': <UserTripModel>[],
+        'error': mapped.userMessage,
+        'error_type': mapped.type.name,
+      };
     }
   }
 
@@ -319,21 +340,25 @@ class UserTripsService {
       if (fechaInicio != null) uri += '&fecha_inicio=$fechaInicio';
       if (fechaFin != null) uri += '&fecha_fin=$fechaFin';
 
-      final response = await http.get(
-        Uri.parse(uri),
+      final result = await _network.getJson(
+        url: Uri.parse(uri),
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return UserPaymentSummary(
-            totalPagado: (data['total_pagado'] ?? 0).toDouble(),
-            totalViajes: data['total_viajes'] ?? 0,
-            promedioPorViaje: (data['promedio_por_viaje'] ?? 0).toDouble(),
-          );
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return UserPaymentSummary(
+          totalPagado: (data['total_pagado'] ?? 0).toDouble(),
+          totalViajes: data['total_viajes'] ?? 0,
+          promedioPorViaje: (data['promedio_por_viaje'] ?? 0).toDouble(),
+        );
+      }
+
       return null;
     } catch (e) {
       print('Error obteniendo resumen de pagos: $e');

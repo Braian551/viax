@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/global/services/app_secrets_service.dart';
+import 'package:viax/src/global/widgets/map_retry_wrapper.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../../services/trip_request_service.dart';
@@ -246,66 +247,72 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                       valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
                     ),
                   )
-                : FlutterMap(
-                    options: MapOptions(
-                      initialCenter: _pickupLocation ?? const LatLng(4.7110, -74.0721),
-                      initialZoom: 13,
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
-                        userAgentPackageName: 'com.example.ping_go',
-                        additionalOptions: {
-                          'access_token': AppSecretsService.instance.mapboxToken,
-                        },
+                : MapRetryWrapper(
+                    isDark: false,
+                    builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+                      key: mapKey,
+                      options: MapOptions(
+                        initialCenter: _pickupLocation ?? const LatLng(4.7110, -74.0721),
+                        initialZoom: 13,
+                        onMapReady: onMapReady,
                       ),
-                      if (_route != null)
-                        PolylineLayer(
-                          polylines: [
-                            Polyline(
-                              points: _route!.geometry,
-                              color: const Color(0xFFFFFF00),
-                              strokeWidth: 5.0,
-                            ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
+                          userAgentPackageName: 'com.example.ping_go',
+                          additionalOptions: {
+                            'access_token': AppSecretsService.instance.mapboxToken,
+                          },
+                          errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+                        ),
+                        if (_route != null)
+                          PolylineLayer(
+                            polylines: [
+                              Polyline(
+                                points: _route!.geometry,
+                                color: const Color(0xFFFFFF00),
+                                strokeWidth: 5.0,
+                              ),
+                            ],
+                          ),
+                        MarkerLayer(
+                          markers: [
+                            if (_pickupLocation != null)
+                              Marker(
+                                point: _pickupLocation!,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            if (_destinationLocation != null)
+                              Marker(
+                                point: _destinationLocation!,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
-                      MarkerLayer(
-                        markers: [
-                          if (_pickupLocation != null)
-                            Marker(
-                              point: _pickupLocation!,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          if (_destinationLocation != null)
-                            Marker(
-                              point: _destinationLocation!,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
           ),
 

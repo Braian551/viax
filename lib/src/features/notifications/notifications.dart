@@ -6,6 +6,7 @@ export 'models/notification_model.dart';
 
 // Services
 export 'services/notification_service.dart';
+export 'services/push_notification_service.dart';
 
 // Providers
 export 'providers/notification_provider.dart';

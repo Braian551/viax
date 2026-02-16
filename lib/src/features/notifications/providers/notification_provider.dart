@@ -9,6 +9,29 @@ enum NotificationLoadState { initial, loading, loaded, error }
 /// Provider para gestionar el estado de las notificaciones
 /// Sigue el patrón de la app con ChangeNotifier
 class NotificationProvider extends ChangeNotifier {
+  static const Set<String> _tripTypes = {
+    'trip_accepted',
+    'trip_cancelled',
+    'trip_completed',
+    'driver_arrived',
+    'driver_waiting',
+  };
+
+  static const Set<String> _paymentTypes = {
+    'payment_received',
+    'payment_pending',
+  };
+
+  static const Set<String> _documentTypes = {
+    'document_approved',
+    'document_rejected',
+    'driver_document_update',
+  };
+
+  static const Set<String> _chatTypes = {
+    'chat_message',
+  };
+
   // Estado
   List<NotificationModel> _notifications = [];
   NotificationSettings? _settings;
@@ -38,6 +61,21 @@ class NotificationProvider extends ChangeNotifier {
     if (_selectedFilter == 'all') return _notifications;
     if (_selectedFilter == 'unread') {
       return _notifications.where((n) => !n.leida).toList();
+    }
+    if (_selectedFilter == 'trips') {
+      return _notifications.where((n) => _tripTypes.contains(n.tipo)).toList();
+    }
+    if (_selectedFilter == 'payments') {
+      return _notifications.where((n) => _paymentTypes.contains(n.tipo)).toList();
+    }
+    if (_selectedFilter == 'documents') {
+      return _notifications.where((n) => _documentTypes.contains(n.tipo)).toList();
+    }
+    if (_selectedFilter == 'chat') {
+      return _notifications.where((n) => _chatTypes.contains(n.tipo)).toList();
+    }
+    if (_selectedFilter == 'promo') {
+      return _notifications.where((n) => n.tipo == 'promo').toList();
     }
     return _notifications.where((n) => n.tipo == _selectedFilter).toList();
   }

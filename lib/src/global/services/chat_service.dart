@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
 import '../../core/utils/date_time_utils.dart';
+import '../../core/network/network_request_executor.dart';
+import '../../core/network/app_network_exception.dart';
 
 /// Modelo de mensaje de chat
 class ChatMessage {
@@ -74,6 +75,11 @@ class ChatMessage {
 /// Maneja la comunicación en tiempo real (con polling) durante un viaje activo.
 class ChatService {
   static String get baseUrl => AppConfig.baseUrl;
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
+  static String _friendlyMessage(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación de chat.'}) {
+    return result.error?.userMessage ?? fallback;
+  }
 
   /// Estado global para saber si el chat está abierto
   static bool isChatOpen = false;
@@ -173,8 +179,8 @@ class ChatService {
       final url = '$baseUrl/chat/send_message.php';
       debugPrint('💬 [ChatService] Enviando mensaje a: $url');
       
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'solicitud_id': solicitudId,
@@ -184,42 +190,38 @@ class ChatService {
           'tipo_remitente': tipoRemitente,
           'tipo_mensaje': tipoMensaje,
         }),
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Tiempo de espera agotado al enviar mensaje');
-        },
+        timeout: AppConfig.connectionTimeout,
       );
 
-      debugPrint('💬 [ChatService] Respuesta: ${response.statusCode}');
+      debugPrint('💬 [ChatService] Respuesta: ${result.statusCode}');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          debugPrint('✅ [ChatService] Mensaje enviado exitosamente');
-          
-          // Crear objeto ChatMessage desde la respuesta
-          final msgData = data['data'] as Map<String, dynamic>;
-          return ChatMessage(
-            id: msgData['id'] as int,
-            solicitudId: msgData['solicitud_id'] as int,
-            remitenteId: msgData['remitente_id'] as int,
-            destinatarioId: msgData['destinatario_id'] as int,
-            tipoRemitente: msgData['tipo_remitente'] as String,
-            mensaje: msgData['mensaje'] as String,
-            tipoMensaje: msgData['tipo_mensaje'] as String,
-            leido: false,
-            fechaCreacion: DateTimeUtils.parseServerDateOrNow(msgData['fecha_creacion']?.toString()),
-          );
-        } else {
-          throw Exception(data['message'] ?? 'Error al enviar mensaje');
-        }
-      } else {
-        throw Exception('Error del servidor: ${response.statusCode}');
+      if (!result.success || result.json == null) {
+        throw Exception(_friendlyMessage(result, fallback: 'No pudimos enviar tu mensaje.'));
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        debugPrint('✅ [ChatService] Mensaje enviado exitosamente');
+
+        final msgData = data['data'] as Map<String, dynamic>;
+        return ChatMessage(
+          id: msgData['id'] as int,
+          solicitudId: msgData['solicitud_id'] as int,
+          remitenteId: msgData['remitente_id'] as int,
+          destinatarioId: msgData['destinatario_id'] as int,
+          tipoRemitente: msgData['tipo_remitente'] as String,
+          mensaje: msgData['mensaje'] as String,
+          tipoMensaje: msgData['tipo_mensaje'] as String,
+          leido: false,
+          fechaCreacion: DateTimeUtils.parseServerDateOrNow(msgData['fecha_creacion']?.toString()),
+        );
+      }
+
+      throw Exception(data['message']?.toString() ?? 'No pudimos enviar tu mensaje.');
     } catch (e) {
       debugPrint('❌ [ChatService] Error enviando mensaje: $e');
-      rethrow;
+      final mapped = AppNetworkException.fromError(e);
+      throw Exception(mapped.userMessage);
     }
   }
 
@@ -237,22 +239,24 @@ class ChatService {
         url += '&desde_id=$desdeId';
       }
       
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 10),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final mensajesJson = data['mensajes'] as List<dynamic>;
-          return mensajesJson
-              .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
-              .toList();
-        }
+      if (!result.success || result.json == null) {
+        return [];
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final mensajesJson = data['mensajes'] as List<dynamic>;
+        return mensajesJson
+            .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
+            .toList();
+      }
+
       return [];
     } catch (e) {
       debugPrint('❌ [ChatService] Error obteniendo mensajes: $e');
@@ -290,18 +294,20 @@ class ChatService {
         body['mensaje_id'] = mensajeId;
       }
       
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
-      ).timeout(
-        const Duration(seconds: 10),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['success'] == true;
+      if (!result.success || result.json == null) {
+        return false;
       }
+
+      final data = result.json!;
+      return data['success'] == true;
+
       return false;
     } catch (e) {
       debugPrint('❌ [ChatService] Error marcando como leído: $e');
@@ -317,19 +323,21 @@ class ChatService {
     try {
       final url = '$baseUrl/chat/get_unread_count.php?solicitud_id=$solicitudId&usuario_id=$usuarioId';
       
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 10),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['no_leidos'] as int? ?? 0;
-        }
+      if (!result.success || result.json == null) {
+        return 0;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data['no_leidos'] as int? ?? 0;
+      }
+
       return 0;
     } catch (e) {
       debugPrint('❌ [ChatService] Error obteniendo conteo no leídos: $e');

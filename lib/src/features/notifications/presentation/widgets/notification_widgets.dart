@@ -280,8 +280,10 @@ class NotificationFilters extends StatelessWidget {
     final filters = [
       {'key': 'all', 'label': 'Todas', 'icon': Icons.all_inbox_rounded},
       {'key': 'unread', 'label': 'No leídas', 'icon': Icons.mark_email_unread_rounded},
-      {'key': 'trip_accepted', 'label': 'Viajes', 'icon': Icons.directions_car_rounded},
-      {'key': 'payment_received', 'label': 'Pagos', 'icon': Icons.payment_rounded},
+      {'key': 'trips', 'label': 'Viajes', 'icon': Icons.directions_car_rounded},
+      {'key': 'payments', 'label': 'Pagos', 'icon': Icons.payment_rounded},
+      {'key': 'documents', 'label': 'Documentos', 'icon': Icons.description_outlined},
+      {'key': 'chat', 'label': 'Chat', 'icon': Icons.chat_bubble_outline_rounded},
       {'key': 'promo', 'label': 'Promos', 'icon': Icons.local_offer_rounded},
     ];
 

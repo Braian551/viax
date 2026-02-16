@@ -5,6 +5,7 @@ import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/auth/google_auth_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -100,11 +101,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           }
         }
       } else {
-        _showErrorSnackBar(result['message'] ?? 'Error en la autenticación');
+        _showErrorSnackBar(
+          (result['message'] ?? 'No pudimos completar el inicio de sesión con Google').toString(),
+        );
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Error: $e');
+        _showErrorSnackBar('No pudimos iniciar sesión con Google. Verifica tu conexión e inténtalo nuevamente.');
       }
     } finally {
       if (mounted) {
@@ -116,12 +119,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
   
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
+    CustomSnackbar.showError(
+      context,
+      message: message,
+      duration: const Duration(seconds: 4),
     );
   }
 

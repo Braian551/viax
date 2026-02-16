@@ -1,8 +1,8 @@
 // lib/src/global/services/mapbox_service.dart
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
 import 'app_secrets_service.dart';
 import 'quota_monitor_service.dart';
 
@@ -10,6 +10,7 @@ import 'quota_monitor_service.dart';
 /// Maneja mapas, rutas, geocoding y optimizaciÃ³n de rutas
 class MapboxService {
   static const String _baseUrl = 'https://api.mapbox.com';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   // ============================================
   // DIRECTIONS API (Rutas y NavegaciÃ³n)
@@ -52,17 +53,18 @@ class MapboxService {
         '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
+      if (result.success && result.json != null) {
         // Incrementar contador de uso
         await QuotaMonitorService.incrementMapboxRouting();
 
-        return await compute(_parseDirectionsResponse, response.body);
+        return await compute(_parseDirectionsResponse, jsonEncode(result.json));
       } else {
-        print(
-          'Error en Mapbox Directions: ${response.statusCode} - ${response.body}',
-        );
+        print('Error en Mapbox Directions: ${result.error?.userMessage}');
       }
 
       return null;
@@ -101,12 +103,15 @@ class MapboxService {
         '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
+      if (result.success && result.json != null) {
         await QuotaMonitorService.incrementMapboxRouting();
 
-        return await compute(_parseOptimizationResponse, response.body);
+        return await compute(_parseOptimizationResponse, jsonEncode(result.json));
       }
 
       return null;
@@ -202,14 +207,15 @@ class MapboxService {
         '$_baseUrl/geocoding/v5/mapbox.places/$encodedQuery.json',
       ).replace(queryParameters: queryParams);
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
-        return await compute(_parsePlacesResponse, response.body);
+      if (result.success && result.json != null) {
+        return await compute(_parsePlacesResponse, jsonEncode(result.json));
       } else {
-        print(
-          'Error en Mapbox Geocoding: ${response.statusCode} - ${response.body}',
-        );
+        print('Error en Mapbox Geocoding: ${result.error?.userMessage}');
       }
 
       return [];
@@ -229,10 +235,13 @@ class MapboxService {
         '&types=address,poi,place',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (result.success && result.json != null) {
+        final data = result.json!;
 
         if (data['features'] != null && (data['features'] as List).isNotEmpty) {
           return MapboxPlace.fromJson(data['features'][0]);
@@ -260,10 +269,13 @@ class MapboxService {
         '&types=address',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (result.success && result.json != null) {
+        final data = result.json!;
 
         if (data['features'] != null && (data['features'] as List).isNotEmpty) {
           final features = data['features'] as List;
@@ -338,12 +350,15 @@ class MapboxService {
         '&access_token=${AppSecretsService.instance.mapboxToken}',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
+      if (result.success && result.json != null) {
         await QuotaMonitorService.incrementMapboxRouting();
 
-        final data = json.decode(response.body);
+        final data = result.json!;
         return MapboxMatrix.fromJson(data);
       }
 
@@ -386,10 +401,13 @@ class MapboxService {
         '&overview=full',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (result.success && result.json != null) {
+        final data = result.json!;
 
         if (data['matchings'] != null &&
             (data['matchings'] as List).isNotEmpty) {
@@ -426,7 +444,7 @@ class MapboxService {
         }
       }
 
-      print('No se pudo hacer snap to road: ${response.statusCode}');
+      print('No se pudo hacer snap to road: ${result.statusCode}');
       return null;
     } catch (e) {
       print('Error en Map Matching: $e');

@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../../global/models/simple_location.dart';
 import '../../../../../global/services/mapbox_service.dart';
+import '../../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Mapa con la ruta y marcadores - usa MapboxService como en home
@@ -28,47 +29,53 @@ class RouteMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: userLocation ?? const LatLng(6.2442, -75.5812),
-        initialZoom: 15,
-        minZoom: 3.0,
-        maxZoom: 18.0,
-        interactionOptions: const InteractionOptions(
-          enableMultiFingerGestureRace: true,
-          flags: InteractiveFlag.all,
-        ),
-      ),
-      children: [
-        // Tiles - usa MapboxService como en home
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
-        ),
-        // Ruta
-        if (routePoints.length >= 2)
-          PolylineLayer(
-            polylines: [
-              // Sombra
-              Polyline(
-                points: routePoints,
-                strokeWidth: 10,
-                color: AppColors.primary.withValues(alpha: 0.2),
-              ),
-              // Línea principal
-              Polyline(
-                points: routePoints,
-                strokeWidth: 5,
-                color: AppColors.primary,
-              ),
-            ],
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: userLocation ?? const LatLng(6.2442, -75.5812),
+          initialZoom: 15,
+          minZoom: 3.0,
+          maxZoom: 18.0,
+          onMapReady: onMapReady,
+          interactionOptions: const InteractionOptions(
+            enableMultiFingerGestureRace: true,
+            flags: InteractiveFlag.all,
           ),
-        // Marcadores
-        MarkerLayer(
-          markers: _buildMarkers(),
         ),
-      ],
+        children: [
+          // Tiles - usa MapboxService como en home
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.viax.app',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+          ),
+          // Ruta
+          if (routePoints.length >= 2)
+            PolylineLayer(
+              polylines: [
+                // Sombra
+                Polyline(
+                  points: routePoints,
+                  strokeWidth: 10,
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+                // Línea principal
+                Polyline(
+                  points: routePoints,
+                  strokeWidth: 5,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+          // Marcadores
+          MarkerLayer(
+            markers: _buildMarkers(),
+          ),
+        ],
+      ),
     );
   }
 

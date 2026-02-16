@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
 
 /// Modelo de categoría de soporte
 class SupportCategory {
@@ -127,22 +127,27 @@ class TicketMessage {
 /// Servicio de soporte
 class SupportService {
   static final String _baseUrl = '${AppConfig.baseUrl}/support';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Obtener categorías de soporte
   static Future<List<SupportCategory>> getCategories() async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/get_categories.php'),
+      final result = await _network.getJson(
+        url: Uri.parse('$_baseUrl/get_categories.php'),
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final List<dynamic> categorias = data['categorias'] ?? [];
-          return categorias.map((c) => SupportCategory.fromJson(c)).toList();
-        }
+      if (!result.success || result.json == null) {
+        return [];
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final List<dynamic> categorias = data['categorias'] ?? [];
+        return categorias.map((c) => SupportCategory.fromJson(c)).toList();
+      }
+
       return [];
     } catch (e) {
       print('Error obteniendo categorías: $e');
@@ -159,8 +164,8 @@ class SupportService {
     int? tripId,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/create_ticket.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$_baseUrl/create_ticket.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -172,14 +177,18 @@ class SupportService {
           'descripcion': description,
           'viaje_id': tripId,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['ticket'];
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return data['ticket'];
+      }
+
       return null;
     } catch (e) {
       print('Error creando ticket: $e');
@@ -207,18 +216,22 @@ class SupportService {
       final uri = Uri.parse('$_baseUrl/get_tickets.php')
           .replace(queryParameters: queryParams);
 
-      final response = await http.get(
-        uri,
+      final result = await _network.getJson(
+        url: uri,
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final List<dynamic> tickets = data['tickets'] ?? [];
-          return tickets.map((t) => SupportTicket.fromJson(t)).toList();
-        }
+      if (!result.success || result.json == null) {
+        return [];
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final List<dynamic> tickets = data['tickets'] ?? [];
+        return tickets.map((t) => SupportTicket.fromJson(t)).toList();
+      }
+
       return [];
     } catch (e) {
       print('Error obteniendo tickets: $e');
@@ -238,21 +251,25 @@ class SupportService {
         'usuario_id': userId.toString(),
       });
 
-      final response = await http.get(
-        uri,
+      final result = await _network.getJson(
+        url: uri,
         headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final List<dynamic> mensajes = data['mensajes'] ?? [];
-          return {
-            'ticket': data['ticket'],
-            'mensajes': mensajes.map((m) => TicketMessage.fromJson(m)).toList(),
-          };
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final List<dynamic> mensajes = data['mensajes'] ?? [];
+        return {
+          'ticket': data['ticket'],
+          'mensajes': mensajes.map((m) => TicketMessage.fromJson(m)).toList(),
+        };
+      }
+
       return null;
     } catch (e) {
       print('Error obteniendo mensajes: $e');
@@ -267,8 +284,8 @@ class SupportService {
     required String message,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/send_message.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$_baseUrl/send_message.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -278,14 +295,18 @@ class SupportService {
           'usuario_id': userId,
           'mensaje': message,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true && data['mensaje'] != null) {
-          return TicketMessage.fromJson(data['mensaje']);
-        }
+      if (!result.success || result.json == null) {
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true && data['mensaje'] != null) {
+        return TicketMessage.fromJson(data['mensaje']);
+      }
+
       return null;
     } catch (e) {
       print('Error enviando mensaje: $e');
@@ -300,8 +321,8 @@ class SupportService {
     String? reason,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/request_callback.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('$_baseUrl/request_callback.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -311,13 +332,15 @@ class SupportService {
           'telefono': phone,
           'motivo': reason,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['success'] == true;
+      if (!result.success || result.json == null) {
+        return false;
       }
-      return false;
+
+      final data = result.json!;
+      return data['success'] == true;
     } catch (e) {
       print('Error solicitando callback: $e');
       return false;

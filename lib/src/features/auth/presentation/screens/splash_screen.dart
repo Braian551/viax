@@ -205,13 +205,22 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    // --- LOGICA DE RECUPERACIÓN DE VIAJE ---
-    try {
-      Map<String, dynamic>? tripToRecover;
-      Map<String, dynamic>? conductorInfo;
-      String? userRole;
+    // 1. Obtener sesión actual (para fallback de IDs)
+    final session = await UserService.getSavedSession();
+    int? sessionUserId;
+    String? sessionUserRole;
 
-      // 1. Intentar recuperación local
+    if (session != null) {
+      sessionUserId = session['id'];
+      sessionUserRole = session['tipo_usuario'];
+    }
+
+    Map<String, dynamic>? tripToRecover;
+    Map<String, dynamic>? conductorInfo;
+    String? userRole;
+
+    // 2. Intentar recuperación local
+    try {
       final savedTrip = await TripPersistenceService().getActiveTrip();
       
       if (savedTrip != null) {
@@ -226,31 +235,24 @@ class _SplashScreenState extends State<SplashScreen>
           conductorInfo = tripStatus['trip']?['conductor'] as Map<String, dynamic>?;
         }
       } 
-      // 2. Si no hay local, consultar backend (Fallback)
-      else {
-        final session = await UserService.getSavedSession();
-        if (session != null) {
-          final userId = session['id'];
-          final role = session['tipo_usuario'];
-          userRole = role;
-          
-          if (userId != null) {
-            final activeCheck = await TripRequestService.checkActiveTrip(
-              userId: userId,
-              role: role,
-            );
-            
-            if (activeCheck['success'] == true) {
-               debugPrint('🌐 Viaje activo encontrado en backend: ${activeCheck['trip']['id']}');
-               tripToRecover = activeCheck['trip'];
-               // El conductor viene dentro de trip, no en la raíz
-               conductorInfo = activeCheck['trip']?['conductor'] as Map<String, dynamic>?;
-            }
-          }
+      // 3. Si no hay local, consultar backend (Fallback)
+      else if (sessionUserId != null && sessionUserRole != null) {
+        userRole = sessionUserRole;
+        
+        final activeCheck = await TripRequestService.checkActiveTrip(
+          userId: sessionUserId,
+          role: sessionUserRole,
+        );
+        
+        if (activeCheck['success'] == true) {
+            debugPrint('🌐 Viaje activo encontrado en backend: ${activeCheck['trip']['id']}');
+            tripToRecover = activeCheck['trip'];
+            // El conductor viene dentro de trip, no en la raíz
+            conductorInfo = activeCheck['trip']?['conductor'] as Map<String, dynamic>?;
         }
       }
 
-      // 3. Procesar redirección si se encontró un viaje
+      // 4. Procesar redirección si se encontró un viaje
       if (tripToRecover != null && userRole != null) {
          final trip = tripToRecover;
          final estado = trip['estado'];
@@ -260,14 +262,12 @@ class _SplashScreenState extends State<SplashScreen>
             if (mounted) {
               if (userRole == 'conductor') {
                  // Recuperar datos para conductor
-              int conductorId = int.tryParse(trip['conductor_id']?.toString() ?? '') ?? 0;
+                 int conductorId = int.tryParse(trip['conductor_id']?.toString() ?? '') ?? 0;
                  
                  // Fallback: Si no viene el ID del conductor en el viaje, usar el de la sesión
                  if (conductorId == 0) {
-                    final session = await UserService.getSavedSession();
-                if (!mounted) return;
-                    if (session != null && session['tipo_usuario'] == 'conductor') {
-                       conductorId = session['id'];
+                    if (sessionUserId != null && sessionUserRole == 'conductor') {
+                       conductorId = sessionUserId;
                     }
                  }
 
@@ -291,7 +291,7 @@ class _SplashScreenState extends State<SplashScreen>
               } else {
                 // Recuperar datos para cliente
                 final tripId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
-                final clienteId = int.tryParse(trip['cliente_id']?.toString() ?? '') ?? 0;
+                final clienteId = int.tryParse(trip['cliente_id']?.toString() ?? '') ?? sessionUserId ?? 0;
                 final origenLat = double.tryParse(trip['origen']?['latitud']?.toString() ?? '') ?? 0.0;
                 final origenLng = double.tryParse(trip['origen']?['longitud']?.toString() ?? '') ?? 0.0;
                 final direccionOrigen = trip['origen']?['direccion']?.toString() ?? '';

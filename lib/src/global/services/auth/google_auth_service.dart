@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
+import 'package:viax/src/core/network/app_network_exception.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 
 /// Servicio para autenticación con Google OAuth
@@ -10,6 +12,8 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 /// Implementa flujo de autenticación nativo con Google Sign-In SDK
 /// compatible con Android, iOS y Web.
 class GoogleAuthService {
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
   // Google OAuth Configuration - Web Client ID (para serverClientId en el SDK)
   // Este es el client ID del tipo "Web application" de Google Cloud Console
   // Se usa para obtener el id_token que el backend puede verificar
@@ -22,15 +26,16 @@ class GoogleAuthService {
     }
     
     try {
-      final response = await http.get(
-        Uri.parse('${AppConfig.authServiceUrl}/google/client_config.php'),
+      final result = await _network.getJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/google/client_config.php'),
         headers: {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true && data['config'] != null) {
-          _cachedWebClientId = data['config']['web_client_id'];
+        timeout: const Duration(seconds: 5),
+      );
+
+      if (result.success && result.json != null) {
+        final data = result.json!;
+        if (data['success'] == true && data['config'] != null && data['config']['web_client_id'] != null) {
+          _cachedWebClientId = data['config']['web_client_id'].toString();
           debugPrint('Web Client ID cargado desde backend');
           return _cachedWebClientId!;
         }
@@ -111,9 +116,10 @@ class GoogleAuthService {
       
     } catch (e) {
       debugPrint('Error en Google Sign-In: $e');
+      final networkError = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error al iniciar sesión con Google: $e',
+        'message': networkError.userMessage,
       };
     }
   }
@@ -137,54 +143,53 @@ class GoogleAuthService {
         body['device_uuid'] = deviceUuid;
       }
       
-      final response = await http.post(
-        Uri.parse('${AppConfig.authServiceUrl}/google/callback.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/google/callback.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode(body),
+        timeout: AppConfig.connectionTimeout,
+        requireDataPayload: false,
       );
-      
-      debugPrint('Backend response: ${response.statusCode}');
-      debugPrint('Backend body: ${response.body}');
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['success'] == true && data['data'] != null) {
-          final userData = data['data'];
-          final user = userData['user'];
-          
-          // Guardar sesión del usuario
-          if (user != null) {
-            await UserService.saveSession(user);
-          }
-          
-          return {
-            'success': true,
-            'message': data['message'] ?? 'Autenticación exitosa',
-            'user': user,
-            'is_new_user': userData['is_new_user'] ?? false,
-            'requires_phone': userData['requires_phone'] ?? user?['requiere_telefono'] ?? false,
-          };
-        } else {
-          return {
-            'success': false,
-            'message': data['message'] ?? 'Error en la autenticación',
-          };
-        }
-      } else {
+
+      if (!result.success || result.json == null) {
         return {
           'success': false,
-          'message': 'Error del servidor: ${response.statusCode}',
+          'message': result.error?.userMessage ?? 'No fue posible validar tu cuenta de Google.',
         };
       }
-    } catch (e) {
-      debugPrint('Error enviando token al backend: $e');
+
+      final data = result.json!;
+
+      if (data['success'] == true && data['data'] != null) {
+        final userData = data['data'];
+        final user = userData['user'];
+
+        if (user != null) {
+          await UserService.saveSession(user);
+        }
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Autenticación exitosa',
+          'user': user,
+          'is_new_user': userData['is_new_user'] ?? false,
+          'requires_phone': userData['requires_phone'] ?? user?['requiere_telefono'] ?? false,
+        };
+      }
+
       return {
         'success': false,
-        'message': 'Error de conexión: $e',
+        'message': data['message']?.toString() ?? 'No fue posible validar tu cuenta de Google.',
+      };
+    } catch (e) {
+      debugPrint('Error enviando token al backend: $e');
+      final networkError = AppNetworkException.fromError(e);
+      return {
+        'success': false,
+        'message': networkError.userMessage,
       };
     }
   }
@@ -212,8 +217,8 @@ class GoogleAuthService {
     required String phone,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.authServiceUrl}/update_phone.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/update_phone.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -222,42 +227,43 @@ class GoogleAuthService {
           'user_id': userId,
           'phone': phone,
         }),
+        timeout: AppConfig.connectionTimeout,
+        requireDataPayload: false,
       );
-      
-      debugPrint('Update phone response: ${response.statusCode}');
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['success'] == true && data['data'] != null) {
-          final user = data['data']['user'];
-          
-          if (user != null) {
-            await UserService.saveSession(user);
-          }
-          
-          return {
-            'success': true,
-            'message': data['message'] ?? 'Teléfono actualizado',
-            'user': user,
-          };
-        }
-        
+
+      if (!result.success || result.json == null) {
         return {
           'success': false,
-          'message': data['message'] ?? 'Error al actualizar teléfono',
+          'message': result.error?.userMessage ?? 'No pudimos actualizar tu teléfono. Intenta nuevamente.',
         };
       }
-      
+
+      final data = result.json!;
+
+      if (data['success'] == true && data['data'] != null) {
+        final user = data['data']['user'];
+
+        if (user != null) {
+          await UserService.saveSession(user);
+        }
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Teléfono actualizado',
+          'user': user,
+        };
+      }
+
       return {
         'success': false,
-        'message': 'Error del servidor: ${response.statusCode}',
+        'message': data['message'] ?? 'No pudimos actualizar tu teléfono. Intenta nuevamente.',
       };
     } catch (e) {
       debugPrint('Error actualizando teléfono: $e');
+      final networkError = AppNetworkException.fromError(e);
       return {
         'success': false,
-        'message': 'Error: $e',
+        'message': networkError.userMessage,
       };
     }
   }

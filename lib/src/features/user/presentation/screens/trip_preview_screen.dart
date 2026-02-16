@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:ui';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/models/simple_location.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../theme/app_colors.dart';
 import '../../domain/models/trip_models.dart';
 import '../../domain/models/company_vehicle_models.dart';
@@ -962,21 +963,26 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Widget _buildMap(bool isDark) {
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: widget.origin.toLatLng(),
-        initialZoom: 14,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: widget.origin.toLatLng(),
+          initialZoom: 14,
+          onMapReady: onMapReady,
+          interactionOptions: const InteractionOptions(
+            flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+          ),
         ),
-      ),
-      children: [
-        // Tiles de Mapbox con estilo según el tema
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.example.ping_go',
-        ),
+        children: [
+          // Tiles de Mapbox con estilo según el tema
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.example.ping_go',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+          ),
 
         // Sombra de la ruta (efecto de profundidad)
         if (_animatedRoutePoints.length > 1)
@@ -1211,7 +1217,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
             ),
           ],
         ),
-      ],
+        ],
+      ),
     );
   }
 

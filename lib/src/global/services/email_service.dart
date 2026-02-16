@@ -1,14 +1,16 @@
 ﻿// lib/src/global/services/email_service.dart
 import 'dart:convert';
 import 'dart:math';
-import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
+import '../../core/network/network_request_executor.dart';
 
 /// Servicio para envío de correos electrónicos
 /// 
 /// NOTA: email_service.php ahora está en el microservicio de auth
 /// URL: AppConfig.authServiceUrl/email_service.php
 class EmailService {
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
   /// URL del servicio de email
   /// Archivo movido a auth/ microservicio
   static String get _apiUrl {
@@ -30,8 +32,8 @@ class EmailService {
     try {
       print('Enviando código de verificación a: $email');
       
-      final response = await http.post(
-        Uri.parse(_apiUrl),
+      final result = await _network.postJson(
+        url: Uri.parse(_apiUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -41,18 +43,18 @@ class EmailService {
           'code': code,
           'userName': userName,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('Respuesta del servidor: ${response.statusCode}');
-      print('Cuerpo de la respuesta: ${response.body}');
+      print('Respuesta del servidor: ${result.statusCode}');
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        return responseData['success'] == true;
-      } else {
-        print('Error del servidor: ${response.statusCode} - ${response.body}');
+      if (!result.success || result.json == null) {
+        print('Error del servicio de correo: ${result.error?.userMessage}');
         return false;
       }
+
+      final responseData = result.json!;
+      return responseData['success'] == true;
     } catch (e) {
       print('Error enviando correo: $e');
       return false;
@@ -108,8 +110,8 @@ class EmailService {
     try {
       print('Enviando código de recuperación de contraseña a: $email');
       
-      final response = await http.post(
-        Uri.parse(_apiUrl),
+      final result = await _network.postJson(
+        url: Uri.parse(_apiUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -120,18 +122,18 @@ class EmailService {
           'userName': userName,
           'type': 'password_recovery', // Tipo especial para recuperación
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      print('Respuesta del servidor: ${response.statusCode}');
-      print('Cuerpo de la respuesta: ${response.body}');
+      print('Respuesta del servidor: ${result.statusCode}');
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        return responseData['success'] == true;
-      } else {
-        print('Error del servidor: ${response.statusCode} - ${response.body}');
+      if (!result.success || result.json == null) {
+        print('Error del servicio de correo de recuperación: ${result.error?.userMessage}');
         return false;
       }
+
+      final responseData = result.json!;
+      return responseData['success'] == true;
     } catch (e) {
       print('Error enviando correo de recuperación: $e');
       return false;

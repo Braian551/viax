@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/network/network_request_executor.dart';
+import '../../../core/network/app_network_exception.dart';
 
 /// Datos de tracking del viaje para el cliente
 class ClientTrackingData {
@@ -112,6 +114,7 @@ class ClientTripTrackingService {
 
   // Configuración
   static const Duration _pollInterval = Duration(seconds: 5);
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   // Estado
   bool _isWatching = false;
@@ -176,20 +179,29 @@ class ClientTripTrackingService {
         '${AppConfig.baseUrl}/conductor/tracking/get_tracking.php?solicitud_id=$solicitudId'
       );
 
-      final response = await http.get(
-        url,
+      final result = await _network.getJson(
+        url: url,
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return ClientTrackingData.fromServerResponse(data);
+      if (!result.success || result.json == null) {
+        if (result.error != null) {
+          onError?.call(result.error!.userMessage);
         }
+        return null;
       }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        return ClientTrackingData.fromServerResponse(data);
+      }
+
       return null;
     } catch (e) {
       debugPrint('❌ [ClientTracking] Error obteniendo tracking: $e');
+      final mapped = AppNetworkException.fromError(e);
+      onError?.call(mapped.userMessage);
       return null;
     }
   }

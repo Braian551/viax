@@ -18,9 +18,12 @@ import 'package:viax/src/core/config/app_config.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 import 'package:viax/src/global/services/local_notification_service.dart';
+import 'package:viax/src/features/notifications/services/push_notification_service.dart';
 import 'package:viax/src/global/widgets/floating_trip_fab.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
+import 'package:viax/src/core/network/connectivity_service.dart';
+import 'package:viax/src/core/network/widgets/global_connectivity_banner.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -104,8 +107,13 @@ void main() async {
     // INICIALIZAR API KEYS DESDE BACKEND
     // ============================================
     try {
-      await AppSecretsService.instance.initialize();
-      debugPrint('✅ API Keys cargadas desde backend');
+      final secretsLoaded = await AppSecretsService.instance.initialize();
+      if (secretsLoaded) {
+        debugPrint('✅ API Keys disponibles');
+      } else {
+        debugPrint('⚠️ API Keys no disponibles en este arranque');
+      }
+      debugPrint('   - Mapbox Token: ${AppSecretsService.instance.mapboxToken.isNotEmpty ? "✓" : "✗"}');
       debugPrint('   - Google Places API: ${AppSecretsService.instance.googlePlacesApiKey.isNotEmpty ? "✓" : "✗"}');
     } catch (e) {
       debugPrint('⚠️ Error cargando API Keys: $e');
@@ -138,6 +146,17 @@ void main() async {
       debugPrint('⚠️ Error inicializando notificaciones: $e');
     }
 
+    // ============================================
+    // INICIALIZAR PUSH (FCM)
+    // ============================================
+    try {
+      await PushNotificationService.initialize();
+      await PushNotificationService.syncForCurrentSession();
+      debugPrint('✅ Push notifications (FCM) inicializadas');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando push notifications: $e');
+    }
+
     // Inicializar Service Locator (Inyección de Dependencias)
     // Esto configura todos los datasources, repositories y use cases
     final serviceLocator = ServiceLocator();
@@ -146,6 +165,13 @@ void main() async {
     } catch (e) {
       print('Error initializing service locator: $e');
       // Continue without service locator for now
+    }
+
+    // Inicializar monitoreo global de conectividad
+    try {
+      await ConnectivityService().initialize();
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando ConnectivityService: $e');
     }
 
     runApp(
@@ -215,6 +241,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    Future.microtask(() async {
+      await PushNotificationService.syncForCurrentSession();
+    });
   }
 
   @override
@@ -240,6 +270,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         // App vuelve a primer plano - ocultar overlay del sistema SIEMPRE      
         tripNavService.hideSystemOverlay();
+        Future.microtask(() async {
+          await PushNotificationService.syncForCurrentSession();
+        });
         debugPrint('📱 [App] Volviendo a primer plano - ocultando overlay');
         break;
       default:
@@ -293,8 +326,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ],
       // Agregar el overlay del FAB flotante usando builder
       builder: (context, child) {
-        return ActiveTripOverlay(
-          child: child ?? const SizedBox.shrink(),
+        return GlobalConnectivityBanner(
+          child: ActiveTripOverlay(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

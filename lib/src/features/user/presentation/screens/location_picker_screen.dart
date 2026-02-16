@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 
 /// Pantalla mejorada de selección de ubicación en mapa
 /// Con animaciones suaves, efecto glass y diseño moderno estilo DiDi/Uber
@@ -256,101 +257,107 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
   }
 
   Widget _buildMap(bool isDark) {
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: _currentCenter,
-        initialZoom: 15.0,
-        onMapReady: () {
-          setState(() => _isMapReady = true);
-          if (widget.initialPosition == null && _userLocation != null) {
-            _mapController.move(_userLocation!, 16);
-          }
-        },
-        onPositionChanged: (position, hasGesture) {
-          if (hasGesture && _isMapReady) {
-            if (!_isMoving) {
-              _pinAnimationController.forward();
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: _currentCenter,
+          initialZoom: 15.0,
+          onMapReady: () {
+            onMapReady();
+            setState(() => _isMapReady = true);
+            if (widget.initialPosition == null && _userLocation != null) {
+              _mapController.move(_userLocation!, 16);
             }
-            setState(() {
-              _isMoving = true;
-              _currentCenter = position.center;
-            });
-          }
-        },
-        onMapEvent: (event) {
-          if (event is MapEventMoveEnd && _isMapReady) {
-            _pinAnimationController.reverse();
-            setState(() => _isMoving = false);
-            _getAddress(_currentCenter);
-          }
-        },
-        interactionOptions: const InteractionOptions(
-          enableMultiFingerGestureRace: true,
-          flags: InteractiveFlag.all,
+          },
+          onPositionChanged: (position, hasGesture) {
+            if (hasGesture && _isMapReady) {
+              if (!_isMoving) {
+                _pinAnimationController.forward();
+              }
+              setState(() {
+                _isMoving = true;
+                _currentCenter = position.center;
+              });
+            }
+          },
+          onMapEvent: (event) {
+            if (event is MapEventMoveEnd && _isMapReady) {
+              _pinAnimationController.reverse();
+              setState(() => _isMoving = false);
+              _getAddress(_currentCenter);
+            }
+          },
+          interactionOptions: const InteractionOptions(
+            enableMultiFingerGestureRace: true,
+            flags: InteractiveFlag.all,
+          ),
         ),
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: isDark
-              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-          subdomains: const ['a', 'b', 'c', 'd'],
-          userAgentPackageName: 'com.example.viax',
-        ),
-        // Marcador de ubicación del usuario
-        if (_userLocation != null)
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: _userLocation!,
-                width: 60,
-                height: 60,
-                child: AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Pulso exterior
-                        Transform.scale(
-                          scale: _pulseAnimation.value,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primary.withValues(
-                                alpha: 0.3 * (1.5 - _pulseAnimation.value),
+        children: [
+          TileLayer(
+            urlTemplate: isDark
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            subdomains: const ['a', 'b', 'c', 'd'],
+            userAgentPackageName: 'com.example.viax',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+          ),
+          // Marcador de ubicación del usuario
+          if (_userLocation != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: _userLocation!,
+                  width: 60,
+                  height: 60,
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Pulso exterior
+                          Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.3 * (1.5 - _pulseAnimation.value),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        // Punto central
-                        Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.4),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
+                          // Punto central
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-      ],
+              ],
+            ),
+        ],
+      ),
     );
   }
 

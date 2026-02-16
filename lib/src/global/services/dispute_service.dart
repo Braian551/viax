@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
+import '../../core/network/network_request_executor.dart';
 
 /// Modelo de datos para una disputa de pago.
 class DisputaData {
@@ -119,17 +119,23 @@ class DisputeService {
   static final DisputeService _instance = DisputeService._internal();
   factory DisputeService() => _instance;
   DisputeService._internal();
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Verificar si el usuario tiene una disputa activa.
   Future<({bool tieneDisputa, DisputaData? disputa})> checkDisputeStatus(int usuarioId) async {
     try {
       final url = '${AppConfig.baseUrl}/payment/check_dispute_status.php?usuario_id=$usuarioId';
-      final response = await http.get(
-        Uri.parse(url),
+      final result = await _network.getJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return (tieneDisputa: false, disputa: null);
+      }
+
+      final data = result.json!;
       
       if (data['success'] == true) {
         final bool tieneDisputa = data['tiene_disputa'] ?? false;
@@ -161,8 +167,8 @@ class DisputeService {
       print('📡 DisputeService: Enviando a $url');
       print('   Datos: solicitud=$solicitudId, usuario=$usuarioId, tipo=$tipoUsuario, confirma=$confirmaPago');
       
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'solicitud_id': solicitudId,
@@ -170,12 +176,16 @@ class DisputeService {
           'tipo_usuario': tipoUsuario,
           'confirma_pago': confirmaPago,
         }),
-      ).timeout(const Duration(seconds: 10));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      print('📡 DisputeService: Respuesta HTTP ${response.statusCode}');
-      print('   Body: ${response.body}');
+      print('📡 DisputeService: Respuesta HTTP ${result.statusCode}');
+
+      if (!result.success || result.json == null) {
+        throw Exception(result.error?.userMessage ?? 'No fue posible reportar el estado de pago.');
+      }
       
-      final data = json.decode(response.body);
+      final data = result.json!;
       return PaymentStatusResult.fromJson(data);
     } catch (e) {
       print('❌ DisputeService Error: $e');
@@ -198,17 +208,22 @@ class DisputeService {
   }) async {
     try {
       final url = '${AppConfig.baseUrl}/payment/resolve_dispute.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final result = await _network.postJson(
+        url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'disputa_id': disputaId,
           'conductor_id': conductorId,
           'confirma_recibo': true,
         }),
-      ).timeout(const Duration(seconds: 10));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return false;
+      }
+
+      final data = result.json!;
       return data['success'] == true;
     } catch (e) {
       print('Error resolving dispute: $e');

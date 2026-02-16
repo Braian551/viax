@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/network/network_request_executor.dart';
 import '../models/notification_model.dart';
 
 /// Servicio para gestionar las notificaciones del usuario
 /// Maneja la comunicación con el backend de notificaciones
 class NotificationService {
   static const String _basePath = '/notifications';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Obtiene las notificaciones del usuario
   /// 
@@ -35,12 +36,21 @@ class NotificationService {
       final uri = Uri.parse('${AppConfig.baseUrl}$_basePath/get_notifications.php')
           .replace(queryParameters: queryParams);
 
-      final response = await http.get(
-        uri,
+      final result = await _network.getJson(
+        url: uri,
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos obtener notificaciones.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      final data = result.json!;
 
       if (data['success'] == true) {
         final notificaciones = (data['notificaciones'] as List)
@@ -75,12 +85,17 @@ class NotificationService {
       final uri = Uri.parse('${AppConfig.baseUrl}$_basePath/get_unread_count.php')
           .replace(queryParameters: {'usuario_id': userId.toString()});
 
-      final response = await http.get(
-        uri,
+      final result = await _network.getJson(
+        url: uri,
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return 0;
+      }
+
+      final data = result.json!;
       return data['count'] ?? 0;
     } catch (e) {
       debugPrint('Error getUnreadCount: $e');
@@ -108,13 +123,22 @@ class NotificationService {
         if (markAll) 'mark_all': true,
       };
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}$_basePath/mark_as_read.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.baseUrl}$_basePath/mark_as_read.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos actualizar tus notificaciones.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      final data = result.json!;
 
       return {
         'success': data['success'] ?? false,
@@ -151,13 +175,22 @@ class NotificationService {
         if (deleteAll) 'delete_all': true,
       };
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}$_basePath/delete_notification.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.baseUrl}$_basePath/delete_notification.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos eliminar notificaciones.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      final data = result.json!;
 
       return {
         'success': data['success'] ?? false,
@@ -180,12 +213,17 @@ class NotificationService {
       final uri = Uri.parse('${AppConfig.baseUrl}$_basePath/get_settings.php')
           .replace(queryParameters: {'usuario_id': userId.toString()});
 
-      final response = await http.get(
-        uri,
+      final result = await _network.getJson(
+        url: uri,
         headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return null;
+      }
+
+      final data = result.json!;
 
       if (data['success'] == true && data['settings'] != null) {
         return NotificationSettings.fromJson(data['settings']);
@@ -209,13 +247,22 @@ class NotificationService {
         ...settings,
       };
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}$_basePath/update_settings.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.baseUrl}$_basePath/update_settings.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
-      ).timeout(const Duration(seconds: 15));
+        timeout: AppConfig.connectionTimeout,
+      );
 
-      final data = json.decode(response.body);
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos actualizar la configuración.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      final data = result.json!;
 
       if (data['success'] == true && data['settings'] != null) {
         return {
@@ -230,6 +277,84 @@ class NotificationService {
       };
     } catch (e) {
       debugPrint('Error updateSettings: $e');
+      return {
+        'success': false,
+        'error': 'Error de conexión: $e',
+      };
+    }
+  }
+
+  /// Registra/actualiza el token push del dispositivo para el usuario.
+  static Future<Map<String, dynamic>> registerPushToken({
+    required int userId,
+    required String token,
+    String? plataforma,
+    String? deviceId,
+    String? deviceName,
+  }) async {
+    try {
+      final body = {
+        'usuario_id': userId,
+        'token': token,
+        if (plataforma != null) 'plataforma': plataforma,
+        if (deviceId != null) 'device_id': deviceId,
+        if (deviceName != null) 'device_name': deviceName,
+      };
+
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.baseUrl}$_basePath/register_push_token.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos registrar el token push.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      return Map<String, dynamic>.from(result.json!);
+    } catch (e) {
+      debugPrint('Error registerPushToken: $e');
+      return {
+        'success': false,
+        'error': 'Error de conexión: $e',
+      };
+    }
+  }
+
+  /// Desactiva el token push del dispositivo para el usuario.
+  static Future<Map<String, dynamic>> unregisterPushToken({
+    required int userId,
+    required String token,
+  }) async {
+    try {
+      final body = {
+        'usuario_id': userId,
+        'token': token,
+      };
+
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.baseUrl}$_basePath/unregister_push_token.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'error': result.error?.userMessage ?? 'No pudimos desactivar el token push.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      return Map<String, dynamic>.from(result.json!);
+    } catch (e) {
+      debugPrint('Error unregisterPushToken: $e');
       return {
         'success': false,
         'error': 'Error de conexión: $e',

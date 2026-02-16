@@ -132,6 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         } else {
           final message = (resp['message'] ?? 'Credenciales inválidas').toString();
+          final errorType = resp['error_type']?.toString();
           final data = resp['data'] is Map<String, dynamic> ? resp['data'] as Map<String, dynamic> : null;
           final bool tooMany = data?['too_many_attempts'] == true;
           final int failAttempts = (data?['fail_attempts'] is int) ? data!['fail_attempts'] as int : _localFailAttempts;
@@ -156,7 +157,13 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           // Mostrar mensaje específico según el error del backend
-          if (message.contains('Email y password son requeridos')) {
+          if (errorType == 'offline') {
+            _showError('No tienes internet. Conéctate y vuelve a intentarlo.');
+          } else if (errorType == 'timeout') {
+            _showError('La conexión está lenta. Intenta de nuevo en unos segundos.');
+          } else if (errorType == 'serverUnavailable') {
+            _showError('El servicio de inicio de sesión no está disponible ahora. Intenta más tarde.');
+          } else if (message.contains('Email y password son requeridos')) {
             _showError('Por favor, completa todos los campos.');
           } else if (message.contains('Usuario no encontrado')) {
             _showError('No se encontró una cuenta con este email. Verifica que el email sea correcto.');

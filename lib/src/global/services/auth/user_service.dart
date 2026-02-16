@@ -4,8 +4,11 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
 
 class UserService {
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
   static Future<Map<String, dynamic>> registerUser({
     required String email,
     required String password,
@@ -386,8 +389,8 @@ class UserService {
     String? deviceUuid,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.authServiceUrl}/login.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/login.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -397,32 +400,43 @@ class UserService {
           'password': password,
           if (deviceUuid != null) 'device_uuid': deviceUuid,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
-        print('UserService.login: response data = $data');
-        // If login success and backend returned user or admin, save session locally
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      final Map<String, dynamic> data = result.json!;
+      print('UserService.login: response data = $data');
+
+      if (data['success'] == true) {
         try {
-          if (data['success'] == true) {
-            if (data['data']?['admin'] != null) {
-              print('UserService.login: admin data = ${data['data']['admin']}');
-              await saveSession(Map<String, dynamic>.from(data['data']['admin']));
-            } else if (data['data']?['user'] != null) {
-              print('UserService.login: user data = ${data['data']['user']}');
-              await saveSession(Map<String, dynamic>.from(data['data']['user']));
-            }
+          if (data['data']?['admin'] != null) {
+            print('UserService.login: admin data = ${data['data']['admin']}');
+            await saveSession(Map<String, dynamic>.from(data['data']['admin']));
+          } else if (data['data']?['user'] != null) {
+            print('UserService.login: user data = ${data['data']['user']}');
+            await saveSession(Map<String, dynamic>.from(data['data']['user']));
           }
-        } catch (_) {
-          // ignore save session errors
-        }
+        } catch (_) {}
         return data;
       }
 
-      return {'success': false, 'message': 'Error del servidor: ${response.statusCode}'};
+      return {
+        'success': false,
+        'message': data['message']?.toString() ?? 'No pudimos validar tus credenciales.',
+      };
     } catch (e) {
       print('Error en login: $e');
-      return {'success': false, 'message': e.toString()};
+      return {
+        'success': false,
+        'message': 'No se pudo completar el inicio de sesión. Verifica tu conexión e inténtalo de nuevo.',
+      };
     }
   }
 
@@ -432,21 +446,29 @@ class UserService {
     required String deviceUuid,
   }) async {
     try {
-      final resp = await http.post(
-        Uri.parse('${AppConfig.authServiceUrl}/check_device.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/check_device.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode({'email': email, 'device_uuid': deviceUuid}),
+        timeout: AppConfig.connectionTimeout,
       );
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        return data;
+
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos verificar el dispositivo.',
+        };
       }
-      return {'success': false, 'message': 'Error servidor (${resp.statusCode})'};
+
+      return result.json!;
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      return {
+        'success': false,
+        'message': 'No pudimos verificar el dispositivo. Revisa tu conexión e intenta de nuevo.',
+      };
     }
   }
 
@@ -458,8 +480,8 @@ class UserService {
     bool markDeviceTrusted = false,
   }) async {
     try {
-      final resp = await http.post(
-        Uri.parse('${AppConfig.authServiceUrl}/verify_code.php'),
+      final result = await _network.postJson(
+        url: Uri.parse('${AppConfig.authServiceUrl}/verify_code.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -470,11 +492,22 @@ class UserService {
           if (deviceUuid != null) 'device_uuid': deviceUuid,
           'mark_device_trusted': markDeviceTrusted,
         }),
+        timeout: AppConfig.connectionTimeout,
       );
-      final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      return data;
+
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos validar el código.',
+        };
+      }
+
+      return result.json!;
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      return {
+        'success': false,
+        'message': 'No pudimos validar el código. Revisa tu conexión e intenta de nuevo.',
+      };
     }
   }
 

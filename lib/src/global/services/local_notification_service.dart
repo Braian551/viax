@@ -61,6 +61,40 @@ class LocalNotificationService {
   }
 
   /// Muestra una notificación de nuevo mensaje.
+  static Future<void> showNotification({
+    required String title,
+    required String body,
+    String? payload,
+    String channelId = 'general_notifications',
+    String channelName = 'Notificaciones Generales',
+    String channelDescription = 'Notificaciones generales de la aplicación',
+    int? notificationId,
+  }) async {
+    if (!_isInitialized) {
+      debugPrint('⚠️ [LocalNotificationService] No inicializado');
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      icon: 'ic_notification',
+      color: const Color(0xFF2196F3),
+      enableVibration: true,
+      playSound: true,
+    );
+
+    final details = NotificationDetails(android: androidDetails);
+    final id = notificationId ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    await _notifications.show(id, title, body, details, payload: payload);
+  }
+
+  /// Muestra una notificación de nuevo mensaje.
   static Future<void> showMessageNotification({
     required String title,
     required String body,
@@ -71,34 +105,14 @@ class LocalNotificationService {
       return;
     }
 
-    const androidDetails = AndroidNotificationDetails(
-      'chat_messages',
-      'Mensajes de Chat',
-      channelDescription: 'Notificaciones de nuevos mensajes durante viajes',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-      icon: 'ic_notification',
-      color: Color(0xFF2196F3), // Color primario para el icono (ajustar si es necesario)
-      // Vibración
-      enableVibration: true,
-      // Sonido (usa el del canal)
-      playSound: true,
-    );
-
-    const notificationDetails = NotificationDetails(
-      android: androidDetails,
-    );
-
-    // Usar solicitudId como ID de notificación para agrupar por viaje
-    final notificationId = solicitudId ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
-
-    await _notifications.show(
-      notificationId,
-      title,
-      body,
-      notificationDetails,
+    await showNotification(
+      title: title,
+      body: body,
       payload: solicitudId?.toString(),
+      channelId: 'chat_messages',
+      channelName: 'Mensajes de Chat',
+      channelDescription: 'Notificaciones de nuevos mensajes durante viajes',
+      notificationId: solicitudId ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
 
     debugPrint('🔔 [LocalNotificationService] Notificación mostrada: $title');

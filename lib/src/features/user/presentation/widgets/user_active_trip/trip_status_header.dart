@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Header con estado del viaje y botón de regreso.
+/// Diseño moderno consistente con el estilo de la app.
 class TripStatusHeader extends StatelessWidget {
   final String tripState;
   final bool isDark;
@@ -66,28 +67,12 @@ class TripStatusHeader extends StatelessWidget {
     return Row(
       children: [
         // Botón atrás
-        Material(
-          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          elevation: 2,
-          shadowColor: Colors.black26,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onBack();
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.grey[800],
-                size: 20,
-              ),
-            ),
-          ),
+        _buildCircleButton(
+          icon: Icons.close_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onBack();
+          },
         ),
 
         const SizedBox(width: 12),
@@ -95,21 +80,22 @@ class TripStatusHeader extends StatelessWidget {
         // Pill de estado
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Dot pulsante
                 Container(
                   width: 10,
                   height: 10,
@@ -118,8 +104,8 @@ class TripStatusHeader extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: _statusColor.withValues(alpha: 0.5),
-                        blurRadius: 6,
+                        color: _statusColor.withValues(alpha: 0.4),
+                        blurRadius: 8,
                         spreadRadius: 1,
                       ),
                     ],
@@ -133,7 +119,8 @@ class TripStatusHeader extends StatelessWidget {
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.grey[900],
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
                   ),
                 ),
               ],
@@ -143,35 +130,53 @@ class TripStatusHeader extends StatelessWidget {
 
         const SizedBox(width: 12),
 
-        // Botón de opciones/cancelar
-        Material(
-          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          elevation: 2,
-          shadowColor: Colors.black26,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              if (onOptions != null) {
-                onOptions!();
-              } else if (onCancel != null) {
-                onCancel!();
-              }
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.more_vert_rounded,
-                color: isDark ? Colors.white : Colors.grey[800],
-                size: 22,
-              ),
-            ),
-          ),
+        // Botón de opciones
+        _buildCircleButton(
+          icon: Icons.more_vert_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            if (onOptions != null) {
+              onOptions!();
+            } else if (onCancel != null) {
+              onCancel!();
+            }
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: isDark ? Colors.white : Colors.grey[700],
+            size: 22,
+          ),
+        ),
+      ),
     );
   }
 }

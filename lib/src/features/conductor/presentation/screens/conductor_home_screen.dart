@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/dispute_service.dart';
+import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../providers/conductor_provider.dart';
 import '../../services/trip_request_search_service.dart';
 import '../../services/demand_zone_service.dart';
@@ -1007,23 +1008,31 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     }
 
     // Mapa con flutter_map
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: LatLng(
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
+    return MapRetryWrapper(
+      isDark: isDark,
+      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
+        key: mapKey,
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: LatLng(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ),
+          initialZoom: 16.0,
+          minZoom: 3.0,
+          maxZoom: 18.0,
+          onMapReady: () {
+            onMapReady();
+            _isMapReady = true;
+          },
         ),
-        initialZoom: 16.0,
-        minZoom: 3.0,
-        maxZoom: 18.0,
-      ),
-      children: [
-        // Capa de tiles de Mapbox
-        TileLayer(
-          urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
-        ),
+        children: [
+          // Capa de tiles de Mapbox
+          TileLayer(
+            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+            userAgentPackageName: 'com.viax.app',
+            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
+          ),
 
         // ========== ZONAS DE DEMANDA (SURGE PRICING) ==========
         // Mostrar siempre que haya zonas (también cuando está offline para planificación)
@@ -1137,7 +1146,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
             ),
           ],
         ),
-      ],
+        ],
+      ),
     );
   }
 

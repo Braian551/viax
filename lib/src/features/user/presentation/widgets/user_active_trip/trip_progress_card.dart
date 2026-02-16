@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Card con información de progreso del viaje.
+/// Diseño moderno consistente con el estilo de la app.
 class TripProgressCard extends StatelessWidget {
   final double distanceKm;
   final int etaMinutes;
-  final int? elapsedMinutes; // Tiempo transcurrido
+  final int? elapsedMinutes;
   final double progress;
   final bool isDark;
 
@@ -26,42 +27,45 @@ class TripProgressCard extends StatelessWidget {
   }
 
   String get _etaText {
-    if (etaMinutes < 1) {
-      return 'Llegando...';
-    }
-    if (etaMinutes == 1) {
-      return '1 min';
-    }
+    if (etaMinutes < 1) return 'Llegando...';
+    if (etaMinutes == 1) return '1 min';
     return '$etaMinutes min';
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Información principal
+          // Info principal
           Row(
             children: [
-              // Icono de destino
+              // Icono destino con fondo gradiente
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.2),
+                      AppColors.primary.withValues(alpha: 0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.flag_rounded,
@@ -71,7 +75,7 @@ class TripProgressCard extends StatelessWidget {
               ),
               const SizedBox(width: 14),
 
-              // Distancia y tiempo
+              // Distancia
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,15 +84,16 @@ class TripProgressCard extends StatelessWidget {
                       _distanceText,
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.grey[900],
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'hasta el destino',
                       style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.grey[600],
+                        color: isDark ? Colors.white54 : Colors.grey[500],
                         fontSize: 13,
                       ),
                     ),
@@ -96,85 +101,66 @@ class TripProgressCard extends StatelessWidget {
                 ),
               ),
 
-              // Tiempos (ETA y Transcurrido)
+              // Badges de tiempo
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Tiempo transcurrido (si existe)
-                  if (elapsedMinutes != null)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.timer_outlined,
-                            color: Colors.orange,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$elapsedMinutes min',
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                  // Elapsed
+                  if (elapsedMinutes != null) ...[
+                    _buildTimeBadge(
+                      icon: Icons.timer_outlined,
+                      text: '$elapsedMinutes min',
+                      color: AppColors.warning,
                     ),
-
+                    const SizedBox(height: 8),
+                  ],
                   // ETA
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.access_time_rounded,
-                          color: AppColors.primary,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _etaText,
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                  _buildTimeBadge(
+                    icon: Icons.access_time_rounded,
+                    text: _etaText,
+                    color: AppColors.primary,
                   ),
                 ],
               ),
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
-          // Barra de progreso
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0, 1),
-              minHeight: 6,
-              backgroundColor: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.grey.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-            ),
+          // Barra de progreso moderna
+          Stack(
+            children: [
+              // Background
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              // Foreground con gradiente
+              FractionallySizedBox(
+                widthFactor: progress.clamp(0, 1),
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.blue600],
+                    ),
+                    borderRadius: BorderRadius.circular(3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 8),
@@ -183,8 +169,38 @@ class TripProgressCard extends StatelessWidget {
           Text(
             '${(progress * 100).toInt()}% del viaje completado',
             style: TextStyle(
-              color: isDark ? Colors.white54 : Colors.grey[500],
+              color: isDark ? Colors.white38 : Colors.grey[400],
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeBadge({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 15),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
               fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

@@ -897,12 +897,31 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       // Detener sonido si está reproduciéndose
       _stopDriverArrivedSound();
 
-      final success = await TripRequestService.cancelTripRequest(
-        widget.solicitudId,
+      final dynamic conductorIdRaw = _conductor?['id'];
+      final int? conductorId = conductorIdRaw is int
+          ? conductorIdRaw
+          : int.tryParse(conductorIdRaw?.toString() ?? '');
+
+      final result = await TripRequestService.cancelTripRequestWithReason(
+        solicitudId: widget.solicitudId,
+        clienteId: widget.clienteId,
+        conductorId: conductorId,
+        motivo: 'Cancelado por el cliente',
+        canceladoPor: 'cliente',
       );
-      if (mounted && success) {
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
         ActiveTripNavigationService().clearActiveTrip();
         Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Error al cancelar el viaje'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     }
   }

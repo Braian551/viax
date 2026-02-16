@@ -1,8 +1,8 @@
 ﻿// lib/src/global/services/traffic_service.dart
 import 'dart:convert';
 import 'dart:math';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:viax/src/core/network/network_request_executor.dart';
 import 'app_secrets_service.dart';
 import 'quota_monitor_service.dart';
 
@@ -11,6 +11,7 @@ import 'quota_monitor_service.dart';
 /// DocumentaciÃ³n: https://developer.tomtom.com/traffic-api/documentation
 class TrafficService {
   static const String _baseUrl = 'https://api.tomtom.com';
+  static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   // ============================================
   // TRAFFIC FLOW API
@@ -38,16 +39,19 @@ class TrafficService {
         '&key=${AppSecretsService.instance.tomtomApiKey}'
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
+      if (result.success && result.json != null) {
         // Incrementar contador de uso
         await QuotaMonitorService.incrementTomTomTraffic();
-        
-        final data = json.decode(response.body);
+
+        final data = result.json!;
         return TrafficFlow.fromJson(data);
       } else {
-        print('Error en TomTom Traffic Flow: ${response.statusCode}');
+        print('Error en TomTom Traffic Flow: ${result.error?.userMessage}');
       }
       
       return null;
@@ -91,12 +95,15 @@ class TrafficService {
         '&language=es-ES'
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
 
-      if (response.statusCode == 200) {
+      if (result.success && result.json != null) {
         await QuotaMonitorService.incrementTomTomTraffic();
-        
-        final data = json.decode(response.body);
+
+        final data = result.json!;
         
         if (data['incidents'] != null) {
           return (data['incidents'] as List)

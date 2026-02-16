@@ -32,8 +32,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   final MapController _mapController = MapController();
   geo.Position? _currentPosition;
   bool _isLoadingLocation = true;
-  // ignore: unused_field
   bool _isMapReady = false;
+  bool _hasMapLoadError = false;
+  bool _isRetryingMap = false;
+  int _tileLoadErrors = 0;
+  Timer? _mapLoadTimeout;
+  Key _mapWidgetKey = UniqueKey();
 
   // Usuario
   String? _userName;
@@ -58,13 +62,6 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     _setupAnimations();
     _loadUserData();
     _requestLocationPermission();
-    
-    // Marcar mapa como listo
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() => _isMapReady = true);
-      }
-    });
   }
 
   void _setupAnimations() {
@@ -111,12 +108,63 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
         setState(() {
           _currentPosition = position;
           _isLoadingLocation = false;
+          _hasMapLoadError = false;
         });
+        _startMapLoadWatchdog();
         _centerMapOnLocation(position);
       }
     } catch (e) {
       if (mounted) setState(() => _isLoadingLocation = false);
     }
+  }
+
+  void _startMapLoadWatchdog() {
+    _mapLoadTimeout?.cancel();
+    _isMapReady = false;
+    _mapLoadTimeout = Timer(const Duration(seconds: 10), () {
+      if (!mounted) return;
+      if (!_isMapReady) {
+        setState(() {
+          _hasMapLoadError = true;
+        });
+      }
+    });
+  }
+
+  void _handleMapTileError(Object error, [StackTrace? stackTrace]) {
+    debugPrint('Map tile error: $error');
+    if (!mounted || _hasMapLoadError) return;
+
+    _tileLoadErrors++;
+    if (_tileLoadErrors >= 3) {
+      setState(() {
+        _hasMapLoadError = true;
+      });
+    }
+  }
+
+  Future<void> _retryMapLoad() async {
+    if (_isRetryingMap) return;
+
+    setState(() {
+      _isRetryingMap = true;
+      _hasMapLoadError = false;
+      _tileLoadErrors = 0;
+      _isMapReady = false;
+      _mapWidgetKey = UniqueKey();
+    });
+
+    if (_currentPosition == null) {
+      await _requestLocationPermission();
+    } else {
+      _startMapLoadWatchdog();
+      _centerMapOnLocation(_currentPosition!);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isRetryingMap = false;
+    });
   }
 
   void _centerMapOnLocation(geo.Position position) {
@@ -221,6 +269,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     _animationController.dispose();
     _mapController.dispose();
     _notificationTimer?.cancel();
+    _mapLoadTimeout?.cancel();
     super.dispose();
   }
 
@@ -371,6 +420,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       return const MapLoadingShimmer();
     }
 
+    if (_hasMapLoadError) {
+      return _buildMapErrorFallback(isDark);
+    }
+
     if (_currentPosition == null) {
       return Container(
         color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -384,6 +437,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     }
 
     return FlutterMap(
+      key: _mapWidgetKey,
       mapController: _mapController,
       options: MapOptions(
         initialCenter: LatLng(
@@ -393,11 +447,22 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
         initialZoom: 16.0,
         minZoom: 3.0,
         maxZoom: 18.0,
+        onMapReady: () {
+          if (!mounted) return;
+          _mapLoadTimeout?.cancel();
+          setState(() {
+            _isMapReady = true;
+            _tileLoadErrors = 0;
+          });
+        },
       ),
       children: [
         TileLayer(
           urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
           userAgentPackageName: 'com.viax.app',
+          errorTileCallback: (tile, error, stackTrace) {
+            _handleMapTileError(error, stackTrace);
+          },
         ),
         // Marcador de usuario (Halo effect)
         MarkerLayer(
@@ -443,6 +508,62 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildMapErrorFallback(bool isDark) {
+    return Container(
+      color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      alignment: Alignment.center,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.map_outlined,
+              size: 44,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No se pudo cargar el mapa',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Puede ser un fallo temporal del SDK o de la conexión.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
+              onPressed: _isRetryingMap ? null : _retryMapLoad,
+              icon: _isRetryingMap
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh_rounded),
+              label: Text(_isRetryingMap ? 'Reintentando...' : 'Reintentar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
