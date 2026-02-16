@@ -18,27 +18,27 @@ abstract class Failure {
 
 /// Fallo de servidor (API, Backend)
 class ServerFailure extends Failure {
-  const ServerFailure(String message, [int? code]) : super(message, code);
+  const ServerFailure(super.message, [super.code]);
 }
 
 /// Fallo de conexiÃ³n (red, timeout)
 class ConnectionFailure extends Failure {
-  const ConnectionFailure(String message) : super(message);
+  const ConnectionFailure(super.message);
 }
 
 /// Fallo de cache/base de datos local
 class CacheFailure extends Failure {
-  const CacheFailure(String message) : super(message);
+  const CacheFailure(super.message);
 }
 
 /// Fallo de validaciÃ³n (datos invÃ¡lidos)
 class ValidationFailure extends Failure {
-  const ValidationFailure(String message) : super(message);
+  const ValidationFailure(super.message);
 }
 
 /// Fallo de autenticaciÃ³n
 class AuthFailure extends Failure {
-  const AuthFailure(String message, [int? code]) : super(message, code);
+  const AuthFailure(super.message, [super.code]);
 }
 
 /// Fallo no autorizado (permisos)
@@ -53,5 +53,5 @@ class NotFoundFailure extends Failure {
 
 /// Fallo genÃ©rico/desconocido
 class UnknownFailure extends Failure {
-  const UnknownFailure(String message) : super(message);
+  const UnknownFailure(super.message);
 }

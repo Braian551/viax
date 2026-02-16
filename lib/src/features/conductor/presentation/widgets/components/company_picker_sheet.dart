@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
-import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'dart:async';
 
 class CompanyPickerSheet extends StatefulWidget {
@@ -158,19 +158,18 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                       itemCount: _companies.length,
                       itemBuilder: (context, index) {
                         final company = _companies[index];
+                        final companyName = (company['nombre'] ?? '').toString();
+                        final companyLogoKey = (company['logo_url'] ?? company['logo'])?.toString();
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: CircleAvatar(
-                            backgroundColor: widget.isDark ? AppColors.darkCard : Colors.grey[200],
-                            backgroundImage: company['logo_url'] != null 
-                              ? (company['logo_url'].toString().startsWith('http') 
-                                  ? NetworkImage(company['logo_url']) 
-                                  : NetworkImage('${AppConfig.baseUrl}/${company['logo_url']}'))
-                              : null,
-                            child: company['logo_url'] == null ? const Icon(Icons.business) : null,
+                          leading: CompanyLogo(
+                            logoKey: companyLogoKey,
+                            nombreEmpresa: companyName,
+                            size: 44,
+                            fontSize: 16,
                           ),
                           title: Text(
-                            company['nombre'],
+                            companyName,
                             style: TextStyle(color: widget.isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
                           ),
                           onTap: () {

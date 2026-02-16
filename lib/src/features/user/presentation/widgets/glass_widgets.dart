@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/utils/colombian_plate_utils.dart';
 
 /// Panel con efecto glassmorphism moderno
 class GlassPanel extends StatelessWidget {
@@ -95,7 +96,9 @@ class DriverInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placa = vehiculo?['placa'] as String? ?? '---';
+    final placa = ColombianPlateUtils.formatForDisplay(
+      vehiculo?['placa'] as String?,
+    );
     final marca = vehiculo?['marca'] as String? ?? '';
     final modelo = vehiculo?['modelo'] as String? ?? '';
     final color = vehiculo?['color'] as String? ?? '';

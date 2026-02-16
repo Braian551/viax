@@ -732,6 +732,70 @@ class UserService {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> getVehicleBrands({
+    required String vehicleType,
+  }) async {
+    try {
+      final uri = Uri.parse('${AppConfig.conductorServiceUrl}/vehicle_catalog.php').replace(
+        queryParameters: {
+          'action': 'brands',
+          'vehicle_type': vehicleType,
+        },
+      );
+
+      final response = await http.get(uri, headers: {'Accept': 'application/json'});
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (data['success'] == true && data['data'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } catch (e) {
+      print('Error getting vehicle brands: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getVehicleModels({
+    required String vehicleType,
+    required String brand,
+    String? year,
+    String? query,
+  }) async {
+    try {
+      final params = <String, String>{
+        'action': 'models',
+        'vehicle_type': vehicleType,
+        'brand': brand,
+      };
+
+      if (year != null && year.trim().isNotEmpty) {
+        params['year'] = year.trim();
+      }
+
+      if (query != null && query.trim().isNotEmpty) {
+        params['q'] = query.trim();
+      }
+
+      final uri = Uri.parse('${AppConfig.conductorServiceUrl}/vehicle_catalog.php').replace(
+        queryParameters: params,
+      );
+
+      final response = await http.get(uri, headers: {'Accept': 'application/json'});
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (data['success'] == true && data['data'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } catch (e) {
+      print('Error getting vehicle models: $e');
+      return [];
+    }
+  }
+
 
 
 

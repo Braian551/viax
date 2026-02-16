@@ -139,7 +139,7 @@ class _CompanyNotificationsScreenState extends State<CompanyNotificationsScreen>
       child: SwitchListTile(
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
         activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
         inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[50],
         inactiveTrackColor: isDark ? Colors.grey[700] : Colors.grey[300],

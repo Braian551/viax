@@ -266,6 +266,7 @@ class AppRouter {
               direccionDestino: args?['direccionDestino'] ?? 'Destino',
               clienteNombre: args?['clienteNombre'],
               clienteFoto: args?['clienteFoto'],
+              clienteCalificacion: (args?['clienteCalificacion'] as num?)?.toDouble(),
               initialTripStatus: args?['initialTripStatus'],
             ),
             settings: settings,

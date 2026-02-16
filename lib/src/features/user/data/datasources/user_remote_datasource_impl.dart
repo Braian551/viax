@@ -25,7 +25,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   /// - ProducciÃ³n: https://api.viax.com/user-service/v1
   /// 
   /// Por ahora apunta al monolito pero la estructura ya estÃ¡ preparada
-  String get _baseUrl => '${AppConfig.authServiceUrl}';
+  String get _baseUrl => AppConfig.authServiceUrl;
 
   @override
   Future<Map<String, dynamic>> register({

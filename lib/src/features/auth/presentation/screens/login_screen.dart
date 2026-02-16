@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else if (message.contains('Usuario no encontrado')) {
             _showError('No se encontró una cuenta con este email. Verifica que el email sea correcto.');
           } else if (message.contains('Contrase')) {
-            _showError('La contraseña es incorrecta. Intento ${_localFailAttempts}/5');
+            _showError('La contraseña es incorrecta. Intento $_localFailAttempts/5');
           } else if (tooMany) {
             _showError('Demasiados intentos fallidos. Verifica tu correo.');
           } else {

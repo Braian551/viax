@@ -1,5 +1,6 @@
 /// Company Repository Contract
 /// Defines the interface for company data operations
+library;
 
 import 'package:dartz/dartz.dart';
 import 'package:viax/src/core/error/failures.dart';

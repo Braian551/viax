@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:viax/src/theme/app_colors.dart';
 
 /// Mensajes rápidos predefinidos para conductor
 class ConductorQuickMessages {

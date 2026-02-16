@@ -1,6 +1,9 @@
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
+
 /// Modelo para información de confianza de un conductor
 /// 
 /// Contiene datos sobre el nivel de confianza entre un usuario y un conductor
+
 class ConfianzaInfo {
   final double score;
   final double scoreTotal;
@@ -130,7 +133,7 @@ class VehiculoInfo {
       tipo: json['tipo'] ?? 'moto',
       marca: json['marca'],
       modelo: json['modelo'],
-      placa: json['placa'],
+      placa: ColombianPlateUtils.normalize((json['placa'] ?? '').toString()),
     );
   }
 
@@ -140,4 +143,7 @@ class VehiculoInfo {
     if (modelo != null) parts.add(modelo!);
     return parts.isNotEmpty ? parts.join(' ') : tipo;
   }
+
+  String get placaFormateada =>
+      ColombianPlateUtils.formatForDisplay(placa, fallback: '---');
 }

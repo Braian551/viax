@@ -1,5 +1,4 @@
 ﻿// lib/src/global/services/traffic_service.dart
-import 'dart:convert';
 import 'dart:math';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';

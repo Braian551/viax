@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/trip_models.dart';
 import 'trip_price_formatter.dart';
-import 'trip_price_formatter.dart';
-import 'company_selector_widget.dart'; // Mantener por compatibilidad o eliminar si ya no se usa
-import 'company_picker_sheet.dart';
+// Mantener por compatibilidad o eliminar si ya no se usa
 import '../../../domain/models/company_vehicle_models.dart';
-import '../../../../../global/services/auth/user_service.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 class TripVehicleBottomSheet extends StatelessWidget {
   const TripVehicleBottomSheet({
@@ -471,14 +469,14 @@ class _VehicleListItem extends StatelessWidget {
                             const SizedBox(width: 8),
                             // Logo small
                             if (selectedCompany.logoUrl != null && selectedCompany.logoUrl!.isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Image.network(
-                                  UserService.getR2ImageUrl(selectedCompany.logoUrl),
-                                  width: 20,
-                                  height: 20,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_,__,___) => const Icon(Icons.business, size: 16),
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CompanyLogo(
+                                  logoKey: selectedCompany.logoUrl,
+                                  nombreEmpresa: selectedCompany.nombre,
+                                  size: 20,
+                                  fontSize: 10,
                                 ),
                               )
                             else 

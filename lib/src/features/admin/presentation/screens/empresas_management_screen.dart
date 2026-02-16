@@ -1,14 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:viax/src/features/admin/data/models/empresa_transporte_model.dart';
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
 import 'package:viax/src/features/admin/presentation/providers/empresa_provider.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_card.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_commission_dialog.dart';
 import 'package:viax/src/features/admin/presentation/widgets/empresa_form.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 import 'package:viax/src/features/admin/presentation/widgets/empresa_card_shimmer.dart';
 
@@ -674,16 +673,11 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
                                 child: empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(24),
-                                        child: Image.network(
-                                          empresa.logoUrl!.startsWith('http') 
-                                              ? empresa.logoUrl!
-                                              : '${AppConfig.baseUrl}/${empresa.logoUrl!}',
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(
-                                            Icons.business_rounded,
-                                            color: AppColors.primary,
-                                            size: 48,
-                                          ),
+                                        child: CompanyLogo(
+                                          logoKey: empresa.logoUrl,
+                                          nombreEmpresa: empresa.nombre,
+                                          size: 100,
+                                          fontSize: 42,
                                         ),
                                       )
                                     : const Icon(

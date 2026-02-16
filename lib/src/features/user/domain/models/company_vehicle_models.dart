@@ -1,5 +1,6 @@
 /// Modelos para el sistema de empresas y vehículos por municipio
 /// Estos modelos representan la respuesta del endpoint get_companies_by_municipality
+library;
 
 /// Información de una empresa con sus conductores y tarifa para un tipo de vehículo
 class CompanyVehicleOption {

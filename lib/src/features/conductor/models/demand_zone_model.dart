@@ -3,6 +3,7 @@
 ///
 /// Muestra zonas con colores según el nivel de demanda y
 /// multiplicadores de precio aplicables.
+library;
 
 class DemandZone {
   final String id;

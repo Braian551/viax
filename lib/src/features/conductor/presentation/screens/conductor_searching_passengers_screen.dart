@@ -216,6 +216,7 @@ class _ConductorSearchingPassengersScreenState
             direccionDestino: solicitudData.direccionDestino,
             clienteNombre: solicitudData.clienteNombre,
             clienteFoto: solicitudData.clienteFoto,
+            clienteCalificacion: solicitudData.clienteCalificacion,
           ),
         ),
         (route) => false,

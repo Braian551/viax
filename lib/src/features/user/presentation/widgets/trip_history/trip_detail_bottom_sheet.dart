@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../trip_preview/trip_price_formatter.dart';

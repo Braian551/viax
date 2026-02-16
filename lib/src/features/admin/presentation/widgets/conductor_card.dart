@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:shimmer/shimmer.dart';
-import 'conductor_card_shimmer.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 /// Card que muestra información resumida de un conductor pendiente de verificación
 class ConductorCard extends StatelessWidget {
@@ -241,7 +241,10 @@ class ConductorCard extends StatelessWidget {
             context,
             Icons.directions_car_outlined,
             'Placa',
-            conductor['vehiculo_placa'] ?? 'N/A',
+            ColombianPlateUtils.formatForDisplay(
+              conductor['vehiculo_placa']?.toString(),
+              fallback: 'N/A',
+            ),
           ),
         ),
       ],

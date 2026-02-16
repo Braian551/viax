@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../global/models/simple_location.dart';
-import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';

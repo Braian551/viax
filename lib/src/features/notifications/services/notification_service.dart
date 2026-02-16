@@ -316,7 +316,16 @@ class NotificationService {
         };
       }
 
-      return Map<String, dynamic>.from(result.json!);
+      final data = Map<String, dynamic>.from(result.json!);
+      if (data['success'] == true) {
+        return data;
+      }
+
+      return {
+        ...data,
+        'success': false,
+        'error': data['error'] ?? data['message'] ?? 'No pudimos registrar el token push.',
+      };
     } catch (e) {
       debugPrint('Error registerPushToken: $e');
       return {

@@ -3,10 +3,13 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/core/config/app_config.dart';
 
 class CompanyLogo extends StatelessWidget {
+  static final String _sessionCacheBuster = DateTime.now().millisecondsSinceEpoch.toString();
+
   final String? logoKey;
   final String nombreEmpresa;
   final double size;
   final double fontSize;
+  final bool enableCacheBusting;
 
   const CompanyLogo({
     super.key,
@@ -14,13 +17,13 @@ class CompanyLogo extends StatelessWidget {
     required this.nombreEmpresa,
     this.size = 48,
     this.fontSize = 18,
+    this.enableCacheBusting = true,
   });
 
   @override
   Widget build(BuildContext context) {
     if (logoKey != null && logoKey!.isNotEmpty) {
       final logoUrl = _buildLogoUrl(logoKey!);
-      debugPrint('CompanyLogo: empresa=$nombreEmpresa, key=$logoKey, url=$logoUrl');
       return _buildImageWithFallback(logoUrl);
     }
 
@@ -47,7 +50,7 @@ class CompanyLogo extends StatelessWidget {
     if (finalKey.startsWith('http') && 
         !finalKey.contains('192.168.') && 
         !finalKey.contains('localhost')) {
-      return finalKey;
+      return _appendCacheBuster(finalKey);
     }
     
     // Si es URL legacy, extraer solo el path
@@ -68,7 +71,27 @@ class CompanyLogo extends StatelessWidget {
     final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
     
     // Construir URL a través de r2_proxy.php
-    return '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
+    final proxyUrl = '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
+    return _appendCacheBuster(proxyUrl);
+  }
+
+  String _appendCacheBuster(String url) {
+    if (!enableCacheBusting) {
+      return url;
+    }
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      return url;
+    }
+
+    if (uri.queryParameters.containsKey('cb')) {
+      return url;
+    }
+
+    final params = Map<String, String>.from(uri.queryParameters);
+    params['cb'] = _sessionCacheBuster;
+    return uri.replace(queryParameters: params).toString();
   }
   // Re-implementing with ClipOval for better error handling
   Widget _buildImageWithFallback(String url) {

@@ -1,5 +1,6 @@
 /// Company Provider
 /// Manages state for company-related screens
+library;
 
 import 'dart:io';
 import 'package:flutter/material.dart';

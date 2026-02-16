@@ -119,8 +119,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     _originFocusNode.dispose();
     _destinationFocusNode.dispose();
     
-    for (var controller in _stopControllers) controller.dispose();
-    for (var node in _stopFocusNodes) node.dispose();
+    for (var controller in _stopControllers) {
+      controller.dispose();
+    }
+    for (var node in _stopFocusNodes) {
+      node.dispose();
+    }
     
     _debounce?.cancel();
     super.dispose();
@@ -767,7 +771,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               subtitle: 'Usa el GPS para localizarte',
               onTap: () {
                 FocusScope.of(context).unfocus();
-                _setCurrentLocation(targetField: focusedField!);
+                _setCurrentLocation(targetField: focusedField);
               },
             ),
             _buildDefaultActionItem(
@@ -777,7 +781,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               subtitle: 'Elige el punto exacto en el mapa',
               onTap: () {
                 FocusScope.of(context).unfocus();
-                _openMapPicker(focusedField!);
+                _openMapPicker(focusedField);
               },
             ),
           ],
@@ -1301,8 +1305,9 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       if (mounted) {
         // Verificar si el campo que solicitó la búsqueda sigue siendo el enfocado
         bool isFieldFocused = false;
-        if (targetField == 'origin' && _originFocusNode.hasFocus) isFieldFocused = true;
-        else if (targetField == 'destination' && _destinationFocusNode.hasFocus) isFieldFocused = true;
+        if (targetField == 'origin' && _originFocusNode.hasFocus) {
+          isFieldFocused = true;
+        } else if (targetField == 'destination' && _destinationFocusNode.hasFocus) isFieldFocused = true;
         else if (targetField.startsWith('stop_')) {
           final index = int.parse(targetField.split('_')[1]);
           if (index < _stopFocusNodes.length && _stopFocusNodes[index].hasFocus) isFieldFocused = true;

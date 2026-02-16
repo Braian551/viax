@@ -37,7 +37,7 @@ class DocumentUploadService {
       // Validar tamaño (max 10MB para PDFs, 5MB para imágenes)
       final maxSize = isPdf ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
       final fileSize = await file.length();
-      debugPrint('Tamaño del archivo: ${fileSize} bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+      debugPrint('Tamaño del archivo: $fileSize bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
       debugPrint('Tipo de archivo: ${isPdf ? 'PDF' : 'Imagen'}');
 
       if (fileSize > maxSize) {

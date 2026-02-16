@@ -277,7 +277,7 @@ class EmpresaProvider extends ChangeNotifier {
   /// Carga estadísticas de empresas
   Future<void> loadStats() async {
     try {
-      _stats = await _repository.getEmpresaStats() as EmpresaStats;
+      _stats = await _repository.getEmpresaStats();
       notifyListeners();
     } catch (e) {
       debugPrint('Error cargando stats: $e');

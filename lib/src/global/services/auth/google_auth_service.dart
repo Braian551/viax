@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';

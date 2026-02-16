@@ -407,8 +407,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
                             onPrimary: Colors.black, // Text on primary
                             surface: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                             onSurface: isDark ? Colors.white : Colors.black,
-                          ),
-                          dialogBackgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                          ), dialogTheme: DialogThemeData(backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white),
                         ),
                         child: child!,
                       );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
 
 import 'package:viax/src/features/conductor/services/document_upload_service.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 /// Panel con información del viaje y conductor.
 /// Diseño moderno consistente con el estilo de la app.
@@ -261,7 +262,7 @@ class TripInfoPanel extends StatelessWidget {
                 ),
               ),
               child: Text(
-                placa,
+                ColombianPlateUtils.formatForDisplay(placa, fallback: ''),
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.grey[800],
                   fontSize: 13,

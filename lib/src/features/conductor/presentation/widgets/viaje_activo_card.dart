@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../screens/conductor_active_trip_screen.dart';
 import '../../services/document_upload_service.dart';
-import '../../../../theme/app_colors.dart';
 import '../../../../global/services/auth/user_service.dart';
 
 class ViajeActivoCard extends StatelessWidget {
@@ -20,6 +19,14 @@ class ViajeActivoCard extends StatelessWidget {
     final estado = viaje['estado'] ?? 'pendiente';
     final precio = viaje['precio_estimado']?.toString() ?? '0';
     final clienteNombre = viaje['cliente_nombre']?.toString() ?? 'Cliente';
+    final clienteCalificacion = double.tryParse(
+      (viaje['cliente_calificacion'] ??
+              viaje['calificacion_cliente'] ??
+              viaje['rating_cliente'] ??
+              viaje['cliente_rating'])
+          ?.toString() ??
+          '',
+    );
 
     Color estadoColor;
     IconData estadoIcon;
@@ -124,13 +131,39 @@ class ViajeActivoCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      clienteNombre,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          clienteNombre,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (clienteCalificacion != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Color(0xFFFFD54F),
+                                size: 15,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                clienteCalificacion.toStringAsFixed(1),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
@@ -189,6 +222,7 @@ class ViajeActivoCard extends StatelessWidget {
                                 clienteNombre: clienteNombre,
                                 // Procesar foto R2 correctamente
                                 clienteFoto: _processPhotoUrl(viaje['cliente_foto']?.toString()),
+                                clienteCalificacion: clienteCalificacion,
                               ),
                             ),
                           );

@@ -1,5 +1,6 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/vehicle_model.dart';
 import '../../models/driver_license_model.dart';
@@ -7,6 +8,8 @@ import '../../providers/conductor_profile_provider.dart';
 import '../../../../core/config/app_config.dart';
 import '../widgets/document_upload_widget.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/vehicle_searchable_sheet.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final int conductorId;
@@ -39,6 +42,15 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final _anioController = TextEditingController();
   final _colorController = TextEditingController();
   VehicleType _selectedType = VehicleType.moto;
+  List<Map<String, dynamic>> _brands = [];
+  List<Map<String, dynamic>> _models = [];
+  List<Map<String, dynamic>> _colors = [];
+  bool _isLoadingBrands = true;
+  bool _isLoadingModels = false;
+  bool _isLoadingColors = true;
+  String? _selectedBrandId;
+  String? _selectedModelId;
+  String? _selectedColorName;
 
   // Document data
   final _soatNumberController = TextEditingController();
@@ -54,12 +66,15 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   void initState() {
     super.initState();
     _loadExistingData();
+    _syncInitialVehicleSelectors();
+    _loadVehicleColors();
+    _loadVehicleBrands();
   }
 
   void _loadExistingData() {
     if (widget.existingVehicle != null) {
       final vehicle = widget.existingVehicle!;
-      _placaController.text = vehicle.placa;
+      _placaController.text = ColombianPlateUtils.normalize(vehicle.placa);
       _selectedType = vehicle.tipo;
       _marcaController.text = vehicle.marca ?? '';
       _modeloController.text = vehicle.modelo ?? '';
@@ -82,6 +97,289 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         _tarjetaPropiedadFotoPath = _buildFullUrl(vehicle.fotoTarjetaPropiedad!);
       }
     }
+  }
+
+  void _syncInitialVehicleSelectors() {
+    final initialBrand = _marcaController.text.trim();
+    final initialModel = _modeloController.text.trim();
+
+    if (initialBrand.isNotEmpty) {
+      _selectedBrandId = initialBrand.toUpperCase();
+    }
+    if (initialModel.isNotEmpty) {
+      _selectedModelId = initialModel.toUpperCase();
+    }
+
+    if (_colorController.text.trim().isNotEmpty) {
+      _selectedColorName = _colorController.text.trim();
+    }
+  }
+
+  Future<void> _loadVehicleColors() async {
+    final colors = await UserService.getVehicleColors();
+
+    final uniqueColors = <Map<String, dynamic>>[];
+    final seen = <String>{};
+    for (final color in colors) {
+      final colorName = (color['nombre'] ?? '').toString().trim();
+      if (colorName.isEmpty) continue;
+      final key = colorName.toUpperCase();
+      if (!seen.contains(key)) {
+        seen.add(key);
+        uniqueColors.add(color);
+      }
+    }
+
+    if (!seen.contains('MULTICOLOR')) {
+      uniqueColors.add({'nombre': 'Multicolor', 'hex_code': '#9E9E9E'});
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _colors = uniqueColors;
+      _isLoadingColors = false;
+
+      if (_colorController.text.trim().isNotEmpty) {
+        final current = _colorController.text.trim().toUpperCase();
+        final match = _colors.cast<Map<String, dynamic>?>().firstWhere(
+          (c) => (c?['nombre']?.toString().trim().toUpperCase() ?? '') == current,
+          orElse: () => null,
+        );
+        _selectedColorName = (match?['nombre'] as String?) ?? _selectedColorName;
+      }
+    });
+  }
+
+  String _vehicleTypeForCatalog() {
+    switch (_selectedType) {
+      case VehicleType.auto:
+        return 'carro';
+      case VehicleType.motocarro:
+        return 'motocarro';
+      case VehicleType.moto:
+        return 'moto';
+    }
+  }
+
+  IconData _vehicleTypeIcon() {
+    switch (_selectedType) {
+      case VehicleType.motocarro:
+        return Icons.electric_rickshaw_rounded;
+      case VehicleType.moto:
+        return Icons.two_wheeler_rounded;
+      case VehicleType.auto:
+      default:
+        return Icons.directions_car_rounded;
+    }
+  }
+
+  Future<void> _loadVehicleBrands() async {
+    if (!mounted) return;
+    setState(() => _isLoadingBrands = true);
+
+    final brands = await UserService.getVehicleBrands(
+      vehicleType: _vehicleTypeForCatalog(),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _brands = brands;
+      _isLoadingBrands = false;
+
+      final selectedStillExists = _selectedBrandId != null &&
+          _brands.any((brand) => brand['id'] == _selectedBrandId);
+      if (!selectedStillExists) {
+        _selectedBrandId = null;
+        _marcaController.clear();
+      }
+    });
+
+    if (_selectedBrandId != null) {
+      await _loadVehicleModels();
+    }
+  }
+
+  Future<void> _loadVehicleModels() async {
+    final brandId = _selectedBrandId;
+    if (brandId == null || brandId.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _models = [];
+        _selectedModelId = null;
+      });
+      _modeloController.clear();
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _isLoadingModels = true);
+
+    final models = await UserService.getVehicleModels(
+      vehicleType: _vehicleTypeForCatalog(),
+      brand: brandId,
+      year: _anioController.text.trim(),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _models = models;
+      _isLoadingModels = false;
+
+      final selectedStillExists = _selectedModelId != null &&
+          _models.any((model) => model['id'] == _selectedModelId);
+      if (!selectedStillExists) {
+        _selectedModelId = null;
+        _modeloController.clear();
+      }
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _searchVehicleModels(String query) async {
+    final brandId = _selectedBrandId;
+    if (brandId == null || brandId.isEmpty) {
+      return [];
+    }
+
+    return UserService.getVehicleModels(
+      vehicleType: _vehicleTypeForCatalog(),
+      brand: brandId,
+      year: _anioController.text.trim(),
+      query: query,
+    );
+  }
+
+  Future<void> _openBrandSheet() async {
+    if (_isLoadingBrands || _brands.isEmpty) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+        title: 'Seleccionar Marca',
+        items: _brands,
+        itemLabel: (item) => (item['name'] as String?) ?? (item['id'] as String),
+        selectedLabel: _marcaController.text.trim().isEmpty ? null : _marcaController.text.trim(),
+        headerIcon: Icons.branding_watermark_rounded,
+        itemIcon: _vehicleTypeIcon(),
+        onSelected: (selected) async {
+          final selectedId = selected['id'] as String;
+          final selectedName = (selected['name'] as String?) ?? selectedId;
+
+          setState(() {
+            _selectedBrandId = selectedId;
+            _selectedModelId = null;
+            _models = [];
+          });
+
+          _marcaController.text = selectedName;
+          _modeloController.clear();
+          await _loadVehicleModels();
+        },
+        searchHint: 'Buscar marca...',
+      ),
+    );
+  }
+
+  Future<void> _openModelSheet() async {
+    if (_selectedBrandId == null || _selectedBrandId!.isEmpty || _isLoadingModels || _models.isEmpty) {
+      return;
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+        title: 'Seleccionar Modelo',
+        items: _models,
+        itemLabel: (item) => (item['name'] as String?) ?? (item['id'] as String),
+        searchText: (item) {
+          final modelName = (item['name'] as String?) ?? (item['id'] as String);
+          return '${_marcaController.text.trim()} $modelName';
+        },
+        onSearch: _searchVehicleModels,
+        selectedLabel: _modeloController.text.trim().isEmpty ? null : _modeloController.text.trim(),
+        headerIcon: Icons.model_training_rounded,
+        itemIcon: _vehicleTypeIcon(),
+        onSelected: (selected) {
+          final selectedId = selected['id'] as String;
+          final selectedName = (selected['name'] as String?) ?? selectedId;
+          setState(() {
+            _selectedModelId = selectedId;
+            if (!_models.any((model) => model['id'] == selectedId)) {
+              _models = [selected, ..._models];
+            }
+          });
+          _modeloController.text = selectedName;
+        },
+        searchHint: 'Buscar modelo...',
+      ),
+    );
+  }
+
+  Future<void> _pickVehicleYear() async {
+    final now = DateTime.now();
+    final currentYear = int.tryParse(_anioController.text.trim()) ?? now.year;
+
+    final pickedYear = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Seleccionar año'),
+          content: SizedBox(
+            width: 320,
+            height: 320,
+            child: YearPicker(
+              firstDate: DateTime(1980),
+              lastDate: DateTime(now.year + 1),
+              selectedDate: DateTime(currentYear.clamp(1980, now.year + 1)),
+              currentDate: DateTime(now.year),
+              onChanged: (DateTime date) {
+                Navigator.of(context).pop(date.year);
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (pickedYear == null) return;
+
+    _anioController.text = pickedYear.toString();
+    await _loadVehicleModels();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openColorSheet() async {
+    if (_isLoadingColors || _colors.isEmpty) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+        title: 'Seleccionar Color',
+        items: _colors,
+        itemLabel: (item) => (item['nombre'] as String?) ?? '',
+        selectedLabel: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
+        headerIcon: Icons.palette_rounded,
+        itemIcon: Icons.lens_rounded,
+        onSelected: (selected) {
+          final selectedName = (selected['nombre'] as String?) ?? '';
+          if (selectedName.isEmpty) return;
+          setState(() => _selectedColorName = selectedName);
+          _colorController.text = selectedName;
+        },
+        searchHint: 'Buscar color...',
+      ),
+    );
   }
 
   /// Construye la URL completa del documento
@@ -320,15 +618,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         _buildTextField(
           controller: _placaController,
           label: 'Placa',
-          hint: 'Ej: ABC123',
+          hint: 'Ej: ABC123 o ABC12D',
           icon: Icons.pin_rounded,
           textCapitalization: TextCapitalization.characters,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa la placa';
-            }
-            return null;
-          },
+          inputFormatters: [ColombianPlateInputFormatter()],
+          validator: ColombianPlateUtils.validate,
         ),
         const SizedBox(height: 16),
         Row(
@@ -337,8 +631,17 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               child: _buildTextField(
                 controller: _marcaController,
                 label: 'Marca',
-                hint: 'Ej: Toyota',
+                hint: _isLoadingBrands ? 'Cargando marcas...' : 'Seleccionar marca',
                 icon: Icons.branding_watermark_rounded,
+                readOnly: true,
+                onTap: _openBrandSheet,
+                suffixIcon: _isLoadingBrands
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_drop_down_rounded, color: Colors.white54),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Requerido';
@@ -352,8 +655,19 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               child: _buildTextField(
                 controller: _modeloController,
                 label: 'Modelo',
-                hint: 'Ej: Corolla',
+                hint: _selectedBrandId == null
+                    ? 'Selecciona marca primero'
+                    : (_isLoadingModels ? 'Cargando modelos...' : 'Seleccionar modelo'),
                 icon: Icons.description_rounded,
+                readOnly: true,
+                onTap: _openModelSheet,
+                suffixIcon: _isLoadingModels
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_drop_down_rounded, color: Colors.white54),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Requerido';
@@ -371,9 +685,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               child: _buildTextField(
                 controller: _anioController,
                 label: 'Año',
-                hint: '2020',
+                hint: 'Seleccionar año',
                 icon: Icons.calendar_today_rounded,
-                keyboardType: TextInputType.number,
+                readOnly: true,
+                onTap: _pickVehicleYear,
+                suffixIcon: const Icon(Icons.arrow_drop_down_rounded, color: Colors.white54),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Requerido';
@@ -391,8 +707,17 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               child: _buildTextField(
                 controller: _colorController,
                 label: 'Color',
-                hint: 'Ej: Blanco',
+                hint: _isLoadingColors ? 'Cargando colores...' : 'Seleccionar color',
                 icon: Icons.palette_rounded,
+                readOnly: true,
+                onTap: _openColorSheet,
+                suffixIcon: _isLoadingColors
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_drop_down_rounded, color: Colors.white54),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Requerido';
@@ -596,6 +921,10 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -616,12 +945,16 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             style: const TextStyle(color: Colors.white),
             keyboardType: keyboardType,
             textCapitalization: textCapitalization,
+            readOnly: readOnly,
+            onTap: onTap,
+            inputFormatters: inputFormatters,
             decoration: InputDecoration(
               labelText: label,
               hintText: hint,
               labelStyle: const TextStyle(color: Colors.white70),
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
               prefixIcon: Icon(icon, color: const Color(0xFFFFFF00)),
+              suffixIcon: suffixIcon,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(20),
               errorStyle: const TextStyle(color: Colors.redAccent),
@@ -665,7 +998,17 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                 children: VehicleType.values.map((type) {
                   final isSelected = _selectedType == type;
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedType = type),
+                    onTap: () async {
+                      setState(() {
+                        _selectedType = type;
+                        _selectedBrandId = null;
+                        _selectedModelId = null;
+                        _marcaController.clear();
+                        _modeloController.clear();
+                        _models = [];
+                      });
+                      await _loadVehicleBrands();
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
@@ -730,7 +1073,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             ),
           ),
           child: DropdownButtonFormField<LicenseCategory>(
-            value: _selectedCategory,
+            initialValue: _selectedCategory,
             dropdownColor: const Color(0xFF1A1A1A),
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
@@ -1103,7 +1446,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
     // Save vehicle
     final vehicle = VehicleModel(
-      placa: _placaController.text,
+      placa: ColombianPlateUtils.normalize(_placaController.text),
       tipo: _selectedType,
       marca: _marcaController.text,
       modelo: _modeloController.text,

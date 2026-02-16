@@ -1,6 +1,8 @@
 ﻿/// Modelo para informaciÃ³n del vehÃ­culo
+library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class VehicleModel {
   final String? marca;
@@ -28,7 +30,7 @@ class VehicleModel {
     this.modelo,
     this.anio,
     this.color,
-    required this.placa,
+    required String placa,
     required this.tipo,
     this.empresaId,
     // this.aseguradora,
@@ -43,7 +45,7 @@ class VehicleModel {
     this.fotoTarjetaPropiedad,
     this.fotoSoat,
     this.fotoTecnomecanica,
-  });
+  }) : placa = ColombianPlateUtils.normalize(placa);
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     return VehicleModel(
@@ -139,6 +141,8 @@ class VehicleModel {
   bool get isComplete {
     return isBasicComplete && isDocumentsComplete;
   }
+
+  String get placaFormateada => ColombianPlateUtils.formatForDisplay(placa);
 
   VehicleModel copyWith({
     String? marca,

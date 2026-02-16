@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:viax/src/routes/route_names.dart';
-import 'package:viax/src/global/services/auth/user_service.dart';
-import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
-import 'package:viax/src/core/config/app_config.dart';
 
 import 'tabs/company_dashboard_tab.dart';
 import 'tabs/company_profile_tab.dart';

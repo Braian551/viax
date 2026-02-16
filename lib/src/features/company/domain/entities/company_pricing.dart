@@ -1,5 +1,6 @@
 /// Company Pricing Entity
 /// Domain entity representing a pricing configuration
+library;
 
 class CompanyPricing {
   final int? id;

@@ -458,9 +458,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
       // Zoom dinámico basado en la extensión
       double targetZoom = 14.0;
-      if (maxDiff < 0.01)
+      if (maxDiff < 0.01) {
         targetZoom = 16.0;
-      else if (maxDiff < 0.02)
+      } else if (maxDiff < 0.02)
         targetZoom = 15.0;
       else if (maxDiff < 0.05)
         targetZoom = 14.0;

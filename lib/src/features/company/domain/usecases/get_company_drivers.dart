@@ -1,4 +1,5 @@
 /// Get Company Drivers Use Case
+library;
 
 import 'package:dartz/dartz.dart';
 import 'package:viax/src/core/error/failures.dart';

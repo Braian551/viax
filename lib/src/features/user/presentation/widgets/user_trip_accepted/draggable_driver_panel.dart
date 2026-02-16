@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../conductor/services/document_upload_service.dart';
+import '../../../../../core/utils/colombian_plate_utils.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Panel arrastrable con información del conductor.
@@ -443,7 +444,9 @@ class _DraggableDriverPanelState extends State<DraggableDriverPanel> {
     final marca = vehiculo['marca'] as String? ?? '';
     final modelo = vehiculo['modelo'] as String? ?? '';
     final color = vehiculo['color'] as String? ?? '';
-    final placa = vehiculo['placa'] as String? ?? '---';
+    final placa = ColombianPlateUtils.formatForDisplay(
+      vehiculo['placa'] as String?,
+    );
     final tipo = vehiculo['tipo'] as String? ?? 'auto';
     final typeLower = tipo.toLowerCase().trim();
     

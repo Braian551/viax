@@ -21,7 +21,7 @@ class AuditLogsScreen extends StatefulWidget {
 class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProviderStateMixin {
   List<dynamic> _logs = [];
   bool _isLoading = true;
-  int _currentPage = 1;
+  final int _currentPage = 1;
   String? _selectedFilter;
   final _searchController = TextEditingController();
   late AnimationController _animationController;

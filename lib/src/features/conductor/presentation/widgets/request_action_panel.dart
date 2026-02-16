@@ -344,6 +344,9 @@ class _RequestActionPanelState extends State<RequestActionPanel>
   }
 
   Widget _buildHeader(bool isDark) {
+    final clientName = widget.request.clienteNombre?.trim();
+    final clientRating = widget.request.clienteCalificacion;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -494,6 +497,61 @@ class _RequestActionPanelState extends State<RequestActionPanel>
             ],
           ),
         ),
+        if (clientName != null && clientName.isNotEmpty)
+          Container(
+            constraints: const BoxConstraints(maxWidth: 130),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clientName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.grey[900],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (clientRating != null && clientRating > 0) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFFFFB300),
+                        size: 13,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        clientRating > 5
+                            ? '5.0'
+                            : clientRating.toStringAsFixed(1),
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.grey[700],
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }

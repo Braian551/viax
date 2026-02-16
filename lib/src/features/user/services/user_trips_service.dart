@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../../../core/config/app_config.dart';
 import '../../../core/utils/date_time_utils.dart';
+import '../../../core/utils/colombian_plate_utils.dart';
 import '../../../core/network/network_request_executor.dart';
 import '../../../core/network/app_network_exception.dart';
 
@@ -80,12 +81,15 @@ class VehicleInfoModel {
   factory VehicleInfoModel.fromJson(Map<String, dynamic>? json) {
     if (json == null) return VehicleInfoModel();
     return VehicleInfoModel(
-      placa: json['placa']?.toString(),
+      placa: ColombianPlateUtils.normalize(json['placa']?.toString() ?? ''),
       marca: json['marca']?.toString(),
       modelo: json['modelo']?.toString(),
       color: json['color']?.toString(),
     );
   }
+
+  String get placaFormateada =>
+      ColombianPlateUtils.formatForDisplay(placa, fallback: '---');
 
   String get descripcion {
     final parts = <String>[];

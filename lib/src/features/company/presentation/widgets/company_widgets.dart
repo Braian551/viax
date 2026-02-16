@@ -1,5 +1,6 @@
 /// Company Widgets
 /// Reusable UI components for company screens
+library;
 
 import 'dart:ui';
 import 'package:flutter/material.dart';

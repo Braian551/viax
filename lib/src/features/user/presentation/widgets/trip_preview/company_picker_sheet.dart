@@ -4,7 +4,7 @@ import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import 'company_details_sheet.dart';
 import 'trip_price_formatter.dart';
-import '../../../../../core/config/app_config.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 
 class CompanyPickerSheet extends StatefulWidget {
@@ -117,20 +117,21 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                           ),
                         ),
                         const SizedBox(width: 14),
-                        Text(
-                          'Elige la empresa',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                            color: widget.isDark ? Colors.white : Colors.black87,
+                        Expanded(
+                          child: Text(
+                            'Seleccionar Empresa',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDark ? Colors.white : Colors.black87,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Search Bar
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                     child: Container(
@@ -269,74 +270,6 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
       ),
     );
   }
-
-  String _getCorrectUrl(String url) {
-    String finalKey = url;
-
-    // Handle legacy r2_proxy.php URLs by extracting the R2 key
-    if (url.contains('r2_proxy.php') && url.contains('key=')) {
-      try {
-        final uri = Uri.parse(url);
-        final extractedKey = uri.queryParameters['key'];
-        
-        if (extractedKey != null && extractedKey.isNotEmpty) {
-           finalKey = extractedKey;
-           debugPrint('CompanyPicker: Parsed r2_proxy key: $finalKey');
-        }
-      } catch (e) {
-        debugPrint('CompanyPicker: Error parsing logo URL: $e');
-      }
-    }
-
-    // If already a valid full URL (not legacy localhost), return it
-    if (finalKey.startsWith('http') && !finalKey.contains('192.168.') && !finalKey.contains('localhost')) {
-      return finalKey;
-    }
-    
-    // If it's a legacy full URL with localhost/192.168, extract just the path
-    if (finalKey.startsWith('http')) {
-      final uri = Uri.tryParse(finalKey);
-      if (uri != null && uri.path.isNotEmpty) {
-        // Remove /viax/backend prefix if present
-        String path = uri.path;
-        if (path.startsWith('/viax/backend/')) {
-          path = path.substring('/viax/backend/'.length);
-        } else if (path.startsWith('/')) {
-          path = path.substring(1);
-        }
-        finalKey = path;
-      }
-    }
-    
-    // Remove leading slash if present
-    final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
-    
-    // Build URL through r2_proxy.php
-    final result = '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
-    debugPrint('CompanyPicker: Generated URL: $result');
-    return result;
-  }
-
-  Widget _buildPlaceholder(String nombre) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Text(
-          nombre.isNotEmpty ? nombre[0].toUpperCase() : 'E',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _CompanyItem extends StatelessWidget {
@@ -416,19 +349,12 @@ class _CompanyItem extends StatelessWidget {
                           color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.1),
                         ),
                       ),
-                        child: company.logoUrl != null && company.logoUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              _getCorrectUrl(company.logoUrl!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                debugPrint('CompanyPickerItem: Failed to load image: ${_getCorrectUrl(company.logoUrl!)}. Error: $error');
-                                return _buildPlaceholder(company.nombre);
-                              },
-                            ),
-                          )
-                        : _buildPlaceholder(company.nombre),
+                      child: CompanyLogo(
+                        logoKey: company.logoUrl,
+                        nombreEmpresa: company.nombre,
+                        size: 56,
+                        fontSize: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -575,71 +501,4 @@ class _CompanyItem extends StatelessWidget {
     );
   }
 
-  String _getCorrectUrl(String url) {
-    String finalKey = url;
-
-    // Handle legacy r2_proxy.php URLs by extracting the R2 key
-    if (url.contains('r2_proxy.php') && url.contains('key=')) {
-      try {
-        final uri = Uri.parse(url);
-        final extractedKey = uri.queryParameters['key'];
-        
-        if (extractedKey != null && extractedKey.isNotEmpty) {
-           finalKey = extractedKey;
-           debugPrint('CompanyPickerItem: Parsed r2_proxy key: $finalKey');
-        }
-      } catch (e) {
-        debugPrint('CompanyPickerItem: Error parsing logo URL: $e');
-      }
-    }
-
-    // If already a valid full URL (not legacy localhost), return it
-    if (finalKey.startsWith('http') && !finalKey.contains('192.168.') && !finalKey.contains('localhost')) {
-      return finalKey;
-    }
-    
-    // If it's a legacy full URL with localhost/192.168, extract just the path
-    if (finalKey.startsWith('http')) {
-      final uri = Uri.tryParse(finalKey);
-      if (uri != null && uri.path.isNotEmpty) {
-        // Remove /viax/backend prefix if present
-        String path = uri.path;
-        if (path.startsWith('/viax/backend/')) {
-          path = path.substring('/viax/backend/'.length);
-        } else if (path.startsWith('/')) {
-          path = path.substring(1);
-        }
-        finalKey = path;
-      }
-    }
-    
-    // Remove leading slash if present
-    final cleanKey = finalKey.startsWith('/') ? finalKey.substring(1) : finalKey;
-    
-    // Build URL through r2_proxy.php
-    final result = '${AppConfig.baseUrl}/r2_proxy.php?key=${Uri.encodeComponent(cleanKey)}';
-    debugPrint('CompanyPickerItem: Generated URL: $url -> $result');
-    return result;
-  }
-
-  Widget _buildPlaceholder(String nombre) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Text(
-          nombre.isNotEmpty ? nombre[0].toUpperCase() : 'E',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
 }

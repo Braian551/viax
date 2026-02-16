@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
-import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 import 'conductor_actions.dart';
 
 class ConductorDetailsSheet extends StatefulWidget {
@@ -198,7 +198,13 @@ class _ConductorDetailsSheetState extends State<ConductorDetailsSheet> {
                           const SizedBox(height: 24),
                           _buildSectionTitle(context, 'Vehículo'),
                           _buildInfoCard(context, [
-                            _buildInfoRow(context, 'Placa', widget.conductor['vehiculo_placa'], Icons.directions_car_outlined, isBold: true),
+                            _buildInfoRow(
+                              context,
+                              'Placa',
+                              ColombianPlateUtils.formatForDisplay(widget.conductor['vehiculo_placa']?.toString()),
+                              Icons.directions_car_outlined,
+                              isBold: true,
+                            ),
                             _buildInfoRow(context, 'Modelo', '${widget.conductor['vehiculo_marca']} ${widget.conductor['vehiculo_modelo']} ${widget.conductor['vehiculo_anio'] ?? ''}', Icons.info_outline),
                             _buildInfoRow(context, 'Color', widget.conductor['vehiculo_color'], Icons.color_lens_outlined),
                             _buildInfoRow(context, 'Tipo', widget.conductor['vehiculo_tipo'], Icons.local_taxi_outlined),

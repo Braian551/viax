@@ -71,7 +71,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   bool _disposed = false;
   
   LatLng? _conductorLocation;
-  double _conductorHeading = 0;
+  final double _conductorHeading = 0;
   LatLng? _clientLocation;
   double _clientHeading = 0;
   Map<String, dynamic>? _conductor;

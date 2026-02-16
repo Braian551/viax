@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import '../../../user/domain/entities/user.dart';
 import '../../../../core/error/failures.dart';
 
 abstract class AdminUserRepository {

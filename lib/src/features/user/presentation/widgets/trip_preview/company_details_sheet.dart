@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import '../../../data/services/company_vehicle_service.dart';
-import '../../../../../global/services/auth/user_service.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 /// Sheet para mostrar información detallada de una empresa
 /// Rediseño consistente con DraggableDriverPanel / TripBottomPanel
@@ -299,13 +299,12 @@ class _CompanyDetailsSheetState extends State<CompanyDetailsSheet>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(17),
-              child: details.logoUrl != null
-                  ? Image.network(
-                      UserService.getR2ImageUrl(details.logoUrl),
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _a, _b) => _buildLogoPlaceholder(details.nombre),
-                    )
-                  : _buildLogoPlaceholder(details.nombre),
+              child: CompanyLogo(
+                logoKey: details.logoUrl,
+                nombreEmpresa: details.nombre,
+                size: 66,
+                fontSize: 24,
+              ),
             ),
           ),
         ),
@@ -384,22 +383,6 @@ class _CompanyDetailsSheetState extends State<CompanyDetailsSheet>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildLogoPlaceholder(String nombre) {
-    return Container(
-      color: widget.isDark ? const Color(0xFF2C2C2C) : Colors.grey[50],
-      child: Center(
-        child: Text(
-          nombre.isNotEmpty ? nombre[0].toUpperCase() : 'E',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
     );
   }
 

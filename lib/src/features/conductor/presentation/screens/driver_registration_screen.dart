@@ -14,6 +14,7 @@ import 'package:viax/src/features/conductor/presentation/widgets/components/comp
 import 'package:viax/src/features/conductor/presentation/widgets/steps/vehicle_step_widget.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class DriverRegistrationScreen extends StatefulWidget {
   /// Optional initial data to pre-fill the form (used when correcting rejected application)
@@ -89,7 +90,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       _modelController.text = vehiculo['vehiculo_modelo'] ?? '';
       _yearController.text = vehiculo['vehiculo_anio']?.toString() ?? '';
       _colorController.text = vehiculo['vehiculo_color'] ?? '';
-      _plateController.text = vehiculo['vehiculo_placa'] ?? '';
+      _plateController.text = ColombianPlateUtils.normalize((vehiculo['vehiculo_placa'] ?? '').toString());
       _vehiclePhotoUrl = UserService.getR2ImageUrl(vehiculo['foto_vehiculo']);
       
       // Map vehicle type
@@ -188,6 +189,10 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         CustomSnackbar.showError(context, message: 'Completa todos los datos del vehículo.');
         return false;
       }
+      if (!ColombianPlateUtils.isValid(_plateController.text)) {
+        CustomSnackbar.showError(context, message: 'Placa inválida. Usa formato ABC123 o ABC12D.');
+        return false;
+      }
       if (_vehiclePhoto == null && _vehiclePhotoUrl == null) {
         CustomSnackbar.showError(context, message: 'Debes subir una foto del vehículo.');
         return false;
@@ -274,7 +279,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         model: _modelController.text,
         year: _yearController.text,
         color: _colorController.text,
-        plate: _plateController.text,
+        plate: ColombianPlateUtils.normalize(_plateController.text),
 
         soatNumber: _soatController.text,
         soatDate: _soatDate!.toIso8601String().split('T')[0],
@@ -610,7 +615,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
+        SizedBox(
           height: 120, // Approximate height for grid
           child: GridView.count(
             crossAxisCount: 4,

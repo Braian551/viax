@@ -159,7 +159,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
         solicitudId: widget.solicitudIdAsInt,
       );
       
-      print('📩 [SearchingDriverScreen] Response: ${result}');
+      print('📩 [SearchingDriverScreen] Response: $result');
       
       if (!mounted || _tripAccepted) return;
       

@@ -1,0 +1,1 @@
+export 'package:viax/src/core/utils/colombian_plate_utils.dart';

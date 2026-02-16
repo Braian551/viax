@@ -5,6 +5,7 @@
 /// 
 /// NOTA: Las excepciones son para errores tÃ©cnicos/infraestructura,
 /// los Failures son para la lÃ³gica de negocio.
+library;
 
 /// ExcepciÃ³n base
 abstract class AppException implements Exception {
@@ -17,35 +18,35 @@ abstract class AppException implements Exception {
 
 /// Error del servidor (HTTP 500, 400, etc.)
 class ServerException extends AppException {
-  const ServerException(String message) : super(message);
+  const ServerException(super.message);
 }
 
 /// Error de conexiÃ³n/red
 class NetworkException extends AppException {
-  const NetworkException(String message) : super(message);
+  const NetworkException(super.message);
 }
 
 /// Recurso no encontrado (HTTP 404)
 class NotFoundException extends AppException {
-  const NotFoundException(String message) : super(message);
+  const NotFoundException(super.message);
 }
 
 /// Error de cachÃ©/BD local
 class CacheException extends AppException {
-  const CacheException(String message) : super(message);
+  const CacheException(super.message);
 }
 
 /// Error de autenticaciÃ³n (HTTP 401)
 class AuthException extends AppException {
-  const AuthException(String message) : super(message);
+  const AuthException(super.message);
 }
 
 /// Error de autorizaciÃ³n (HTTP 403)
 class UnauthorizedException extends AppException {
-  const UnauthorizedException(String message) : super(message);
+  const UnauthorizedException(super.message);
 }
 
 /// Error de validaciÃ³n de datos
 class ValidationException extends AppException {
-  const ValidationException(String message) : super(message);
+  const ValidationException(super.message);
 }

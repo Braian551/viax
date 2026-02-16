@@ -48,7 +48,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   String? _errorMessage;
 
   // Estado de carga y datos
-  bool _isLoading = true;
+  final bool _isLoading = true;
   CompanyVehicleResponse? _companyResponse;
 
   // Estado para indicar que no hay vehículos disponibles
@@ -1522,7 +1522,7 @@ class _HiddenSheetHandle extends StatelessWidget {
 class _RouteLoader extends StatefulWidget {
   final bool isDark;
 
-  const _RouteLoader({super.key, required this.isDark});
+  const _RouteLoader({required this.isDark});
 
   @override
   State<_RouteLoader> createState() => _RouteLoaderState();

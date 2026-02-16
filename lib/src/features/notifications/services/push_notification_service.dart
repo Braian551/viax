@@ -24,6 +24,10 @@ class PushNotificationService {
 
   static bool _initialized = false;
   static int? _currentUserId;
+  static bool _isSyncingToken = false;
+  static Timer? _retryTimer;
+  static String? _lastRegisteredToken;
+  static int? _lastRegisteredUserId;
 
   static Stream<RemoteMessage> get onMessage => _onMessageController.stream;
 
@@ -38,6 +42,8 @@ class PushNotificationService {
       sound: true,
       provisional: false,
     );
+
+    await _messaging.setAutoInitEnabled(true);
 
     await _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
@@ -70,10 +76,7 @@ class PushNotificationService {
     _messaging.onTokenRefresh.listen((token) async {
       final userId = _currentUserId;
       if (userId != null && userId > 0) {
-        await NotificationService.registerPushToken(
-          userId: userId,
-          token: token,
-        );
+        await _registerTokenWithRetry(userId: userId, token: token);
       }
     });
 
@@ -82,7 +85,10 @@ class PushNotificationService {
 
   static Future<void> syncForCurrentSession() async {
     final session = await UserService.getSavedSession();
-    final userId = session?['id'] as int?;
+    final rawUserId = session?['id'];
+    final userId = rawUserId is int
+        ? rawUserId
+        : int.tryParse(rawUserId?.toString() ?? '');
 
     if (userId == null || userId <= 0) {
       return;
@@ -94,25 +100,80 @@ class PushNotificationService {
   static Future<void> registerCurrentDeviceForUser(int userId) async {
     _currentUserId = userId;
 
-    final token = await _messaging.getToken();
-    if (token == null || token.isEmpty) {
-      debugPrint('⚠️ [PushNotificationService] No se pudo obtener token FCM');
+    if (_isSyncingToken) {
       return;
     }
 
-    final result = await NotificationService.registerPushToken(
-      userId: userId,
-      token: token,
-      plataforma: _platformName(),
-      deviceName: 'Flutter App',
-    );
+    _isSyncingToken = true;
+    try {
+      final token = await _messaging.getToken();
+      if (token == null || token.isEmpty) {
+        debugPrint('⚠️ [PushNotificationService] No se pudo obtener token FCM');
+        _scheduleRetry(userId);
+        return;
+      }
 
-    if (result['success'] != true) {
-      debugPrint('⚠️ [PushNotificationService] No se pudo registrar token push: ${result['error']}');
+      await _registerTokenWithRetry(userId: userId, token: token);
+    } catch (e) {
+      debugPrint('⚠️ [PushNotificationService] Error obteniendo token FCM: $e');
+      _scheduleRetry(userId);
+    } finally {
+      _isSyncingToken = false;
     }
   }
 
+  static Future<void> _registerTokenWithRetry({
+    required int userId,
+    required String token,
+  }) async {
+    if (_lastRegisteredUserId == userId && _lastRegisteredToken == token) {
+      return;
+    }
+
+    Map<String, dynamic>? lastResult;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      final result = await NotificationService.registerPushToken(
+        userId: userId,
+        token: token,
+        plataforma: _platformName(),
+        deviceName: 'Flutter App',
+      );
+
+      if (result['success'] == true) {
+        _lastRegisteredUserId = userId;
+        _lastRegisteredToken = token;
+        _retryTimer?.cancel();
+        _retryTimer = null;
+        debugPrint('✅ [PushNotificationService] Token push sincronizado correctamente');
+        return;
+      }
+
+      lastResult = result;
+      if (attempt < 3) {
+        await Future<void>.delayed(Duration(seconds: attempt * 2));
+      }
+    }
+
+    final error = lastResult?['error']?.toString() ?? 'Error desconocido';
+    final errorType = lastResult?['error_type']?.toString() ?? 'unknown';
+    debugPrint(
+      '⚠️ [PushNotificationService] No se pudo registrar token push '
+      '(tipo=$errorType): $error',
+    );
+    _scheduleRetry(userId);
+  }
+
+  static void _scheduleRetry(int userId) {
+    _retryTimer?.cancel();
+    _retryTimer = Timer(const Duration(seconds: 20), () {
+      registerCurrentDeviceForUser(userId);
+    });
+  }
+
   static Future<void> unregisterCurrentDevice({int? userId}) async {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+
     final token = await _messaging.getToken();
     final resolvedUserId = userId ?? _currentUserId;
 
@@ -124,6 +185,11 @@ class PushNotificationService {
       userId: resolvedUserId,
       token: token,
     );
+
+    if (_lastRegisteredUserId == resolvedUserId && _lastRegisteredToken == token) {
+      _lastRegisteredUserId = null;
+      _lastRegisteredToken = null;
+    }
   }
 
   static String _platformName() {

@@ -263,6 +263,36 @@ class _SplashScreenState extends State<SplashScreen>
               if (userRole == 'conductor') {
                  // Recuperar datos para conductor
                  int conductorId = int.tryParse(trip['conductor_id']?.toString() ?? '') ?? 0;
+
+                 final cliente = trip['cliente'] is Map
+                   ? Map<String, dynamic>.from(trip['cliente'] as Map)
+                   : null;
+
+                 final clienteNombre =
+                   trip['cliente_nombre']?.toString() ??
+                   trip['nombre_usuario']?.toString() ??
+                   (() {
+                     if (cliente == null) return null;
+                     final nombre = cliente['nombre']?.toString() ?? '';
+                     final apellido = cliente['apellido']?.toString() ?? '';
+                     final fullName = '$nombre $apellido'.trim();
+                     return fullName.isEmpty ? null : fullName;
+                   })();
+
+                 final clienteFoto =
+                   trip['cliente_foto']?.toString() ??
+                   trip['foto_usuario']?.toString() ??
+                   cliente?['foto_perfil']?.toString();
+
+                 final clienteCalificacion = double.tryParse(
+                   (trip['cliente_calificacion'] ??
+                       trip['calificacion_cliente'] ??
+                       trip['rating_cliente'] ??
+                       trip['cliente_rating'] ??
+                       cliente?['calificacion_promedio'])
+                     ?.toString() ??
+                     '',
+                 );
                  
                  // Fallback: Si no viene el ID del conductor en el viaje, usar el de la sesión
                  if (conductorId == 0) {
@@ -283,6 +313,9 @@ class _SplashScreenState extends State<SplashScreen>
                        destinoLat: double.tryParse(trip['destino']?['latitud']?.toString() ?? '') ?? 0.0,
                        destinoLng: double.tryParse(trip['destino']?['longitud']?.toString() ?? '') ?? 0.0,
                        direccionDestino: trip['destino']?['direccion']?.toString() ?? '',
+                       clienteNombre: clienteNombre,
+                       clienteFoto: clienteFoto,
+                       clienteCalificacion: clienteCalificacion,
                        initialTripStatus: trip['estado'],
                      ),
                    ),

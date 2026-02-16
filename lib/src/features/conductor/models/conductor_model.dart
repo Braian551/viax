@@ -1,4 +1,6 @@
-﻿class ConductorModel {
+﻿import 'package:viax/src/core/utils/colombian_plate_utils.dart';
+
+class ConductorModel {
   final int id;
   final String nombre;
   final String apellido;
@@ -47,7 +49,7 @@
       totalViajes: int.tryParse(json['total_viajes']?.toString() ?? '0') ?? 0,
       disponible: json['disponible'] == 1 || json['disponible'] == true,
       vehiculoModelo: json['vehiculo_modelo']?.toString(),
-      vehiculoPlaca: json['vehiculo_placa']?.toString(),
+      vehiculoPlaca: ColombianPlateUtils.normalize(json['vehiculo_placa']?.toString() ?? ''),
       vehiculoColor: json['vehiculo_color']?.toString(),
       licenciaNumero: json['licencia_numero']?.toString(),
       licenciaVencimiento: json['licencia_vencimiento'] != null
@@ -80,4 +82,6 @@
   }
 
   String get nombreCompleto => '$nombre $apellido';
+  String get vehiculoPlacaFormateada =>
+      ColombianPlateUtils.formatForDisplay(vehiculoPlaca, fallback: '---');
 }

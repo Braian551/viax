@@ -5,6 +5,7 @@
 /// - Operaciones offline con cola de sincronización
 /// - Optimistic updates para mejor UX
 /// - Detección y resolución de conflictos
+library;
 
 export 'network_resilience_service.dart';
 export 'connectivity_service.dart';

@@ -1,5 +1,6 @@
 /// Módulo de notificaciones
 /// Exporta todos los componentes necesarios para usar notificaciones
+library;
 
 // Models
 export 'models/notification_model.dart';

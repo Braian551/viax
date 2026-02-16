@@ -1,6 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../../theme/app_colors.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 /// Tarjeta principal con información del vehículo
 class VehicleInfoCard extends StatefulWidget {
@@ -62,7 +61,9 @@ class _VehicleInfoCardState extends State<VehicleInfoCard>
     final marca = widget.vehicleData?['vehiculo_marca'] ?? widget.vehicleData?['marca'] ?? 'Marca';
     final modelo = widget.vehicleData?['vehiculo_modelo'] ?? widget.vehicleData?['modelo'] ?? 'Modelo';
     final anio = widget.vehicleData?['vehiculo_anio']?.toString() ?? widget.vehicleData?['anio']?.toString() ?? '';
-    final placa = widget.vehicleData?['vehiculo_placa'] ?? widget.vehicleData?['placa'] ?? '--- ---';
+    final placa = ColombianPlateUtils.formatForDisplay(
+      widget.vehicleData?['vehiculo_placa']?.toString() ?? widget.vehicleData?['placa']?.toString(),
+    );
     final color = widget.vehicleData?['vehiculo_color'] ?? widget.vehicleData?['color'] ?? 'Color';
     final tipoVehiculo = widget.vehicleData?['vehiculo_tipo'] ?? widget.vehicleData?['tipo_vehiculo'] ?? 'auto';
 
@@ -176,7 +177,7 @@ class _VehicleInfoCardState extends State<VehicleInfoCard>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          placa.toUpperCase(),
+                          placa,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,

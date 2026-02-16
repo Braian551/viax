@@ -12,6 +12,7 @@ import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/routes/route_names.dart';
 import '../../../profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class ConductorProfileScreen extends StatefulWidget {
   final int conductorId;
@@ -479,7 +480,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     
     final empresaName = companyInfo?['nombre'] ?? _conductorUser?['empresa_nombre'] ?? 'Empresa';
     final empresaLogo = companyInfo?['logo_url'] ?? companyInfo?['logo'];
-    final empresaLogoUrl = empresaLogo != null ? UserService.getR2ImageUrl(empresaLogo) : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -556,7 +556,10 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                                 ),
                               ),
                               child: Text(
-                                vehicle.placa.toUpperCase(),
+                                ColombianPlateUtils.formatForDisplay(
+                                  vehicle.placa,
+                                  fallback: vehicle.placa.toUpperCase(),
+                                ),
                                 style: TextStyle(
                                   color: isDark ? Colors.white70 : Colors.grey[800],
                                   fontSize: 13,

@@ -124,7 +124,7 @@ void main() async {
     print('❌ Error: $e');
   }
 
-  print('\n' + '=' * 50);
+  print('\n${'=' * 50}');
   print('🧪 Backend testing completed!');
   print('Remember to replace the Railway URL with your actual deployment URL');
 }

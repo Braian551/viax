@@ -1,5 +1,6 @@
 /// Company Remote Data Source
 /// Handles HTTP requests to company-related backend endpoints
+library;
 
 import 'dart:convert';
 import 'dart:io';
@@ -293,10 +294,12 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
       var url =
           '${AppConfig.baseUrl}/company/conductores_documentos.php?empresa_id=$empresaId';
       if (userId != null) url += '&user_id=$userId';
-      if (estadoVerificacion != null)
+      if (estadoVerificacion != null) {
         url += '&estado_verificacion=$estadoVerificacion';
-      if (searchQuery != null && searchQuery.isNotEmpty)
+      }
+      if (searchQuery != null && searchQuery.isNotEmpty) {
         url += '&search=${Uri.encodeComponent(searchQuery)}';
+      }
       url += '&page=$page&per_page=$perPage';
 
       final response = await client.get(
@@ -446,6 +449,7 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   }
 
   /// Check if user has password set (for Google OAuth users)
+  @override
   Future<Map<String, dynamic>> checkPasswordStatus(dynamic userId) async {
     try {
       final url = Uri.parse('${AppConfig.authServiceUrl}/change_password.php');
@@ -473,6 +477,7 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   }
 
   /// Change or set password
+  @override
   Future<bool> changePassword({
     required dynamic userId,
     String? currentPassword,

@@ -5,6 +5,7 @@ import '../../../../global/services/auth/user_service.dart';
 import '../../../../routes/route_names.dart';
 import '../../../../widgets/dialogs/logout_dialog.dart';
 import '../../services/conductor_service.dart';
+import '../../../../core/utils/colombian_plate_utils.dart';
 
 /// Menú hamburguesa del conductor con diseño moderno
 class ConductorDrawer extends StatefulWidget {
@@ -258,7 +259,10 @@ class _ConductorDrawerState extends State<ConductorDrawer> {
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
     final nombre = widget.conductorUser['nombre']?.toString() ?? 'Conductor';
     final tipoVehiculo = widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Vehículo';
-    final placa = widget.conductorUser['placa']?.toString() ?? '';
+    final placa = ColombianPlateUtils.formatForDisplay(
+      widget.conductorUser['placa']?.toString(),
+      fallback: '',
+    );
     
     return Container(
       padding: const EdgeInsets.all(20),

@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
 import 'package:viax/src/features/auth/presentation/widgets/searchable_dropdown_sheet.dart';
 
@@ -389,20 +389,22 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
                         image: FileImage(_logoFile!),
                         fit: BoxFit.cover,
                       )
-                    : (_currentLogoUrl != null 
-                        ? DecorationImage(
-                            image: NetworkImage(_currentLogoUrl!),
-                            fit: BoxFit.cover,
-                          ) 
-                        : null),
+                    : null,
               ),
-              child: (_logoFile == null && _currentLogoUrl == null)
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_a_photo_rounded, size: 28, color: Colors.grey[500]),
-                      ],
-                    )
+              child: _logoFile == null
+                  ? (_currentLogoUrl != null && _currentLogoUrl!.isNotEmpty
+                      ? CompanyLogo(
+                          logoKey: _currentLogoUrl,
+                          nombreEmpresa: _razonSocialController.text.trim(),
+                          size: 96,
+                          fontSize: 34,
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo_rounded, size: 28, color: Colors.grey[500]),
+                          ],
+                        ))
                   : null,
             ),
             Positioned(

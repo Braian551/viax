@@ -17,7 +17,7 @@ class AdminProvider with ChangeNotifier {
   });
 
   SystemStats? _stats;
-  List<Map<String, dynamic>> _pendingDrivers = [];
+  final List<Map<String, dynamic>> _pendingDrivers = [];
   bool _isLoading = false;
   String? _errorMessage;
 

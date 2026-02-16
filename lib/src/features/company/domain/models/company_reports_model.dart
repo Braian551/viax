@@ -1,5 +1,6 @@
 /// Company Reports Model
 /// Modelo de datos para reportes de empresa
+library;
 
 class CompanyReportsData {
   final String periodo;

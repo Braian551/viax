@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/company_vehicle_models.dart';
-import '../../../../../global/services/auth/user_service.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 
 /// Widget para seleccionar empresa manualmente
 /// Muestra chips con las empresas disponibles para el tipo de vehículo seleccionado
@@ -118,18 +118,14 @@ class _CompanyChip extends StatelessWidget {
           children: [
             // Logo o icono
             if (empresa.logoUrl != null && empresa.logoUrl!.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  UserService.getR2ImageUrl(empresa.logoUrl),
-                  width: isCompact ? 18 : 24,
-                  height: isCompact ? 18 : 24,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.business,
-                    size: isCompact ? 16 : 20,
-                    color: isSelected ? AppColors.primary : (isDark ? Colors.white60 : Colors.black45),
-                  ),
+              SizedBox(
+                width: isCompact ? 18 : 24,
+                height: isCompact ? 18 : 24,
+                child: CompanyLogo(
+                  logoKey: empresa.logoUrl,
+                  nombreEmpresa: empresa.nombre,
+                  size: isCompact ? 18 : 24,
+                  fontSize: isCompact ? 10 : 12,
                 ),
               ),
               const SizedBox(width: 6),

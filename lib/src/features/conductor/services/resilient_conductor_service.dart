@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 import '../../../core/network/network_resilience_service.dart';
 import '../../../core/network/trip_sync_manager.dart';

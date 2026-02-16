@@ -227,6 +227,6 @@ class UserLocation {
 
   @override
   String toString() {
-    return 'UserLocation(id: $id, direccion: ${formattedAddress}, esPrincipal: $esPrincipal)';
+    return 'UserLocation(id: $id, direccion: $formattedAddress, esPrincipal: $esPrincipal)';
   }
 }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/admin/data/models/empresa_transporte_model.dart';
 import 'package:viax/src/features/admin/domain/entities/empresa_transporte.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
@@ -296,23 +296,21 @@ class _EmpresaFormState extends State<EmpresaForm> {
                                 image: FileImage(_formData.logoFile!),
                                 fit: BoxFit.cover,
                               )
-                            : (_formData.logoUrl != null
-                                ? DecorationImage(
-                                    image: _formData.logoUrl!.startsWith('http')
-                                        ? NetworkImage(_formData.logoUrl!)
-                                        : NetworkImage(
-                                            '${AppConfig.baseUrl}/${_formData.logoUrl}',
-                                          ),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null),
+                            : null,
                       ),
-                      child: _formData.logoFile == null && _formData.logoUrl == null
-                          ? const Icon(
-                              Icons.add_a_photo,
-                              size: 40,
-                              color: Colors.grey,
-                            )
+                      child: _formData.logoFile == null
+                          ? ((_formData.logoUrl != null && _formData.logoUrl!.isNotEmpty)
+                              ? CompanyLogo(
+                                  logoKey: _formData.logoUrl,
+                                  nombreEmpresa: _nombreController.text.trim(),
+                                  size: 96,
+                                  fontSize: 34,
+                                )
+                              : const Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ))
                           : null,
                     ),
                   ),

@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:flutter/services.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/components/image_upload_card.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/components/vehicle_searchable_sheet.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class VehicleStepWidget extends StatefulWidget {
   final bool isDark;
@@ -48,16 +50,51 @@ class VehicleStepWidget extends StatefulWidget {
 
 class _VehicleStepWidgetState extends State<VehicleStepWidget> {
   List<Map<String, dynamic>> _colors = [];
+  List<Map<String, dynamic>> _brands = [];
+  List<Map<String, dynamic>> _models = [];
   bool _isLoadingColors = true;
+  bool _isLoadingBrands = true;
+  bool _isLoadingModels = false;
   String? _selectedColorName;
+  String? _selectedBrandId;
+  String? _selectedModelId;
 
   @override
   void initState() {
     super.initState();
     _loadColors();
+    _syncInitialVehicleSelectors();
+    _loadBrands();
+    widget.plateController.text = ColombianPlateUtils.normalize(widget.plateController.text);
     // Initialize local state from controller if present
     if (widget.colorController.text.isNotEmpty) {
       _selectedColorName = widget.colorController.text;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant VehicleStepWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.selectedVehicleType != widget.selectedVehicleType) {
+      _selectedBrandId = null;
+      _selectedModelId = null;
+      widget.brandController.clear();
+      widget.modelController.clear();
+      _models = [];
+      _loadBrands();
+    }
+  }
+
+  void _syncInitialVehicleSelectors() {
+    final initialBrand = widget.brandController.text.trim();
+    final initialModel = widget.modelController.text.trim();
+
+    if (initialBrand.isNotEmpty) {
+      _selectedBrandId = initialBrand.toUpperCase();
+    }
+    if (initialModel.isNotEmpty) {
+      _selectedModelId = initialModel.toUpperCase();
     }
   }
 
@@ -67,22 +104,181 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
     final uniqueColors = <Map<String, dynamic>>[];
     final seen = <String>{};
     for (final color in colors) {
-      if (!seen.contains(color['nombre'])) {
-        seen.add(color['nombre']);
+      final colorName = (color['nombre'] ?? '').toString().trim();
+      if (colorName.isEmpty) continue;
+
+      final key = colorName.toUpperCase();
+      if (!seen.contains(key)) {
+        seen.add(key);
         uniqueColors.add(color);
       }
     }
+
+    if (!seen.contains('MULTICOLOR')) {
+      uniqueColors.add({'nombre': 'Multicolor', 'hex_code': '#9E9E9E'});
+    }
+
     if (mounted) {
       setState(() {
         _colors = uniqueColors;
         _isLoadingColors = false;
-        
-        // Auto-select if current text matches one
-        if (widget.colorController.text.isNotEmpty && 
-            !_colors.any((c) => c['nombre'] == widget.colorController.text)) {
-              // Custom logic fallback if needed
+
+        if (widget.colorController.text.isNotEmpty) {
+          final current = widget.colorController.text.trim().toUpperCase();
+          final match = _colors.cast<Map<String, dynamic>?>().firstWhere(
+            (c) => (c?['nombre']?.toString().trim().toUpperCase() ?? '') == current,
+            orElse: () => null,
+          );
+          _selectedColorName = (match?['nombre'] as String?) ?? _selectedColorName;
         }
       });
+    }
+  }
+
+  Future<void> _loadBrands() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingBrands = true;
+    });
+
+    final brands = await UserService.getVehicleBrands(
+      vehicleType: widget.selectedVehicleType,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _brands = brands;
+      _isLoadingBrands = false;
+
+      final selectedStillExists = _selectedBrandId != null &&
+          _brands.any((brand) => brand['id'] == _selectedBrandId);
+      if (!selectedStillExists) {
+        _selectedBrandId = null;
+        widget.brandController.clear();
+      }
+    });
+
+    if (_selectedBrandId != null) {
+      await _loadModels();
+    }
+  }
+
+  Future<void> _loadModels() async {
+    final brandId = _selectedBrandId;
+    if (brandId == null || brandId.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _models = [];
+        _selectedModelId = null;
+      });
+      widget.modelController.clear();
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoadingModels = true;
+    });
+
+    final models = await UserService.getVehicleModels(
+      vehicleType: widget.selectedVehicleType,
+      brand: brandId,
+      year: widget.yearController.text.trim(),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _models = models;
+      _isLoadingModels = false;
+
+      final selectedStillExists = _selectedModelId != null &&
+          _models.any((model) => model['id'] == _selectedModelId);
+      if (!selectedStillExists) {
+        _selectedModelId = null;
+        widget.modelController.clear();
+      }
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _searchModels(String query) async {
+    final brandId = _selectedBrandId;
+    if (brandId == null || brandId.isEmpty) {
+      return [];
+    }
+
+    return UserService.getVehicleModels(
+      vehicleType: widget.selectedVehicleType,
+      brand: brandId,
+      year: widget.yearController.text.trim(),
+      query: query,
+    );
+  }
+
+  Future<void> _pickVehicleYear() async {
+    final now = DateTime.now();
+    final currentYear = int.tryParse(widget.yearController.text.trim()) ?? now.year;
+
+    final pickedYear = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Seleccionar año'),
+          content: SizedBox(
+            width: 320,
+            height: 320,
+            child: YearPicker(
+              firstDate: DateTime(1980),
+              lastDate: DateTime(now.year + 1),
+              selectedDate: DateTime(currentYear.clamp(1980, now.year + 1)),
+              currentDate: DateTime(now.year),
+              onChanged: (DateTime date) {
+                Navigator.of(context).pop(date.year);
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (pickedYear == null) return;
+
+    widget.yearController.text = pickedYear.toString();
+    await _loadModels();
+  }
+
+  Color _parseColor(String? hexCode) {
+    final normalized = (hexCode ?? '').toString().trim();
+    if (normalized.isEmpty) {
+      return Colors.grey;
+    }
+
+    final hex = normalized.replaceAll('#', '');
+    final withAlpha = hex.length == 6 ? 'FF$hex' : hex;
+    final value = int.tryParse(withAlpha, radix: 16);
+    if (value == null) {
+      return Colors.grey;
+    }
+    return Color(value);
+  }
+
+  IconData _vehicleTypeIcon() {
+    switch (widget.selectedVehicleType) {
+      case 'motocarro':
+        return Icons.electric_rickshaw_rounded;
+      case 'moto':
+      case 'mototaxi':
+        return Icons.two_wheeler_rounded;
+      case 'taxi':
+        return Icons.local_taxi_rounded;
+      case 'carro':
+      default:
+        return Icons.directions_car_rounded;
     }
   }
 
@@ -267,36 +463,11 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
             ],
           ),
           const SizedBox(height: 20),
-          AuthTextField(
-            controller: widget.brandController,
-            label: 'Marca',
-            icon: Icons.branding_watermark_rounded,
-            textCapitalization: TextCapitalization.characters,
-            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Alphanumeric + Space
-            ],
-          ),
+            _buildBrandSelector(context),
           const SizedBox(height: 16),
-          AuthTextField(
-            controller: widget.modelController,
-            label: 'Modelo (Ref)',
-            icon: Icons.model_training_rounded,
-            textCapitalization: TextCapitalization.characters,
-            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Alphanumeric + Space
-            ],
-          ),
+            _buildModelSelector(context),
           const SizedBox(height: 16),
-          AuthTextField(
-            controller: widget.yearController,
-            label: 'Año',
-            icon: Icons.calendar_today_rounded,
-            keyboardType: TextInputType.number,
-            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
+          _buildYearPickerField(),
           const SizedBox(height: 16),
           _isLoadingColors 
              ? Center(child: CircularProgressIndicator(strokeWidth: 2)) 
@@ -307,12 +478,296 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
             label: 'Placa',
             icon: Icons.tag_rounded,
             textCapitalization: TextCapitalization.characters,
-            validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+            hintText: 'Ej: ABC123 o ABC12D',
+            validator: ColombianPlateUtils.validate,
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), // Alphanumeric no space
+              ColombianPlateInputFormatter(),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBrandSelector(BuildContext context) {
+    final bool isDark = widget.isDark;
+    final selectedBrand = _brands.cast<Map<String, dynamic>?>().firstWhere(
+      (brand) => brand?['id'] == _selectedBrandId,
+      orElse: () => null,
+    );
+    final selectedBrandName = selectedBrand?['name'] as String?;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            isDark
+                ? AppColors.darkSurface.withValues(alpha: 0.8)
+                : AppColors.lightSurface.withValues(alpha: 0.8),
+            isDark
+                ? AppColors.darkCard.withValues(alpha: 0.4)
+                : AppColors.lightCard.withValues(alpha: 0.4),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          width: 1.5,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: _isLoadingBrands || _brands.isEmpty
+            ? null
+            : () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+                    title: 'Seleccionar Marca',
+                    items: _brands,
+                    itemLabel: (item) => (item['name'] as String?) ?? (item['id'] as String),
+                    selectedLabel: selectedBrandName,
+                    headerIcon: Icons.branding_watermark_rounded,
+                    itemIcon: _vehicleTypeIcon(),
+                    onSelected: (selected) async {
+                      final selectedId = selected['id'] as String;
+                      final selectedName = (selected['name'] as String?) ?? selectedId;
+
+                      setState(() {
+                        _selectedBrandId = selectedId;
+                        _selectedModelId = null;
+                        _models = [];
+                      });
+
+                      widget.brandController.text = selectedName;
+                      widget.modelController.clear();
+                      await _loadModels();
+                    },
+                    searchHint: 'Buscar marca...',
+                  ),
+                );
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.branding_watermark_rounded, color: Colors.white, size: 20),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Marca',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      selectedBrandName ?? 'Seleccionar marca',
+                      style: TextStyle(
+                        color: selectedBrandName != null
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (_isLoadingBrands)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(Icons.arrow_drop_down, color: Colors.grey),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModelSelector(BuildContext context) {
+    final bool isDark = widget.isDark;
+    final bool isDisabled = _selectedBrandId == null || _selectedBrandId!.isEmpty;
+    final selectedBrand = _brands.cast<Map<String, dynamic>?>().firstWhere(
+      (brand) => brand?['id'] == _selectedBrandId,
+      orElse: () => null,
+    );
+    final selectedBrandName = selectedBrand?['name'] as String?;
+    final selectedModel = _models.cast<Map<String, dynamic>?>().firstWhere(
+      (model) => model?['id'] == _selectedModelId,
+      orElse: () => null,
+    );
+    final selectedModelName = selectedModel?['name'] as String?;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            isDark
+                ? AppColors.darkSurface.withValues(alpha: 0.8)
+                : AppColors.lightSurface.withValues(alpha: 0.8),
+            isDark
+                ? AppColors.darkCard.withValues(alpha: 0.4)
+                : AppColors.lightCard.withValues(alpha: 0.4),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          width: 1.5,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: isDisabled || _isLoadingModels || _models.isEmpty
+            ? null
+            : () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+                    title: 'Seleccionar Modelo',
+                    items: _models,
+                    itemLabel: (item) => (item['name'] as String?) ?? (item['id'] as String),
+                    searchText: (item) {
+                      final modelName = (item['name'] as String?) ?? (item['id'] as String);
+                      return '${selectedBrandName ?? ''} $modelName';
+                    },
+                    onSearch: _searchModels,
+                    selectedLabel: selectedModelName,
+                    headerIcon: Icons.model_training_rounded,
+                    itemIcon: _vehicleTypeIcon(),
+                    onSelected: (selected) {
+                      final selectedId = selected['id'] as String;
+                      final selectedName = (selected['name'] as String?) ?? selectedId;
+                      setState(() {
+                        _selectedModelId = selectedId;
+                        if (!_models.any((model) => model['id'] == selectedId)) {
+                          _models = [selected, ..._models];
+                        }
+                      });
+                      widget.modelController.text = selectedName;
+                    },
+                    searchHint: 'Buscar modelo...',
+                  ),
+                );
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.model_training_rounded, color: Colors.white, size: 20),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Modelo (Ref)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      selectedModelName ?? (isDisabled ? 'Selecciona marca primero' : 'Seleccionar modelo'),
+                      style: TextStyle(
+                        color: selectedModelName != null
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (_isLoadingModels)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(Icons.arrow_drop_down, color: Colors.grey),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYearPickerField() {
+    return GestureDetector(
+      onTap: _pickVehicleYear,
+      child: AbsorbPointer(
+        child: AuthTextField(
+          controller: widget.yearController,
+          label: 'Año',
+          icon: Icons.calendar_today_rounded,
+          readOnly: true,
+          validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          suffixIcon: Icon(
+            Icons.arrow_drop_down_rounded,
+            color: widget.isDark ? Colors.white70 : Colors.black54,
+          ),
+        ),
       ),
     );
   }
@@ -322,6 +777,11 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
   Widget _buildColorDropdown(BuildContext context) {
     // Determine isDark from context or widget prop (widget.isDark seems reliable)
     final bool isDark = widget.isDark;
+    final selectedValue = _colors.any(
+      (color) => (color['nombre'] ?? '').toString() == _selectedColorName,
+    )
+        ? _selectedColorName
+        : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -352,7 +812,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
       ),
       child: DropdownButtonFormField<String>(
         menuMaxHeight: 300, // Limit height to allow scrolling
-        value: _selectedColorName,
+        initialValue: selectedValue,
         items: _colors.map((color) {
           return DropdownMenuItem<String>(
             value: color['nombre'],
@@ -362,7 +822,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
                   width: 16,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: Color(int.parse(color['hex_code'].replaceAll('#', '0xFF'))),
+                    color: _parseColor(color['hex_code']?.toString()),
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.grey.shade300)
                   ),
@@ -441,6 +901,10 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
 
   Widget _buildCompanySection(BuildContext context) {
     final bool hasCompany = widget.selectedCompany != null;
+    final companyName = widget.companyController.text.trim();
+    final companyLogoKey = hasCompany
+        ? (widget.selectedCompany!['logo_url'] ?? widget.selectedCompany!['logo'])?.toString()
+        : null;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,10 +999,17 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
                         : Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.business_rounded, 
-                    color: hasCompany ? AppColors.primary : Colors.red,
-                  ),
+                  child: hasCompany
+                      ? CompanyLogo(
+                          logoKey: companyLogoKey,
+                          nombreEmpresa: companyName,
+                          size: 28,
+                          fontSize: 12,
+                        )
+                      : Icon(
+                          Icons.business_rounded,
+                          color: Colors.red,
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -18,6 +18,7 @@ class TripRequestView {
     this.clienteNombre,
     this.clienteFoto,
     this.clienteTelefono,
+    this.clienteCalificacion,
   });
 
 
@@ -35,40 +36,54 @@ class TripRequestView {
   final String? clienteNombre;
   final String? clienteFoto;
   final String? clienteTelefono;
+  final double? clienteCalificacion;
 
   LatLng get origen => LatLng(latitudOrigen, longitudOrigen);
   LatLng get destino => LatLng(latitudDestino, longitudDestino);
 
   factory TripRequestView.fromMap(Map<String, dynamic> raw) {
-    double _toDouble(dynamic value) {
+    double toDouble(dynamic value) {
       return double.tryParse(value?.toString() ?? '') ?? 0;
     }
 
-    int _toInt(dynamic value) {
+    int toInt(dynamic value) {
       return int.tryParse(value?.toString() ?? '') ?? 0;
     }
 
-    int? _toIntOrNull(dynamic value) {
+    int? toIntOrNull(dynamic value) {
       if (value == null) return null;
       return int.tryParse(value.toString());
     }
 
+    double? toDoubleOrNull(dynamic value) {
+      if (value == null) return null;
+      return double.tryParse(value.toString());
+    }
+
     return TripRequestView(
-      id: _toInt(raw['id']),
-      latitudOrigen: _toDouble(raw['latitud_origen'] ?? raw['latitud_recogida']),
-      longitudOrigen: _toDouble(raw['longitud_origen'] ?? raw['longitud_recogida']),
-      latitudDestino: _toDouble(raw['latitud_destino']),
-      longitudDestino: _toDouble(raw['longitud_destino']),
-      distanciaKm: _toDouble(raw['distancia_km'] ?? raw['distancia_estimada']),
-      precioEstimado: _toDouble(raw['precio_estimado']),
-      duracionMinutos: _toInt(raw['duracion_minutos'] ?? raw['tiempo_estimado']),
+      id: toInt(raw['id']),
+      latitudOrigen: toDouble(raw['latitud_origen'] ?? raw['latitud_recogida']),
+      longitudOrigen: toDouble(raw['longitud_origen'] ?? raw['longitud_recogida']),
+      latitudDestino: toDouble(raw['latitud_destino']),
+      longitudDestino: toDouble(raw['longitud_destino']),
+      distanciaKm: toDouble(raw['distancia_km'] ?? raw['distancia_estimada']),
+      precioEstimado: toDouble(raw['precio_estimado']),
+      duracionMinutos: toInt(raw['duracion_minutos'] ?? raw['tiempo_estimado']),
       direccionOrigen: (raw['direccion_origen'] ?? raw['direccion_recogida'])?.toString() ?? 'Sin dirección',
       direccionDestino: raw['direccion_destino']?.toString() ?? 'Sin dirección',
-      clienteId: _toIntOrNull(raw['cliente_id']),
+      clienteId: toIntOrNull(raw['cliente_id']),
       clienteNombre: (raw['cliente_nombre'] ?? raw['nombre_usuario'])?.toString(),
       // Procesar foto con R2 URL si es necesario
       clienteFoto: _processPhotoUrl((raw['cliente_foto'] ?? raw['foto_usuario'])?.toString()),
       clienteTelefono: (raw['cliente_telefono'] ?? raw['telefono_usuario'])?.toString(),
+      clienteCalificacion: toDoubleOrNull(
+        raw['cliente_calificacion'] ??
+            raw['calificacion_cliente'] ??
+            raw['rating_cliente'] ??
+            raw['cliente_rating'] ??
+            raw['usuario_calificacion'] ??
+            raw['rating_usuario'],
+      ),
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:viax/src/features/conductor/presentation/widgets/components/imag
 import 'package:viax/src/features/conductor/presentation/widgets/components/company_picker_sheet.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart'; // Helper for picking documents
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 import '../../models/vehicle_model.dart';
 import '../../models/driver_license_model.dart';
 import '../../providers/conductor_profile_provider.dart';
@@ -89,7 +90,7 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
     // 1. Load Vehicle Data
     if (widget.existingVehicle != null) {
       final vehicle = widget.existingVehicle!;
-      _placaController.text = vehicle.placa;
+      _placaController.text = ColombianPlateUtils.normalize(vehicle.placa);
       _selectedType = vehicle.tipo.value;
       _marcaController.text = vehicle.marca ?? '';
       _modeloController.text = vehicle.modelo ?? '';
@@ -281,7 +282,7 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
             ),
           ),
           const SizedBox(height: 12),
-          Container(
+          SizedBox(
             height: 120, // Approximate height for grid
             child: GridView.count(
               crossAxisCount: 4,
@@ -555,6 +556,10 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
         CustomSnackbar.showError(context, message: 'Completa los datos del vehículo');
         return false;
       }
+      if (!ColombianPlateUtils.isValid(_placaController.text)) {
+        CustomSnackbar.showError(context, message: 'Placa inválida. Usa formato ABC123 o ABC12D.');
+        return false;
+      }
       if (_selectedCompany == null) {
         CustomSnackbar.showError(context, message: 'Selecciona una empresa');
         return false;
@@ -582,7 +587,7 @@ class _VehicleOnlyRegistrationScreenState extends State<VehicleOnlyRegistrationS
     try {
       // --- Save Vehicle Info ---
       final vehicle = VehicleModel(
-        placa: _placaController.text,
+        placa: ColombianPlateUtils.normalize(_placaController.text),
         tipo: VehicleType.fromString(_selectedType),
         marca: _marcaController.text,
         modelo: _modeloController.text,

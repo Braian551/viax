@@ -1,8 +1,8 @@
-﻿import 'dart:ui';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/conductor_profile_model.dart';
 import '../../providers/conductor_profile_provider.dart';
+import '../../../../core/utils/colombian_plate_utils.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
   final int conductorId;
@@ -501,7 +501,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
           ? [
               vehicle.tipo.label,
               '${vehicle.marca} ${vehicle.modelo}',
-              'Placa: ${vehicle.placa}',
+              'Placa: ${ColombianPlateUtils.formatForDisplay(vehicle.placa)}',
               'Color: ${vehicle.color}',
             ]
           : ['Sin informaciÃ³n de vehÃ­culo'],

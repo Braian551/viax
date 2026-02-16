@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:viax/src/theme/app_colors.dart';
 
 class DocumentsLoadingShimmer extends StatelessWidget {
   const DocumentsLoadingShimmer({super.key});

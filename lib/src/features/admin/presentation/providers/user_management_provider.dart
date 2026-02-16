@@ -17,7 +17,7 @@ class AdminUserManagementProvider with ChangeNotifier {
   List<dynamic> _users = [];
   String? _errorMessage;
   int _currentPage = 1;
-  int _totalPages = 1;
+  final int _totalPages = 1;
   String? _currentFilter; // 'cliente', 'conductor', 'empresa', or null for all
   String? _searchQuery;
   bool _showInactive = false; // false = show active, true = show inactive

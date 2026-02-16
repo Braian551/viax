@@ -11,7 +11,6 @@ import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
-import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/auth/user_service.dart';
@@ -39,6 +38,7 @@ class ConductorActiveTripScreen extends StatefulWidget {
   final String direccionDestino;
   final String? clienteNombre;
   final String? clienteFoto;
+  final double? clienteCalificacion;
   final String? initialTripStatus; // NUEVO: Estado inicial del viaje
 
   const ConductorActiveTripScreen({
@@ -55,6 +55,7 @@ class ConductorActiveTripScreen extends StatefulWidget {
     required this.direccionDestino,
     this.clienteNombre,
     this.clienteFoto,
+    this.clienteCalificacion,
     this.initialTripStatus,
   });
 
@@ -145,7 +146,13 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         direccionDestino: widget.direccionDestino,
         clienteNombre: widget.clienteNombre,
         clienteFoto: widget.clienteFoto,
-        clienteInfo: widget.clienteId != null ? {'id': widget.clienteId} : null,
+        clienteInfo: widget.clienteId != null
+            ? {
+                'id': widget.clienteId,
+                if (widget.clienteCalificacion != null)
+                  'calificacion': widget.clienteCalificacion,
+              }
+            : null,
         initialTripStatus: widget.initialTripStatus,
       ),
     );
@@ -1055,6 +1062,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       arrivedAtPickup: _controller.arrivedAtPickup,
       passengerName: widget.clienteNombre ?? '',
       passengerPhoto: widget.clienteFoto,
+      passengerRating: widget.clienteCalificacion,
       pickupAddress: widget.direccionOrigen,
       destinationAddress: widget.direccionDestino,
       etaMinutes: _controller.etaMinutes,

@@ -5,6 +5,7 @@ import '../../services/trip_request_service.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/local_notification_service.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 /// Pantalla de espera mientras se busca un conductor
 /// Estilo Uber/DiDi con animaciÃ³n de bÃºsqueda y polling de estado
@@ -584,7 +585,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
         ),
         const SizedBox(height: 24),
         // Indicador de progreso
-        Container(
+        SizedBox(
           width: 150,
           child: const LinearProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
@@ -677,7 +678,7 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'Placa: ${_conductorInfo!['vehiculo']['placa']}',
+                'Placa: ${ColombianPlateUtils.formatForDisplay(_conductorInfo!['vehiculo']['placa']?.toString())}',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,

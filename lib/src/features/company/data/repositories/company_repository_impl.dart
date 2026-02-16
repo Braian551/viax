@@ -1,5 +1,6 @@
 /// Company Repository Implementation
 /// Implements the domain repository contract using remote data source
+library;
 
 import 'package:dartz/dartz.dart';
 import 'package:viax/src/core/error/failures.dart';

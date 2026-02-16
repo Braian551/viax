@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../../conductor/services/document_upload_service.dart';
+import '../../../../../core/utils/colombian_plate_utils.dart';
 
 import 'package:viax/src/global/services/rating_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -104,7 +105,10 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
     final vehiculoInfo = vehiculo != null
         ? '${vehiculo['marca'] ?? ''} ${vehiculo['modelo'] ?? ''}'.trim()
         : 'Vehículo no especificado';
-    final placa = vehiculo?['placa'] as String? ?? '';
+    final placa = ColombianPlateUtils.formatForDisplay(
+      vehiculo?['placa'] as String?,
+      fallback: '',
+    );
 
     return Container(
       padding: const EdgeInsets.only(top: 8),

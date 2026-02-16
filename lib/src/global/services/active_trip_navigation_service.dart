@@ -297,6 +297,7 @@ class ActiveTripNavigationService extends ChangeNotifier {
         'direccionDestino': data.direccionDestino,
         'clienteNombre': data.clienteNombre,
         'clienteFoto': data.clienteFoto,
+        'clienteCalificacion': (data.clienteInfo?['calificacion'] as num?)?.toDouble(),
         'clienteId': data.clienteInfo?['id'],
         'initialTripStatus': data.initialTripStatus,
       },

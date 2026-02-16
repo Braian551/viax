@@ -1,4 +1,5 @@
 ﻿import '../../domain/entities/conductor_profile.dart';
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 /// Modelo de datos para ConductorProfile
 /// 
@@ -163,7 +164,7 @@ class VehicleModel extends Vehicle {
       marca: json['marca'] as String?,
       modelo: json['modelo'] as String?,
       anio: json['anio'] as int?,
-      placa: json['placa'] as String?,
+      placa: ColombianPlateUtils.normalize((json['placa'] as String?) ?? ''),
       color: json['color'] as String?,
       capacidadPasajeros: json['capacidad_pasajeros'] as int?,
       tipo: json['tipo'] as String?,
@@ -179,7 +180,7 @@ class VehicleModel extends Vehicle {
       'marca': marca,
       'modelo': modelo,
       'anio': anio,
-      'placa': placa,
+      'placa': ColombianPlateUtils.normalize(placa ?? ''),
       'color': color,
       'capacidad_pasajeros': capacidadPasajeros,
       'tipo': tipo,
@@ -189,6 +190,9 @@ class VehicleModel extends Vehicle {
       'imagen_interior': imagenInterior,
     };
   }
+
+  String get placaFormateada =>
+      ColombianPlateUtils.formatForDisplay(placa, fallback: '---');
 
   factory VehicleModel.fromEntity(Vehicle entity) {
     return VehicleModel(

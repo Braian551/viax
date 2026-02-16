@@ -21,7 +21,7 @@ class VehicleManagementSheet extends StatefulWidget {
 }
 
 class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
-  Map<String, VehicleTypeInfo> _vehicleTypes = {};
+  final Map<String, VehicleTypeInfo> _vehicleTypes = {};
   bool _isSaving = false;
   bool _isLoading = true;
 
@@ -410,7 +410,7 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
                         Switch(
                           value: isEnabled,
                           onChanged: (value) => _toggleVehicleType(key, value),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                     ],
                   ),

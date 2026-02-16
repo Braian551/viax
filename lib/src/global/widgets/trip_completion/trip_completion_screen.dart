@@ -4,8 +4,6 @@ import '../../../theme/app_colors.dart';
 import '../../services/dispute_service.dart';
 import 'star_rating_widget.dart';
 import 'trip_summary_card.dart';
-import 'payment_status_card.dart';
-import 'client_payment_confirm_card.dart';
 import '../../../features/user/presentation/widgets/trip_history/trip_conductor_avatar.dart';
 
 /// Tipo de usuario que ve la pantalla.

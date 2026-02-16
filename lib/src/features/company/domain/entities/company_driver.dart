@@ -1,5 +1,7 @@
 /// Company Driver Entity
 /// Domain entity representing a driver associated with a company
+library;
+import 'package:viax/src/core/utils/colombian_plate_utils.dart';
 
 class CompanyDriver {
   final int id;
@@ -36,12 +38,14 @@ class CompanyDriver {
       esActivo: json['es_activo'] == 1,
       esVerificado: json['es_verificado'] == 1,
       tipoVehiculo: json['tipo_vehiculo'],
-      vehiculoPlaca: json['vehiculo_placa'],
+      vehiculoPlaca: ColombianPlateUtils.normalize((json['vehiculo_placa'] ?? '').toString()),
       fechaRegistro: json['fecha_registro'],
     );
   }
 
   String get fullName => '$nombre $apellido';
+  String get vehiculoPlacaFormateada =>
+      ColombianPlateUtils.formatForDisplay(vehiculoPlaca, fallback: '---');
   
   String get initials => nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
 }

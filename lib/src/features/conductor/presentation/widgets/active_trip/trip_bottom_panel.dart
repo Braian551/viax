@@ -15,6 +15,7 @@ class TripBottomPanel extends StatefulWidget {
   final bool arrivedAtPickup;  // NUEVO: esperando iniciar viaje
   final String passengerName;
   final String? passengerPhoto;
+  final double? passengerRating;
   final String pickupAddress;
   final String destinationAddress;
   final int etaMinutes;
@@ -43,6 +44,7 @@ class TripBottomPanel extends StatefulWidget {
     required this.arrivedAtPickup,
     required this.passengerName,
     this.passengerPhoto,
+    this.passengerRating,
     required this.pickupAddress,
     required this.destinationAddress,
     required this.etaMinutes,
@@ -86,6 +88,13 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
   String get _displayName => widget.passengerName.trim().isNotEmpty
       ? widget.passengerName.trim()
       : 'Pasajero';
+
+  double? get _displayRating {
+    final value = widget.passengerRating;
+    if (value == null || value <= 0) return null;
+    if (value > 5) return 5;
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,6 +256,13 @@ class _TripBottomPanelState extends State<TripBottomPanel> {
               color: statusColor,
               isDark: widget.isDark,
             ),
+            if (_displayRating != null) ...[
+              const SizedBox(width: 8),
+              _RatingBadge(
+                rating: _displayRating!,
+                isDark: widget.isDark,
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 4),
@@ -647,6 +663,39 @@ class _StatusBadge extends StatelessWidget {
               color: color,
               fontSize: 10,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingBadge extends StatelessWidget {
+  final double rating;
+  final bool isDark;
+
+  const _RatingBadge({required this.rating, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFD54F).withValues(alpha: isDark ? 0.22 : 0.18),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFFB300), size: 12),
+          const SizedBox(width: 4),
+          Text(
+            rating.toStringAsFixed(1),
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF7A5600),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
