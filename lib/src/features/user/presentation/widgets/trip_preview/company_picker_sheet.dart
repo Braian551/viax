@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../../../../theme/app_colors.dart';
+import '../../../data/services/company_vehicle_service.dart';
 import '../../../domain/models/company_vehicle_models.dart';
 import 'company_details_sheet.dart';
 import 'trip_price_formatter.dart';
@@ -18,7 +19,7 @@ class CompanyPickerSheet extends StatefulWidget {
 
   final List<CompanyVehicleOption> companies;
   final int? selectedCompanyId;
-  final ValueChanged<int> onCompanySelected;
+  final ValueChanged<int?> onCompanySelected;
   final bool isDark;
 
   @override
@@ -29,12 +30,14 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
   late List<CompanyVehicleOption> _filteredCompanies;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final Map<int, int> _companyTotalDrivers = {};
 
   @override
   void initState() {
     super.initState();
-    _filteredCompanies = widget.companies;
+    _filteredCompanies = _sortCompaniesByRating(widget.companies);
     _searchController.addListener(_onSearchChanged);
+    _prefetchCompanyDriverTotals();
   }
 
   @override
@@ -48,10 +51,58 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredCompanies = widget.companies.where((company) {
+      final filtered = widget.companies.where((company) {
         return company.nombre.toLowerCase().contains(query);
       }).toList();
+      _filteredCompanies = _sortCompaniesByRating(filtered);
     });
+  }
+
+  List<CompanyVehicleOption> _sortCompaniesByRating(
+    List<CompanyVehicleOption> companies,
+  ) {
+    final sorted = List<CompanyVehicleOption>.from(companies);
+    sorted.sort((a, b) {
+      final ratingCompare = b.calificacion.compareTo(a.calificacion);
+      if (ratingCompare != 0) return ratingCompare;
+      final driversCompare =
+          _displayDriversFor(b).compareTo(_displayDriversFor(a));
+      if (driversCompare != 0) return driversCompare;
+      return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
+    });
+    return sorted;
+  }
+
+  Future<void> _prefetchCompanyDriverTotals() async {
+    final uniqueCompanyIds = widget.companies.map((c) => c.id).toSet().toList();
+
+    await Future.wait(
+      uniqueCompanyIds.map((companyId) async {
+        try {
+          final details = await CompanyVehicleService.getCompanyDetails(companyId);
+          if (!mounted || details == null) return;
+
+          setState(() {
+            _companyTotalDrivers[companyId] = details.totalConductores;
+            _filteredCompanies = _sortCompaniesByRating(_filteredCompanies);
+          });
+        } catch (_) {
+          // Silencioso: fallback al valor ya entregado por get_companies_by_municipality
+        }
+      }),
+    );
+  }
+
+  int _displayDriversFor(CompanyVehicleOption company) {
+    final totalDrivers = _companyTotalDrivers[company.id];
+    if (totalDrivers != null && totalDrivers > 0) {
+      return totalDrivers;
+    }
+    return company.conductores;
+  }
+
+  bool _hasDrivers(CompanyVehicleOption company) {
+    return _displayDriversFor(company) > 0 || company.distanciaConductorKm != null;
   }
 
   @override
@@ -202,16 +253,33 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
                             controller: scrollController, // Vital for DraggableScrollableSheet
                             physics: const BouncingScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                            itemCount: _filteredCompanies.length,
+                            itemCount: _filteredCompanies.length + 1,
                             separatorBuilder: (_, __) => const SizedBox(height: 16),
                             itemBuilder: (context, index) {
-                              final company = _filteredCompanies[index];
+                              if (index == 0) {
+                                final isRandomSelected = widget.selectedCompanyId == null;
+                                return _RandomCompanyItem(
+                                  isSelected: isRandomSelected,
+                                  isDark: widget.isDark,
+                                  onTap: () {
+                                    widget.onCompanySelected(null);
+                                    Navigator.pop(context);
+                                  },
+                                  onInfoTap: _showRandomInfo,
+                                );
+                              }
+
+                              final company = _filteredCompanies[index - 1];
                               final isSelected = company.id == widget.selectedCompanyId;
+                              final displayedDrivers = _displayDriversFor(company);
+                              final hasDrivers = _hasDrivers(company);
                               
                               return _CompanyItem(
                                 company: company,
                                 isSelected: isSelected,
                                 isDark: widget.isDark,
+                                displayedDrivers: displayedDrivers,
+                                hasDrivers: hasDrivers,
                                 onTap: () {
                                   widget.onCompanySelected(company.id);
                                   Navigator.pop(context);
@@ -270,6 +338,146 @@ class _CompanyPickerSheetState extends State<CompanyPickerSheet> {
       ),
     );
   }
+
+  void _showRandomInfo() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: widget.isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.shuffle_rounded, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '¿Cómo funciona Al azar?',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: widget.isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Empieza por la empresa con el conductor más cercano para tu vehículo. Si no acepta nadie tras un tiempo, la búsqueda rota automáticamente entre otras empresas cercanas. Así hay libre competencia y menor tiempo de espera.',
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.45,
+                  color: widget.isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RandomCompanyItem extends StatelessWidget {
+  const _RandomCompanyItem({
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+    required this.onInfoTap,
+  });
+
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+  final VoidCallback onInfoTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.fastOutSlowIn,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+            : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isSelected
+              ? AppColors.primary
+              : (isDark ? Colors.transparent : Colors.grey.withValues(alpha: 0.15)),
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(Icons.shuffle_rounded, color: AppColors.primary, size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Al azar',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Empieza por el más cercano y rota entre empresas',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: onInfoTap,
+                  icon: const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CompanyItem extends StatelessWidget {
@@ -277,6 +485,8 @@ class _CompanyItem extends StatelessWidget {
     required this.company,
     required this.isSelected,
     required this.isDark,
+    required this.displayedDrivers,
+    required this.hasDrivers,
     required this.onTap,
     required this.onLogoTap,
   });
@@ -284,6 +494,8 @@ class _CompanyItem extends StatelessWidget {
   final CompanyVehicleOption company;
   final bool isSelected;
   final bool isDark;
+  final int displayedDrivers;
+  final bool hasDrivers;
   final VoidCallback onTap;
   final VoidCallback onLogoTap;
 
@@ -425,7 +637,7 @@ class _CompanyItem extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: company.hasConductores 
+                          color: hasDrivers
                               ? (isDark ? Colors.green.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.1))
                               : (isDark ? Colors.grey.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1)),
                           borderRadius: BorderRadius.circular(10),
@@ -436,17 +648,17 @@ class _CompanyItem extends StatelessWidget {
                             Icon(
                               Icons.directions_car_filled_rounded, 
                               size: 14, 
-                              color: company.hasConductores ? AppColors.success : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              color: hasDrivers ? AppColors.success : (isDark ? Colors.grey[400] : Colors.grey[600]),
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              company.hasConductores 
-                                  ? '${company.conductores} conductores'
+                              hasDrivers
+                                  ? '$displayedDrivers conductores'
                                   : 'Sin conductores',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: company.hasConductores 
+                                color: hasDrivers
                                     ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
                                     : (isDark ? Colors.grey[400] : Colors.grey[600]),
                               ),

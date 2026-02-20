@@ -24,69 +24,64 @@ class PickupBottomPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding + 20),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding + 20),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[600] : Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Punto de encuentro sugerido',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Punto de encuentro sugerido',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Otros pasajeros han usado este punto de encuentro',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Otros pasajeros han usado este punto de encuentro',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
             ),
-            const SizedBox(height: 16),
-            _AddressCard(
-              isDark: isDark,
-              pickupAddress: pickupAddress,
-              isLoadingAddress: isLoadingAddress,
-              onChangeHint: onChangeHint,
-            ),
-            const SizedBox(height: 20),
-            _RequestButton(
-              isRequesting: isRequestingTrip,
-              isLoadingAddress: isLoadingAddress,
-              onTap: onRequestTrip,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          _AddressCard(
+            isDark: isDark,
+            pickupAddress: pickupAddress,
+            isLoadingAddress: isLoadingAddress,
+            onChangeHint: onChangeHint,
+          ),
+          const SizedBox(height: 20),
+          _RequestButton(
+            isRequesting: isRequestingTrip,
+            isLoadingAddress: isLoadingAddress,
+            onTap: onRequestTrip,
+          ),
+        ],
       ),
     );
   }

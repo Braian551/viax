@@ -221,6 +221,44 @@ class TripRequestService {
     }
   }
 
+  /// Actualizar empresa objetivo durante búsqueda de conductor
+  static Future<Map<String, dynamic>> updateTripSearchCompany({
+    required int solicitudId,
+    required int clienteId,
+    int? empresaId,
+  }) async {
+    try {
+      final url = '$baseUrl/user/update_trip_search_company.php';
+
+      final result = await _network.postJson(
+        url: Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'solicitud_id': solicitudId,
+          'cliente_id': clienteId,
+          'empresa_id': empresaId,
+        }),
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return _errorResponse(
+          result,
+          fallback: 'No pudimos actualizar la empresa de búsqueda.',
+        );
+      }
+
+      return result.json!;
+    } catch (e) {
+      final mapped = AppNetworkException.fromError(e);
+      return {
+        'success': false,
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
+      };
+    }
+  }
+
   /// Cancelar solicitud con parámetros completos
   /// Usa el mismo endpoint que el conductor para consistencia
   /// Cancelar solicitud con parámetros completos.

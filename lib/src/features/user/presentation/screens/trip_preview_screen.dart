@@ -564,11 +564,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         for (var v in filteredVehicles) {
           _companiesPerVehicle[v.tipo] = v.empresas;
 
-          if (v.empresaRecomendada != null) {
-            _selectedCompanyPerVehicle[v.tipo] = v.empresaRecomendada!.id;
-            _updateQuoteForVehicle(v.tipo, v.empresaRecomendada!);
+          // Modo por defecto: "Al azar" (sin empresa fija).
+          // La cotización se muestra usando la empresa recomendada/primera para ese tipo.
+          _selectedCompanyPerVehicle.remove(v.tipo);
+          final defaultOption =
+              v.empresaRecomendada ??
+              (v.empresas.isNotEmpty ? v.empresas.first : null);
+          if (defaultOption != null) {
+            _updateQuoteForVehicle(v.tipo, defaultOption);
             debugPrint(
-              '💰 Quote para ${v.tipo}: \$${v.empresaRecomendada!.tarifaTotal}',
+              '💰 Quote base (azar) para ${v.tipo}: \$${defaultOption.tarifaTotal}',
             );
           }
         }
@@ -697,16 +702,28 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     );
   }
 
-  void _onCompanyChanged(String vehicleType, int newCompanyId) {
+  void _onCompanyChanged(String vehicleType, int? newCompanyId) {
     final typeData = _companyResponse?.vehiculosDisponibles.firstWhere(
       (v) => v.tipo == vehicleType,
     );
     if (typeData == null) return;
 
-    final newOption = typeData.empresas.firstWhere((e) => e.id == newCompanyId);
+    final defaultOption =
+        typeData.empresaRecomendada ??
+        (typeData.empresas.isNotEmpty ? typeData.empresas.first : null);
+
+    final newOption =
+        newCompanyId == null
+            ? defaultOption
+            : typeData.empresas.firstWhere((e) => e.id == newCompanyId);
+    if (newOption == null) return;
 
     setState(() {
-      _selectedCompanyPerVehicle[vehicleType] = newCompanyId;
+      if (newCompanyId == null) {
+        _selectedCompanyPerVehicle.remove(vehicleType);
+      } else {
+        _selectedCompanyPerVehicle[vehicleType] = newCompanyId;
+      }
       _updateQuoteForVehicle(vehicleType, newOption);
 
       if (_selectedVehicleType == vehicleType) {
@@ -1342,6 +1359,29 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         ? _selectedCompanyPerVehicle[_selectedVehicleType!] 
         : null;
 
+    final vehicleType = _selectedVehicleType ?? '';
+    final companies = _companiesPerVehicle[vehicleType] ?? const <CompanyVehicleOption>[];
+    final selectedCompany =
+        (empresaId != null && companies.isNotEmpty)
+            ? companies.firstWhere(
+              (c) => c.id == empresaId,
+              orElse: () => companies.first,
+            )
+            : null;
+
+    final companyCandidates =
+        companies
+            .map(
+              (company) => {
+                'id': company.id,
+                'nombre': company.nombre,
+                'logo_url': company.logoUrl,
+                'distancia_conductor_km': company.distanciaConductorKm,
+                'conductores': company.conductores,
+              },
+            )
+            .toList();
+
     // Navegar a pantalla de selección de punto de encuentro con el vehículo seleccionado
     Navigator.push(
       context,
@@ -1351,9 +1391,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               origin: widget.origin,
               destination: widget.destination,
               stops: widget.stops,
-              vehicleType: _selectedVehicleType ?? '',
+              vehicleType: vehicleType,
               quote: _quote!,
               empresaId: empresaId,
+              selectedCompanyName: selectedCompany?.nombre,
+              selectedCompanyLogoUrl: selectedCompany?.logoUrl,
+              companyCandidates: companyCandidates,
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);

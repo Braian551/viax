@@ -31,6 +31,9 @@ class PickupSelectionScreen extends StatefulWidget {
   final String vehicleType;
   final TripQuote quote;
   final int? empresaId; // ID de la empresa seleccionada para las tarifas
+  final String? selectedCompanyName;
+  final String? selectedCompanyLogoUrl;
+  final List<Map<String, dynamic>> companyCandidates;
 
   const PickupSelectionScreen({
     super.key,
@@ -40,6 +43,9 @@ class PickupSelectionScreen extends StatefulWidget {
     required this.vehicleType,
     required this.quote,
     this.empresaId,
+    this.selectedCompanyName,
+    this.selectedCompanyLogoUrl,
+    this.companyCandidates = const [],
   });
 
   @override
@@ -405,6 +411,10 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
               longitudDestino: widget.destination.longitude,
               direccionDestino: widget.destination.address,
               tipoVehiculo: widget.vehicleType,
+              initialEmpresaId: widget.empresaId,
+              initialCompanyName: widget.selectedCompanyName,
+              initialCompanyLogoUrl: widget.selectedCompanyLogoUrl,
+              companyCandidates: widget.companyCandidates,
             ),
           ),
         );

@@ -321,13 +321,13 @@ class _VehicleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Find selected company
     final selectedCompany = (companies.isNotEmpty && selectedCompanyId != null)
         ? companies.firstWhere(
             (c) => c.id == selectedCompanyId,
             orElse: () => companies.first,
           )
-        : (companies.isNotEmpty ? companies.first : null);
+        : null;
+    final suggestedCompany = companies.isNotEmpty ? companies.first : null;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -447,12 +447,12 @@ class _VehicleListItem extends StatelessWidget {
                   ),
                    
                   // Operado por / Empresa Badge
-                  if (isSelected && selectedCompany != null) ...[
+                  if (isSelected) ...[
                     const SizedBox(height: 12),
                     Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
                     const SizedBox(height: 8),
                     InkWell(
-                      onTap: companies.length > 1 ? onOpenPicker : null,
+                      onTap: companies.isNotEmpty ? onOpenPicker : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
@@ -467,8 +467,9 @@ class _VehicleListItem extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Logo small
-                            if (selectedCompany.logoUrl != null && selectedCompany.logoUrl!.isNotEmpty)
+                            if (selectedCompany == null)
+                              const Icon(Icons.shuffle_rounded, size: 16, color: AppColors.primary)
+                            else if (selectedCompany.logoUrl != null && selectedCompany.logoUrl!.isNotEmpty)
                               SizedBox(
                                 width: 20,
                                 height: 20,
@@ -484,15 +485,30 @@ class _VehicleListItem extends StatelessWidget {
                               
                             const SizedBox(width: 6),
                             Text(
-                              selectedCompany.nombre,
+                              selectedCompany?.nombre ?? 'Al azar',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white70 : Colors.black87,
                               ),
                             ),
+
+                            if (selectedCompany == null && suggestedCompany != null) ...[
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Inicia por ${suggestedCompany.nombre}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white54 : Colors.black45,
+                                  ),
+                                ),
+                              ),
+                            ],
                             
-                            if (selectedCompany.calificacion > 0) ...[
+                            if (selectedCompany != null && selectedCompany.calificacion > 0) ...[
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -529,7 +545,7 @@ class _VehicleListItem extends StatelessWidget {
                               ),
                             ],
                             
-                            if (companies.length > 1) ...[
+                            if (companies.isNotEmpty) ...[
                               const Spacer(),
                               Text(
                                 'Cambiar',

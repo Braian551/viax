@@ -8,6 +8,7 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../theme/app_colors.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'user_trip_accepted_screen.dart';
 
 class SearchingDriverScreen extends StatefulWidget {
@@ -20,6 +21,10 @@ class SearchingDriverScreen extends StatefulWidget {
   final double longitudDestino;
   final String direccionDestino;
   final String tipoVehiculo;
+  final int? initialEmpresaId;
+  final String? initialCompanyName;
+  final String? initialCompanyLogoUrl;
+  final List<Map<String, dynamic>> companyCandidates;
 
   const SearchingDriverScreen({
     super.key,
@@ -32,6 +37,10 @@ class SearchingDriverScreen extends StatefulWidget {
     required this.longitudDestino,
     required this.direccionDestino,
     required this.tipoVehiculo,
+    this.initialEmpresaId,
+    this.initialCompanyName,
+    this.initialCompanyLogoUrl,
+    this.companyCandidates = const [],
   });
 
   int get solicitudIdAsInt {
@@ -55,6 +64,16 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   int _searchSeconds = 0;
   double _currentRadiusKm = 2.0;
   bool _tripAccepted = false; // Flag para evitar múltiples navegaciones
+  int? _currentEmpresaId;
+  String? _currentEmpresaNombre;
+  String? _currentEmpresaLogo;
+  bool _syncingCompany = false;
+  final List<_SearchCompanyCandidate> _companyRotationQueue = [];
+  int _currentCompanyIndex = -1;
+  int _lastCompanySwitchSecond = 0;
+
+  static const int _companySwitchIntervalNoDriversSec = 8;
+  static const int _companySwitchIntervalWithDriversSec = 18;
   
   late AnimationController _pulseController;
   late AnimationController _waveController;
@@ -62,9 +81,66 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   @override
   void initState() {
     super.initState();
+    _initializeCompanyRotation();
     _initAnimations();
     _startSearching();
     _startStatusPolling(); // Iniciar polling de estado
+  }
+
+  void _initializeCompanyRotation() {
+    final parsed = widget.companyCandidates
+        .map(_SearchCompanyCandidate.fromMap)
+        .where((company) => company.id > 0)
+        .toList();
+
+    parsed.sort((a, b) {
+      final aHasActive = a.conductores > 0;
+      final bHasActive = b.conductores > 0;
+      if (aHasActive != bHasActive) {
+        return bHasActive ? 1 : -1;
+      }
+
+      final ad = a.distanciaConductorKm ?? 999999;
+      final bd = b.distanciaConductorKm ?? 999999;
+      final distanceCompare = ad.compareTo(bd);
+      if (distanceCompare != 0) return distanceCompare;
+
+      final driversCompare = b.conductores.compareTo(a.conductores);
+      if (driversCompare != 0) return driversCompare;
+
+      return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
+    });
+
+    if (widget.initialEmpresaId != null) {
+      final preferredIdx = parsed.indexWhere((c) => c.id == widget.initialEmpresaId);
+      if (preferredIdx > 0) {
+        final preferred = parsed.removeAt(preferredIdx);
+        parsed.insert(0, preferred);
+      }
+    }
+
+    _companyRotationQueue
+      ..clear()
+      ..addAll(parsed);
+
+    if (widget.initialEmpresaId != null) {
+      _currentEmpresaId = widget.initialEmpresaId;
+      _currentEmpresaNombre = widget.initialCompanyName;
+      _currentEmpresaLogo = widget.initialCompanyLogoUrl;
+      final idx = _companyRotationQueue.indexWhere((c) => c.id == widget.initialEmpresaId);
+      _currentCompanyIndex = idx >= 0 ? idx : (_companyRotationQueue.isNotEmpty ? 0 : -1);
+    } else if (_companyRotationQueue.isNotEmpty) {
+      _currentCompanyIndex = 0;
+      final first = _companyRotationQueue.first;
+      _currentEmpresaId = first.id;
+      _currentEmpresaNombre = first.nombre;
+      _currentEmpresaLogo = first.logoUrl;
+    }
+
+    debugPrint(
+      '🔁 [SearchingDriverScreen] Rotación init: cola=${_companyRotationQueue.length}, '
+      'empresaInicial=$_currentEmpresaId, index=$_currentCompanyIndex',
+    );
   }
 
   void _initAnimations() {
@@ -80,7 +156,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   }
 
   void _startSearching() {
-    _searchDrivers();
+    _bootstrapDynamicCompanySearch();
     
     _searchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -89,11 +165,21 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
         _searchSeconds++;
         _updateRadius();
       });
+
+      _maybeRotateCompany();
       
       if (_searchSeconds % 3 == 0) {
         _searchDrivers();
       }
     });
+  }
+
+  Future<void> _bootstrapDynamicCompanySearch() async {
+    if (_currentEmpresaId != null) {
+      await _syncSearchCompany(_currentEmpresaId);
+    }
+    await _searchDrivers();
+    await _maybeRotateCompany(forceImmediate: true);
   }
 
   void _updateRadius() {
@@ -130,10 +216,175 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       latitude: widget.latitudOrigen,
       longitude: widget.longitudOrigen,
       vehicleType: widget.tipoVehiculo,
+      empresaId: _currentEmpresaId,
       radiusKm: _currentRadiusKm,
     );
     if (mounted) {
+      debugPrint(
+        '🚕 [SearchingDriverScreen] Conductores cerca=${drivers.length}, '
+        'empresa=${_currentEmpresaId ?? 'libre'}',
+      );
       setState(() => _nearbyDrivers = drivers);
+    }
+  }
+
+  Future<void> _maybeRotateCompany({bool forceImmediate = false}) async {
+    if (!mounted || _tripAccepted || _syncingCompany) return;
+    if (_companyRotationQueue.length < 2) return;
+
+    final noDriversNearby = _nearbyDrivers.isEmpty;
+    final switchInterval = noDriversNearby
+        ? _companySwitchIntervalNoDriversSec
+        : _companySwitchIntervalWithDriversSec;
+
+    if (!forceImmediate) {
+      if (_searchSeconds < 4) return;
+      if ((_searchSeconds - _lastCompanySwitchSecond) < switchInterval) return;
+    }
+
+    final shouldRotate = noDriversNearby || _searchSeconds >= 60 || forceImmediate;
+    if (!shouldRotate) return;
+
+    final startIndex = _currentCompanyIndex < 0 ? 0 : _currentCompanyIndex;
+    final queueLen = _companyRotationQueue.length;
+
+    debugPrint(
+      '🔁 [SearchingDriverScreen] Intentando rotación: sec=$_searchSeconds, '
+      'sinConductores=$noDriversNearby, actual=$_currentEmpresaId, index=$startIndex',
+    );
+
+    for (int step = 1; step <= queueLen; step++) {
+      final nextIndex = (startIndex + step) % queueLen;
+      final nextCompany = _companyRotationQueue[nextIndex];
+
+      if (nextCompany.id == _currentEmpresaId) {
+        continue;
+      }
+
+      final changed = await _syncSearchCompany(
+        nextCompany.id,
+        forcedName: nextCompany.nombre,
+        forcedLogo: nextCompany.logoUrl,
+        forcedIndex: nextIndex,
+      );
+
+      if (changed) {
+        debugPrint(
+          '✅ [SearchingDriverScreen] Rotó empresa a ${nextCompany.nombre} (${nextCompany.id})',
+        );
+        _lastCompanySwitchSecond = _searchSeconds;
+        await _searchDrivers();
+        if (mounted) {
+          HapticFeedback.lightImpact();
+        }
+        return;
+      }
+
+      debugPrint(
+        '⚠️ [SearchingDriverScreen] Falló cambio a ${nextCompany.nombre} (${nextCompany.id}), probando siguiente',
+      );
+    }
+
+    debugPrint('⚠️ [SearchingDriverScreen] No se pudo rotar a ninguna empresa candidata');
+
+    if (noDriversNearby && _currentEmpresaId != null) {
+      final fallbackToFreeMode = await _syncSearchCompany(
+        null,
+        forcedName: 'Al azar',
+        forcedLogo: null,
+        forcedIndex: -1,
+      );
+      if (fallbackToFreeMode) {
+        debugPrint('✅ [SearchingDriverScreen] Fallback a libre competencia aplicado');
+        _lastCompanySwitchSecond = _searchSeconds;
+        await _searchDrivers();
+      } else {
+        debugPrint('⚠️ [SearchingDriverScreen] También falló fallback a libre competencia');
+      }
+    }
+  }
+
+  Future<bool> _syncSearchCompany(
+    int? empresaId, {
+    String? forcedName,
+    String? forcedLogo,
+    int? forcedIndex,
+  }) async {
+    if (_syncingCompany || _tripAccepted) return false;
+    if (_currentEmpresaId == empresaId && forcedName == null && forcedLogo == null) {
+      return false;
+    }
+
+    _syncingCompany = true;
+    try {
+      final result = await TripRequestService.updateTripSearchCompany(
+        solicitudId: widget.solicitudIdAsInt,
+        clienteId: widget.clienteId,
+        empresaId: empresaId,
+      );
+
+      if (result['success'] != true) {
+        debugPrint(
+          '⚠️ [SearchingDriverScreen] updateTripSearchCompany falló: '
+          '${result['message'] ?? 'sin mensaje'} (empresa=$empresaId)',
+        );
+      }
+
+      if (result['success'] == true && mounted) {
+        final backendCompany = result['empresa'] as Map<String, dynamic>?;
+
+        setState(() {
+          _currentEmpresaId = empresaId;
+          _currentEmpresaNombre =
+              forcedName ?? backendCompany?['nombre']?.toString() ?? _currentEmpresaNombre;
+          _currentEmpresaLogo =
+              forcedLogo ?? backendCompany?['logo_url']?.toString() ?? _currentEmpresaLogo;
+          if (forcedIndex != null) {
+            _currentCompanyIndex = forcedIndex;
+          } else {
+            _currentCompanyIndex = _companyRotationQueue.indexWhere((c) => c.id == empresaId);
+          }
+        });
+
+        return true;
+      }
+    } catch (_) {
+      // Fallback silencioso
+    } finally {
+      _syncingCompany = false;
+    }
+
+    return false;
+  }
+
+  String _vehicleImagePath() {
+    switch (widget.tipoVehiculo) {
+      case 'moto':
+        return 'assets/images/vehicles/moto3d.png';
+      case 'motocarro':
+        return 'assets/images/vehicles/motocarro3d.png';
+      case 'taxi':
+        return 'assets/images/vehicles/taxi3d.png';
+      case 'auto':
+      case 'carro':
+      default:
+        return 'assets/images/vehicles/auto3d.png';
+    }
+  }
+
+  String _vehicleLabel() {
+    switch (widget.tipoVehiculo) {
+      case 'moto':
+        return 'Moto';
+      case 'motocarro':
+        return 'Motocarro';
+      case 'taxi':
+        return 'Taxi';
+      case 'auto':
+      case 'carro':
+        return 'Carro';
+      default:
+        return widget.tipoVehiculo;
     }
   }
 
@@ -498,6 +749,50 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                                 color: isDark ? Colors.white60 : Colors.black54,
                               ),
                             ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Image.asset(
+                                    _vehicleImagePath(),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.directions_car,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    '${_vehicleLabel()} · ${_currentEmpresaNombre ?? 'Al azar'}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.white70 : Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                                if (_currentEmpresaLogo != null && _currentEmpresaLogo!.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CompanyLogo(
+                                      logoKey: _currentEmpresaLogo,
+                                      nombreEmpresa: _currentEmpresaNombre ?? 'Empresa',
+                                      size: 20,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -833,6 +1128,42 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           ),
         );
       },
+    );
+  }
+}
+
+class _SearchCompanyCandidate {
+  _SearchCompanyCandidate({
+    required this.id,
+    required this.nombre,
+    required this.conductores,
+    this.logoUrl,
+    this.distanciaConductorKm,
+  });
+
+  final int id;
+  final String nombre;
+  final int conductores;
+  final String? logoUrl;
+  final double? distanciaConductorKm;
+
+  factory _SearchCompanyCandidate.fromMap(Map<String, dynamic> json) {
+    final rawConductores = json['conductores'];
+    int conductores = 0;
+    if (rawConductores is int) {
+      conductores = rawConductores;
+    } else if (rawConductores != null) {
+      conductores = int.tryParse('$rawConductores') ?? 0;
+    }
+
+    return _SearchCompanyCandidate(
+      id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
+      nombre: (json['nombre'] ?? '').toString(),
+      conductores: conductores,
+      logoUrl: json['logo_url']?.toString(),
+      distanciaConductorKm: json['distancia_conductor_km'] == null
+          ? null
+          : double.tryParse('${json['distancia_conductor_km']}'),
     );
   }
 }

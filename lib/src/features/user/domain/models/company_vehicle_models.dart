@@ -2,6 +2,22 @@
 /// Estos modelos representan la respuesta del endpoint get_companies_by_municipality
 library;
 
+int _toInt(dynamic value, {int fallback = 0}) {
+  if (value == null) return fallback;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+double _toDouble(dynamic value, {double fallback = 0.0}) {
+  if (value == null) return fallback;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? fallback;
+  return fallback;
+}
+
 /// Información de una empresa con sus conductores y tarifa para un tipo de vehículo
 class CompanyVehicleOption {
   final int id;
@@ -36,23 +52,33 @@ class CompanyVehicleOption {
   });
 
   /// Indica si hay conductores disponibles para esta empresa/vehículo
-  bool get hasConductores => conductores > 0;
+  bool get hasConductores => conductores > 0 || distanciaConductorKm != null;
 
   factory CompanyVehicleOption.fromJson(Map<String, dynamic> json) {
+    final conductoresValue =
+        json['conductores'] ??
+        json['conductores_cercanos'] ??
+        json['total_conductores'] ??
+        json['drivers_count'] ??
+        json['available_drivers'];
+
     return CompanyVehicleOption(
-      id: json['id'] ?? 0,
+      id: _toInt(json['id']),
       nombre: json['nombre'] ?? '',
       logoUrl: json['logo_url'],
-      conductores: json['conductores'] ?? 0,
-      distanciaConductorKm: json['distancia_conductor_km']?.toDouble(),
-      tarifaTotal: (json['tarifa_total'] ?? 0).toDouble(),
-      tarifaBase: (json['tarifa_base'] ?? 0).toDouble(),
-      costoDistancia: (json['costo_distancia'] ?? 0).toDouble(),
-      costoTiempo: (json['costo_tiempo'] ?? 0).toDouble(),
-      recargoPrecio: (json['recargo_precio'] ?? 0).toDouble(),
+      conductores: _toInt(conductoresValue),
+      distanciaConductorKm:
+          json['distancia_conductor_km'] != null
+              ? _toDouble(json['distancia_conductor_km'])
+              : null,
+      tarifaTotal: _toDouble(json['tarifa_total']),
+      tarifaBase: _toDouble(json['tarifa_base']),
+      costoDistancia: _toDouble(json['costo_distancia']),
+      costoTiempo: _toDouble(json['costo_tiempo']),
+      recargoPrecio: _toDouble(json['recargo_precio']),
       periodo: json['periodo'] ?? 'normal',
-      recargoPorcentaje: (json['recargo_porcentaje'] ?? 0).toDouble(),
-      calificacion: (json['calificacion'] ?? 0).toDouble(),
+      recargoPorcentaje: _toDouble(json['recargo_porcentaje']),
+      calificacion: _toDouble(json['calificacion']),
     );
   }
 }
@@ -111,13 +137,17 @@ class CompanyInfo {
 
   factory CompanyInfo.fromJson(Map<String, dynamic> json) {
     return CompanyInfo(
-      id: json['id'] ?? 0,
+      id: _toInt(json['id']),
       nombre: json['nombre'] ?? '',
       logoUrl: json['logo_url'],
       municipio: json['municipio'],
       tiposVehiculo: List<String>.from(json['tipos_vehiculo'] ?? []),
-      conductoresCercanos: json['conductores_cercanos'] ?? 0,
-      distanciaPromedioKm: json['distancia_promedio_km']?.toDouble(),
+      conductoresCercanos:
+          _toInt(json['conductores_cercanos'] ?? json['total_conductores']),
+      distanciaPromedioKm:
+          json['distancia_promedio_km'] != null
+              ? _toDouble(json['distancia_promedio_km'])
+              : null,
     );
   }
 }
@@ -169,10 +199,14 @@ class CompanyVehicleResponse {
     return CompanyVehicleResponse(
       success: json['success'] ?? false,
       municipio: json['municipio'],
-      empresaRecomendadaId: json['empresa_recomendada_id'],
-      totalEmpresas: json['total_empresas'] ?? 0,
-      totalTiposVehiculo: json['total_tipos_vehiculo'] ?? 0,
-      totalConductoresCerca: json['total_conductores_cerca'] ?? 0,
+      empresaRecomendadaId:
+        json['empresa_recomendada_id'] != null
+          ? _toInt(json['empresa_recomendada_id'])
+          : null,
+      totalEmpresas: _toInt(json['total_empresas']),
+      totalTiposVehiculo: _toInt(json['total_tipos_vehiculo']),
+      totalConductoresCerca:
+        _toInt(json['total_conductores_cerca'] ?? json['total_conductores']),
       vehiculosDisponibles:
           (json['vehiculos_disponibles'] as List<dynamic>?)
               ?.map((e) => AvailableVehicleType.fromJson(e))
@@ -234,7 +268,7 @@ class CompanyDetails {
 
   factory CompanyDetails.fromJson(Map<String, dynamic> json) {
     return CompanyDetails(
-      id: json['id'] ?? 0,
+      id: _toInt(json['id']),
       nombre: json['nombre'] ?? '',
       logoUrl: json['logo_url'],
       verificada: json['verificada'] ?? false,
@@ -244,12 +278,21 @@ class CompanyDetails {
       website: json['website'],
       municipio: json['municipio'],
       departamento: json['departamento'],
-      anioFundacion: json['anio_fundacion'],
-      anioRegistro: json['anio_registro'],
-      totalConductores: json['total_conductores'] ?? 0,
-      viajesCompletados: json['viajes_completados'] ?? 0,
-      calificacionPromedio: json['calificacion_promedio']?.toDouble(),
-      totalCalificaciones: json['total_calificaciones'] ?? 0,
+        anioFundacion:
+          json['anio_fundacion'] != null
+            ? _toInt(json['anio_fundacion'])
+            : null,
+        anioRegistro:
+          json['anio_registro'] != null
+            ? _toInt(json['anio_registro'])
+            : null,
+        totalConductores: _toInt(json['total_conductores']),
+        viajesCompletados: _toInt(json['viajes_completados']),
+        calificacionPromedio:
+          json['calificacion_promedio'] != null
+            ? _toDouble(json['calificacion_promedio'])
+            : null,
+        totalCalificaciones: _toInt(json['total_calificaciones']),
       tiposVehiculo: (json['tipos_vehiculo'] as List<dynamic>?)
               ?.map((e) => VehicleTypeInfo.fromJson(e))
               .toList() ??
