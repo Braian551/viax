@@ -135,8 +135,9 @@ class TripTrackingService {
 
   // Configuración
   static const Duration _trackingInterval = Duration(seconds: 5);
+  static const Duration _batchSyncInterval = Duration(seconds: 10);
   static const double _minDistanceToRegisterMeters = 10.0; // Filtro de jitter
-  static const int _maxRetries = 3;
+  static const int _maxBatchSize = 20;
 
   // Estado del tracking
   bool _isTracking = false;
@@ -153,6 +154,8 @@ class TripTrackingService {
   // Stream de posición
   StreamSubscription<Position>? _positionSubscription;
   Timer? _syncTimer;
+  DateTime _lastBatchSync = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _isSyncingBatch = false;
 
   // Cola de puntos pendientes (para modo offline)
   final List<TrackingPoint> _pendingPoints = [];
@@ -193,6 +196,8 @@ class TripTrackingService {
       _startTime = startTime ?? DateTime.now();
       _ultimaPosicion = null;
       _pendingPoints.clear(); // Limpiar cola
+      _lastBatchSync = DateTime.now();
+      _isSyncingBatch = false;
       _isTracking = true;
 
       debugPrint('🚀 [Tracking] Iniciando tracking para viaje $solicitudId');
@@ -211,7 +216,7 @@ class TripTrackingService {
       debugPrint('📍 [Tracking] Posición inicial: ${position.latitude}, ${position.longitude}');
 
       // Registrar punto de inicio
-      await _registrarPunto(position, evento: 'inicio');
+      await _registrarPunto(position, evento: 'inicio', forceSync: true);
 
       // Iniciar stream de posición
       _positionSubscription = Geolocator.getPositionStream(
@@ -237,13 +242,17 @@ class TripTrackingService {
   Future<void> _periodicSync() async {
     if (!_isTracking || _solicitudId == null) return;
     
-    // Sincronizar puntos pendientes
-    await _syncPendingPoints();
-    
     // Registrar punto actual para mantener tiempo actualizado
     if (_ultimaPosicion != null) {
       await _registrarPunto(_ultimaPosicion!);
       _notifyUpdate(_ultimaPosicion!);
+    }
+
+    final shouldFlush = _pendingPoints.length >= _maxBatchSize ||
+        DateTime.now().difference(_lastBatchSync) >= _batchSyncInterval;
+
+    if (shouldFlush) {
+      await _syncPendingPoints();
     }
   }
 
@@ -253,6 +262,8 @@ class TripTrackingService {
 
     debugPrint('🛑 [Tracking] Deteniendo tracking');
 
+    _isTracking = false;
+
     _positionSubscription?.cancel();
     _positionSubscription = null;
     _syncTimer?.cancel();
@@ -261,7 +272,6 @@ class TripTrackingService {
     // Sincronizar puntos pendientes
     await _syncPendingPoints();
 
-    _isTracking = false;
     _solicitudId = null;
     _conductorId = null;
   }
@@ -279,8 +289,11 @@ class TripTrackingService {
 
       // Registrar último punto
       if (_ultimaPosicion != null) {
-        await _registrarPunto(_ultimaPosicion!, evento: 'fin');
+        await _registrarPunto(_ultimaPosicion!, evento: 'fin', forceSync: true);
       }
+
+      // Asegurar flush final antes del cálculo de tarifa
+      await _syncPendingPoints();
 
       // Usar tiempo real del conductor si se proporciona, sino el del tracking
       final tiempoFinalSeg = tiempoRealSegundos ?? tiempoSegundos;
@@ -307,10 +320,6 @@ class TripTrackingService {
         
         if (data['success'] == true) {
           debugPrint('✅ [Tracking] Precio final calculado: ${data['precio_final']}');
-          
-          // Limpiar estado
-          await stopTracking();
-          
           return TrackingFinalResult.fromJson(data);
         }
       }
@@ -320,6 +329,8 @@ class TripTrackingService {
     } catch (e) {
       debugPrint('❌ [Tracking] Error finalizando: $e');
       return null;
+    } finally {
+      await stopTracking();
     }
   }
 
@@ -392,7 +403,7 @@ class TripTrackingService {
     onError?.call('Error de GPS: $error');
   }
 
-  Future<void> _registrarPunto(Position position, {String? evento}) async {
+  Future<void> _registrarPunto(Position position, {String? evento, bool forceSync = false}) async {
     if (_solicitudId == null || _conductorId == null) return;
 
     final punto = TrackingPoint(
@@ -408,13 +419,10 @@ class TripTrackingService {
       evento: evento,
     );
 
-    // Intentar enviar inmediatamente
-    final enviado = await _enviarPunto(punto);
-    
-    if (!enviado) {
-      // Guardar para enviar después
-      _pendingPoints.add(punto);
-      debugPrint('📦 [Tracking] Punto guardado en cola (${_pendingPoints.length} pendientes)');
+    _pendingPoints.add(punto);
+
+    if (forceSync || _pendingPoints.length >= _maxBatchSize) {
+      await _syncPendingPoints();
     }
   }
 
@@ -462,17 +470,62 @@ class TripTrackingService {
   }
 
   Future<void> _syncPendingPoints() async {
-    if (_pendingPoints.isEmpty) return;
+    if (_pendingPoints.isEmpty || _isSyncingBatch) return;
+    if (_solicitudId == null || _conductorId == null) return;
 
-    debugPrint('🔄 [Tracking] Sincronizando ${_pendingPoints.length} puntos pendientes');
+    _isSyncingBatch = true;
+    try {
+      while (_pendingPoints.isNotEmpty) {
+        final currentBatch = _pendingPoints
+            .take(_maxBatchSize)
+            .map((point) => point.toJson())
+            .toList();
 
-    final puntosAEnviar = List<TrackingPoint>.from(_pendingPoints);
-    
-    for (final punto in puntosAEnviar) {
-      final enviado = await _enviarPunto(punto);
-      if (enviado) {
-        _pendingPoints.remove(punto);
+        debugPrint('🔄 [Tracking] Sincronizando lote de ${currentBatch.length} puntos (${_pendingPoints.length} pendientes)');
+
+        final enviado = await _enviarLote(currentBatch);
+        if (!enviado) {
+          break;
+        }
+
+        _pendingPoints.removeRange(0, currentBatch.length);
+        _lastBatchSync = DateTime.now();
       }
+    } finally {
+      _isSyncingBatch = false;
+    }
+  }
+
+  Future<bool> _enviarLote(List<Map<String, dynamic>> puntos) async {
+    if (_solicitudId == null || _conductorId == null || puntos.isEmpty) return false;
+
+    try {
+      final url = Uri.parse('${AppConfig.baseUrl}/conductor/tracking/register_points_batch.php');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'solicitud_id': _solicitudId,
+          'conductor_id': _conductorId,
+          'puntos': puntos,
+        }),
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final nuevoPrecio = (data['data']?['precio_parcial'] ?? _precioActual).toDouble();
+          _precioActual = nuevoPrecio;
+          return true;
+        }
+      }
+
+      debugPrint('⚠️ [Tracking] Error enviando lote: HTTP ${response.statusCode} ${response.body}');
+      return false;
+    } catch (e) {
+      debugPrint('⚠️ [Tracking] Error enviando lote: $e');
+      return false;
     }
   }
 
