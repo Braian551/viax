@@ -569,6 +569,196 @@ class UserService {
     }
   }
 
+  static Future<Map<String, dynamic>> checkPasswordStatus({
+    required int userId,
+  }) async {
+    try {
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'check_status',
+          'user_id': userId,
+        }),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': 'Error del servidor: ${resp.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo verificar el estado de la contraseña.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> requestPasswordChangeCode({
+    required int userId,
+  }) async {
+    try {
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'request_change_code',
+          'user_id': userId,
+        }),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': 'Error del servidor: ${resp.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo enviar el código de verificación.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> changePasswordWithCode({
+    required int userId,
+    String? currentPassword,
+    required String newPassword,
+    required String verificationCode,
+    bool isSettingNew = false,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'action': 'change_password_with_code',
+        'user_id': userId,
+        'new_password': newPassword,
+        'verification_code': verificationCode,
+        'is_setting_new': isSettingNew,
+      };
+
+      if (!isSettingNew && currentPassword != null && currentPassword.isNotEmpty) {
+        body['current_password'] = currentPassword;
+      }
+
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': 'Error del servidor: ${resp.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo actualizar la contraseña.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyPasswordChangeCode({
+    required int userId,
+    required String verificationCode,
+  }) async {
+    try {
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'verify_change_code',
+          'user_id': userId,
+          'verification_code': verificationCode,
+        }),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': 'Error del servidor: ${resp.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo validar el código de verificación.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> changePassword({
+    required int userId,
+    String? currentPassword,
+    required String newPassword,
+    bool isSettingNew = false,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'action': isSettingNew ? 'set_password' : 'change_password',
+        'user_id': userId,
+        'new_password': newPassword,
+      };
+
+      if (!isSettingNew && currentPassword != null && currentPassword.isNotEmpty) {
+        body['current_password'] = currentPassword;
+      }
+
+      final resp = await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/change_password.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': 'Error del servidor: ${resp.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo actualizar la contraseña.',
+      };
+    }
+  }
+
   static Future<Map<String, dynamic>> registerDriverVehicle({
     required int userId, 
     required String type, 

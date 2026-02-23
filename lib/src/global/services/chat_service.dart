@@ -38,14 +38,14 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      id: json['id'] as int,
-      solicitudId: json['solicitud_id'] as int,
-      remitenteId: json['remitente_id'] as int,
-      destinatarioId: json['destinatario_id'] as int,
+      id: ChatService.asInt(json['id']),
+      solicitudId: ChatService.asInt(json['solicitud_id']),
+      remitenteId: ChatService.asInt(json['remitente_id']),
+      destinatarioId: ChatService.asInt(json['destinatario_id']),
       tipoRemitente: json['tipo_remitente'] as String,
       mensaje: json['mensaje'] as String,
       tipoMensaje: json['tipo_mensaje'] as String? ?? 'texto',
-      leido: json['leido'] as bool? ?? false,
+      leido: ChatService.asBool(json['leido']),
       leidoEn: DateTimeUtils.parseServerDate(json['leido_en']?.toString()),
       fechaCreacion: DateTimeUtils.parseServerDateOrNow(json['fecha_creacion']?.toString()),
       remitenteNombre: json['remitente']?['nombre'] as String?,
@@ -76,6 +76,28 @@ class ChatMessage {
 class ChatService {
   static String get baseUrl => AppConfig.baseUrl;
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+
+  static int asInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  static bool asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == '1' || normalized == 'true' || normalized == 'si') {
+        return true;
+      }
+      if (normalized == '0' || normalized == 'false' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
+  }
 
   static String _friendlyMessage(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación de chat.'}) {
     return result.error?.userMessage ?? fallback;
@@ -335,7 +357,7 @@ class ChatService {
 
       final data = result.json!;
       if (data['success'] == true) {
-        return data['no_leidos'] as int? ?? 0;
+        return asInt(data['no_leidos']);
       }
 
       return 0;

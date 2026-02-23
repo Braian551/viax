@@ -2,7 +2,7 @@
 
 ## 📋 Resumen
 
-Se ha implementado un sistema mejorado para la carga y visualización de documentos en la aplicación PingGo, específicamente para conductores que necesitan registrar sus licencias y documentos del vehículo.
+Se ha implementado un sistema mejorado para la carga y visualización de documentos en la aplicación Viax, específicamente para conductores que necesitan registrar sus licencias y documentos del vehículo.
 
 ## ✨ Características Principales
 

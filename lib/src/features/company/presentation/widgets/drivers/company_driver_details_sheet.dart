@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
+import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_avatar.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
@@ -17,13 +18,18 @@ class CompanyDriverDetailsSheet extends StatefulWidget {
   });
 
   @override
-  State<CompanyDriverDetailsSheet> createState() => _CompanyDriverDetailsSheetState();
+  State<CompanyDriverDetailsSheet> createState() =>
+      _CompanyDriverDetailsSheetState();
 }
 
 class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   bool _isLoadingEarnings = false;
   Map<String, dynamic>? _earningsData;
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'es_CO',
+    symbol: '\$',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
@@ -32,13 +38,19 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   }
 
   Future<void> _loadEarnings() async {
-    final conductorId = int.tryParse(widget.driver['id']?.toString() ?? widget.driver['usuario_id']?.toString() ?? '');
+    final conductorId = int.tryParse(
+      widget.driver['id']?.toString() ??
+          widget.driver['usuario_id']?.toString() ??
+          '',
+    );
     if (conductorId == null) return;
 
     setState(() => _isLoadingEarnings = true);
-    
+
     try {
-      final response = await AdminService.getConductorEarnings(conductorId: conductorId);
+      final response = await AdminService.getConductorEarnings(
+        conductorId: conductorId,
+      );
       if (mounted && response['success'] == true) {
         setState(() => _earningsData = response['ganancias']);
       }
@@ -50,11 +62,15 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   }
 
   Future<void> _registrarPago(double deuda) async {
-    final conductorId = int.tryParse(widget.driver['id']?.toString() ?? widget.driver['usuario_id']?.toString() ?? '');
+    final conductorId = int.tryParse(
+      widget.driver['id']?.toString() ??
+          widget.driver['usuario_id']?.toString() ??
+          '',
+    );
     if (conductorId == null) return;
 
     final controller = TextEditingController(text: deuda.toStringAsFixed(0));
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -93,7 +109,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
       if (monto <= 0) return;
 
       if (!mounted) return;
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -103,19 +119,25 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
       try {
         final result = await AdminService.registrarPagoComision(
           adminId: 0, // 0 or null, backend handles it
-          conductorId: conductorId, 
+          conductorId: conductorId,
           monto: monto,
-          notas: 'Pago registrado desde panel empresa'
+          notas: 'Pago registrado desde panel empresa',
         );
 
         if (!mounted) return;
         Navigator.pop(context); // Cerrar loading
 
         if (result['success'] == true) {
-          CustomSnackbar.showSuccess(context, message: 'Pago registrado correctamente');
-          _loadEarnings(); 
+          CustomSnackbar.showSuccess(
+            context,
+            message: 'Pago registrado correctamente',
+          );
+          _loadEarnings();
         } else {
-          CustomSnackbar.showError(context, message: result['message'] ?? 'Error al registrar pago');
+          CustomSnackbar.showError(
+            context,
+            message: result['message'] ?? 'Error al registrar pago',
+          );
         }
       } catch (e) {
         if (!mounted) return;
@@ -128,7 +150,8 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   Widget _buildEarningsCard(bool isDark) {
     if (_earningsData == null) return const SizedBox();
 
-    final debt = double.tryParse(_earningsData!['comision_adeudada'].toString()) ?? 0.0;
+    final debt =
+        double.tryParse(_earningsData!['comision_adeudada'].toString()) ?? 0.0;
     final hasDebt = debt > 0;
 
     return Container(
@@ -138,12 +161,16 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasDebt ? Colors.orange.withOpacity(0.5) : AppColors.success.withOpacity(0.5),
+          color: hasDebt
+              ? Colors.orange.withOpacity(0.5)
+              : AppColors.success.withOpacity(0.5),
           width: hasDebt ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(0.1),
+            color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(
+              0.1,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -156,7 +183,8 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(0.1),
+                  color: (hasDebt ? Colors.orange : AppColors.success)
+                      .withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -203,7 +231,9 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
@@ -216,16 +246,19 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final nombre = '${widget.driver['nombre']} ${widget.driver['apellido'] ?? ''}';
+    final nombre =
+        '${widget.driver['nombre']} ${widget.driver['apellido'] ?? ''}';
     final email = widget.driver['email'] ?? 'Sin email';
     final telefono = widget.driver['telefono'] ?? 'Sin teléfono';
     final estado = widget.driver['estado_verificacion'] ?? 'pendiente';
-    final rawDate = widget.driver['fecha_registro'] ?? widget.driver['created_at'];
+    final rawDate =
+        widget.driver['fecha_registro'] ?? widget.driver['created_at'];
     String fechaRegistro;
     if (rawDate != null) {
       try {
         final date = DateTime.parse(rawDate.toString());
-        fechaRegistro = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+        fechaRegistro =
+            '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
       } catch (e) {
         fechaRegistro = rawDate.toString();
       }
@@ -253,30 +286,21 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
               ),
             ),
           ),
-          
+
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
                   // Avatar Large
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        nombre.isNotEmpty ? nombre[0].toUpperCase() : 'C',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                  CompanyDriverAvatar(
+                    name: nombre,
+                    photoKey:
+                        (widget.driver['foto_perfil'] ??
+                                widget.driver['fotoPerfil'])
+                            ?.toString(),
+                    size: 80,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -293,30 +317,55 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
                     email,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Commission / Earnings Card (New)
                   _buildEarningsCard(isDark),
 
                   // Info Grid
-                  _buildInfoRow(context, Icons.phone_rounded, 'Teléfono', telefono),
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
-                  _buildInfoRow(context, Icons.verified_user_rounded, 'Estado', estado.toUpperCase()),
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
-                  _buildInfoRow(context, Icons.calendar_today_rounded, 'Registrado', fechaRegistro),
-                  
+                  _buildInfoRow(
+                    context,
+                    Icons.phone_rounded,
+                    'Teléfono',
+                    telefono,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+                  _buildInfoRow(
+                    context,
+                    Icons.verified_user_rounded,
+                    'Estado',
+                    estado.toUpperCase(),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+                  _buildInfoRow(
+                    context,
+                    Icons.calendar_today_rounded,
+                    'Registrado',
+                    fechaRegistro,
+                  ),
+
                   const SizedBox(height: 32),
-                  
+
                   // Actions
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: widget.onViewCommissions ?? () {
-                        Navigator.pop(context);
-                      },
+                      onPressed:
+                          widget.onViewCommissions ??
+                          () {
+                            Navigator.pop(context);
+                          },
                       icon: const Icon(Icons.receipt_long_rounded),
                       label: const Text('Ver Historial Financiero'),
                       style: ElevatedButton.styleFrom(
@@ -333,9 +382,11 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: widget.onViewDocuments ?? () {
-                        Navigator.pop(context);
-                      },
+                      onPressed:
+                          widget.onViewDocuments ??
+                          () {
+                            Navigator.pop(context);
+                          },
                       icon: const Icon(Icons.folder_shared_rounded),
                       label: const Text('Ver Documentos'),
                       style: ElevatedButton.styleFrom(
@@ -358,7 +409,12 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       children: [
         Container(
@@ -367,7 +423,13 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
             color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+          child: Icon(
+            icon,
+            size: 20,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
         ),
         const SizedBox(width: 16),
         Column(
@@ -377,7 +439,9 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
             Text(

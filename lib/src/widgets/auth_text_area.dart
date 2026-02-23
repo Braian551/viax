@@ -17,6 +17,7 @@ class AuthTextArea extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final int minLines;
   final int maxLines;
+  final String? helperText;
 
   const AuthTextArea({
     super.key,
@@ -32,6 +33,7 @@ class AuthTextArea extends StatelessWidget {
     this.inputFormatters,
     this.minLines = 3,
     this.maxLines = 5,
+    this.helperText,
   });
 
   @override
@@ -91,38 +93,50 @@ class AuthTextArea extends StatelessWidget {
             ),
             // Campo de texto expandido
             Expanded(
-              child: TextFormField(
-                controller: controller,
-                inputFormatters: inputFormatters,
-                textCapitalization: textCapitalization,
-                keyboardType: keyboardType ?? TextInputType.multiline,
-                enabled: enabled,
-                readOnly: readOnly,
-                minLines: minLines,
-                maxLines: maxLines,
-                textInputAction: isLast ? TextInputAction.done : TextInputAction.newline,
-                textAlignVertical: TextAlignVertical.top,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.3,
-                ),
-                decoration: InputDecoration(
-                  labelText: label,
-                  labelStyle: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  alignLabelWithHint: true,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(top: 8, bottom: 8),
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  isCollapsed: true,
-                  filled: false,
-                ),
-                validator: validator,
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, child) {
+                  final showHelper = helperText != null && value.text.trim().isEmpty;
+
+                  return TextFormField(
+                    controller: controller,
+                    inputFormatters: inputFormatters,
+                    textCapitalization: textCapitalization,
+                    keyboardType: keyboardType ?? TextInputType.multiline,
+                    enabled: enabled,
+                    readOnly: readOnly,
+                    minLines: minLines,
+                    maxLines: maxLines,
+                    textInputAction: isLast ? TextInputAction.done : TextInputAction.newline,
+                    textAlignVertical: TextAlignVertical.top,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: label,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      helperText: showHelper ? helperText : null,
+                      helperStyle: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                      alignLabelWithHint: true,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.only(top: 8, bottom: 8),
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                      isCollapsed: true,
+                      filled: false,
+                    ),
+                    validator: validator,
+                  );
+                },
               ),
             ),
           ],

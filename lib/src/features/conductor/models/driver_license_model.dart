@@ -97,7 +97,7 @@ enum LicenseCategory {
   ninguna('ninguna', 'Ninguna', ''),
   a1('A1', 'A1', 'Motocicletas hasta 125cc'),
   a2('A2', 'A2', 'Motocicletas superior a 125cc'),
-  b1('B1', 'B1', 'AutomÃ³viles, motocarros, cuatrimotor y camperos'),
+  b1('B1', 'B1', 'AutomÃ³viles, mototaxis, cuatrimotor y camperos'),
   b2('B2', 'B2', 'Camionetas y microbuses'),
   b3('B3', 'B3', 'Camiones rÃ­gidos, busetas y buses'),
   c1('C1', 'C1', 'AutomÃ³viles, camperos (Servicio pÃºblico)'),

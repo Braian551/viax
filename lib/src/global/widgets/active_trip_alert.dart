@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../services/active_trip_navigation_service.dart';
+import '../services/trip_status_navigation_service.dart';
 import '../../features/user/services/trip_request_service.dart';
-import '../../routes/route_names.dart';
 
 /// Muestra una alerta indicando que hay un viaje en curso
 /// y permite navegar directamente al viaje activo
@@ -82,22 +82,7 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
           debugPrint('✅ [ActiveTripAlert] Navigating to active trip: $tripData');
           
           Navigator.pop(context);
-          
-          // Función auxiliar para parsear enteros seguros
-          int parseInt(dynamic value) {
-            if (value == null) return 0;
-            if (value is int) return value;
-            return int.tryParse(value.toString()) ?? 0;
-          }
 
-          // Función auxiliar para parsear doubles seguros
-          double parseDouble(dynamic value) {
-            if (value == null) return 0.0;
-            if (value is double) return value;
-            if (value is int) return value.toDouble();
-            return double.tryParse(value.toString()) ?? 0.0;
-          }
-          
           final navigator = ActiveTripNavigationService.navigatorKey.currentState;
           if (navigator == null) {
             if (mounted) {
@@ -106,75 +91,28 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
             return;
           }
 
-          // Navegar a la pantalla correcta según el rol
           if (widget.isConductor) {
-            await navigator.pushNamed(
-              RouteNames.conductorActiveTrip,
-              arguments: {
-                'conductorId': widget.userId,
-                'solicitudId': parseInt(tripData['id']),
-                'origenLat': parseDouble(tripData['latitud_recogida'] ?? tripData['latitud_origen']),
-                'origenLng': parseDouble(tripData['longitud_recogida'] ?? tripData['longitud_origen']),
-                'destinoLat': parseDouble(tripData['latitud_destino']),
-                'destinoLng': parseDouble(tripData['longitud_destino']),
-                'direccionOrigen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
-                'direccionDestino': tripData['direccion_destino'] ?? '',
-                'clienteNombre': tripData['cliente_nombre'],
-                'clienteFoto': tripData['cliente_foto'],
-                'clienteId': parseInt(tripData['cliente_id']),
-                'initialTripStatus': tripData['estado'],
-              },
+            final decision = TripStatusNavigationService.resolveConductorNavigation(
+              trip: Map<String, dynamic>.from(tripData as Map),
+              fallbackConductorId: widget.userId ?? 0,
             );
+
+            if (decision != null) {
+              await navigator.pushNamed(
+                decision.routeName,
+                arguments: decision.arguments,
+              );
+            }
           } else {
-            // Para clientes, verificar el estado del viaje
-            final tripStatus = tripData['estado']?.toString() ?? '';
-            final shouldGoToMeetingPoint =
-                tripStatus == 'aceptada' ||
-                tripStatus == 'conductor_asignado' ||
-                tripStatus == 'en_camino' ||
-                tripStatus == 'conductor_llego';
-            
-            if (tripStatus == 'pendiente') {
-              // Viaje esperando conductor - ir a WaitingForDriverScreen
+            final decision = TripStatusNavigationService.resolveUserNavigation(
+              trip: Map<String, dynamic>.from(tripData as Map),
+              fallbackClienteId: widget.userId ?? 0,
+            );
+
+            if (decision != null) {
               await navigator.pushNamed(
-                '/user/waiting_driver',
-                arguments: {
-                  'solicitud_id': parseInt(tripData['id']),
-                  'cliente_id': widget.userId,
-                  'direccion_origen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
-                  'direccion_destino': tripData['direccion_destino'] ?? '',
-                },
-              );
-            } else if (shouldGoToMeetingPoint) {
-              await navigator.pushNamed(
-                RouteNames.userTripAccepted,
-                arguments: {
-                  'solicitudId': parseInt(tripData['id']),
-                  'clienteId': widget.userId,
-                  'latitudOrigen': parseDouble(tripData['latitud_recogida'] ?? tripData['latitud_origen']),
-                  'longitudOrigen': parseDouble(tripData['longitud_recogida'] ?? tripData['longitud_origen']),
-                  'direccionOrigen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
-                  'latitudDestino': parseDouble(tripData['latitud_destino']),
-                  'longitudDestino': parseDouble(tripData['longitud_destino']),
-                  'direccionDestino': tripData['direccion_destino'] ?? '',
-                  'conductorInfo': tripData['conductor'],
-                },
-              );
-            } else {
-              // Viaje con conductor asignado - ir a UserActiveTripScreen
-              await navigator.pushNamed(
-                RouteNames.userActiveTrip,
-                arguments: {
-                  'solicitudId': parseInt(tripData['id']),
-                  'clienteId': widget.userId,
-                  'origenLat': parseDouble(tripData['latitud_recogida'] ?? tripData['latitud_origen']),
-                  'origenLng': parseDouble(tripData['longitud_recogida'] ?? tripData['longitud_origen']),
-                  'direccionOrigen': tripData['direccion_recogida'] ?? tripData['direccion_origen'] ?? '',
-                  'destinoLat': parseDouble(tripData['latitud_destino']),
-                  'destinoLng': parseDouble(tripData['longitud_destino']),
-                  'direccionDestino': tripData['direccion_destino'] ?? '',
-                  'conductorInfo': tripData['conductor'],
-                },
+                decision.routeName,
+                arguments: decision.arguments,
               );
             }
           }

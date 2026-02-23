@@ -68,7 +68,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
   // Tipos de vehículos disponibles
   final List<String> _tiposVehiculoDisponibles = [
     'moto',
-    'motocarro',
+    'mototaxi',
     'taxi',
     'carro',
   ];
@@ -986,7 +986,7 @@ class _EmpresaFormState extends State<EmpresaForm> {
     switch (tipo.toLowerCase()) {
       case 'moto':
         return Icons.two_wheeler;
-      case 'motocarro':
+      case 'mototaxi':
         return Icons.electric_rickshaw;
       case 'taxi':
         return Icons.local_taxi;

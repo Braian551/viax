@@ -130,11 +130,11 @@ calificaciones
 ## Testing
 Para probar el endpoint:
 ```bash
-curl "http://localhost/pingo/backend/conductor/get_historial.php?conductor_id=7&page=1&limit=20"
+curl "http://localhost/viax/backend/conductor/get_historial.php?conductor_id=7&page=1&limit=20"
 ```
 
 ## Archivos Modificados
-- `pingo/backend/conductor/get_historial.php` ✅
+- `viax/backend/conductor/get_historial.php` ✅
 
 ## Fecha de Corrección
 24 de octubre de 2025

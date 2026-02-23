@@ -1,8 +1,8 @@
-# 📋 Requerimientos Funcionales y No Funcionales - PingGo
+# 📋 Requerimientos Funcionales y No Funcionales - Viax
 
 ## 🎯 **Visión General**
 
-Este documento clasifica todas las funcionalidades y características del proyecto PingGo según los **Requerimientos Funcionales** (qué hace el sistema) y **Requerimientos No Funcionales** (cómo lo hace). Esta organización facilita la comprensión del alcance del proyecto y sirve como referencia para desarrollo, testing y mantenimiento.
+Este documento clasifica todas las funcionalidades y características del proyecto Viax según los **Requerimientos Funcionales** (qué hace el sistema) y **Requerimientos No Funcionales** (cómo lo hace). Esta organización facilita la comprensión del alcance del proyecto y sirve como referencia para desarrollo, testing y mantenimiento.
 
 ---
 
@@ -43,7 +43,7 @@ Los requerimientos funcionales describen las funcionalidades específicas que el
   - Integración con Gmail SMTP
 - **Estado**: ✅ Implementado
 - **Documentación**: [Sistema de Verificación Email](docs/user/SISTEMA_SOLICITUD_VIAJES.md)
-- **Archivos**: `pingo/backend/auth/email_service.php`
+- **Archivos**: `viax/backend/auth/email_service.php`
 
 ### 🚗 **RF.2 - Gestión de Conductores**
 
@@ -105,7 +105,7 @@ Los requerimientos funcionales describen las funcionalidades específicas que el
   - Tarifas mínimas garantizadas
 - **Estado**: ✅ Implementado
 - **Documentación**: [Sistema de Precios](docs/IMPLEMENTACION_COMPLETADA_SISTEMA_PRECIOS.md)
-- **Archivos**: `pingo/backend/pricing/calculate_quote.php`
+- **Archivos**: `viax/backend/pricing/calculate_quote.php`
 
 #### **RF.3.3 - Búsqueda de Conductores**
 - **Descripción**: Algoritmo de matching entre solicitudes y conductores
@@ -116,7 +116,7 @@ Los requerimientos funcionales describen las funcionalidades específicas que el
   - Actualización en tiempo real
 - **Estado**: ✅ Implementado
 - **Documentación**: [Sistema de Solicitudes](docs/user/SISTEMA_SOLICITUD_VIAJES.md)
-- **Archivos**: `pingo/backend/user/find_nearby_drivers.php`
+- **Archivos**: `viax/backend/user/find_nearby_drivers.php`
 
 ### 🗺️ **RF.4 - Mapas y Geolocalización**
 
@@ -186,7 +186,7 @@ Los requerimientos funcionales describen las funcionalidades específicas que el
   - Visualización de perfiles completos
 - **Estado**: ✅ Implementado
 - **Documentación**: [Documentos Conductores](docs/admin/DOCUMENTOS_CONDUCTORES.md)
-- **Archivos**: `pingo/backend/admin/user_management.php`
+- **Archivos**: `viax/backend/admin/user_management.php`
 
 ### 🔔 **RF.6 - Notificaciones y Comunicación**
 
@@ -225,7 +225,7 @@ Los requerimientos no funcionales especifican cómo debe comportarse el sistema,
   - Arquitectura modular preparada para microservicios
   - Base de datos optimizada con índices
   - Cache de mapas y geocoding
-  - Auto-escalado en Railway
+  - Escalado vertical/horizontal en VPS
 - **Estado**: ✅ Preparado
 - **Documentación**: [Migración a Microservicios](docs/architecture/MIGRATION_TO_MICROSERVICES.md)
 
@@ -278,7 +278,7 @@ Los requerimientos no funcionales especifican cómo debe comportarse el sistema,
 #### **RNF.4.1 - Uptime del Sistema**
 - **Objetivo**: 99.5% de disponibilidad mensual
 - **Características**:
-  - Despliegue en Railway (alta disponibilidad)
+  - Despliegue en VPS (alta disponibilidad)
   - Base de datos MySQL en la nube
   - Monitoreo automático de servicios
   - Recuperación automática de fallos
@@ -345,7 +345,7 @@ Los requerimientos no funcionales especifican cómo debe comportarse el sistema,
 #### **RNF.7.1 - Observabilidad**
 - **Objetivo**: Visibilidad completa del estado del sistema
 - **Características**:
-  - Logs estructurados en Railway
+  - Logs estructurados en servidor VPS
   - Métricas de rendimiento
   - Alertas automáticas
   - Dashboard de monitoreo
@@ -374,7 +374,7 @@ Los requerimientos no funcionales especifican cómo debe comportarse el sistema,
 
 ### **No Funcionales**
 - ✅ **Tiempo de respuesta**: < 2 segundos promedio
-- ✅ **Disponibilidad**: 99.5%+ (Railway)
+- ✅ **Disponibilidad**: 99.5%+ (VPS)
 - ✅ **Compatibilidad**: Android/iOS/Web
 - ✅ **Seguridad**: Autenticación + encriptación
 
@@ -417,7 +417,7 @@ Los requerimientos no funcionales especifican cómo debe comportarse el sistema,
 
 ## 📞 **CONTACTO Y SOPORTE**
 
-- **Repositorio**: https://github.com/Braian551/pingo
+- **Repositorio**: https://github.com/Braian551/viax
 - **Documentación**: `docs/` folder
 - **Issues**: GitHub Issues para reportes
 - **Estado**: Sistema completamente funcional

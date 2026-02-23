@@ -41,14 +41,14 @@ flutter run
 # Navega a /map-example para ver demo completa
 ```
 
-**¡YA ESTÁ TODO CONFIGURADO CON TU TOKEN!**
+**¡YA ESTÁ TODO CONFIGURADO PARA USAR TOKEN DESDE ENTORNO/BACKEND!**
 
 ---
 
 ## 📊 TU TOKEN DE MAPBOX
 
 ```
-pk.eyJ1IjoiYnJhaW5waW5nbzIiLCJhIjoiY21neHYzYnF3MWprMTJ3cHU4M3kzeHM1aiJ9.ICn4bFPZVRHcf2fyW7qBEA
+<MAPBOX_PUBLIC_TOKEN>
 ```
 
 - ✅ Activo y funcionando
@@ -166,4 +166,4 @@ flutter run
 
 **Todo listo. Todo documentado. Todo funcionando.** ✅
 
-*Desarrollado con precisión para PingGo* ❤️
+*Desarrollado con precisión para Viax* ❤️

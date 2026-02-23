@@ -9,7 +9,6 @@ import 'package:latlong2/latlong.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../theme/app_colors.dart';
-import '../../services/conductor_service.dart';
 import '../../services/trip_request_search_service.dart';
 import '../models/trip_request_view.dart';
 import '../widgets/conductor_searching_map.dart';
@@ -59,7 +58,6 @@ class _ConductorSearchingPassengersScreenState
   void dispose() {
     _positionStream?.cancel();
     SoundService.stopSound();
-    _setDriverUnavailable();
     super.dispose();
   }
 
@@ -250,17 +248,6 @@ class _ConductorSearchingPassengersScreenState
 
     if (!mounted) return;
     Navigator.pop(context);
-  }
-
-  Future<void> _setDriverUnavailable() async {
-    try {
-      await ConductorService.actualizarDisponibilidad(
-        conductorId: widget.conductorId,
-        disponible: false,
-      );
-    } catch (e) {
-      debugPrint('Error desactivando disponibilidad: $e');
-    }
   }
 
   PreferredSizeWidget _buildAppBar(bool isDark) {

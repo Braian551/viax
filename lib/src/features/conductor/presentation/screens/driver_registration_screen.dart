@@ -99,8 +99,8 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         _selectedVehicleType = 'carro';
       } else if (tipo.contains('taxi')) {
         _selectedVehicleType = 'taxi';
-      } else if (tipo.contains('motocarro')) {
-        _selectedVehicleType = 'motocarro';
+      } else if (tipo.contains('mototaxi')) {
+        _selectedVehicleType = 'mototaxi';
       } else {
         _selectedVehicleType = 'moto';
       }

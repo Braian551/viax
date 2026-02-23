@@ -193,7 +193,7 @@ class VehicleModel {
 enum VehicleType {
   moto('moto', 'Moto', FontAwesomeIcons.motorcycle),
   auto('auto', 'Auto', FontAwesomeIcons.car),
-  motocarro('motocarro', 'Motocarro', FontAwesomeIcons.vanShuttle);
+  mototaxi('mototaxi', 'Mototaxi', FontAwesomeIcons.vanShuttle);
 
   final String value;
   final String label;

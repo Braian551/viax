@@ -37,8 +37,8 @@
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/Braian551/pingo.git
-   cd pingo
+   git clone https://github.com/Braian551/viax.git
+   cd viax
    ```
 
 2. **Instalar dependencias**
@@ -47,7 +47,7 @@
    ```
 
 3. **Configurar backend local**
-   - Ubicación: `pingo/backend/`
+   - Ubicación: `viax/backend/`
    - Importar BD: `basededatos.sql`
    - Configurar PHP en `localhost` o tu servidor local
 
@@ -64,7 +64,7 @@
 
 ## 🔧 Backend Local - Endpoints
 
-Durante desarrollo, el backend PHP está en `pingo/backend/`. Los endpoints principales son:
+Durante desarrollo, el backend PHP está en `viax/backend/`. Los endpoints principales son:
 
 ### Autenticación
 - **POST** `/auth/register.php` - Registrar usuario
@@ -91,11 +91,11 @@ Durante desarrollo, el backend PHP está en `pingo/backend/`. Los endpoints prin
 - **POST** `/conductor/submit_for_approval.php` - Enviar para aprobación
 
 ### Configuración para Emulador Android
-Usar `http://10.0.2.2/pingo/backend/` como base URL.
+Usar `http://10.0.2.2/viax/backend/` como base URL.
 
 ### Prueba rápida con curl
 ```bash
-curl -X POST http://localhost/pingo/backend/auth/register.php \
+curl -X POST http://localhost/viax/backend/auth/register.php \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"pass123","name":"Test","lastName":"User","phone":"3001234567"}'
 ```
@@ -244,11 +244,11 @@ test: agregar tests para use cases
 
 ## 📞 Contacto y Soporte
 
-- **GitHub**: [Braian551/pingo](https://github.com/Braian551/pingo)
+- **GitHub**: [Braian551/viax](https://github.com/Braian551/viax)
 - **Documentación**: `docs/`
 - **Issues**: GitHub Issues
 
 ---
 
 **Última actualización**: Octubre 2025  
-**Mantenido por**: Equipo Ping Go
+**Mantenido por**: Equipo Viax

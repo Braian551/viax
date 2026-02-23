@@ -33,7 +33,7 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
   // Actually CompanyPricingCard handles presentation. EditSheet needs name string.
   final Map<String, String> _vehicleTypeNames = {
     'moto': 'Moto',
-    'motocarro': 'Motocarro',
+    'mototaxi': 'Mototaxi',
     'taxi': 'Taxi',
     'carro': 'Carro',
   };

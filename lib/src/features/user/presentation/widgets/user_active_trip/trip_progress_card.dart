@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
 
@@ -34,147 +36,170 @@ class TripProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Info principal
-          Row(
-            children: [
-              // Icono destino con fondo gradiente
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.2),
-                      AppColors.primary.withValues(alpha: 0.08),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      AppColors.darkSurface.withValues(alpha: 0.9),
+                      AppColors.darkBackground.withValues(alpha: 0.84),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.88),
+                      AppColors.blue50.withValues(alpha: 0.72),
                     ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.flag_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.65),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.11),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
-              const SizedBox(width: 14),
-
-              // Distancia
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _distanceText,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.grey[900],
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'hasta el destino',
-                      style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.grey[500],
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Badges de tiempo
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            ],
+          ),
+          child: Column(
+            children: [
+              // Info principal
+              Row(
                 children: [
-                  // Elapsed
-                  if (elapsedMinutes != null) ...[
-                    _buildTimeBadge(
-                      icon: Icons.timer_outlined,
-                      text: '$elapsedMinutes min',
-                      color: AppColors.warning,
+                  // Icono destino con fondo gradiente
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.2),
+                          AppColors.primary.withValues(alpha: 0.08),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    const SizedBox(height: 8),
-                  ],
-                  // ETA
-                  _buildTimeBadge(
-                    icon: Icons.access_time_rounded,
-                    text: _etaText,
-                    color: AppColors.primary,
+                    child: const Icon(
+                      Icons.flag_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Distancia
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _distanceText,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.grey[900],
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'hasta el destino',
+                          style: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.grey[500],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Badges de tiempo
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Elapsed
+                      if (elapsedMinutes != null) ...[
+                        _buildTimeBadge(
+                          icon: Icons.timer_outlined,
+                          text: '$elapsedMinutes min',
+                          color: AppColors.warning,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // ETA
+                      _buildTimeBadge(
+                        icon: Icons.access_time_rounded,
+                        text: _etaText,
+                        color: AppColors.primary,
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
 
-          const SizedBox(height: 18),
+              const SizedBox(height: 18),
 
-          // Barra de progreso moderna
-          Stack(
-            children: [
-              // Background
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.grey.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              // Foreground con gradiente
-              FractionallySizedBox(
-                widthFactor: progress.clamp(0, 1),
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.blue600],
+              // Barra de progreso moderna
+              Stack(
+                children: [
+                  // Background
+                  Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.grey.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                    borderRadius: BorderRadius.circular(3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
+                  // Foreground con gradiente
+                  FractionallySizedBox(
+                    widthFactor: progress.clamp(0, 1),
+                    child: Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.blue600],
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Texto de progreso
+              Text(
+                '${(progress * 100).toInt()}% del viaje completado',
+                style: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 8),
-
-          // Texto de progreso
-          Text(
-            '${(progress * 100).toInt()}% del viaje completado',
-            style: TextStyle(
-              color: isDark ? Colors.white38 : Colors.grey[400],
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -189,6 +214,7 @@ class TripProgressCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,4 @@
-# Nuevas Funcionalidades para Conductores - PinGo
+# Nuevas Funcionalidades para Conductores - Viax
 
 ## 📋 Resumen de Cambios
 
@@ -385,4 +385,4 @@ dependencies:
 
 **Desarrollado por:** GitHub Copilot  
 **Fecha:** 24 de Octubre, 2025  
-**Proyecto:** PinGo - Plataforma de Transporte
+**Proyecto:** Viax - Plataforma de Transporte

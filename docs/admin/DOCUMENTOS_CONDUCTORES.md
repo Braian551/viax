@@ -80,7 +80,7 @@ Al hacer clic en cualquier conductor, se muestra un modal con **todos** los camp
 ## 📁 Archivos Creados
 
 ### Backend (PHP)
-1. **`/pingo/backend/admin/get_conductores_documentos.php`**
+1. **`/viax/backend/admin/get_conductores_documentos.php`**
    - Endpoint GET para obtener todos los documentos de conductores
    - Filtra por estado de verificación
    - Calcula automáticamente:
@@ -89,13 +89,13 @@ Al hacer clic en cualquier conductor, se muestra un modal con **todos** los camp
      - Documentos vencidos
    - Incluye paginación
 
-2. **`/pingo/backend/admin/aprobar_conductor.php`**
+2. **`/viax/backend/admin/aprobar_conductor.php`**
    - Endpoint POST para aprobar conductores
    - Actualiza estado a "aprobado"
    - Marca usuario como verificado
    - Registra en logs de auditoría
 
-3. **`/pingo/backend/admin/rechazar_conductor.php`**
+3. **`/viax/backend/admin/rechazar_conductor.php`**
    - Endpoint POST para rechazar conductores
    - Requiere motivo del rechazo
    - Actualiza estado a "rechazado"

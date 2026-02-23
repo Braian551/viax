@@ -1,5 +1,6 @@
 ﻿import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'app_user_settings_service.dart';
 
 /// Servicio para manejar la reproducciÃ³n de sonidos en la aplicaciÃ³n
 ///
@@ -15,6 +16,13 @@ class SoundService {
   /// Similar a la notificación de Uber/DiDi cuando llega un viaje
   /// Se repite hasta que se acepte o rechace la solicitud
   static Future<void> playRequestNotification() async {
+        final soundEnabled = await AppUserSettingsService.isSoundEnabled();
+        final vibrationEnabled = await AppUserSettingsService.isVibrationEnabled();
+
+        if (!soundEnabled && !vibrationEnabled) {
+          return;
+        }
+
     print('🔊 [DEBUG] ==========================================');
     print('🔊 [DEBUG] Iniciando loop continuo de sonido de solicitud...');
 
@@ -25,16 +33,20 @@ class SoundService {
     }
 
     // Primero intentar vibración como feedback inmediato
-    try {
-      HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 100));
-      HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 100));
-      HapticFeedback.heavyImpact();
-      print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
-    } catch (e) {
-      print('❌ [ERROR] Error al vibrar: $e');
+    if (vibrationEnabled) {
+      try {
+        HapticFeedback.heavyImpact();
+        await Future.delayed(const Duration(milliseconds: 100));
+        HapticFeedback.heavyImpact();
+        await Future.delayed(const Duration(milliseconds: 100));
+        HapticFeedback.heavyImpact();
+        print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
+      } catch (e) {
+        print('❌ [ERROR] Error al vibrar: $e');
+      }
     }
+
+    if (!soundEnabled) return;
 
     if (_hasError) {
       print('⚠️ [WARN] AudioPlayer no disponible, usando solo vibración');
@@ -126,9 +138,18 @@ class SoundService {
   /// Reproduce un sonido de confirmación al aceptar un viaje
   static Future<void> playAcceptSound() async {
     try {
+      final soundEnabled = await AppUserSettingsService.isSoundEnabled();
+      final vibrationEnabled = await AppUserSettingsService.isVibrationEnabled();
+
+      if (!soundEnabled && !vibrationEnabled) return;
+
       // Feedback táctil
-      HapticFeedback.mediumImpact();
-      print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
+      if (vibrationEnabled) {
+        HapticFeedback.mediumImpact();
+        print('📳 [DEBUG] ✅ Vibración ejecutada como feedback');
+      }
+
+      if (!soundEnabled) return;
 
       // Detener cualquier sonido que se esté reproduciendo (solicitud)
       await stopSound();
@@ -159,6 +180,9 @@ class SoundService {
   /// Reproduce el sonido de mensaje nuevo
   static Future<void> playMessageSound() async {
     try {
+      final soundEnabled = await AppUserSettingsService.isSoundEnabled();
+      if (!soundEnabled) return;
+
       final player = AudioPlayer();
       await player.setSource(AssetSource('sounds/notificacion/notification.mp3'));
       await player.setVolume(1.0);

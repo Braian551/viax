@@ -53,7 +53,7 @@ Migra a microservicios cuando detectes estas señales:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         API GATEWAY                                  │
 │                   (Kong / NGINX / AWS API Gateway)                   │
-│                   https://api.pingo.com                              │
+│                   https://api.Viax.com                              │
 └─────────────┬───────────────────────────────────────────────────────┘
               │
               ├─── /auth-service/v1/*         → Auth Service (8001)
@@ -162,9 +162,9 @@ Migra a microservicios cuando detectes estas señales:
 - Instalar Docker y Docker Compose
 - Configurar repositorios Git por servicio:
   ```
-  github.com/pingo/conductor-service
-  github.com/pingo/auth-service
-  github.com/pingo/map-service
+  github.com/Viax/conductor-service
+  github.com/Viax/auth-service
+  github.com/Viax/map-service
   ```
 
 ---
@@ -329,14 +329,14 @@ volumes:
 3. Migrar datos:
    ```sql
    INSERT INTO conductor_db.conductor_profiles
-   SELECT * FROM pingo_db.conductor_profiles;
+   SELECT * FROM Viax_db.conductor_profiles;
    ```
 
 #### 2.5 Actualizar Flutter App
 
 **Antes** (llamada directa al monolito):
 ```dart
-static const String baseUrl = 'http://10.0.2.2/pingo/backend/conductor';
+static const String baseUrl = 'http://10.0.2.2/viax/backend/conductor';
 ```
 
 **Después** (llamada al microservicio):

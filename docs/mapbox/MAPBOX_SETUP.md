@@ -1,4 +1,4 @@
-# 🗺️ Configuración de APIs de Mapas - PingGo
+# 🗺️ Configuración de APIs de Mapas - Viax
 
 ## 📋 Resumen de la Arquitectura
 
@@ -29,7 +29,7 @@ Este proyecto utiliza una **combinación inteligente de APIs** para optimizar co
 
 **Tu token actual:**
 ```
-pk.eyJ1IjoiYnJhaW5waW5nbzIiLCJhIjoiY21neHYzYnF3MWprMTJ3cHU4M3kzeHM1aiJ9.ICn4bFPZVRHcf2fyW7qBEA
+<MAPBOX_PUBLIC_TOKEN>
 ```
 
 #### TomTom (OPCIONAL - para tráfico)
@@ -63,7 +63,7 @@ class EnvConfig {
   static const String tomtomApiKey = 'TU_KEY_AQUI';
   
   // Nominatim (ya configurado)
-  static const String nominatimUserAgent = 'PingGo App';
+  static const String nominatimUserAgent = 'Viax App';
   static const String nominatimEmail = 'traconmaster@gmail.com';
 }
 ```

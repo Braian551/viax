@@ -1,4 +1,4 @@
-# Mejoras Panel de Administración - PingGo
+# Mejoras Panel de Administración - Viax
 
 ## 📋 Resumen de Cambios
 

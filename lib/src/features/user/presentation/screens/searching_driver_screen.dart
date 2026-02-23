@@ -6,10 +6,13 @@ import 'package:latlong2/latlong.dart';
 import '../../services/trip_request_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
+import '../../../../global/services/trip_status_navigation_service.dart';
 import '../../../../global/widgets/map_retry_wrapper.dart';
+import '../../../../routes/route_names.dart';
 import '../../../../theme/app_colors.dart';
-import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
-import 'user_trip_accepted_screen.dart';
+import '../widgets/searching_driver/searching_driver_bottom_panel.dart';
+import '../widgets/searching_driver/searching_driver_header.dart';
+import '../widgets/trip_preview/company_details_sheet.dart';
 
 class SearchingDriverScreen extends StatefulWidget {
   final dynamic solicitudId;
@@ -74,9 +77,14 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
   static const int _companySwitchIntervalNoDriversSec = 8;
   static const int _companySwitchIntervalWithDriversSec = 18;
+
+  bool get _isFixedCompanyMode => widget.initialEmpresaId != null;
   
   late AnimationController _pulseController;
   late AnimationController _waveController;
+  late AnimationController _panelController;
+  late Animation<Offset> _panelSlideAnimation;
+  late Animation<double> _panelFadeAnimation;
 
   @override
   void initState() {
@@ -153,6 +161,21 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat();
+
+    _panelController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _panelSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _panelController, curve: Curves.easeOutCubic));
+    _panelFadeAnimation = CurvedAnimation(
+      parent: _panelController,
+      curve: Curves.easeOut,
+    );
+
+    _panelController.forward();
   }
 
   void _startSearching() {
@@ -179,35 +202,42 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       await _syncSearchCompany(_currentEmpresaId);
     }
     await _searchDrivers();
-    await _maybeRotateCompany(forceImmediate: true);
+    if (!_isFixedCompanyMode) {
+      await _maybeRotateCompany(forceImmediate: true);
+    }
   }
 
   void _updateRadius() {
     double newRadius = 2.0;
-    double newZoom = 15.0;
+    double newZoom = 14.3;
     
     if (_searchSeconds >= 120) {
       newRadius = 10.0;
-      newZoom = 13.0;
+      newZoom = 11.9;
     } else if (_searchSeconds >= 90) {
       newRadius = 7.0;
-      newZoom = 13.5;
+      newZoom = 12.3;
     } else if (_searchSeconds >= 60) {
       newRadius = 5.0;
-      newZoom = 14.0;
+      newZoom = 12.8;
     } else if (_searchSeconds >= 30) {
       newRadius = 3.0;
-      newZoom = 14.5;
+      newZoom = 13.4;
     }
     
     if (newRadius != _currentRadiusKm) {
       _currentRadiusKm = newRadius;
       _mapController.move(
-        LatLng(widget.latitudOrigen, widget.longitudOrigen),
+        _mapVisualCenter,
         newZoom,
       );
       HapticFeedback.lightImpact();
     }
+  }
+
+  LatLng get _mapVisualCenter {
+    final latOffset = (_currentRadiusKm * 0.0012).clamp(0.002, 0.012);
+    return LatLng(widget.latitudOrigen - latOffset, widget.longitudOrigen);
   }
 
   Future<void> _searchDrivers() async {
@@ -230,6 +260,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
   Future<void> _maybeRotateCompany({bool forceImmediate = false}) async {
     if (!mounted || _tripAccepted || _syncingCompany) return;
+    if (_isFixedCompanyMode) return;
     if (_companyRotationQueue.length < 2) return;
 
     final noDriversNearby = _nearbyDrivers.isEmpty;
@@ -311,6 +342,12 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     int? forcedIndex,
   }) async {
     if (_syncingCompany || _tripAccepted) return false;
+    if (_isFixedCompanyMode && empresaId != widget.initialEmpresaId) {
+      debugPrint(
+        '⛔ [SearchingDriverScreen] Cambio ignorado: modo empresa fija (${widget.initialEmpresaId})',
+      );
+      return false;
+    }
     if (_currentEmpresaId == empresaId && forcedName == null && forcedLogo == null) {
       return false;
     }
@@ -361,8 +398,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     switch (widget.tipoVehiculo) {
       case 'moto':
         return 'assets/images/vehicles/moto3d.png';
-      case 'motocarro':
-        return 'assets/images/vehicles/motocarro3d.png';
+      case 'mototaxi':
+        return 'assets/images/vehicles/mototaxi3d.png';
       case 'taxi':
         return 'assets/images/vehicles/taxi3d.png';
       case 'auto':
@@ -376,8 +413,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     switch (widget.tipoVehiculo) {
       case 'moto':
         return 'Moto';
-      case 'motocarro':
-        return 'Motocarro';
+      case 'mototaxi':
+        return 'Mototaxi';
       case 'taxi':
         return 'Taxi';
       case 'auto':
@@ -390,7 +427,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
   /// Inicia el polling para detectar cuando un conductor acepta la solicitud
   void _startStatusPolling() {
-    print('🚀 [SearchingDriverScreen] INICIANDO POLLING para solicitud ${widget.solicitudIdAsInt}');
+    debugPrint('🚀 [SearchingDriverScreen] INICIANDO POLLING para solicitud ${widget.solicitudIdAsInt}');
     // Consultar estado cada 3 segundos
     _statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _checkTripStatus();
@@ -403,61 +440,48 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   Future<void> _checkTripStatus() async {
     if (!mounted || _tripAccepted) return;
     
-    print('🔍 [SearchingDriverScreen] Checking status for solicitud: ${widget.solicitudIdAsInt}');
+    debugPrint('🔍 [SearchingDriverScreen] Checking status for solicitud: ${widget.solicitudIdAsInt}');
     
     try {
       final result = await TripRequestService.getTripStatus(
         solicitudId: widget.solicitudIdAsInt,
       );
       
-      print('📩 [SearchingDriverScreen] Response: $result');
+      debugPrint('📩 [SearchingDriverScreen] Response: $result');
       
       if (!mounted || _tripAccepted) return;
       
       if (result['success'] == true) {
-        final trip = result['trip'];
+        final trip = Map<String, dynamic>.from(result['trip'] as Map);
         final estado = trip['estado'] as String?;
         
-        print('📊 [SearchingDriverScreen] Estado actual: $estado');
+        debugPrint('📊 [SearchingDriverScreen] Estado actual: $estado');
         
-        // Si el conductor aceptó la solicitud
-        if (estado == 'aceptada' || estado == 'conductor_asignado') {
-          print('✅ [SearchingDriverScreen] ¡CONDUCTOR ACEPTÓ! Navegando a UserTripAcceptedScreen...');
-          _tripAccepted = true; // Evitar múltiples navegaciones
+        final decision = TripStatusNavigationService.resolveUserNavigation(
+          trip: trip,
+          fallbackClienteId: widget.clienteId,
+        );
+
+        if (decision != null && decision.routeName != RouteNames.userSearchingDriver) {
+          debugPrint('✅ [SearchingDriverScreen] Cambio de estado detectado. Redirigiendo a ${decision.routeName}');
+          _tripAccepted = true;
           _searchTimer?.cancel();
           _statusTimer?.cancel();
-          
-          // Reproducir sonido de notificación
+
           try {
             await SoundService.playRequestNotification();
           } catch (_) {}
-          
-          // Vibración de feedback
+
           HapticFeedback.heavyImpact();
-          
-          // Obtener info del conductor
-          final conductor = trip['conductor'] as Map<String, dynamic>?;
-          
-          // Navegar a la pantalla de viaje aceptado
+
           if (mounted) {
-            Navigator.pushReplacement(
+            Navigator.pushReplacementNamed(
               context,
-              MaterialPageRoute(
-                builder: (context) => UserTripAcceptedScreen(
-                  solicitudId: widget.solicitudIdAsInt,
-                  clienteId: widget.clienteId,
-                  latitudOrigen: widget.latitudOrigen,
-                  longitudOrigen: widget.longitudOrigen,
-                  direccionOrigen: widget.direccionOrigen,
-                  latitudDestino: widget.latitudDestino,
-                  longitudDestino: widget.longitudDestino,
-                  direccionDestino: widget.direccionDestino,
-                  conductorInfo: conductor,
-                ),
-              ),
+              decision.routeName,
+              arguments: decision.arguments,
             );
           }
-        } else if (estado == 'cancelada') {
+        } else if (TripStatusNavigationService.isCancelledStatus(estado)) {
           // La solicitud fue cancelada
           _statusTimer?.cancel();
           _searchTimer?.cancel();
@@ -491,7 +515,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              _goToHomeAfterCancel();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -505,18 +529,50 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   }
 
   Future<void> _cancelTrip() async {
-    setState(() => _isCancelling = true);
+    if (_isCancelling) return;
+
+    _searchTimer?.cancel();
+    _statusTimer?.cancel();
+    _tripAccepted = true;
+
+    if (mounted) {
+      setState(() => _isCancelling = true);
+    }
+
     try {
       final success = await TripRequestService.cancelTripRequest(widget.solicitudIdAsInt);
-      if (mounted && success) Navigator.pop(context);
+      if (!mounted) return;
+
+      if (success) {
+        _goToHomeAfterCancel();
+        return;
+      }
+
+      setState(() {
+        _isCancelling = false;
+        _tripAccepted = false;
+      });
+      _startStatusPolling();
     } catch (e) {
       if (mounted) {
-        setState(() => _isCancelling = false);
+        setState(() {
+          _isCancelling = false;
+          _tripAccepted = false;
+        });
+        _startStatusPolling();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
         );
       }
     }
+  }
+
+  void _goToHomeAfterCancel() {
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      RouteNames.home,
+      (route) => false,
+    );
   }
 
   void _showCancelDialog() {
@@ -565,6 +621,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     _statusTimer?.cancel();
     _pulseController.dispose();
     _waveController.dispose();
+    _panelController.dispose();
     super.dispose();
   }
 
@@ -586,8 +643,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
               key: mapKey,
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: origin,
-                initialZoom: 15.0,
+                initialCenter: _mapVisualCenter,
+                initialZoom: 14.3,
                 onMapReady: onMapReady,
                 interactionOptions: const InteractionOptions(
                   flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
@@ -605,9 +662,9 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                     CircleMarker(
                       point: origin,
                       radius: _currentRadiusKm * 1000,
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderColor: AppColors.primary.withValues(alpha: 0.3),
-                      borderStrokeWidth: 2,
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderColor: AppColors.primary.withValues(alpha: 0.45),
+                      borderStrokeWidth: 2.4,
                       useRadiusInMeter: true,
                     ),
                   ],
@@ -642,62 +699,16 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    (isDark ? Colors.black : Colors.white),
-                    (isDark ? Colors.black : Colors.white)
-                        .withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  child: Row(
-                    children: [
-                      // Botón cerrar
-                      Material(
-                        color: isDark ? Colors.white12 : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        elevation: isDark ? 0 : 2,
-                        child: InkWell(
-                          onTap: _showCancelDialog,
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            width: 46,
-                            height: 46,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      // Tiempo
-                      _buildInfoChip(
-                        Icons.timer_outlined,
-                        _formattedTime,
-                        isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      // Radio
-                      _buildInfoChip(
-                        Icons.radar_rounded,
-                        '${_currentRadiusKm.toStringAsFixed(0)} km',
-                        isDark,
-                        highlighted: _currentRadiusKm > 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            child: SearchingDriverHeader(
+              isDark: isDark,
+              formattedTime: _formattedTime,
+              currentRadiusKm: _currentRadiusKm,
+              vehicleLabel: _vehicleLabel(),
+              vehicleImagePath: _vehicleImagePath(),
+              companyName: _currentEmpresaNombre ?? 'Al azar',
+              companyLogoKey: _currentEmpresaLogo,
+              onClose: _showCancelDialog,
+              onCompanyTap: _showCompanyInfoSheet,
             ),
           ),
           
@@ -706,239 +717,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
             bottom: bottomPadding + 16,
             left: 16,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Estado
-                  Row(
-                    children: [
-                      _buildMiniRadar(),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Buscando conductor',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _nearbyDrivers.isEmpty
-                                  ? 'Radio: ${_currentRadiusKm.toStringAsFixed(0)} km...'
-                                  : '${_nearbyDrivers.length} conductor${_nearbyDrivers.length == 1 ? "" : "es"} cerca',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark ? Colors.white60 : Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Image.asset(
-                                    _vehicleImagePath(),
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.directions_car,
-                                      size: 16,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    '${_vehicleLabel()} · ${_currentEmpresaNombre ?? 'Al azar'}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? Colors.white70 : Colors.black54,
-                                    ),
-                                  ),
-                                ),
-                                if (_currentEmpresaLogo != null && _currentEmpresaLogo!.isNotEmpty) ...[
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CompanyLogo(
-                                      logoKey: _currentEmpresaLogo,
-                                      nombreEmpresa: _currentEmpresaNombre ?? 'Empresa',
-                                      size: 20,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Barra de progreso
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Área de búsqueda',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.white38 : Colors.black38,
-                            ),
-                          ),
-                          Text(
-                            '${_currentRadiusKm.toStringAsFixed(0)} / 10 km',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: _currentRadiusKm / 10.0,
-                          minHeight: 6,
-                          backgroundColor: isDark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.black.withValues(alpha: 0.05),
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Info viaje
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Container(
-                              width: 2,
-                              height: 20,
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              color: Colors.grey.withValues(alpha: 0.3),
-                            ),
-                            const Icon(Icons.location_on, color: AppColors.error, size: 16),
-                          ],
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.direccionOrigen,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                widget.direccionDestino,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Botón cancelar
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: _isCancelling ? null : _showCancelDialog,
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: _isCancelling
-                              ? Colors.grey.withValues(alpha: 0.3)
-                              : AppColors.error.withValues(alpha: 0.5),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: _isCancelling
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Cancelar búsqueda',
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
+            child: SlideTransition(
+              position: _panelSlideAnimation,
+              child: FadeTransition(
+                opacity: _panelFadeAnimation,
+                child: SearchingDriverBottomPanel(
+                  isDark: isDark,
+                  currentRadiusKm: _currentRadiusKm,
+                  nearbyDriversCount: _nearbyDrivers.length,
+                  direccionOrigen: widget.direccionOrigen,
+                  direccionDestino: widget.direccionDestino,
+                  isCancelling: _isCancelling,
+                  miniRadar: _buildMiniRadar(),
+                  onCancelTap: _showCancelDialog,
+                ),
               ),
             ),
           ),
@@ -947,36 +739,25 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String text, bool isDark, {bool highlighted = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: highlighted
-            ? AppColors.primary.withValues(alpha: 0.15)
-            : (isDark ? Colors.white12 : Colors.white),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: isDark ? null : [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: highlighted ? AppColors.primary : (isDark ? Colors.white70 : Colors.black54),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: highlighted ? AppColors.primary : (isDark ? Colors.white : Colors.black87),
-            ),
-          ),
-        ],
+  void _showCompanyInfoSheet() {
+    HapticFeedback.selectionClick();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Usa el sheet completo existente de la app para mantener consistencia visual.
+    if (_currentEmpresaId == null || _currentEmpresaId! <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay empresa específica en modo Al azar')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CompanyDetailsSheet(
+        empresaId: _currentEmpresaId!,
+        isDark: isDark,
       ),
     );
   }

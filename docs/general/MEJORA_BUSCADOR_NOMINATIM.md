@@ -141,7 +141,7 @@ if (result != null) {
 
 Nominatim es un servicio gratuito pero requiere uso responsable:
 - ✅ Límite: 1 request por segundo (implementado con debounce de 500ms)
-- ✅ User-Agent obligatorio (incluido: "PingGo/1.0")
+- ✅ User-Agent obligatorio (incluido: "Viax/1.0")
 - ✅ No hacer spam de requests
 - ✅ Considerar cacheo de resultados
 

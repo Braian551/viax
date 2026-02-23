@@ -27,10 +27,10 @@ Se ha implementado un sistema completo de solicitud de viajes con búsqueda de c
 - `lib/src/features/conductor/presentation/screens/conductor_requests_screen.dart` - Panel de solicitudes para conductores
 
 ### Backend (PHP)
-- `pingo/backend/user/create_trip_request.php` - Crear solicitud de viaje y buscar conductores
-- `pingo/backend/user/find_nearby_drivers.php` - Buscar conductores cercanos disponibles
-- `pingo/backend/conductor/get_pending_requests.php` - Obtener solicitudes pendientes para conductor
-- `pingo/backend/conductor/accept_trip_request.php` - Aceptar solicitud de viaje
+- `viax/backend/user/create_trip_request.php` - Crear solicitud de viaje y buscar conductores
+- `viax/backend/user/find_nearby_drivers.php` - Buscar conductores cercanos disponibles
+- `viax/backend/conductor/get_pending_requests.php` - Obtener solicitudes pendientes para conductor
+- `viax/backend/conductor/accept_trip_request.php` - Aceptar solicitud de viaje
 
 ## 🔧 Archivos Modificados
 
@@ -145,7 +145,7 @@ class ApiConfig {
 
 ### 2. Iniciar el Servidor Backend
 ```bash
-cd pingo/backend
+cd viax/backend
 php -S localhost:8000
 ```
 

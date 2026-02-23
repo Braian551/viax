@@ -62,7 +62,7 @@ lib/src/features/user/  # Microservicio de Usuarios
 ### Backend (PHP)
 
 ```
-pingo/backend/auth/  # Microservicio de Usuarios (Backend)
+viax/backend/auth/  # Microservicio de Usuarios (Backend)
 ├── register.php           # POST - Registrar usuario
 ├── login.php             # POST - Login
 ├── profile.php           # GET - Obtener perfil
@@ -202,13 +202,13 @@ En `lib/src/core/config/app_config.dart`:
 
 ```dart
 // Desarrollo
-static String get baseUrl => 'http://10.0.2.2/pingo/backend';
+static String get baseUrl => 'http://10.0.2.2/viax/backend';
 
 // Microservicio de Usuarios
 static String get userServiceUrl => '$baseUrl/auth';
 
 // Futuro (con microservicios separados):
-// static String get userServiceUrl => 'https://api.pingo.com/user-service/v1';
+// static String get userServiceUrl => 'https://api.Viax.com/user-service/v1';
 ```
 
 ### Service Locator
@@ -239,8 +239,8 @@ void main() async {
 ## 📱 Endpoints del Backend
 
 ### Base URL
-- **Desarrollo**: `http://10.0.2.2/pingo/backend/auth`
-- **Producción**: `https://api.pingo.com/user-service/v1` (futuro)
+- **Desarrollo**: `http://10.0.2.2/viax/backend/auth`
+- **Producción**: `https://api.Viax.com/user-service/v1` (futuro)
 
 ### Endpoints Disponibles
 
@@ -253,7 +253,7 @@ void main() async {
 | POST | `/profile_update.php` | Actualizar perfil/ubicación |
 | POST | `/check_user.php` | Verificar si usuario existe |
 
-Ver documentación completa en: `pingo/backend/auth/README_USER_MICROSERVICE.md`
+Ver documentación completa en: `viax/backend/auth/README_USER_MICROSERVICE.md`
 
 ## 🧪 Testing
 
@@ -367,13 +367,13 @@ test('UserRemoteDataSource should register user successfully', () async {
 
 - [Clean Architecture](../docs/architecture/CLEAN_ARCHITECTURE.md)
 - [Guía de Migración a Microservicios](../docs/architecture/MIGRATION_TO_MICROSERVICES.md)
-- [Backend User Microservice](../pingo/backend/auth/README_USER_MICROSERVICE.md)
+- [Backend User Microservice](../viax/backend/auth/README_USER_MICROSERVICE.md)
 
 ## 🤝 Contribuir
 
 ### Agregar Nuevo Endpoint
 
-1. **Backend**: Crear archivo PHP en `pingo/backend/auth/`
+1. **Backend**: Crear archivo PHP en `viax/backend/auth/`
 2. **DataSource**: Agregar método en `UserRemoteDataSource`
 3. **Repository**: Implementar en `UserRepositoryImpl`
 4. **Use Case**: Crear archivo en `domain/usecases/`

@@ -1,4 +1,4 @@
-# 🗺️ Mapa Visual de la Arquitectura PingGo
+# 🗺️ Mapa Visual de la Arquitectura Viax
 
 ## 📊 Visión General
 
@@ -67,7 +67,7 @@
 ```
 [Flutter App]
     ↓
-AppConfig.authServiceUrl → "http://10.0.2.2/pingo/backend/auth"
+AppConfig.authServiceUrl → "http://10.0.2.2/viax/backend/auth"
     ↓
 UserRemoteDataSource.login()
     ↓
@@ -91,7 +91,7 @@ UI actualizada ✅
 ```
 [Flutter App]
     ↓
-AppConfig.conductorServiceUrl → "http://10.0.2.2/pingo/backend/conductor"
+AppConfig.conductorServiceUrl → "http://10.0.2.2/viax/backend/conductor"
     ↓
 ConductorRemoteDataSource.updateProfile()
     ↓
@@ -279,33 +279,33 @@ lib/src/
 ```
 AppConfig.environment = Environment.development
 
-baseUrl = "http://10.0.2.2/pingo/backend"
+baseUrl = "http://10.0.2.2/viax/backend"
   ↓
-authServiceUrl = "http://10.0.2.2/pingo/backend/auth"
-conductorServiceUrl = "http://10.0.2.2/pingo/backend/conductor"
-adminServiceUrl = "http://10.0.2.2/pingo/backend/admin"
+authServiceUrl = "http://10.0.2.2/viax/backend/auth"
+conductorServiceUrl = "http://10.0.2.2/viax/backend/conductor"
+adminServiceUrl = "http://10.0.2.2/viax/backend/admin"
 ```
 
 ### Staging
 ```
 AppConfig.environment = Environment.staging
 
-baseUrl = "https://staging-api.pingo.com"
+baseUrl = "https://staging-api.Viax.com"
   ↓
-authServiceUrl = "https://staging-api.pingo.com/auth"
-conductorServiceUrl = "https://staging-api.pingo.com/conductor"
-adminServiceUrl = "https://staging-api.pingo.com/admin"
+authServiceUrl = "https://staging-api.Viax.com/auth"
+conductorServiceUrl = "https://staging-api.Viax.com/conductor"
+adminServiceUrl = "https://staging-api.Viax.com/admin"
 ```
 
 ### Producción
 ```
 AppConfig.environment = Environment.production
 
-baseUrl = "https://api.pingo.com"
+baseUrl = "https://api.Viax.com"
   ↓
-authServiceUrl = "https://api.pingo.com/auth"
-conductorServiceUrl = "https://api.pingo.com/conductor"
-adminServiceUrl = "https://api.pingo.com/admin"
+authServiceUrl = "https://api.Viax.com/auth"
+conductorServiceUrl = "https://api.Viax.com/conductor"
+adminServiceUrl = "https://api.Viax.com/admin"
 ```
 
 ---

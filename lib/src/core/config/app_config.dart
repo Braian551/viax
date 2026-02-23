@@ -13,7 +13,7 @@
 /// flutter run --dart-define=API_BASE_URL=http://10.0.2.2/viax/backend
 /// 
 /// # Producción
-/// flutter run --dart-define=API_BASE_URL=https://viax-backend-production.up.railway.app
+/// flutter run --dart-define=API_BASE_URL=http://76.13.114.194
 /// ```
 class AppConfig {
   // Permite recordar el host que ya funcionó para evitar probar todos cada vez
@@ -90,10 +90,31 @@ class AppConfig {
     ];
   }
 
+  /// Alias de compatibilidad para código que usa el nombre anterior.
+  static List<String> get allBaseUrls => baseUrlCandidates;
+
   /// Guarda el host que respondió exitosamente para evitar timeouts repetidos
   static void rememberWorkingBaseUrl(String url) {
     _cachedWorkingBaseUrl = url;
   }
+
+  /// URL del sitio web (para enlaces de compartir)
+  static const String _envWebsiteUrl = String.fromEnvironment(
+    'WEBSITE_URL',
+    defaultValue: 'https://viaxcol.online',
+  );
+
+  static String get websiteUrl => _envWebsiteUrl;
+
+  /// URL del módulo de ubicación compartida en el backend
+  static String get locationSharingUrl => '$baseUrl/location_sharing';
+
+  /// Construye la URL de compartir para un token
+  static String buildShareUrl(String token) =>
+      '${websiteUrl.trimRight()}/share/$token';
+
+  /// Construye el deep link para abrir directamente en la app
+  static String buildDeepLink(String token) => 'viax://share/$token';
 
   // ============================================
   // MICROSERVICIOS

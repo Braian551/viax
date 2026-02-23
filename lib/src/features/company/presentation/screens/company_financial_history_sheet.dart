@@ -3,17 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/features/company/services/company_debt_payment_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
 class DriverFinancialHistorySheet extends StatefulWidget {
   final Map<String, dynamic> driver;
+  final int empresaId;
+  final int actorUserId;
+  final int? initialReportId;
   final VoidCallback? onPaymentRegistered;
 
   const DriverFinancialHistorySheet({
     super.key,
     required this.driver,
+    required this.empresaId,
+    required this.actorUserId,
+    this.initialReportId,
     this.onPaymentRegistered,
   });
 
@@ -23,18 +30,49 @@ class DriverFinancialHistorySheet extends StatefulWidget {
 
 class _DriverFinancialHistorySheetState extends State<DriverFinancialHistorySheet> {
   bool _isLoading = true;
+  bool _isLoadingReports = false;
   List<Map<String, dynamic>> _transactions = [];
+  List<Map<String, dynamic>> _reports = [];
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
   final TextEditingController _amountController = TextEditingController();
+  bool _handledInitialReport = false;
+  double _currentDebt = 0;
 
   @override
   void initState() {
     super.initState();
+    _currentDebt = double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0;
     _loadHistory();
     // Pre-fill amount with full debt if > 0
-    final deuda = double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0;
-    if (deuda > 0) {
-      _amountController.text = deuda.toStringAsFixed(0);
+    if (_currentDebt > 0) {
+      _amountController.text = _currentDebt.toStringAsFixed(0);
+    }
+  }
+
+  void _recalculateDebtFromTransactions() {
+    double totalCargos = 0;
+    double totalAbonos = 0;
+
+    for (final item in _transactions) {
+      final monto = double.tryParse(item['monto']?.toString() ?? '0') ?? 0;
+      final tipo = item['tipo']?.toString() ?? '';
+      if (tipo == 'cargo') {
+        totalCargos += monto;
+      } else if (tipo == 'abono') {
+        totalAbonos += monto;
+      }
+    }
+
+    final deudaActual = (totalCargos - totalAbonos).clamp(0, double.infinity).toDouble();
+    _currentDebt = deudaActual;
+
+    if (deudaActual <= 0) {
+      _amountController.clear();
+    } else {
+      final currentInput = double.tryParse(_amountController.text) ?? 0;
+      if (currentInput <= 0) {
+        _amountController.text = deudaActual.toStringAsFixed(0);
+      }
     }
   }
 
@@ -51,6 +89,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
           if (mounted) {
             setState(() {
               _transactions = List<Map<String, dynamic>>.from(data['data']);
+              _recalculateDebtFromTransactions();
               _isLoading = false;
             });
           }
@@ -60,6 +99,128 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
       debugPrint('Error loading history: $e');
       if (mounted) setState(() => _isLoading = false);
     }
+
+    await _loadDebtReports();
+  }
+
+  Future<void> _loadDebtReports() async {
+    setState(() => _isLoadingReports = true);
+    try {
+      final conductorId = int.tryParse((widget.driver['id'] ?? '').toString());
+      if (conductorId == null) {
+        setState(() => _isLoadingReports = false);
+        return;
+      }
+
+      final response = await CompanyDebtPaymentService.getReports(
+        empresaId: widget.empresaId,
+        conductorId: conductorId,
+      );
+
+      if (response['success'] == true && mounted) {
+        setState(() {
+          _reports = List<Map<String, dynamic>>.from(response['data'] ?? []);
+        });
+        _openInitialReportIfNeeded();
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingReports = false);
+      }
+    }
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  void _openInitialReportIfNeeded() {
+    if (_handledInitialReport) return;
+
+    final targetReportId = widget.initialReportId;
+    if (targetReportId == null || targetReportId <= 0) return;
+
+    _handledInitialReport = true;
+
+    final report = _reports.where((item) => _asInt(item['id']) == targetReportId).firstOrNull;
+    if (report == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se encontró el comprobante solicitado.')),
+        );
+      }
+      return;
+    }
+
+    final proofUrl = report['comprobante_url']?.toString();
+    if (proofUrl != null && proofUrl.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showProofDialog(proofUrl);
+        }
+      });
+    }
+  }
+
+  Future<void> _performReportAction({
+    required int reportId,
+    required String action,
+    String? motivo,
+  }) async {
+    final result = await CompanyDebtPaymentService.performAction(
+      empresaId: widget.empresaId,
+      reporteId: reportId,
+      action: action,
+      actorUserId: widget.actorUserId,
+      motivo: motivo,
+    );
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      CustomSnackbar.showSuccess(context, message: result['message']?.toString() ?? 'Acción completada');
+      widget.onPaymentRegistered?.call();
+      _loadHistory();
+      return;
+    }
+
+    CustomSnackbar.showError(context, message: result['message']?.toString() ?? 'No se pudo completar la acción');
+  }
+
+  Future<void> _rejectReport(int reportId) async {
+    final controller = TextEditingController();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rechazar comprobante'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'Motivo de rechazo',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Rechazar')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    final motivo = controller.text.trim();
+    if (motivo.isEmpty) {
+      if (!mounted) return;
+      CustomSnackbar.showError(context, message: 'Debes indicar el motivo');
+      return;
+    }
+
+    await _performReportAction(reportId: reportId, action: 'reject', motivo: motivo);
   }
 
   Future<void> _registrarPago() async {
@@ -122,7 +283,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final nombre = '${widget.driver['nombre']} ${widget.driver['apellido'] ?? ''}';
-    final deuda = double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0;
+    final deuda = _currentDebt;
 
     return Container(
       decoration: BoxDecoration(
@@ -138,7 +299,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
               width: 40, 
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -169,22 +330,24 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
-              : _transactions.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.history_edu_rounded, size: 60, color: Colors.grey[300]),
-                        const SizedBox(height: 16),
-                        Text('Sin movimientos recientes', style: TextStyle(color: Colors.grey[500])),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _transactions.length,
-                    itemBuilder: (context, index) {
-                      final t = _transactions[index];
+              : ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    _buildReportsSection(isDark),
+                    const SizedBox(height: 18),
+                    if (_transactions.isEmpty)
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history_edu_rounded, size: 60, color: Colors.grey[300]),
+                            const SizedBox(height: 16),
+                            Text('Sin movimientos recientes', style: TextStyle(color: Colors.grey[500])),
+                          ],
+                        ),
+                      )
+                    else
+                      ..._transactions.map((t) {
                       final isCargo = t['tipo'] == 'cargo'; // Cargo = debt increase (commission)
                       final monto = double.tryParse(t['monto']?.toString() ?? '0') ?? 0;
                       final date = DateTime.tryParse(t['fecha'] ?? '') ?? DateTime.now();
@@ -197,12 +360,12 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
                           color: isDark ? AppColors.darkCard : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                           ),
                           boxShadow: [
                             if (!isDark)
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
+                                color: Colors.black.withValues(alpha: 0.03),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               )
@@ -213,7 +376,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: (isCargo ? Colors.red : AppColors.success).withOpacity(0.1),
+                                color: (isCargo ? Colors.red : AppColors.success).withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -254,7 +417,8 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
                           ],
                         ),
                       );
-                    },
+                    }),
+                  ],
                   ),
           ),
 
@@ -266,7 +430,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
                 color: isDark ? AppColors.darkSurface : Colors.white,
                 boxShadow: [
                    BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -307,5 +471,171 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
         ],
       ),
     );
+  }
+
+  Widget _buildReportsSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Comprobantes de transferencia',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(height: 10),
+          if (_isLoadingReports)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(8),
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            ))
+          else if (_reports.isEmpty)
+            const Text('No hay comprobantes reportados para este conductor')
+          else
+            ..._reports.map((report) {
+              final estado = report['estado']?.toString() ?? 'pendiente_revision';
+              final reportId = int.tryParse(report['id']?.toString() ?? '') ?? 0;
+              final monto = double.tryParse(report['monto_reportado']?.toString() ?? '0') ?? 0;
+              final motivo = report['motivo_rechazo']?.toString() ?? '';
+              final proofUrl = report['comprobante_url']?.toString();
+
+              return Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : Colors.grey.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Monto: ${_currencyFormat.format(monto)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _statusColor(estado).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            _statusLabel(estado),
+                            style: TextStyle(color: _statusColor(estado), fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (proofUrl != null && proofUrl.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showProofDialog(proofUrl),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.receipt_long_rounded, size: 16, color: AppColors.primary),
+                            SizedBox(width: 6),
+                            Text('Ver comprobante', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (motivo.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text('Motivo rechazo: $motivo', style: const TextStyle(color: Colors.orange, fontSize: 12)),
+                    ],
+                    const SizedBox(height: 10),
+                    if (estado == 'pendiente_revision')
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: reportId <= 0 ? null : () => _performReportAction(reportId: reportId, action: 'approve'),
+                              child: const Text('Aprobar'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: reportId <= 0 ? null : () => _rejectReport(reportId),
+                              child: const Text('Rechazar'),
+                            ),
+                          ),
+                        ],
+                      )
+                    else if (estado == 'comprobante_aprobado')
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: reportId <= 0 ? null : () => _performReportAction(reportId: reportId, action: 'confirm_payment'),
+                          icon: const Icon(Icons.paid_rounded),
+                          label: const Text('Confirmar pago final'),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showProofDialog(String url) async {
+    final isPdf = url.toLowerCase().contains('.pdf');
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Comprobante'),
+        content: isPdf
+            ? const Text('Comprobante en PDF. Ábrelo desde el navegador o descarga el archivo para revisarlo.')
+            : Image.network(
+                url,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Text('No se pudo cargar el comprobante'),
+              ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
+        ],
+      ),
+    );
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'pendiente_revision':
+        return 'Pendiente';
+      case 'comprobante_aprobado':
+        return 'Aprobado';
+      case 'rechazado':
+        return 'Rechazado';
+      case 'pagado_confirmado':
+        return 'Pagado';
+      default:
+        return status;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'pendiente_revision':
+        return Colors.orange;
+      case 'comprobante_aprobado':
+        return Colors.blue;
+      case 'rechazado':
+        return Colors.red;
+      case 'pagado_confirmado':
+        return AppColors.success;
+      default:
+        return Colors.grey;
+    }
   }
 }

@@ -12,7 +12,7 @@
 
 ### Flutter
 ```diff
-- 10+ archivos con "http://10.0.2.2/pingo/backend/..."  ❌ Hardcodeado
+- 10+ archivos con "http://10.0.2.2/viax/backend/..."  ❌ Hardcodeado
 + AppConfig centraliza TODAS las URLs                   ✅ 1 solo lugar
 ```
 
@@ -31,10 +31,10 @@ static const Environment environment = Environment.production;  // ← Solo esto
 ### URLs Automáticas
 ```dart
 // Desarrollo
-authServiceUrl → "http://10.0.2.2/pingo/backend/auth"
+authServiceUrl → "http://10.0.2.2/viax/backend/auth"
 
 // Producción  
-authServiceUrl → "https://api.pingo.com/auth"
+authServiceUrl → "https://api.Viax.com/auth"
 
 // Sin cambiar NINGÚN otro código ✨
 ```
@@ -47,7 +47,7 @@ authServiceUrl → "https://api.pingo.com/auth"
 2. **[GUIA_RAPIDA_RUTAS.md](./GUIA_RAPIDA_RUTAS.md)** - Tabla de endpoints
 3. **[MAPA_VISUAL.md](./MAPA_VISUAL.md)** - Diagramas visuales
 4. **[RESUMEN_LIMPIEZA.md](./RESUMEN_LIMPIEZA.md)** - Resumen detallado
-5. **[backend/README.md](../../pingo/backend/README.md)** - Doc del backend
+5. **[backend/README.md](../../viax/backend/README.md)** - Doc del backend
 
 ---
 

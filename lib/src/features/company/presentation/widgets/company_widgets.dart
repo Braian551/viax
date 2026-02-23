@@ -211,21 +211,21 @@ class CompanyPricingCard extends StatelessWidget {
 
   static const Map<String, String> vehicleTypeNames = {
     'moto': 'Moto',
-    'motocarro': 'Motocarro',
+    'mototaxi': 'Mototaxi',
     'taxi': 'Taxi',
     'carro': 'Carro',
   };
 
   static const Map<String, IconData> vehicleTypeIcons = {
     'moto': Icons.two_wheeler_rounded,
-    'motocarro': Icons.electric_rickshaw_rounded,
+    'mototaxi': Icons.electric_rickshaw_rounded,
     'taxi': Icons.local_taxi_rounded,
     'carro': Icons.directions_car_rounded,
   };
 
   static const Map<String, Color> vehicleTypeColors = {
     'moto': AppColors.primary,
-    'motocarro': Colors.orange,
+    'mototaxi': Colors.orange,
     'taxi': Colors.amber,
     'carro': Colors.blue,
   };

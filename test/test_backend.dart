@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 void main() async {
   // Cambiar según el entorno:
   // LOCAL: 'http://localhost/viax/backend'
-  // PRODUCCIÓN: 'https://pinggo-backend-production.up.railway.app'
+  // PRODUCCIÓN: 'http://76.13.114.194'
   const String baseUrl = 'http://localhost/viax/backend';
 
   print('🧪 Testing Viax Backend API');
@@ -126,5 +126,5 @@ void main() async {
 
   print('\n${'=' * 50}');
   print('🧪 Backend testing completed!');
-  print('Remember to replace the Railway URL with your actual deployment URL');
+  print('Remember to replace the base URL with your current production URL (VPS)');
 }

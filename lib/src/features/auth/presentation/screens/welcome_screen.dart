@@ -1,5 +1,7 @@
 ﻿// lib/src/features/auth/presentation/screens/welcome_screen.dart
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
@@ -16,7 +18,7 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool _isGoogleLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -29,35 +31,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       // Verificar si necesita ingresar teléfono
       final requiresPhone = await GoogleAuthService.checkRequiresPhone();
       if (requiresPhone && mounted) {
-        Navigator.of(context).pushReplacementNamed(
-          RouteNames.phoneRequired,
-          arguments: session,
-        );
+        Navigator.of(
+          context,
+        ).pushReplacementNamed(RouteNames.phoneRequired, arguments: session);
       } else if (mounted) {
         Navigator.of(context).pushReplacementNamed(RouteNames.home);
       }
     }
   }
-  
+
   /// Inicia sesión con Google usando el SDK nativo
   Future<void> _signInWithGoogle() async {
     if (_isGoogleLoading) return;
-    
+
     setState(() {
       _isGoogleLoading = true;
     });
-    
+
     try {
       // Usar el SDK de Google Sign-In directamente
       final result = await GoogleAuthService.signInWithGoogle();
-      
+
       if (!mounted) return;
-      
+
       if (result['cancelled'] == true) {
         // Usuario canceló, no mostrar error
         return;
       }
-      
+
       if (result['success'] == true) {
         // Verificar si necesita teléfono
         if (result['requires_phone'] == true) {
@@ -69,10 +70,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           // Determinar redirección basada en rol
           final user = result['user'];
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
-          
+
           if (tipoUsuario == 'administrador') {
             Navigator.pushNamedAndRemoveUntil(
-              context, 
+              context,
               RouteNames.adminHome,
               (route) => false,
               arguments: {'admin_user': user},
@@ -102,12 +103,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         }
       } else {
         _showErrorSnackBar(
-          (result['message'] ?? 'No pudimos completar el inicio de sesión con Google').toString(),
+          (result['message'] ??
+                  'No pudimos completar el inicio de sesión con Google')
+              .toString(),
         );
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('No pudimos iniciar sesión con Google. Verifica tu conexión e inténtalo nuevamente.');
+        _showErrorSnackBar(
+          'No pudimos iniciar sesión con Google. Verifica tu conexión e inténtalo nuevamente.',
+        );
       }
     } finally {
       if (mounted) {
@@ -117,7 +122,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
     }
   }
-  
+
+  Future<void> _openTerms() async {
+    final opened = await LegalLinksService.openTerms(role: LegalRole.cliente);
+    if (!opened && mounted) {
+      CustomSnackbar.showError(
+        context,
+        message: 'No se pudo abrir Términos de Servicio',
+      );
+    }
+  }
+
+  Future<void> _openPrivacy() async {
+    final opened = await LegalLinksService.openPrivacy(role: LegalRole.cliente);
+    if (!opened && mounted) {
+      CustomSnackbar.showError(
+        context,
+        message: 'No se pudo abrir Política de Privacidad',
+      );
+    }
+  }
+
   void _showErrorSnackBar(String message) {
     CustomSnackbar.showError(
       context,
@@ -130,7 +155,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -139,7 +164,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           child: Column(
             children: [
               SizedBox(height: size.height * 0.12),
-              
+
               // Icono de auto moderno con efecto de profundidad (entrance animation)
               EntranceFader(
                 delay: const Duration(milliseconds: 80),
@@ -149,7 +174,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primary.withValues(alpha: isDark ? 0.25 : 0.15),
+                        AppColors.primary.withValues(
+                          alpha: isDark ? 0.25 : 0.15,
+                        ),
                         Colors.transparent,
                       ],
                       stops: const [0.1, 0.8],
@@ -160,10 +187,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       return const LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primaryLight,
-                        ],
+                        colors: [AppColors.primary, AppColors.primaryLight],
                       ).createShader(bounds);
                     },
                     child: Image.asset(
@@ -175,7 +199,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 8),
 
               EntranceFader(
@@ -208,9 +232,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
               ),
-              
+
               SizedBox(height: size.height * 0.07),
-              
+
               // Botones de autenticación
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -218,31 +242,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   children: [
                     // Iniciar con Google
                     _buildSocialButton(
-                      icon: _isGoogleLoading 
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                      icon: _isGoogleLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black54,
+                                ),
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/google_logo.png',
+                              height: 24,
+                              width: 24,
                             ),
-                          )
-                        : Image.asset(
-                            'assets/images/google_logo.png',
-                            height: 24,
-                            width: 24,
-                          ),
-                      text: _isGoogleLoading ? 'Conectando...' : 'Continuar con Google',
+                      text: _isGoogleLoading
+                          ? 'Conectando...'
+                          : 'Continuar con Google',
                       backgroundColor: Colors.white,
                       textColor: Colors.black,
-                        borderColor: isDark 
-                          ? Colors.white.withValues(alpha: 0.3) 
+                      borderColor: isDark
+                          ? Colors.white.withValues(alpha: 0.3)
                           : Colors.black.withValues(alpha: 0.2),
                       onPressed: _isGoogleLoading ? () {} : _signInWithGoogle,
                     ),
-                    
+
                     const SizedBox(height: 14),
-                    
+
                     /*
                     // Iniciar con Apple
                     _buildSocialButton(
@@ -262,7 +290,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       },
                     ),                    const SizedBox(height: 14),
                     */
-                    
+
                     // Iniciar con correo
                     _buildSocialButton(
                       icon: const Icon(
@@ -278,9 +306,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Navigator.pushNamed(context, RouteNames.emailAuth);
                       },
                     ),
-                    
+
                     const SizedBox(height: 28),
-                    
+
                     // Divider con texto
                     Row(
                       children: [
@@ -296,7 +324,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             '¿Tienes una empresa?',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color
+                                  ?.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -308,9 +340,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Botón de registro de empresa
                     _buildSocialButton(
                       icon: Icon(
@@ -323,10 +355,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       textColor: isDark ? Colors.white70 : Colors.black54,
                       borderColor: isDark ? Colors.white24 : Colors.black26,
                       onPressed: () {
-                        Navigator.pushNamed(context, RouteNames.empresaRegister);
+                        Navigator.pushNamed(
+                          context,
+                          RouteNames.empresaRegister,
+                        );
                       },
                     ),
-                    
+
                     /*
                     const SizedBox(height: 14),
                     
@@ -345,9 +380,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       },
                     ),
                     */
-                    
                     const SizedBox(height: 28),
-                    
+
                     // Términos y condiciones
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -356,7 +390,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         text: TextSpan(
                           text: 'Al continuar, aceptas nuestros ',
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            color: Theme.of(context).textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.7),
                             fontSize: 12,
                             height: 1.5,
                           ),
@@ -367,6 +402,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 color: AppColors.primary.withValues(alpha: 0.9),
                                 decoration: TextDecoration.underline,
                               ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = _openTerms,
                             ),
                             const TextSpan(text: ' y '),
                             TextSpan(
@@ -375,12 +412,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 color: AppColors.primary.withValues(alpha: 0.9),
                                 decoration: TextDecoration.underline,
                               ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = _openPrivacy,
                             ),
                           ],
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -409,10 +448,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           foregroundColor: textColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: borderColor,
-              width: 1.2,
-            ),
+            side: BorderSide(color: borderColor, width: 1.2),
           ),
           elevation: 0,
           shadowColor: Colors.transparent,

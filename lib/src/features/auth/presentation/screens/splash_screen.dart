@@ -6,17 +6,18 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/auth/presentation/widgets/logo_transition.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
 import 'package:viax/src/features/user/services/trip_request_service.dart';
-import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
-import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
-import 'package:viax/src/features/conductor/presentation/screens/active_trip_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/trip_status_navigation_service.dart';
+import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
+import 'package:viax/src/global/services/rating_service.dart';
 
 /// Indicador de carga minimalista inspirado en TikTok
 class MinimalLoadingIndicator extends StatefulWidget {
   const MinimalLoadingIndicator({super.key});
 
   @override
-  State<MinimalLoadingIndicator> createState() => _MinimalLoadingIndicatorState();
+  State<MinimalLoadingIndicator> createState() =>
+      _MinimalLoadingIndicatorState();
 }
 
 class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
@@ -34,19 +35,15 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
       duration: const Duration(milliseconds: 2000),
     )..repeat();
 
-    _progressAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _progressAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _opacityAnim = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _opacityAnim = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -58,7 +55,7 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -75,15 +72,21 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
             child: Container(
               height: 2,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: _opacityAnim.value * (isDark ? 1.0 : 0.7)),
+                color: AppColors.primary.withValues(
+                  alpha: _opacityAnim.value * (isDark ? 1.0 : 0.7),
+                ),
                 borderRadius: BorderRadius.circular(1),
-                boxShadow: isDark ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3 * _opacityAnim.value),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ] : null,
+                boxShadow: isDark
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(
+                            alpha: 0.3 * _opacityAnim.value,
+                          ),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
             ),
           ),
@@ -105,14 +108,17 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _controller;
   late final AnimationController _pulseController;
   late final AnimationController _rotationController;
-  
+
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
   late final Animation<double> _pulseAnim;
   late final Animation<double> _slideAnim; // Ahora es opacidad del título
-  late final Animation<double> _subtitleSlideAnim; // Ahora es opacidad del subtítulo
+  late final Animation<double>
+  _subtitleSlideAnim; // Ahora es opacidad del subtítulo
   late final Animation<double> _textScaleAnim;
   late final Animation<double> _rotationAnim;
+
+  bool get _isCurrentRoute => ModalRoute.of(context)?.isCurrent ?? true;
 
   @override
   void initState() {
@@ -178,18 +184,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Pulso del glow
     _pulseAnim = Tween<double>(begin: 0.15, end: 0.30).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
     // Rotación sutil
     _rotationAnim = Tween<double>(begin: 0.0, end: 0.05).animate(
-      CurvedAnimation(
-        parent: _rotationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
     );
 
     _controller.forward();
@@ -204,6 +204,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 3000));
 
     if (!mounted) return;
+    if (!_isCurrentRoute) return;
 
     // 1. Obtener sesión actual (para fallback de IDs)
     final session = await UserService.getSavedSession();
@@ -222,9 +223,11 @@ class _SplashScreenState extends State<SplashScreen>
     // 2. Intentar recuperación local
     try {
       final savedTrip = await TripPersistenceService().getActiveTrip();
-      
+
       if (savedTrip != null) {
-        debugPrint('♻️ Intentando recuperar viaje local ${savedTrip.tripId}...');
+        debugPrint(
+          '♻️ Intentando recuperar viaje local ${savedTrip.tripId}...',
+        );
         userRole = savedTrip.userRole;
         final tripStatus = await TripRequestService.getTripStatus(
           solicitudId: savedTrip.tripId,
@@ -232,158 +235,192 @@ class _SplashScreenState extends State<SplashScreen>
         if (tripStatus['success'] == true) {
           tripToRecover = tripStatus['trip'];
           // El conductor viene dentro de trip, no en la raíz
-          conductorInfo = tripStatus['trip']?['conductor'] as Map<String, dynamic>?;
+          conductorInfo =
+              tripStatus['trip']?['conductor'] as Map<String, dynamic>?;
         }
-      } 
+      }
       // 3. Si no hay local, consultar backend (Fallback)
       else if (sessionUserId != null && sessionUserRole != null) {
         userRole = sessionUserRole;
-        
+
         final activeCheck = await TripRequestService.checkActiveTrip(
           userId: sessionUserId,
           role: sessionUserRole,
         );
-        
-        if (activeCheck['success'] == true) {
-            debugPrint('🌐 Viaje activo encontrado en backend: ${activeCheck['trip']['id']}');
-            tripToRecover = activeCheck['trip'];
-            // El conductor viene dentro de trip, no en la raíz
-            conductorInfo = activeCheck['trip']?['conductor'] as Map<String, dynamic>?;
+
+        final dynamic maybeTrip =
+            activeCheck['trip'] ??
+            (activeCheck['data'] as Map<String, dynamic>?)?['trip'] ??
+            activeCheck['trip_data'];
+
+        if (activeCheck['success'] == true && maybeTrip is Map) {
+          final tripMap = Map<String, dynamic>.from(
+            maybeTrip as Map<dynamic, dynamic>,
+          );
+          debugPrint(
+            '🌐 Viaje activo encontrado en backend: ${tripMap['id'] ?? 'sin_id'}',
+          );
+          tripToRecover = tripMap;
+
+          final dynamic maybeConductor = tripMap['conductor'];
+          conductorInfo = maybeConductor is Map
+              ? Map<String, dynamic>.from(
+                  maybeConductor as Map<dynamic, dynamic>,
+                )
+              : null;
         }
       }
 
       // 4. Procesar redirección si se encontró un viaje
       if (tripToRecover != null && userRole != null) {
-         final trip = tripToRecover;
-         final estado = trip['estado'];
-          if (estado == 'en_curso' || estado == 'conductor_llego' || estado == 'recogido' || estado == 'aceptada' || estado == 'en_camino') {
-            debugPrint('✅ Viaje activo validado ($estado). Redirigiendo como $userRole...');
-            
-            if (mounted) {
-              if (userRole == 'conductor') {
-                 // Recuperar datos para conductor
-                 int conductorId = int.tryParse(trip['conductor_id']?.toString() ?? '') ?? 0;
+        final trip = Map<String, dynamic>.from(tripToRecover);
+        final status = TripStatusNavigationService.normalizeStatus(
+          trip['estado'],
+        );
 
-                 final cliente = trip['cliente'] is Map
-                   ? Map<String, dynamic>.from(trip['cliente'] as Map)
-                   : null;
+        if (TripStatusNavigationService.isCompletedStatus(status)) {
+          final showSummary =
+              TripStatusNavigationService.shouldShowPendingSummary(
+                trip: trip,
+                isConductor: userRole == 'conductor',
+              );
 
-                 final clienteNombre =
-                   trip['cliente_nombre']?.toString() ??
-                   trip['nombre_usuario']?.toString() ??
-                   (() {
-                     if (cliente == null) return null;
-                     final nombre = cliente['nombre']?.toString() ?? '';
-                     final apellido = cliente['apellido']?.toString() ?? '';
-                     final fullName = '$nombre $apellido'.trim();
-                     return fullName.isEmpty ? null : fullName;
-                   })();
+          if (showSummary && mounted && _isCurrentRoute) {
+            final solicitudId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
+            final origen =
+                (trip['origen']?['direccion'] ??
+                        trip['direccion_recogida'] ??
+                        trip['direccion_origen'] ??
+                        'Origen')
+                    .toString();
+            final destino =
+                (trip['destino']?['direccion'] ??
+                        trip['direccion_destino'] ??
+                        'Destino')
+                    .toString();
+            final distanciaKm = _toDouble(
+              trip['distancia_km'] ??
+                  trip['distancia_recorrida'] ??
+                  trip['distancia_estimada'],
+            );
+            final duracionSeg = _toInt(
+              trip['duracion_segundos'] ??
+                  trip['tiempo_transcurrido_seg'] ??
+                  (trip['duracion_minutos'] ?? trip['tiempo_transcurrido']),
+            );
+            final precio = _toDouble(
+              trip['precio_final'] ?? trip['precio_estimado'] ?? 0,
+            );
 
-                 final clienteFoto =
-                   trip['cliente_foto']?.toString() ??
-                   trip['foto_usuario']?.toString() ??
-                   cliente?['foto_perfil']?.toString();
+            final miUsuarioId =
+                sessionUserId ??
+                _toInt(
+                  userRole == 'conductor'
+                      ? trip['conductor_id']
+                      : trip['cliente_id'],
+                );
+            final otroUsuarioId = _toInt(
+              userRole == 'conductor'
+                  ? trip['cliente_id']
+                  : trip['conductor_id'],
+            );
 
-                 final clienteCalificacion = double.tryParse(
-                   (trip['cliente_calificacion'] ??
-                       trip['calificacion_cliente'] ??
-                       trip['rating_cliente'] ??
-                       trip['cliente_rating'] ??
-                       cliente?['calificacion_promedio'])
-                     ?.toString() ??
-                     '',
-                 );
-                 
-                 // Fallback: Si no viene el ID del conductor en el viaje, usar el de la sesión
-                 if (conductorId == 0) {
-                    if (sessionUserId != null && sessionUserRole == 'conductor') {
-                       conductorId = sessionUserId;
+            final otroNombre = userRole == 'conductor'
+                ? (trip['cliente_nombre']?.toString() ?? 'Pasajero')
+                : ((conductorInfo?['nombre']?.toString() ??
+                          trip['conductor']?['nombre']?.toString()) ??
+                      'Conductor');
+            final otroFoto = userRole == 'conductor'
+                ? trip['cliente_foto']?.toString()
+                : (conductorInfo?['foto']?.toString() ??
+                      trip['conductor']?['foto']?.toString());
+            final otroCalificacion = _toNullableDouble(
+              userRole == 'conductor'
+                  ? (trip['cliente_calificacion'] ?? trip['cliente_rating'])
+                  : (conductorInfo?['calificacion'] ??
+                        trip['conductor']?['calificacion']),
+            );
+
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => TripCompletionScreen(
+                  userType: userRole == 'conductor'
+                      ? TripCompletionUserType.conductor
+                      : TripCompletionUserType.cliente,
+                  tripData: TripCompletionData(
+                    solicitudId: solicitudId,
+                    origen: origen,
+                    destino: destino,
+                    distanciaKm: distanciaKm,
+                    duracionSegundos: duracionSeg,
+                    precio: precio,
+                    metodoPago: 'Efectivo',
+                    otroUsuarioNombre: otroNombre,
+                    otroUsuarioFoto: otroFoto,
+                    otroUsuarioCalificacion: otroCalificacion,
+                  ),
+                  miUsuarioId: miUsuarioId,
+                  otroUsuarioId: otroUsuarioId,
+                  onSubmitRating: (rating, comentario) async {
+                    if (miUsuarioId == 0 || otroUsuarioId == 0) {
+                      return {
+                        'success': false,
+                        'message': 'No se pudo identificar a los participantes',
+                      };
                     }
-                 }
-
-                 Navigator.of(context).pushReplacement(
-                   MaterialPageRoute(
-                     builder: (context) => ConductorActiveTripScreen(
-                       conductorId: conductorId,
-                       solicitudId: int.tryParse(trip['id']?.toString() ?? '') ?? 0,
-                       clienteId: int.tryParse(trip['cliente_id']?.toString() ?? '') ?? 0,
-                       origenLat: double.tryParse(trip['origen']?['latitud']?.toString() ?? '') ?? 0.0,
-                       origenLng: double.tryParse(trip['origen']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionOrigen: trip['origen']?['direccion']?.toString() ?? '',
-                       destinoLat: double.tryParse(trip['destino']?['latitud']?.toString() ?? '') ?? 0.0,
-                       destinoLng: double.tryParse(trip['destino']?['longitud']?.toString() ?? '') ?? 0.0,
-                       direccionDestino: trip['destino']?['direccion']?.toString() ?? '',
-                       clienteNombre: clienteNombre,
-                       clienteFoto: clienteFoto,
-                       clienteCalificacion: clienteCalificacion,
-                       initialTripStatus: trip['estado'],
-                     ),
-                   ),
-                 );
-                 return;
-              } else {
-                // Recuperar datos para cliente
-                final tripId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
-                final clienteId = int.tryParse(trip['cliente_id']?.toString() ?? '') ?? sessionUserId ?? 0;
-                final origenLat = double.tryParse(trip['origen']?['latitud']?.toString() ?? '') ?? 0.0;
-                final origenLng = double.tryParse(trip['origen']?['longitud']?.toString() ?? '') ?? 0.0;
-                final direccionOrigen = trip['origen']?['direccion']?.toString() ?? '';
-                final destinoLat = double.tryParse(trip['destino']?['latitud']?.toString() ?? '') ?? 0.0;
-                final destinoLng = double.tryParse(trip['destino']?['longitud']?.toString() ?? '') ?? 0.0;
-                final direccionDestino = trip['destino']?['direccion']?.toString() ?? '';
-
-                final shouldGoToMeetingPoint =
-                    estado == 'aceptada' ||
-                    estado == 'conductor_asignado' ||
-                    estado == 'en_camino' ||
-                    estado == 'conductor_llego';
-
-                if (shouldGoToMeetingPoint) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => UserTripAcceptedScreen(
-                        solicitudId: tripId,
-                        clienteId: clienteId,
-                        latitudOrigen: origenLat,
-                        longitudOrigen: origenLng,
-                        direccionOrigen: direccionOrigen,
-                        latitudDestino: destinoLat,
-                        longitudDestino: destinoLng,
-                        direccionDestino: direccionDestino,
-                        conductorInfo: conductorInfo,
-                      ),
-                    ),
-                  );
-                } else {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => UserActiveTripScreen(
-                        solicitudId: tripId,
-                        clienteId: clienteId,
-                        origenLat: origenLat,
-                        origenLng: origenLng,
-                        direccionOrigen: direccionOrigen,
-                        destinoLat: destinoLat,
-                        destinoLng: destinoLng,
-                        direccionDestino: direccionDestino,
-                        conductorInfo: conductorInfo,
-                      ),
-                    ),
-                  );
-                }
-                 return;
-              }
-            }
-          } else {
-             // Viaje completado/cancelado
-             await TripPersistenceService().clearActiveTrip();
+                    return RatingService.enviarCalificacion(
+                      solicitudId: solicitudId,
+                      calificadorId: miUsuarioId,
+                      calificadoId: otroUsuarioId,
+                      calificacion: rating,
+                      tipoCalificador: userRole == 'conductor'
+                          ? 'conductor'
+                          : 'cliente',
+                      comentario: comentario,
+                    );
+                  },
+                  onComplete: () {
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/', (route) => false);
+                  },
+                ),
+              ),
+            );
+            return;
           }
+
+          await TripPersistenceService().clearActiveTrip();
+        } else {
+          TripNavigationDecision? decision;
+          if (userRole == 'conductor') {
+            decision = TripStatusNavigationService.resolveConductorNavigation(
+              trip: trip,
+              fallbackConductorId: sessionUserId ?? 0,
+            );
+          } else {
+            decision = TripStatusNavigationService.resolveUserNavigation(
+              trip: trip,
+              fallbackClienteId: sessionUserId ?? 0,
+            );
+          }
+
+          if (decision != null && mounted && _isCurrentRoute) {
+            Navigator.of(context).pushReplacementNamed(
+              decision.routeName,
+              arguments: decision.arguments,
+            );
+            return;
+          }
+
+          await TripPersistenceService().clearActiveTrip();
+        }
       }
     } catch (e) {
       debugPrint('⚠️ Error en recuperación de viaje: $e');
     }
 
-    if (mounted) {
+    if (mounted && _isCurrentRoute) {
       Navigator.of(context).pushReplacementNamed(RouteNames.authWrapper);
     }
   }
@@ -401,7 +438,11 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: AnimatedBuilder(
-        animation: Listenable.merge([_controller, _pulseController, _rotationController]),
+        animation: Listenable.merge([
+          _controller,
+          _pulseController,
+          _rotationController,
+        ]),
         builder: (context, child) {
           return Center(
             child: FadeTransition(
@@ -417,7 +458,8 @@ class _SplashScreenState extends State<SplashScreen>
                         angle: _rotationAnim.value,
                         child: AnimatedLogo(
                           size: 86,
-                          glowOpacity: Theme.of(context).brightness == Brightness.dark 
+                          glowOpacity:
+                              Theme.of(context).brightness == Brightness.dark
                               ? _pulseAnim.value * 0.4
                               : _pulseAnim.value * 0.3,
                           scale: 1.0,
@@ -434,35 +476,38 @@ class _SplashScreenState extends State<SplashScreen>
                   Transform.translate(
                     offset: const Offset(0, -15),
                     child: Transform.scale(
-                    scale: _textScaleAnim.value,
-                    child: Opacity(
-                      opacity: _slideAnim.value,
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Viax',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.5,
-                                foreground: Paint()
-                                  ..shader = LinearGradient(
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryLight,
-                                      AppColors.accent,
-                                    ],
-                                    stops: const [0.0, 0.5, 1.0],
-                                  ).createShader(const Rect.fromLTWH(0, 0, 200, 0)),
+                      scale: _textScaleAnim.value,
+                      child: Opacity(
+                        opacity: _slideAnim.value,
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Viax',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                  foreground: Paint()
+                                    ..shader =
+                                        LinearGradient(
+                                          colors: [
+                                            AppColors.primary,
+                                            AppColors.primaryLight,
+                                            AppColors.accent,
+                                          ],
+                                          stops: const [0.0, 0.5, 1.0],
+                                        ).createShader(
+                                          const Rect.fromLTWH(0, 0, 200, 0),
+                                        ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   ),
 
                   const SizedBox(height: 0),
@@ -471,16 +516,16 @@ class _SplashScreenState extends State<SplashScreen>
                   Transform.translate(
                     offset: const Offset(0, -10),
                     child: Opacity(
-                    opacity: _subtitleSlideAnim.value,
-                    child: Text(
-                      'Viaja fácil, llega rápido',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
+                      opacity: _subtitleSlideAnim.value,
+                      child: Text(
+                        'Viaja fácil, llega rápido',
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                          fontSize: 13,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
-                  ),
                   ),
 
                   const SizedBox(height: 20),
@@ -492,4 +537,23 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+double _toDouble(dynamic value) {
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0.0;
+}
+
+double? _toNullableDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  return double.tryParse(value.toString());
 }

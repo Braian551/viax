@@ -16,16 +16,16 @@ Se agregaron las siguientes columnas a la tabla `detalles_conductor`:
 - `tecnomecanica_vencimiento` - Fecha de vencimiento de la tecnomecánica
 - `tarjeta_propiedad_numero` - Número de la tarjeta de propiedad
 
-**Archivo de migración:** `pingo/backend/migrations/005_add_vehicle_registration_fields.sql`
+**Archivo de migración:** `viax/backend/migrations/005_add_vehicle_registration_fields.sql`
 
-**Script de ejecución:** `pingo/backend/migrations/run_migration_005.php`
+**Script de ejecución:** `viax/backend/migrations/run_migration_005.php`
 
 ### 2. Endpoints Backend ✓
 
 #### **update_license.php**
 Endpoint para actualizar la información de la licencia de conducción.
 
-**Ubicación:** `pingo/backend/conductor/update_license.php`
+**Ubicación:** `viax/backend/conductor/update_license.php`
 
 **Campos que acepta:**
 ```json
@@ -41,7 +41,7 @@ Endpoint para actualizar la información de la licencia de conducción.
 #### **update_vehicle.php**
 Endpoint para actualizar la información del vehículo y sus documentos.
 
-**Ubicación:** `pingo/backend/conductor/update_vehicle.php`
+**Ubicación:** `viax/backend/conductor/update_vehicle.php`
 
 **Campos que acepta:**
 ```json
@@ -67,7 +67,7 @@ Endpoint para actualizar la información del vehículo y sus documentos.
 ### 3. Actualización de get_profile.php ✓
 Se actualizó el endpoint `get_profile.php` para incluir todos los nuevos campos en la respuesta.
 
-**Ubicación:** `pingo/backend/conductor/get_profile.php`
+**Ubicación:** `viax/backend/conductor/get_profile.php`
 
 Ahora retorna:
 - Información completa de la licencia (número, expedición, vencimiento, categoría)
@@ -79,22 +79,22 @@ Ahora retorna:
 #### **verify_structure.php**
 Script para verificar que la base de datos tenga todas las columnas necesarias.
 
-**Ubicación:** `pingo/backend/migrations/verify_structure.php`
+**Ubicación:** `viax/backend/migrations/verify_structure.php`
 
 **Uso:**
 ```bash
-cd pingo/backend/migrations
+cd viax/backend/migrations
 php verify_structure.php
 ```
 
 #### **test_vehicle_registration.php**
 Script para probar los endpoints de registro de vehículos.
 
-**Ubicación:** `pingo/backend/conductor/test_vehicle_registration.php`
+**Ubicación:** `viax/backend/conductor/test_vehicle_registration.php`
 
 **Uso:**
 ```bash
-cd pingo/backend/conductor
+cd viax/backend/conductor
 php test_vehicle_registration.php
 ```
 
@@ -138,7 +138,7 @@ Para verificar que todo funciona correctamente:
 
 1. **Verificar la base de datos:**
    ```bash
-   php pingo/backend/migrations/verify_structure.php
+   php viax/backend/migrations/verify_structure.php
    ```
    
    Debe mostrar: "✓ All required columns are present!"
@@ -151,15 +151,15 @@ Para verificar que todo funciona correctamente:
 ## Archivos Modificados
 
 ### Creados:
-- `pingo/backend/conductor/update_license.php`
-- `pingo/backend/conductor/update_vehicle.php`
-- `pingo/backend/migrations/005_add_vehicle_registration_fields.sql`
-- `pingo/backend/migrations/run_migration_005.php`
-- `pingo/backend/migrations/verify_structure.php`
-- `pingo/backend/conductor/test_vehicle_registration.php`
+- `viax/backend/conductor/update_license.php`
+- `viax/backend/conductor/update_vehicle.php`
+- `viax/backend/migrations/005_add_vehicle_registration_fields.sql`
+- `viax/backend/migrations/run_migration_005.php`
+- `viax/backend/migrations/verify_structure.php`
+- `viax/backend/conductor/test_vehicle_registration.php`
 
 ### Modificados:
-- `pingo/backend/conductor/get_profile.php`
+- `viax/backend/conductor/get_profile.php`
 
 ## Estado Actual
 

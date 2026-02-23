@@ -30,7 +30,7 @@ Se ha implementado exitosamente una **arquitectura híbrida de mapas** que combi
 
 **Tu token está activo y listo:**
 ```
-pk.eyJ1IjoiYnJhaW5waW5nbzIiLCJhIjoiY21neHYzYnF3MWprMTJ3cHU4M3kzeHM1aiJ9.ICn4bFPZVRHcf2fyW7qBEA
+<MAPBOX_PUBLIC_TOKEN>
 ```
 
 **Ubicación:** `lib/src/core/config/env_config.dart` (protegido en .gitignore)
@@ -318,7 +318,7 @@ Todos documentados en `MAPBOX_SETUP.md` sección "Solución de Problemas"
 
 **🚀 TU PROYECTO ESTÁ LISTO PARA PRODUCCIÓN 🚀**
 
-**Desarrollado con precisión y cuidado para PingGo** ❤️
+**Desarrollado con precisión y cuidado para Viax** ❤️
 
 ---
 

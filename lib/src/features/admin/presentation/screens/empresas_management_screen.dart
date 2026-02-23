@@ -1450,7 +1450,7 @@ class _EmpresasManagementScreenState extends State<EmpresasManagementScreen> {
     switch (tipo.toLowerCase()) {
       case 'moto':
         return Icons.two_wheeler;
-      case 'motocarro':
+      case 'mototaxi':
         return Icons.electric_rickshaw;
       case 'taxi':
         return Icons.local_taxi;

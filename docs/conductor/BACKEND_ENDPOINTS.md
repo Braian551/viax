@@ -169,7 +169,7 @@ ON DUPLICATE KEY UPDATE
 {
   "success": true,
   "message": "Documento subido correctamente",
-  "file_url": "https://pingo.com/uploads/conductores/1/licencia_foto.jpg"
+  "file_url": "https://Viax.com/uploads/conductores/1/licencia_foto.jpg"
 }
 ```
 
@@ -197,7 +197,7 @@ $fileName = $documentType . '_' . time() . '.jpg';
 $targetFile = $uploadDir . $fileName;
 
 if (move_uploaded_file($_FILES['document']['tmp_name'], $targetFile)) {
-    $fileUrl = 'https://pingo.com/uploads/conductores/' . $conductorId . '/' . $fileName;
+    $fileUrl = 'https://Viax.com/uploads/conductores/' . $conductorId . '/' . $fileName;
     
     // Actualizar en base de datos
     $sql = "UPDATE detalles_conductor SET $documentType = ? WHERE usuario_id = ?";

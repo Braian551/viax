@@ -23,6 +23,7 @@ dependencies:
   mapbox_maps_flutter: ^2.12.0
   # Dependencias para geolocalización (simplificada)
   geolocator: ^14.0.2
+  flutter_compass: ^0.8.1
   geocoding: ^4.0.0
   # Dependencias para UI y utilidades
   pin_code_fields: ^8.0.1
@@ -49,6 +50,10 @@ dependencies:
   firebase_messaging: ^15.2.4
   camera: ^0.11.3
   dartz: ^0.10.1
+  local_auth: ^2.3.0
+  # Location sharing
+  share_plus: ^10.0.0
+  app_links: ^6.3.2
 
 dev_dependencies:
   flutter_test:

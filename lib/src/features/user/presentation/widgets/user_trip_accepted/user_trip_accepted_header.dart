@@ -8,6 +8,8 @@ class UserTripAcceptedHeader extends StatelessWidget {
   final String statusText;
   final String direccionOrigen;
   final VoidCallback onClose;
+  final bool isSoundMuted;
+  final VoidCallback onToggleSound;
 
   const UserTripAcceptedHeader({
     super.key,
@@ -16,6 +18,8 @@ class UserTripAcceptedHeader extends StatelessWidget {
     required this.statusText,
     required this.direccionOrigen,
     required this.onClose,
+    required this.isSoundMuted,
+    required this.onToggleSound,
   });
 
   @override
@@ -87,6 +91,33 @@ class UserTripAcceptedHeader extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                GlassPanel(
+                  borderRadius: 14,
+                  padding: EdgeInsets.zero,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onToggleSound,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        width: 46,
+                        height: 46,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          isSoundMuted
+                              ? Icons.volume_off_rounded
+                              : Icons.volume_up_rounded,
+                          color: isSoundMuted
+                              ? AppColors.warning
+                              : (isDark ? Colors.white : Colors.black87),
+                        ),
+                      ),
                     ),
                   ),
                 ),

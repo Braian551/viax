@@ -4,16 +4,25 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_avatar.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'company_financial_history_sheet.dart';
 
 class CompanyCommissionsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
+  final int? initialConductorId;
+  final int? initialReportId;
 
-  const CompanyCommissionsScreen({super.key, required this.user});
+  const CompanyCommissionsScreen({
+    super.key,
+    required this.user,
+    this.initialConductorId,
+    this.initialReportId,
+  });
 
   @override
-  State<CompanyCommissionsScreen> createState() => _CompanyCommissionsScreenState();
+  State<CompanyCommissionsScreen> createState() =>
+      _CompanyCommissionsScreenState();
 }
 
 class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
@@ -21,12 +30,21 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
   List<Map<String, dynamic>> _debtors = [];
   Map<String, dynamic>? _resumen;
   String? _errorMessage;
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'es_CO',
+    symbol: '\$',
+    decimalDigits: 0,
+  );
+  bool _openedInitialTarget = false;
 
   @override
   void initState() {
     super.initState();
-    _loadDebtors();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    await _loadDebtors();
   }
 
   Future<void> _loadDebtors() async {
@@ -37,7 +55,9 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
 
     try {
       final empresaId = widget.user['empresa_id'] ?? widget.user['id'];
-      final url = Uri.parse('${AppConfig.baseUrl}/company/get_debtors.php?empresa_id=$empresaId');
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/get_debtors.php?empresa_id=$empresaId',
+      );
       final response = await http.get(url);
 
       if (!mounted) return;
@@ -50,6 +70,8 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
             _resumen = data['resumen'];
             _isLoading = false;
           });
+
+          _openInitialTargetIfNeeded();
         } else {
           setState(() {
             _errorMessage = data['message'] ?? 'Error al cargar datos';
@@ -72,7 +94,52 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
     }
   }
 
-  Future<void> _showFinancialHistory(Map<String, dynamic> conductor) async {
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  Future<void> _openInitialTargetIfNeeded() async {
+    if (_openedInitialTarget) return;
+    final targetConductorId = widget.initialConductorId;
+    if (targetConductorId == null || targetConductorId <= 0) return;
+
+    final conductor = _debtors.firstWhere(
+      (item) => _asInt(item['id']) == targetConductorId,
+      orElse: () => <String, dynamic>{},
+    );
+
+    if (conductor.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró el conductor del comprobante.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    _openedInitialTarget = true;
+    await _showFinancialHistory(
+      conductor,
+      initialReportId: widget.initialReportId,
+    );
+  }
+
+  Future<void> _showFinancialHistory(
+    Map<String, dynamic> conductor, {
+    int? initialReportId,
+  }) async {
+    final empresaId =
+        int.tryParse(
+          (widget.user['empresa_id'] ?? widget.user['id']).toString(),
+        ) ??
+        0;
+    final actorUserId = int.tryParse((widget.user['id'] ?? '').toString()) ?? 0;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -83,6 +150,9 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
         maxChildSize: 0.95,
         builder: (_, controller) => DriverFinancialHistorySheet(
           driver: conductor,
+          empresaId: empresaId,
+          actorUserId: actorUserId,
+          initialReportId: initialReportId,
           onPaymentRegistered: () {
             _loadDebtors(); // Reload main list
           },
@@ -91,13 +161,14 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: const Text('Comisiones'),
         backgroundColor: Colors.transparent,
@@ -113,8 +184,8 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
       body: _isLoading
           ? _buildLoading()
           : _errorMessage != null
-              ? _buildError()
-              : _buildContent(isDark),
+          ? _buildError()
+          : _buildContent(isDark),
     );
   }
 
@@ -122,7 +193,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
     return ListView.builder(
       padding: const EdgeInsets.all(20),
       itemCount: 5,
-      itemBuilder: (_, __) => Container(
+      itemBuilder: (context, index) => Container(
         margin: const EdgeInsets.only(bottom: 16),
         height: 80,
         decoration: BoxDecoration(
@@ -130,8 +201,8 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Shimmer.fromColors(
-          baseColor: Colors.grey.withOpacity(0.1),
-          highlightColor: Colors.grey.withOpacity(0.05),
+          baseColor: Colors.grey.withValues(alpha: 0.1),
+          highlightColor: Colors.grey.withValues(alpha: 0.05),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -180,7 +251,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.purple.withOpacity(0.3),
+                color: Colors.purple.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -191,10 +262,14 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -203,7 +278,10 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                   children: [
                     Text(
                       'Deuda Total',
-                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -218,9 +296,12 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -239,9 +320,16 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_outline_rounded, size: 64, color: AppColors.success),
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 64,
+                        color: AppColors.success,
+                      ),
                       const SizedBox(height: 16),
-                      const Text('No hay deudas pendientes 🎉', style: TextStyle(fontSize: 16)),
+                      const Text(
+                        'No hay deudas pendientes',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ],
                   ),
                 )
@@ -260,9 +348,12 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
 
   Widget _buildDebtorCard(Map<String, dynamic> debtor, bool isDark) {
     final nombre = '${debtor['nombre']} ${debtor['apellido'] ?? ''}';
-    final deuda = double.tryParse(debtor['deuda_actual']?.toString() ?? '0') ?? 0;
-    final totalComision = double.tryParse(debtor['total_comision']?.toString() ?? '0') ?? 0;
-    final totalPagado = double.tryParse(debtor['total_pagado']?.toString() ?? '0') ?? 0;
+    final deuda =
+        double.tryParse(debtor['deuda_actual']?.toString() ?? '0') ?? 0;
+    final totalComision =
+        double.tryParse(debtor['total_comision']?.toString() ?? '0') ?? 0;
+    final totalPagado =
+        double.tryParse(debtor['total_pagado']?.toString() ?? '0') ?? 0;
     final hasDebt = deuda > 0;
 
     return Container(
@@ -271,12 +362,14 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasDebt ? Colors.orange.withOpacity(0.4) : AppColors.success.withOpacity(0.3),
+          color: hasDebt
+              ? Colors.orange.withValues(alpha: 0.4)
+              : AppColors.success.withValues(alpha: 0.3),
           width: hasDebt ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -292,23 +385,12 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
             child: Row(
               children: [
                 // Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      nombre.isNotEmpty ? nombre[0].toUpperCase() : 'C',
-                      style: TextStyle(
-                        color: hasDebt ? Colors.orange : AppColors.success,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                CompanyDriverAvatar(
+                  name: nombre,
+                  photoKey: (debtor['foto_perfil'] ?? debtor['fotoPerfil'])
+                      ?.toString(),
+                  size: 50,
+                  color: hasDebt ? Colors.orange : AppColors.success,
                 ),
                 const SizedBox(width: 14),
                 // Info
@@ -334,7 +416,9 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                             'Comisión: ${_currencyFormat.format(totalComision)}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -373,7 +457,10 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                 ),
                 if (hasDebt) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded, color: Colors.orange.withOpacity(0.5)),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.orange.withValues(alpha: 0.5),
+                  ),
                 ],
               ],
             ),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
@@ -79,51 +81,77 @@ class TripStatusHeader extends StatelessWidget {
 
         // Pill de estado
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 11,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Dot pulsante
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: _statusColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: _statusColor.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            AppColors.darkSurface.withValues(alpha: 0.88),
+                            AppColors.darkBackground.withValues(alpha: 0.82),
+                          ]
+                        : [
+                            Colors.white.withValues(alpha: 0.86),
+                            AppColors.blue50.withValues(alpha: 0.66),
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.6),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Dot pulsante
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: _statusColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: _statusColor.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(_statusIcon, color: _statusColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      _statusText,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.grey[900],
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Icon(_statusIcon, color: _statusColor, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  _statusText,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.grey[900],
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -150,30 +178,43 @@ class TripStatusHeader extends StatelessWidget {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+    return ClipRRect(
       borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Material(
+          color: isDark
+              ? AppColors.darkSurface.withValues(alpha: 0.74)
+              : Colors.white.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.65),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            color: isDark ? Colors.white : Colors.grey[700],
-            size: 22,
+              child: Icon(
+                icon,
+                color: isDark ? Colors.white : Colors.grey[700],
+                size: 22,
+              ),
+            ),
           ),
         ),
       ),

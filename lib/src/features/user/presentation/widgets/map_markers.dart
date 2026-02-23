@@ -284,12 +284,12 @@ class DriverMarker extends StatelessWidget {
         return 'assets/images/vehicles/iconvehicles/motoicon.png';
       case 'auto':
         return 'assets/images/vehicles/iconvehicles/autoicon.png';
-      case 'motocarro':
-        return 'assets/images/vehicles/iconvehicles/motocarroicon.png';
+      case 'mototaxi':
+        return 'assets/images/vehicles/iconvehicles/mototaxiicon.png';
       default:
         // Si contiene 'moto' usa moto, si no usa auto
-        if (type.toLowerCase().contains('motocarro')) {
-          return 'assets/images/vehicles/iconvehicles/motocarroicon.png';
+        if (type.toLowerCase().contains('mototaxi')) {
+          return 'assets/images/vehicles/iconvehicles/mototaxiicon.png';
         }
         if (type.toLowerCase().contains('moto')) {
           return 'assets/images/vehicles/iconvehicles/motoicon.png';

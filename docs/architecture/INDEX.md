@@ -92,7 +92,7 @@
 ### Backend
 
 #### User Microservice (Auth)
-- **[README User Microservice](../../pingo/backend/auth/README_USER_MICROSERVICE.md)** ⭐ NUEVO
+- **[README User Microservice](../../viax/backend/auth/README_USER_MICROSERVICE.md)** ⭐ NUEVO
   - Endpoints disponibles
   - Estructura de requests/responses
   - Base de datos
@@ -108,7 +108,7 @@
 3. **Rutas y URLs**: [Guía Rápida de Rutas](GUIA_RAPIDA_RUTAS.md)
 4. **Entiende el proyecto**: [Executive Summary](EXECUTIVE_SUMMARY.md)
 5. **Migración actual**: [Microservicio de Usuarios](USER_MICROSERVICE_MIGRATION.md)
-6. **Backend**: [User Microservice Backend](../../pingo/backend/auth/README_USER_MICROSERVICE.md)
+6. **Backend**: [User Microservice Backend](../../viax/backend/auth/README_USER_MICROSERVICE.md)
 
 ### Para Migraciones
 

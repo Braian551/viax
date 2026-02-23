@@ -1,43 +1,51 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 
 class AdminProfileTab extends StatefulWidget {
   final Map<String, dynamic> adminUser;
 
-  const AdminProfileTab({
-    super.key,
-    required this.adminUser,
-  });
+  const AdminProfileTab({super.key, required this.adminUser});
 
   @override
   State<AdminProfileTab> createState() => _AdminProfileTabState();
 }
 
-class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAliveClientMixin {
+class _AdminProfileTabState extends State<AdminProfileTab>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
   // Theme colors
-  Color get _surfaceColor => Theme.of(context).colorScheme.surfaceContainerHighest;
+  Color get _surfaceColor =>
+      Theme.of(context).colorScheme.surfaceContainerHighest;
   Color get _onSurfaceColor => Theme.of(context).colorScheme.onSurface;
-  Color get _onSurfaceVariantColor => Theme.of(context).colorScheme.onSurfaceVariant;
+  Color get _onSurfaceVariantColor =>
+      Theme.of(context).colorScheme.onSurfaceVariant;
   Color get _outlineColor => Theme.of(context).colorScheme.outline;
-  Color get _inverseOnSurfaceColor => Theme.of(context).brightness == Brightness.dark 
-    ? Colors.black 
-    : Colors.white;
+  Color get _inverseOnSurfaceColor =>
+      Theme.of(context).brightness == Brightness.dark
+      ? Colors.black
+      : Colors.white;
   Color get _primaryColor => Theme.of(context).colorScheme.primary;
   Color get _secondaryColor => Theme.of(context).colorScheme.secondary;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
+
     final adminName = widget.adminUser['nombre']?.toString() ?? 'Administrador';
-  final adminEmail = widget.adminUser['correo_electronico'] ?? widget.adminUser['email'] ?? 'admin@viax.com';
-    final adminPhone = widget.adminUser['telefono'] ?? widget.adminUser['phone'] ?? 'No especificado';
+    final adminEmail =
+        widget.adminUser['correo_electronico'] ??
+        widget.adminUser['email'] ??
+        'admin@viax.com';
+    final adminPhone =
+        widget.adminUser['telefono'] ??
+        widget.adminUser['phone'] ??
+        'No especificado';
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -72,7 +80,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
             gradient: LinearGradient(
               colors: [
                 _primaryColor.withValues(alpha: 0.2),
-                Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
+                Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.1),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -89,7 +99,10 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [_primaryColor, Theme.of(context).colorScheme.primaryContainer],
+                    colors: [
+                      _primaryColor,
+                      Theme.of(context).colorScheme.primaryContainer,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -104,7 +117,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                 ),
                 child: Icon(
                   Icons.admin_panel_settings_rounded,
-                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                  color:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.white,
                   size: 40,
                 ),
               ),
@@ -128,7 +143,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                     Text(
                       'Administrador del Sistema',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -195,8 +212,12 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
-              : Theme.of(context).colorScheme.surfaceContainerLowest.withValues(alpha: 0.6),
+                ? Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
+                : Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: accentColor.withValues(alpha: 0.3),
@@ -225,7 +246,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                     Text(
                       title,
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -342,7 +365,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                   Text(
                     count,
                     style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
                   ),
@@ -393,7 +418,7 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
           },
         ),
         const SizedBox(height: 12),
-/*         _buildSettingItem(
+        /*         _buildSettingItem(
           icon: Icons.help_outline_rounded,
           title: 'Ayuda y soporte',
           onTap: () {
@@ -407,6 +432,18 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
           onTap: () {
             _showAboutDialog();
           },
+        ),
+        const SizedBox(height: 12),
+        _buildSettingItem(
+          icon: Icons.description_outlined,
+          title: 'Términos y Condiciones',
+          onTap: _openAdminTerms,
+        ),
+        const SizedBox(height: 12),
+        _buildSettingItem(
+          icon: Icons.privacy_tip_outlined,
+          title: 'Política de Privacidad',
+          onTap: _openAdminPrivacy,
         ),
       ],
     );
@@ -441,7 +478,11 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(icon, color: _onSurfaceColor.withValues(alpha: 0.7), size: 24),
+                      Icon(
+                        icon,
+                        color: _onSurfaceColor.withValues(alpha: 0.7),
+                        size: 24,
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
@@ -476,9 +517,9 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
 
         if (shouldLogout == true && mounted) {
           await UserService.clearSession();
-          
+
           if (!mounted) return;
-          
+
           Navigator.pushNamedAndRemoveUntil(
             context,
             RouteNames.welcome,
@@ -503,11 +544,7 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.logout_rounded,
-                  color: Color(0xFFf5576c),
-                  size: 24,
-                ),
+                Icon(Icons.logout_rounded, color: Color(0xFFf5576c), size: 24),
                 SizedBox(width: 12),
                 Text(
                   'Cerrar sesión',
@@ -525,7 +562,6 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
     );
   }
 
-
   void _showComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -535,6 +571,32 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  Future<void> _openAdminTerms() async {
+    final opened = await LegalLinksService.openTerms(
+      role: LegalRole.administrador,
+    );
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir Términos y Condiciones'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openAdminPrivacy() async {
+    final opened = await LegalLinksService.openPrivacy(
+      role: LegalRole.administrador,
+    );
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir Política de Privacidad'),
+        ),
+      );
+    }
   }
 
   void _showAboutDialog() {
@@ -601,7 +663,10 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                       backgroundColor: _primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -625,6 +690,3 @@ class _AdminProfileTabState extends State<AdminProfileTab> with AutomaticKeepAli
     );
   }
 }
-
-
-

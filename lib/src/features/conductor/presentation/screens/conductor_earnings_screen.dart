@@ -5,7 +5,9 @@ import '../../../../theme/app_colors.dart';
 import '../../providers/conductor_earnings_provider.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/earnings/earnings_widgets.dart';
+import '../../services/debt_payment_service.dart';
 import '../../../user/presentation/widgets/trip_preview/trip_price_formatter.dart';
+import '../../../../routes/route_names.dart';
 
 /// Pantalla de Ganancias del Conductor
 /// 
@@ -33,6 +35,7 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
   late Animation<Offset> _headerSlideAnimation;
 
   bool _isInitialized = false;
+  Map<String, dynamic>? _debtContext;
 
   @override
   void initState() {
@@ -87,7 +90,25 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
     if (!mounted) return;
     final provider = context.read<ConductorEarningsProvider>();
     await provider.loadEarnings(widget.conductorId);
+
+    final debtContext = await DebtPaymentService.getContext(
+      conductorId: widget.conductorId,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      if (debtContext['success'] == true && debtContext['data'] is Map<String, dynamic>) {
+        _debtContext = Map<String, dynamic>.from(debtContext['data'] as Map);
+      }
+    });
   }
+
+  String get _reportStatus => _debtContext?['estado_reporte']?.toString() ?? 'sin_reporte';
+
+  bool get _isReportInReview =>
+      _reportStatus == 'pendiente_revision' || _reportStatus == 'comprobante_aprobado';
+
+  bool get _isReportRejected => _reportStatus == 'rechazado';
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +300,13 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
                 ),
                 // Card de comisión adeudada
                 if (earnings.comisionAdeudada > 0)
-                  _buildCommissionCard(earnings.comisionAdeudada, isDark),
+                  _buildCommissionCard(
+                    earnings.comisionAdeudada,
+                    isDark,
+                    inReview: _isReportInReview,
+                    isApprovedPendingFinal: _reportStatus == 'comprobante_aprobado',
+                    isRejected: _isReportRejected,
+                  ),
                 const SizedBox(height: 24),
                 EarningsStatsGrid(
                   totalTrips: earnings.totalViajes,
@@ -333,7 +360,29 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
     }
   }
 
-  Widget _buildCommissionCard(double comisionAdeudada, bool isDark) {
+  Widget _buildCommissionCard(
+    double comisionAdeudada,
+    bool isDark, {
+    required bool inReview,
+    required bool isApprovedPendingFinal,
+    required bool isRejected,
+  }) {
+    final subtitle = isApprovedPendingFinal
+      ? 'Tu comprobante fue aprobado. Falta la confirmación final del pago'
+      : inReview
+        ? 'Tu comprobante fue enviado y está en revisión'
+        : isRejected
+            ? 'Tu comprobante fue rechazado, debes subir uno nuevo'
+            : 'Total acumulado pendiente de pago';
+
+    final buttonLabel = isApprovedPendingFinal
+      ? 'Comprobante aprobado, pendiente confirmación final'
+      : inReview
+        ? 'Tu comprobante está en revisión'
+        : isRejected
+            ? 'Volver a subir comprobante'
+            : 'Pagar deuda';
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       padding: const EdgeInsets.all(16),
@@ -347,50 +396,77 @@ class _ConductorEarningsScreenState extends State<ConductorEarningsScreen>
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.account_balance_wallet_outlined,
-              color: Colors.orange,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Comisión adeudada a empresa',
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.grey[700],
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Total acumulado pendiente de pago',
-                  style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.grey[500],
-                    fontSize: 11,
-                  ),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.orange,
+                  size: 24,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Comisión adeudada a empresa',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.grey[700],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.grey[500],
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                formatCurrency(comisionAdeudada),
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          Text(
-            formatCurrency(comisionAdeudada),
-            style: const TextStyle(
-              color: Colors.orange,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: inReview
+                  ? null
+                  : () {
+                Navigator.pushNamed(
+                  context,
+                  RouteNames.conductorCommissions,
+                  arguments: widget.conductorUser,
+                );
+              },
+              icon: Icon(
+                isApprovedPendingFinal
+                    ? Icons.verified_rounded
+                    : inReview
+                        ? Icons.hourglass_top_rounded
+                        : Icons.upload_file_rounded,
+              ),
+              label: Text(buttonLabel),
             ),
           ),
         ],

@@ -6,9 +6,9 @@ import 'package:viax/src/features/user/presentation/screens/enhanced_destination
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
-import 'package:viax/src/features/user/presentation/screens/waiting_for_driver_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/searching_driver_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -17,6 +17,8 @@ import 'package:viax/src/features/auth/presentation/screens/email_verification_s
 import 'package:viax/src/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/password_recovery_verification_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/password_change_verification_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/set_new_password_after_verification_screen.dart';
 import 'package:viax/src/features/onboarding/presentation/screens/onboarding_screen.dart';
 // import 'package:viax/src/features/map/presentation/screens/location_selection_screen.dart'; // COMENTADO - YA NO SE USA
 import 'package:viax/src/features/map/presentation/screens/location_picker_screen.dart';
@@ -35,6 +37,7 @@ import 'package:viax/src/features/conductor/presentation/screens/conductor_home_
 import 'package:viax/src/features/conductor/presentation/screens/conductor_profile_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_trips_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_earnings_screen.dart';
+import 'package:viax/src/features/conductor/presentation/screens/conductor_commissions_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_vehicle_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_documents_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_settings_screen.dart';
@@ -52,6 +55,7 @@ import 'package:viax/src/features/auth/presentation/screens/empresa_register_scr
 import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/widgets/help/help_screen.dart';
+import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -106,10 +110,16 @@ class AppRouter {
       case RouteNames.passwordRecoveryVerification:
         {
           final args = settings.arguments as Map<String, dynamic>?;
+          final rawPasswordChangeUserId = args?['passwordChangeUserId'];
+          final passwordChangeUserId = rawPasswordChangeUserId is int
+              ? rawPasswordChangeUserId
+              : int.tryParse(rawPasswordChangeUserId?.toString() ?? '');
+
           return FadeSlidePageRoute(
             page: PasswordRecoveryVerificationScreen(
               email: args?['email'] ?? '',
               userName: args?['userName'] ?? '',
+              passwordChangeUserId: passwordChangeUserId,
             ),
             settings: settings,
           );
@@ -121,6 +131,35 @@ class AppRouter {
             page: ResetPasswordScreen(
               email: args?['email'] ?? '',
               userName: args?['userName'] ?? '',
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.passwordChangeVerification:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final userId = args?['userId'];
+          final parsedUserId = userId is int
+              ? userId
+              : int.tryParse(userId?.toString() ?? '0') ?? 0;
+
+          return FadeSlidePageRoute(
+            page: PasswordChangeVerificationScreen(userId: parsedUserId),
+            settings: settings,
+          );
+        }
+      case RouteNames.passwordChangeSetNew:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final userId = args?['userId'];
+          final parsedUserId = userId is int
+              ? userId
+              : int.tryParse(userId?.toString() ?? '0') ?? 0;
+
+          return FadeSlidePageRoute(
+            page: SetNewPasswordAfterVerificationScreen(
+              userId: parsedUserId,
+              verificationCode: args?['verificationCode']?.toString() ?? '',
             ),
             settings: settings,
           );
@@ -175,18 +214,52 @@ class AppRouter {
           builder: (_) => const ConfirmTripScreen(),
           settings: settings,
         );
-      case '/user/waiting_driver':
+      case RouteNames.userSearchingDriver:
         {
           final args = settings.arguments as Map<String, dynamic>?;
+
+          final solicitudId = args?['solicitudId'] ?? args?['solicitud_id'] ?? 0;
+          final clienteId = args?['clienteId'] ?? args?['cliente_id'] ?? 0;
+          final latitudOrigen = (args?['latitudOrigen'] as num?)?.toDouble() ??
+            (args?['origen']?['latitud'] as num?)?.toDouble() ??
+            0.0;
+          final longitudOrigen = (args?['longitudOrigen'] as num?)?.toDouble() ??
+            (args?['origen']?['longitud'] as num?)?.toDouble() ??
+            0.0;
+          final latitudDestino = (args?['latitudDestino'] as num?)?.toDouble() ??
+            (args?['destino']?['latitud'] as num?)?.toDouble() ??
+            0.0;
+          final longitudDestino = (args?['longitudDestino'] as num?)?.toDouble() ??
+            (args?['destino']?['longitud'] as num?)?.toDouble() ??
+            0.0;
+          final direccionOrigen =
+            args?['direccionOrigen'] ?? args?['direccion_origen'] ?? args?['origen']?['direccion'] ?? 'Origen';
+          final direccionDestino =
+            args?['direccionDestino'] ?? args?['direccion_destino'] ?? args?['destino']?['direccion'] ?? 'Destino';
+
           return MaterialPageRoute(
-            builder: (_) => WaitingForDriverScreen(
-              solicitudId: args?['solicitud_id'] ?? 0,
-              clienteId: args?['cliente_id'] ?? 0,
-              direccionOrigen: args?['direccion_origen'] ?? 'Origen',
-              direccionDestino: args?['direccion_destino'] ?? 'Destino',
-            ),
-            settings: settings,
+          builder: (_) => SearchingDriverScreen(
+            solicitudId: solicitudId,
+            clienteId: clienteId,
+            latitudOrigen: latitudOrigen,
+            longitudOrigen: longitudOrigen,
+            direccionOrigen: direccionOrigen,
+            latitudDestino: latitudDestino,
+            longitudDestino: longitudDestino,
+            direccionDestino: direccionDestino,
+            tipoVehiculo: args?['tipoVehiculo'] ?? args?['tipo_vehiculo'] ?? 'mototaxi',
+            initialEmpresaId: args?['initialEmpresaId'] ?? args?['empresa_id'],
+            initialCompanyName: args?['initialCompanyName'] ?? args?['empresa_nombre'],
+            initialCompanyLogoUrl: args?['initialCompanyLogoUrl'] ?? args?['empresa_logo_url'],
+            companyCandidates: (args?['companyCandidates'] as List?)
+                ?.whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+              const [],
+          ),
+          settings: settings,
           );
+
         }
       case '/user/active_trip':
         {
@@ -294,6 +367,8 @@ class AppRouter {
           return MaterialPageRoute(
             builder: (_) => NotificationsScreen(
               userId: args?['userId'] ?? 0,
+              currentUser: args?['currentUser'] as Map<String, dynamic>?,
+              userType: args?['userType'] as String?,
             ),
           );
         }
@@ -421,7 +496,7 @@ class AppRouter {
           final args = settings.arguments as Map<String, dynamic>?;
           final user = args?['user'] ?? {};
           final empresaId = user['empresa_id'];
-          print('AppRouter: Navigating to companyHome. User: ${user['nombre']}, EmpresaId: $empresaId');
+          debugPrint('AppRouter: Navigating to companyHome. User: ${user['nombre']}, EmpresaId: $empresaId');
           
           return MaterialPageRoute(
             builder: (_) => ChangeNotifierProvider(
@@ -483,6 +558,19 @@ class AppRouter {
             settings: settings,
           );
         }
+      case RouteNames.conductorCommissions:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final conductorUser = args ?? {};
+          final conductorId = conductorUser['id'] ?? 0;
+          return FadeSlidePageRoute(
+            page: ConductorCommissionsScreen(
+              conductorId: conductorId,
+              conductorUser: conductorUser,
+            ),
+            settings: settings,
+          );
+        }
       case RouteNames.conductorVehicle:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -536,6 +624,16 @@ class AppRouter {
           );
         }
       
+      case RouteNames.sharedLocationView:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final token = args?['token'] as String? ?? '';
+          return FadeSlidePageRoute(
+            page: SharedLocationViewScreen(token: token),
+            settings: settings,
+          );
+        }
+
       // Agregar más rutas aquí
       default:
         return MaterialPageRoute(

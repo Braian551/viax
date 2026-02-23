@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../firebase_options.dart';
 import '../../../global/services/auth/user_service.dart';
@@ -15,6 +16,90 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  final title = _resolveNotificationTitle(message);
+  final body = _resolveNotificationBody(message);
+
+  // Para mensajes con payload "notification", Android suele mostrarlos
+  // automáticamente en background/terminada. Solo forzamos local cuando
+  // viene data-only para asegurar entrega fuera de la app.
+  if (message.notification != null) {
+    return;
+  }
+
+  if ((title ?? '').isEmpty && (body ?? '').isEmpty) {
+    return;
+  }
+
+  await LocalNotificationService.initialize();
+  await LocalNotificationService.showNotification(
+    title: title ?? 'Nueva notificación',
+    body: body ?? '',
+    payload: _resolveNotificationPayload(message),
+    channelId: _resolveChannelId(message),
+    channelName: _resolveChannelName(message),
+    channelDescription: _resolveChannelDescription(message),
+    notificationId: _resolveNotificationId(message),
+  );
+}
+
+String? _resolveNotificationTitle(RemoteMessage message) {
+  return message.notification?.title ??
+      message.data['title']?.toString() ??
+      message.data['notification_title']?.toString();
+}
+
+String? _resolveNotificationBody(RemoteMessage message) {
+  return message.notification?.body ??
+      message.data['body']?.toString() ??
+      message.data['message']?.toString() ??
+      message.data['notification_body']?.toString();
+}
+
+String _resolveNotificationPayload(RemoteMessage message) {
+  final solicitudId = message.data['solicitud_id']?.toString() ??
+      message.data['trip_id']?.toString() ??
+      message.data['request_id']?.toString();
+
+  if (solicitudId != null && solicitudId.isNotEmpty) {
+    return solicitudId;
+  }
+
+  return jsonEncode(message.data);
+}
+
+int _resolveNotificationId(RemoteMessage message) {
+  final messageIdNum = int.tryParse(message.messageId ?? '');
+  if (messageIdNum != null) return messageIdNum;
+
+  final dataMessageId = int.tryParse(message.data['message_id']?.toString() ?? '');
+  if (dataMessageId != null) return dataMessageId;
+
+  return DateTime.now().millisecondsSinceEpoch ~/ 1000;
+}
+
+String _resolveChannelId(RemoteMessage message) {
+  final type = message.data['type']?.toString().toLowerCase();
+  if (type == 'chat' || message.data.containsKey('solicitud_id')) {
+    return 'chat_messages';
+  }
+  return 'viax_events';
+}
+
+String _resolveChannelName(RemoteMessage message) {
+  final channelId = _resolveChannelId(message);
+  if (channelId == 'chat_messages') {
+    return 'Mensajes de Chat';
+  }
+  return 'Eventos Viax';
+}
+
+String _resolveChannelDescription(RemoteMessage message) {
+  final channelId = _resolveChannelId(message);
+  if (channelId == 'chat_messages') {
+    return 'Notificaciones de nuevos mensajes durante viajes';
+  }
+  return 'Eventos de viajes, pagos y documentos';
 }
 
 class PushNotificationService {
@@ -54,17 +139,18 @@ class PushNotificationService {
     FirebaseMessaging.onMessage.listen((message) async {
       _onMessageController.add(message);
 
-      final title = message.notification?.title ?? message.data['title'];
-      final body = message.notification?.body ?? message.data['body'];
+      final title = _resolveNotificationTitle(message);
+      final body = _resolveNotificationBody(message);
 
       if ((title ?? '').isNotEmpty || (body ?? '').isNotEmpty) {
         await LocalNotificationService.showNotification(
-          title: title?.toString() ?? 'Nueva notificación',
-          body: body?.toString() ?? '',
-          payload: jsonEncode(message.data),
-          channelId: 'viax_events',
-          channelName: 'Eventos Viax',
-          channelDescription: 'Eventos de viajes, pagos y documentos',
+          title: title ?? 'Nueva notificación',
+          body: body ?? '',
+          payload: _resolveNotificationPayload(message),
+          channelId: _resolveChannelId(message),
+          channelName: _resolveChannelName(message),
+          channelDescription: _resolveChannelDescription(message),
+          notificationId: _resolveNotificationId(message),
         );
       }
     });
@@ -72,6 +158,13 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _onMessageController.add(message);
     });
+
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _onMessageController.add(initialMessage);
+      });
+    }
 
     _messaging.onTokenRefresh.listen((token) async {
       final userId = _currentUserId;

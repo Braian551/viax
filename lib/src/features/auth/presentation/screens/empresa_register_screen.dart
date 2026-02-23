@@ -71,7 +71,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   
   final List<String> _tiposVehiculoDisponibles = [
     'moto',
-    'motocarro', 
+    'mototaxi', 
     'taxi',
     'carro',
   ];
@@ -1097,7 +1097,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
     switch (type.toLowerCase()) {
       case 'moto':
         return Icons.two_wheeler_rounded;
-      case 'motocarro':
+      case 'mototaxi':
         return Icons.delivery_dining_rounded;
       case 'taxi':
         return Icons.local_taxi_rounded;

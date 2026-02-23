@@ -154,8 +154,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     switch (_selectedType) {
       case VehicleType.auto:
         return 'carro';
-      case VehicleType.motocarro:
-        return 'motocarro';
+      case VehicleType.mototaxi:
+        return 'mototaxi';
       case VehicleType.moto:
         return 'moto';
     }
@@ -163,7 +163,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
   IconData _vehicleTypeIcon() {
     switch (_selectedType) {
-      case VehicleType.motocarro:
+      case VehicleType.mototaxi:
         return Icons.electric_rickshaw_rounded;
       case VehicleType.moto:
         return Icons.two_wheeler_rounded;

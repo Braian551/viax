@@ -1,7 +1,11 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:viax/src/features/notifications/presentation/widgets/notification_widgets.dart';
+import 'package:viax/src/features/notifications/services/notification_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 import 'tabs/company_dashboard_tab.dart';
@@ -10,6 +14,7 @@ import 'company_drivers_screen.dart'; // Contains CompanyDriversTab
 import 'company_pricing_screen.dart'; // Contains CompanyPricingTab
 import 'company_conductores_documentos_screen.dart';
 import 'company_commissions_screen.dart';
+import 'company_data_screen.dart';
 import '../widgets/company_logo.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
@@ -27,18 +32,122 @@ class CompanyHomeScreen extends StatefulWidget {
 class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
+  bool _isShowingMandatoryBankDialog = false;
+  int _unreadNotifications = 0;
+  Timer? _notificationTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CompanyProvider>().loadCompanyDetails();
+      _initializeHomeData();
     });
+  }
+
+  Future<void> _initializeHomeData() async {
+    final provider = context.read<CompanyProvider>();
+    await provider.loadCompanyDetails();
+    await _loadUnreadNotifications();
+    _startNotificationPolling();
+    if (!mounted) return;
+    await _checkAndShowMandatoryBankDialog();
+  }
+
+  int? get _companyUserId {
+    final raw = widget.user['id'];
+    if (raw is int) return raw;
+    if (raw is String) return int.tryParse(raw);
+    return null;
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    final userId = _companyUserId;
+    if (userId == null) return;
+    final count = await NotificationService.getUnreadCount(userId: userId);
+    if (!mounted) return;
+    setState(() => _unreadNotifications = count);
+  }
+
+  void _startNotificationPolling() {
+    _notificationTimer?.cancel();
+    _notificationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadUnreadNotifications(),
+    );
+  }
+
+  void _openNotifications() {
+    final userId = _companyUserId;
+    if (userId == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(
+          userId: userId,
+          currentUser: widget.user,
+          userType: 'empresa',
+        ),
+      ),
+    ).then((_) => _loadUnreadNotifications());
+  }
+
+  Future<void> _checkAndShowMandatoryBankDialog() async {
+    if (!mounted || _isShowingMandatoryBankDialog) return;
+
+    final provider = context.read<CompanyProvider>();
+    await provider.loadSettings();
+    if (!mounted) return;
+
+    final hasTransferAccount = provider.settings['has_transfer_account'] == true;
+    if (hasTransferAccount) return;
+
+    _isShowingMandatoryBankDialog = true;
+    await _showMandatoryBankDialog(provider);
+    _isShowingMandatoryBankDialog = false;
+  }
+
+  Future<void> _showMandatoryBankDialog(CompanyProvider provider) async {
+    if (!mounted) return;
+
+    final screenContext = context;
+
+    await showDialog<void>(
+      context: screenContext,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cuenta bancaria requerida'),
+        content: const Text(
+          'Para gestionar pagos por transferencia debes configurar una cuenta bancaria de la empresa.',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await Navigator.push(
+                screenContext,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: provider,
+                    child: const CompanyDataScreen(),
+                  ),
+                ),
+              );
+
+              if (!mounted) return;
+              await _checkAndShowMandatoryBankDialog();
+            },
+            child: const Text('Configurar cuenta'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _notificationTimer?.cancel();
     super.dispose();
   }
 
@@ -157,6 +266,16 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           ),
         ],
       ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: NotificationBadge(
+            count: _unreadNotifications,
+            isDark: isDark,
+            onTap: _openNotifications,
+          ),
+        ),
+      ],
     );
   }
 

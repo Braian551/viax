@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:viax/src/features/company/presentation/providers/company_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
-import 'package:viax/src/features/company/presentation/screens/company_notifications_screen.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_security_screen.dart';
 
 class CompanyProfileTab extends StatefulWidget {
@@ -21,13 +22,39 @@ class CompanyProfileTab extends StatefulWidget {
 class _CompanyProfileTabState extends State<CompanyProfileTab> {
   bool _isLoggingOut = false;
 
+  Future<void> _openTerms() async {
+    final opened = await LegalLinksService.openTerms(role: LegalRole.empresa);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir Términos y Condiciones'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openPrivacy() async {
+    final opened = await LegalLinksService.openPrivacy(role: LegalRole.empresa);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir Política de Privacidad'),
+        ),
+      );
+    }
+  }
+
   Future<void> _performLogout() async {
     if (_isLoggingOut) return;
     setState(() => _isLoggingOut = true);
     try {
       await UserService.clearSession();
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, RouteNames.welcome, (route) => false);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        RouteNames.welcome,
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoggingOut = false);
@@ -62,7 +89,7 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                 _buildOptionTile(
                   icon: Icons.business_rounded,
                   title: 'Datos de Empresa',
-                  subtitle: 'NIT, Dirección, Teléfono',
+                  subtitle: 'NIT, Dirección, Teléfono y cuenta bancaria',
                   isDark: isDark,
                   onTap: () {
                     final provider = context.read<CompanyProvider>();
@@ -77,25 +104,30 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                     );
                   },
                 ),
-                 _buildOptionTile(
+                _buildOptionTile(
                   icon: Icons.notifications_none_rounded,
                   title: 'Notificaciones',
-                  subtitle: 'Alertas de conductores',
+                  subtitle: 'Ver alertas y actividad',
                   isDark: isDark,
-                   onTap: () {
-                    final provider = context.read<CompanyProvider>();
+                  onTap: () {
+                    final rawUserId = widget.user['id'];
+                    final userId = rawUserId is int
+                        ? rawUserId
+                        : int.tryParse(rawUserId?.toString() ?? '');
+                    if (userId == null) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ChangeNotifierProvider.value(
-                          value: provider,
-                          child: const CompanyNotificationsScreen(),
+                        builder: (_) => NotificationsScreen(
+                          userId: userId,
+                          currentUser: widget.user,
+                          userType: 'empresa',
                         ),
                       ),
                     );
                   },
                 ),
-                 _buildOptionTile(
+                _buildOptionTile(
                   icon: Icons.lock_outline_rounded,
                   title: 'Seguridad',
                   subtitle: 'Contraseña y accesos',
@@ -114,12 +146,26 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                     );
                   },
                 ),
-                 _buildOptionTile(
+                _buildOptionTile(
                   icon: Icons.help_outline_rounded,
                   title: 'Soporte',
                   subtitle: 'Contactar ayuda',
                   isDark: isDark,
                   onTap: () {},
+                ),
+                _buildOptionTile(
+                  icon: Icons.description_outlined,
+                  title: 'Términos y Condiciones',
+                  subtitle: 'Uso de plataforma para empresa',
+                  isDark: isDark,
+                  onTap: _openTerms,
+                ),
+                _buildOptionTile(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Política de Privacidad',
+                  subtitle: 'Tratamiento de datos corporativos',
+                  isDark: isDark,
+                  onTap: _openPrivacy,
                 ),
                 const SizedBox(height: 32),
                 _buildLogoutButton(isDark),
@@ -153,7 +199,7 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
           color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         ),
         boxShadow: [
-           BoxShadow(
+          BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
@@ -169,7 +215,11 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
               shape: BoxShape.circle,
               color: AppColors.primary.withValues(alpha: 0.1),
             ),
-            child: const Icon(Icons.person_rounded, size: 40, color: AppColors.primary),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 40,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -226,7 +276,9 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: isDark ? Colors.white70 : Colors.black54),
@@ -240,11 +292,13 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-            color: isDark ? Colors.white54 : Colors.black45,
-          ),
+          style: TextStyle(color: isDark ? Colors.white54 : Colors.black45),
         ),
-        trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: isDark ? Colors.white30 : Colors.black26),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 16,
+          color: isDark ? Colors.white30 : Colors.black26,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
@@ -258,10 +312,19 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
           backgroundColor: AppColors.error.withValues(alpha: 0.1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
         child: _isLoggingOut
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.error))
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.error,
+                ),
+              )
             : const Text(
                 'Cerrar Sesión',
                 style: TextStyle(

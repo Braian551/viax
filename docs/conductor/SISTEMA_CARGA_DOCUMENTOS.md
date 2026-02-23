@@ -10,7 +10,7 @@ Se implementó un sistema completo para que los conductores puedan subir fotos d
 
 ### 1. Base de Datos 💾
 
-**Archivo:** `pingo/backend/migrations/006_add_documentos_conductor.sql`
+**Archivo:** `viax/backend/migrations/006_add_documentos_conductor.sql`
 
 #### Columnas agregadas a `detalles_conductor`:
 - `licencia_foto_url` - URL de la foto de la licencia
@@ -28,7 +28,7 @@ Se implementó un sistema completo para que los conductores puedan subir fotos d
 
 **Ejecutar migración:**
 ```bash
-cd pingo/backend/migrations
+cd viax/backend/migrations
 php run_migration_006.php
 ```
 
@@ -36,7 +36,7 @@ php run_migration_006.php
 
 ### 2. Backend - Endpoint de Upload 🚀
 
-**Archivo:** `pingo/backend/conductor/upload_documents.php`
+**Archivo:** `viax/backend/conductor/upload_documents.php`
 
 #### Características:
 ✅ Validación de tipo de archivo (JPG, PNG, WEBP, PDF)
@@ -161,7 +161,7 @@ final url = await provider.uploadLicensePhoto(
 ## 📁 Estructura de Archivos en Servidor
 
 ```
-pingo/backend/
+viax/backend/
 ├── uploads/
 │   ├── .htaccess              ← Protección contra ejecución de PHP
 │   ├── .gitignore             ← Excluir uploads del repo
@@ -207,14 +207,14 @@ pingo/backend/
 
 ### Paso 1: Ejecutar Migración
 ```bash
-cd pingo/backend/migrations
+cd viax/backend/migrations
 php run_migration_006.php
 ```
 
 ### Paso 2: Verificar Permisos
 ```bash
-chmod 755 pingo/backend/uploads
-chmod 755 pingo/backend/uploads/documentos
+chmod 755 viax/backend/uploads
+chmod 755 viax/backend/uploads/documentos
 ```
 
 ### Paso 3: Desde la App
@@ -395,8 +395,8 @@ class DriverLicenseModel {
 ### Error: "No se pudo crear el directorio"
 ```bash
 # Verificar permisos
-chmod 755 pingo/backend/uploads
-chmod 755 pingo/backend/uploads/documentos
+chmod 755 viax/backend/uploads
+chmod 755 viax/backend/uploads/documentos
 ```
 
 ### Error: "Archivo muy grande"
@@ -440,14 +440,14 @@ await _picker.pickImage(
 
 **Implementado:** 25 de Octubre, 2025
 **Versión:** 1.0.0
-**Sistema:** PinGo - Módulo Conductor
+**Sistema:** Viax - Módulo Conductor
 
 ---
 
 ## 📞 Soporte
 
 Si tienes problemas con la implementación:
-1. Verificar logs en servidor: `pingo/backend/conductor/upload_documents.php`
+1. Verificar logs en servidor: `viax/backend/conductor/upload_documents.php`
 2. Verificar logs en app: Console de Flutter
 3. Verificar permisos de carpetas
 4. Verificar migración de BD ejecutada

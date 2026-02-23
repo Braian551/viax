@@ -80,9 +80,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   bool _isProcessingAction = false;
   String? _processingActionType; // 'arrived', 'start', 'finish'
 
-  late final StreamSubscription<List<ChatMessage>> _messagesSubscription;
-  late final StreamSubscription<int> _unreadSubscription;
+  StreamSubscription<List<ChatMessage>>? _messagesSubscription;
+  StreamSubscription<int>? _unreadSubscription;
   int _unreadCount = 0;
+  final Set<int> _notifiedIncomingMessageIds = <int>{};
+  bool _chatBootstrapCompleted = false;
   bool? _lastIsDark; // Para detectar cambios de tema
 
   @override
@@ -282,8 +284,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     // Notificar que salimos de la pantalla de viaje
     ActiveTripNavigationService().setOnTripScreen(false);
     _controller.dispose();
-    _messagesSubscription.cancel();
-    _unreadSubscription.cancel();
+    _messagesSubscription?.cancel();
+    _unreadSubscription?.cancel();
     ChatService.stopPolling();
     _pollingTimer?.cancel(); // Cancelar polling
     super.dispose();
@@ -294,21 +296,46 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _messagesSubscription = ChatService.messagesStream.listen((messages) {
       if (messages.isEmpty) return;
 
-      final lastMsg = messages.last;
+      if (!_chatBootstrapCompleted) {
+        _chatBootstrapCompleted = true;
+        for (final message in messages) {
+          if (message.remitenteId != widget.conductorId) {
+            _notifiedIncomingMessageIds.add(message.id);
+          }
+        }
+        return;
+      }
 
       // Si el chat está abierto, no hacer nada
       if (ChatService.isChatOpen) return;
 
-      // Si el mensaje es del cliente y es reciente (menos de 10s)
-      if (lastMsg.remitenteId != widget.conductorId &&
-          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+      final incomingMessages = messages
+          .where(
+            (message) =>
+                message.remitenteId != widget.conductorId &&
+                !_notifiedIncomingMessageIds.contains(message.id),
+          )
+          .toList();
+
+      if (incomingMessages.isEmpty) return;
+
+      if (mounted) {
+        setState(() {
+          _unreadCount += incomingMessages.length;
+        });
+      }
+
+      for (final message in incomingMessages) {
+        _notifiedIncomingMessageIds.add(message.id);
+
         // Reproducir sonido de mensaje
         SoundService.playMessageSound();
 
         LocalNotificationService.showMessageNotification(
-          title: lastMsg.remitenteNombre ?? 'Cliente',
-          body: lastMsg.mensaje,
+          title: message.remitenteNombre ?? 'Cliente',
+          body: message.mensaje,
           solicitudId: widget.solicitudId,
+          notificationId: message.id,
         );
       }
     });
@@ -327,7 +354,13 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     // Escuchar conteo de no leídos
     _unreadSubscription = ChatService.unreadCountStream.listen((count) {
       if (mounted) {
-        setState(() => _unreadCount = count);
+        setState(() {
+          if (ChatService.isChatOpen) {
+            _unreadCount = count;
+          } else if (count > _unreadCount) {
+            _unreadCount = count;
+          }
+        });
       }
     });
   }
@@ -704,6 +737,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     debugPrint('✅ [Chat] Navegando a ChatScreen...');
 
     try {
+      setState(() => _unreadCount = 0);
       Navigator.push(
         context,
         MaterialPageRoute(

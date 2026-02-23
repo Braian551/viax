@@ -2,7 +2,7 @@
 
 ## ✅ Funcionalidades Completadas
 
-Se han implementado **funcionalidades completas y profesionales** para el módulo de conductores en PinGo, incluyendo:
+Se han implementado **funcionalidades completas y profesionales** para el módulo de conductores en Viax, incluyendo:
 
 ### 📱 Pantallas Nuevas (3)
 
@@ -200,12 +200,12 @@ Se han implementado **funcionalidades completas y profesionales** para el módul
 ### 1. Backend
 ```bash
 # Crear estructura de carpetas
-mkdir -p pingo/backend/conductor
-mkdir -p pingo/backend/uploads/conductores
+mkdir -p viax/backend/conductor
+mkdir -p viax/backend/uploads/conductores
 
 # Configurar permisos
-chmod 755 pingo/backend/uploads
-chmod 755 pingo/backend/uploads/conductores
+chmod 755 viax/backend/uploads
+chmod 755 viax/backend/uploads/conductores
 ```
 
 ### 2. Base de Datos
@@ -283,7 +283,7 @@ docs/conductor/
 
 ## ✨ Conclusión
 
-Se ha implementado un **sistema completo y profesional** para la gestión de conductores en PinGo, con:
+Se ha implementado un **sistema completo y profesional** para la gestión de conductores en Viax, con:
 
 - ✅ **Código limpio** y bien documentado
 - ✅ **Diseño consistente** con la app
@@ -297,5 +297,5 @@ El módulo está **listo para integración** con el backend. Solo falta implemen
 
 **Desarrollado por:** GitHub Copilot  
 **Fecha:** 24 de Octubre, 2025  
-**Proyecto:** PinGo - Plataforma de Transporte  
+**Proyecto:** Viax - Plataforma de Transporte  
 **Versión:** 1.0.0

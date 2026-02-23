@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:latlong2/latlong.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/rating_service.dart';
@@ -18,6 +21,7 @@ import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import '../../services/client_tracking_service.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
+import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
 import '../widgets/user_active_trip/user_active_trip_widgets.dart';
 import '../widgets/user_active_trip/driver_detail_sheet.dart';
 
@@ -59,21 +63,26 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   final MapController _mapController = MapController();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  
+
   // Servicio de tracking del cliente
-  final ClientTripTrackingService _trackingService = ClientTripTrackingService();
+  final ClientTripTrackingService _trackingService =
+      ClientTripTrackingService();
 
   // Estado del viaje
   String _tripState = 'en_curso';
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
   int _unreadCount = 0;
+  final Set<int> _notifiedIncomingMessageIds = <int>{};
+  bool _chatBootstrapCompleted = false;
   bool _disposed = false;
-  
+
   LatLng? _conductorLocation;
   final double _conductorHeading = 0;
   LatLng? _clientLocation;
   double _clientHeading = 0;
+  double _lastClientSpeedMps = 0.0;
+  StreamSubscription<CompassEvent>? _compassStream;
   Map<String, dynamic>? _conductor;
 
   // Ruta y progreso
@@ -83,12 +92,12 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   double? _distanceTraveled; // Distancia RECORRIDA (real)
   int _etaMinutes = 0;
   double _tripProgress = 0;
-  
+
   // Datos de tracking en tiempo real (sincronizado con conductor)
   double _precioActual = 0;
   int _tiempoTranscurridoSeg = 0;
   bool _trackingActivo = false;
-  
+
   // Tiempos reales
   DateTime? _tripStartTime;
   int _elapsedMinutes = 0;
@@ -101,6 +110,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Control de UI
   bool _isLoading = true;
   bool _tripCompleted = false;
+
+  // Compartir ubicación
+  LocationShareSession? _shareSession;
+  bool _isSharingLocation = false;
 
   @override
   void initState() {
@@ -118,10 +131,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Esperamos un poco para que la UI se estabilice
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    
-    final hasPermission = await ActiveTripNavigationService().hasSystemOverlayPermission();
+
+    final hasPermission = await ActiveTripNavigationService()
+        .hasSystemOverlayPermission();
     if (!hasPermission && mounted) {
-      await ActiveTripNavigationService().requestSystemOverlayPermission(context);
+      await ActiveTripNavigationService().requestSystemOverlayPermission(
+        context,
+      );
     }
   }
 
@@ -159,37 +175,73 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _locationTimer = null;
     _messagesSubscription?.cancel();
     _unreadSubscription?.cancel();
+    _compassStream?.cancel();
     _pulseController.dispose();
     _stopClientTracking();
+    // Stop live location sharing if active
+    final token =
+        _shareSession?.token ??
+        LocationSharingService.instance.currentSession?.token;
+    if (token != null && token.isNotEmpty) {
+      unawaited(LocationSharingService.instance.stopSharingByToken(token));
+    } else if (_isSharingLocation) {
+      LocationSharingService.instance.stopSendingUpdates();
+    }
     super.dispose();
   }
-  
+
+  Future<void> _stopLocationSharingSession() async {
+    final token =
+        _shareSession?.token ??
+        LocationSharingService.instance.currentSession?.token;
+
+    if (token != null && token.isNotEmpty) {
+      await LocationSharingService.instance.stopSharingByToken(token);
+    } else if (_isSharingLocation) {
+      await LocationSharingService.instance.stopSharing();
+    }
+
+    if (!mounted) {
+      _isSharingLocation = false;
+      _shareSession = null;
+      return;
+    }
+
+    setState(() {
+      _isSharingLocation = false;
+      _shareSession = null;
+    });
+  }
+
   /// Inicia la observación del tracking del conductor
   void _startClientTracking() {
     _trackingService.onTrackingUpdate = (data) {
       if (!mounted || _disposed) return;
-      
+
       setState(() {
         _distanceTraveled = data.distanciaKm;
         _tiempoTranscurridoSeg = data.tiempoSegundos;
         _precioActual = data.precioActual;
         _trackingActivo = data.viajeEnCurso;
         _elapsedMinutes = data.tiempoMinutos;
-        
+
         // Actualizar ubicación del conductor desde tracking
         if (data.latitudConductor != null && data.longitudConductor != null) {
-          _conductorLocation = LatLng(data.latitudConductor!, data.longitudConductor!);
+          _conductorLocation = LatLng(
+            data.latitudConductor!,
+            data.longitudConductor!,
+          );
         }
       });
     };
-    
+
     _trackingService.onError = (error) {
       debugPrint('⚠️ [ClientTracking] Error: $error');
     };
-    
+
     _trackingService.startWatching(solicitudId: widget.solicitudId);
   }
-  
+
   /// Detiene la observación del tracking
   void _stopClientTracking() {
     _trackingService.onTrackingUpdate = null;
@@ -211,16 +263,16 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   Future<void> _initializeTrip() async {
     // Cargar info del conductor si no viene
     _conductor = widget.conductorInfo;
-    
+
     // Iniciar rastreo de ubicación del cliente
     _startLocationTracking();
-    
+
     // Calcular ruta inicial
     await _loadRoute();
-    
+
     // Iniciar polling de estado
     _startStatusPolling();
-    
+
     // Iniciar polling de chat
     ChatService.startPolling(
       solicitudId: widget.solicitudId,
@@ -276,7 +328,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       if (mounted) {
         setState(() {
           _clientLocation = LatLng(position.latitude, position.longitude);
-          _clientHeading = position.heading;
+          _updateHeadingFromGps(position.heading, position.speed);
         });
       }
 
@@ -291,13 +343,53 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         if (mounted) {
           setState(() {
             _clientLocation = LatLng(position.latitude, position.longitude);
-            _clientHeading = position.heading;
+            _updateHeadingFromGps(position.heading, position.speed);
           });
         }
       });
+
+      _startCompassTracking();
     } catch (e) {
       debugPrint('Error obteniendo ubicación: $e');
     }
+  }
+
+  void _startCompassTracking() {
+    _compassStream?.cancel();
+    _compassStream = FlutterCompass.events?.listen((event) {
+      if (!mounted || _disposed) return;
+      final heading = event.heading;
+      if (heading == null || !heading.isFinite) return;
+
+      if (_lastClientSpeedMps < 1.5) {
+        setState(() {
+          _clientHeading = _smoothHeading(
+            _clientHeading,
+            _normalizeHeading(heading),
+          );
+        });
+      }
+    });
+  }
+
+  void _updateHeadingFromGps(double heading, double speed) {
+    _lastClientSpeedMps = speed;
+    if (heading.isFinite && heading >= 0) {
+      _clientHeading = _smoothHeading(
+        _clientHeading,
+        _normalizeHeading(heading),
+      );
+    }
+  }
+
+  double _normalizeHeading(double heading) {
+    final normalized = heading % 360;
+    return normalized < 0 ? normalized + 360 : normalized;
+  }
+
+  double _smoothHeading(double current, double target, {double factor = 0.25}) {
+    final delta = (((target - current + 540) % 360) - 180);
+    return _normalizeHeading(current + delta * factor);
   }
 
   void _startStatusPolling() {
@@ -312,22 +404,46 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _messagesSubscription = ChatService.messagesStream.listen((messages) {
       if (_disposed || messages.isEmpty) return;
 
-      final lastMsg = messages.last;
-      
+      if (!_chatBootstrapCompleted) {
+        _chatBootstrapCompleted = true;
+        for (final message in messages) {
+          if (message.remitenteId != widget.clienteId) {
+            _notifiedIncomingMessageIds.add(message.id);
+          }
+        }
+        return;
+      }
+
       // Si el chat está abierto, no hacer nada
       if (ChatService.isChatOpen) return;
 
-      // Si el mensaje es del otro usuario y es reciente (menos de 10s)
-      if (lastMsg.remitenteId != widget.clienteId &&
-          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
-        
+      final incomingMessages = messages
+          .where(
+            (message) =>
+                message.remitenteId != widget.clienteId &&
+                !_notifiedIncomingMessageIds.contains(message.id),
+          )
+          .toList();
+
+      if (incomingMessages.isEmpty) return;
+
+      if (mounted && !_disposed) {
+        setState(() {
+          _unreadCount += incomingMessages.length;
+        });
+      }
+
+      for (final message in incomingMessages) {
+        _notifiedIncomingMessageIds.add(message.id);
+
         // Reproducir sonido de mensaje
         SoundService.playMessageSound();
-        
+
         LocalNotificationService.showMessageNotification(
-          title: lastMsg.remitenteNombre ?? 'Conductor',
-          body: lastMsg.mensaje,
+          title: message.remitenteNombre ?? 'Conductor',
+          body: message.mensaje,
           solicitudId: widget.solicitudId,
+          notificationId: message.id,
         );
       }
     });
@@ -346,7 +462,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Escuchar conteo de no leídos
     _unreadSubscription = ChatService.unreadCountStream.listen((count) {
       if (mounted && !_disposed) {
-        setState(() => _unreadCount = count);
+        setState(() {
+          if (ChatService.isChatOpen) {
+            _unreadCount = count;
+          } else if (count > _unreadCount) {
+            _unreadCount = count;
+          }
+        });
       }
     });
   }
@@ -371,7 +493,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         if (trip['hora_inicio'] != null) {
           try {
             _tripStartTime = DateTime.parse(trip['hora_inicio']);
-            _elapsedMinutes = DateTime.now().difference(_tripStartTime!).inMinutes;
+            _elapsedMinutes = DateTime.now()
+                .difference(_tripStartTime!)
+                .inMinutes;
           } catch (e) {
             debugPrint('Error parsing start time: $e');
           }
@@ -383,23 +507,29 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           if (trip['distancia_recorrida'] != null) {
             _distanceTraveled = (trip['distancia_recorrida'] as num).toDouble();
           }
-          
+
           // Obtener tiempo del tracking si está disponible
           // Prioridad: duracion_segundos > tiempo_transcurrido_seg > tiempo_transcurrido*60
-          if (trip['duracion_segundos'] != null && (trip['duracion_segundos'] as num) > 0) {
+          if (trip['duracion_segundos'] != null &&
+              (trip['duracion_segundos'] as num) > 0) {
             _tiempoTranscurridoSeg = (trip['duracion_segundos'] as num).toInt();
-          } else if (trip['tiempo_transcurrido_seg'] != null && (trip['tiempo_transcurrido_seg'] as num) > 0) {
-            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido_seg'] as num).toInt();
-          } else if (trip['tiempo_transcurrido'] != null && (trip['tiempo_transcurrido'] as num) > 0) {
+          } else if (trip['tiempo_transcurrido_seg'] != null &&
+              (trip['tiempo_transcurrido_seg'] as num) > 0) {
+            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido_seg'] as num)
+                .toInt();
+          } else if (trip['tiempo_transcurrido'] != null &&
+              (trip['tiempo_transcurrido'] as num) > 0) {
             // Fallback: tiempo_transcurrido puede estar en minutos (viejo formato)
-            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido'] as num).toInt() * 60;
+            _tiempoTranscurridoSeg =
+                (trip['tiempo_transcurrido'] as num).toInt() * 60;
           }
 
-          
           // Precio: prioridad -> precio_final > precio_en_tracking > precio_estimado
-          if (trip['precio_final'] != null && (trip['precio_final'] as num) > 0) {
+          if (trip['precio_final'] != null &&
+              (trip['precio_final'] as num) > 0) {
             _precioActual = (trip['precio_final'] as num).toDouble();
-          } else if (trip['precio_en_tracking'] != null && (trip['precio_en_tracking'] as num) > 0) {
+          } else if (trip['precio_en_tracking'] != null &&
+              (trip['precio_en_tracking'] as num) > 0) {
             _precioActual = (trip['precio_en_tracking'] as num).toDouble();
           } else if (trip['precio_estimado'] != null && _precioActual == 0) {
             _precioActual = (trip['precio_estimado'] as num).toDouble();
@@ -410,54 +540,70 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         if (estado == 'completada' || estado == 'entregado') {
           // Cuando el viaje está completo, SIEMPRE leer datos finales de la BD
           debugPrint('📊 [Cliente] Datos crudos del backend:');
-          debugPrint('   - distancia_recorrida: ${trip['distancia_recorrida']}');
-          debugPrint('   - tiempo_transcurrido: ${trip['tiempo_transcurrido']}');
+          debugPrint(
+            '   - distancia_recorrida: ${trip['distancia_recorrida']}',
+          );
+          debugPrint(
+            '   - tiempo_transcurrido: ${trip['tiempo_transcurrido']}',
+          );
           debugPrint('   - duracion_minutos: ${trip['duracion_minutos']}');
           debugPrint('   - precio_final: ${trip['precio_final']}');
-          
+
           // Distancia: usar real si existe
-          if (trip['distancia_recorrida'] != null && (trip['distancia_recorrida'] as num) > 0) {
+          if (trip['distancia_recorrida'] != null &&
+              (trip['distancia_recorrida'] as num) > 0) {
             _distanceTraveled = (trip['distancia_recorrida'] as num).toDouble();
           }
-          
+
           // Tiempo: prioridad -> duracion_segundos > tiempo_transcurrido_seg > tiempo_minutos*60 > local
           // El backend ahora devuelve tiempo en segundos exactos
           int tiempoFinalSegundos = 0;
-          
+
           // Prioridad 1: usar duracion_segundos (valor exacto del backend)
-          if (trip['duracion_segundos'] != null && (trip['duracion_segundos'] as num) > 0) {
+          if (trip['duracion_segundos'] != null &&
+              (trip['duracion_segundos'] as num) > 0) {
             tiempoFinalSegundos = (trip['duracion_segundos'] as num).toInt();
-          } 
+          }
           // Prioridad 2: usar tiempo_transcurrido_seg (nuevo campo del backend)
-          else if (trip['tiempo_transcurrido_seg'] != null && (trip['tiempo_transcurrido_seg'] as num) > 0) {
-            tiempoFinalSegundos = (trip['tiempo_transcurrido_seg'] as num).toInt();
+          else if (trip['tiempo_transcurrido_seg'] != null &&
+              (trip['tiempo_transcurrido_seg'] as num) > 0) {
+            tiempoFinalSegundos = (trip['tiempo_transcurrido_seg'] as num)
+                .toInt();
           }
           // Prioridad 3: convertir minutos a segundos (fallback)
-          else if (trip['tiempo_transcurrido'] != null && (trip['tiempo_transcurrido'] as num) > 0) {
-            tiempoFinalSegundos = (trip['tiempo_transcurrido'] as num).toInt() * 60;
-          } else if (trip['duracion_minutos'] != null && (trip['duracion_minutos'] as num) > 0) {
-            tiempoFinalSegundos = (trip['duracion_minutos'] as num).toInt() * 60;
+          else if (trip['tiempo_transcurrido'] != null &&
+              (trip['tiempo_transcurrido'] as num) > 0) {
+            tiempoFinalSegundos =
+                (trip['tiempo_transcurrido'] as num).toInt() * 60;
+          } else if (trip['duracion_minutos'] != null &&
+              (trip['duracion_minutos'] as num) > 0) {
+            tiempoFinalSegundos =
+                (trip['duracion_minutos'] as num).toInt() * 60;
           } else if (_elapsedMinutes > 0) {
             tiempoFinalSegundos = _elapsedMinutes * 60;
           }
-          
+
           // Usar el tiempo en segundos directamente
           if (tiempoFinalSegundos > 0) {
             _tiempoTranscurridoSeg = tiempoFinalSegundos;
           } else if (_tripStartTime != null) {
             // Fallback: calcular desde hora de inicio
-            _tiempoTranscurridoSeg = DateTime.now().difference(_tripStartTime!).inSeconds;
+            _tiempoTranscurridoSeg = DateTime.now()
+                .difference(_tripStartTime!)
+                .inSeconds;
           }
 
-          
           // Precio: usar precio_final
-          if (trip['precio_final'] != null && (trip['precio_final'] as num) > 0) {
+          if (trip['precio_final'] != null &&
+              (trip['precio_final'] as num) > 0) {
             _precioActual = (trip['precio_final'] as num).toDouble();
           }
-          
+
           debugPrint('📊 [Cliente] Viaje completado - Datos finales:');
           debugPrint('   - Distancia: $_distanceTraveled km');
-          debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s (${_tiempoTranscurridoSeg / 60} min)');
+          debugPrint(
+            '   - Tiempo: $_tiempoTranscurridoSeg s (${_tiempoTranscurridoSeg / 60} min)',
+          );
           debugPrint('   - Precio: $_precioActual');
           _onTripCompleted();
           return;
@@ -465,8 +611,6 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           _onTripCancelled();
           return;
         }
-
-
 
         // Actualizar ubicación del conductor
         LatLng? newConductorLocation;
@@ -494,10 +638,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
           _tripProgress = 1 - (remainingDistance / totalDistance).clamp(0, 1);
           _distanceKm = remainingDistance;
-          _etaMinutes = (remainingDistance / 0.5 * 60).ceil(); // ~30km/h promedio
+          _etaMinutes = (remainingDistance / 0.5 * 60)
+              .ceil(); // ~30km/h promedio
         }
-
-
 
         // Solo actualizar UI si seguimos activos
         if (mounted && !_tripCompleted) {
@@ -516,9 +659,11 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           });
 
           // LÃ³gica de sonido de llegada
-          if (_tripState == 'conductor_llego' && previousState != 'conductor_llego') {
+          if (_tripState == 'conductor_llego' &&
+              previousState != 'conductor_llego') {
             SoundService.playDriverArrivedSound();
-          } else if (_tripState == 'en_curso' && previousState == 'conductor_llego') {
+          } else if (_tripState == 'en_curso' &&
+              previousState == 'conductor_llego') {
             SoundService.stopDriverArrivedSound();
           }
         }
@@ -553,21 +698,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
     int currentIndex = 0;
     _routeAnimationTimer?.cancel();
-    _routeAnimationTimer = Timer.periodic(
-      const Duration(milliseconds: 20),
-      (timer) {
-        if (currentIndex >= _routePoints.length) {
-          timer.cancel();
-          return;
-        }
-        if (mounted) {
-          setState(() {
-            _animatedRoute = _routePoints.sublist(0, currentIndex + 1);
-          });
-        }
-        currentIndex += 3;
-      },
-    );
+    _routeAnimationTimer = Timer.periodic(const Duration(milliseconds: 20), (
+      timer,
+    ) {
+      if (currentIndex >= _routePoints.length) {
+        timer.cancel();
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _animatedRoute = _routePoints.sublist(0, currentIndex + 1);
+        });
+      }
+      currentIndex += 3;
+    });
   }
 
   void _fitMapToRoute() {
@@ -587,6 +731,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _tripCompleted = true;
     _statusTimer?.cancel();
     ChatService.stopPolling();
+    await _stopLocationSharingSession();
 
     HapticFeedback.heavyImpact();
     SoundService.playAcceptSound();
@@ -594,7 +739,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Obtener datos finales del tracking antes de navegar
     // Esto asegura que tenemos los datos más recientes del servidor
     try {
-      final trackingData = await _trackingService.getTrackingOnce(widget.solicitudId);
+      final trackingData = await _trackingService.getTrackingOnce(
+        widget.solicitudId,
+      );
       if (trackingData != null && trackingData.tiempoSegundos > 0) {
         _tiempoTranscurridoSeg = trackingData.tiempoSegundos;
         _distanceTraveled = trackingData.distanciaKm;
@@ -612,12 +759,12 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _showCompletionDialog();
   }
 
-
   void _onTripCancelled() {
     _tripCompleted = true;
     _statusTimer?.cancel();
     ChatService.stopPolling();
-    
+    unawaited(_stopLocationSharingSession());
+
     // Limpiar viaje activo
     TripPersistenceService().clearActiveTrip();
     ActiveTripNavigationService().clearActiveTrip();
@@ -655,7 +802,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   /// Muestra las opciones del viaje (cancelar, soporte, etc.)
   void _showOptionsMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -690,11 +837,14 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             const SizedBox(height: 8),
             _buildOptionItem(
               icon: Icons.share_location_rounded,
-              label: 'Compartir ubicación',
+              label: _isSharingLocation
+                  ? 'Compartir (activo)'
+                  : 'Compartir ubicación',
+              color: _isSharingLocation ? AppColors.success : null,
               isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
-                // TODO: Implementar compartir ubicación
+                _shareLocation();
               },
             ),
             const SizedBox(height: 8),
@@ -721,7 +871,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     required VoidCallback onTap,
   }) {
     final itemColor = color ?? (isDark ? Colors.white : Colors.grey[800]);
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -763,7 +913,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   /// Muestra confirmación antes de cancelar el viaje
   void _showCancelConfirmation() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -816,23 +966,25 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No se puede cancelar: información del conductor no disponible'),
+            content: Text(
+              'No se puede cancelar: información del conductor no disponible',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
       }
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     final result = await TripRequestService.cancelTripRequestWithReason(
       solicitudId: widget.solicitudId,
       conductorId: conductorId,
       motivo: 'Cancelado por el cliente',
       canceladoPor: 'cliente',
     );
-    
+
     if (result['success'] == true) {
       setState(() => _isLoading = false);
       _onTripCancelled();
@@ -853,19 +1005,105 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void _navigateToHome() {
     // Marcar que salimos de la pantalla de viaje pero el viaje sigue activo
     ActiveTripNavigationService().setOnTripScreen(false);
-    
+
     // Si hay historial, volvemos al inicio (HomeUser debería estar abajo)
     if (Navigator.canPop(context)) {
-       Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.popUntil(context, (route) => route.isFirst);
     } else {
-       // Si no podemos hacer pop (estamos en la raiz por recuperación), ir explícitamente al home
-       Navigator.pushReplacementNamed(context, RouteNames.home);
+      // Si no podemos hacer pop (estamos en la raiz por recuperación), ir explícitamente al home
+      Navigator.pushReplacementNamed(context, RouteNames.home);
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────
+  // COMPARTIR UBICACIÓN
+  // ─────────────────────────────────────────────────────────────────────
+
+  /// Creates or reuses an active share session and opens the native share sheet.
+  Future<void> _shareLocation() async {
+    // User ID required — obtain from conductor data or widget
+    // The clienteId IS the current user (the passenger)
+    final userId = widget.clienteId;
+
+    // If already sharing, just re-share the link
+    if (_isSharingLocation && _shareSession != null) {
+      _openShareSheet(_shareSession!);
+      return;
+    }
+
+    // Show loading indicator
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final session = await LocationSharingService.instance.createShare(
+        userId: userId,
+        solicitudId: widget.solicitudId,
+        expiresMinutes: 120,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _shareSession = session;
+        _isSharingLocation = true;
+        _isLoading = false;
+      });
+
+      // Start broadcasting location in the background
+      LocationSharingService.instance.startSendingUpdates();
+
+      _openShareSheet(session);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo compartir la ubicación: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _openShareSheet(LocationShareSession session) {
+    final nombre = _conductor?['nombre'] ?? 'mi conductor';
+    final message =
+        '📍 Estoy en un viaje con Viax junto a $nombre. '
+        'Sigue mi ubicación en tiempo real:\n${session.shareUrl}';
+    Share.share(message, subject: 'Mi ubicación en Viax');
+  }
+
   void _showCompletionDialog() {
-    // Navegar a pantalla de completación en lugar de diálogo
-    _navigateToTripCompletion();
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.success, size: 28),
+            SizedBox(width: 12),
+            Expanded(child: Text('Viaje completado')),
+          ],
+        ),
+        content: const Text('Tu viaje finalizó correctamente.'),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _navigateToTripCompletion();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Navega a la pantalla de completación del viaje.
@@ -873,25 +1111,27 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Limpiar el viaje activo al completar
     TripPersistenceService().clearActiveTrip();
     ActiveTripNavigationService().clearActiveTrip();
-    
+
     // Usar precio real del tracking si está disponible, sino tarifa mínima
-    final precioFinal = _precioActual > 0 
-        ? _precioActual 
+    final precioFinal = _precioActual > 0
+        ? _precioActual
         : 5000.0; // Tarifa mínima como fallback
-    
+
     // Usar distancia real del tracking - si no hay tracking, es 0 (no se movió)
     final distanciaFinal = _distanceTraveled ?? 0.0;
-    
+
     // Usar tiempo real del tracking en segundos
-    final duracionSegundos = _tiempoTranscurridoSeg > 0 
-        ? _tiempoTranscurridoSeg 
+    final duracionSegundos = _tiempoTranscurridoSeg > 0
+        ? _tiempoTranscurridoSeg
         : (_elapsedMinutes * 60);
-    
+
     debugPrint('📊 [ClientTracking] Finalizando viaje:');
     debugPrint('   - Precio real tracking: $_precioActual');
     debugPrint('   - Distancia real: $distanciaFinal km');
-    debugPrint('   - Tiempo real: ${duracionSegundos}s (${(duracionSegundos / 60).toStringAsFixed(1)} min)');
-    
+    debugPrint(
+      '   - Tiempo real: ${duracionSegundos}s (${(duracionSegundos / 60).toStringAsFixed(1)} min)',
+    );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -907,7 +1147,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             metodoPago: 'Efectivo', // TODO: Obtener del backend
             otroUsuarioNombre: _conductor?['nombre'] ?? 'Conductor',
             otroUsuarioFoto: _conductor?['foto'] as String?,
-            otroUsuarioCalificacion: (_conductor?['calificacion'] as num?)?.toDouble(),
+            otroUsuarioCalificacion: (_conductor?['calificacion'] as num?)
+                ?.toDouble(),
           ),
           miUsuarioId: widget.clienteId,
           otroUsuarioId: (_conductor?['id'] as int?) ?? 0,
@@ -931,7 +1172,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             // Limpiar persistencia de viaje activo
             TripPersistenceService().clearActiveTrip();
 
-            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/', (route) => false);
           },
         ),
       ),
@@ -941,11 +1184,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void _openChat() {
     final conductorId = _conductor?['id'] as int?;
     if (conductorId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chat no disponible')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chat no disponible')));
       return;
     }
+
+    setState(() => _unreadCount = 0);
 
     Navigator.push(
       context,
@@ -1057,77 +1302,79 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
     return MapRetryWrapper(
       isDark: isDark,
-      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
-        key: mapKey,
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: destination,
-          initialZoom: 14,
-          minZoom: 10,
-          maxZoom: 18,
-          onMapReady: onMapReady,
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-            userAgentPackageName: 'com.viax.app',
-            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
-          ),
+      builder: ({required mapKey, required onMapReady, required onTileError}) =>
+          FlutterMap(
+            key: mapKey,
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: destination,
+              initialZoom: 14,
+              minZoom: 10,
+              maxZoom: 18,
+              onMapReady: onMapReady,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+                userAgentPackageName: 'com.viax.app',
+                errorTileCallback: (tile, error, stackTrace) =>
+                    onTileError(error, stackTrace),
+              ),
 
-        // Ruta animada
-        if (_animatedRoute.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: _animatedRoute,
-                strokeWidth: 5.0,
-                color: AppColors.primary,
-                borderStrokeWidth: 1.5,
-                borderColor: Colors.white,
+              // Ruta animada
+              if (_animatedRoute.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _animatedRoute,
+                      strokeWidth: 5.0,
+                      color: AppColors.primary,
+                      borderStrokeWidth: 1.5,
+                      borderColor: Colors.white,
+                    ),
+                  ],
+                ),
+
+              // Marcadores
+              MarkerLayer(
+                markers: [
+                  // Cliente (ubicación actual)
+                  if (_clientLocation != null)
+                    Marker(
+                      point: _clientLocation!,
+                      width: 50,
+                      height: 50,
+                      child: _ClientMarker(heading: _clientHeading),
+                    ),
+
+                  // Conductor
+                  if (_conductorLocation != null)
+                    Marker(
+                      point: _conductorLocation!,
+                      width: 50,
+                      height: 50,
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: _ConductorMarker(heading: _conductorHeading),
+                          );
+                        },
+                      ),
+                    ),
+
+                  // Destino
+                  Marker(
+                    point: destination,
+                    width: 50,
+                    height: 60,
+                    child: const _DestinationMarker(),
+                  ),
+                ],
               ),
             ],
           ),
-
-        // Marcadores
-        MarkerLayer(
-          markers: [
-            // Cliente (ubicación actual)
-            if (_clientLocation != null)
-              Marker(
-                point: _clientLocation!,
-                width: 50,
-                height: 50,
-                child: _ClientMarker(heading: _clientHeading),
-              ),
-
-            // Conductor
-            if (_conductorLocation != null)
-              Marker(
-                point: _conductorLocation!,
-                width: 50,
-                height: 50,
-                child: AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: _ConductorMarker(heading: _conductorHeading),
-                    );
-                  },
-                ),
-              ),
-
-            // Destino
-            Marker(
-              point: destination,
-              width: 50,
-              height: 60,
-              child: const _DestinationMarker(),
-            ),
-          ],
-        ),
-        ],
-      ),
     );
   }
 
@@ -1165,90 +1412,122 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       snap: true,
       snapSizes: const [0.18, 0.32, 0.55],
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, -6),
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark
+                      ? [
+                          AppColors.darkSurface.withValues(alpha: 0.93),
+                          AppColors.darkBackground.withValues(alpha: 0.88),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.9),
+                          AppColors.blue50.withValues(alpha: 0.8),
+                        ],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.66),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    blurRadius: 24,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 14),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                // Info del viaje
-                TripInfoPanel(
-                  direccionDestino: widget.direccionDestino,
-                  conductor: _conductor,
-                  distanceKm: _distanceKm,
-                  etaMinutes: _etaMinutes,
-                  isDark: isDark,
-                  precioActual: _precioActual,
-                  distanciaRecorrida: _distanceTraveled,
-                  tiempoTranscurrido: _tiempoTranscurridoSeg,
-                  onDriverTap: _showDriverDetails,
-                ),
-
-                const SizedBox(height: 20),
-
-                // Botones de acción
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.message_rounded,
-                          label: 'Mensaje',
-                          onTap: _openChat,
-                          isDark: isDark,
-                          badgeCount: _unreadCount,
+              child: SingleChildScrollView(
+                controller: scrollController,
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 14),
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [Colors.white30, Colors.white12]
+                              : [Colors.grey[400]!, Colors.grey[300]!],
                         ),
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.person_rounded,
-                          label: 'Perfil',
-                          onTap: _showDriverDetails,
-                          isDark: isDark,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.share_location_rounded,
-                          label: 'Compartir',
-                          onTap: () {
-                            // TODO: Implementar compartir viaje
-                          },
-                          isDark: isDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                const SizedBox(height: 28),
-              ],
+                    // Info del viaje
+                    TripInfoPanel(
+                      direccionDestino: widget.direccionDestino,
+                      conductor: _conductor,
+                      distanceKm: _distanceKm,
+                      etaMinutes: _etaMinutes,
+                      isDark: isDark,
+                      precioActual: _precioActual,
+                      distanciaRecorrida: _distanceTraveled,
+                      tiempoTranscurrido: _tiempoTranscurridoSeg,
+                      onDriverTap: _showDriverDetails,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Botones de acción
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.message_rounded,
+                              label: 'Mensaje',
+                              onTap: _openChat,
+                              isDark: isDark,
+                              badgeCount: _unreadCount,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.person_rounded,
+                              label: 'Perfil',
+                              onTap: _showDriverDetails,
+                              isDark: isDark,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _ActionButton(
+                              icon: _isSharingLocation
+                                  ? Icons.share_location_rounded
+                                  : Icons.share_location_rounded,
+                              label: _isSharingLocation
+                                  ? 'Compartiendo'
+                                  : 'Compartir',
+                              onTap: _shareLocation,
+                              isDark: isDark,
+                              highlight: _isSharingLocation,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -1367,11 +1646,7 @@ class _DestinationMarker extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.flag_rounded,
-            color: Colors.white,
-            size: 22,
-          ),
+          child: const Icon(Icons.flag_rounded, color: Colors.white, size: 22),
         ),
         Container(
           width: 4,
@@ -1440,6 +1715,7 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isDark;
   final int badgeCount;
+  final bool highlight;
 
   const _ActionButton({
     required this.icon,
@@ -1447,96 +1723,136 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     required this.isDark,
     this.badgeCount = 0,
+    this.highlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(14),
-        splashColor: AppColors.primary.withValues(alpha: 0.08),
-        highlightColor: AppColors.primary.withValues(alpha: 0.04),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.grey.withValues(alpha: 0.06),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.grey.withValues(alpha: 0.1),
-            ),
-          ),
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    icon,
-                    color: isDark ? Colors.white70 : AppColors.primary,
-                    size: 22,
+            splashColor: AppColors.primary.withValues(alpha: 0.08),
+            highlightColor: AppColors.primary.withValues(alpha: 0.04),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: highlight
+                      ? [
+                          AppColors.success.withValues(alpha: 0.2),
+                          AppColors.success.withValues(alpha: 0.1),
+                        ]
+                      : isDark
+                      ? [
+                          Colors.white.withValues(alpha: 0.09),
+                          Colors.white.withValues(alpha: 0.04),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.84),
+                          AppColors.blue50.withValues(alpha: 0.52),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: highlight
+                      ? AppColors.success.withValues(alpha: 0.35)
+                      : isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.68),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.08 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  if (badgeCount > 0)
-                    Positioned(
-                      right: -6,
-                      top: -6,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.error.withValues(alpha: 0.3),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Center(
-                          child: Text(
-                            badgeCount > 9 ? '9+' : badgeCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              height: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white60 : Colors.grey[600],
-                ),
+              child: Column(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        icon,
+                        color: highlight
+                            ? AppColors.success
+                            : isDark
+                            ? Colors.white70
+                            : AppColors.primary,
+                        size: 22,
+                      ),
+                      if (badgeCount > 0)
+                        Positioned(
+                          right: -6,
+                          top: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF1C1C1E)
+                                    : Colors.white,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.error.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Center(
+                              child: Text(
+                                badgeCount > 9 ? '9+' : badgeCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: highlight
+                          ? AppColors.success
+                          : isDark
+                          ? Colors.white70
+                          : Colors.grey[700],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-

@@ -12,8 +12,8 @@ Aplicación Flutter **Viax**, para servicios de movilidad y envíos rápidos, co
 - ✅ **Geocoding** (Dirección ↔ Coordenadas)
 - ✅ **Cálculo de rutas** (Mapbox Directions API)
 - ✅ **Información de tráfico** (TomTom API)
-- ✅ **Backend PHP/MySQL** (Desplegado en Railway)
-- ✅ **Base de datos MySQL** (Railway - sql10.freesqldatabase.com)
+- ✅ **Backend PHP/MySQL** (Desplegado en VPS)
+- ✅ **Base de datos MySQL** (Servidor de producción)
 - ✅ **UI/UX profesional** (Diseño minimalista)
 - ✅ **Panel de administración** (Dashboard completo)
 
@@ -25,7 +25,7 @@ Frontend (Flutter)
 ├── GPS y cálculo de rutas
 └── UI/UX profesional
 
-Backend (PHP + MySQL - Railway)
+Backend (PHP + MySQL - VPS)
 ├── API REST completa
 ├── Sistema de verificación por email
 ├── Gestión de usuarios y conductores
@@ -35,8 +35,8 @@ Backend (PHP + MySQL - Railway)
 
 ### 🚀 **Despliegue**
 - **Frontend**: Compilación manual (APK/AAB)
-- **Backend**: Railway (https://viax-backend-production.up.railway.app)
-- **Base de datos**: MySQL en Railway (sql10.freesqldatabase.com)
+- **Backend**: VPS (http://76.13.114.194)
+- **Base de datos**: MySQL en servidor de producción
 - **Email**: PHPMailer con Gmail SMTP
 
 ## 🚀 Inicio Rápido
@@ -69,7 +69,7 @@ flutter pub get
 flutter run
 ```
 
-### Opción B: Usar Backend en Producción (Railway)
+### Opción B: Usar Backend en Producción (VPS)
 
 #### 1. **Cambiar a Modo Producción**
 Edita `lib/src/core/config/app_config.dart`:
@@ -96,7 +96,7 @@ flutter run
 | **Mapbox Routes** | 100k/mes | ✅ Activo | api.mapbox.com |
 | **TomTom Traffic** | 2.5k/día | ✅ Activo | api.tomtom.com |
 | **Nominatim** | Ilimitado | ✅ Activo | nominatim.openstreetmap.org |
-| **Backend API** | - | ✅ Activo | viax-backend-production.up.railway.app |
+| **Backend API** | - | ✅ Activo | 76.13.114.194 |
 | **MySQL Database** | - | ✅ Activo | sql10.freesqldatabase.com |
 | **Email Service** | - | ✅ Activo | Gmail SMTP |
 
@@ -117,13 +117,13 @@ $this->username = 'root';
 $this->password = 'root';
 ```
 
-#### **Entorno PRODUCCIÓN (Railway)**
+#### **Entorno PRODUCCIÓN (VPS)**
 ```dart
 // lib/src/core/config/app_config.dart
 static const Environment environment = Environment.production;
 
 // lib/src/global/config/api_config.dart
-static const String baseUrl = 'https://viax-backend-production.up.railway.app';
+static const String baseUrl = 'http://76.13.114.194';
 
 // backend/config/database.php
 $this->host = 'sql10.freesqldatabase.com';
@@ -134,17 +134,17 @@ $this->password = 'BVeitwKy1q';
 
 **Ver documentación completa**: [`docs/CONFIGURACION_ENTORNOS.md`](docs/CONFIGURACION_ENTORNOS.md)
 
-### 🔧 **URLs de Producción (Railway)**
+### 🔧 **URLs de Producción (VPS)**
 ```dart
 // Backend URLs (lib/src/core/constants/app_constants.dart)
-const String baseUrl = 'https://viax-backend-production.up.railway.app';
+const String baseUrl = 'http://76.13.114.194';
 const String verifySystemUrl = '$baseUrl/verify_system_json.php';
 
-// Database connection (Railway)
-host: 'sql10.freesqldatabase.com'
-database: 'sql10740070'
-username: 'sql10740070'
-password: '********'
+// Database connection (servidor VPS)
+host: '***'
+database: '***'
+username: '***'
+password: '***'
 ```
 
 ## 🛠️ **Problemas Resueltos**
@@ -175,7 +175,7 @@ lib/
 ├── main.dart               # Punto de entrada
 └── ...
 
-backend/                    # Backend PHP (Railway)
+backend/                    # Backend PHP (VPS)
 ├── auth/                   # Endpoints de autenticación
 ├── config/                 # Configuración de BD
 ├── conductor/              # Gestión de conductores
@@ -226,14 +226,14 @@ docs/                       # Documentación completa
 - **provider** (State management)
 
 ### 🖥️ **Backend (PHP/MySQL)**
-- **PHP** 8.3+ (Railway)
-- **MySQL** 8.0+ (Railway)
+- **PHP** 8.3+ (VPS)
+- **MySQL** 8.0+ (VPS)
 - **PHPMailer** (Envío de emails)
 - **Composer** (Gestión de dependencias)
 
 ### 🗄️ **Base de Datos**
-- **MySQL** (sql10.freesqldatabase.com)
-- **Railway** (Hosting cloud)
+- **MySQL** (servidor de producción)
+- **Hosting** (VPS)
 - **phpMyAdmin** (Gestión de BD)
 
 ### 🗺️ **APIs de Mapas**
@@ -299,10 +299,10 @@ flutter build appbundle --release
 flutter install
 ```
 
-### 🖥️ **Backend (Railway)**
-- **URL**: https://viax-backend-production.up.railway.app
-- **Estado**: ✅ Desplegado automáticamente
-- **Base de datos**: MySQL en Railway
+### 🖥️ **Backend (VPS)**
+- **URL**: http://76.13.114.194
+- **Estado**: ✅ Activo en producción
+- **Base de datos**: MySQL en VPS
 - **Email**: Gmail SMTP configurado
 
 ### 🗄️ **Base de Datos**
@@ -313,7 +313,7 @@ flutter install
 ### 🔧 **Configuración de Producción**
 ```dart
 // lib/src/core/constants/app_constants.dart
-const String baseUrl = 'https://viax-backend-production.up.railway.app';
+const String baseUrl = 'http://76.13.114.194';
 
 // lib/src/core/config/env_config.dart
 const String mapboxAccessToken = 'tu_token_mapbox';
@@ -339,7 +339,7 @@ const String tomtomApiKey = 'tu_api_key_tomtom';
 ### ✅ **Completado**
 - Autenticación completa con verificación por email
 - Mapas interactivos con geocoding y rutas
-- Backend PHP/MySQL desplegado en Railway
+- Backend PHP/MySQL desplegado en VPS
 - Panel de administración funcional
 - UI/UX profesional y responsive
 - Sistema de precios implementado
@@ -369,7 +369,7 @@ Este proyecto está bajo la Licencia MIT.
 
 ### ✅ **Características Principales**
 - **App Flutter nativa** con UI/UX profesional
-- **Backend robusto** desplegado en Railway
+- **Backend robusto** desplegado en VPS
 - **Base de datos MySQL** en la nube
 - **Sistema de email** con verificación
 - **Mapas interactivos** con múltiples APIs

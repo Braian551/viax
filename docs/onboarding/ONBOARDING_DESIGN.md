@@ -1,4 +1,4 @@
-# 🎯 Pantalla de Onboarding - PingGo
+# 🎯 Pantalla de Onboarding - Viax
 
 ## 📱 Descripción General
 
@@ -56,7 +56,7 @@ Sistema de introducción profesional con 5 pantallas deslizables que presentan l
 ## ✨ Características de Diseño
 
 ### **Header (Superior)**
-- Logo pequeño de la app + nombre "PingGo"
+- Logo pequeño de la app + nombre "Viax"
 - Botón "Saltar" en la esquina derecha (se oculta en la última pantalla)
 
 ### **Contenido Central**
@@ -145,7 +145,7 @@ Sistema de introducción profesional con 5 pantallas deslizables que presentan l
 ## 🚀 Mejoras Implementadas
 
 ✅ **Diseño profesional** inspirado en Uber, Rappi, DiDi
-✅ **Consistencia visual** con la identidad de PingGo
+✅ **Consistencia visual** con la identidad de Viax
 ✅ **Animaciones fluidas** para mejor UX
 ✅ **Navegación intuitiva** con gestos y botones
 ✅ **Responsive design** para diferentes dispositivos

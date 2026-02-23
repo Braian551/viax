@@ -10,24 +10,24 @@ Se ha implementado exitosamente un sistema completo de solicitud de viajes en do
 
 ### 1. Base de Datos (3 archivos)
 
-#### `pingo/backend/migrations/007_create_configuracion_precios.sql`
+#### `viax/backend/migrations/007_create_configuracion_precios.sql`
 - **Tabla `configuracion_precios`**: 26 campos de configuración
 - **Tabla `historial_precios`**: Auditoría de cambios
 - **Vista `vista_precios_activos`**: Consulta rápida con período actual
 - **4 Configuraciones por defecto**: moto, carro, moto_carga, carro_carga
 
-#### `pingo/backend/migrations/run_migration_007.php`
+#### `viax/backend/migrations/run_migration_007.php`
 - Script PHP para ejecutar la migración
 - Verificación automática de instalación
 - Reporte detallado de configuraciones
 
-#### `pingo/backend/migrations/install_precios.bat`
+#### `viax/backend/migrations/install_precios.bat`
 - Script batch para Windows
 - Ejecución simplificada de la migración
 
 ### 2. Backend PHP (2 archivos)
 
-#### `pingo/backend/pricing/get_config.php`
+#### `viax/backend/pricing/get_config.php`
 ```
 GET /pricing/get_config.php?tipo_vehiculo=moto
 ```
@@ -35,7 +35,7 @@ GET /pricing/get_config.php?tipo_vehiculo=moto
 - Calcula período actual (normal, hora pico, nocturno)
 - Retorna recargo aplicable en tiempo real
 
-#### `pingo/backend/pricing/calculate_quote.php`
+#### `viax/backend/pricing/calculate_quote.php`
 ```
 POST /pricing/calculate_quote.php
 Body: {
@@ -168,13 +168,13 @@ Total = MAX(Total, Tarifa Mínima)
 
 **Opción A - Script Batch (Recomendado):**
 ```bash
-cd c:\Flutter\ping_go\pingo\backend\migrations
+cd c:\Flutter\ping_go\Viax\backend\migrations
 install_precios.bat
 ```
 
 **Opción B - MySQL Directo:**
 ```bash
-mysql -u root -p pingo < c:\Flutter\ping_go\pingo\backend\migrations\007_create_configuracion_precios.sql
+mysql -u root -p Viax < c:\Flutter\ping_go\Viax\backend\migrations\007_create_configuracion_precios.sql
 ```
 
 **Opción C - MySQL Workbench:**
@@ -199,10 +199,10 @@ SELECT * FROM vista_precios_activos;
 
 ```bash
 # Test 1: Obtener configuración
-curl "http://localhost/pingo/backend/pricing/get_config.php?tipo_vehiculo=moto"
+curl "http://localhost/viax/backend/pricing/get_config.php?tipo_vehiculo=moto"
 
 # Test 2: Calcular cotización
-curl -X POST http://localhost/pingo/backend/pricing/calculate_quote.php \
+curl -X POST http://localhost/viax/backend/pricing/calculate_quote.php \
   -H "Content-Type: application/json" \
   -d '{
     "distancia_km": 8.5,
@@ -334,7 +334,7 @@ ORDER BY fecha_actualizacion DESC;
 
 ### Documentación
 - `docs/SISTEMA_PRECIOS_DOBLE_PANTALLA.md` - Documentación completa
-- `pingo/backend/pricing/` - Código fuente PHP
+- `viax/backend/pricing/` - Código fuente PHP
 - `lib/src/features/user/presentation/screens/` - Código Flutter
 
 ### Endpoints

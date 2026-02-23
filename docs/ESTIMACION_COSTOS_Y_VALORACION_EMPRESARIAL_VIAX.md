@@ -138,7 +138,7 @@ Se aplicó un enfoque mixto:
 
 | Rubro | Rango USD/mes |
 |---|---:|
-| Hosting backend (Railway/VPS) | 20 – 120 |
+| Hosting backend (VPS) | 20 – 120 |
 | Base de datos gestionada | 30 – 200 |
 | APIs mapas/rutas/tráfico (uso variable) | 0 – 800 |
 | Email transaccional | 10 – 80 |

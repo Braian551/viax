@@ -194,6 +194,9 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
   }
 
   Future<void> _showFinancialHistory(Map<String, dynamic> conductor) async {
+    final empresaId = int.tryParse((widget.user['empresa_id'] ?? widget.user['id']).toString()) ?? 0;
+    final actorUserId = int.tryParse((widget.user['id'] ?? '').toString()) ?? 0;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -204,6 +207,8 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
         maxChildSize: 0.95,
         builder: (_, controller) => DriverFinancialHistorySheet(
           driver: conductor,
+          empresaId: empresaId,
+          actorUserId: actorUserId,
           onPaymentRegistered: () {
             _loadDrivers();
           },
@@ -235,7 +240,7 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             itemCount: 5,
-            itemBuilder: (_, __) => Container(
+            itemBuilder: (context, index) => Container(
               margin: const EdgeInsets.only(bottom: 16),
               height: 100,
               decoration: BoxDecoration(

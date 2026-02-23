@@ -53,6 +53,11 @@ app.*.map.json
 backend/
 
 # ============================================
+# Sitioweb - repositorio separado
+# ============================================
+sitioweb/
+
+# ============================================
 # Security - API Keys and Environment Config
 # ============================================
 # IMPORTANTE: Protege tus API keys y tokens
@@ -87,7 +92,6 @@ GoogleService-Info.plist
 # ============================================
 render.yaml
 nixpacks.toml
-railway.json
 .htaccess
 
 # ============================================

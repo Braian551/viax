@@ -288,7 +288,7 @@ El proyecto Ping Go ahora tiene:
 
 ## 📞 Contacto
 
-**GitHub**: [Braian551/pingo](https://github.com/Braian551/pingo)  
+**GitHub**: [Braian551/Viax](https://github.com/Braian551/viax)  
 **Documentación**: `docs/architecture/`  
 **Questions**: Abrir Issue en GitHub
 

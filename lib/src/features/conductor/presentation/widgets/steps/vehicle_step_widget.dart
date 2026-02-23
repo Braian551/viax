@@ -269,10 +269,9 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
 
   IconData _vehicleTypeIcon() {
     switch (widget.selectedVehicleType) {
-      case 'motocarro':
+      case 'mototaxi':
         return Icons.electric_rickshaw_rounded;
       case 'moto':
-      case 'mototaxi':
         return Icons.two_wheeler_rounded;
       case 'taxi':
         return Icons.local_taxi_rounded;
@@ -352,7 +351,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
       {'id': 'moto', 'icon': Icons.two_wheeler_rounded, 'label': 'Moto'},
       {'id': 'carro', 'icon': Icons.directions_car_rounded, 'label': 'Carro'},
       {'id': 'taxi', 'icon': Icons.local_taxi_rounded, 'label': 'Taxi'},
-      {'id': 'motocarro', 'icon': Icons.electric_rickshaw_rounded, 'label': 'Motocarro'},
+      {'id': 'mototaxi', 'icon': Icons.electric_rickshaw_rounded, 'label': 'Mototaxi'},
     ];
 
     return GridView.builder(

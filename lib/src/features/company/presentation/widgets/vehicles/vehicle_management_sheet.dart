@@ -27,7 +27,7 @@ class _VehicleManagementSheetState extends State<VehicleManagementSheet> {
 
   static const List<Map<String, dynamic>> _allVehicleTypes = [
     {'key': 'moto', 'name': 'Moto', 'icon': Icons.two_wheeler_rounded, 'description': 'Motocicletas'},
-    {'key': 'motocarro', 'name': 'Motocarro', 'icon': Icons.electric_rickshaw_rounded, 'description': 'Motocarros de carga'},
+    {'key': 'mototaxi', 'name': 'Mototaxi', 'icon': Icons.electric_rickshaw_rounded, 'description': 'Mototaxis de carga'},
     {'key': 'taxi', 'name': 'Taxi', 'icon': Icons.local_taxi_rounded, 'description': 'Taxis y transporte público'},
     {'key': 'carro', 'name': 'Carro', 'icon': Icons.directions_car_rounded, 'description': 'Automóviles particulares'},
   ];

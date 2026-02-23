@@ -1,16 +1,16 @@
-# 🛠️ Comandos Útiles - PingGo
+# 🛠️ Comandos Útiles - Viax
 
 ## 🔍 Verificación
 
 ### Buscar URLs Hardcodeadas
 ```powershell
 cd c:\Flutter\ping_go
-Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/pingo/backend" -CaseSensitive
+Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/viax/backend" -CaseSensitive
 ```
 
 ### Ver Estructura Backend
 ```powershell
-cd c:\Flutter\ping_go\pingo\backend
+cd c:\Flutter\ping_go\Viax\backend
 Get-ChildItem -Recurse -Filter "*.php" | Format-Table FullName
 ```
 
@@ -36,10 +36,10 @@ void main() {
 ### Verificar Archivos Movidos
 ```bash
 # Email service debe estar en auth/
-ls c:\Flutter\ping_go\pingo\backend\auth\email_service.php
+ls c:\Flutter\ping_go\Viax\backend\auth\email_service.php
 
 # Verify code debe estar en auth/
-ls c:\Flutter\ping_go\pingo\backend\auth\verify_code.php
+ls c:\Flutter\ping_go\Viax\backend\auth\verify_code.php
 ```
 
 ---
@@ -49,13 +49,13 @@ ls c:\Flutter\ping_go\pingo\backend\auth\verify_code.php
 ### Verificar Servicios
 ```bash
 # Auth service
-curl http://localhost/pingo/backend/auth/login.php
+curl http://localhost/viax/backend/auth/login.php
 
 # Conductor service  
-curl http://localhost/pingo/backend/conductor/get_profile.php?conductor_id=1
+curl http://localhost/viax/backend/conductor/get_profile.php?conductor_id=1
 
 # Admin service
-curl http://localhost/pingo/backend/admin/dashboard_stats.php?admin_id=1
+curl http://localhost/viax/backend/admin/dashboard_stats.php?admin_id=1
 ```
 
 ### Logs
@@ -108,7 +108,7 @@ git commit -m "🎯 Reorganizar microservicios y centralizar URLs"
 ### Contar Archivos
 ```powershell
 # PHP files
-(Get-ChildItem -Path "c:\Flutter\ping_go\pingo\backend" -Recurse -Filter "*.php").Count
+(Get-ChildItem -Path "c:\Flutter\ping_go\Viax\backend" -Recurse -Filter "*.php").Count
 
 # Dart files
 (Get-ChildItem -Path "c:\Flutter\ping_go\lib" -Recurse -Filter "*.dart").Count

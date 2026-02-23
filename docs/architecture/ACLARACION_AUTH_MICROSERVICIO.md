@@ -127,9 +127,9 @@ Single Server (localhost/xampp)
 ### Fase Futura: Servidores Separados
 ```
 API Gateway
-  ├── auth.pingo.com       → Auth Service
-  ├── conductors.pingo.com → Conductor Service
-  └── admin.pingo.com      → Admin Service
+  ├── auth.Viax.com       → Auth Service
+  ├── conductors.Viax.com → Conductor Service
+  └── admin.Viax.com      → Admin Service
 ```
 
 **Solo cambiar URLs en AppConfig** ✨

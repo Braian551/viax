@@ -77,6 +77,8 @@ class ActiveTripController {
   DateTime _lastCameraUpdate = DateTime.now();
   bool _shouldUpdateCamera = true;
   bool _locationTrackingStarted = false;
+  bool _isCameraAnimating = false;
+  int _styleLoadToken = 0;
 
   // Callback
   final VoidCallback onStateChanged;
@@ -102,6 +104,8 @@ class ActiveTripController {
 
   void dispose() {
     isDisposed = true;
+    _styleLoadToken++;
+    mapReady = false;
     _stopLocationTracking();
     _cleanupMapResources();
     _cleanupTrackingService();
@@ -144,6 +148,7 @@ class ActiveTripController {
   Future<void> updateStyle(bool isDark) async {
     if (mapboxMap == null || isDisposed) return;
     try {
+      mapReady = false;
       final styleUri = isDark
           ? 'mapbox://styles/mapbox/navigation-night-v1'
           : 'mapbox://styles/mapbox/navigation-day-v1';
@@ -210,15 +215,19 @@ class ActiveTripController {
 
   Future<void> onStyleLoaded() async {
     if (isDisposed) return;
+    final styleToken = ++_styleLoadToken;
     
     mapReady = true;
+    await _resetAnnotationManagers();
     // Eliminamos el modo 3D al inicio para estabilidad
     onStateChanged();
 
     // Ejecutar tareas de inicialización
     await _quickFocusOnDriver();
-    _enableLocationPuck();
-    _addMarkers();
+    if (isDisposed || styleToken != _styleLoadToken || !mapReady) return;
+
+    await _enableLocationPuck();
+    await _addMarkers(styleToken: styleToken);
 
     if (!_locationTrackingStarted) {
       _locationTrackingStarted = true;
@@ -229,6 +238,15 @@ class ActiveTripController {
   void onMapLoadError(MapLoadingErrorEventData eventData) {
     if (isDisposed) return;
     debugPrint('Error cargando mapa: ${eventData.type} -> ${eventData.message}');
+
+    // Errores de tiles por red/DNS suelen ser transitorios (emulador o conexión).
+    // No debemos romper toda la vista de mapa por esto.
+    if (eventData.type == MapLoadErrorType.TILE) {
+      error = 'Conexión inestable: algunos tiles no cargaron';
+      onStateChanged();
+      return;
+    }
+
     mapError = true;
     error = 'Error al cargar el mapa';
     onStateChanged();
@@ -238,7 +256,7 @@ class ActiveTripController {
   // MAPA - MARCADORES
   // =========================================================================
 
-  Future<void> _addMarkers() async {
+  Future<void> _addMarkers({required int styleToken}) async {
     if (mapboxMap == null || isDisposed || !mapReady) return;
 
     try {
@@ -247,10 +265,12 @@ class ActiveTripController {
       // Múltiples capas para crear efecto de pin con sombra
       // =====================================================================
       if (toPickup) {
-        _pickupAnnotationManager ??= await mapboxMap!.annotations
+        if (isDisposed || styleToken != _styleLoadToken || !mapReady) return;
+        _pickupAnnotationManager = await mapboxMap!.annotations
             .createCircleAnnotationManager();
 
         if (_pickupAnnotationManager != null && !isDisposed) {
+          if (styleToken != _styleLoadToken || !mapReady) return;
           // Capa 1: Sombra/Glow exterior (efecto de profundidad)
           await _pickupAnnotationManager!.create(CircleAnnotationOptions(
             geometry: pickup,
@@ -296,10 +316,12 @@ class ActiveTripController {
       // =====================================================================
       // MARCADOR DE DESTINO - Estilo Pin Rojo tipo Google Maps
       // =====================================================================
-      _dropoffAnnotationManager ??= await mapboxMap!.annotations
+      if (isDisposed || styleToken != _styleLoadToken || !mapReady) return;
+      _dropoffAnnotationManager = await mapboxMap!.annotations
           .createCircleAnnotationManager();
 
       if (_dropoffAnnotationManager != null && !isDisposed) {
+        if (styleToken != _styleLoadToken || !mapReady) return;
         // Capa 1: Sombra exterior
         await _dropoffAnnotationManager!.create(CircleAnnotationOptions(
           geometry: dropoff,
@@ -344,6 +366,18 @@ class ActiveTripController {
     } catch (e) {
       debugPrint('⚠️ Error agregando marcadores: $e');
     }
+  }
+
+  Future<void> _resetAnnotationManagers() async {
+    try {
+      await _pickupAnnotationManager?.deleteAll();
+    } catch (_) {}
+    _pickupAnnotationManager = null;
+
+    try {
+      await _dropoffAnnotationManager?.deleteAll();
+    } catch (_) {}
+    _dropoffAnnotationManager = null;
   }
 
   /// Elimina el marcador del punto de recogida cuando el conductor llega
@@ -577,10 +611,12 @@ class ActiveTripController {
               bearing: 0,
             );
 
-      await mapboxMap!.easeTo(
-        options,
-        MapAnimationOptions(duration: 800, startDelay: 0),
-      );
+      await _runCameraAnimation(() {
+        return mapboxMap!.easeTo(
+          options,
+          MapAnimationOptions(duration: 800, startDelay: 0),
+        );
+      });
     } catch (e) {
       debugPrint('Error moviendo cámara: $e');
     }
@@ -602,13 +638,26 @@ class ActiveTripController {
       );
 
       if (!isDisposed && mapReady) {
-        await mapboxMap!.easeTo(
-          camera,
-          MapAnimationOptions(duration: 1200, startDelay: 0),
-        );
+        await _runCameraAnimation(() {
+          return mapboxMap!.easeTo(
+            camera,
+            MapAnimationOptions(duration: 1200, startDelay: 0),
+          );
+        });
       }
     } catch (e) {
       debugPrint('Error ajustando vista: $e');
+    }
+  }
+
+  Future<void> _runCameraAnimation(Future<void> Function() action) async {
+    if (_isCameraAnimating || isDisposed || mapboxMap == null || !mapReady) return;
+
+    _isCameraAnimating = true;
+    try {
+      await action();
+    } finally {
+      _isCameraAnimating = false;
     }
   }
 
@@ -747,22 +796,32 @@ class ActiveTripController {
   // =========================================================================
 
   Future<void> toggle3DMode() async {
+    if (_isCameraAnimating) return;
+
     is3DMode = !is3DMode;
     onStateChanged();
 
     if (mapboxMap == null || !mapReady) return;
 
     try {
-      if (is3DMode) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        final center = driverLocation ?? pickup;
-        await mapboxMap!.easeTo(
-          CameraOptions(center: center, zoom: 17.5, pitch: 55, bearing: currentBearing),
-          MapAnimationOptions(duration: 1000, startDelay: 0),
+      // IMPORTANTE: este botón solo cambia la perspectiva (2D/3D)
+      // y no debe comportarse como el botón de centrar/enfocar.
+      await _runCameraAnimation(() {
+        return mapboxMap!.easeTo(
+          is3DMode
+              ? CameraOptions(
+                  pitch: 55,
+                  bearing: currentBearing,
+                  zoom: 17.5,
+                )
+              : CameraOptions(
+                  pitch: 0,
+                  bearing: 0,
+                  zoom: 16.5,
+                ),
+          MapAnimationOptions(duration: 700, startDelay: 0),
         );
-      } else {
-        await fitRouteInView();
-      }
+      });
     } catch (e) {
       debugPrint('Error toggle 3D: $e');
       is3DMode = false;
@@ -788,10 +847,9 @@ class ActiveTripController {
               bearing: 0,
             );
 
-      await mapboxMap!.easeTo(
-        options,
-        MapAnimationOptions(duration: 800, startDelay: 0),
-      );
+      // Debe reaccionar siempre al toque del usuario, incluso si había
+      // una animación previa en curso.
+      await mapboxMap!.setCamera(options);
     } catch (e) {
       debugPrint('Error centrando: $e');
     }

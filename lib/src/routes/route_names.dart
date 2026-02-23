@@ -16,6 +16,8 @@
   static const String forgotPassword = '/forgot-password';
   static const String passwordRecoveryVerification = '/password-recovery-verification';
   static const String resetPassword = '/reset-password';
+  static const String passwordChangeVerification = '/password-change-verification';
+  static const String passwordChangeSetNew = '/password-change-set-new';
   
   static const String home = '/home';
   static const String locationPicker = '/location-picker';
@@ -54,6 +56,7 @@
   static const String conductorHome = '/conductor/home';
   static const String conductorTrips = '/conductor/trips';
   static const String conductorEarnings = '/conductor/earnings';
+  static const String conductorCommissions = '/conductor/commissions';
   static const String conductorProfile = '/conductor/profile';
   static const String conductorVehicle = '/conductor/vehicle';
   static const String conductorDocuments = '/conductor/documents';
@@ -62,6 +65,10 @@
   static const String conductorActiveTrip = '/conductor/active-trip';
   
   // Rutas de viaje activo
+  static const String userSearchingDriver = '/user/searching-driver';
   static const String userActiveTrip = '/user/active-trip';
   static const String userTripAccepted = '/user/trip-accepted';
+
+  // Compartir ubicación
+  static const String sharedLocationView = '/share/location';
 }

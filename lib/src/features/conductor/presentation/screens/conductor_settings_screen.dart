@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viax/src/features/notifications/services/push_notification_service.dart';
+import 'package:viax/src/global/models/app_user_settings.dart';
+import 'package:viax/src/global/services/app_user_settings_service.dart';
+import 'package:viax/src/global/services/biometric_auth_service.dart';
+import 'package:viax/src/global/services/legal/legal_links_service.dart';
+import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/theme/theme_provider.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/conductor_drawer.dart';
 import '../widgets/settings/settings_widgets.dart';
 
 /// Pantalla de Configuración del Conductor
-/// 
+///
 /// Permite gestionar preferencias de la cuenta,
 /// notificaciones, privacidad y más.
 class ConductorSettingsScreen extends StatefulWidget {
@@ -18,7 +26,8 @@ class ConductorSettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<ConductorSettingsScreen> createState() => _ConductorSettingsScreenState();
+  State<ConductorSettingsScreen> createState() =>
+      _ConductorSettingsScreenState();
 }
 
 class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
@@ -32,18 +41,14 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
-  bool _locationSharing = true;
+  bool _biometricEnabled = false;
   bool _darkMode = false;
+  bool _isLoadingSettings = true;
 
   @override
   void initState() {
     super.initState();
     _initAnimations();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _loadSettings();
   }
 
@@ -60,23 +65,115 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
       ),
     );
 
-    _headerSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, -0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _headerController,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
-      ),
-    );
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _headerController,
+            curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _headerController.forward();
   }
 
-  void _loadSettings() {
-    // Cargar configuraciones guardadas
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    _darkMode = isDark;
+  Future<void> _loadSettings() async {
+    final themeProvider = context.read<ThemeProvider>();
+    final settings = await AppUserSettingsService.loadForCurrentUser();
+
+    if (!mounted) return;
+
+    setState(() {
+      _notificationsEnabled = settings.notificationsEnabled;
+      _soundEnabled = settings.soundEnabled;
+      _vibrationEnabled = settings.vibrationEnabled;
+      _biometricEnabled = settings.biometricEnabled;
+      _darkMode = themeProvider.isDarkMode;
+      _isLoadingSettings = false;
+    });
+  }
+
+  Future<void> _saveSettings() async {
+    final settings = AppUserSettings(
+      notificationsEnabled: _notificationsEnabled,
+      soundEnabled: _soundEnabled,
+      vibrationEnabled: _vibrationEnabled,
+      biometricEnabled: _biometricEnabled,
+      language: 'es',
+    );
+    await AppUserSettingsService.saveForCurrentUser(settings);
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    setState(() => _notificationsEnabled = value);
+    await _saveSettings();
+
+    if (value) {
+      await PushNotificationService.registerCurrentDeviceForUser(
+        widget.conductorId,
+      );
+    } else {
+      await PushNotificationService.unregisterCurrentDevice(
+        userId: widget.conductorId,
+      );
+    }
+  }
+
+  Future<void> _toggleDarkMode(bool value) async {
+    final themeProvider = context.read<ThemeProvider>();
+    if (value) {
+      await themeProvider.setDarkMode();
+    } else {
+      await themeProvider.setLightMode();
+    }
+
+    if (!mounted) return;
+
+    setState(() => _darkMode = value);
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      final available = await BiometricAuthService.isAvailable();
+      if (!available) {
+        _showSnackbar('Tu dispositivo no soporta biometría');
+        return;
+      }
+
+      final authenticated = await BiometricAuthService.authenticateForEnable();
+      if (!authenticated) {
+        _showSnackbar('No fue posible activar biometría');
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() => _biometricEnabled = value);
+    await _saveSettings();
+  }
+
+  Future<void> _openChangePasswordScreen() async {
+    await Navigator.pushNamed(
+      context,
+      RouteNames.passwordChangeVerification,
+      arguments: {'userId': widget.conductorId},
+    );
+  }
+
+  Future<void> _openTerms() async {
+    final opened = await LegalLinksService.openTerms(role: LegalRole.conductor);
+    if (!opened) {
+      _showSnackbar('No se pudo abrir Términos y Condiciones');
+    }
+  }
+
+  Future<void> _openPrivacy() async {
+    final opened = await LegalLinksService.openPrivacy(
+      role: LegalRole.conductor,
+    );
+    if (!opened) {
+      _showSnackbar('No se pudo abrir Política de Privacidad');
+    }
   }
 
   @override
@@ -103,7 +200,9 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       drawer: widget.conductorUser != null
           ? ConductorDrawer(conductorUser: widget.conductorUser!)
           : null,
@@ -117,165 +216,152 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Información de cuenta (removida - ya se muestra en Perfil)
-                  const SizedBox.shrink(),
+                  if (_isLoadingSettings)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else ...[
+                    // Información de cuenta (removida - ya se muestra en Perfil)
+                    const SizedBox.shrink(),
 
-                  // Notificaciones
-                  SettingsSection(
-                    title: 'Notificaciones',
-                    children: [
-                      SettingsItem(
-                        icon: Icons.notifications_rounded,
-                        title: 'Notificaciones',
-                        subtitle: 'Recibir alertas de viajes',
-                        animationIndex: 0,
-                        trailing: SettingsToggle(
-                          value: _notificationsEnabled,
-                          onChanged: (value) {
-                            setState(() => _notificationsEnabled = value);
+                    // Notificaciones
+                    SettingsSection(
+                      title: 'Notificaciones',
+                      children: [
+                        SettingsItem(
+                          icon: Icons.notifications_rounded,
+                          title: 'Notificaciones',
+                          subtitle: 'Recibir alertas de viajes',
+                          animationIndex: 0,
+                          trailing: SettingsToggle(
+                            value: _notificationsEnabled,
+                            onChanged: _toggleNotifications,
+                          ),
+                        ),
+                        SettingsItem(
+                          icon: Icons.volume_up_rounded,
+                          title: 'Sonidos',
+                          subtitle: 'Sonidos de notificación',
+                          animationIndex: 1,
+                          trailing: SettingsToggle(
+                            value: _soundEnabled,
+                            onChanged: (value) {
+                              setState(() => _soundEnabled = value);
+                              _saveSettings();
+                            },
+                          ),
+                        ),
+                        SettingsItem(
+                          icon: Icons.vibration_rounded,
+                          title: 'Vibración',
+                          subtitle: 'Vibrar al recibir notificaciones',
+                          animationIndex: 2,
+                          trailing: SettingsToggle(
+                            value: _vibrationEnabled,
+                            onChanged: (value) {
+                              setState(() => _vibrationEnabled = value);
+                              _saveSettings();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Privacidad
+                    SettingsSection(
+                      title: 'Privacidad y Seguridad',
+                      children: [
+                        SettingsItem(
+                          icon: Icons.lock_rounded,
+                          title: 'Cambiar Contraseña',
+                          subtitle: 'Actualiza tu contraseña',
+                          animationIndex: 3,
+                          onTap: _openChangePasswordScreen,
+                        ),
+                        SettingsItem(
+                          icon: Icons.fingerprint_rounded,
+                          title: 'Autenticación Biométrica',
+                          subtitle: 'Usar huella o Face ID',
+                          animationIndex: 4,
+                          trailing: SettingsToggle(
+                            value: _biometricEnabled,
+                            onChanged: _toggleBiometric,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Apariencia
+                    SettingsSection(
+                      title: 'Apariencia',
+                      children: [
+                        SettingsItem(
+                          icon: Icons.dark_mode_rounded,
+                          title: 'Modo Oscuro',
+                          subtitle: 'Cambiar tema de la aplicación',
+                          animationIndex: 6,
+                          trailing: SettingsToggle(
+                            value: _darkMode,
+                            onChanged: _toggleDarkMode,
+                          ),
+                        ),
+                        SettingsItem(
+                          icon: Icons.language_rounded,
+                          title: 'Idioma',
+                          subtitle: 'Español',
+                          animationIndex: 7,
+                          onTap: () {
+                            _showSnackbar('Selección de idioma próximamente');
                           },
                         ),
-                      ),
-                      SettingsItem(
-                        icon: Icons.volume_up_rounded,
-                        title: 'Sonidos',
-                        subtitle: 'Sonidos de notificación',
-                        animationIndex: 1,
-                        trailing: SettingsToggle(
-                          value: _soundEnabled,
-                          onChanged: (value) {
-                            setState(() => _soundEnabled = value);
+                      ],
+                    ),
+
+                    // Sobre la app
+                    SettingsSection(
+                      title: 'Acerca de',
+                      children: [
+                        SettingsItem(
+                          icon: Icons.info_rounded,
+                          title: 'Versión de la App',
+                          subtitle: '1.0.0',
+                          animationIndex: 8,
+                          trailing: const SizedBox.shrink(),
+                        ),
+                        SettingsItem(
+                          icon: Icons.description_rounded,
+                          title: 'Términos y Condiciones',
+                          animationIndex: 9,
+                          onTap: _openTerms,
+                        ),
+                        SettingsItem(
+                          icon: Icons.privacy_tip_rounded,
+                          title: 'Política de Privacidad',
+                          animationIndex: 10,
+                          onTap: _openPrivacy,
+                        ),
+                      ],
+                    ),
+
+                    // Zona de peligro
+                    SettingsSection(
+                      title: 'Zona de Peligro',
+                      children: [
+                        SettingsItem(
+                          icon: Icons.delete_forever_rounded,
+                          title: 'Eliminar Cuenta',
+                          subtitle: 'Esta acción no se puede deshacer',
+                          iconColor: AppColors.error,
+                          animationIndex: 11,
+                          onTap: () {
+                            _showDeleteAccountDialog();
                           },
                         ),
-                      ),
-                      SettingsItem(
-                        icon: Icons.vibration_rounded,
-                        title: 'Vibración',
-                        subtitle: 'Vibrar al recibir notificaciones',
-                        animationIndex: 2,
-                        trailing: SettingsToggle(
-                          value: _vibrationEnabled,
-                          onChanged: (value) {
-                            setState(() => _vibrationEnabled = value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Privacidad
-                  SettingsSection(
-                    title: 'Privacidad y Seguridad',
-                    children: [
-                      SettingsItem(
-                        icon: Icons.location_on_rounded,
-                        title: 'Ubicación en tiempo real',
-                        subtitle: 'Compartir ubicación mientras conduces',
-                        animationIndex: 3,
-                        trailing: SettingsToggle(
-                          value: _locationSharing,
-                          onChanged: (value) {
-                            setState(() => _locationSharing = value);
-                          },
-                        ),
-                      ),
-                      SettingsItem(
-                        icon: Icons.lock_rounded,
-                        title: 'Cambiar Contraseña',
-                        subtitle: 'Actualiza tu contraseña',
-                        animationIndex: 4,
-                        onTap: () {
-                          _showSnackbar('Cambiar contraseña próximamente');
-                        },
-                      ),
-                      SettingsItem(
-                        icon: Icons.fingerprint_rounded,
-                        title: 'Autenticación Biométrica',
-                        subtitle: 'Usar huella o Face ID',
-                        animationIndex: 5,
-                        onTap: () {
-                          _showSnackbar('Biometría próximamente');
-                        },
-                      ),
-                    ],
-                  ),
-
-                  // Apariencia
-                  SettingsSection(
-                    title: 'Apariencia',
-                    children: [
-                      SettingsItem(
-                        icon: Icons.dark_mode_rounded,
-                        title: 'Modo Oscuro',
-                        subtitle: 'Cambiar tema de la aplicación',
-                        animationIndex: 6,
-                        trailing: SettingsToggle(
-                          value: _darkMode,
-                          onChanged: (value) {
-                            setState(() => _darkMode = value);
-                            _showSnackbar('Cambio de tema próximamente');
-                          },
-                        ),
-                      ),
-                      SettingsItem(
-                        icon: Icons.language_rounded,
-                        title: 'Idioma',
-                        subtitle: 'Español',
-                        animationIndex: 7,
-                        onTap: () {
-                          _showSnackbar('Selección de idioma próximamente');
-                        },
-                      ),
-                    ],
-                  ),
-
-                  // Sobre la app
-                  SettingsSection(
-                    title: 'Acerca de',
-                    children: [
-                      SettingsItem(
-                        icon: Icons.info_rounded,
-                        title: 'Versión de la App',
-                        subtitle: '1.0.0',
-                        animationIndex: 8,
-                        trailing: const SizedBox.shrink(),
-                      ),
-                      SettingsItem(
-                        icon: Icons.description_rounded,
-                        title: 'Términos y Condiciones',
-                        animationIndex: 9,
-                        onTap: () {
-                          _showSnackbar('Términos próximamente');
-                        },
-                      ),
-                      SettingsItem(
-                        icon: Icons.privacy_tip_rounded,
-                        title: 'Política de Privacidad',
-                        animationIndex: 10,
-                        onTap: () {
-                          _showSnackbar('Privacidad próximamente');
-                        },
-                      ),
-                    ],
-                  ),
-
-                  // Zona de peligro
-                  SettingsSection(
-                    title: 'Zona de Peligro',
-                    children: [
-                      SettingsItem(
-                        icon: Icons.delete_forever_rounded,
-                        title: 'Eliminar Cuenta',
-                        subtitle: 'Esta acción no se puede deshacer',
-                        iconColor: AppColors.error,
-                        animationIndex: 11,
-                        onTap: () {
-                          _showDeleteAccountDialog();
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ],
               ),
             ),
@@ -290,7 +376,9 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
       expandedHeight: 160,
       floating: false,
       pinned: true,
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       leading: widget.conductorUser != null
           ? IconButton(
               icon: Icon(
@@ -396,10 +484,7 @@ class _ConductorSettingsScreenState extends State<ConductorSettingsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.primary),
-            ),
+            child: Text('Cancelar', style: TextStyle(color: AppColors.primary)),
           ),
           ElevatedButton(
             onPressed: () {

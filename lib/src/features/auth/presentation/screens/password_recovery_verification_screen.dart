@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:viax/src/global/services/email_service.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
 import 'package:viax/src/widgets/dialogs/dialog_helper.dart';
@@ -13,11 +14,13 @@ import 'dart:async';
 class PasswordRecoveryVerificationScreen extends StatefulWidget {
   final String email;
   final String userName;
+  final int? passwordChangeUserId;
 
   const PasswordRecoveryVerificationScreen({
     super.key,
     required this.email,
     required this.userName,
+    this.passwordChangeUserId,
   });
 
   @override
@@ -37,6 +40,9 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
   int _resendCountdown = 60;
   Timer? _countdownTimer;
   bool _isDisposed = false;
+
+  bool get _isPasswordChangeFlow =>
+      widget.passwordChangeUserId != null;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -139,14 +145,22 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
     setState(() => _isLoading = true);
     
     try {
-      _verificationCode = EmailService.generateVerificationCode();
-      
-      bool success = await EmailService.sendPasswordRecoveryCodeWithFallback(
-        email: widget.email,
-        code: _verificationCode,
-        userName: widget.userName,
-        useMock: false,
-      );
+      bool success;
+
+      if (_isPasswordChangeFlow) {
+        final result = await UserService.requestPasswordChangeCode(
+          userId: widget.passwordChangeUserId!,
+        );
+        success = result['success'] == true;
+      } else {
+        _verificationCode = EmailService.generateVerificationCode();
+        success = await EmailService.sendPasswordRecoveryCodeWithFallback(
+          email: widget.email,
+          code: _verificationCode,
+          userName: widget.userName,
+          useMock: false,
+        );
+      }
 
       if (!mounted || _isDisposed) return;
       
@@ -188,6 +202,54 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
     if (!mounted || _isDisposed) return;
 
     final inputCode = _enteredCode;
+
+    if (_isPasswordChangeFlow) {
+      _countdownTimer?.cancel();
+      setState(() => _isVerifying = true);
+
+      try {
+        final result = await UserService.verifyPasswordChangeCode(
+          userId: widget.passwordChangeUserId!,
+          verificationCode: inputCode,
+        );
+
+        if (!mounted || _isDisposed) return;
+
+        if (result['success'] != true) {
+          await DialogHelper.showError(
+            context,
+            title: 'Código inválido',
+            message: result['message']?.toString() ??
+                'No se pudo verificar el código',
+            primaryButtonText: 'Reintentar',
+          );
+          return;
+        }
+
+        Navigator.pushReplacementNamed(
+          context,
+          RouteNames.passwordChangeSetNew,
+          arguments: {
+            'userId': widget.passwordChangeUserId,
+            'verificationCode': inputCode,
+          },
+        );
+        return;
+      } catch (_) {
+        if (!mounted || _isDisposed) return;
+        await DialogHelper.showError(
+          context,
+          title: 'Error',
+          message: 'No se pudo verificar el código. Intenta nuevamente.',
+          primaryButtonText: 'Entendido',
+        );
+      } finally {
+        if (mounted && !_isDisposed) {
+          setState(() => _isVerifying = false);
+        }
+      }
+      return;
+    }
     
     if (inputCode == _verificationCode) {
       _countdownTimer?.cancel();
@@ -208,7 +270,7 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
         );
       } catch (e) {
         if (!mounted || _isDisposed) return;
-        print('Error en verificación: $e');
+        debugPrint('Error en verificación: $e');
         _showErrorDialog('Error al verificar el código');
       } finally {
         if (mounted && !_isDisposed) {
@@ -289,7 +351,9 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
                       const SizedBox(height: 40),
 
                       Text(
-                        'Recupera tu contraseña',
+                        _isPasswordChangeFlow
+                            ? 'Verifica tu correo'
+                            : 'Recupera tu contraseña',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -300,7 +364,9 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
                       const SizedBox(height: 8),
 
                       Text(
-                        'Hemos enviado un código de 4 dígitos a\n${widget.email}',
+                        _isPasswordChangeFlow
+                            ? 'Hemos enviado un código de 4 dígitos a\n${widget.email}'
+                            : 'Hemos enviado un código de 4 dígitos a\n${widget.email}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
@@ -386,7 +452,7 @@ class _PasswordRecoveryVerificationScreenState extends State<PasswordRecoveryVer
 
                       const SizedBox(height: 20),
 
-                      if (_verificationCode.isNotEmpty)
+                      if (_verificationCode.isNotEmpty && !_isPasswordChangeFlow)
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(

@@ -98,7 +98,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                   final userModel = UserModel.fromJson(Map<String, dynamic>.from(userData));
                   _rating = userModel.calificacion ?? 5.0;
                 } catch (e) {
-                  print('Error parsing user rating: $e');
+                  debugPrint('Error parsing user rating: $e');
                   // Fallback to manual check if model parsing fails for some reason
                   final rawRating = userData['calificacion'] ?? 
                                    userData['calificacion_promedio'] ?? 
@@ -136,7 +136,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                }
              }
            } catch (e) {
-             print('Error fetching real rating: $e');
+             debugPrint('Error fetching real rating: $e');
            }
         }
         
@@ -307,14 +307,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                             ),
                               _buildOptionTile(
                               icon: Icons.notifications_none_rounded,
-                              title: 'Notificaciones',
-                              subtitle: 'Promociones, estado del viaje',
+                                title: 'Configuración',
+                                subtitle: 'Notificaciones, seguridad, tema',
                               isDark: isDark,
                               onTap: () {
                                 Navigator.pushNamed(
                                   context,
-                                  RouteNames.notifications,
-                                  arguments: {'userId': _userId},
+                                    RouteNames.settings,
                                 );
                               },
                             ),

@@ -10,19 +10,19 @@ Se ha implementado un sistema de solicitud de viajes en dos etapas, similar a Di
 ## 🗂️ Archivos Creados
 
 ### **Base de Datos**
-- `pingo/backend/migrations/007_create_configuracion_precios.sql`
+- `viax/backend/migrations/007_create_configuracion_precios.sql`
   - Tabla `configuracion_precios`: Configuración de tarifas por tipo de vehículo
   - Tabla `historial_precios`: Auditoría de cambios de precios
   - Vista `vista_precios_activos`: Consulta rápida de precios con período actual
   - 4 configuraciones por defecto (moto, carro, moto_carga, carro_carga)
 
 ### **Backend PHP**
-- `pingo/backend/pricing/get_config.php`
+- `viax/backend/pricing/get_config.php`
   - Obtiene configuración de precios para un tipo de vehículo
   - Calcula período actual (normal, hora pico, nocturno)
   - **Endpoint:** `GET /pricing/get_config.php?tipo_vehiculo=moto`
 
-- `pingo/backend/pricing/calculate_quote.php`
+- `viax/backend/pricing/calculate_quote.php`
   - Calcula cotización completa del viaje
   - Aplica tarifas, descuentos y recargos
   - **Endpoint:** `POST /pricing/calculate_quote.php`
@@ -101,7 +101,7 @@ Se ha implementado un sistema de solicitud de viajes en dos etapas, similar a Di
 # - Ejecutar todo el script
 
 # Opción 2: Desde línea de comandos
-mysql -u root -p pingo < pingo/backend/migrations/007_create_configuracion_precios.sql
+mysql -u root -p Viax < viax/backend/migrations/007_create_configuracion_precios.sql
 ```
 
 ### 2. Verificar la Instalación
@@ -123,10 +123,10 @@ SELECT * FROM vista_precios_activos;
 
 ```bash
 # Obtener configuración de moto
-curl "http://localhost/pingo/backend/pricing/get_config.php?tipo_vehiculo=moto"
+curl "http://localhost/viax/backend/pricing/get_config.php?tipo_vehiculo=moto"
 
 # Calcular cotización
-curl -X POST http://localhost/pingo/backend/pricing/calculate_quote.php \
+curl -X POST http://localhost/viax/backend/pricing/calculate_quote.php \
   -H "Content-Type: application/json" \
   -d '{
     "distancia_km": 8.5,

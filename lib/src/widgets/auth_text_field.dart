@@ -19,6 +19,7 @@ class AuthTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final String? hintText;
+  final String? helperText;
 
   const AuthTextField({
     super.key,
@@ -36,12 +37,13 @@ class AuthTextField extends StatelessWidget {
     this.inputFormatters,
     this.maxLines = 1,
     this.hintText,
+    this.helperText,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -69,58 +71,70 @@ class AuthTextField extends StatelessWidget {
           ),
         ],
       ),
-      child: TextFormField(
-        controller: controller,
-        inputFormatters: inputFormatters,
-        textCapitalization: textCapitalization,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        enabled: enabled,
-        readOnly: readOnly,
-        maxLines: maxLines,
-        textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
-        style: TextStyle(
-          color: Theme.of(context).textTheme.bodyLarge?.color,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.3,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryLight],
-              ),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (context, value, child) {
+          final showHelper = helperText != null && value.text.trim().isEmpty;
+
+          return TextFormField(
+            controller: controller,
+            inputFormatters: inputFormatters,
+            textCapitalization: textCapitalization,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            enabled: enabled,
+            readOnly: readOnly,
+            maxLines: maxLines,
+            textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.3,
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          suffixIcon: suffixIcon,
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
-            fontSize: 15,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
-        ),
-        validator: validator,
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              prefixIcon: Container(
+                margin: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              suffixIcon: suffixIcon,
+              hintText: hintText,
+              hintStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
+                fontSize: 15,
+              ),
+              helperText: showHelper ? helperText : null,
+              helperStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+            ),
+            validator: validator,
+          );
+        },
       ),
     );
   }

@@ -279,7 +279,7 @@ test('should update UI state when profile loads', () async {
 ```dart
 // En AppConfig, cambiar:
 // Antes
-static const baseUrl = 'http://10.0.2.2/pingo/backend';
+static const baseUrl = 'http://10.0.2.2/viax/backend';
 
 // Después
 static const conductorServiceUrl = 'http://api-gateway.com/conductor-service/v1';

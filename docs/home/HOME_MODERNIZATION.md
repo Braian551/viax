@@ -56,7 +56,7 @@ El nuevo Home Screen ha sido completamente rediseñado con las siguientes caract
 
 ```
 ┌─────────────────────────────────────┐
-│  [Logo] PingGo          [🔔 Notif]  │
+│  [Logo] Viax          [🔔 Notif]  │
 │  ────────────────────────────────   │
 │  (Fondo blur con gradiente)         │
 └─────────────────────────────────────┘
@@ -152,7 +152,7 @@ El nuevo Home Screen ha sido completamente rediseñado con las siguientes caract
 ```
 ┌────────────────────────────────────┐
 │  ¡Obtén 20% OFF!                   │
-│  En tu primer viaje con PingGo     │
+│  En tu primer viaje con Viax     │
 │  [BIENVENIDO20]                    │
 │  (Gradiente amarillo brillante)    │
 └────────────────────────────────────┘
@@ -347,5 +347,5 @@ dependencies:
 
 **Versión:** 2.0.0  
 **Fecha:** Octubre 2025  
-**Autor:** Sistema de diseño PingGo  
+**Autor:** Sistema de diseño Viax  
 **Estado:** ✅ Producción ready

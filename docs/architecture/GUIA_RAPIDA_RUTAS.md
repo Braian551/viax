@@ -6,14 +6,14 @@
 
 #### Email Service
 ```diff
-- ❌ http://10.0.2.2/pingo/backend/email_service.php
-+ ✅ http://10.0.2.2/pingo/backend/auth/email_service.php
+- ❌ http://10.0.2.2/viax/backend/email_service.php
++ ✅ http://10.0.2.2/viax/backend/auth/email_service.php
 ```
 
 #### Verify Code
 ```diff
-- ❌ http://10.0.2.2/pingo/backend/verify_code.php
-+ ✅ http://10.0.2.2/pingo/backend/auth/verify_code.php
+- ❌ http://10.0.2.2/viax/backend/verify_code.php
++ ✅ http://10.0.2.2/viax/backend/auth/verify_code.php
 ```
 
 ---
@@ -27,11 +27,11 @@ import 'package:ping_go/src/core/config/app_config.dart';
 
 // Email service
 final emailUrl = '${AppConfig.authServiceUrl}/email_service.php';
-// Resultado: http://10.0.2.2/pingo/backend/auth/email_service.php
+// Resultado: http://10.0.2.2/viax/backend/auth/email_service.php
 
 // Verify code
 final verifyUrl = '${AppConfig.authServiceUrl}/verify_code.php';
-// Resultado: http://10.0.2.2/pingo/backend/auth/verify_code.php
+// Resultado: http://10.0.2.2/viax/backend/auth/verify_code.php
 
 // Cualquier endpoint de auth
 final loginUrl = '${AppConfig.authServiceUrl}/login.php';
@@ -42,10 +42,10 @@ final registerUrl = '${AppConfig.authServiceUrl}/register.php';
 
 ```dart
 // ❌ NO HACER ESTO
-final url = 'http://10.0.2.2/pingo/backend/email_service.php';
+final url = 'http://10.0.2.2/viax/backend/email_service.php';
 
 // ❌ NO HACER ESTO
-final url = 'http://10.0.2.2/pingo/backend/auth/login.php';
+final url = 'http://10.0.2.2/viax/backend/auth/login.php';
 ```
 
 ---
@@ -96,7 +96,7 @@ final url = 'http://10.0.2.2/pingo/backend/auth/login.php';
 ```dart
 // ❌ Antes (INCORRECTO)
 class EmailService {
-  static const String apiUrl = 'http://10.0.2.2/pingo/backend/email_service.php';
+  static const String apiUrl = 'http://10.0.2.2/viax/backend/email_service.php';
 }
 
 // ✅ Después (CORRECTO)
@@ -112,7 +112,7 @@ class EmailService {
 ```dart
 // ❌ Antes (INCORRECTO)
 final response = await http.post(
-  Uri.parse('http://10.0.2.2/pingo/backend/auth/register.php'),
+  Uri.parse('http://10.0.2.2/viax/backend/auth/register.php'),
   body: jsonEncode(data),
 );
 
@@ -128,7 +128,7 @@ final response = await http.post(
 ```dart
 // ❌ Antes (INCORRECTO)
 class ConductorService {
-  static const String baseUrl = 'http://10.0.2.2/pingo/backend/conductor';
+  static const String baseUrl = 'http://10.0.2.2/viax/backend/conductor';
 }
 
 // ✅ Después (CORRECTO)
@@ -158,11 +158,11 @@ class AppConfig {
   static String get baseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://10.0.2.2/pingo/backend';
+        return 'http://10.0.2.2/viax/backend';
       case Environment.staging:
-        return 'https://staging-api.pingo.com';
+        return 'https://staging-api.Viax.com';
       case Environment.production:
-        return 'https://api.pingo.com/backend';
+        return 'https://api.Viax.com/backend';
     }
   }
   
@@ -223,7 +223,7 @@ void main() {
 ```powershell
 # Buscar URLs hardcodeadas en el proyecto
 cd c:\Flutter\ping_go
-Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/pingo/backend" -CaseSensitive
+Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/viax/backend" -CaseSensitive
 
 # Buscar específicamente email_service
 Select-String -Path "lib\**\*.dart" -Pattern "email_service\.php" -CaseSensitive
@@ -235,7 +235,7 @@ Select-String -Path "lib\**\*.dart" -Pattern "verify_code\.php" -CaseSensitive
 ### VS Code Search
 
 1. Presiona `Ctrl + Shift + F`
-2. Busca: `http://10.0.2.2/pingo/backend`
+2. Busca: `http://10.0.2.2/viax/backend`
 3. Reemplaza con: `${AppConfig.baseUrl}`
 4. O mejor: usa el getter específico del microservicio
 
@@ -264,7 +264,7 @@ Select-String -Path "lib\**\*.dart" -Pattern "verify_code\.php" -CaseSensitive
 
 ### Verificar estructura backend
 ```powershell
-cd c:\Flutter\ping_go\pingo\backend
+cd c:\Flutter\ping_go\Viax\backend
 Get-ChildItem -Recurse -Filter "*.php" | Select-Object FullName
 ```
 

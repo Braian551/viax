@@ -27,6 +27,9 @@ import '../widgets/common/radar_indicator.dart';
 import 'package:intl/intl.dart';
 import '../../../user/presentation/widgets/home/map_loading_shimmer.dart';
 import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:viax/src/features/notifications/presentation/widgets/notification_widgets.dart';
+import 'package:viax/src/features/notifications/services/notification_service.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -80,6 +83,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   // Estadísticas del día
   int _viajesHoy = 0;
   double _gananciasHoy = 0.0;
+  int _unreadNotifications = 0;
+  Timer? _notificationTimer;
 
   late AnimationController _pulseController;
   late AnimationController _connectionController;
@@ -98,6 +103,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _initializeAnimations();
     _requestLocationPermission();
     _checkActiveDispute(); // Verificar disputa activa al inicio
+    _loadUnreadNotifications();
+    _startNotificationPolling();
 
     // Marcar mapa como listo
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -132,6 +139,48 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     } catch (e) {
       debugPrint('Error loading daily stats: $e');
     }
+  }
+
+  int? get _conductorUserId {
+    final raw = widget.conductorUser['id'];
+    if (raw is int) return raw;
+    if (raw is String) return int.tryParse(raw);
+    if (raw is num) return raw.toInt();
+    return null;
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    final userId = _conductorUserId;
+    if (userId == null) return;
+
+    final count = await NotificationService.getUnreadCount(userId: userId);
+    if (!_isDisposed && mounted) {
+      _safeSetState(() => _unreadNotifications = count);
+    }
+  }
+
+  void _startNotificationPolling() {
+    _notificationTimer?.cancel();
+    _notificationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadUnreadNotifications(),
+    );
+  }
+
+  void _openNotifications() {
+    final userId = _conductorUserId;
+    if (userId == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(
+          userId: userId,
+          currentUser: widget.conductorUser,
+          userType: 'conductor',
+        ),
+      ),
+    ).then((_) => _loadUnreadNotifications());
   }
 
   Future<void> _loadCompanyInfo() async {
@@ -238,6 +287,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         // Actualizar posición del mapa si es necesario
         if (_currentPosition != null && mounted) {
           _centerMapOnLocation(_currentPosition!);
+          _syncOnlineStateFromBackend();
         }
         break;
 
@@ -352,9 +402,51 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
       // Cargar zonas de demanda inmediatamente (para mostrar antes de conectarse)
       _startDemandZonesUpdates();
+
+      // Restaurar estado online persistido en backend cuando Home se reconstruye
+      await _syncOnlineStateFromBackend();
     } catch (e) {
       debugPrint('Error al obtener ubicación: $e');
       _safeSetState(() => _isLoadingLocation = false);
+    }
+  }
+
+  Future<void> _syncOnlineStateFromBackend() async {
+    try {
+      if (_isDisposed || !mounted) return;
+
+      final conductorId = int.tryParse(widget.conductorUser['id'].toString());
+      if (conductorId == null) return;
+
+      final info = await ConductorService.getConductorInfo(conductorId);
+      final conductorData = info?['conductor'] as Map<String, dynamic>?;
+      final rawDisponible =
+          conductorData?['disponible'] ?? info?['disponible'] ?? info?['data']?['disponible'];
+
+      final isDisponible =
+          rawDisponible == true || rawDisponible == 1 || rawDisponible == '1';
+
+      if (!isDisponible) return;
+
+      _safeSetState(() => _isOnline = true);
+      _connectionController.forward();
+
+      if (_currentPosition == null) return;
+
+      TripRequestSearchService.startSearching(
+        conductorId: conductorId,
+        currentLat: _currentPosition!.latitude,
+        currentLng: _currentPosition!.longitude,
+        onRequestsFound: _onRequestsFound,
+        onError: _onSearchError,
+      );
+
+      _safeSetState(() {
+        _isSearchingRequests = true;
+        _searchStatus = 'Buscando solicitudes cercanas...';
+      });
+    } catch (e) {
+      debugPrint('Error sincronizando estado online: $e');
     }
   }
 
@@ -378,6 +470,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         ).listen(
           (geo.Position position) {
             _safeSetState(() => _currentPosition = position);
+
+            if (_isOnline) {
+              TripRequestSearchService.updateSearchLocation(
+                latitude: position.latitude,
+                longitude: position.longitude,
+              );
+            }
 
             // Actualizar mapa con debounce
             _debouncedUpdateMapLocation(position);
@@ -720,6 +819,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _fadeController.dispose();
     _slideController.dispose();
     _positionStream?.cancel();
+    _notificationTimer?.cancel();
     _mapController.dispose();
 
     // Detener búsqueda si está activa
@@ -915,6 +1015,12 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                         ),
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 10),
+                  NotificationBadge(
+                    count: _unreadNotifications,
+                    isDark: isDark,
+                    onTap: _openNotifications,
                   ),
                   const SizedBox(width: 10),
                   // Botón de menú con efecto glass

@@ -10,7 +10,7 @@ flutter run --dart-define=RESET_ONBOARDING=true
 ```
 
 O simplemente elimina los datos de la app desde el dispositivo/emulador:
-- Settings → Apps → PingGo → Storage → Clear Data
+- Settings → Apps → Viax → Storage → Clear Data
 
 ### Alternativa rápida (Durante desarrollo)
 Puedes modificar temporalmente el código en `auth_wrapper.dart` para forzar que siempre muestre el onboarding:

@@ -2,6 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../company/presentation/screens/company_conductores_documentos_screen.dart';
+import '../../../company/presentation/screens/company_commissions_screen.dart';
+import '../../../conductor/presentation/screens/conductor_commissions_screen.dart';
+import '../../../../routes/route_names.dart';
 import '../../../../theme/app_colors.dart';
 import '../../models/notification_model.dart';
 import '../../providers/notification_provider.dart';
@@ -11,25 +15,39 @@ import '../widgets/notification_widgets.dart';
 /// Muestra todas las notificaciones con filtros y acciones
 class NotificationsScreen extends StatelessWidget {
   final int userId;
+  final Map<String, dynamic>? currentUser;
+  final String? userType;
 
   const NotificationsScreen({
     super.key,
     required this.userId,
+    this.currentUser,
+    this.userType,
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => NotificationProvider()..initialize(userId),
-      child: _NotificationsContent(userId: userId),
+      child: _NotificationsContent(
+        userId: userId,
+        currentUser: currentUser,
+        userType: userType,
+      ),
     );
   }
 }
 
 class _NotificationsContent extends StatefulWidget {
   final int userId;
+  final Map<String, dynamic>? currentUser;
+  final String? userType;
 
-  const _NotificationsContent({required this.userId});
+  const _NotificationsContent({
+    required this.userId,
+    this.currentUser,
+    this.userType,
+  });
 
   @override
   State<_NotificationsContent> createState() => _NotificationsContentState();
@@ -83,6 +101,14 @@ class _NotificationsContentState extends State<_NotificationsContent>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final normalizedUserType = widget.userType?.toLowerCase();
+    final isCompany = normalizedUserType == 'empresa' || normalizedUserType == 'company';
+    final isConductor = normalizedUserType == 'conductor';
+    final visibleFilterKeys = isCompany
+      ? const ['all', 'unread', 'payments', 'documents']
+      : isConductor
+        ? const ['all', 'unread', 'trips', 'payments', 'documents']
+        : const ['all', 'unread', 'trips', 'payments', 'documents', 'chat', 'promo'];
 
     return PopScope(
       canPop: true,
@@ -106,6 +132,7 @@ class _NotificationsContentState extends State<_NotificationsContent>
                 const SizedBox(height: 12),
                 NotificationFilters(
                   selectedFilter: provider.selectedFilter,
+                  visibleFilterKeys: visibleFilterKeys,
                   onFilterChanged: (filter) {
                     provider.setFilter(filter, userId: widget.userId);
                   },
@@ -410,8 +437,18 @@ class _NotificationsContentState extends State<_NotificationsContent>
     }
 
     // Navegar según el tipo de notificación
-    if (notification.referenciaTipo != null && notification.referenciaId != null) {
-      _navigateToReference(notification);
+    final handled = await _navigateToReference(notification);
+    if (!handled && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Esta notificación no tiene una vista detallada disponible.'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
   }
 
@@ -464,6 +501,7 @@ class _NotificationsContentState extends State<_NotificationsContent>
       backgroundColor: Colors.transparent,
       builder: (context) => _NotificationSettingsSheet(
         userId: widget.userId,
+        userType: widget.userType,
         settings: provider.settings,
         onSettingChanged: (key, value) {
           provider.updateSetting(
@@ -514,18 +552,104 @@ class _NotificationsContentState extends State<_NotificationsContent>
     );
   }
 
-  void _navigateToReference(NotificationModel notification) {
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  Future<bool> _navigateToReference(NotificationModel notification) async {
+    final referenceType = notification.referenciaTipo;
+
+    final normalizedUserType = (widget.userType ?? widget.currentUser?['tipo_usuario']?.toString())
+        ?.toLowerCase();
+
+    final reportId = notification.referenciaId ?? _asInt(notification.data['reporte_id']);
+    final conductorId = _asInt(notification.data['conductor_id']);
+
+    Future<bool> openConductorCommissions() async {
+      if (normalizedUserType != 'conductor') return false;
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ConductorCommissionsScreen(
+            conductorId: _asInt(widget.currentUser?['id']) ?? widget.userId,
+            conductorUser: widget.currentUser,
+          ),
+        ),
+      );
+      return true;
+    }
+
+    if (referenceType == null) {
+      if (notification.tipo.startsWith('debt_payment_') ||
+          notification.tipo == 'debt_payment_reminder' ||
+          notification.tipo == 'debt_payment_mandatory') {
+        return openConductorCommissions();
+      }
+      return false;
+    }
+
     // Navegar según el tipo de referencia
-    switch (notification.referenciaTipo) {
-      case 'viaje':
-        // Navigator.pushNamed(context, '/trip/${notification.referenciaId}');
-        break;
+    switch (referenceType) {
+      case 'pago_comision_reporte':
+        if (normalizedUserType == 'empresa' && widget.currentUser != null) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CompanyCommissionsScreen(
+                user: widget.currentUser!,
+                initialConductorId: conductorId,
+                initialReportId: reportId,
+              ),
+            ),
+          );
+          return true;
+        }
+
+        return openConductorCommissions();
+
+      case 'deuda_comision':
+        return openConductorCommissions();
+
+      case 'conductor_solicitud':
+      case 'documento_conductor':
+      case 'conductor':
+        if (normalizedUserType == 'empresa' && widget.currentUser != null) {
+          final companyId = _asInt(widget.currentUser?['empresa_id']) ??
+              _asInt(widget.currentUser?['id']);
+          if (companyId == null || companyId <= 0) {
+            return false;
+          }
+
+          final initialUserId = conductorId ??
+              (referenceType == 'conductor' ? notification.referenciaId : null);
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CompanyConductoresDocumentosScreen(
+                user: widget.currentUser!,
+                empresaId: companyId,
+                initialUserId: initialUserId,
+              ),
+            ),
+          );
+          return true;
+        }
+        return false;
+
       case 'pago':
-        // Navigator.pushNamed(context, '/payment/${notification.referenciaId}');
-        break;
-      case 'disputa':
-        // Navigator.pushNamed(context, '/dispute/${notification.referenciaId}');
-        break;
+        return openConductorCommissions();
+
+      default:
+        if (notification.tipo.startsWith('debt_payment_') ||
+            referenceType == 'deuda_comision') {
+          return openConductorCommissions();
+        }
+        return false;
     }
   }
 }
@@ -533,11 +657,13 @@ class _NotificationsContentState extends State<_NotificationsContent>
 /// Sheet de configuración de notificaciones
 class _NotificationSettingsSheet extends StatefulWidget {
   final int userId;
+  final String? userType;
   final NotificationSettings? settings;
   final Function(String key, dynamic value) onSettingChanged;
 
   const _NotificationSettingsSheet({
     required this.userId,
+    this.userType,
     required this.settings,
     required this.onSettingChanged,
   });
@@ -559,6 +685,9 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final normalizedUserType = widget.userType?.toLowerCase();
+    final isCompany = normalizedUserType == 'empresa' || normalizedUserType == 'company';
+    final isConductor = normalizedUserType == 'conductor';
 
     return Container(
       decoration: BoxDecoration(
@@ -608,24 +737,27 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
             },
             isDark,
           ),
-          
-          _buildSwitch(
-            'Viajes',
-            'Actualizaciones sobre tus viajes',
-            Icons.directions_car_rounded,
-            _localSettings.notifViajes,
-            (value) {
-              setState(() {
-                _localSettings = _localSettings.copyWith(notifViajes: value);
-              });
-              widget.onSettingChanged('notif_viajes', value);
-            },
-            isDark,
-          ),
-          
+
+          if (!isCompany)
+            _buildSwitch(
+              'Viajes',
+              'Actualizaciones sobre tus viajes',
+              Icons.directions_car_rounded,
+              _localSettings.notifViajes,
+              (value) {
+                setState(() {
+                  _localSettings = _localSettings.copyWith(notifViajes: value);
+                });
+                widget.onSettingChanged('notif_viajes', value);
+              },
+              isDark,
+            ),
+
           _buildSwitch(
             'Pagos',
-            'Confirmaciones y recibos de pago',
+            isCompany
+                ? 'Comprobantes y movimientos de pago de conductores'
+                : 'Confirmaciones y recibos de pago',
             Icons.payment_rounded,
             _localSettings.notifPagos,
             (value) {
@@ -636,34 +768,52 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
             },
             isDark,
           ),
-          
-          _buildSwitch(
-            'Promociones',
-            'Ofertas y descuentos especiales',
-            Icons.local_offer_rounded,
-            _localSettings.notifPromociones,
-            (value) {
-              setState(() {
-                _localSettings = _localSettings.copyWith(notifPromociones: value);
-              });
-              widget.onSettingChanged('notif_promociones', value);
-            },
-            isDark,
-          ),
-          
-          _buildSwitch(
-            'Mensajes',
-            'Notificaciones del chat',
-            Icons.chat_rounded,
-            _localSettings.notifChat,
-            (value) {
-              setState(() {
-                _localSettings = _localSettings.copyWith(notifChat: value);
-              });
-              widget.onSettingChanged('notif_chat', value);
-            },
-            isDark,
-          ),
+
+          if (isCompany || isConductor)
+            _buildSwitch(
+              'Documentos y estado',
+              isCompany
+                  ? 'Cambios en documentos y solicitudes de vinculación'
+                  : 'Cambios de estado documental y validaciones',
+              Icons.description_rounded,
+              _localSettings.notifSistema,
+              (value) {
+                setState(() {
+                  _localSettings = _localSettings.copyWith(notifSistema: value);
+                });
+                widget.onSettingChanged('notif_sistema', value);
+              },
+              isDark,
+            )
+          else
+            _buildSwitch(
+              'Promociones',
+              'Ofertas y descuentos especiales',
+              Icons.local_offer_rounded,
+              _localSettings.notifPromociones,
+              (value) {
+                setState(() {
+                  _localSettings = _localSettings.copyWith(notifPromociones: value);
+                });
+                widget.onSettingChanged('notif_promociones', value);
+              },
+              isDark,
+            ),
+
+          if (!isCompany && !isConductor)
+            _buildSwitch(
+              'Mensajes',
+              'Notificaciones del chat',
+              Icons.chat_rounded,
+              _localSettings.notifChat,
+              (value) {
+                setState(() {
+                  _localSettings = _localSettings.copyWith(notifChat: value);
+                });
+                widget.onSettingChanged('notif_chat', value);
+              },
+              isDark,
+            ),
           
           const SizedBox(height: 20),
         ],

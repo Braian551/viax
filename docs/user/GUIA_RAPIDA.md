@@ -254,7 +254,7 @@ Usa los filtros:
 1. **Centro de ayuda**: Perfil → Ayuda
 2. **Chat en vivo**: Configuración → Soporte
 3. **Reportar problema**: Configuración → Reportar
-4. **Email**: soporte@pinggo.com (ejemplo)
+4. **Email**: soporte@Viax.com (ejemplo)
 
 ---
 
@@ -306,7 +306,7 @@ Para tu primer viaje:
 
 ---
 
-**¡Disfruta tu nueva experiencia con PingGo! 🚀**
+**¡Disfruta tu nueva experiencia con Viax! 🚀**
 
 ---
 

@@ -265,7 +265,7 @@ UI se actualiza (Consumer rebuild)
 ### 🔄 Estado Actual: Monolito Modular
 
 Actualmente, el proyecto es un **monolito modular** bien organizado:
-- Un solo backend (PHP en `pingo/backend/`)
+- Un solo backend (PHP en `viax/backend/`)
 - Una sola base de datos
 - Módulos separados por features (conductor, auth, map)
 
@@ -297,12 +297,12 @@ Cada feature (`conductor/`, `auth/`, `map/`) puede convertirse en un microservic
 ##### A. Actualizar URLs en DataSources
 **Antes (Monolito)**:
 ```dart
-static const String baseUrl = 'http://10.0.2.2/pingo/backend/conductor';
+static const String baseUrl = 'http://10.0.2.2/viax/backend/conductor';
 ```
 
 **Después (Microservicios)**:
 ```dart
-static const String baseUrl = 'http://api-gateway.pingo.com/conductor-service/v1';
+static const String baseUrl = 'http://api-gateway.Viax.com/conductor-service/v1';
 ```
 
 ##### B. Configuración Centralizada
@@ -311,7 +311,7 @@ Usar `AppConfig` para gestionar URLs por servicio:
 ```dart
 // core/config/app_config.dart
 class AppConfig {
-  static const String apiGateway = 'http://api-gateway.pingo.com';
+  static const String apiGateway = 'http://api-gateway.Viax.com';
   
   static const String conductorServiceUrl = '$apiGateway/conductor-service/v1';
   static const String authServiceUrl = '$apiGateway/auth-service/v1';
@@ -325,7 +325,7 @@ Implementar un gateway (Kong, NGINX, AWS API Gateway) que enrute requests:
 ```
 Cliente Flutter App
     ↓
-API Gateway (http://api-gateway.pingo.com)
+API Gateway (http://api-gateway.Viax.com)
     ├── /conductor-service/* → Conductor Service (8001)
     ├── /auth-service/*      → Auth Service (8002)
     ├── /map-service/*       → Map Service (8003)

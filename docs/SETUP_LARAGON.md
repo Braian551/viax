@@ -1,6 +1,6 @@
 # Guía de Configuración Local con Laragon
 
-Esta guía te ayudará a configurar el proyecto PinGo en tu entorno local usando **Laragon**.
+Esta guía te ayudará a configurar el proyecto Viax en tu entorno local usando **Laragon**.
 
 ---
 
@@ -35,7 +35,7 @@ Esta guía te ayudará a configurar el proyecto PinGo en tu entorno local usando
 
 ### 2.1 Copiar el Backend a Laragon
 
-1. Navega a la carpeta de tu proyecto PinGo:
+1. Navega a la carpeta de tu proyecto Viax:
    ```
    c:\Flutter\ping_go
    ```
@@ -79,7 +79,7 @@ Deberías ver un mensaje de salud del sistema.
 1. En Laragon, click derecho en **MySQL** → **Open**
 2. Se abrirá **HeidiSQL**
 3. Click derecho en la conexión → **Create new** → **Database**
-4. Nombre: `pingo`
+4. Nombre: `Viax`
 5. Charset: `utf8mb4_unicode_ci`
 6. Click **OK**
 
@@ -88,13 +88,13 @@ Deberías ver un mensaje de salud del sistema.
 1. En Laragon, click en **Database** (botón superior)
 2. Se abrirá phpMyAdmin
 3. Click en **New** (Nueva base de datos)
-4. Nombre: `pingo`
+4. Nombre: `Viax`
 5. Cotejamiento: `utf8mb4_unicode_ci`
 6. Click **Create**
 
 ### 3.2 Importar el SQL
 
-1. En HeidiSQL o phpMyAdmin, selecciona la base de datos `pingo`
+1. En HeidiSQL o phpMyAdmin, selecciona la base de datos `Viax`
 2. Click en **Import** o **Importar**
 3. Selecciona el archivo:
    ```
@@ -123,7 +123,7 @@ El archivo `backend-deploy/config/database.php` ya está configurado para Larago
 ```php
 public function __construct() {
     $this->host = 'localhost';
-    $this->db_name = 'pingo';
+    $this->db_name = 'Viax';
     $this->username = 'root';
     $this->password = 'root';
 }
@@ -267,7 +267,7 @@ O desde VS Code:
 **Solución**:
 1. Verifica que MySQL esté corriendo en Laragon
 2. Verifica las credenciales en `config/database.php`
-3. Verifica que la base `pingo` exista
+3. Verifica que la base `Viax` exista
 4. Ejecuta en terminal:
    ```bash
    mysql -u root -proot -e "SHOW DATABASES;"
@@ -403,7 +403,7 @@ C:\laragon\www\ping_go\backend-deploy\
 
 - [ ] Laragon instalado y corriendo
 - [ ] Backend copiado a `C:\laragon\www\ping_go\backend-deploy`
-- [ ] Base de datos `pingo` creada
+- [ ] Base de datos `Viax` creada
 - [ ] SQL importado correctamente
 - [ ] `composer install` ejecutado
 - [ ] `config/database.php` configurado (localhost/root/root)
@@ -414,6 +414,6 @@ C:\laragon\www\ping_go\backend-deploy\
 
 ---
 
-**¡Listo!** Ahora puedes desarrollar PinGo en tu entorno local con Laragon.
+**¡Listo!** Ahora puedes desarrollar Viax en tu entorno local con Laragon.
 
 Para cambiar a producción más tarde, consulta: `docs/CONFIGURACION_ENTORNOS.md`

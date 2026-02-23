@@ -74,7 +74,7 @@ lib/src/core/error/
 ### 3. ✅ Backend (Microservicio)
 
 ```
-pingo/backend/auth/
+viax/backend/auth/
 ├── register.php                          ✅ Registro de usuarios
 ├── login.php                             ✅ Autenticación
 ├── profile.php                           ✅ Obtener perfil
@@ -98,7 +98,7 @@ docs/architecture/
 ├── CLEAN_ARCHITECTURE.md                 ✅ Ya existente
 └── MIGRATION_TO_MICROSERVICES.md         ✅ Ya existente
 
-pingo/backend/auth/
+viax/backend/auth/
 └── README_USER_MICROSERVICE.md           ✅ Documentación del backend
 ```
 
@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
 #### Documentación (3)
 18. `docs/architecture/USER_MICROSERVICE_MIGRATION.md`
 19. `docs/architecture/INDEX.md`
-20. `pingo/backend/auth/README_USER_MICROSERVICE.md`
+20. `viax/backend/auth/README_USER_MICROSERVICE.md`
 
 ### Archivos Modificados (3)
 1. `lib/src/core/config/app_config.dart` - URLs de microservicios
@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 ### Agregar Nuevo Endpoint: "Cambiar Contraseña"
 
-**1. Backend** (`pingo/backend/auth/change_password.php`)
+**1. Backend** (`viax/backend/auth/change_password.php`)
 ```php
 <?php
 require_once '../config/config.php';
@@ -418,7 +418,7 @@ await userProvider.changePassword(
 
 ### Documentación
 - **Migración completa**: `docs/architecture/USER_MICROSERVICE_MIGRATION.md`
-- **Backend**: `pingo/backend/auth/README_USER_MICROSERVICE.md`
+- **Backend**: `viax/backend/auth/README_USER_MICROSERVICE.md`
 - **Clean Architecture**: `docs/architecture/CLEAN_ARCHITECTURE.md`
 - **Índice general**: `docs/architecture/INDEX.md`
 

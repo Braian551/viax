@@ -1,4 +1,4 @@
-# 📱 PingGo - App de Transporte con Mapbox
+# 📱 Viax - App de Transporte con Mapbox
 
 > Aplicación de transporte y delivery con integración profesional de mapas usando Mapbox, geocoding gratuito con Nominatim, y sistema inteligente de monitoreo de cuotas.
 
@@ -186,7 +186,7 @@ class EnvConfig {
   static const String tomtomApiKey = 'xxx';
   
   // Nominatim (NO requiere key)
-  static const String nominatimUserAgent = 'PingGo App';
+  static const String nominatimUserAgent = 'Viax App';
   static const String nominatimEmail = 'tu-email@ejemplo.com';
 }
 ```
@@ -271,4 +271,4 @@ Este proyecto es privado y confidencial.
 
 ---
 
-**¡Desarrollado con ❤️ para PingGo!**
+**¡Desarrollado con ❤️ para Viax!**

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'app_user_settings_service.dart';
 
 /// Servicio para mostrar notificaciones locales del dispositivo.
 ///
@@ -74,6 +75,14 @@ class LocalNotificationService {
       return;
     }
 
+    final notificationsEnabled = await AppUserSettingsService.isNotificationsEnabled();
+    if (!notificationsEnabled) {
+      return;
+    }
+
+    final soundEnabled = await AppUserSettingsService.isSoundEnabled();
+    final vibrationEnabled = await AppUserSettingsService.isVibrationEnabled();
+
     final androidDetails = AndroidNotificationDetails(
       channelId,
       channelName,
@@ -83,8 +92,8 @@ class LocalNotificationService {
       showWhen: true,
       icon: 'ic_notification',
       color: const Color(0xFF2196F3),
-      enableVibration: true,
-      playSound: true,
+      enableVibration: vibrationEnabled,
+      playSound: soundEnabled,
     );
 
     final details = NotificationDetails(android: androidDetails);
@@ -98,6 +107,7 @@ class LocalNotificationService {
     required String title,
     required String body,
     int? solicitudId,
+    int? notificationId,
   }) async {
     if (!_isInitialized) {
       debugPrint('⚠️ [LocalNotificationService] No inicializado');
@@ -111,7 +121,7 @@ class LocalNotificationService {
       channelId: 'chat_messages',
       channelName: 'Mensajes de Chat',
       channelDescription: 'Notificaciones de nuevos mensajes durante viajes',
-      notificationId: solicitudId ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      notificationId: notificationId ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
 
     debugPrint('🔔 [LocalNotificationService] Notificación mostrada: $title');

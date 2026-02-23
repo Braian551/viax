@@ -132,7 +132,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       if (!mounted) return;
 
       debugPrint('🔍 TripPreviewScreen: initState started');
-      
+
       // Intentar cerrar teclado inmediatamente para evitar loop de foco IME
       debugPrint('🔍 TripPreviewScreen: Forcing unfocus in initState');
       FocusManager.instance.primaryFocus?.unfocus();
@@ -152,9 +152,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         LatLng(widget.origin.latitude, widget.origin.longitude),
         LatLng(widget.destination.latitude, widget.destination.longitude),
       );
-      
-      debugPrint('🚨 TripPreview: Distancia entre origen/destino: ${distanceBetween}m');
-      
+
+      debugPrint(
+        '🚨 TripPreview: Distancia entre origen/destino: ${distanceBetween}m',
+      );
+
       if (distanceBetween < 50) {
         debugPrint('🚨 FAILSAFE: Origen y destino son el mismo lugar!');
         showDialog(
@@ -298,17 +300,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     );
 
     // Animación para cambio de vehículo
-  // _vehicleChangeController = AnimationController(
-  //   duration: const Duration(milliseconds: 400),
-  //   vsync: this,
-  // );
+    // _vehicleChangeController = AnimationController(
+    //   duration: const Duration(milliseconds: 400),
+    //   vsync: this,
+    // );
 
-  // _vehicleChangeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-  //   CurvedAnimation(
-  //     parent: _vehicleChangeController,
-  //     curve: Curves.easeOutCubic,
-  //   ),
-  // );
+    // _vehicleChangeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    //   CurvedAnimation(
+    //     parent: _vehicleChangeController,
+    //     curve: Curves.easeOutCubic,
+    //   ),
+    // );
 
     // Animación para el precio
     _priceAnimationController = AnimationController(
@@ -322,7 +324,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         curve: Curves.easeOutCubic,
       ),
     );
-    
+
     // Listener único para animación de precio
     _priceAnimationController.addListener(_onPriceAnimationTick);
     _priceListenerAttached = true;
@@ -342,7 +344,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     debugPrint('🔍 TripPreviewScreen: _loadRouteAndQuote called');
     // Asegurar que el teclado esté cerrado antes de iniciar cálculos pesados
     FocusManager.instance.primaryFocus?.unfocus();
-    
+
     setState(() {
       _isLoadingRoute = true;
       _isLoadingQuote = true;
@@ -400,18 +402,26 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
       // Calcular cotización para todos los vehículos (Backend)
       await _loadCompanyVehicles(route);
-      
+
       debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles completed');
 
       if (!mounted) {
-        debugPrint('🔍 TripPreviewScreen: Widget no longer mounted after _loadCompanyVehicles');
+        debugPrint(
+          '🔍 TripPreviewScreen: Widget no longer mounted after _loadCompanyVehicles',
+        );
         return;
       }
-      
-      debugPrint('🔍 TripPreviewScreen: About to call setState for quote update');
-      debugPrint('🔍 TripPreviewScreen: _selectedVehicleType = $_selectedVehicleType');
-      debugPrint('🔍 TripPreviewScreen: _vehicleQuotes.keys = ${_vehicleQuotes.keys.toList()}');
-      
+
+      debugPrint(
+        '🔍 TripPreviewScreen: About to call setState for quote update',
+      );
+      debugPrint(
+        '🔍 TripPreviewScreen: _selectedVehicleType = $_selectedVehicleType',
+      );
+      debugPrint(
+        '🔍 TripPreviewScreen: _vehicleQuotes.keys = ${_vehicleQuotes.keys.toList()}',
+      );
+
       setState(() {
         _quote = _vehicleQuotes[_selectedVehicleType];
         _isLoadingQuote = false;
@@ -420,8 +430,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           _animatedPrice = _quote!.totalPrice;
         }
       });
-      
-      debugPrint('🔍 TripPreviewScreen: setState completed, starting slide animation delay');
+
+      debugPrint(
+        '🔍 TripPreviewScreen: setState completed, starting slide animation delay',
+      );
 
       // Animar la aparición del panel de detalles
       await Future.delayed(const Duration(milliseconds: 800));
@@ -458,11 +470,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     final int duracionMin = route.durationMinutes.ceil();
 
     // Extraer municipio con fallback robusto
-    String municipio = widget.origin.municipality ?? 
-        CompanyVehicleService.extractMunicipalityFromAddress(widget.origin.address) ??
-        CompanyVehicleService.findNearestMunicipality(start.latitude, start.longitude) ??
+    String municipio =
+        widget.origin.municipality ??
+        CompanyVehicleService.extractMunicipalityFromAddress(
+          widget.origin.address,
+        ) ??
+        CompanyVehicleService.findNearestMunicipality(
+          start.latitude,
+          start.longitude,
+        ) ??
         'Medellín';
-        
+
     debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles started');
     debugPrint('🏘️ Municipio resuelto para cotización: $municipio');
 
@@ -480,77 +498,156 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       if (response.success && response.vehiculosDisponibles.isNotEmpty) {
         debugPrint('🔍 TripPreviewScreen: Got valid vehicle response');
         _companyResponse = response;
-        
+
         // Normalizar texto para comparación robusta (sin tildes, minúsculas)
         String normalize(String? text) {
           if (text == null) return '';
-          return text.toLowerCase()
-            .replaceAll(RegExp(r'[áàäâ]'), 'a')
-            .replaceAll(RegExp(r'[éèëê]'), 'e')
-            .replaceAll(RegExp(r'[íìïî]'), 'i')
-            .replaceAll(RegExp(r'[óòöô]'), 'o')
-            .replaceAll(RegExp(r'[úùüû]'), 'u')
-            .replaceAll('ñ', 'n');
+          return text
+              .toLowerCase()
+              .replaceAll(RegExp(r'[áàäâ]'), 'a')
+              .replaceAll(RegExp(r'[éèëê]'), 'e')
+              .replaceAll(RegExp(r'[íìïî]'), 'i')
+              .replaceAll(RegExp(r'[óòöô]'), 'o')
+              .replaceAll(RegExp(r'[úùüû]'), 'u')
+              .replaceAll('ñ', 'n');
         }
 
         final normalizedMunicipio = normalize(municipio);
 
         // Crear mapa de detalles de empresas para búsqueda rápida
-        final companyDetailsMap = {
-          for (var e in response.empresas) e.id: e
-        };
+        final companyDetailsMap = {for (var e in response.empresas) e.id: e};
 
-        // Filtrar empresas con conductores > 0 Y que pertenezcan al municipio correcto
+        // Filtrar empresas priorizando municipio correcto, pero con fallback
+        // para no perder tipos de vehículo completos (ej: mototaxi).
         final filteredVehicles = <AvailableVehicleType>[];
         for (var v in response.vehiculosDisponibles) {
-          final availableCompanies = v.empresas.where((e) {
-             // 1. Filtro de municipio estricto (PRIORIDAD)
-             final details = companyDetailsMap[e.id];
-             if (details != null && details.municipio != null) {
-               final companyMun = normalize(details.municipio);
-               // Si el municipio de la empresa es diferente al de la zona, filtrar
-               if (companyMun != normalizedMunicipio) {
-                 debugPrint('🚫 Filtrando empresa ${e.nombre} (${details.municipio}) por no coincidir con zona ($municipio)');
-                 return false;
-               }
-             }
-             
-             // NOTA: Se eliminó el filtro de conductores > 0 para permitir ver empresas 
-             // que operan en la zona aunque no tengan conductores activos en este momento.
-             
-             return true;
-          }).toList();
-          
+          final exactMunicipioCompanies = <CompanyVehicleOption>[];
+          final fallbackCompanies = <CompanyVehicleOption>[];
+
+          for (final e in v.empresas) {
+            final details = companyDetailsMap[e.id];
+            final companyMunicipio = details?.municipio;
+
+            // Si no hay municipio en metadata, mantener como válido por defecto.
+            if (companyMunicipio == null || companyMunicipio.trim().isEmpty) {
+              exactMunicipioCompanies.add(e);
+              continue;
+            }
+
+            final companyMun = normalize(companyMunicipio);
+            if (companyMun == normalizedMunicipio) {
+              exactMunicipioCompanies.add(e);
+            } else {
+              fallbackCompanies.add(e);
+            }
+          }
+
+          // Priorizar coincidencia exacta por municipio; si no existe,
+          // usar fallback para no ocultar tipos de vehículo.
+          final availableCompanies = exactMunicipioCompanies.isNotEmpty
+              ? exactMunicipioCompanies
+              : fallbackCompanies;
+
+          if (exactMunicipioCompanies.isEmpty && fallbackCompanies.isNotEmpty) {
+            debugPrint(
+              '⚠️ Usando fallback de municipio para ${v.tipo} en zona $municipio',
+            );
+          }
+
           if (availableCompanies.isNotEmpty) {
             // Asegurar que la empresa recomendada original esté de primera si aún está disponible
-            if (v.empresaRecomendada != null && availableCompanies.contains(v.empresaRecomendada)) {
+            if (v.empresaRecomendada != null &&
+                availableCompanies.contains(v.empresaRecomendada)) {
               availableCompanies.remove(v.empresaRecomendada);
               availableCompanies.insert(0, v.empresaRecomendada!);
             }
 
-            filteredVehicles.add(AvailableVehicleType(
-              tipo: v.tipo,
-              nombre: v.nombre,
-              empresas: availableCompanies,
-            ));
+            filteredVehicles.add(
+              AvailableVehicleType(
+                tipo: v.tipo,
+                nombre: v.nombre,
+                empresas: availableCompanies,
+              ),
+            );
           }
         }
-        
+
+        String normalizeVehicleType(String type) {
+          final t = type.trim().toLowerCase();
+          if (t == 'moto_taxi' || t == 'moto taxi') return 'mototaxi';
+          return t;
+        }
+
+        int vehiclePriority(String type) {
+          switch (normalizeVehicleType(type)) {
+            case 'moto':
+              return 0;
+            case 'mototaxi':
+              return 1;
+            case 'taxi':
+              return 2;
+            case 'carro':
+            case 'auto':
+              return 3;
+            default:
+              return 10;
+          }
+        }
+
+        final effectiveVehicles = List<AvailableVehicleType>.from(
+          filteredVehicles,
+        );
+
+        final hasMototaxi = effectiveVehicles.any(
+          (v) => normalizeVehicleType(v.tipo) == 'mototaxi',
+        );
+
+        if (!hasMototaxi) {
+          AvailableVehicleType? motoSource;
+          for (final v in effectiveVehicles) {
+            if (normalizeVehicleType(v.tipo) == 'moto' &&
+                v.empresas.isNotEmpty) {
+              motoSource = v;
+              break;
+            }
+          }
+
+          if (motoSource != null) {
+            effectiveVehicles.add(
+              AvailableVehicleType(
+                tipo: 'mototaxi',
+                nombre: 'Mototaxi',
+                empresas: List<CompanyVehicleOption>.from(motoSource.empresas),
+              ),
+            );
+            debugPrint(
+              '🛠️ Fallback UI: se agrega mototaxi usando empresas de moto para mantener visibilidad en el drag',
+            );
+          }
+        }
+
+        effectiveVehicles.sort(
+          (a, b) => vehiclePriority(a.tipo).compareTo(vehiclePriority(b.tipo)),
+        );
+
         // Si después del filtro no quedan vehículos, mostrar mensaje
-        if (filteredVehicles.isEmpty) {
+        if (effectiveVehicles.isEmpty) {
           setState(() {
             _noVehiclesAvailable = true;
-            _noVehiclesMessage = 'No hay conductores disponibles cerca de tu ubicación';
+            _noVehiclesMessage =
+                'No hay conductores disponibles cerca de tu ubicación';
             _vehicles = [];
             _vehicleQuotes.clear();
           });
           return;
         }
-        
-        // Actualizar lista de vehículos con los filtrados
-        _vehicles = _mapToVehicleInfo(filteredVehicles);
 
-        debugPrint('🚗 Vehículos mapeados (con conductores): ${_vehicles.length}');
+        // Actualizar lista de vehículos con los filtrados
+        _vehicles = _mapToVehicleInfo(effectiveVehicles);
+
+        debugPrint(
+          '🚗 Vehículos mapeados (con conductores): ${_vehicles.length}',
+        );
         for (var v in _vehicles) {
           debugPrint('   - ${v.type}: ${v.name}');
         }
@@ -561,7 +658,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         _vehicleQuotes.clear();
 
         // Pre-seleccionar empresas y llenar mapa
-        for (var v in filteredVehicles) {
+        for (var v in effectiveVehicles) {
           _companiesPerVehicle[v.tipo] = v.empresas;
 
           // Modo por defecto: "Al azar" (sin empresa fija).
@@ -638,20 +735,23 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       String desc;
       String? pinPath;
 
-      switch (t.tipo) {
+      switch (t.tipo.trim().toLowerCase()) {
         case 'moto':
           icon = Icons.two_wheeler;
           imagePath = 'assets/images/vehicles/moto3d.png';
           desc = 'Rápido y económico';
           break;
+        case 'carro':
         case 'auto':
           icon = Icons.directions_car;
           imagePath = 'assets/images/vehicles/auto3d.png';
           desc = 'Cómodo y seguro';
           break;
-        case 'motocarro':
+        case 'moto_taxi':
+        case 'moto taxi':
+        case 'mototaxi':
           icon = Icons.electric_moped;
-          imagePath = 'assets/images/vehicles/motocarro3d.png';
+          imagePath = 'assets/images/vehicles/mototaxi3d.png';
           desc = 'Ideal para cargas';
           break;
         case 'taxi':
@@ -682,11 +782,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     // Usar datos de la ruta si está disponible, con safety checks
     double distKm = _route?.distanceKm ?? 0;
     double durMinRaw = _route?.durationMinutes ?? 0;
-    
+
     // Safety check: ensure values are finite before using
     if (!distKm.isFinite) distKm = 0;
     if (!durMinRaw.isFinite) durMinRaw = 0;
-    
+
     final durMin = durMinRaw.ceil();
 
     _vehicleQuotes[type] = TripQuote(
@@ -703,28 +803,46 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   void _onCompanyChanged(String vehicleType, int? newCompanyId) {
-    final typeData = _companyResponse?.vehiculosDisponibles.firstWhere(
-      (v) => v.tipo == vehicleType,
-    );
-    if (typeData == null) return;
+    final companies =
+        _companiesPerVehicle[vehicleType] ?? const <CompanyVehicleOption>[];
+    if (companies.isEmpty) {
+      debugPrint('⚠️ _onCompanyChanged sin empresas para tipo: $vehicleType');
+      return;
+    }
 
-    final defaultOption =
-        typeData.empresaRecomendada ??
-        (typeData.empresas.isNotEmpty ? typeData.empresas.first : null);
+    final defaultOption = companies.first;
 
-    final newOption =
-        newCompanyId == null
-            ? defaultOption
-            : typeData.empresas.firstWhere((e) => e.id == newCompanyId);
-    if (newOption == null) return;
+    CompanyVehicleOption? newOption;
+    if (newCompanyId == null) {
+      newOption = defaultOption;
+    } else {
+      for (final company in companies) {
+        if (company.id == newCompanyId) {
+          newOption = company;
+          break;
+        }
+      }
+
+      if (newOption == null) {
+        debugPrint(
+          '⚠️ Empresa $newCompanyId no encontrada para $vehicleType, usando opción por defecto',
+        );
+        newOption = defaultOption;
+      }
+    }
+
+    final resolvedOption = newOption ?? defaultOption;
 
     setState(() {
-      if (newCompanyId == null) {
+      final existsInCurrentList =
+          newCompanyId != null && companies.any((c) => c.id == newCompanyId);
+
+      if (!existsInCurrentList) {
         _selectedCompanyPerVehicle.remove(vehicleType);
       } else {
         _selectedCompanyPerVehicle[vehicleType] = newCompanyId;
       }
-      _updateQuoteForVehicle(vehicleType, newOption);
+      _updateQuoteForVehicle(vehicleType, resolvedOption);
 
       if (_selectedVehicleType == vehicleType) {
         _quote = _vehicleQuotes[vehicleType];
@@ -739,7 +857,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   /// Cambia el vehículo seleccionado con animación
   void _selectVehicle(String vehicleType) {
     if (vehicleType == _selectedVehicleType) return;
-    
+
     // Check if the current price is valid before setting it as start
     if (_quote != null) {
       _startPrice = _animatedPrice;
@@ -752,12 +870,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       _quote = _vehicleQuotes[vehicleType];
       if (_quote != null) {
         _targetPrice = _quote!.totalPrice;
-        
+
         // Removed aggressive map manipulation here if any
       }
-      
+
       // Reset selected company for this type if necessary (cleaner logic)
-      // _selectedCompanyPerVehicle.remove(vehicleType); // Is this needed? 
+      // _selectedCompanyPerVehicle.remove(vehicleType); // Is this needed?
     });
 
     // Animar el precio
@@ -765,7 +883,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   /// Muestra el selector de empresas en un bottom sheet
-  void _showCompanyPicker(BuildContext context, String vehicleType, List<CompanyVehicleOption> companies) {
+  void _showCompanyPicker(
+    BuildContext context,
+    String vehicleType,
+    List<CompanyVehicleOption> companies,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -787,12 +909,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     _priceAnimationController.reset();
     _priceAnimationController.forward();
   }
-  
+
   /// Callback para la animación de precio (listener único)
   void _onPriceAnimationTick() {
     if (!mounted) return;
     setState(() {
-      _animatedPrice = _startPrice + (_targetPrice - _startPrice) * _priceAnimation.value;
+      _animatedPrice =
+          _startPrice + (_targetPrice - _startPrice) * _priceAnimation.value;
     });
   }
 
@@ -931,7 +1054,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                         companiesPerVehicle: _companiesPerVehicle,
                         selectedCompanyIds: _selectedCompanyPerVehicle,
                         onCompanyChanged: _onCompanyChanged,
-                        onOpenCompanyPicker: (type, companies) => _showCompanyPicker(context, type, companies),
+                        onOpenCompanyPicker: (type, companies) =>
+                            _showCompanyPicker(context, type, companies),
                         noVehiclesAvailable: _noVehiclesAvailable,
                         noVehiclesMessage: _noVehiclesMessage,
                       );
@@ -982,260 +1106,272 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   Widget _buildMap(bool isDark) {
     return MapRetryWrapper(
       isDark: isDark,
-      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
-        key: mapKey,
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: widget.origin.toLatLng(),
-          initialZoom: 14,
-          onMapReady: onMapReady,
-          interactionOptions: const InteractionOptions(
-            flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-          ),
-        ),
-        children: [
-          // Tiles de Mapbox con estilo según el tema
-          TileLayer(
-            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-            userAgentPackageName: 'com.example.ping_go',
-            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
-          ),
-
-        // Sombra de la ruta (efecto de profundidad)
-        if (_animatedRoutePoints.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: _animatedRoutePoints,
-                strokeWidth: 12,
-                color: Colors.black.withValues(alpha: 0.3),
-                borderStrokeWidth: 0,
+      builder: ({required mapKey, required onMapReady, required onTileError}) =>
+          FlutterMap(
+            key: mapKey,
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: widget.origin.toLatLng(),
+              initialZoom: 14,
+              onMapReady: onMapReady,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
               ),
-            ],
-          ),
+            ),
+            children: [
+              // Tiles de Mapbox con estilo según el tema
+              TileLayer(
+                urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+                userAgentPackageName: 'com.example.ping_go',
+                errorTileCallback: (tile, error, stackTrace) =>
+                    onTileError(error, stackTrace),
+              ),
 
-        // Línea de ruta principal con tema azul
-        if (_animatedRoutePoints.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: _animatedRoutePoints,
-                strokeWidth: 8,
-                color: AppColors.primary,
-                borderStrokeWidth: 0,
-                gradientColors: [
-                  AppColors.primaryLight,
-                  AppColors.primary,
-                  AppColors.primaryDark,
+              // Sombra de la ruta (efecto de profundidad)
+              if (_animatedRoutePoints.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _animatedRoutePoints,
+                      strokeWidth: 12,
+                      color: Colors.black.withValues(alpha: 0.3),
+                      borderStrokeWidth: 0,
+                    ),
+                  ],
+                ),
+
+              // Línea de ruta principal con tema azul
+              if (_animatedRoutePoints.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _animatedRoutePoints,
+                      strokeWidth: 8,
+                      color: AppColors.primary,
+                      borderStrokeWidth: 0,
+                      gradientColors: [
+                        AppColors.primaryLight,
+                        AppColors.primary,
+                        AppColors.primaryDark,
+                      ],
+                    ),
+                  ],
+                ),
+
+              // Marcadores de origen, destino y paradas
+              MarkerLayer(
+                markers: [
+                  // Origen
+                  Marker(
+                    point: widget.origin.toLatLng(),
+                    width: 80,
+                    height: 80,
+                    child: AnimatedBuilder(
+                      animation: _markerScaleAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _markerScaleAnimation.value,
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Pulso animado de fondo
+                          AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: 60 * _pulseAnimation.value,
+                                height: 60 * _pulseAnimation.value,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primaryLight.withValues(
+                                    alpha: 0.3 / _pulseAnimation.value,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          // Círculo exterior
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 12,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Punto interior
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Paradas intermedias
+                  ...widget.stops.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final stop = entry.value;
+                    return Marker(
+                      point: stop.toLatLng(),
+                      width: 50,
+                      height: 50,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Sombra suave
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Círculo principal naranja
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.orangeAccent,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  // Destino con pin moderno
+                  Marker(
+                    point: widget.destination.toLatLng(),
+                    width: 50,
+                    height: 70,
+                    alignment: Alignment.topCenter,
+                    child: AnimatedBuilder(
+                      animation: _markerBounceAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(
+                            0,
+                            -15 * (1 - _markerBounceAnimation.value),
+                          ),
+                          child: Transform.scale(
+                            scale: 0.3 + (_markerBounceAnimation.value * 0.7),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Pin de destino
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Sombra del pin
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      blurRadius: 15,
+                                      spreadRadius: 3,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Círculo exterior
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primaryDark,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              // Círculo azul claro interior
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.primaryDark,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: AppColors.primaryDark,
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Sombra proyectada en el suelo
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            width: 30,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
-
-        // Marcadores de origen, destino y paradas
-        MarkerLayer(
-          markers: [
-            // Origen
-            Marker(
-              point: widget.origin.toLatLng(),
-              width: 80,
-              height: 80,
-              child: AnimatedBuilder(
-                animation: _markerScaleAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _markerScaleAnimation.value,
-                    child: child,
-                  );
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Pulso animado de fondo
-                    AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        return Container(
-                          width: 60 * _pulseAnimation.value,
-                          height: 60 * _pulseAnimation.value,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primaryLight.withValues(
-                              alpha: 0.3 / _pulseAnimation.value,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    // Círculo exterior
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Punto interior
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Paradas intermedias
-            ...widget.stops.asMap().entries.map((entry) {
-              final index = entry.key;
-              final stop = entry.value;
-              return Marker(
-                point: stop.toLatLng(),
-                width: 50,
-                height: 50,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Sombra suave
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Círculo principal naranja
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.orangeAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-
-            // Destino con pin moderno
-            Marker(
-              point: widget.destination.toLatLng(),
-              width: 50,
-              height: 70,
-              alignment: Alignment.topCenter,
-              child: AnimatedBuilder(
-                animation: _markerBounceAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, -15 * (1 - _markerBounceAnimation.value)),
-                    child: Transform.scale(
-                      scale: 0.3 + (_markerBounceAnimation.value * 0.7),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Pin de destino
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Sombra del pin
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 15,
-                                spreadRadius: 3,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Círculo exterior
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primaryDark,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        // Círculo azul claro interior
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.primaryDark,
-                              width: 3,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.location_on,
-                            color: AppColors.primaryDark,
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Sombra proyectada en el suelo
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      width: 30,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        ],
-      ),
     );
   }
 
@@ -1355,32 +1491,31 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     if (_quote == null) return;
 
     // Obtener empresa seleccionada para el vehículo actual
-    final empresaId = _selectedVehicleType != null 
-        ? _selectedCompanyPerVehicle[_selectedVehicleType!] 
+    final empresaId = _selectedVehicleType != null
+        ? _selectedCompanyPerVehicle[_selectedVehicleType!]
         : null;
 
     final vehicleType = _selectedVehicleType ?? '';
-    final companies = _companiesPerVehicle[vehicleType] ?? const <CompanyVehicleOption>[];
-    final selectedCompany =
-        (empresaId != null && companies.isNotEmpty)
-            ? companies.firstWhere(
-              (c) => c.id == empresaId,
-              orElse: () => companies.first,
-            )
-            : null;
+    final companies =
+        _companiesPerVehicle[vehicleType] ?? const <CompanyVehicleOption>[];
+    final selectedCompany = (empresaId != null && companies.isNotEmpty)
+        ? companies.firstWhere(
+            (c) => c.id == empresaId,
+            orElse: () => companies.first,
+          )
+        : null;
 
-    final companyCandidates =
-        companies
-            .map(
-              (company) => {
-                'id': company.id,
-                'nombre': company.nombre,
-                'logo_url': company.logoUrl,
-                'distancia_conductor_km': company.distanciaConductorKm,
-                'conductores': company.conductores,
-              },
-            )
-            .toList();
+    final companyCandidates = companies
+        .map(
+          (company) => {
+            'id': company.id,
+            'nombre': company.nombre,
+            'logo_url': company.logoUrl,
+            'distancia_conductor_km': company.distanciaConductorKm,
+            'conductores': company.conductores,
+          },
+        )
+        .toList();
 
     // Navegar a pantalla de selección de punto de encuentro con el vehículo seleccionado
     Navigator.push(
@@ -1600,12 +1735,12 @@ class _RouteLoaderState extends State<_RouteLoader>
   @override
   Widget build(BuildContext context) {
     final primaryColor = AppColors.primary;
-    final backgroundColor = widget.isDark 
-        ? const Color(0xFF1E1E1E) 
+    final backgroundColor = widget.isDark
+        ? const Color(0xFF1E1E1E)
         : Colors.white;
     final textColor = widget.isDark ? Colors.white : AppColors.lightTextPrimary;
-    final subtextColor = widget.isDark 
-        ? Colors.white.withValues(alpha: 0.6) 
+    final subtextColor = widget.isDark
+        ? Colors.white.withValues(alpha: 0.6)
         : AppColors.lightTextSecondary;
 
     return Container(
@@ -1657,7 +1792,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                           );
                         },
                       ),
-                      
+
                       // Car Icon with float/bounce
                       AnimatedBuilder(
                         animation: _carController,
@@ -1692,7 +1827,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Titles
                 Text(
                   'Calculando ruta...',
@@ -1714,7 +1849,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                
+
                 // Optional: Loading bar or dots (keeping it clean for now)
               ],
             ),
@@ -1729,37 +1864,34 @@ class _RipplePainter extends CustomPainter {
   final double animationValue;
   final Color color;
 
-  _RipplePainter({
-    required this.animationValue,
-    required this.color,
-  });
+  _RipplePainter({required this.animationValue, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = size.width / 2;
-    
+
     // Draw 3 ripples
     for (int i = 0; i < 3; i++) {
       final delay = i * 0.35;
       double value = (animationValue - delay) % 1.0;
       if (value < 0) value += 1.0;
-      
+
       final radius = maxRadius * value;
       final opacity = (1.0 - value).clamp(0.0, 1.0);
-      
+
       final paint = Paint()
         ..color = color.withValues(alpha: opacity * 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2; // Thin sleek lines
-        
+
       canvas.drawCircle(center, radius, paint);
-      
+
       // Fill
       final fillPaint = Paint()
         ..color = color.withValues(alpha: opacity * 0.05)
         ..style = PaintingStyle.fill;
-        
+
       canvas.drawCircle(center, radius, fillPaint);
     }
   }
@@ -1767,6 +1899,6 @@ class _RipplePainter extends CustomPainter {
   @override
   bool shouldRepaint(_RipplePainter oldDelegate) {
     return oldDelegate.animationValue != animationValue ||
-           oldDelegate.color != color;
+        oldDelegate.color != color;
   }
 }

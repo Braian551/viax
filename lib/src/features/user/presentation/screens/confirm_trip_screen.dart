@@ -6,6 +6,7 @@ import 'package:viax/src/global/services/mapbox_service.dart';
 import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:viax/src/global/widgets/map_retry_wrapper.dart';
 import 'package:provider/provider.dart';
+import 'package:viax/src/routes/route_names.dart';
 import '../providers/user_provider.dart';
 import '../../services/trip_request_service.dart';
 
@@ -191,12 +192,17 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
         // Navegar a pantalla de espera
         final resultWaiting = await Navigator.pushNamed(
           context,
-          '/user/waiting_driver',
+          RouteNames.userSearchingDriver,
           arguments: {
-            'solicitud_id': solicitudId,
-            'cliente_id': userId,
-            'direccion_origen': pickupAddress,
-            'direccion_destino': destinationAddress,
+            'solicitudId': solicitudId,
+            'clienteId': userId,
+            'latitudOrigen': _pickupLocation!.latitude,
+            'longitudOrigen': _pickupLocation!.longitude,
+            'direccionOrigen': pickupAddress,
+            'latitudDestino': _destinationLocation!.latitude,
+            'longitudDestino': _destinationLocation!.longitude,
+            'direccionDestino': destinationAddress,
+            'tipoVehiculo': _selectedVehicleType,
           },
         );
 

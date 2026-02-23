@@ -166,7 +166,7 @@ QuotaAlertWidget(
 ### Badge en AppBar
 ```dart
 AppBar(
-  title: Text('PingGo'),
+  title: Text('Viax'),
   actions: [
     QuotaStatusBadge(), // Muestra % de uso
   ],

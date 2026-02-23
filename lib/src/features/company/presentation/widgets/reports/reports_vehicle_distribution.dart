@@ -9,7 +9,7 @@ class ReportsVehicleDistribution extends StatelessWidget {
 
   static const _vehicleIcons = {
     'moto': Icons.two_wheeler_rounded,
-    'motocarro': Icons.electric_rickshaw_rounded,
+    'mototaxi': Icons.electric_rickshaw_rounded,
     'taxi': Icons.local_taxi_rounded,
     'carro': Icons.directions_car_rounded,
     'camioneta': Icons.airport_shuttle_rounded,

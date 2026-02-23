@@ -13,7 +13,7 @@ class DatabaseProvider with ChangeNotifier {
 
   Future<void> initializeDatabase() async {
     try {
-      // Verificar conexión con el backend de Railway
+      // Verificar conexión con el backend de producción
       final result = await _network.getJson(
         url: Uri.parse('${ApiConfig.baseUrl}/verify_system_json.php'),
         headers: {'Content-Type': 'application/json'},

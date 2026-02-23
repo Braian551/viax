@@ -206,7 +206,7 @@ Cuando migremos a microservicios:
    ```sql
    -- Mover conductor_* a conductor_db
    CREATE DATABASE conductor_db;
-   INSERT INTO conductor_db.profiles SELECT * FROM pingo_db.conductor_profiles;
+   INSERT INTO conductor_db.profiles SELECT * FROM Viax_db.conductor_profiles;
    ```
 3. Usar eventos para sincronización entre servicios
 

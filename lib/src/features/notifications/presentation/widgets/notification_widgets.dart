@@ -267,17 +267,19 @@ class NotificationFilters extends StatelessWidget {
   final String selectedFilter;
   final ValueChanged<String> onFilterChanged;
   final bool isDark;
+  final List<String>? visibleFilterKeys;
 
   const NotificationFilters({
     super.key,
     required this.selectedFilter,
     required this.onFilterChanged,
     this.isDark = false,
+    this.visibleFilterKeys,
   });
 
   @override
   Widget build(BuildContext context) {
-    final filters = [
+    final allFilters = [
       {'key': 'all', 'label': 'Todas', 'icon': Icons.all_inbox_rounded},
       {'key': 'unread', 'label': 'No leídas', 'icon': Icons.mark_email_unread_rounded},
       {'key': 'trips', 'label': 'Viajes', 'icon': Icons.directions_car_rounded},
@@ -286,6 +288,13 @@ class NotificationFilters extends StatelessWidget {
       {'key': 'chat', 'label': 'Chat', 'icon': Icons.chat_bubble_outline_rounded},
       {'key': 'promo', 'label': 'Promos', 'icon': Icons.local_offer_rounded},
     ];
+
+    final filters = visibleFilterKeys == null || visibleFilterKeys!.isEmpty
+        ? allFilters
+        : allFilters
+            .where((filter) =>
+                visibleFilterKeys!.contains(filter['key'] as String))
+            .toList();
 
     return SizedBox(
       height: 42,

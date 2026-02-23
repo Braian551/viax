@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../theme/app_colors.dart';
@@ -5,7 +7,6 @@ import '../../../../conductor/services/document_upload_service.dart';
 import '../../../../../core/utils/colombian_plate_utils.dart';
 
 import 'package:viax/src/global/services/rating_service.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /// Sheet con detalle completo del conductor.
 /// Diseño moderno consistente con el estilo de la app.
@@ -76,7 +77,8 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
         setState(() {
           if (response['success'] == true) {
             _reviews = List<Map<String, dynamic>>.from(
-                response['calificaciones'] ?? []);
+              response['calificaciones'] ?? [],
+            );
           }
           _isLoadingFn = false;
         });
@@ -98,10 +100,9 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
     final conductorFoto = widget.conductor['foto'];
     final calificacion =
         (widget.conductor['calificacion_promedio'] as num?)?.toDouble() ??
-            (widget.conductor['calificacion'] as num?)?.toDouble() ??
-            5.0;
-    final vehiculo =
-        widget.conductor['vehiculo'] as Map<String, dynamic>?;
+        (widget.conductor['calificacion'] as num?)?.toDouble() ??
+        5.0;
+    final vehiculo = widget.conductor['vehiculo'] as Map<String, dynamic>?;
     final vehiculoInfo = vehiculo != null
         ? '${vehiculo['marca'] ?? ''} ${vehiculo['modelo'] ?? ''}'.trim()
         : 'Vehículo no especificado';
@@ -110,73 +111,77 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
       fallback: '',
     );
 
-    return Container(
-      padding: const EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, -6),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          _buildDragHandle(),
-
-          Flexible(
-            child: ListView(
-              controller: widget.scrollController,
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-              shrinkWrap: true,
-              children: [
-                const SizedBox(height: 12),
-
-                // ── Avatar grande con borde gradiente ──
-                _buildLargeAvatar(conductorFoto),
-
-                const SizedBox(height: 16),
-
-                // ── Nombre ──
-                Text(
-                  conductorNombre,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: widget.isDark ? Colors.white : Colors.black87,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ── Rating badge ──
-                Center(child: _buildRatingBadge(calificacion)),
-
-                const SizedBox(height: 24),
-
-                // ── Divider ──
-                _buildGradientDivider(),
-
-                const SizedBox(height: 24),
-
-                // ── Vehículo info ──
-                _buildVehicleCard(vehiculoInfo, placa, vehiculo),
-
-                const SizedBox(height: 28),
-
-                // ── Reseñas ──
-                _buildReviewsSection(),
-              ],
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: widget.isDark
+                  ? [
+                      AppColors.darkSurface.withValues(alpha: 0.92),
+                      AppColors.darkBackground.withValues(alpha: 0.9),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.88),
+                      AppColors.blue50.withValues(alpha: 0.78),
+                    ],
             ),
+            border: Border.all(
+              color: widget.isDark
+                  ? Colors.white.withValues(alpha: 0.09)
+                  : Colors.white.withValues(alpha: 0.55),
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 28,
+                offset: const Offset(0, -8),
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDragHandle(),
+              Flexible(
+                child: ListView(
+                  controller: widget.scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                  shrinkWrap: true,
+                  children: [
+                    const SizedBox(height: 12),
+                    _buildLargeAvatar(conductorFoto),
+                    const SizedBox(height: 16),
+                    Text(
+                      conductorNombre,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: widget.isDark ? Colors.white : Colors.black87,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(child: _buildRatingBadge(calificacion)),
+                    const SizedBox(height: 22),
+                    _buildGradientDivider(),
+                    const SizedBox(height: 18),
+                    _buildVehicleCard(vehiculoInfo, placa, vehiculo),
+                    const SizedBox(height: 24),
+                    _buildReviewsSection(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -261,10 +266,16 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
 
   Widget _buildRatingBadge(double calificacion) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accent.withValues(alpha: 0.22),
+            AppColors.primary.withValues(alpha: 0.18),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -304,29 +315,49 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
   // ── Vehicle Card ────────────────────────────────────────────────────
 
   Widget _buildVehicleCard(
-      String vehiculoInfo, String placa, Map<String, dynamic>? vehiculo) {
+    String vehiculoInfo,
+    String placa,
+    Map<String, dynamic>? vehiculo,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: widget.isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey[50],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: widget.isDark
+              ? [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.04),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.72),
+                  AppColors.blue50.withValues(alpha: 0.58),
+                ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.grey.withValues(alpha: 0.1),
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.65),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: widget.isDark ? 0.12 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.12),
+              color: AppColors.accent.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: FaIcon(
+            child: Icon(
               _getVehicleIcon(vehiculo?['tipo']),
               color: AppColors.accent,
               size: 20,
@@ -352,8 +383,7 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
                   Text(
                     placa,
                     style: TextStyle(
-                      color:
-                          widget.isDark ? Colors.white54 : Colors.grey[500],
+                      color: widget.isDark ? Colors.white54 : Colors.grey[500],
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1,
@@ -408,7 +438,9 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: Text(
                       'Ver todas (${_reviews.length})',
                       style: TextStyle(
@@ -433,8 +465,7 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
                 width: 28,
                 height: 28,
                 child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   strokeWidth: 2.5,
                 ),
               ),
@@ -494,22 +525,31 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: widget.isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: widget.isDark
+              ? [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.04),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.82),
+                  AppColors.blue50.withValues(alpha: 0.52),
+                ],
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: widget.isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.grey.withValues(alpha: 0.1),
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.7),
         ),
         boxShadow: [
-          if (!widget.isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: widget.isDark ? 0.08 : 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -611,112 +651,137 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
         maxChildSize: 0.95,
         snap: true,
         snapSizes: const [0.5, 0.85, 0.95],
-        builder: (_, controller) => Container(
-          decoration: BoxDecoration(
-            color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, -6),
+        builder: (_, controller) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: widget.isDark
+                      ? [
+                          AppColors.darkSurface.withValues(alpha: 0.94),
+                          AppColors.darkBackground.withValues(alpha: 0.92),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.9),
+                          AppColors.blue50.withValues(alpha: 0.8),
+                        ],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                border: Border.all(
+                  color: widget.isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.6),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    blurRadius: 24,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                width: double.infinity,
-                child: Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          widget.isDark ? Colors.white24 : Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    width: double.infinity,
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: widget.isDark
+                              ? Colors.white24
+                              : Colors.grey[400],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          width: 3,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 3,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Todas las reseñas (${_reviews.length})',
+                              style: TextStyle(
+                                color: widget.isDark
+                                    ? Colors.white
+                                    : Colors.black87,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Todas las reseñas (${_reviews.length})',
-                          style: TextStyle(
-                            color: widget.isDark
-                                ? Colors.white
-                                : Colors.black87,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.pop(context),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: widget.isDark
+                                    ? Colors.white54
+                                    : Colors.grey[500],
+                                size: 22,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => Navigator.pop(context),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.close_rounded,
-                            color: widget.isDark
-                                ? Colors.white54
-                                : Colors.grey[500],
-                            size: 22,
-                          ),
-                        ),
+                  ),
+                  // Divider
+                  Container(
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          widget.isDark ? Colors.white24 : Colors.grey[300]!,
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              // Divider
-              Container(
-                height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      widget.isDark ? Colors.white24 : Colors.grey[300]!,
-                      Colors.transparent,
-                    ],
                   ),
-                ),
+                  // Lista completa de reseñas
+                  Expanded(
+                    child: ListView.builder(
+                      controller: controller,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                      itemCount: _reviews.length,
+                      itemBuilder: (context, index) =>
+                          _buildReviewCard(_reviews[index]),
+                    ),
+                  ),
+                ],
               ),
-              // Lista completa de reseñas
-              Expanded(
-                child: ListView.builder(
-                  controller: controller,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-                  itemCount: _reviews.length,
-                  itemBuilder: (context, index) =>
-                      _buildReviewCard(_reviews[index]),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -726,14 +791,14 @@ class _DriverDetailSheetState extends State<DriverDetailSheet>
   // ── Helpers ─────────────────────────────────────────────────────────
 
   IconData _getVehicleIcon(String? tipo) {
-    if (tipo == null) return FontAwesomeIcons.car;
+    if (tipo == null) return Icons.directions_car_filled_rounded;
     final typeLower = tipo.toLowerCase().trim();
-    if (typeLower == 'motocarro') {
-      return FontAwesomeIcons.vanShuttle;
+    if (typeLower == 'mototaxi') {
+      return Icons.electric_rickshaw_rounded;
     } else if (typeLower.contains('moto')) {
-      return FontAwesomeIcons.motorcycle;
+      return Icons.two_wheeler_rounded;
     } else {
-      return FontAwesomeIcons.car;
+      return Icons.directions_car_filled_rounded;
     }
   }
 }

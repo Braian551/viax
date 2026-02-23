@@ -10,7 +10,7 @@ Permitir que los conductores suban fotos de sus documentos (SOAT, tecnomecánica
 ## 📦 Componentes Desarrollados
 
 ### 1. Base de Datos ✅
-- **Archivo:** `pingo/backend/migrations/006_add_documentos_conductor.sql`
+- **Archivo:** `viax/backend/migrations/006_add_documentos_conductor.sql`
 - **Script de ejecución:** `run_migration_006.php`
 - **Cambios:**
   - 5 columnas nuevas en `detalles_conductor` para URLs de fotos
@@ -18,7 +18,7 @@ Permitir que los conductores suban fotos de sus documentos (SOAT, tecnomecánica
   - Índices para optimización de consultas
 
 ### 2. Backend PHP ✅
-- **Endpoint:** `pingo/backend/conductor/upload_documents.php`
+- **Endpoint:** `viax/backend/conductor/upload_documents.php`
 - **Funcionalidades:**
   - Upload multipart/form-data
   - Validación de tipo y tamaño
@@ -61,12 +61,12 @@ Permitir que los conductores suban fotos de sus documentos (SOAT, tecnomecánica
 
 ### Creados:
 ```
-✓ pingo/backend/migrations/006_add_documentos_conductor.sql
-✓ pingo/backend/migrations/run_migration_006.php
-✓ pingo/backend/migrations/INSTALACION_006.md
-✓ pingo/backend/conductor/upload_documents.php
-✓ pingo/backend/uploads/.htaccess
-✓ pingo/backend/uploads/.gitignore
+✓ viax/backend/migrations/006_add_documentos_conductor.sql
+✓ viax/backend/migrations/run_migration_006.php
+✓ viax/backend/migrations/INSTALACION_006.md
+✓ viax/backend/conductor/upload_documents.php
+✓ viax/backend/uploads/.htaccess
+✓ viax/backend/uploads/.gitignore
 ✓ lib/src/features/conductor/services/document_upload_service.dart
 ✓ docs/conductor/SISTEMA_CARGA_DOCUMENTOS.md
 ```
@@ -229,10 +229,10 @@ Usuario              App              Servidor            BD
 
 **Documentación detallada:**
 - `docs/conductor/SISTEMA_CARGA_DOCUMENTOS.md`
-- `pingo/backend/migrations/INSTALACION_006.md`
+- `viax/backend/migrations/INSTALACION_006.md`
 
 **Archivos clave:**
-- Backend: `pingo/backend/conductor/upload_documents.php`
+- Backend: `viax/backend/conductor/upload_documents.php`
 - Service: `lib/src/features/conductor/services/document_upload_service.dart`
 - Provider: `lib/src/features/conductor/providers/conductor_profile_provider.dart`
 
@@ -243,7 +243,7 @@ Usuario              App              Servidor            BD
 **Status:** ✅ COMPLETO Y FUNCIONAL
 **Versión:** 1.0.0
 **Fecha:** 25 de Octubre, 2025
-**Desarrollador:** Sistema PinGo - Módulo Conductor
+**Desarrollador:** Sistema Viax - Módulo Conductor
 
 ---
 

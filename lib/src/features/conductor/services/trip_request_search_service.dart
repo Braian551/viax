@@ -6,6 +6,11 @@ import '../../../core/config/app_config.dart';
 class TripRequestSearchService {
   static Timer? _searchTimer;
   static bool _isSearching = false;
+  static int? _conductorId;
+  static double? _currentLat;
+  static double? _currentLng;
+  static Function(List<Map<String, dynamic>>)? _onRequestsFound;
+  static Function(String)? _onError;
   static final Set<int> _processedRequestIds = {};
   static const double searchRadiusKm = 5.0;
   static const int searchIntervalSeconds = 5;
@@ -17,34 +22,36 @@ class TripRequestSearchService {
     required Function(List<Map<String, dynamic>>) onRequestsFound,
     required Function(String) onError,
   }) {
+    _conductorId = conductorId;
+    _currentLat = currentLat;
+    _currentLng = currentLng;
+    _onRequestsFound = onRequestsFound;
+    _onError = onError;
+
     if (_isSearching) {
-      print('Ya hay una busqueda activa');
+      print('Ya hay una busqueda activa, actualizando contexto de búsqueda');
       return;
     }
 
     print('Iniciando busqueda de solicitudes...');
     _isSearching = true;
 
-    _searchRequests(
-      conductorId: conductorId,
-      currentLat: currentLat,
-      currentLng: currentLng,
-      onRequestsFound: onRequestsFound,
-      onError: onError,
-    );
+    _runSearchCycle();
 
     _searchTimer = Timer.periodic(
       const Duration(seconds: searchIntervalSeconds),
       (timer) {
-        _searchRequests(
-          conductorId: conductorId,
-          currentLat: currentLat,
-          currentLng: currentLng,
-          onRequestsFound: onRequestsFound,
-          onError: onError,
-        );
+        _runSearchCycle();
       },
     );
+  }
+
+  static void updateSearchLocation({
+    required double latitude,
+    required double longitude,
+  }) {
+    _currentLat = latitude;
+    _currentLng = longitude;
   }
 
   static void stopSearching() {
@@ -52,6 +59,11 @@ class TripRequestSearchService {
     _searchTimer?.cancel();
     _searchTimer = null;
     _isSearching = false;
+    _conductorId = null;
+    _currentLat = null;
+    _currentLng = null;
+    _onRequestsFound = null;
+    _onError = null;
   }
   
   static void markRequestAsProcessed(int requestId) {
@@ -108,6 +120,31 @@ class TripRequestSearchService {
       print('Error buscando solicitudes: $e');
       onError(e.toString());
     }
+  }
+
+  static Future<void> _runSearchCycle() async {
+    final conductorId = _conductorId;
+    final currentLat = _currentLat;
+    final currentLng = _currentLng;
+    final onRequestsFound = _onRequestsFound;
+    final onError = _onError;
+
+    if (!_isSearching ||
+        conductorId == null ||
+        currentLat == null ||
+        currentLng == null ||
+        onRequestsFound == null ||
+        onError == null) {
+      return;
+    }
+
+    await _searchRequests(
+      conductorId: conductorId,
+      currentLat: currentLat,
+      currentLng: currentLng,
+      onRequestsFound: onRequestsFound,
+      onError: onError,
+    );
   }
 
   static Future<void> updateLocation({

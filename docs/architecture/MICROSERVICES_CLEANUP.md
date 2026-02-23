@@ -2,7 +2,7 @@
 
 ## 📋 Resumen Ejecutivo
 
-Este documento describe la reorganización completa del proyecto PingGo para **eliminar redundancia** entre el monolito y la arquitectura de microservicios, y establecer una estructura clara y mantenible.
+Este documento describe la reorganización completa del proyecto Viax para **eliminar redundancia** entre el monolito y la arquitectura de microservicios, y establecer una estructura clara y mantenible.
 
 **Fecha de migración**: Octubre 2025  
 **Estado**: ✅ Completado
@@ -25,7 +25,7 @@ Este documento describe la reorganización completa del proyecto PingGo para **e
 ❌ **Servicios redundantes con URLs hardcodeadas:**
 - `lib/src/global/services/auth/user_service.dart` - **Duplica** `UserRemoteDataSourceImpl`
 - `lib/src/global/services/admin/admin_service.dart` - Sin datasource correspondiente
-- URLs hardcodeadas: `http://10.0.2.2/pingo/backend/...` en múltiples lugares
+- URLs hardcodeadas: `http://10.0.2.2/viax/backend/...` en múltiples lugares
 
 ✅ **Arquitectura limpia implementada:**
 - Datasources con Clean Architecture
@@ -40,13 +40,13 @@ Este documento describe la reorganización completa del proyecto PingGo para **e
 #### Movidos a `auth/` microservicio:
 ```bash
 # Antes
-pingo/backend/
+viax/backend/
   ├── email_service.php        ❌ Fuera de lugar
   ├── verify_code.php          ❌ Fuera de lugar
   └── auth/                    ✅ Microservicio
 
 # Después
-pingo/backend/
+viax/backend/
   └── auth/                    ✅ Todo en su lugar
       ├── email_service.php    ✅ Movido
       ├── verify_code.php      ✅ Movido
@@ -58,10 +58,10 @@ pingo/backend/
 **Acción requerida:** Actualizar cualquier referencia a estos archivos:
 ```php
 // Antes
-'http://10.0.2.2/pingo/backend/email_service.php'
+'http://10.0.2.2/viax/backend/email_service.php'
 
 // Después
-'http://10.0.2.2/pingo/backend/auth/email_service.php'
+'http://10.0.2.2/viax/backend/auth/email_service.php'
 ```
 
 ### 2. Flutter - Centralización de URLs
@@ -75,11 +75,11 @@ class AppConfig {
   static String get baseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://10.0.2.2/pingo/backend';
+        return 'http://10.0.2.2/viax/backend';
       case Environment.staging:
-        return 'https://staging-api.pingo.com';
+        return 'https://staging-api.Viax.com';
       case Environment.production:
-        return 'https://api.pingo.com';
+        return 'https://api.Viax.com';
     }
   }
 
@@ -142,7 +142,7 @@ final result = await userRepository.login(email, password);
 
 ### Backend
 ```
-pingo/backend/
+viax/backend/
 ├── auth/                          ✅ Microservicio de Usuarios
 │   ├── check_user.php
 │   ├── email_service.php          ✅ Movido aquí
@@ -231,11 +231,11 @@ class AppConfig {
   static String get baseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://10.0.2.2/pingo/backend';
+        return 'http://10.0.2.2/viax/backend';
       case Environment.staging:
-        return 'https://staging-api.pingo.com';
+        return 'https://staging-api.Viax.com';
       case Environment.production:
-        return 'https://api.pingo.com/backend';  // ← Producción
+        return 'https://api.Viax.com/backend';  // ← Producción
     }
   }
 
@@ -256,15 +256,15 @@ class AppConfig {
 ```dart
 // ❌ 10+ archivos con URLs hardcodeadas
 class ConductorService {
-  static const String baseUrl = 'http://10.0.2.2/pingo/backend/conductor';
+  static const String baseUrl = 'http://10.0.2.2/viax/backend/conductor';
 }
 
 class UserService {
-  final url = 'http://10.0.2.2/pingo/backend/auth/register.php';
+  final url = 'http://10.0.2.2/viax/backend/auth/register.php';
 }
 
 class AdminService {
-  static const String _baseUrl = 'http://10.0.2.2/pingo/backend/admin';
+  static const String _baseUrl = 'http://10.0.2.2/viax/backend/admin';
 }
 ```
 
@@ -301,12 +301,12 @@ Cuando escales a servidores separados:
 
 ```dart
 // Solo cambiar AppConfig
-static String get baseUrl => 'https://api-gateway.pingo.com';
+static String get baseUrl => 'https://api-gateway.Viax.com';
 
 // O URLs independientes:
-static String get userServiceUrl => 'https://users.pingo.com/v1';
-static String get conductorServiceUrl => 'https://conductors.pingo.com/v1';
-static String get adminServiceUrl => 'https://admin.pingo.com/v1';
+static String get userServiceUrl => 'https://users.Viax.com/v1';
+static String get conductorServiceUrl => 'https://conductors.Viax.com/v1';
+static String get adminServiceUrl => 'https://admin.Viax.com/v1';
 ```
 
 **Ningún otro código necesita cambiar** ✨
@@ -337,7 +337,7 @@ void main() {
 void main() {
   test('Cambio a producción', () {
     // Cambiar environment en AppConfig
-    expect(AppConfig.baseUrl, contains('api.pingo.com'));
+    expect(AppConfig.baseUrl, contains('api.Viax.com'));
   });
 }
 ```
@@ -349,8 +349,8 @@ void main() {
 - [Clean Architecture](./CLEAN_ARCHITECTURE.md) - Arquitectura general
 - [User Microservice Migration](./USER_MICROSERVICE_MIGRATION.md) - Migración de usuarios
 - [Migration to Microservices](./MIGRATION_TO_MICROSERVICES.md) - Plan completo de microservicios
-- [Backend Auth README](../../pingo/backend/auth/README_USER_MICROSERVICE.md)
-- [Backend Conductor README](../../pingo/backend/conductor/README_CONDUCTOR_MICROSERVICE.md)
+- [Backend Auth README](../../viax/backend/auth/README_USER_MICROSERVICE.md)
+- [Backend Conductor README](../../viax/backend/conductor/README_CONDUCTOR_MICROSERVICE.md)
 
 ---
 

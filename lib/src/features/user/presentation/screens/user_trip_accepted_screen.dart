@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import '../../../../global/services/chat_service.dart';
@@ -11,6 +12,7 @@ import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/active_trip_navigation_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
+import '../../../../routes/route_names.dart';
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import '../widgets/user_trip_accepted/draggable_driver_panel.dart';
@@ -62,7 +64,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Ubicación del cliente
   LatLng? _clientLocation;
   double _clientHeading = 0.0; // Orientación del dispositivo (brújula)
+  double _lastClientSpeedMps = 0.0;
   StreamSubscription<geo.Position>? _positionStream;
+  StreamSubscription<CompassEvent>? _compassStream;
 
   // Info del conductor (actualizada con polling)
   Map<String, dynamic>? _conductor;
@@ -98,11 +102,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   bool _driverArrivedDialogShowing = false;
   bool _navigatedToActiveTrip = false; // Evitar navegaciones duplicadas
   bool _driverArrivedSoundPlayed = false; // Evitar repetir sonido de llegada
+  bool _isTripSoundMuted = false;
 
   // Chat y notificaciones
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
   int _unreadCount = 0;
+  final Set<int> _notifiedIncomingMessageIds = <int>{};
+  bool _chatBootstrapCompleted = false;
 
   // Tamaño actual del panel draggable para posicionar el botón de enfoque
   double _currentPanelSize = 0.38; // Valor inicial (midSize)
@@ -152,12 +159,12 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   /// Iniciar el polling del chat para recibir mensajes
   void _startChatPolling() {
-    final conductorId = _conductor?['id'] as int?;
-    if (conductorId != null) {
-      ChatService.startPolling(
-        solicitudId: widget.solicitudId,
-        usuarioId: widget.clienteId,
-      );
+    ChatService.startPolling(
+      solicitudId: widget.solicitudId,
+      usuarioId: widget.clienteId,
+    );
+
+    if (_messagesSubscription == null) {
       _setupChatListeners();
     }
   }
@@ -168,22 +175,47 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _messagesSubscription = ChatService.messagesStream.listen((messages) {
       if (messages.isEmpty) return;
 
-      final lastMsg = messages.last;
+      if (!_chatBootstrapCompleted) {
+        _chatBootstrapCompleted = true;
+        for (final message in messages) {
+          if (message.remitenteId != widget.clienteId) {
+            _notifiedIncomingMessageIds.add(message.id);
+          }
+        }
+        return;
+      }
 
       // Si el chat está abierto, no hacer nada
       if (ChatService.isChatOpen) return;
 
-      // Si el mensaje es del conductor y es reciente (menos de 10s)
-      if (lastMsg.remitenteId != widget.clienteId &&
-          DateTime.now().difference(lastMsg.fechaCreacion).inSeconds < 10) {
+      final incomingMessages = messages
+          .where(
+            (message) =>
+                message.remitenteId != widget.clienteId &&
+                !_notifiedIncomingMessageIds.contains(message.id),
+          )
+          .toList();
+
+      if (incomingMessages.isEmpty) return;
+
+      if (mounted) {
+        setState(() {
+          _unreadCount += incomingMessages.length;
+        });
+      }
+
+      for (final message in incomingMessages) {
+        _notifiedIncomingMessageIds.add(message.id);
+
         // Reproducir sonido de mensaje
         SoundService.playMessageSound();
 
         // Mostrar notificación local
         LocalNotificationService.showMessageNotification(
-          title: lastMsg.remitenteNombre ?? 'Conductor',
-          body: lastMsg.mensaje,
+          title: message.remitenteNombre ?? 'Conductor',
+          body: message.mensaje,
           solicitudId: widget.solicitudId,
+          notificationId: message.id,
         );
       }
     });
@@ -201,7 +233,13 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     // Escuchar conteo de no leídos
     _unreadSubscription = ChatService.unreadCountStream.listen((count) {
       if (mounted) {
-        setState(() => _unreadCount = count);
+        setState(() {
+          if (ChatService.isChatOpen) {
+            _unreadCount = count;
+          } else if (count > _unreadCount) {
+            _unreadCount = count;
+          }
+        });
       }
     });
   }
@@ -252,6 +290,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   /// Reproducir sonido cuando el conductor llegó al punto de encuentro
   Future<void> _playDriverArrivedSound() async {
+    if (_isTripSoundMuted) return;
     if (_driverArrivedSoundPlayed) return; // Solo reproducir una vez
     _driverArrivedSoundPlayed = true;
 
@@ -267,6 +306,23 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     SoundService.stopSound();
   }
 
+  Future<void> _toggleTripSoundMute() async {
+    final nextMuted = !_isTripSoundMuted;
+
+    setState(() {
+      _isTripSoundMuted = nextMuted;
+    });
+
+    if (nextMuted) {
+      _driverArrivedSoundPlayed = false;
+      await SoundService.stopSound();
+      return;
+    }
+
+    _driverArrivedSoundPlayed = false;
+    await _playDriverArrivedSound();
+  }
+
   Future<void> _startLocationTracking() async {
     try {
       // Obtener ubicación inicial
@@ -279,7 +335,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       if (mounted) {
         setState(() {
           _clientLocation = LatLng(pos.latitude, pos.longitude);
-          _clientHeading = pos.heading;
+          _updateHeadingFromGps(pos.heading, pos.speed);
           _isLoading = false;
         });
 
@@ -294,6 +350,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           distanceFilter: 5, // Actualizar cada 5 metros
         ),
       ).listen(_onPositionUpdate);
+
+      _startCompassTracking();
     } catch (e) {
       debugPrint('Error getting location: $e');
       if (mounted) {
@@ -307,8 +365,43 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
     setState(() {
       _clientLocation = LatLng(pos.latitude, pos.longitude);
-      _clientHeading = pos.heading;
+      _updateHeadingFromGps(pos.heading, pos.speed);
     });
+  }
+
+  void _startCompassTracking() {
+    _compassStream?.cancel();
+    _compassStream = FlutterCompass.events?.listen((event) {
+      if (!mounted) return;
+      final heading = event.heading;
+      if (heading == null || !heading.isFinite) return;
+
+      // Cuando el usuario va lento o quieto, la brújula es más útil que el heading GPS
+      if (_lastClientSpeedMps < 1.5) {
+        setState(() {
+          _clientHeading = _smoothHeading(_clientHeading, _normalizeHeading(heading));
+        });
+      }
+    });
+  }
+
+  void _updateHeadingFromGps(double heading, double speed) {
+    _lastClientSpeedMps = speed;
+
+    // Heading GPS válido normalmente cuando hay movimiento real
+    if (heading.isFinite && heading >= 0) {
+      _clientHeading = _smoothHeading(_clientHeading, _normalizeHeading(heading));
+    }
+  }
+
+  double _normalizeHeading(double heading) {
+    final normalized = heading % 360;
+    return normalized < 0 ? normalized + 360 : normalized;
+  }
+
+  double _smoothHeading(double current, double target, {double factor = 0.25}) {
+    final delta = (((target - current + 540) % 360) - 180);
+    return _normalizeHeading(current + delta * factor);
   }
 
   void _fitMapToBounds() {
@@ -725,21 +818,17 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
     Navigator.pushReplacementNamed(
       context,
-      '/user/active_trip',
+      RouteNames.userActiveTrip,
       arguments: {
-        'solicitud_id': widget.solicitudId,
-        'cliente_id': widget.clienteId,
-        'conductor': _conductor,
-        'origen': {
-          'latitud': widget.latitudOrigen,
-          'longitud': widget.longitudOrigen,
-          'direccion': widget.direccionOrigen,
-        },
-        'destino': {
-          'latitud': widget.latitudDestino,
-          'longitud': widget.longitudDestino,
-          'direccion': widget.direccionDestino,
-        },
+        'solicitudId': widget.solicitudId,
+        'clienteId': widget.clienteId,
+        'conductorInfo': _conductor,
+        'origenLat': widget.latitudOrigen,
+        'origenLng': widget.longitudOrigen,
+        'direccionOrigen': widget.direccionOrigen,
+        'destinoLat': widget.latitudDestino,
+        'destinoLng': widget.longitudDestino,
+        'direccionDestino': widget.direccionDestino,
       },
     );
   }
@@ -787,7 +876,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
         solicitudId: widget.solicitudId,
         usuarioId: widget.clienteId,
       ).then((count) {
-        if (mounted) setState(() => _unreadCount = count);
+        if (mounted) {
+          setState(() {
+            _unreadCount = count;
+          });
+        }
       });
     });
   }
@@ -940,6 +1033,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
     // Cancelar otros streams y timers
     _positionStream?.cancel();
+    _compassStream?.cancel();
     _statusTimer?.cancel();
 
     // Dispose de animaciones
@@ -987,6 +1081,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
               statusText: _getStatusText(),
               direccionOrigen: widget.direccionOrigen,
               onClose: _cancelTrip,
+              isSoundMuted: _isTripSoundMuted,
+              onToggleSound: _toggleTripSoundMute,
             ),
           ),
 

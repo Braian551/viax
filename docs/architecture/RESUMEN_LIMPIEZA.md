@@ -2,7 +2,7 @@
 
 ## 🎯 Objetivo Logrado
 
-Se ha completado con éxito la **limpieza y reorganización del proyecto PingGo** para eliminar la redundancia entre el código monolítico y la arquitectura de microservicios.
+Se ha completado con éxito la **limpieza y reorganización del proyecto Viax** para eliminar la redundancia entre el código monolítico y la arquitectura de microservicios.
 
 ---
 
@@ -16,7 +16,7 @@ Se ha completado con éxito la **limpieza y reorganización del proyecto PingGo*
 - Confusión sobre dónde agregar nuevos endpoints
 
 #### Frontend
-- **10+ archivos** con URLs hardcodeadas `http://10.0.2.2/pingo/backend/...`
+- **10+ archivos** con URLs hardcodeadas `http://10.0.2.2/viax/backend/...`
 - Servicios duplicados: `user_service.dart` replica `UserRemoteDataSourceImpl`
 - Imposible cambiar a producción sin editar múltiples archivos
 - `admin_service.dart` sin arquitectura limpia correspondiente
@@ -97,7 +97,7 @@ class AppConfig {
 ### 1. Sin URLs Hardcodeadas
 ```dart
 // ❌ Antes (en 10+ archivos)
-const url = 'http://10.0.2.2/pingo/backend/conductor/get_profile.php';
+const url = 'http://10.0.2.2/viax/backend/conductor/get_profile.php';
 
 // ✅ Ahora (1 solo lugar)
 final url = '${AppConfig.conductorServiceUrl}/get_profile.php';
@@ -122,8 +122,8 @@ admin/       → Todo de administración
 ### 4. Preparado para Microservicios Reales
 ```dart
 // Cuando tengas servidores separados:
-static String get authServiceUrl => 'https://users.pingo.com/v1';
-static String get conductorServiceUrl => 'https://conductors.pingo.com/v1';
+static String get authServiceUrl => 'https://users.Viax.com/v1';
+static String get conductorServiceUrl => 'https://conductors.Viax.com/v1';
 
 // Ningún otro código necesita cambiar ✨
 ```
@@ -146,7 +146,7 @@ static String get conductorServiceUrl => 'https://conductors.pingo.com/v1';
 
 ### Backend
 ```bash
-cd c:\Flutter\ping_go\pingo\backend
+cd c:\Flutter\ping_go\Viax\backend
 
 # ✅ Verificar estructura
 Get-ChildItem -Recurse -Filter "*.php" | Select-Object FullName
@@ -160,7 +160,7 @@ Get-ChildItem -Recurse -Filter "*.php" | Select-Object FullName
 cd c:\Flutter\ping_go
 
 # ✅ No debería haber URLs hardcodeadas
-Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/pingo/backend" -CaseSensitive
+Select-String -Path "lib\**\*.dart" -Pattern "http://10.0.2.2/viax/backend" -CaseSensitive
 
 # Si aparece algo, verifica que use AppConfig
 ```
@@ -271,12 +271,12 @@ void main() {
 ### Documentación
 - [MICROSERVICES_CLEANUP.md](../docs/architecture/MICROSERVICES_CLEANUP.md)
 - [GUIA_RAPIDA_RUTAS.md](../docs/architecture/GUIA_RAPIDA_RUTAS.md)
-- [backend/README.md](../pingo/backend/README.md)
+- [backend/README.md](../viax/backend/README.md)
 
 ### Código
 - `lib/src/core/config/app_config.dart` - URLs centralizadas
 - `lib/src/features/user/data/datasources/` - Ejemplo Clean Architecture
-- `pingo/backend/auth/` - Microservicio completo
+- `viax/backend/auth/` - Microservicio completo
 
 ---
 
