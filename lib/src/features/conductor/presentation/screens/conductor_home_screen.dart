@@ -30,6 +30,9 @@ import 'package:viax/src/features/company/presentation/widgets/company_logo.dart
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/features/notifications/presentation/widgets/notification_widgets.dart';
 import 'package:viax/src/features/notifications/services/notification_service.dart';
+import 'package:viax/src/global/services/local_notification_service.dart';
+import 'package:viax/src/global/services/active_trip_navigation_service.dart';
+import '../../services/conductor_background_session_service.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -85,6 +88,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   double _gananciasHoy = 0.0;
   int _unreadNotifications = 0;
   Timer? _notificationTimer;
+  bool _isAppInForeground = true;
+  bool _backgroundModeEnabled = false;
+  final Set<int> _backgroundNotifiedRequestIds = <int>{};
 
   late AnimationController _pulseController;
   late AnimationController _connectionController;
@@ -105,6 +111,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _checkActiveDispute(); // Verificar disputa activa al inicio
     _loadUnreadNotifications();
     _startNotificationPolling();
+    _initializeBackgroundSessionGuards();
 
     // Marcar mapa como listo
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -156,6 +163,174 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     final count = await NotificationService.getUnreadCount(userId: userId);
     if (!_isDisposed && mounted) {
       _safeSetState(() => _unreadNotifications = count);
+    }
+  }
+
+  Future<void> _initializeBackgroundSessionGuards() async {
+    final conductorId = _conductorUserId;
+    if (conductorId == null) return;
+
+    _backgroundModeEnabled =
+        await ConductorBackgroundSessionService.isBackgroundModeEnabled(
+          conductorId,
+        );
+
+    if (mounted) {
+      _safeSetState(() {});
+    }
+  }
+
+  Future<void> _forceOfflineIfUnexpectedTermination() async {
+    final conductorId = _conductorUserId;
+    if (conductorId == null) return;
+
+    final shouldForceOffline =
+        await ConductorBackgroundSessionService.consumeUnexpectedOnlineSession(
+          conductorId,
+        );
+    if (!shouldForceOffline) return;
+
+    debugPrint(
+      '⚠️ Sesión previa cerrada abruptamente. Forzando desconexión segura...',
+    );
+
+    try {
+      await ConductorService.actualizarDisponibilidad(
+        conductorId: conductorId,
+        disponible: false,
+        latitud: _currentPosition?.latitude,
+        longitud: _currentPosition?.longitude,
+      );
+    } catch (e) {
+      debugPrint('❌ No se pudo forzar offline tras cierre abrupto: $e');
+    }
+
+    if (!_isDisposed && mounted) {
+      _safeSetState(() => _isOnline = false);
+    }
+  }
+
+  Future<void> _promptBackgroundModeIfNeeded() async {
+    final conductorId = _conductorUserId;
+    if (conductorId == null || _isDisposed || !mounted) return;
+
+    final alreadyPrompted =
+        await ConductorBackgroundSessionService.wasBackgroundPrompted(
+          conductorId,
+        );
+    if (alreadyPrompted) {
+      _backgroundModeEnabled =
+          await ConductorBackgroundSessionService.isBackgroundModeEnabled(
+            conductorId,
+          );
+      return;
+    }
+
+    final enableBackground = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Trabajo en segundo plano'),
+        content: const Text(
+          '¿Deseas mantenerte disponible en segundo plano cuando estés en línea? '
+          'Así podrás recibir solicitudes aunque minimices la app.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Ahora no'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Habilitar'),
+          ),
+        ],
+      ),
+    );
+
+    final enabled = enableBackground == true;
+    await ConductorBackgroundSessionService.setBackgroundModeEnabled(
+      conductorId,
+      enabled,
+    );
+    await ConductorBackgroundSessionService.markBackgroundPrompted(conductorId);
+    _backgroundModeEnabled = enabled;
+
+    if (enabled && mounted) {
+      await ActiveTripNavigationService().requestSystemOverlayPermission(context);
+    }
+  }
+
+  int? _extractRequestId(Map<String, dynamic> request) {
+    final raw = request['id'] ?? request['solicitud_id'] ?? request['request_id'];
+    if (raw is int) return raw;
+    if (raw is String) return int.tryParse(raw);
+    if (raw is num) return raw.toInt();
+    return null;
+  }
+
+  Future<void> _showTripRequestBackgroundNotification(
+    Map<String, dynamic> request,
+    int totalRequests,
+  ) async {
+    final requestId = _extractRequestId(request);
+    if (requestId != null && _backgroundNotifiedRequestIds.contains(requestId)) {
+      return;
+    }
+
+    final clienteNombre =
+        request['cliente_nombre']?.toString().trim().isNotEmpty == true
+        ? request['cliente_nombre'].toString().trim()
+        : 'Pasajero';
+    final origen = request['direccion_origen']?.toString() ??
+        request['origen']?.toString() ??
+        'Ubicación no disponible';
+
+    final title = totalRequests > 1
+        ? 'Tienes $totalRequests nuevas solicitudes'
+        : 'Nueva solicitud de viaje';
+    final body = totalRequests > 1
+        ? '$clienteNombre solicita viaje desde $origen'
+        : '$clienteNombre solicita viaje desde $origen';
+
+    await LocalNotificationService.showTripRequestNotification(
+      title: title,
+      body: body,
+      payload: requestId?.toString(),
+      notificationId: requestId,
+    );
+
+    if (requestId != null) {
+      _backgroundNotifiedRequestIds.add(requestId);
+    }
+  }
+
+  Future<void> _forceOfflineNow({String reason = ''}) async {
+    if (!_isOnline) return;
+
+    final conductorId = _conductorUserId;
+    if (conductorId == null) return;
+
+    TripRequestSearchService.stopSearching();
+
+    try {
+      await ConductorService.actualizarDisponibilidad(
+        conductorId: conductorId,
+        disponible: false,
+        latitud: _currentPosition?.latitude,
+        longitud: _currentPosition?.longitude,
+      );
+      await ConductorBackgroundSessionService.setOnlineSession(conductorId, false);
+      debugPrint('🛑 Conductor forzado offline (${reason.isEmpty ? 'sin razón' : reason})');
+    } catch (e) {
+      debugPrint('❌ Error forzando offline: $e');
+    }
+
+    if (!_isDisposed && mounted) {
+      _safeSetState(() {
+        _isOnline = false;
+        _isSearchingRequests = false;
+      });
     }
   }
 
@@ -275,23 +450,38 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     switch (state) {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
+        _isAppInForeground = false;
+        if (!_isOnline || !_backgroundModeEnabled) {
+          _stopSearchingRequests();
+        }
         debugPrint('⏸️ App pausada');
         break;
 
       case AppLifecycleState.detached:
+        _isAppInForeground = false;
+        unawaited(_forceOfflineNow(reason: 'app_detached'));
         debugPrint('🔌 App desconectada');
         break;
 
       case AppLifecycleState.resumed:
+        _isAppInForeground = true;
+        _backgroundNotifiedRequestIds.clear();
         debugPrint('✅ App en foreground');
         // Actualizar posición del mapa si es necesario
         if (_currentPosition != null && mounted) {
           _centerMapOnLocation(_currentPosition!);
           _syncOnlineStateFromBackend();
+          if (_isOnline && !_isSearchingRequests) {
+            _startSearchingRequests();
+          }
         }
         break;
 
       case AppLifecycleState.hidden:
+        _isAppInForeground = false;
+        if (!_isOnline || !_backgroundModeEnabled) {
+          _stopSearchingRequests();
+        }
         debugPrint('👁️ App oculta');
         break;
     }
@@ -403,6 +593,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       // Cargar zonas de demanda inmediatamente (para mostrar antes de conectarse)
       _startDemandZonesUpdates();
 
+      // Si la app se cerró abruptamente estando online, forzar offline al reiniciar
+      await _forceOfflineIfUnexpectedTermination();
+
       // Restaurar estado online persistido en backend cuando Home se reconstruye
       await _syncOnlineStateFromBackend();
     } catch (e) {
@@ -500,13 +693,19 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       return;
     }
 
+    final conductorId = _conductorUserId;
+    if (conductorId == null) {
+      debugPrint('❌ No se pudo resolver conductorId para buscar solicitudes');
+      return;
+    }
+
     _safeSetState(() {
       _isSearchingRequests = true;
       _searchStatus = 'Buscando solicitudes cercanas...';
     });
 
     TripRequestSearchService.startSearching(
-      conductorId: widget.conductorUser['id'] as int,
+      conductorId: conductorId,
       currentLat: _currentPosition!.latitude,
       currentLng: _currentPosition!.longitude,
       onRequestsFound: _onRequestsFound,
@@ -526,6 +725,15 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   void _onRequestsFound(List<Map<String, dynamic>> requests) {
     if (_isDisposed || !mounted || !_isOnline) return;
 
+    if (!_isAppInForeground) {
+      if (_backgroundModeEnabled && requests.isNotEmpty) {
+        unawaited(
+          _showTripRequestBackgroundNotification(requests.first, requests.length),
+        );
+      }
+      return;
+    }
+
     if (requests.isNotEmpty) {
       // Hay solicitudes disponibles - mostrar LA PRIMERA solicitud
       debugPrint(
@@ -535,13 +743,19 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       // Detener búsqueda temporalmente
       _stopSearchingRequests();
 
+      final conductorId = _conductorUserId;
+      if (conductorId == null) {
+        debugPrint('❌ No se pudo abrir solicitud: conductorId inválido');
+        return;
+      }
+
       // Navegar a pantalla de solicitud con LA PRIMERA solicitud únicamente
       // Lógica tipo Uber/InDrive: muestra una a la vez
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ConductorSearchingPassengersScreen(
-            conductorId: widget.conductorUser['id'] as int,
+            conductorId: conductorId,
             conductorNombre:
                 widget.conductorUser['nombre']?.toString() ?? 'Conductor',
             tipoVehiculo:
@@ -670,9 +884,15 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   }
 
   void _toggleOnlineStatus() async {
-    final conductorId = widget.conductorUser['id'] as int;
+    final conductorId = _conductorUserId;
+    if (conductorId == null) {
+      _showStatusSnackbar('No se pudo identificar el conductor.', Colors.red);
+      return;
+    }
     
     if (!_isOnline) {
+      await _promptBackgroundModeIfNeeded();
+
       // Verificar si hay viaje activo antes de conectar
       // 1. Verificación local (más rápida y fiable si la app sigue vivía)
       if (TripTrackingService().isTracking) {
@@ -710,6 +930,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         _safeSetState(() => _isOnline = true);
         _connectionController.forward();
         HapticFeedback.mediumImpact();
+        await ConductorBackgroundSessionService.setOnlineSession(conductorId, true);
 
         // Limpiar caché de solicitudes procesadas (para permitir ver solicitudes que antes rechazó)
         TripRequestSearchService.clearProcessedRequests();
@@ -766,6 +987,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         _safeSetState(() => _isOnline = false);
         _connectionController.reverse();
         HapticFeedback.lightImpact();
+        await ConductorBackgroundSessionService.setOnlineSession(
+          conductorId,
+          false,
+        );
 
         // Detener búsqueda de solicitudes
         _stopSearchingRequests();

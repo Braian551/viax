@@ -96,6 +96,54 @@ class _NotificationsContentState extends State<_NotificationsContent>
     super.dispose();
   }
 
+  void _showThemedSnackBar({
+    required String message,
+    Color? backgroundColor,
+    Duration duration = const Duration(seconds: 2),
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final resolvedBackground =
+        backgroundColor ??
+        (isDark
+            ? AppColors.darkCard.withValues(alpha: 0.95)
+            : AppColors.lightTextPrimary.withValues(alpha: 0.95));
+
+    final contrastBrightness = ThemeData.estimateBrightnessForColor(
+      resolvedBackground,
+    );
+    final foregroundColor = contrastBrightness == Brightness.dark
+        ? Colors.white
+        : AppColors.lightTextPrimary;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            color: foregroundColor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: resolvedBackground,
+        behavior: SnackBarBehavior.floating,
+        duration: duration,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        action: actionLabel != null && onAction != null
+            ? SnackBarAction(
+                label: actionLabel,
+                textColor: AppColors.primary,
+                onPressed: onAction,
+              )
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -439,15 +487,8 @@ class _NotificationsContentState extends State<_NotificationsContent>
     // Navegar según el tipo de notificación
     final handled = await _navigateToReference(notification);
     if (!handled && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Esta notificación no tiene una vista detallada disponible.'),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      _showThemedSnackBar(
+        message: 'Esta notificación no tiene una vista detallada disponible.',
       );
     }
   }
@@ -456,29 +497,21 @@ class _NotificationsContentState extends State<_NotificationsContent>
     NotificationModel notification,
     NotificationProvider provider,
   ) async {
-    await provider.deleteNotification(
+    final staged = provider.stageDeleteNotification(
       userId: widget.userId,
-      notificationId: notification.id,
+      notification: notification,
     );
 
+    if (!staged) return;
+
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Notificación eliminada'),
-          backgroundColor: AppColors.darkSurface,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          action: SnackBarAction(
-            label: 'Deshacer',
-            textColor: AppColors.primary,
-            onPressed: () {
-              // Aquí se podría implementar deshacer si se guarda el estado
-              provider.refresh(userId: widget.userId);
-            },
-          ),
-        ),
+      _showThemedSnackBar(
+        message: 'Notificación eliminada',
+        duration: const Duration(seconds: 4),
+        actionLabel: 'Deshacer',
+        onAction: () {
+          provider.undoDeleteNotification(notificationId: notification.id);
+        },
       );
     }
   }
@@ -515,8 +548,6 @@ class _NotificationsContentState extends State<_NotificationsContent>
   }
 
   void _showDeleteAllConfirmation(NotificationProvider provider) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -532,18 +563,24 @@ class _NotificationsContentState extends State<_NotificationsContent>
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
-              await provider.deleteAllNotifications(userId: widget.userId);
+              final staged = provider.stageDeleteAllNotifications(
+                userId: widget.userId,
+              );
               if (!mounted) return;
 
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: const Text('Todas las notificaciones eliminadas'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+              if (!staged) {
+                _showThemedSnackBar(
+                  message: 'No hay notificaciones para eliminar.',
+                );
+                return;
+              }
+
+              _showThemedSnackBar(
+                message: 'Todas las notificaciones eliminadas',
+                backgroundColor: AppColors.success,
+                duration: const Duration(seconds: 4),
+                actionLabel: 'Deshacer',
+                onAction: provider.undoDeleteAllNotifications,
               );
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),

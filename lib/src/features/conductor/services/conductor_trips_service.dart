@@ -240,6 +240,39 @@ class TripModel {
   String get clienteNombreCompleto => '$clienteNombre $clienteApellido';
   
   double get calificacionDouble => (calificacion ?? 0).toDouble();
+
+  /// Total cobrado al cliente
+  double get totalCobradoViaje =>
+      precioFinal ?? desglosePrecio?.precioFinal ?? precioEstimado ?? 0;
+
+  /// Comisión total aplicada al viaje
+  double get comisionCalculada {
+    if (comisionEmpresa != null && comisionEmpresa! > 0) {
+      return comisionEmpresa!;
+    }
+    if (desglosePrecio?.comisionValor != null && desglosePrecio!.comisionValor > 0) {
+      return desglosePrecio!.comisionValor;
+    }
+    if (comisionPorcentaje != null && comisionPorcentaje! > 0) {
+      return totalCobradoViaje * (comisionPorcentaje! / 100);
+    }
+    if (desglosePrecio?.comisionPorcentaje != null && desglosePrecio!.comisionPorcentaje > 0) {
+      return totalCobradoViaje * (desglosePrecio!.comisionPorcentaje / 100);
+    }
+    return 0;
+  }
+
+  /// Ganancia neta del conductor (comisión descontada)
+  double get gananciaNeta {
+    if (gananciaViaje != null && gananciaViaje! > 0) {
+      return gananciaViaje!;
+    }
+    if (desglosePrecio?.gananciaConductor != null && desglosePrecio!.gananciaConductor > 0) {
+      return desglosePrecio!.gananciaConductor;
+    }
+    final neta = totalCobradoViaje - comisionCalculada;
+    return neta >= 0 ? neta : 0;
+  }
 }
 
 /// Modelo para paginaciÃ³n

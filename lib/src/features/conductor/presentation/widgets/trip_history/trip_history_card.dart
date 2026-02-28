@@ -336,13 +336,10 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildEarningsFooter(bool isDark) {
-    // Usar ganancia neta del viaje (ya con comisión descontada)
-    final ganancia = widget.trip.gananciaViaje ?? 
-                     widget.trip.precioFinal ?? 
-                     widget.trip.precioEstimado ?? 
-                     0;
-    final comision = widget.trip.comisionEmpresa ?? 0;
-    final precioTotal = widget.trip.precioFinal ?? widget.trip.precioEstimado ?? 0;
+    // Usar valores consistentes del modelo (neto y total)
+    final ganancia = widget.trip.gananciaNeta;
+    final comision = widget.trip.comisionCalculada;
+    final precioTotal = widget.trip.totalCobradoViaje;
     final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
 

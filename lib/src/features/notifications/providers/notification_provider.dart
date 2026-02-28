@@ -42,6 +42,10 @@ class NotificationProvider extends ChangeNotifier {
   bool _hasMore = true;
   String _selectedFilter = 'all';
   int? _userId;
+
+  // Eliminaciones pendientes con ventana de deshacer
+  final Map<int, _PendingNotificationDeletion> _pendingDeletions = {};
+  _PendingDeleteAll? _pendingDeleteAll;
   
   // Timer para polling de nuevas notificaciones
   Timer? _pollingTimer;
@@ -209,6 +213,10 @@ class NotificationProvider extends ChangeNotifier {
     required int userId,
     required int notificationId,
   }) async {
+    if (_pendingDeleteAll != null) {
+      return false;
+    }
+
     final result = await NotificationService.deleteNotification(
       userId: userId,
       notificationId: notificationId,
@@ -223,6 +231,183 @@ class NotificationProvider extends ChangeNotifier {
     }
 
     return false;
+  }
+
+  /// Elimina una notificación de la UI y espera una ventana para confirmar
+  /// el borrado en backend. Permite deshacer dentro de la ventana.
+  bool stageDeleteNotification({
+    required int userId,
+    required NotificationModel notification,
+    Duration gracePeriod = const Duration(seconds: 4),
+  }) {
+    if (_pendingDeleteAll != null) {
+      return false;
+    }
+
+    final existingPending = _pendingDeletions[notification.id];
+    if (existingPending != null) {
+      return true;
+    }
+
+    final index = _notifications.indexWhere((n) => n.id == notification.id);
+    if (index == -1) {
+      return false;
+    }
+
+    _notifications.removeAt(index);
+    if (!notification.leida && _unreadCount > 0) {
+      _unreadCount--;
+    }
+
+    final timer = Timer(gracePeriod, () {
+      _commitPendingDelete(userId: userId, notificationId: notification.id);
+    });
+
+    _pendingDeletions[notification.id] = _PendingNotificationDeletion(
+      notification: notification,
+      originalIndex: index,
+      timer: timer,
+    );
+
+    notifyListeners();
+    return true;
+  }
+
+  /// Elimina todas de la UI y espera una ventana para confirmar el borrado
+  /// en backend. Permite deshacer dentro de la ventana.
+  bool stageDeleteAllNotifications({
+    required int userId,
+    Duration gracePeriod = const Duration(seconds: 4),
+  }) {
+    if (_pendingDeleteAll != null) {
+      return false;
+    }
+
+    _restorePendingSingleDeletes();
+
+    if (_notifications.isEmpty) {
+      return false;
+    }
+
+    final snapshotNotifications = List<NotificationModel>.from(_notifications);
+    final snapshotUnread = _unreadCount;
+
+    _notifications = [];
+    _unreadCount = 0;
+
+    final timer = Timer(gracePeriod, () {
+      _commitPendingDeleteAll(userId: userId);
+    });
+
+    _pendingDeleteAll = _PendingDeleteAll(
+      notificationsSnapshot: snapshotNotifications,
+      unreadCountSnapshot: snapshotUnread,
+      timer: timer,
+    );
+
+    notifyListeners();
+    return true;
+  }
+
+  /// Revierte la eliminación masiva pendiente.
+  bool undoDeleteAllNotifications() {
+    final pending = _pendingDeleteAll;
+    if (pending == null) return false;
+
+    pending.timer.cancel();
+    _pendingDeleteAll = null;
+
+    _notifications = List<NotificationModel>.from(pending.notificationsSnapshot);
+    _unreadCount = pending.unreadCountSnapshot;
+    notifyListeners();
+    return true;
+  }
+
+  /// Revierte una eliminación pendiente dentro de la ventana de gracia.
+  bool undoDeleteNotification({
+    required int notificationId,
+  }) {
+    final pending = _pendingDeletions.remove(notificationId);
+    if (pending == null) return false;
+
+    pending.timer.cancel();
+
+    final safeIndex = pending.originalIndex.clamp(0, _notifications.length);
+    _notifications.insert(safeIndex, pending.notification);
+    if (!pending.notification.leida) {
+      _unreadCount++;
+    }
+
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> _commitPendingDelete({
+    required int userId,
+    required int notificationId,
+  }) async {
+    final pending = _pendingDeletions.remove(notificationId);
+    if (pending == null) return;
+
+    final result = await NotificationService.deleteNotification(
+      userId: userId,
+      notificationId: notificationId,
+    );
+
+    if (result['success'] == true) {
+      _unreadCount = result['no_leidas'] ?? _unreadCount;
+      notifyListeners();
+      return;
+    }
+
+    final safeIndex = pending.originalIndex.clamp(0, _notifications.length);
+    _notifications.insert(safeIndex, pending.notification);
+    if (!pending.notification.leida) {
+      _unreadCount++;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _commitPendingDeleteAll({
+    required int userId,
+  }) async {
+    final pending = _pendingDeleteAll;
+    if (pending == null) return;
+
+    _pendingDeleteAll = null;
+
+    final result = await NotificationService.deleteNotification(
+      userId: userId,
+      deleteAll: true,
+    );
+
+    if (result['success'] == true) {
+      _unreadCount = 0;
+      notifyListeners();
+      return;
+    }
+
+    _notifications = List<NotificationModel>.from(pending.notificationsSnapshot);
+    _unreadCount = pending.unreadCountSnapshot;
+    notifyListeners();
+  }
+
+  void _restorePendingSingleDeletes() {
+    if (_pendingDeletions.isEmpty) return;
+
+    final pendingItems = _pendingDeletions.values.toList()
+      ..sort((a, b) => a.originalIndex.compareTo(b.originalIndex));
+
+    for (final pending in pendingItems) {
+      pending.timer.cancel();
+      final safeIndex = pending.originalIndex.clamp(0, _notifications.length);
+      _notifications.insert(safeIndex, pending.notification);
+      if (!pending.notification.leida) {
+        _unreadCount++;
+      }
+    }
+
+    _pendingDeletions.clear();
   }
 
   /// Elimina todas las notificaciones
@@ -302,6 +487,12 @@ class NotificationProvider extends ChangeNotifier {
 
   /// Limpia el estado
   void clear() {
+    _pendingDeleteAll?.timer.cancel();
+    _pendingDeleteAll = null;
+    for (final pending in _pendingDeletions.values) {
+      pending.timer.cancel();
+    }
+    _pendingDeletions.clear();
     _notifications = [];
     _settings = null;
     _loadState = NotificationLoadState.initial;
@@ -315,7 +506,37 @@ class NotificationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _pendingDeleteAll?.timer.cancel();
+    _pendingDeleteAll = null;
+    for (final pending in _pendingDeletions.values) {
+      pending.timer.cancel();
+    }
+    _pendingDeletions.clear();
     stopPolling();
     super.dispose();
   }
+}
+
+class _PendingNotificationDeletion {
+  final NotificationModel notification;
+  final int originalIndex;
+  final Timer timer;
+
+  const _PendingNotificationDeletion({
+    required this.notification,
+    required this.originalIndex,
+    required this.timer,
+  });
+}
+
+class _PendingDeleteAll {
+  final List<NotificationModel> notificationsSnapshot;
+  final int unreadCountSnapshot;
+  final Timer timer;
+
+  const _PendingDeleteAll({
+    required this.notificationsSnapshot,
+    required this.unreadCountSnapshot,
+    required this.timer,
+  });
 }

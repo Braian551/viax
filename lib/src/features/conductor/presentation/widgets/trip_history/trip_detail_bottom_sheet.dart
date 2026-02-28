@@ -499,7 +499,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildEarningsCard(bool isDark, Color textColor) {
-    final ganancia = widget.trip.precioFinal ?? widget.trip.precioEstimado ?? 0;
+    final ganancia = widget.trip.gananciaNeta;
+    final comision = widget.trip.comisionCalculada;
+    final totalCobrado = widget.trip.totalCobradoViaje;
     final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
     
@@ -529,53 +531,81 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
           width: 1,
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                isCompleted ? 'Ganancia Total' : 'Viaje Cancelado',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isCompleted ? 'Tu ganancia' : 'Viaje Cancelado',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (isCompleted)
+                    Text(
+                      comision > 0
+                          ? 'Comisión: -\$${currencyFormat.format(comision)}'
+                          : 'Sin comisión aplicada',
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                        fontSize: 13,
+                      ),
+                    )
+                  else
+                    Text(
+                      'No se realizó cobro',
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                isCompleted
-                    ? 'Pago completado'
-                    : 'No se realizó cobro',
-                style: TextStyle(
-                  color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
-                  fontSize: 13,
-                ),
+              Row(
+                children: [
+                  if (isCompleted)
+                    Text(
+                      '+',
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  Text(
+                    '\$${currencyFormat.format(ganancia)}',
+                    style: TextStyle(
+                      color: isCompleted ? AppColors.success : AppColors.error,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          Row(
-            children: [
-              if (isCompleted)
-                Text(
-                  '+',
+          if (isCompleted && comision > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'Total cobrado: \$${currencyFormat.format(totalCobrado)}',
                   style: TextStyle(
-                    color: AppColors.success,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                    fontSize: 12,
                   ),
                 ),
-              Text(
-                '\$${currencyFormat.format(ganancia)}',
-                style: TextStyle(
-                  color: isCompleted ? AppColors.success : AppColors.error,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
-            ],
-          ),
+            ),
         ],
       ),
     );
