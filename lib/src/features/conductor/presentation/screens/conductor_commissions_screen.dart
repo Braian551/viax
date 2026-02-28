@@ -3,6 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_debt_payment_screen.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/conductor_drawer.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/commissions/commission_kpi_card.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/commissions/commissions_trend_chart.dart';
+import 'package:viax/src/features/conductor/presentation/widgets/earnings/earnings_period_selector.dart';
 import 'package:viax/src/features/conductor/services/debt_payment_service.dart';
 import 'package:viax/src/features/conductor/services/conductor_earnings_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
@@ -10,6 +13,7 @@ import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
 enum CommissionPeriod { today, week, month }
+enum CommissionsTrendMetric { commission, trips }
 
 class ConductorCommissionsScreen extends StatefulWidget {
   final int conductorId;
@@ -40,6 +44,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
   Map<String, dynamic>? _debtContext;
   bool _hasShownMandatoryDialog = false;
   CommissionPeriod _period = CommissionPeriod.month;
+  CommissionsTrendMetric _trendMetric = CommissionsTrendMetric.commission;
 
   @override
   void initState() {
@@ -228,7 +233,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
         child: Column(
           children: [
             _buildHeader(isDark),
-            _buildPeriodSelector(isDark),
+            _buildPeriodSelector(),
             Expanded(child: _buildBody(isDark)),
           ],
         ),
@@ -329,72 +334,38 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     );
   }
 
-  Widget _buildPeriodSelector(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Row(
-        children: CommissionPeriod.values.map((period) {
-          final selected = period == _period;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {
-                setState(() => _period = period);
-                _loadData();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppColors.primary.withValues(alpha: isDark ? 0.28 : 0.18)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : Colors.white.withValues(alpha: 0.85)),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected
-                        ? AppColors.primary
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : Colors.grey.withValues(alpha: 0.25)),
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.2),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (selected) ...[
-                      Icon(Icons.check_rounded, size: 14, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                    ],
-                    Text(
-                      _periodLabel(period),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: selected
-                            ? AppColors.primary
-                            : (isDark ? Colors.white70 : AppColors.lightTextPrimary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+  Widget _buildPeriodSelector() {
+    return EarningsPeriodSelector(
+      selectedPeriod: _mapCommissionPeriodToType(_period),
+      onPeriodChanged: (type) {
+        final nextPeriod = _mapTypeToCommissionPeriod(type);
+        if (nextPeriod == _period) return;
+        setState(() => _period = nextPeriod);
+        _loadData();
+      },
     );
+  }
+
+  EarningsPeriodType _mapCommissionPeriodToType(CommissionPeriod period) {
+    switch (period) {
+      case CommissionPeriod.today:
+        return EarningsPeriodType.today;
+      case CommissionPeriod.week:
+        return EarningsPeriodType.week;
+      case CommissionPeriod.month:
+        return EarningsPeriodType.month;
+    }
+  }
+
+  CommissionPeriod _mapTypeToCommissionPeriod(EarningsPeriodType type) {
+    switch (type) {
+      case EarningsPeriodType.today:
+        return CommissionPeriod.today;
+      case EarningsPeriodType.week:
+        return CommissionPeriod.week;
+      case EarningsPeriodType.month:
+        return CommissionPeriod.month;
+    }
   }
 
   Widget _buildBody(bool isDark) {
@@ -498,33 +469,117 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
             Row(
               children: [
                 Expanded(
-                  child: _glassCard(
+                  child: CommissionKpiCard(
                     isDark: isDark,
-                    borderColor: AppColors.primary.withValues(alpha: 0.28),
-                    child: _statBlock(
-                      isDark: isDark,
-                      icon: Icons.percent_rounded,
-                      title: 'Comisión del periodo',
-                      value: formatCurrency(commissions.comisionPeriodo),
-                      valueColor: AppColors.primary,
-                    ),
+                    icon: Icons.percent_rounded,
+                    title: 'Comisión del periodo',
+                    value: formatCurrency(commissions.comisionPeriodo),
+                    accentColor: AppColors.primary,
+                    subtitle: '${commissions.totalViajes} viajes',
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _glassCard(
+                  child: CommissionKpiCard(
                     isDark: isDark,
-                    borderColor: AppColors.info.withValues(alpha: 0.28),
-                    child: _statBlock(
-                      isDark: isDark,
-                      icon: Icons.pie_chart_rounded,
-                      title: 'Porcentaje comisión',
-                      value: '${commissions.comisionPromedioPorcentaje.toStringAsFixed(1)}%',
-                      valueColor: AppColors.info,
-                    ),
+                    icon: Icons.pie_chart_rounded,
+                    title: 'Porcentaje comisión',
+                    value: '${commissions.comisionPromedioPorcentaje.toStringAsFixed(1)}%',
+                    accentColor: AppColors.info,
+                    subtitle:
+                        'Conductor ${commissions.porcentajeGanancia.toStringAsFixed(1)}%',
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: CommissionKpiCard(
+                    isDark: isDark,
+                    icon: Icons.attach_money_rounded,
+                    title: 'Total cobrado',
+                    value: formatCurrency(commissions.totalCobrado),
+                    accentColor: AppColors.success,
+                    subtitle: _periodLabel(_period),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: CommissionKpiCard(
+                    isDark: isDark,
+                    icon: Icons.insights_rounded,
+                    title: 'Promedio por viaje',
+                    value: formatCurrency(commissions.promedioPorViaje),
+                    accentColor: AppColors.warning,
+                    subtitle: 'Ticket medio',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _glassCard(
+              isDark: isDark,
+              borderColor: (_trendMetric == CommissionsTrendMetric.commission
+                      ? AppColors.warning
+                      : AppColors.info)
+                  .withValues(alpha: 0.3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _trendMetric == CommissionsTrendMetric.commission
+                            ? Icons.show_chart_rounded
+                            : Icons.bar_chart_rounded,
+                        color: _trendMetric == CommissionsTrendMetric.commission
+                            ? AppColors.warning
+                            : AppColors.info,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tendencia del periodo',
+                          style: TextStyle(
+                            color:
+                                isDark ? Colors.white : AppColors.lightTextPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      _buildTrendMetricChip(
+                        isDark: isDark,
+                        label: 'Comisión',
+                        selected:
+                            _trendMetric == CommissionsTrendMetric.commission,
+                        color: AppColors.warning,
+                        onTap: () => setState(
+                          () => _trendMetric = CommissionsTrendMetric.commission,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      _buildTrendMetricChip(
+                        isDark: isDark,
+                        label: 'Viajes',
+                        selected: _trendMetric == CommissionsTrendMetric.trips,
+                        color: AppColors.info,
+                        onTap: () => setState(
+                          () => _trendMetric = CommissionsTrendMetric.trips,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  CommissionsTrendChart(
+                    isDark: isDark,
+                    days: commissions.desgloseDiario,
+                    showTrips: _trendMetric == CommissionsTrendMetric.trips,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             _glassCard(
@@ -619,6 +674,45 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendMetricChip({
+    required bool isDark,
+    required String label,
+    required bool selected,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? color.withValues(alpha: isDark ? 0.25 : 0.18)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? color.withValues(alpha: 0.6)
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.18)
+                    : Colors.grey.withValues(alpha: 0.25)),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? color
+                : (isDark ? Colors.white70 : AppColors.lightTextSecondary),
+          ),
         ),
       ),
     );
