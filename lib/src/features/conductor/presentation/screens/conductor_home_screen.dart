@@ -671,6 +671,13 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
               );
             }
 
+            DemandZoneService.updateLocation(
+              latitude: position.latitude,
+              longitude: position.longitude,
+              onZonesUpdated: _onDemandZonesUpdated,
+              onError: _onDemandZonesError,
+            );
+
             // Actualizar mapa con debounce
             _debouncedUpdateMapLocation(position);
           },
@@ -803,18 +810,22 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     DemandZoneService.startAutoRefresh(
       latitude: _currentPosition!.latitude,
       longitude: _currentPosition!.longitude,
-      onZonesUpdated: (zones) {
-        if (!_isDisposed && mounted) {
-          _safeSetState(() {
-            _demandZones = zones;
-          });
-          debugPrint('🔥 ${zones.length} zonas de demanda actualizadas');
-        }
-      },
-      onError: (error) {
-        debugPrint('❌ Error al obtener zonas de demanda: $error');
-      },
+      onZonesUpdated: _onDemandZonesUpdated,
+      onError: _onDemandZonesError,
     );
+  }
+
+  void _onDemandZonesUpdated(List<DemandZone> zones) {
+    if (_isDisposed || !mounted) return;
+
+    _safeSetState(() {
+      _demandZones = zones;
+    });
+    debugPrint('🔥 ${zones.length} zonas de demanda actualizadas');
+  }
+
+  void _onDemandZonesError(String error) {
+    debugPrint('❌ Error al obtener zonas de demanda: $error');
   }
 
   /// Manejar tap en zona de demanda

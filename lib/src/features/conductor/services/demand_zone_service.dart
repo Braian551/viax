@@ -14,11 +14,22 @@ import '../models/demand_zone_model.dart';
 class DemandZoneService {
   static Timer? _refreshTimer;
   static bool _isRefreshing = false;
+  static bool _isFetchInProgress = false;
   static List<DemandZone> _cachedZones = [];
   static DateTime? _lastUpdate;
+  static DateTime? _lastFetchAt;
+  static DateTime? _lastLocationUpdateAt;
+  static double? _currentLatitude;
+  static double? _currentLongitude;
+  static int _consecutiveEmptyResponses = 0;
+  static bool _locationDirty = false;
+  static int _serverSuggestedRefreshSeconds = refreshIntervalSeconds;
   
   /// Intervalo de actualización en segundos
   static const int refreshIntervalSeconds = 30;
+  static const int minRefreshIntervalSeconds = 12;
+  static const int staleRefreshIntervalSeconds = 90;
+  static const double locationChangeThresholdKm = 0.12; // 120m
   
   /// Obtener zonas de demanda cercanas a una ubicación
   static Future<DemandZonesResponse> getDemandZones({
@@ -26,6 +37,7 @@ class DemandZoneService {
     required double longitude,
     double radiusKm = 10.0,
     double zoneSizeKm = 0.5,
+    bool includeDemo = false,
   }) async {
     try {
       final response = await _postWithFallback(
@@ -35,6 +47,7 @@ class DemandZoneService {
           'longitud': longitude,
           'radio_km': radiusKm,
           'zone_size_km': zoneSizeKm,
+          'include_demo': includeDemo,
         },
       );
       
@@ -114,19 +127,17 @@ class DemandZoneService {
     
     debugPrint('🔄 Iniciando auto-refresh de zonas de demanda');
     _isRefreshing = true;
+    _isFetchInProgress = false;
+    _currentLatitude = latitude;
+    _currentLongitude = longitude;
+    _lastLocationUpdateAt = DateTime.now();
+    _locationDirty = true;
+    _consecutiveEmptyResponses = 0;
+    _serverSuggestedRefreshSeconds = refreshIntervalSeconds;
     
     // Primera carga inmediata
-    _fetchAndNotify(latitude, longitude, onZonesUpdated, onError);
-    
-    // Configurar timer para actualizaciones periódicas
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: refreshIntervalSeconds),
-      (timer) {
-        if (_isRefreshing) {
-          _fetchAndNotify(latitude, longitude, onZonesUpdated, onError);
-        }
-      },
-    );
+    unawaited(_fetchAndNotify(onZonesUpdated, onError));
+    _scheduleNextRefresh(onZonesUpdated, onError);
   }
   
   /// Actualizar ubicación del conductor para el auto-refresh
@@ -136,17 +147,50 @@ class DemandZoneService {
     required Function(List<DemandZone>) onZonesUpdated,
     Function(String)? onError,
   }) {
-    if (_isRefreshing) {
-      // Solo actualizar en la próxima iteración si está activo
-      _fetchAndNotify(latitude, longitude, onZonesUpdated, onError);
+    final previousLatitude = _currentLatitude;
+    final previousLongitude = _currentLongitude;
+
+    _currentLatitude = latitude;
+    _currentLongitude = longitude;
+    _lastLocationUpdateAt = DateTime.now();
+
+    if (!_isRefreshing) {
+      return;
+    }
+
+    final hasPreviousUpdate = previousLatitude != null && previousLongitude != null;
+    final movedEnough = hasPreviousUpdate && _cachedZones.isNotEmpty
+      ? _hasSignificantLocationChange(
+        latitude,
+        longitude,
+        previousLatitude,
+        previousLongitude,
+        )
+        : true;
+
+    if (movedEnough) {
+      _locationDirty = true;
+      final secondsSinceLastFetch = _lastFetchAt == null
+          ? 999
+          : DateTime.now().difference(_lastFetchAt!).inSeconds;
+
+      if (!_isFetchInProgress && secondsSinceLastFetch >= minRefreshIntervalSeconds) {
+        unawaited(_fetchAndNotify(onZonesUpdated, onError));
+      }
     }
   }
   
   /// Detener actualización automática
   static void stopAutoRefresh() {
     _isRefreshing = false;
+    _isFetchInProgress = false;
     _refreshTimer?.cancel();
     _refreshTimer = null;
+    _locationDirty = false;
+    _consecutiveEmptyResponses = 0;
+    _serverSuggestedRefreshSeconds = refreshIntervalSeconds;
+    _currentLatitude = null;
+    _currentLongitude = null;
     debugPrint('⏹️ Auto-refresh de zonas de demanda detenido');
   }
   
@@ -163,25 +207,109 @@ class DemandZoneService {
   static void clearCache() {
     _cachedZones = [];
     _lastUpdate = null;
+    _lastFetchAt = null;
+    _consecutiveEmptyResponses = 0;
+    _locationDirty = false;
+    _serverSuggestedRefreshSeconds = refreshIntervalSeconds;
   }
   
   /// Método interno para obtener y notificar cambios
   static Future<void> _fetchAndNotify(
-    double latitude,
-    double longitude,
     Function(List<DemandZone>) onZonesUpdated,
     Function(String)? onError,
   ) async {
+    if (!_isRefreshing || _isFetchInProgress) return;
+
+    final latitude = _currentLatitude;
+    final longitude = _currentLongitude;
+    if (latitude == null || longitude == null) {
+      return;
+    }
+
+    _isFetchInProgress = true;
+    _lastFetchAt = DateTime.now();
+
+    final dynamicRadius = _consecutiveEmptyResponses >= 4 ? 15.0 : 10.0;
+
     final response = await getDemandZones(
       latitude: latitude,
       longitude: longitude,
+      radiusKm: dynamicRadius,
+      includeDemo: false,
     );
-    
+
     if (response.success) {
+      _serverSuggestedRefreshSeconds = response.refreshIntervalSeconds.clamp(
+        minRefreshIntervalSeconds,
+        60,
+      );
+      _locationDirty = false;
+      if (response.zones.isEmpty) {
+        _consecutiveEmptyResponses++;
+      } else {
+        _consecutiveEmptyResponses = 0;
+      }
       onZonesUpdated(response.zones);
     } else if (onError != null) {
       onError(response.message ?? 'Error desconocido');
     }
+
+    _isFetchInProgress = false;
+    if (_isRefreshing) {
+      _scheduleNextRefresh(onZonesUpdated, onError);
+    }
+  }
+
+  static void _scheduleNextRefresh(
+    Function(List<DemandZone>) onZonesUpdated,
+    Function(String)? onError,
+  ) {
+    if (!_isRefreshing) return;
+
+    _refreshTimer?.cancel();
+
+    final now = DateTime.now();
+    final secondsSinceLocation = _lastLocationUpdateAt == null
+        ? refreshIntervalSeconds
+        : now.difference(_lastLocationUpdateAt!).inSeconds;
+
+    final shouldForceStaleRefresh = _lastFetchAt == null
+        ? true
+        : now.difference(_lastFetchAt!).inSeconds >= staleRefreshIntervalSeconds;
+
+    int nextSeconds;
+    final baseRefresh = _serverSuggestedRefreshSeconds;
+    if (_locationDirty) {
+      nextSeconds = minRefreshIntervalSeconds;
+    } else if (shouldForceStaleRefresh) {
+      nextSeconds = minRefreshIntervalSeconds;
+    } else if (secondsSinceLocation >= 180) {
+      nextSeconds = 45;
+    } else {
+      nextSeconds = baseRefresh;
+    }
+
+    _refreshTimer = Timer(Duration(seconds: nextSeconds), () {
+      if (_isRefreshing) {
+        unawaited(_fetchAndNotify(onZonesUpdated, onError));
+      }
+    });
+  }
+
+  static bool _hasSignificantLocationChange(
+    double latitude,
+    double longitude,
+    double previousLatitude,
+    double previousLongitude,
+  ) {
+    final movedKm = _calculateDistance(
+      latitude,
+      longitude,
+      previousLatitude,
+      previousLongitude,
+    );
+
+    return movedKm >= locationChangeThresholdKm;
   }
   
   /// Obtener el multiplicador de precio para una ubicación específica

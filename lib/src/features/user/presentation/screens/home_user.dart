@@ -356,6 +356,26 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                   ? Colors.white.withValues(alpha: 0.15) 
                                   : Colors.white.withValues(alpha: 0.4)),
                                 shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.35)
+                                      : Colors.white.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                                boxShadow: isDark
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.22),
+                                          blurRadius: 14,
+                                          spreadRadius: 1,
+                                        ),
+                                        BoxShadow(
+                                          color: AppColors.primary.withValues(alpha: 0.28),
+                                          blurRadius: 12,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                               child: Image.asset(
                                 'assets/images/logo.png',
