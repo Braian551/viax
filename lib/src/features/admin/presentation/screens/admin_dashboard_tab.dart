@@ -1,10 +1,11 @@
-﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/theme/app_colors.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:viax/src/widgets/shared/glass_container.dart';
+import 'package:viax/src/widgets/shared/dashboard_widgets.dart';
+import 'package:viax/src/widgets/shared/shimmer_loading.dart';
 import 'platform_earnings_screen.dart';
 
 class AdminDashboardTab extends StatefulWidget {
@@ -21,7 +22,8 @@ class AdminDashboardTab extends StatefulWidget {
   State<AdminDashboardTab> createState() => _AdminDashboardTabState();
 }
 
-class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKeepAliveClientMixin {
+class _AdminDashboardTabState extends State<AdminDashboardTab>
+    with AutomaticKeepAliveClientMixin {
   Map<String, dynamic>? _dashboardData;
   bool _isLoading = true;
 
@@ -35,18 +37,16 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
   }
 
   Future<void> _loadDashboardData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      print('AdminDashboardTab: adminUser completo: ${widget.adminUser}');
-      
-      final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
-      
-      print('AdminDashboardTab: Cargando datos para adminId: $adminId');
-      
+      final adminId =
+          int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+
       final response = await AdminService.getDashboardStats(adminId: adminId);
-      
-      print('AdminDashboardTab: Response recibida: $response');
+
+      if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
         setState(() {
@@ -54,7 +54,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
           _isLoading = false;
         });
       } else {
-        final errorMsg = response['message'] ?? 'No se pudieron cargar las estadísticas';
+        final errorMsg =
+            response['message'] ?? 'No se pudieron cargar las estadísticas';
         _showError(errorMsg);
         setState(() {
           _dashboardData = _getDefaultDashboardData();
@@ -62,8 +63,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
         });
       }
     } catch (e) {
-      print('AdminDashboardTab Error: $e');
-      _showError('Error al cargar datos: $e');
+      if (!mounted) return;
+      _showError('Error al cargar datos');
       setState(() {
         _dashboardData = _getDefaultDashboardData();
         _isLoading = false;
@@ -100,92 +101,43 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
   }
 
   void _showError(String message) {
-    CustomSnackbar.showError(context, message: message);
+    if (mounted) CustomSnackbar.showError(context, message: message);
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
-    final adminName = widget.adminUser['nombre']?.toString() ?? 'Administrador';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final adminName =
+        widget.adminUser['nombre']?.toString() ?? 'Administrador';
 
     if (_isLoading) {
-      return _buildShimmerLoading();
+      return const DashboardShimmer();
     }
 
     return RefreshIndicator(
       color: AppColors.primary,
-      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       onRefresh: _loadDashboardData,
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
             _buildWelcomeSection(adminName),
-            const SizedBox(height: 30),
+            const SizedBox(height: 28),
+            const SectionHeader(title: 'Dashboard en vivo'),
             _buildStatsGrid(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+            _buildPlatformEarningsCard(),
+            const SizedBox(height: 28),
+            const SectionHeader(title: 'Actividad reciente'),
             _buildRecentActivity(),
             const SizedBox(height: 20),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          _buildShimmerBox(height: 60, width: 200),
-          const SizedBox(height: 24),
-          _buildShimmerBox(height: 24, width: 180),
-          const SizedBox(height: 16),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.3,
-            children: List.generate(4, (index) => _buildShimmerBox(height: 140)),
-          ),
-          const SizedBox(height: 30),
-          _buildShimmerBox(height: 24, width: 150),
-          const SizedBox(height: 16),
-          Column(
-            children: List.generate(
-              3,
-              (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildShimmerBox(height: 80, width: double.infinity),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShimmerBox({required double height, double? width}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Shimmer.fromColors(
-      baseColor: isDark ? AppColors.darkSurface : AppColors.lightDivider,
-      highlightColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
-      child: Container(
-        height: height,
-        width: width,
-        decoration: BoxDecoration(
-          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
-          borderRadius: BorderRadius.circular(20),
         ),
       ),
     );
@@ -195,7 +147,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
     final hour = DateTime.now().hour;
     String greeting = 'Buenos días';
     IconData greetingIcon = Icons.wb_sunny_rounded;
-    
+
     if (hour >= 12 && hour < 18) {
       greeting = 'Buenas tardes';
       greetingIcon = Icons.wb_cloudy_rounded;
@@ -204,65 +156,52 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
       greetingIcon = Icons.nightlight_round;
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
+    return AccentGlassContainer(
+      accentColor: AppColors.primary,
+      padding: const EdgeInsets.all(22),
+      borderRadius: 24,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(greetingIcon, color: Colors.white, size: 30),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    AppColors.primaryGlow(opacity: 0.3, blur: 12, spread: 0),
-                  ],
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  greeting,
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                child: Icon(greetingIcon, color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white, size: 32),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      greeting,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      adminName,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.displayMedium?.color,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  adminName,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -273,95 +212,80 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
     final ingresos = _dashboardData?['ingresos'] ?? {};
     final reportes = _dashboardData?['reportes'] ?? {};
 
-        final size = MediaQuery.of(context).size;
-        final double itemWidth = (size.width - 40 - 16) / 2; // padding 20*2, spacing 16
-        const double desiredHeight = 165;
-        final double childAspectRatio = itemWidth / desiredHeight;
+    final adminId =
+        int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 500 ? 4 : 2;
+        final childAspectRatio =
+            crossAxisCount == 4 ? 1.1 : (constraints.maxWidth - 54) / 2 / 155;
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: childAspectRatio,
           children: [
-            Text(
-              'Dashboard en vivo',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.displayMedium?.color,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
+            StatCard(
+              title: 'Usuarios',
+              value: (users['total_usuarios'] ?? 0).toString(),
+              subtitle: 'Activos: ${users['usuarios_activos'] ?? 0}',
+              icon: Icons.people_rounded,
+              color: AppColors.blue600,
+              onTap: () {
+                Navigator.pushNamed(context, RouteNames.adminUsers,
+                    arguments: {
+                      'admin_id': adminId,
+                      'admin_user': widget.adminUser,
+                    });
+              },
             ),
-            const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: childAspectRatio,
-              children: [
-                _buildModernStatCard(
-                  title: 'Usuarios',
-                  value: (users['total_usuarios'] ?? 0).toString(),
-                  subtitle: 'Activos: ${users['usuarios_activos'] ?? 0}',
-                  icon: Icons.people_rounded,
-                  gradientColors: [AppColors.blue600, AppColors.blue800],
-                  onTap: () {
-                    final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
-                    Navigator.pushNamed(
-                      context,
-                      RouteNames.adminUsers,
-                      arguments: {'admin_id': adminId, 'admin_user': widget.adminUser},
-                    );
-                  },
-                ),
-                _buildModernStatCard(
-                  title: 'Solicitudes',
-                  value: (solicitudes['total_solicitudes'] ?? 0).toString(),
-                  subtitle: 'Hoy: ${solicitudes['solicitudes_hoy'] ?? 0}',
-                  icon: Icons.assignment_rounded,
-                  gradientColors: [AppColors.accent, AppColors.accentDark],
-                  onTap: () {
-                    widget.onNavigateToTab?.call(2);
-                  },
-                ),
-                _buildModernStatCard(
-                  title: 'Ingresos',
-                  value: '\$${_formatNumber(ingresos['ingresos_totales'])}',
-                  subtitle: 'Hoy: \$${_formatNumber(ingresos['ingresos_hoy'])}',
-                  icon: Icons.attach_money_rounded,
-                  gradientColors: [AppColors.success, AppColors.success.withValues(alpha: 0.7)],
-                  onTap: () {
-                    widget.onNavigateToTab?.call(2);
-                  },
-                ),
-                _buildModernStatCard(
-                  title: 'Reportes',
-                  value: (reportes['reportes_pendientes'] ?? 0).toString(),
-                  subtitle: 'Pendientes',
-                  icon: Icons.report_problem_rounded,
-                  gradientColors: [AppColors.warning, AppColors.error],
-                  onTap: () {
-                    final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
-                    Navigator.pushNamed(
-                      context,
-                      RouteNames.adminAuditLogs,
-                      arguments: {'admin_id': adminId},
-                    );
-                  },
-                ),
-              ],
+            StatCard(
+              title: 'Solicitudes',
+              value: (solicitudes['total_solicitudes'] ?? 0).toString(),
+              subtitle: 'Hoy: ${solicitudes['solicitudes_hoy'] ?? 0}',
+              icon: Icons.assignment_rounded,
+              color: AppColors.accent,
+              onTap: () => widget.onNavigateToTab?.call(2),
             ),
-        const SizedBox(height: 16),
-        // Tarjeta de Ganancias de Plataforma (full width)
-        _buildPlatformEarningsCard(),
-      ],
+            StatCard(
+              title: 'Ingresos',
+              value: '\$${_formatNumber(ingresos['ingresos_totales'])}',
+              subtitle: 'Hoy: \$${_formatNumber(ingresos['ingresos_hoy'])}',
+              icon: Icons.attach_money_rounded,
+              color: AppColors.success,
+              onTap: () => widget.onNavigateToTab?.call(2),
+            ),
+            StatCard(
+              title: 'Reportes',
+              value: (reportes['reportes_pendientes'] ?? 0).toString(),
+              subtitle: 'Pendientes',
+              icon: Icons.report_problem_rounded,
+              color: AppColors.warning,
+              onTap: () {
+                Navigator.pushNamed(context, RouteNames.adminAuditLogs,
+                    arguments: {'admin_id': adminId});
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildPlatformEarningsCard() {
-    return GestureDetector(
+    final adminId =
+        int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+
+    return ActionCard(
+      title: 'Ganancias Plataforma',
+      subtitle: 'Ver cuentas por cobrar de empresas',
+      icon: Icons.account_balance_rounded,
+      color: AppColors.primary,
       onTap: () {
-        final adminId = int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -369,318 +293,119 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
           ),
         );
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.2),
-                  AppColors.accent.withValues(alpha: 0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ganancias Plataforma',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.displayMedium?.color,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Ver cuentas por cobrar de empresas',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.primary,
-                  size: 28,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernStatCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradientColors,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: gradientColors[0].withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: gradientColors[0].withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: gradientColors[0].withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: gradientColors[0].withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: gradientColors[0], size: 20),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.displayMedium?.color,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
   Widget _buildRecentActivity() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final actividades = _dashboardData?['actividades_recientes'] ?? [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Actividad reciente',
+    if (actividades.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.notifications_none_rounded,
+        title: 'Sin actividad reciente',
+        subtitle: 'Las acciones del sistema aparecerán aquí',
+      );
+    }
+
+    return GlassContainer(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: actividades.length > 5 ? 5 : actividades.length,
+        separatorBuilder: (_, __) => Divider(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
+          height: 1,
+          indent: 72,
+        ),
+        itemBuilder: (context, index) {
+          final actividad = actividades[index];
+          return _buildActivityItem(actividad);
+        },
+      ),
+    );
+  }
+
+  Widget _buildActivityItem(Map<String, dynamic> actividad) {
+    final tipo = actividad['tipo']?.toString().toUpperCase() ?? '';
+    Color iconColor = AppColors.primary;
+    IconData iconData = Icons.notifications_active_rounded;
+
+    if (tipo.contains('LOGIN') || tipo.contains('SESSION')) {
+      iconColor = AppColors.success;
+      iconData = Icons.login_rounded;
+    } else if (tipo.contains('REGISTER') || tipo.contains('REGISTRO')) {
+      iconColor = AppColors.accent;
+      iconData = Icons.person_add_rounded;
+    } else if (tipo.contains('ERROR') || tipo.contains('FAIL')) {
+      iconColor = AppColors.error;
+      iconData = Icons.error_outline_rounded;
+    } else if (tipo.contains('UPDATE') || tipo.contains('EDIT')) {
+      iconColor = AppColors.warning;
+      iconData = Icons.edit_rounded;
+    }
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(iconData, color: iconColor, size: 22),
+      ),
+      title: Text(
+        actividad['descripcion'] ?? 'Sin descripción',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          '${actividad['nombre'] ?? ''} ${actividad['apellido'] ?? ''} • ${_formatDate(actividad['fecha_creacion'])}',
           style: TextStyle(
-            color: Theme.of(context).textTheme.displayMedium?.color,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.45),
+            fontSize: 12,
           ),
         ),
-        const SizedBox(height: 16),
-        if (actividades.isEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: const EdgeInsets.all(40),
-                decoration: BoxDecoration(
-                  color: isDark
-                    ? AppColors.darkSurface.withValues(alpha: 0.6)
-                    : AppColors.lightSurface.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.notifications_none_rounded,
-                        color: AppColors.primary.withValues(alpha: 0.5),
-                        size: 48,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Sin actividad reciente',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Las acciones del sistema aparecerán aquí',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+      ),
+      trailing: tipo.isNotEmpty
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tipo.length > 10 ? tipo.substring(0, 10) : tipo,
+                style: TextStyle(
+                  color: iconColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-          )
-        else
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark
-                    ? AppColors.darkSurface.withValues(alpha: 0.6)
-                    : AppColors.lightSurface.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                    width: 1.5,
-                  ),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: actividades.length > 5 ? 5 : actividades.length,
-                  separatorBuilder: (_, __) => Divider(
-                    color: isDark 
-                      ? AppColors.darkDivider.withValues(alpha: 0.3)
-                      : AppColors.lightDivider.withValues(alpha: 0.3),
-                    height: 1,
-                    indent: 72,
-                  ),
-                  itemBuilder: (context, index) {
-                    final actividad = actividades[index];
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      leading: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_active_rounded,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
-                      title: Text(
-                        actividad['descripcion'] ?? 'Sin descripción',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '${actividad['nombre'] ?? ''} ${actividad['apellido'] ?? ''} â€¢ ${_formatDate(actividad['fecha_creacion'])}',
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-      ],
+            )
+          : null,
     );
   }
 
   String _formatNumber(dynamic value) {
     if (value == null) return '0';
     final num = double.tryParse(value.toString()) ?? 0;
+    if (num >= 1000000) {
+      return '${(num / 1000000).toStringAsFixed(1)}M';
+    } else if (num >= 1000) {
+      return '${(num / 1000).toStringAsFixed(1)}K';
+    }
     return num.toStringAsFixed(0);
   }
 
@@ -691,18 +416,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> with AutomaticKee
       final now = DateTime.now();
       final diff = now.difference(date);
 
-      if (diff.inMinutes < 60) {
-        return 'Hace ${diff.inMinutes}m';
-      } else if (diff.inHours < 24) {
-        return 'Hace ${diff.inHours}h';
-      } else {
-        return 'Hace ${diff.inDays}d';
-      }
+      if (diff.inMinutes < 1) return 'Ahora';
+      if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
+      if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
+      if (diff.inDays < 7) return 'Hace ${diff.inDays}d';
+      return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
       return dateStr;
     }
   }
 }
-
-
-

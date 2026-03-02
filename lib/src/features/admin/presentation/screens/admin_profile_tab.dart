@@ -1,9 +1,13 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
+import 'package:viax/src/widgets/shared/glass_container.dart';
+import 'package:viax/src/widgets/shared/dashboard_widgets.dart';
+import 'package:viax/src/widgets/shared/shimmer_loading.dart';
 
 class AdminProfileTab extends StatefulWidget {
   final Map<String, dynamic> adminUser;
@@ -19,49 +23,59 @@ class _AdminProfileTabState extends State<AdminProfileTab>
   @override
   bool get wantKeepAlive => true;
 
-  // Theme colors
-  Color get _surfaceColor =>
-      Theme.of(context).colorScheme.surfaceContainerHighest;
-  Color get _onSurfaceColor => Theme.of(context).colorScheme.onSurface;
-  Color get _onSurfaceVariantColor =>
-      Theme.of(context).colorScheme.onSurfaceVariant;
-  Color get _outlineColor => Theme.of(context).colorScheme.outline;
-  Color get _inverseOnSurfaceColor =>
-      Theme.of(context).brightness == Brightness.dark
-      ? Colors.black
-      : Colors.white;
-  Color get _primaryColor => Theme.of(context).colorScheme.primary;
-  Color get _secondaryColor => Theme.of(context).colorScheme.secondary;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    final adminName = widget.adminUser['nombre']?.toString() ?? 'Administrador';
-    final adminEmail =
-        widget.adminUser['correo_electronico'] ??
+    final adminName =
+        widget.adminUser['nombre']?.toString() ?? 'Administrador';
+    final adminEmail = widget.adminUser['correo_electronico'] ??
         widget.adminUser['email'] ??
         'admin@viax.com';
-    final adminPhone =
-        widget.adminUser['telefono'] ??
+    final adminPhone = widget.adminUser['telefono'] ??
         widget.adminUser['phone'] ??
         'No especificado';
+    final fotoUrl = widget.adminUser['foto_perfil']?.toString() ?? '';
+    final photoUrl = fotoUrl.isNotEmpty
+        ? UserService.getR2ImageUrl(fotoUrl)
+        : '';
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          _buildProfileHeader(adminName, adminEmail),
-          const SizedBox(height: 30),
-          _buildInfoSection(adminName, adminEmail, adminPhone),
-          const SizedBox(height: 24),
+          _buildProfileHeader(adminName, adminEmail, photoUrl),
+          const SizedBox(height: 28),
+          const SectionHeader(title: 'Información personal'),
+          _buildInfoCard(
+            icon: Icons.person_outline_rounded,
+            title: 'Nombre completo',
+            value: adminName,
+            color: AppColors.primary,
+          ),
+          const SizedBox(height: 12),
+          _buildInfoCard(
+            icon: Icons.email_outlined,
+            title: 'Correo electrónico',
+            value: adminEmail.toString(),
+            color: AppColors.accent,
+          ),
+          const SizedBox(height: 12),
+          _buildInfoCard(
+            icon: Icons.phone_outlined,
+            title: 'Teléfono',
+            value: adminPhone.toString(),
+            color: AppColors.success,
+          ),
+          const SizedBox(height: 28),
+          const SectionHeader(title: 'Acciones rápidas'),
           _buildQuickActions(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
+          const SectionHeader(title: 'Configuración'),
           _buildSettingsSection(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           _buildLogoutButton(),
           const SizedBox(height: 20),
         ],
@@ -69,132 +83,59 @@ class _AdminProfileTabState extends State<AdminProfileTab>
     );
   }
 
-  Widget _buildProfileHeader(String name, String email) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _primaryColor.withValues(alpha: 0.2),
-                Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: 0.1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _primaryColor.withValues(alpha: 0.3),
-              width: 1.5,
-            ),
+  Widget _buildProfileHeader(
+      String name, String email, String photoUrl) {
+    return AccentGlassContainer(
+      accentColor: AppColors.primary,
+      padding: const EdgeInsets.all(24),
+      borderRadius: 24,
+      child: Row(
+        children: [
+          ProfileAvatar(
+            photoUrl: photoUrl.isNotEmpty ? photoUrl : null,
+            fallbackName: name,
+            size: 72,
+            backgroundColor: AppColors.primary,
+            fallbackIcon: Icons.admin_panel_settings_rounded,
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _primaryColor,
-                      Theme.of(context).colorScheme.primaryContainer,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                    ),
-                  ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Icon(
-                  Icons.admin_panel_settings_rounded,
-                  color:
-                      Theme.of(context).textTheme.bodyLarge?.color ??
-                      Colors.white,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.displayMedium?.color,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Administrador',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Administrador del Sistema',
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildInfoSection(String name, String email, String phone) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Información personal',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.displayMedium?.color,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildInfoCard(
-          icon: Icons.person_outline_rounded,
-          title: 'Nombre completo',
-          value: name,
-          accentColor: _primaryColor,
-        ),
-        const SizedBox(height: 12),
-        _buildInfoCard(
-          icon: Icons.email_outlined,
-          title: 'Correo electrónico',
-          value: email,
-          accentColor: _secondaryColor,
-        ),
-        const SizedBox(height: 12),
-        _buildInfoCard(
-          icon: Icons.phone_outlined,
-          title: 'Teléfono',
-          value: phone,
-          accentColor: Theme.of(context).colorScheme.tertiary,
-        ),
-      ],
     );
   }
 
@@ -202,244 +143,153 @@ class _AdminProfileTabState extends State<AdminProfileTab>
     required IconData icon,
     required String title,
     required String value,
-    required Color accentColor,
+    required Color color,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
-                : Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: accentColor.withValues(alpha: 0.3),
-              width: 1.5,
+    return AccentGlassContainer(
+      accentColor: color,
+      padding: const EdgeInsets.all(18),
+      borderRadius: 18,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: Icon(icon, color: color, size: 22),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.3),
-                    width: 1,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.5),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                child: Icon(icon, color: accentColor, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Acciones rápidas',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.displayMedium?.color,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Row(
           children: [
             Expanded(
               child: _buildQuickActionCard(
                 icon: Icons.notifications_outlined,
                 title: 'Notificaciones',
-                count: '5',
-                color: const Color(0xFFf093fb),
-                onTap: () {
-                  _showComingSoon();
-                },
+                color: AppColors.warning,
+                onTap: () => _showComingSoon(),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: _buildQuickActionCard(
                 icon: Icons.security_rounded,
                 title: 'Seguridad',
-                count: '',
-                color: const Color(0xFF667eea),
-                onTap: () {
-                  _showComingSoon();
-                },
+                color: AppColors.accent,
+                onTap: () => _showComingSoon(),
               ),
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildQuickActionCard({
     required IconData icon,
     required String title,
-    required String count,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return AccentGlassContainer(
+      accentColor: color,
+      padding: const EdgeInsets.all(20),
+      borderRadius: 20,
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: color.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: color, size: 28),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (count.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    count,
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ],
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildSettingsSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Configuración',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.displayMedium?.color,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 16),
         _buildSettingItem(
           icon: Icons.edit_outlined,
           title: 'Editar perfil',
-          onTap: () {
-            _showComingSoon();
-          },
+          onTap: () => _showComingSoon(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSettingItem(
           icon: Icons.lock_outline_rounded,
           title: 'Cambiar contraseña',
-          onTap: () {
-            _showComingSoon();
-          },
+          onTap: () => _showComingSoon(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSettingItem(
           icon: Icons.notifications_outlined,
           title: 'Preferencias de notificaciones',
-          onTap: () {
-            _showComingSoon();
-          },
+          onTap: () => _showComingSoon(),
         ),
-        const SizedBox(height: 12),
-        /*         _buildSettingItem(
-          icon: Icons.help_outline_rounded,
-          title: 'Ayuda y soporte',
-          onTap: () {
-            _showComingSoon();
-          },
-        ),
-        const SizedBox(height: 12), */
+        const SizedBox(height: 10),
         _buildSettingItem(
           icon: Icons.info_outline_rounded,
           title: 'Acerca de',
-          onTap: () {
-            _showAboutDialog();
-          },
+          onTap: () => _showAboutDialog(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSettingItem(
           icon: Icons.description_outlined,
           title: 'Términos y Condiciones',
           onTap: _openAdminTerms,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSettingItem(
           icon: Icons.privacy_tip_outlined,
           title: 'Política de Privacidad',
@@ -454,64 +304,52 @@ class _AdminProfileTabState extends State<AdminProfileTab>
     required String title,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return GlassContainer(
+      padding: EdgeInsets.zero,
+      borderRadius: 16,
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: _surfaceColor.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _outlineColor.withValues(alpha: 0.1),
-                width: 1,
-              ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.6),
+              size: 22,
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        icon,
-                        color: _onSurfaceColor.withValues(alpha: 0.7),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            color: _onSurfaceColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: _onSurfaceVariantColor,
-                        size: 16,
-                      ),
-                    ],
-                  ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildLogoutButton() {
-    return GestureDetector(
+    return AccentGlassContainer(
+      accentColor: AppColors.error,
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      borderRadius: 20,
       onTap: () async {
         final shouldLogout = await LogoutDialog.show(context);
 
@@ -527,37 +365,20 @@ class _AdminProfileTabState extends State<AdminProfileTab>
           );
         }
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFf5576c).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFf5576c).withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.logout_rounded, color: Color(0xFFf5576c), size: 24),
-                SizedBox(width: 12),
-                Text(
-                  'Cerrar sesión',
-                  style: TextStyle(
-                    color: Color(0xFFf5576c),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+          SizedBox(width: 12),
+          Text(
+            'Cerrar sesión',
+            style: TextStyle(
+              color: AppColors.error,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -565,10 +386,19 @@ class _AdminProfileTabState extends State<AdminProfileTab>
   void _showComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Función en desarrollo'),
-        backgroundColor: _surfaceColor,
+        content: const Row(
+          children: [
+            Icon(Icons.construction_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 12),
+            Text('Función en desarrollo',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -600,6 +430,8 @@ class _AdminProfileTabState extends State<AdminProfileTab>
   }
 
   void _showAboutDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -607,15 +439,19 @@ class _AdminProfileTabState extends State<AdminProfileTab>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: _surfaceColor.withValues(alpha: 0.95),
+                color: isDark
+                    ? AppColors.darkSurface.withValues(alpha: 0.95)
+                    : AppColors.lightSurface.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _outlineColor.withValues(alpha: 0.1),
-                  width: 1.5,
+                  color: isDark
+                      ? AppColors.darkDivider.withValues(alpha: 0.3)
+                      : AppColors.lightDivider.withValues(alpha: 0.3),
+                  width: 1,
                 ),
               ),
               child: Column(
@@ -624,20 +460,25 @@ class _AdminProfileTabState extends State<AdminProfileTab>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _primaryColor.withValues(alpha: 0.15),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Image.asset(
                       'assets/images/logo.png',
                       width: 60,
                       height: 60,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.admin_panel_settings_rounded,
+                        color: AppColors.primary,
+                        size: 48,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     'Viax Admin',
                     style: TextStyle(
-                      color: _onSurfaceColor,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -646,7 +487,10 @@ class _AdminProfileTabState extends State<AdminProfileTab>
                   Text(
                     'Versión 1.0.0',
                     style: TextStyle(
-                      color: _onSurfaceVariantColor,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -654,30 +498,33 @@ class _AdminProfileTabState extends State<AdminProfileTab>
                   Text(
                     'Panel de administración del sistema Viax',
                     style: TextStyle(
-                      color: _onSurfaceVariantColor,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      backgroundColor: _primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Cerrar',
-                      style: TextStyle(
-                        color: _inverseOnSurfaceColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      child: const Text(
+                        'Cerrar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

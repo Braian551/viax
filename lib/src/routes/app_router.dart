@@ -29,8 +29,6 @@ import 'package:viax/src/features/admin/presentation/screens/admin_home_screen.d
 import 'package:viax/src/features/admin/presentation/screens/users_management_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/statistics_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/audit_logs_screen.dart';
-import 'package:viax/src/features/admin/presentation/screens/conductores_documentos_screen.dart';
-
 import 'package:viax/src/features/admin/presentation/screens/empresas_management_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/platform_earnings_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_home_screen.dart';
@@ -459,16 +457,7 @@ class AppRouter {
             ),
           );
         }
-      case RouteNames.adminConductorDocs:
-        {
-          final args = settings.arguments as Map<String, dynamic>?;
-          return MaterialPageRoute(
-            builder: (_) => ConductoresDocumentosScreen(
-              adminId: args?['admin_id'] ?? 0,
-              adminUser: args?['admin_user'] ?? {},
-            ),
-          );
-        }
+      // Conductores y Docs removido del admin - lo gestiona cada empresa
 
       case RouteNames.adminEmpresas:
         {
