@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
@@ -20,6 +21,8 @@ class AdminProfileTab extends StatefulWidget {
 
 class _AdminProfileTabState extends State<AdminProfileTab>
     with AutomaticKeepAliveClientMixin {
+  int get _adminId => int.tryParse(widget.adminUser['id']?.toString() ?? '0') ?? 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -203,7 +206,7 @@ class _AdminProfileTabState extends State<AdminProfileTab>
                 icon: Icons.notifications_outlined,
                 title: 'Notificaciones',
                 color: AppColors.warning,
-                onTap: () => _showComingSoon(),
+                onTap: _openNotifications,
               ),
             ),
             const SizedBox(width: 14),
@@ -275,7 +278,7 @@ class _AdminProfileTabState extends State<AdminProfileTab>
         _buildSettingItem(
           icon: Icons.notifications_outlined,
           title: 'Preferencias de notificaciones',
-          onTap: () => _showComingSoon(),
+          onTap: _openNotifications,
         ),
         const SizedBox(height: 10),
         _buildSettingItem(
@@ -296,6 +299,23 @@ class _AdminProfileTabState extends State<AdminProfileTab>
           onTap: _openAdminPrivacy,
         ),
       ],
+    );
+  }
+
+  void _openNotifications() {
+    if (_adminId <= 0) {
+      _showComingSoon();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(
+          userId: _adminId,
+          currentUser: widget.adminUser,
+          userType: 'admin',
+        ),
+      ),
     );
   }
 

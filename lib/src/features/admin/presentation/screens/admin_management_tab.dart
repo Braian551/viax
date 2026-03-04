@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/shared/dashboard_widgets.dart';
@@ -175,7 +176,23 @@ class _AdminManagementTabState extends State<AdminManagementTab>
             subtitle: 'Enviar notificaciones a usuarios',
             icon: Icons.notifications_active_rounded,
             accentColor: AppColors.accent,
-            onTap: () => _showComingSoon(),
+            onTap: () {
+              if (adminId <= 0) {
+                _showComingSoon();
+                return;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NotificationsScreen(
+                    userId: adminId,
+                    currentUser: widget.adminUser,
+                    userType: 'admin',
+                  ),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 24),

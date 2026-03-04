@@ -150,9 +150,12 @@ class _NotificationsContentState extends State<_NotificationsContent>
     final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final normalizedUserType = widget.userType?.toLowerCase();
+    final isAdmin = normalizedUserType == 'admin' || normalizedUserType == 'administrador';
     final isCompany = normalizedUserType == 'empresa' || normalizedUserType == 'company';
     final isConductor = normalizedUserType == 'conductor';
-    final visibleFilterKeys = isCompany
+    final visibleFilterKeys = isAdmin
+      ? const ['all', 'unread', 'documents', 'payments', 'system']
+      : isCompany
       ? const ['all', 'unread', 'payments', 'documents']
       : isConductor
         ? const ['all', 'unread', 'trips', 'payments', 'documents']
@@ -725,6 +728,7 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final normalizedUserType = widget.userType?.toLowerCase();
+    final isAdmin = normalizedUserType == 'admin' || normalizedUserType == 'administrador';
     final isCompany = normalizedUserType == 'empresa' || normalizedUserType == 'company';
     final isConductor = normalizedUserType == 'conductor';
 
@@ -777,7 +781,7 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
             isDark,
           ),
 
-          if (!isCompany)
+          if (!isCompany && !isAdmin)
             _buildSwitch(
               'Viajes',
               'Actualizaciones sobre tus viajes',
@@ -808,11 +812,13 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
             isDark,
           ),
 
-          if (isCompany || isConductor)
+          if (isCompany || isConductor || isAdmin)
             _buildSwitch(
               'Documentos y estado',
               isCompany
                   ? 'Cambios en documentos y solicitudes de vinculación'
+                  : isAdmin
+                      ? 'Solicitudes empresariales y validaciones pendientes'
                   : 'Cambios de estado documental y validaciones',
               Icons.description_rounded,
               _localSettings.notifSistema,
@@ -839,7 +845,7 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
               isDark,
             ),
 
-          if (!isCompany && !isConductor)
+          if (!isCompany && !isConductor && !isAdmin)
             _buildSwitch(
               'Mensajes',
               'Notificaciones del chat',

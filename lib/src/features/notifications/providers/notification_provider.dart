@@ -20,12 +20,19 @@ class NotificationProvider extends ChangeNotifier {
   static const Set<String> _paymentTypes = {
     'payment_received',
     'payment_pending',
+    'admin_company_payment_info_updated',
   };
 
   static const Set<String> _documentTypes = {
     'document_approved',
     'document_rejected',
     'driver_document_update',
+    'admin_company_documents_submitted',
+  };
+
+  static const Set<String> _systemTypes = {
+    'system',
+    'admin_company_registration_pending',
   };
 
   static const Set<String> _chatTypes = {
@@ -74,6 +81,9 @@ class NotificationProvider extends ChangeNotifier {
     }
     if (_selectedFilter == 'documents') {
       return _notifications.where((n) => _documentTypes.contains(n.tipo)).toList();
+    }
+    if (_selectedFilter == 'system') {
+      return _notifications.where((n) => _systemTypes.contains(n.tipo)).toList();
     }
     if (_selectedFilter == 'chat') {
       return _notifications.where((n) => _chatTypes.contains(n.tipo)).toList();
