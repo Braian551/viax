@@ -90,6 +90,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Refuerza el estado visible para evitar falsos positivos del FAB flotante
+    ActiveTripNavigationService().setOnTripScreen(true);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (_lastIsDark != isDark) {
       _lastIsDark = isDark;
@@ -158,6 +160,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         initialTripStatus: widget.initialTripStatus,
       ),
     );
+
+    // Asegura estado consistente por si hubo cambios de ruta/lifecycle.
+    ActiveTripNavigationService().setOnTripScreen(true);
   }
 
   void _startTripStatusPolling() {
@@ -371,6 +376,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _controller.positionStream?.pause();
     } else if (state == AppLifecycleState.resumed) {
       _controller.positionStream?.resume();
+      ActiveTripNavigationService().setOnTripScreen(true);
     }
   }
 

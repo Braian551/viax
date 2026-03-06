@@ -156,6 +156,7 @@ class TripTrackingService {
   Timer? _syncTimer;
   DateTime _lastBatchSync = DateTime.fromMillisecondsSinceEpoch(0);
   bool _isSyncingBatch = false;
+  bool _syncBlockedByPricingConfig = false;
 
   // Cola de puntos pendientes (para modo offline)
   final List<TrackingPoint> _pendingPoints = [];
@@ -198,6 +199,7 @@ class TripTrackingService {
       _pendingPoints.clear(); // Limpiar cola
       _lastBatchSync = DateTime.now();
       _isSyncingBatch = false;
+      _syncBlockedByPricingConfig = false;
       _isTracking = true;
 
       debugPrint('🚀 [Tracking] Iniciando tracking para viaje $solicitudId');
@@ -246,6 +248,11 @@ class TripTrackingService {
     if (_ultimaPosicion != null) {
       await _registrarPunto(_ultimaPosicion!);
       _notifyUpdate(_ultimaPosicion!);
+    }
+
+    if (_syncBlockedByPricingConfig) {
+      // Seguimos emitiendo estado local para UI, pero sin insistir en backend.
+      return;
     }
 
     final shouldFlush = _pendingPoints.length >= _maxBatchSize ||
@@ -405,6 +412,7 @@ class TripTrackingService {
 
   Future<void> _registrarPunto(Position position, {String? evento, bool forceSync = false}) async {
     if (_solicitudId == null || _conductorId == null) return;
+    if (_syncBlockedByPricingConfig) return;
 
     final punto = TrackingPoint(
       latitud: position.latitude,
@@ -521,12 +529,57 @@ class TripTrackingService {
         }
       }
 
+      final backendMessage = _extractBackendMessage(response.body);
+      if (_isMissingPricingConfigError(response.statusCode, backendMessage)) {
+        _handleMissingPricingConfig(backendMessage);
+        return true;
+      }
+
       debugPrint('⚠️ [Tracking] Error enviando lote: HTTP ${response.statusCode} ${response.body}');
       return false;
     } catch (e) {
       debugPrint('⚠️ [Tracking] Error enviando lote: $e');
       return false;
     }
+  }
+
+  String? _extractBackendMessage(String rawBody) {
+    try {
+      final decoded = jsonDecode(rawBody);
+      if (decoded is Map<String, dynamic>) {
+        final message = decoded['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      }
+    } catch (_) {
+      // body no JSON, se ignora
+    }
+    return null;
+  }
+
+  bool _isMissingPricingConfigError(int statusCode, String? message) {
+    if (statusCode != 400 || message == null) return false;
+    final normalized = message.toLowerCase();
+    return normalized.contains('configuraci') &&
+        normalized.contains('precio') &&
+        normalized.contains('veh');
+  }
+
+  void _handleMissingPricingConfig(String? backendMessage) {
+    if (_syncBlockedByPricingConfig) return;
+
+    _syncBlockedByPricingConfig = true;
+    _pendingPoints.clear();
+
+    final message = backendMessage ??
+        'No hay configuración de precios para este tipo de vehículo';
+
+    debugPrint('⛔ [Tracking] Sincronización pausada por error no recuperable: $message');
+    onError?.call(
+      'No se pudo sincronizar el tracking: $message. '
+      'El viaje sigue activo, pero debes configurar tarifas para este vehículo.',
+    );
   }
 
   void _notifyUpdate(Position position) {

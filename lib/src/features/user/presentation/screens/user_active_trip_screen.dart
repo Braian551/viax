@@ -110,10 +110,18 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Control de UI
   bool _isLoading = true;
   bool _tripCompleted = false;
+  bool _isMapReady = false;
 
   // Compartir ubicación
   LocationShareSession? _shareSession;
   bool _isSharingLocation = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refuerza el estado visible para evitar falsos positivos del FAB flotante
+    ActiveTripNavigationService().setOnTripScreen(true);
+  }
 
   @override
   void initState() {
@@ -158,6 +166,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         initialTripStatus: _tripState,
       ),
     );
+
+    // Asegura estado consistente por si hubo cambios de ruta/lifecycle.
+    ActiveTripNavigationService().setOnTripScreen(true);
   }
 
   @override
@@ -715,7 +726,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   }
 
   void _fitMapToRoute() {
-    if (_routePoints.isEmpty) return;
+    if (_routePoints.isEmpty || !_isMapReady) return;
 
     final bounds = LatLngBounds.fromPoints(_routePoints);
     _mapController.fitCamera(
@@ -1311,7 +1322,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               initialZoom: 14,
               minZoom: 10,
               maxZoom: 18,
-              onMapReady: onMapReady,
+              onMapReady: () {
+                _isMapReady = true;
+                onMapReady();
+                if (_routePoints.isNotEmpty) {
+                  _fitMapToRoute();
+                }
+              },
             ),
             children: [
               TileLayer(
