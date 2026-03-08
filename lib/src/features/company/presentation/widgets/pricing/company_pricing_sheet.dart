@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -52,6 +53,33 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     'costo_tiempo_espera',
   };
 
+  static const List<String> _sectionInfo = [
+    'Define el precio base del servicio y los límites de tarifa que se cobrarán al usuario.',
+    'Configura cuánto se cobra por km y minuto, y los rangos de distancia permitidos.',
+    'Recargos que se aplican automáticamente según la hora o el día del viaje.',
+    'Descuentos automáticos para viajes que superan cierta distancia.',
+    'Porcentaje que cobras a tus conductores por cada viaje realizado.',
+    'Tiempo de espera gratuito y tarifa por cada minuto extra de espera.',
+  ];
+
+  static const Map<String, String> _fieldHelp = {
+    'tarifa_base': 'Precio inicial al solicitar el viaje',
+    'tarifa_minima': 'Monto mínimo que se cobra sin importar la distancia',
+    'tarifa_maxima': 'Tope máximo del viaje. Déjalo vacío para no limitar',
+    'costo_por_km': 'Se cobra por cada kilómetro recorrido',
+    'costo_por_minuto': 'Se cobra por cada minuto de duración del viaje',
+    'distancia_minima': 'Distancia mínima para aceptar un viaje',
+    'distancia_maxima': 'Distancia máxima permitida para un viaje',
+    'recargo_hora_pico': 'Se aplica en horarios de alta demanda (ej. 6-8am, 5-7pm)',
+    'recargo_nocturno': 'Se aplica en viajes realizados en horario nocturno',
+    'recargo_festivo': 'Se aplica automáticamente los días festivos',
+    'descuento_distancia_larga': 'Descuento que se aplica a viajes largos',
+    'umbral_km_descuento': 'A partir de cuántos km se aplica el descuento',
+    'comision_plataforma': 'Porcentaje que cobras a tus conductores por viaje',
+    'tiempo_espera_gratis': 'Minutos que el conductor espera sin cobro adicional',
+    'costo_tiempo_espera': 'Se cobra por cada minuto extra de espera',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -75,7 +103,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
       final controller = widget.controllers[key];
       if (controller == null) continue;
 
-      final value = _parseCop(controller.text);
+      // Parsear como double primero para no confundir decimales con dígitos
+      final value = double.tryParse(controller.text.trim()) ?? 0;
       if (value <= 0 && key == 'tarifa_maxima') {
         controller.text = '';
       } else if (value > 0) {
@@ -296,17 +325,29 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       expand: false,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      builder: (context, scrollController) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurface.withValues(alpha: 0.92)
+                  : Colors.white.withValues(alpha: 0.95),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border(
+                top: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : AppColors.primary.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+              ),
+            ),
         child: Column(
           children: [
-            // Handle - Draggable area
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragUpdate: (_) {},
+            // Handle
+            Center(
               child: Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 width: 40,
@@ -320,14 +361,22 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
 
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.primary.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: const Icon(
                       Icons.tune_rounded,
@@ -341,34 +390,49 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Editar Tarifas',
+                          widget.vehicleTypeName,
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
                             color: isDark
                                 ? Colors.white
                                 : AppColors.lightTextPrimary,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          widget.vehicleTypeName,
+                          'Configurar tarifas',
                           style: TextStyle(
                             fontSize: 13,
                             color: isDark
-                                ? Colors.white60
+                                ? Colors.white54
                                 : AppColors.lightTextSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close,
-                      color: isDark
-                          ? Colors.white60
-                          : AppColors.lightTextSecondary,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -444,7 +508,7 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                   controller: scrollController,
                   padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPadding),
                   children: [
-                    _buildLiveSummaryCard(isDark),
+                    _buildInfoBanner(_currentSection),
                     const SizedBox(height: 14),
                     _buildCurrentSection(),
                   ],
@@ -521,6 +585,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
           ],
         ),
       ),
+      ),
+      ),
     );
   }
 
@@ -580,23 +646,20 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(
           key: const ValueKey('recargos'),
           children: [
-            _buildField(
-              'Recargo Hora Pico (%)',
-              widget.controllers['recargo_hora_pico']!,
+            _buildSliderField(
+              label: 'Recargo Hora Pico',
               fieldKey: 'recargo_hora_pico',
-              unit: '%',
+              max: 100,
             ),
-            _buildField(
-              'Recargo Nocturno (%)',
-              widget.controllers['recargo_nocturno']!,
+            _buildSliderField(
+              label: 'Recargo Nocturno',
               fieldKey: 'recargo_nocturno',
-              unit: '%',
+              max: 100,
             ),
-            _buildField(
-              'Recargo Festivo (%)',
-              widget.controllers['recargo_festivo']!,
+            _buildSliderField(
+              label: 'Recargo Festivo',
               fieldKey: 'recargo_festivo',
-              unit: '%',
+              max: 100,
             ),
           ],
         );
@@ -604,12 +667,12 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(
           key: const ValueKey('descuentos'),
           children: [
-            _buildField(
-              'Descuento Distancia Larga (%)',
-              widget.controllers['descuento_distancia_larga']!,
+            _buildSliderField(
+              label: 'Descuento Distancia Larga',
               fieldKey: 'descuento_distancia_larga',
-              unit: '%',
+              max: 80,
             ),
+            const SizedBox(height: 4),
             _buildField(
               'Umbral Descuento (km)',
               widget.controllers['umbral_km_descuento']!,
@@ -622,61 +685,10 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(
           key: const ValueKey('comision'),
           children: [
-            _buildField(
-              'Comisión a Conductores (%)',
-              widget.controllers['comision_plataforma']!,
+            _buildSliderField(
+              label: 'Comisión a Conductores',
               fieldKey: 'comision_plataforma',
-              unit: '%',
-            ),
-            AnimatedBuilder(
-              animation: widget.controllers['comision_plataforma']!,
-              builder: (context, _) {
-                double value = double.tryParse(
-                      widget.controllers['comision_plataforma']!.text,
-                    ) ??
-                    0.0;
-                // Securely clamp the value between 0 and 100
-                if (value < 0) value = 0;
-                if (value > 100) value = 100;
-
-                return Slider(
-                  value: value,
-                  min: 0,
-                  max: 100,
-                  divisions: 200, // 0.5 steps
-                  label: value.toStringAsFixed(1),
-                  activeColor: AppColors.primary,
-                  inactiveColor: AppColors.primary.withValues(alpha: 0.2),
-                  onChanged: (newValue) {
-                    widget.controllers['comision_plataforma']!.text =
-                        newValue.toStringAsFixed(1);
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.blue50,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline,
-                    color: AppColors.primary,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Esta es la comisión que cobras a tus conductores.',
-                      style: TextStyle(fontSize: 13, color: AppColors.blue800),
-                    ),
-                  ),
-                ],
-              ),
+              max: 100,
             ),
           ],
         );
@@ -684,14 +696,14 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(
           key: const ValueKey('espera'),
           children: [
-            _buildField(
-              'Tiempo Espera Gratis (min)',
-              widget.controllers['tiempo_espera_gratis']!,
+            _buildMinutesSlider(
+              label: 'Tiempo Espera Gratis',
               fieldKey: 'tiempo_espera_gratis',
-              unit: 'min',
+              max: 30,
             ),
+            const SizedBox(height: 4),
             _buildField(
-              'Costo/Min Extra',
+              'Costo por Minuto Extra',
               widget.controllers['costo_tiempo_espera']!,
               fieldKey: 'costo_tiempo_espera',
               unit: 'COP',
@@ -714,6 +726,7 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     final isCop = _copKeys.contains(fieldKey);
     final isPercent = unit == '%';
     final isInteger = unit == 'min';
+    final helpText = _fieldHelp[fieldKey];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -721,16 +734,29 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            padding: const EdgeInsets.only(left: 4, bottom: 2),
             child: Text(
               label,
               style: TextStyle(
-                color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
+          if (helpText != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                helpText,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.white38 : AppColors.lightTextHint,
+                ),
+              ),
+            )
+          else
+            const SizedBox(height: 6),
           TextFormField(
             controller: controller,
             keyboardType: TextInputType.numberWithOptions(decimal: !isCop && !isInteger),
@@ -775,6 +801,11 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                 color: isDark ? Colors.white54 : AppColors.lightTextSecondary,
                 fontWeight: FontWeight.w600,
               ),
+              hintText: optional ? 'Opcional' : null,
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                fontWeight: FontWeight.w400,
+              ),
               filled: true,
               fillColor: isDark
                   ? Colors.white.withValues(alpha: 0.06)
@@ -794,6 +825,20 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
                   width: 1.5,
                 ),
               ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppColors.error.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppColors.error,
+                  width: 1.5,
+                ),
+              ),
             ),
           ),
         ],
@@ -801,84 +846,315 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     );
   }
 
-  Widget _buildLiveSummaryCard(bool isDark) {
-    final tarifaBase = _valueOf('tarifa_base');
-    final tarifaMin = _valueOf('tarifa_minima');
-    final costoKm = _valueOf('costo_por_km');
-    final costoMin = _valueOf('costo_por_minuto');
+  Widget _buildInfoBanner(int sectionIndex) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final info = _sectionInfo[sectionIndex];
     final requiereConfig = widget.config['requiere_configuracion'] == true;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : AppColors.blue50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? Colors.white12 : AppColors.blue100,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : AppColors.blue50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.blue100,
+            ),
+          ),
+          child: Row(
             children: [
-              Icon(Icons.analytics_outlined, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Resumen de configuración',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: isDark ? Colors.white : AppColors.blue900,
+              Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: isDark ? AppColors.primaryLight : AppColors.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  info,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : AppColors.blue800,
+                    height: 1.3,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _summaryChip('Base ${formatCurrency(tarifaBase)}', isDark),
-              _summaryChip('Mínima ${formatCurrency(tarifaMin)}', isDark),
-              _summaryChip('Km ${formatCurrency(costoKm)}', isDark),
-              _summaryChip('Min ${formatCurrency(costoMin)}', isDark),
-            ],
-          ),
-          if (requiereConfig) ...[
-            const SizedBox(height: 10),
-            Text(
-              'Este vehículo está usando tarifa heredada. Guarda para dejar su configuración propia.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.orange[200] : Colors.orange[800],
+        ),
+        if (requiereConfig && sectionIndex == 0) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.orange.withValues(alpha: 0.08)
+                  : Colors.orange.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.orange.withValues(alpha: 0.2),
               ),
             ),
-          ],
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: isDark ? Colors.orange[200] : Colors.orange[800],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Este vehículo usa tarifa heredada. Guarda para establecer su configuración propia.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.orange[200] : Colors.orange[800],
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
-      ),
+      ],
     );
   }
 
-  Widget _summaryChip(String text, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: isDark ? Colors.white12 : AppColors.blue100,
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white70 : AppColors.lightTextPrimary,
-        ),
-      ),
+  Widget _buildSliderField({
+    required String label,
+    required String fieldKey,
+    required double max,
+    double min = 0,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final helpText = _fieldHelp[fieldKey];
+
+    return AnimatedBuilder(
+      animation: widget.controllers[fieldKey]!,
+      builder: (context, _) {
+        double value = double.tryParse(widget.controllers[fieldKey]!.text) ?? min;
+        value = value.clamp(min, max);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (helpText != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            helpText,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white38 : AppColors.lightTextHint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${value.toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : AppColors.primary.withValues(alpha: 0.12),
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withValues(alpha: 0.08),
+                  trackHeight: 6,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                ),
+                child: Slider(
+                  value: value,
+                  min: min,
+                  max: max,
+                  divisions: ((max - min) * 2).round(),
+                  onChanged: (newValue) {
+                    widget.controllers[fieldKey]!.text = newValue.toStringAsFixed(1);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${min.toInt()}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                      ),
+                    ),
+                    Text(
+                      '${max.toInt()}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMinutesSlider({
+    required String label,
+    required String fieldKey,
+    required double max,
+    double min = 0,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final helpText = _fieldHelp[fieldKey];
+
+    return AnimatedBuilder(
+      animation: widget.controllers[fieldKey]!,
+      builder: (context, _) {
+        double value = double.tryParse(widget.controllers[fieldKey]!.text) ?? min;
+        value = value.clamp(min, max).roundToDouble();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (helpText != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            helpText,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white38 : AppColors.lightTextHint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${value.toInt()} min',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : AppColors.primary.withValues(alpha: 0.12),
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withValues(alpha: 0.08),
+                  trackHeight: 6,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                ),
+                child: Slider(
+                  value: value,
+                  min: min,
+                  max: max,
+                  divisions: (max - min).round(),
+                  onChanged: (newValue) {
+                    widget.controllers[fieldKey]!.text = newValue.round().toString();
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${min.toInt()} min',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                      ),
+                    ),
+                    Text(
+                      '${max.toInt()} min',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

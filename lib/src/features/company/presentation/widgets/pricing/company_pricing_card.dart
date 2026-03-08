@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
@@ -32,6 +33,15 @@ class CompanyPricingCard extends StatelessWidget {
     return formatCurrency(number, withSymbol: false);
   }
 
+  String _formatPercent(dynamic value) {
+    if (value == null) return '0%';
+    final num = double.tryParse(value.toString()) ?? 0;
+    if (num == num.truncateToDouble()) {
+      return '${num.toInt()}%';
+    }
+    return '${num.toStringAsFixed(1)}%';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -43,173 +53,228 @@ class CompanyPricingCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Header - Subtle blue, not garish
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.blue900.withValues(alpha: 0.4) : AppColors.blue50,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkCard.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : AppColors.primary.withValues(alpha: 0.08),
+                width: 1,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.3 : 0.15),
-                      borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header con gradiente
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [AppColors.blue900.withValues(alpha: 0.5), AppColors.blue900.withValues(alpha: 0.2)]
+                          : [AppColors.blue50, AppColors.blue50.withValues(alpha: 0.3)],
                     ),
-                    child: Icon(icon, color: AppColors.primary, size: 22),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          nombre,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withValues(alpha: isDark ? 0.3 : 0.15),
+                              AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2),
                           ),
                         ),
-                        if (isGlobal)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              needsConfig
-                                  ? 'Configuración pendiente'
-                                  : 'Usando tarifa estándar',
+                        child: Icon(icon, color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              nombre,
                               style: TextStyle(
-                                color: needsConfig
-                                    ? (isDark ? Colors.orange[200] : Colors.orange[800])
-                                    : (isDark ? Colors.white60 : AppColors.lightTextSecondary),
-                                fontSize: 12,
-                                fontWeight: needsConfig ? FontWeight.w700 : FontWeight.w500,
+                                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Content - Clean and minimal
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildRow(context, 'Tarifa Base', '\$${_formatNumber(config['tarifa_base'])}', isDark),
-                  _buildRow(context, 'Costo/Km', '\$${_formatNumber(config['costo_por_km'])}', isDark),
-                  _buildRow(context, 'Costo/Min', '\$${_formatNumber(config['costo_por_minuto'])}', isDark),
-                  _buildRow(context, 'Mínimo', '\$${_formatNumber(config['tarifa_minima'])}', isDark),
-                  
-                  const SizedBox(height: 12),
-                  Divider(color: isDark ? AppColors.darkDivider : AppColors.lightDivider, height: 1),
-                  const SizedBox(height: 12),
-                  
-                  // Stats row - neutral colors, not colorful
-                  Row(
-                    children: [
-                      Expanded(child: _buildStat(context, 'Recargo H.P.', '${config['recargo_hora_pico'] ?? 0}%', isDark)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildStat(context, 'Rec. Noct.', '${config['recargo_nocturno'] ?? 0}%', isDark)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildStat(context, 'Comisión', '${config['comision_plataforma'] ?? 0}%', isDark)),
+                            if (isGlobal)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      needsConfig ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                                      size: 13,
+                                      color: needsConfig
+                                          ? (isDark ? Colors.orange[200] : Colors.orange[700])
+                                          : (isDark ? Colors.white38 : AppColors.lightTextSecondary),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      needsConfig ? 'Configuración pendiente' : 'Tarifa estándar',
+                                      style: TextStyle(
+                                        color: needsConfig
+                                            ? (isDark ? Colors.orange[200] : Colors.orange[700])
+                                            : (isDark ? Colors.white38 : AppColors.lightTextSecondary),
+                                        fontSize: 11,
+                                        fontWeight: needsConfig ? FontWeight.w600 : FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 17),
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+
+                // Contenido con métricas
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildMetric(context, 'Base', '\$${_formatNumber(config['tarifa_base'])}', isDark),
+                      ),
+                      _buildDivider(isDark),
+                      Expanded(
+                        child: _buildMetric(context, 'Por Km', '\$${_formatNumber(config['costo_por_km'])}', isDark),
+                      ),
+                      _buildDivider(isDark),
+                      Expanded(
+                        child: _buildMetric(context, 'Por Min', '\$${_formatNumber(config['costo_por_minuto'])}', isDark),
+                      ),
+                      _buildDivider(isDark),
+                      Expanded(
+                        child: _buildMetric(context, 'Mínimo', '\$${_formatNumber(config['tarifa_minima'])}', isDark),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tags de porcentajes
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: Row(
+                    children: [
+                      _buildTag(context, 'H.P.', _formatPercent(config['recargo_hora_pico']), isDark),
+                      const SizedBox(width: 6),
+                      _buildTag(context, 'Noct.', _formatPercent(config['recargo_nocturno']), isDark),
+                      const SizedBox(width: 6),
+                      _buildTag(context, 'Com.', _formatPercent(config['comision_plataforma']), isDark),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildRow(BuildContext context, String label, String value, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-              fontSize: 14,
-            ),
+  Widget _buildMetric(BuildContext context, String label, String value, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            fontSize: 11,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildStat(BuildContext context, String label, String value, bool isDark) {
+  Widget _buildDivider(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06),
+    );
+  }
+
+  Widget _buildTag(BuildContext context, String label, String value, bool isDark) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : AppColors.primary.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : AppColors.primary.withValues(alpha: 0.08),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-              fontWeight: FontWeight.w600,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
