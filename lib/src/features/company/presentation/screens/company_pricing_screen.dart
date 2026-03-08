@@ -189,6 +189,17 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
   }
 
   Widget _buildShimmerLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark
+      ? Colors.white.withValues(alpha: 0.10)
+      : Colors.grey.withValues(alpha: 0.14);
+    final highlightColor = isDark
+      ? Colors.white.withValues(alpha: 0.18)
+      : Colors.grey.withValues(alpha: 0.08);
+    final blockColor = isDark
+      ? AppColors.darkCard.withValues(alpha: 0.55)
+      : Colors.white;
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -197,12 +208,12 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
           children: [
             Expanded(
               child: Shimmer.fromColors(
-                baseColor: Colors.grey.withValues(alpha: 0.1),
-                highlightColor: Colors.grey.withValues(alpha: 0.05),
+                baseColor: baseColor,
+                highlightColor: highlightColor,
                 child: Container(
                   height: 110,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: blockColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -211,12 +222,12 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
             const SizedBox(width: 16),
             Expanded(
               child: Shimmer.fromColors(
-                baseColor: Colors.grey.withValues(alpha: 0.1),
-                highlightColor: Colors.grey.withValues(alpha: 0.05),
+                baseColor: baseColor,
+                highlightColor: highlightColor,
                 child: Container(
                   height: 110,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: blockColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -231,12 +242,12 @@ class _CompanyPricingTabState extends State<CompanyPricingTab>
           (index) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Shimmer.fromColors(
-              baseColor: Colors.grey.withValues(alpha: 0.1),
-              highlightColor: Colors.grey.withValues(alpha: 0.05),
+              baseColor: baseColor,
+              highlightColor: highlightColor,
               child: Container(
                 height: 180,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: blockColor,
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),

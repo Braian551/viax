@@ -171,12 +171,16 @@ class NotificationBadge extends StatelessWidget {
   final int count;
   final VoidCallback? onTap;
   final bool isDark;
+  final double size;
+  final double iconSize;
 
   const NotificationBadge({
     super.key,
     required this.count,
     this.onTap,
     this.isDark = false,
+    this.size = 56,
+    this.iconSize = 26,
   });
 
   @override
@@ -186,8 +190,8 @@ class NotificationBadge extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          width: 56,
-          height: 56,
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.1)
@@ -210,13 +214,13 @@ class NotificationBadge extends StatelessWidget {
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(50),
                   child: Container(
-                    width: 56,
-                    height: 56,
+                    width: size,
+                    height: size,
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.notifications_outlined,
                       color: isDark ? Colors.white : Colors.grey[800],
-                      size: 26,
+                      size: iconSize,
                     ),
                   ),
                 ),
@@ -224,8 +228,8 @@ class NotificationBadge extends StatelessWidget {
               // Badge
               if (count > 0)
                 Positioned(
-                  right: 10,
-                  top: 10,
+                  right: size <= 46 ? 6 : 10,
+                  top: size <= 46 ? 6 : 10,
                   child: Container(
                     constraints: const BoxConstraints(
                       minWidth: 16,
@@ -303,7 +307,7 @@ class NotificationFilters extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = selectedFilter == filter['key'];

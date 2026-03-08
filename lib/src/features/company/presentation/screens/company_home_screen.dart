@@ -272,6 +272,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           child: NotificationBadge(
             count: _unreadNotifications,
             isDark: isDark,
+            size: 44,
+            iconSize: 20,
             onTap: _openNotifications,
           ),
         ),

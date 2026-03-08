@@ -8,6 +8,7 @@ import 'package:viax/src/features/company/presentation/widgets/drivers/company_d
 import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_details_sheet.dart';
 import 'package:viax/src/features/company/presentation/screens/company_conductores_documentos_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_financial_history_sheet.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
 class CompanyDriversTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -99,6 +100,8 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
   }
 
   Widget _buildBody() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoading) {
       return _buildShimmerLoading();
     }
@@ -119,6 +122,44 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
     return Column(
       children: [
         _buildSearchBar(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Row(
+            children: [
+              Icon(Icons.groups_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Conductores',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.primary.withValues(alpha: 0.16)
+                      : AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  '${_drivers.length}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: _drivers.isEmpty
              ? const Center(child: Text('No se encontraron conductores.'))
@@ -141,13 +182,18 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
   Widget _buildSearchBar() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Container(
         decoration: BoxDecoration(
           color: isDark 
             ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)
             : Colors.grey.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.06),
+          ),
         ),
         child: TextField(
           controller: _searchController,
@@ -233,26 +279,54 @@ class _CompanyDriversTabState extends State<CompanyDriversTab> {
   }
 
   Widget _buildShimmerLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark
+        ? Colors.white.withValues(alpha: 0.10)
+        : Colors.grey.withValues(alpha: 0.14);
+    final highlightColor = isDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : Colors.grey.withValues(alpha: 0.08);
+    final blockColor = isDark
+        ? AppColors.darkCard.withValues(alpha: 0.55)
+        : Colors.white;
+
     return Column(
       children: [
         _buildSearchBar(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Row(
+            children: [
+              Icon(Icons.groups_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Conductores',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             itemCount: 5,
             itemBuilder: (context, index) => Container(
               margin: const EdgeInsets.only(bottom: 16),
-              height: 100,
+              height: 110,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: blockColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Shimmer.fromColors(
-                baseColor: Colors.grey.withValues(alpha: 0.1),
-                highlightColor: Colors.grey.withValues(alpha: 0.05),
+                baseColor: baseColor,
+                highlightColor: highlightColor,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: blockColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),

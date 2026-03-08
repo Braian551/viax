@@ -47,17 +47,19 @@ class CompanyDriverCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDark
-            ? AppColors.darkSurface.withValues(alpha: 0.5)
+            ? AppColors.darkSurface.withValues(alpha: 0.7)
             : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.06),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -65,19 +67,19 @@ class CompanyDriverCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 CompanyDriverAvatar(
                   name: nombre,
                   photoKey: (driver['foto_perfil'] ?? driver['fotoPerfil'])
                       ?.toString(),
-                  size: 50,
+                  size: 46,
                   color: AppColors.primary,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,8 +87,8 @@ class CompanyDriverCard extends StatelessWidget {
                       Text(
                         nombre,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
@@ -99,6 +101,8 @@ class CompanyDriverCard extends StatelessWidget {
                             context,
                           ).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -119,23 +123,26 @@ class CompanyDriverCard extends StatelessWidget {
                                 context,
                               ).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 9,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.2),
                         ),
@@ -157,15 +164,27 @@ class CompanyDriverCard extends StatelessWidget {
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
+                    Text(
+                      fechaRegistro.isNotEmpty ? 'Registro reciente' : '',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.35),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Icon(
                       Icons.chevron_right_rounded,
+                      size: 20,
                       color: Theme.of(
                         context,
                       ).colorScheme.onSurface.withValues(alpha: 0.2),
