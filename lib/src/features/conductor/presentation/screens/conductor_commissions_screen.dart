@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_debt_payment_screen.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/conductor_drawer.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/commissions/commission_kpi_card.dart';
@@ -42,6 +45,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
   String? _errorMessage;
   EarningsModel? _commissions;
   Map<String, dynamic>? _debtContext;
+  double _companyDebtFromTransactions = 0;
   bool _hasShownMandatoryDialog = false;
   CommissionPeriod _period = CommissionPeriod.month;
   CommissionsTrendMetric _trendMetric = CommissionsTrendMetric.commission;
@@ -115,15 +119,18 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
       final debtContext = await DebtPaymentService.getContext(
         conductorId: widget.conductorId,
       );
+      final txDebt = await _loadCompanyDebtFromTransactions();
 
       if (!mounted) return;
 
       setState(() {
+        _companyDebtFromTransactions = txDebt;
+        if (debtContext['success'] == true && debtContext['data'] is Map<String, dynamic>) {
+          _debtContext = Map<String, dynamic>.from(debtContext['data'] as Map);
+        }
+
         if (response['success'] == true && response['ganancias'] is EarningsModel) {
           _commissions = response['ganancias'] as EarningsModel;
-          if (debtContext['success'] == true && debtContext['data'] is Map<String, dynamic>) {
-            _debtContext = Map<String, dynamic>.from(debtContext['data'] as Map);
-          }
         } else {
           _errorMessage = response['message']?.toString() ??
               'No se pudieron cargar las comisiones.';
@@ -141,6 +148,46 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<double> _loadCompanyDebtFromTransactions() async {
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/get_conductor_transactions.php?conductor_id=${widget.conductorId}',
+      );
+      final response = await http.get(url);
+      if (response.statusCode != 200) return 0;
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      final rows = List<Map<String, dynamic>>.from(data['data'] ?? []);
+
+      double totalCargos = 0;
+      double totalAbonos = 0;
+
+      for (final item in rows) {
+        final monto = double.tryParse(item['monto']?.toString() ?? '0') ?? 0;
+        final tipo = item['tipo']?.toString() ?? '';
+        if (tipo == 'cargo') {
+          totalCargos += monto;
+        } else if (tipo == 'abono') {
+          totalAbonos += monto;
+        }
+      }
+
+      return (totalCargos - totalAbonos).clamp(0, double.infinity).toDouble();
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  double _resolveCurrentDebt(EarningsModel commissions) {
+    final earningsDebt = commissions.comisionAdeudada;
+    final contextDebt = double.tryParse(_debtContext?['deuda_actual']?.toString() ?? '0') ?? 0;
+
+    double resolved = earningsDebt;
+    if (contextDebt > resolved) resolved = contextDebt;
+    if (_companyDebtFromTransactions > resolved) resolved = _companyDebtFromTransactions;
+    return resolved;
   }
 
   bool get _isMandatoryPayment {
@@ -402,6 +449,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     if (commissions == null) {
       return const SizedBox.shrink();
     }
+    final currentDebt = _resolveCurrentDebt(commissions);
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -417,7 +465,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
           children: [
             _glassCard(
               isDark: isDark,
-              borderColor: (commissions.comisionAdeudada > 0
+              borderColor: (currentDebt > 0
                       ? AppColors.warning
                       : AppColors.success)
                   .withValues(alpha: 0.35),
@@ -429,7 +477,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
                       Icon(
                         Icons.warning_amber_rounded,
                         size: 18,
-                        color: commissions.comisionAdeudada > 0
+                        color: currentDebt > 0
                             ? AppColors.warning
                             : AppColors.success,
                       ),
@@ -446,9 +494,9 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    formatCurrency(commissions.comisionAdeudada),
+                    formatCurrency(currentDebt),
                     style: TextStyle(
-                      color: commissions.comisionAdeudada > 0
+                      color: currentDebt > 0
                           ? AppColors.warning
                           : AppColors.success,
                       fontSize: 30,
@@ -460,8 +508,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
               ),
             ),
             if (_debtContext != null &&
-              (double.tryParse(_debtContext!['deuda_actual']?.toString() ?? '0') ?? 0) > 0 &&
-              ((_debtContext!['alerta'] as Map<String, dynamic>?)?['mostrar'] == true)) ...[
+              currentDebt > 0) ...[
               const SizedBox(height: 12),
               _buildDebtAlertCard(isDark),
             ],
