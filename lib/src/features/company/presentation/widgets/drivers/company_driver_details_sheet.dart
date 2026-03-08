@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_avatar.dart';
+import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
@@ -55,7 +56,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
         setState(() => _earningsData = response['ganancias']);
       }
     } catch (e) {
-      print('Error loading earnings: $e');
+      debugPrint('Error loading earnings: $e');
     } finally {
       if (mounted) setState(() => _isLoadingEarnings = false);
     }
@@ -69,7 +70,22 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
     );
     if (conductorId == null) return;
 
-    final controller = TextEditingController(text: deuda.toStringAsFixed(0));
+    final controller = TextEditingController(text: formatCurrency(deuda, withSymbol: false));
+
+    void formatCopInput() {
+      final rawDigits = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (rawDigits.isEmpty) return;
+      final amount = double.tryParse(rawDigits) ?? 0;
+      final formatted = formatCurrency(amount, withSymbol: false);
+      if (formatted == controller.text) return;
+      controller.value = controller.value.copyWith(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+        composing: TextRange.empty,
+      );
+    }
+
+    controller.addListener(formatCopInput);
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -105,7 +121,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
     );
 
     if (confirm == true) {
-      final monto = double.tryParse(controller.text) ?? 0;
+      final monto = double.tryParse(controller.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
       if (monto <= 0) return;
 
       if (!mounted) return;
@@ -148,10 +164,33 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   }
 
   Widget _buildEarningsCard(bool isDark) {
+    if (_isLoadingEarnings) {
+      return Container(
+        height: 110,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (_earningsData == null) return const SizedBox();
 
-    final debt =
-        double.tryParse(_earningsData!['comision_adeudada'].toString()) ?? 0.0;
+    final earningsDebt =
+      double.tryParse(_earningsData!['comision_adeudada']?.toString() ?? '0') ?? 0.0;
+    final listDebt =
+      double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0.0;
+
+    // Si el endpoint de ganancias responde en 0 pero la lista trae deuda,
+    // mostramos el valor más confiable para evitar inconsistencias visuales.
+    final debt = earningsDebt > 0 ? earningsDebt : listDebt;
     final hasDebt = debt > 0;
 
     return Container(
@@ -162,14 +201,14 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: hasDebt
-              ? Colors.orange.withOpacity(0.5)
-              : AppColors.success.withOpacity(0.5),
+              ? Colors.orange.withValues(alpha: 0.5)
+              : AppColors.success.withValues(alpha: 0.5),
           width: hasDebt ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: (hasDebt ? Colors.orange : AppColors.success).withOpacity(
-              0.1,
+            color: (hasDebt ? Colors.orange : AppColors.success).withValues(
+              alpha: 0.1,
             ),
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -184,7 +223,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: (hasDebt ? Colors.orange : AppColors.success)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

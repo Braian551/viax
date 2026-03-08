@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/company/services/company_debt_payment_service.dart';
+import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
@@ -43,10 +44,46 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
     super.initState();
     _currentDebt = double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0;
     _loadHistory();
+    _amountController.addListener(_formatAmountInput);
     // Pre-fill amount with full debt if > 0
     if (_currentDebt > 0) {
-      _amountController.text = _currentDebt.toStringAsFixed(0);
+      _setAmountValue(_currentDebt);
     }
+  }
+
+  @override
+  void dispose() {
+    _amountController.removeListener(_formatAmountInput);
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  double _parseCopInput(String text) {
+    final rawDigits = text.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(rawDigits) ?? 0;
+  }
+
+  void _setAmountValue(double value) {
+    if (value <= 0) {
+      _amountController.clear();
+      return;
+    }
+    _amountController.text = formatCurrency(value, withSymbol: false);
+  }
+
+  void _formatAmountInput() {
+    final rawDigits = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (rawDigits.isEmpty) return;
+
+    final amount = double.tryParse(rawDigits) ?? 0;
+    final formatted = formatCurrency(amount, withSymbol: false);
+    if (_amountController.text == formatted) return;
+
+    _amountController.value = _amountController.value.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+      composing: TextRange.empty,
+    );
   }
 
   void _recalculateDebtFromTransactions() {
@@ -69,9 +106,9 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
     if (deudaActual <= 0) {
       _amountController.clear();
     } else {
-      final currentInput = double.tryParse(_amountController.text) ?? 0;
+      final currentInput = _parseCopInput(_amountController.text);
       if (currentInput <= 0) {
-        _amountController.text = deudaActual.toStringAsFixed(0);
+        _setAmountValue(deudaActual);
       }
     }
   }
@@ -224,7 +261,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
   }
 
   Future<void> _registrarPago() async {
-    final monto = double.tryParse(_amountController.text) ?? 0;
+    final monto = _parseCopInput(_amountController.text);
     if (monto <= 0) {
       CustomSnackbar.showError(context, message: 'Ingrese un monto válido');
       return;
