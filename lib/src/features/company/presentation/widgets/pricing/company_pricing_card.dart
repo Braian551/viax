@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 class CompanyPricingCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class CompanyPricingCard extends StatelessWidget {
   String _formatNumber(dynamic value) {
     if (value == null) return '0';
     final number = double.tryParse(value.toString()) ?? 0.0;
-    return number.toStringAsFixed(0);
+    return formatCurrency(number, withSymbol: false);
   }
 
   @override
@@ -38,6 +39,7 @@ class CompanyPricingCard extends StatelessWidget {
     final icon = _vehicleTypeIcons[tipo] ?? Icons.local_shipping_rounded;
     final nombre = _vehicleTypeNames[tipo] ?? tipo?.toString().toUpperCase() ?? 'Vehículo';
     final isGlobal = config['es_global'] == true || config['heredado'] == true;
+    final needsConfig = config['requiere_configuracion'] == true;
 
     return GestureDetector(
       onTap: onTap,
@@ -93,10 +95,15 @@ class CompanyPricingCard extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
-                              'Usando tarifa estándar',
+                              needsConfig
+                                  ? 'Configuración pendiente'
+                                  : 'Usando tarifa estándar',
                               style: TextStyle(
-                                color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                                color: needsConfig
+                                    ? (isDark ? Colors.orange[200] : Colors.orange[800])
+                                    : (isDark ? Colors.white60 : AppColors.lightTextSecondary),
                                 fontSize: 12,
+                                fontWeight: needsConfig ? FontWeight.w700 : FontWeight.w500,
                               ),
                             ),
                           ),

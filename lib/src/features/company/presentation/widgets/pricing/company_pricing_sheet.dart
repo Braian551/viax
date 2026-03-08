@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 
 class CompanyPricingSheet extends StatefulWidget {
@@ -24,8 +25,10 @@ class CompanyPricingSheet extends StatefulWidget {
 }
 
 class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
+  final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
   int _currentSection = 0;
+  bool _isFormattingCop = false;
 
   final List<Map<String, dynamic>> _sections = [
     {'title': 'Tarifas', 'icon': Icons.attach_money_rounded},
@@ -36,56 +39,199 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     {'title': 'Espera', 'icon': Icons.timer_rounded},
   ];
 
+  static final _decimalRegex = RegExp(r'^\d+\.?\d{0,2}');
+  static final _optionalDecimalRegex = RegExp(r'^(\d+\.?\d{0,2})?');
+  static final _percentDecimalRegex = RegExp(r'^\d{0,3}(\.\d{0,2})?');
+
+  static const Set<String> _copKeys = {
+    'tarifa_base',
+    'tarifa_minima',
+    'tarifa_maxima',
+    'costo_por_km',
+    'costo_por_minuto',
+    'costo_tiempo_espera',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _normalizeInitialValues();
+    _bindCopFormatters();
+  }
+
+  @override
+  void dispose() {
+    for (final key in _copKeys) {
+      final controller = widget.controllers[key];
+      if (controller != null) {
+        controller.removeListener(() => _formatCopValue(controller));
+      }
+    }
+    super.dispose();
+  }
+
+  void _normalizeInitialValues() {
+    for (final key in _copKeys) {
+      final controller = widget.controllers[key];
+      if (controller == null) continue;
+
+      final value = _parseCop(controller.text);
+      if (value <= 0 && key == 'tarifa_maxima') {
+        controller.text = '';
+      } else if (value > 0) {
+        controller.text = formatCurrency(value, withSymbol: false);
+      }
+    }
+  }
+
+  void _bindCopFormatters() {
+    for (final key in _copKeys) {
+      final controller = widget.controllers[key];
+      if (controller == null) continue;
+      controller.addListener(() => _formatCopValue(controller));
+    }
+  }
+
+  void _formatCopValue(TextEditingController controller) {
+    if (_isFormattingCop) return;
+
+    final rawDigits = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (rawDigits.isEmpty) {
+      return;
+    }
+
+    final value = double.tryParse(rawDigits) ?? 0;
+    final formatted = formatCurrency(value, withSymbol: false);
+
+    if (controller.text == formatted) return;
+
+    _isFormattingCop = true;
+    controller.value = controller.value.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+      composing: TextRange.empty,
+    );
+    _isFormattingCop = false;
+  }
+
+  double _parseCop(String text) {
+    final raw = text.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(raw) ?? 0;
+  }
+
+  double _parseDecimal(String text) {
+    final normalized = text.replaceAll(',', '.').trim();
+    return double.tryParse(normalized) ?? 0;
+  }
+
+  double _valueOf(String key) {
+    final text = widget.controllers[key]?.text ?? '';
+    if (_copKeys.contains(key)) {
+      return _parseCop(text);
+    }
+    return _parseDecimal(text);
+  }
+
+  List<String> _validateBusinessRules() {
+    final errors = <String>[];
+
+    final tarifaBase = _valueOf('tarifa_base');
+    final tarifaMinima = _valueOf('tarifa_minima');
+    final tarifaMaximaText = widget.controllers['tarifa_maxima']?.text.trim() ?? '';
+    final tarifaMaxima = tarifaMaximaText.isEmpty ? 0 : _valueOf('tarifa_maxima');
+    final costoKm = _valueOf('costo_por_km');
+    final costoMin = _valueOf('costo_por_minuto');
+
+    final hp = _valueOf('recargo_hora_pico');
+    final noct = _valueOf('recargo_nocturno');
+    final fest = _valueOf('recargo_festivo');
+    final desc = _valueOf('descuento_distancia_larga');
+    final comision = _valueOf('comision_plataforma');
+
+    final distMin = _valueOf('distancia_minima');
+    final distMax = _valueOf('distancia_maxima');
+    final umbral = _valueOf('umbral_km_descuento');
+    final esperaGratis = _valueOf('tiempo_espera_gratis');
+    final esperaCosto = _valueOf('costo_tiempo_espera');
+
+    if (tarifaBase <= 0) errors.add('La tarifa base debe ser mayor a 0.');
+    if (tarifaMinima < tarifaBase) {
+      errors.add('La tarifa mínima no puede ser menor que la tarifa base.');
+    }
+    if (tarifaMaximaText.isNotEmpty && tarifaMaxima > 0 && tarifaMaxima < tarifaMinima) {
+      errors.add('La tarifa máxima no puede ser menor que la tarifa mínima.');
+    }
+    if (costoKm <= 0) errors.add('El costo por km debe ser mayor a 0.');
+    if (costoMin <= 0) errors.add('El costo por minuto debe ser mayor a 0.');
+
+    if (distMin <= 0) errors.add('La distancia mínima debe ser mayor a 0 km.');
+    if (distMax < distMin) errors.add('La distancia máxima no puede ser menor que la mínima.');
+    if (distMax > 1000) errors.add('La distancia máxima no debe superar 1000 km.');
+
+    if (umbral < distMin) {
+      errors.add('El umbral de descuento no puede ser menor que la distancia mínima.');
+    }
+
+    if (hp < 0 || hp > 100) errors.add('El recargo de hora pico debe estar entre 0% y 100%.');
+    if (noct < 0 || noct > 100) errors.add('El recargo nocturno debe estar entre 0% y 100%.');
+    if (fest < 0 || fest > 100) errors.add('El recargo festivo debe estar entre 0% y 100%.');
+    if (desc < 0 || desc > 80) errors.add('El descuento por distancia larga debe estar entre 0% y 80%.');
+    if (comision < 0 || comision > 100) errors.add('La comisión debe estar entre 0% y 100%.');
+
+    if (esperaGratis < 0 || esperaGratis > 180) {
+      errors.add('El tiempo de espera gratis debe estar entre 0 y 180 minutos.');
+    }
+    if (esperaCosto < 0) errors.add('El costo por tiempo de espera no puede ser negativo.');
+
+    return errors;
+  }
+
+  Map<String, dynamic> _buildPayload() {
+    final tarifaMaximaText = widget.controllers['tarifa_maxima']?.text.trim() ?? '';
+
+    return {
+      'empresa_id': widget.empresaId,
+      'tipo_vehiculo': widget.config['tipo_vehiculo'],
+      'tarifa_base': _valueOf('tarifa_base'),
+      'tarifa_minima': _valueOf('tarifa_minima'),
+      'tarifa_maxima': tarifaMaximaText.isEmpty ? null : _valueOf('tarifa_maxima'),
+      'costo_por_km': _valueOf('costo_por_km'),
+      'costo_por_minuto': _valueOf('costo_por_minuto'),
+      'recargo_hora_pico': _valueOf('recargo_hora_pico'),
+      'recargo_nocturno': _valueOf('recargo_nocturno'),
+      'recargo_festivo': _valueOf('recargo_festivo'),
+      'descuento_distancia_larga': _valueOf('descuento_distancia_larga'),
+      'umbral_km_descuento': _valueOf('umbral_km_descuento'),
+      'comision_plataforma': _valueOf('comision_plataforma'),
+      'comision_metodo_pago': 0,
+      'distancia_minima': _valueOf('distancia_minima'),
+      'distancia_maxima': _valueOf('distancia_maxima'),
+      'tiempo_espera_gratis': _valueOf('tiempo_espera_gratis').toInt(),
+      'costo_tiempo_espera': _valueOf('costo_tiempo_espera'),
+      'activo': 1,
+    };
+  }
+
   Future<void> _saveChanges() async {
     FocusScope.of(context).unfocus();
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      _showError('Revisa los campos marcados antes de guardar.');
+      return;
+    }
+
+    final businessErrors = _validateBusinessRules();
+    if (businessErrors.isNotEmpty) {
+      _showError(businessErrors.first);
+      return;
+    }
+
     setState(() => _isSaving = true);
     
     bool shouldResetState = true;
 
     try {
-      final body = {
-        'empresa_id': widget.empresaId,
-        'tipo_vehiculo': widget.config['tipo_vehiculo'],
-        'tarifa_base':
-            double.tryParse(widget.controllers['tarifa_base']!.text) ?? 0,
-        'tarifa_minima':
-            double.tryParse(widget.controllers['tarifa_minima']!.text) ?? 0,
-        'tarifa_maxima': widget.controllers['tarifa_maxima']!.text.isEmpty
-            ? null
-            : double.tryParse(widget.controllers['tarifa_maxima']!.text),
-        'costo_por_km':
-            double.tryParse(widget.controllers['costo_por_km']!.text) ?? 0,
-        'costo_por_minuto':
-            double.tryParse(widget.controllers['costo_por_minuto']!.text) ?? 0,
-        'recargo_hora_pico':
-            double.tryParse(widget.controllers['recargo_hora_pico']!.text) ?? 0,
-        'recargo_nocturno':
-            double.tryParse(widget.controllers['recargo_nocturno']!.text) ?? 0,
-        'recargo_festivo':
-            double.tryParse(widget.controllers['recargo_festivo']!.text) ?? 0,
-        'descuento_distancia_larga':
-            double.tryParse(
-              widget.controllers['descuento_distancia_larga']!.text,
-            ) ??
-            0,
-        'umbral_km_descuento':
-            double.tryParse(widget.controllers['umbral_km_descuento']!.text) ??
-            15,
-        'comision_plataforma':
-            double.tryParse(widget.controllers['comision_plataforma']!.text) ??
-            0,
-        'comision_metodo_pago': 0,
-        'distancia_minima':
-            double.tryParse(widget.controllers['distancia_minima']!.text) ?? 1,
-        'distancia_maxima':
-            double.tryParse(widget.controllers['distancia_maxima']!.text) ?? 50,
-        'tiempo_espera_gratis':
-            int.tryParse(widget.controllers['tiempo_espera_gratis']!.text) ?? 3,
-        'costo_tiempo_espera':
-            double.tryParse(widget.controllers['costo_tiempo_espera']!.text) ??
-            0,
-        'activo': 1,
-      };
+      final body = _buildPayload();
 
       final url = Uri.parse('${AppConfig.baseUrl}/company/pricing.php');
       final response = await http.post(
@@ -139,9 +285,6 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
       SnackBar(content: Text(msg), backgroundColor: AppColors.error),
     );
   }
-
-  static final _numberRegex = RegExp(r'^\d+\.?\d{0,2}');
-  static final _optionalNumberRegex = RegExp(r'^(\d+\.?\d{0,2})?');
 
   @override
   Widget build(BuildContext context) {
@@ -294,10 +437,18 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
 
             // Form - Uses the scroll controller from DraggableScrollableSheet
             Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPadding),
-                children: [_buildCurrentSection()],
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: ListView(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPadding),
+                  children: [
+                    _buildLiveSummaryCard(isDark),
+                    const SizedBox(height: 14),
+                    _buildCurrentSection(),
+                  ],
+                ),
               ),
             ),
 
@@ -379,14 +530,18 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
         return Column(
           key: const ValueKey('tarifas'),
           children: [
-            _buildField('Tarifa Base (\$)', widget.controllers['tarifa_base']!),
+            _buildField('Tarifa base', widget.controllers['tarifa_base']!, fieldKey: 'tarifa_base', unit: 'COP'),
             _buildField(
-              'Tarifa Mínima (\$)',
+              'Tarifa mínima',
               widget.controllers['tarifa_minima']!,
+              fieldKey: 'tarifa_minima',
+              unit: 'COP',
             ),
             _buildField(
-              'Tarifa Máxima (\$) - Opcional',
+              'Tarifa máxima (opcional)',
               widget.controllers['tarifa_maxima']!,
+              fieldKey: 'tarifa_maxima',
+              unit: 'COP',
               optional: true,
             ),
           ],
@@ -396,20 +551,28 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
           key: const ValueKey('distancia'),
           children: [
             _buildField(
-              'Costo por Km (\$)',
+              'Costo por km',
               widget.controllers['costo_por_km']!,
+              fieldKey: 'costo_por_km',
+              unit: 'COP',
             ),
             _buildField(
-              'Costo por Minuto (\$)',
+              'Costo por minuto',
               widget.controllers['costo_por_minuto']!,
+              fieldKey: 'costo_por_minuto',
+              unit: 'COP',
             ),
             _buildField(
               'Distancia Mínima (km)',
               widget.controllers['distancia_minima']!,
+              fieldKey: 'distancia_minima',
+              unit: 'km',
             ),
             _buildField(
               'Distancia Máxima (km)',
               widget.controllers['distancia_maxima']!,
+              fieldKey: 'distancia_maxima',
+              unit: 'km',
             ),
           ],
         );
@@ -420,14 +583,20 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             _buildField(
               'Recargo Hora Pico (%)',
               widget.controllers['recargo_hora_pico']!,
+              fieldKey: 'recargo_hora_pico',
+              unit: '%',
             ),
             _buildField(
               'Recargo Nocturno (%)',
               widget.controllers['recargo_nocturno']!,
+              fieldKey: 'recargo_nocturno',
+              unit: '%',
             ),
             _buildField(
               'Recargo Festivo (%)',
               widget.controllers['recargo_festivo']!,
+              fieldKey: 'recargo_festivo',
+              unit: '%',
             ),
           ],
         );
@@ -438,10 +607,14 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             _buildField(
               'Descuento Distancia Larga (%)',
               widget.controllers['descuento_distancia_larga']!,
+              fieldKey: 'descuento_distancia_larga',
+              unit: '%',
             ),
             _buildField(
               'Umbral Descuento (km)',
               widget.controllers['umbral_km_descuento']!,
+              fieldKey: 'umbral_km_descuento',
+              unit: 'km',
             ),
           ],
         );
@@ -452,6 +625,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             _buildField(
               'Comisión a Conductores (%)',
               widget.controllers['comision_plataforma']!,
+              fieldKey: 'comision_plataforma',
+              unit: '%',
             ),
             AnimatedBuilder(
               animation: widget.controllers['comision_plataforma']!,
@@ -512,10 +687,14 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             _buildField(
               'Tiempo Espera Gratis (min)',
               widget.controllers['tiempo_espera_gratis']!,
+              fieldKey: 'tiempo_espera_gratis',
+              unit: 'min',
             ),
             _buildField(
-              'Costo/Min Extra (\$)',
+              'Costo/Min Extra',
               widget.controllers['costo_tiempo_espera']!,
+              fieldKey: 'costo_tiempo_espera',
+              unit: 'COP',
             ),
           ],
         );
@@ -527,9 +706,14 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   Widget _buildField(
     String label,
     TextEditingController controller, {
+    required String fieldKey,
+    required String unit,
     bool optional = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCop = _copKeys.contains(fieldKey);
+    final isPercent = unit == '%';
+    final isInteger = unit == 'min';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -547,23 +731,49 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
               ),
             ),
           ),
-          TextField(
+          TextFormField(
             controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: TextInputType.numberWithOptions(decimal: !isCop && !isInteger),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(
-                optional ? _optionalNumberRegex : _numberRegex,
-              ),
+              if (isCop || isInteger) FilteringTextInputFormatter.digitsOnly,
+              if (!isCop && !isInteger)
+                FilteringTextInputFormatter.allow(
+                  isPercent ? _percentDecimalRegex : (optional ? _optionalDecimalRegex : _decimalRegex),
+                ),
             ],
             style: TextStyle(
               fontWeight: FontWeight.w500,
               fontSize: 15,
               color: isDark ? Colors.white : AppColors.lightTextPrimary,
             ),
+            validator: (value) {
+              final raw = (value ?? '').trim();
+              if (!optional && raw.isEmpty) {
+                return 'Campo obligatorio';
+              }
+              if (optional && raw.isEmpty) return null;
+
+              final parsed = _valueOf(fieldKey);
+              if (isCop && parsed <= 0) {
+                return 'Debe ser mayor a 0';
+              }
+              if (isInteger && parsed < 0) {
+                return 'No puede ser negativo';
+              }
+              if (isPercent && (parsed < 0 || parsed > 100)) {
+                return 'Rango permitido: 0 - 100';
+              }
+              return null;
+            },
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
+              ),
+              suffixText: unit,
+              suffixStyle: TextStyle(
+                color: isDark ? Colors.white54 : AppColors.lightTextSecondary,
+                fontWeight: FontWeight.w600,
               ),
               filled: true,
               fillColor: isDark
@@ -587,6 +797,87 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLiveSummaryCard(bool isDark) {
+    final tarifaBase = _valueOf('tarifa_base');
+    final tarifaMin = _valueOf('tarifa_minima');
+    final costoKm = _valueOf('costo_por_km');
+    final costoMin = _valueOf('costo_por_minuto');
+    final requiereConfig = widget.config['requiere_configuracion'] == true;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : AppColors.blue50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppColors.blue100,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.analytics_outlined, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Resumen de configuración',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: isDark ? Colors.white : AppColors.blue900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _summaryChip('Base ${formatCurrency(tarifaBase)}', isDark),
+              _summaryChip('Mínima ${formatCurrency(tarifaMin)}', isDark),
+              _summaryChip('Km ${formatCurrency(costoKm)}', isDark),
+              _summaryChip('Min ${formatCurrency(costoMin)}', isDark),
+            ],
+          ),
+          if (requiereConfig) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Este vehículo está usando tarifa heredada. Guarda para dejar su configuración propia.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.orange[200] : Colors.orange[800],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryChip(String text, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppColors.blue100,
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white70 : AppColors.lightTextPrimary,
+        ),
       ),
     );
   }
