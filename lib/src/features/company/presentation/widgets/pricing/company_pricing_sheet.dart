@@ -30,6 +30,8 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   bool _isSaving = false;
   int _currentSection = 0;
   bool _isFormattingCop = false;
+  final Map<String, VoidCallback> _copListeners = {};
+  final Map<String, double> _sliderValues = {};
 
   final List<Map<String, dynamic>> _sections = [
     {'title': 'Tarifas', 'icon': Icons.attach_money_rounded},
@@ -84,18 +86,27 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   void initState() {
     super.initState();
     _normalizeInitialValues();
+    _initializeSliderValues();
     _bindCopFormatters();
   }
 
   @override
   void dispose() {
-    for (final key in _copKeys) {
-      final controller = widget.controllers[key];
-      if (controller != null) {
-        controller.removeListener(() => _formatCopValue(controller));
-      }
+    for (final entry in _copListeners.entries) {
+      final controller = widget.controllers[entry.key];
+      controller?.removeListener(entry.value);
     }
     super.dispose();
+  }
+
+  void _initializeSliderValues() {
+    _sliderValues['recargo_hora_pico'] = _valueOf('recargo_hora_pico').clamp(0, 100);
+    _sliderValues['recargo_nocturno'] = _valueOf('recargo_nocturno').clamp(0, 100);
+    _sliderValues['recargo_festivo'] = _valueOf('recargo_festivo').clamp(0, 100);
+    _sliderValues['descuento_distancia_larga'] =
+        _valueOf('descuento_distancia_larga').clamp(0, 80);
+    _sliderValues['comision_plataforma'] = _valueOf('comision_plataforma').clamp(0, 100);
+    _sliderValues['tiempo_espera_gratis'] = _valueOf('tiempo_espera_gratis').clamp(0, 30);
   }
 
   void _normalizeInitialValues() {
@@ -117,7 +128,10 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
     for (final key in _copKeys) {
       final controller = widget.controllers[key];
       if (controller == null) continue;
-      controller.addListener(() => _formatCopValue(controller));
+
+      void listener() => _formatCopValue(controller);
+      _copListeners[key] = listener;
+      controller.addListener(listener);
     }
   }
 
@@ -934,111 +948,107 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final helpText = _fieldHelp[fieldKey];
+    final value = (_sliderValues[fieldKey] ?? min).clamp(min, max);
 
-    return AnimatedBuilder(
-      animation: widget.controllers[fieldKey]!,
-      builder: (context, _) {
-        double value = double.tryParse(widget.controllers[fieldKey]!.text) ?? min;
-        value = value.clamp(min, max);
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (helpText != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            helpText,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : AppColors.lightTextHint,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${value.toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SliderTheme(
-                data: SliderThemeData(
-                  activeTrackColor: AppColors.primary,
-                  inactiveTrackColor: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : AppColors.primary.withValues(alpha: 0.12),
-                  thumbColor: AppColors.primary,
-                  overlayColor: AppColors.primary.withValues(alpha: 0.08),
-                  trackHeight: 6,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-                ),
-                child: Slider(
-                  value: value,
-                  min: min,
-                  max: max,
-                  divisions: ((max - min) * 2).round(),
-                  onChanged: (newValue) {
-                    widget.controllers[fieldKey]!.text = newValue.toStringAsFixed(1);
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${min.toInt()}%',
+                      label,
                       style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      '${max.toInt()}%',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                    if (helpText != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        helpText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white38 : AppColors.lightTextHint,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${value.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.primary.withValues(alpha: 0.12),
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.08),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+            ),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              divisions: ((max - min) * 2).round(),
+              onChanged: (newValue) {
+                setState(() {
+                  _sliderValues[fieldKey] = newValue;
+                });
+                widget.controllers[fieldKey]?.text = newValue.toStringAsFixed(1);
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${min.toInt()}%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                  ),
+                ),
+                Text(
+                  '${max.toInt()}%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1050,111 +1060,108 @@ class _CompanyPricingSheetState extends State<CompanyPricingSheet> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final helpText = _fieldHelp[fieldKey];
+    final value = (_sliderValues[fieldKey] ?? min).clamp(min, max).roundToDouble();
 
-    return AnimatedBuilder(
-      animation: widget.controllers[fieldKey]!,
-      builder: (context, _) {
-        double value = double.tryParse(widget.controllers[fieldKey]!.text) ?? min;
-        value = value.clamp(min, max).roundToDouble();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (helpText != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            helpText,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : AppColors.lightTextHint,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${value.toInt()} min',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SliderTheme(
-                data: SliderThemeData(
-                  activeTrackColor: AppColors.primary,
-                  inactiveTrackColor: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : AppColors.primary.withValues(alpha: 0.12),
-                  thumbColor: AppColors.primary,
-                  overlayColor: AppColors.primary.withValues(alpha: 0.08),
-                  trackHeight: 6,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-                ),
-                child: Slider(
-                  value: value,
-                  min: min,
-                  max: max,
-                  divisions: (max - min).round(),
-                  onChanged: (newValue) {
-                    widget.controllers[fieldKey]!.text = newValue.round().toString();
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${min.toInt()} min',
+                      label,
                       style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      '${max.toInt()} min',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                    if (helpText != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        helpText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white38 : AppColors.lightTextHint,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${value.toInt()} min',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.primary.withValues(alpha: 0.12),
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.08),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+            ),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              divisions: (max - min).round(),
+              onChanged: (newValue) {
+                final rounded = newValue.roundToDouble();
+                setState(() {
+                  _sliderValues[fieldKey] = rounded;
+                });
+                widget.controllers[fieldKey]?.text = rounded.toInt().toString();
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${min.toInt()} min',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                  ),
+                ),
+                Text(
+                  '${max.toInt()} min',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white24 : AppColors.lightTextHint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
