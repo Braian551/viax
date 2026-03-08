@@ -17,3 +17,12 @@
 
 ## Nota
 - Se retiraron referencias antiguas de despliegue para mantener una única referencia de producción (VPS).
+
+## Actualización 2026-03-08 (Tarifas mototaxi)
+- Endpoint ajustado: `backend/company/pricing.php`.
+- Se normalizan tipos de vehículo para evitar pérdida de tarifas por alias legacy:
+	- `auto`, `automovil`, `car` -> `carro`
+	- `motocarro`, `moto_carga`, `moto carga` -> `mototaxi`
+- El GET de tarifas ahora filtra y ordena usando tipos normalizados, corrigiendo casos donde `mototaxi` no aparecía en app/sitioweb.
+- El POST/PUT actualiza registros existentes incluso si quedaron con tipo legacy, y los canoniza al guardar.
+- Limpieza de seguridad local: se eliminó `remote_env.txt` para evitar exposición accidental de credenciales.
