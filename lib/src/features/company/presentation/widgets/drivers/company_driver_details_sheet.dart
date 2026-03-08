@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/features/company/presentation/widgets/drivers/company_driver_avatar.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
@@ -25,7 +28,9 @@ class CompanyDriverDetailsSheet extends StatefulWidget {
 
 class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   bool _isLoadingEarnings = false;
+  bool _isLoadingDebt = false;
   Map<String, dynamic>? _earningsData;
+  double _companyDebtFromTransactions = 0;
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'es_CO',
     symbol: '\$',
@@ -36,14 +41,59 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   void initState() {
     super.initState();
     _loadEarnings();
+    _loadCompanyDebt();
   }
 
-  Future<void> _loadEarnings() async {
-    final conductorId = int.tryParse(
+  int? _resolveConductorId() {
+    return int.tryParse(
       widget.driver['id']?.toString() ??
           widget.driver['usuario_id']?.toString() ??
           '',
     );
+  }
+
+  Future<void> _loadCompanyDebt() async {
+    final conductorId = _resolveConductorId();
+    if (conductorId == null) return;
+
+    setState(() => _isLoadingDebt = true);
+
+    try {
+      final url = Uri.parse(
+        '${AppConfig.baseUrl}/company/get_conductor_transactions.php?conductor_id=$conductorId',
+      );
+      final response = await http.get(url);
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final rows = List<Map<String, dynamic>>.from(data['data'] ?? []);
+
+        double totalCargos = 0;
+        double totalAbonos = 0;
+
+        for (final item in rows) {
+          final monto = double.tryParse(item['monto']?.toString() ?? '0') ?? 0;
+          final tipo = item['tipo']?.toString() ?? '';
+          if (tipo == 'cargo') {
+            totalCargos += monto;
+          } else if (tipo == 'abono') {
+            totalAbonos += monto;
+          }
+        }
+
+        final deuda = (totalCargos - totalAbonos).clamp(0, double.infinity).toDouble();
+        setState(() => _companyDebtFromTransactions = deuda);
+      }
+    } catch (e) {
+      debugPrint('Error loading company debt: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingDebt = false);
+    }
+  }
+
+  Future<void> _loadEarnings() async {
+    final conductorId = _resolveConductorId();
     if (conductorId == null) return;
 
     setState(() => _isLoadingEarnings = true);
@@ -63,11 +113,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
   }
 
   Future<void> _registrarPago(double deuda) async {
-    final conductorId = int.tryParse(
-      widget.driver['id']?.toString() ??
-          widget.driver['usuario_id']?.toString() ??
-          '',
-    );
+    final conductorId = _resolveConductorId();
     if (conductorId == null) return;
 
     final controller = TextEditingController(text: formatCurrency(deuda, withSymbol: false));
@@ -149,6 +195,7 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
             message: 'Pago registrado correctamente',
           );
           _loadEarnings();
+          _loadCompanyDebt();
         } else {
           CustomSnackbar.showError(
             context,
@@ -161,10 +208,13 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
         CustomSnackbar.showError(context, message: 'Error: $e');
       }
     }
+
+    controller.removeListener(formatCopInput);
+    controller.dispose();
   }
 
   Widget _buildEarningsCard(bool isDark) {
-    if (_isLoadingEarnings) {
+    if (_isLoadingEarnings || _isLoadingDebt) {
       return Container(
         height: 110,
         margin: const EdgeInsets.only(bottom: 24),
@@ -181,16 +231,17 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
       );
     }
 
-    if (_earningsData == null) return const SizedBox();
-
     final earningsDebt =
-      double.tryParse(_earningsData!['comision_adeudada']?.toString() ?? '0') ?? 0.0;
+      double.tryParse(_earningsData?['comision_adeudada']?.toString() ?? '0') ?? 0.0;
     final listDebt =
       double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0.0;
 
-    // Si el endpoint de ganancias responde en 0 pero la lista trae deuda,
-    // mostramos el valor más confiable para evitar inconsistencias visuales.
-    final debt = earningsDebt > 0 ? earningsDebt : listDebt;
+    // Prioridad: deuda calculada desde transacciones de empresa (más confiable),
+    // luego deuda de endpoint de ganancias y finalmente deuda de la lista.
+    double debt = _companyDebtFromTransactions;
+    if (earningsDebt > debt) debt = earningsDebt;
+    if (listDebt > debt) debt = listDebt;
+
     final hasDebt = debt > 0;
 
     return Container(
