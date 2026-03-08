@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 import 'package:viax/src/features/conductor/services/debt_payment_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
@@ -30,15 +33,17 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
   File? _comprobanteFile;
   bool _isSubmitting = false;
   bool _isFormattingMonto = false;
+  bool _isLoadingDebt = false;
+  double _resolvedDebt = 0;
 
   @override
   void initState() {
     super.initState();
-    final deuda = double.tryParse(widget.contextData['deuda_actual']?.toString() ?? '0') ?? 0;
-    if (deuda > 0) {
-      _montoController.text = formatCurrency(deuda, withSymbol: false);
-    }
+    _resolvedDebt =
+        double.tryParse(widget.contextData['deuda_actual']?.toString() ?? '0') ?? 0;
+    _prefillAmountWithDebt(_resolvedDebt);
     _montoController.addListener(_formatMontoAsCop);
+    _refreshResolvedDebt();
   }
 
   @override
@@ -74,6 +79,74 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
   double _parseMontoCop() {
     final rawDigits = _montoController.text.replaceAll(RegExp(r'[^0-9]'), '');
     return double.tryParse(rawDigits) ?? 0;
+  }
+
+  void _prefillAmountWithDebt(double debt) {
+    if (debt <= 0) return;
+    final current = _parseMontoCop();
+    if (current > 0) return;
+    _montoController.text = formatCurrency(debt, withSymbol: false);
+  }
+
+  Future<double> _fetchDebtFromTransactions() async {
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.baseUrl}/company/get_conductor_transactions.php?conductor_id=${widget.conductorId}',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode != 200) return 0;
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      final rows = List<Map<String, dynamic>>.from(data['data'] ?? []);
+
+      double totalCargos = 0;
+      double totalAbonos = 0;
+
+      for (final item in rows) {
+        final monto = double.tryParse(item['monto']?.toString() ?? '0') ?? 0;
+        final tipo = item['tipo']?.toString() ?? '';
+        if (tipo == 'cargo') {
+          totalCargos += monto;
+        } else if (tipo == 'abono') {
+          totalAbonos += monto;
+        }
+      }
+
+      return (totalCargos - totalAbonos).clamp(0, double.infinity).toDouble();
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _refreshResolvedDebt() async {
+    setState(() => _isLoadingDebt = true);
+    try {
+      final contextResponse = await DebtPaymentService.getContext(
+        conductorId: widget.conductorId,
+      );
+
+      final debtFromPassed =
+          double.tryParse(widget.contextData['deuda_actual']?.toString() ?? '0') ?? 0;
+      final debtFromContext = double.tryParse(
+            ((contextResponse['data'] as Map<String, dynamic>?)?['deuda_actual'])
+                    ?.toString() ??
+                '0',
+          ) ??
+          0;
+      final debtFromTransactions = await _fetchDebtFromTransactions();
+
+      double resolved = debtFromPassed;
+      if (debtFromContext > resolved) resolved = debtFromContext;
+      if (debtFromTransactions > resolved) resolved = debtFromTransactions;
+
+      if (!mounted) return;
+      setState(() => _resolvedDebt = resolved);
+      _prefillAmountWithDebt(resolved);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingDebt = false);
+      }
+    }
   }
 
   Future<void> _pickProof() async {
@@ -274,7 +347,7 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
   }
 
   Widget _buildDebtSummaryCard(bool isDark) {
-    final deuda = double.tryParse(widget.contextData['deuda_actual']?.toString() ?? '0') ?? 0;
+    final deuda = _resolvedDebt;
 
     return Container(
       width: double.infinity,
@@ -319,7 +392,7 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  formatCurrency(deuda),
+                  _isLoadingDebt ? 'Calculando...' : formatCurrency(deuda),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,

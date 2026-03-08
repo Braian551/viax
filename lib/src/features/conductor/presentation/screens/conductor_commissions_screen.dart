@@ -240,12 +240,23 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
       return;
     }
 
+    final mergedContext = Map<String, dynamic>.from(_debtContext!);
+    final debtFromContext =
+        double.tryParse(_debtContext!['deuda_actual']?.toString() ?? '0') ?? 0;
+    final debtFromCommissions = _commissions?.comisionAdeudada ?? 0;
+    double resolvedDebt = debtFromContext;
+    if (debtFromCommissions > resolvedDebt) resolvedDebt = debtFromCommissions;
+    if (_companyDebtFromTransactions > resolvedDebt) {
+      resolvedDebt = _companyDebtFromTransactions;
+    }
+    mergedContext['deuda_actual'] = resolvedDebt.toStringAsFixed(0);
+
     final refreshed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => ConductorDebtPaymentScreen(
           conductorId: widget.conductorId,
-          contextData: _debtContext!,
+          contextData: mergedContext,
         ),
       ),
     );
@@ -886,43 +897,4 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     );
   }
 
-  Widget _statBlock({
-    required bool isDark,
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color valueColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: valueColor),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.4,
-          ),
-        ),
-      ],
-    );
-  }
 }
