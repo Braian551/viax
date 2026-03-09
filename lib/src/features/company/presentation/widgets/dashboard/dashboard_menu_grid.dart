@@ -8,6 +8,7 @@ class DashboardMenuGrid extends StatelessWidget {
   final VoidCallback? onReportsTap;
   final VoidCallback? onVehiclesTap;
   final VoidCallback? onCommissionsTap;
+  final VoidCallback? onPlatformPaymentTap;
 
   const DashboardMenuGrid({
     super.key,
@@ -17,6 +18,7 @@ class DashboardMenuGrid extends StatelessWidget {
     this.onReportsTap,
     this.onVehiclesTap,
     this.onCommissionsTap,
+    this.onPlatformPaymentTap,
   });
 
   @override
@@ -115,6 +117,17 @@ class DashboardMenuGrid extends StatelessWidget {
                 icon: Icons.monetization_on_rounded,
                 color: Colors.purple,
                 onTap: onCommissionsTap,
+                isDark: isDark,
+                isFullWidth: true,
+              ),
+              const SizedBox(height: 12),
+              _buildMenuCard(
+                context,
+                title: 'Pagar Plataforma',
+                subtitle: 'Pagar deuda con el administrador',
+                icon: Icons.account_balance_rounded,
+                color: const Color(0xFF1565C0),
+                onTap: onPlatformPaymentTap,
                 isDark: isDark,
                 isFullWidth: true,
               ),

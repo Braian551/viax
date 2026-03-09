@@ -31,6 +31,7 @@ import 'package:viax/src/features/admin/presentation/screens/statistics_screen.d
 import 'package:viax/src/features/admin/presentation/screens/audit_logs_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/empresas_management_screen.dart';
 import 'package:viax/src/features/admin/presentation/screens/platform_earnings_screen.dart';
+import 'package:viax/src/features/admin/presentation/screens/admin_company_payment_reports_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_home_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_profile_screen.dart';
 import 'package:viax/src/features/conductor/presentation/screens/conductor_trips_screen.dart';
@@ -475,6 +476,17 @@ class AppRouter {
           return MaterialPageRoute(
             builder: (_) => PlatformEarningsScreen(
               adminId: args?['admin_id'] ?? 0,
+            ),
+          );
+        }
+
+      case RouteNames.adminCompanyPaymentReports:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => AdminCompanyPaymentReportsScreen(
+              adminId: args?['admin_id'] ?? 0,
+              adminUser: args?['admin_user'] ?? {},
             ),
           );
         }

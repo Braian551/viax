@@ -15,6 +15,8 @@ import 'company_pricing_screen.dart'; // Contains CompanyPricingTab
 import 'company_conductores_documentos_screen.dart';
 import 'company_commissions_screen.dart';
 import 'company_data_screen.dart';
+import 'company_platform_payment_screen.dart';
+import 'package:viax/src/features/company/services/company_platform_payment_service.dart';
 import '../widgets/company_logo.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
@@ -185,6 +187,49 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     });
   }
 
+  /// Navega a la pantalla de pagar deuda con la plataforma (admin).
+  Future<void> _navigateToPlatformPayment() async {
+    final empresaId = widget.user['empresa_id'] ?? widget.user['id'];
+    final userId = widget.user['id'];
+
+    // Cargar contexto de deuda desde el servidor
+    try {
+      final result =
+          await CompanyPlatformPaymentService.getDebtContext(empresaId: empresaId);
+      if (!mounted) return;
+
+      final contextData = (result['success'] == true)
+          ? (result['data'] as Map<String, dynamic>? ?? {})
+          : <String, dynamic>{};
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CompanyPlatformPaymentScreen(
+            empresaId: empresaId,
+            userId: userId,
+            contextData: contextData,
+          ),
+        ),
+      ).then((_) {
+        if (mounted) context.read<CompanyProvider>().loadDashboardStats();
+      });
+    } catch (_) {
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CompanyPlatformPaymentScreen(
+              empresaId: empresaId,
+              userId: userId,
+              contextData: const {},
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -220,6 +265,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                        if (mounted) context.read<CompanyProvider>().loadDashboardStats();
                     });
                   },
+                  onNavigateToPlatformPayment: () => _navigateToPlatformPayment(),
                 ),
                 CompanyDriversTab(user: widget.user),
                 CompanyPricingTab(user: widget.user),

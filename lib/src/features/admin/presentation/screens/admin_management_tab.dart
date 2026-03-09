@@ -122,6 +122,23 @@ class _AdminManagementTabState extends State<AdminManagementTab>
               );
             },
           ),
+          const SizedBox(height: 12),
+          ManagementMenuItem(
+            title: 'Comprobantes de Pago',
+            subtitle: 'Revisar comprobantes enviados por empresas',
+            icon: Icons.receipt_long_rounded,
+            accentColor: Colors.teal,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                RouteNames.adminCompanyPaymentReports,
+                arguments: {
+                  'admin_id': adminId,
+                  'admin_user': widget.adminUser,
+                },
+              );
+            },
+          ),
 
           const SizedBox(height: 28),
 

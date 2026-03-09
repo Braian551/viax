@@ -49,6 +49,7 @@
 
   static const String adminEmpresas = '/admin/empresas';
   static const String adminPlatformEarnings = '/admin/platform-earnings';
+  static const String adminCompanyPaymentReports = '/admin/company-payment-reports';
   
   // Rutas de empresa
   static const String companyHome = '/company/home';

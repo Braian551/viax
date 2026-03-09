@@ -13,6 +13,7 @@ class CompanyDashboardTab extends StatefulWidget {
   final VoidCallback? onNavigateToPricing;
   final VoidCallback? onNavigateToDocumentos;
   final VoidCallback? onNavigateToCommissions;
+  final VoidCallback? onNavigateToPlatformPayment;
 
   const CompanyDashboardTab({
     super.key,
@@ -20,6 +21,7 @@ class CompanyDashboardTab extends StatefulWidget {
     this.onNavigateToPricing,
     this.onNavigateToDocumentos,
     this.onNavigateToCommissions,
+    this.onNavigateToPlatformPayment,
   });
 
   @override
@@ -55,6 +57,7 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
                 onCommissionsTap: widget.onNavigateToCommissions,
                 onVehiclesTap: () => _showVehicleManagement(context),
                 onReportsTap: () => _navigateToReports(context),
+                onPlatformPaymentTap: widget.onNavigateToPlatformPayment,
               ),
             ),
 
