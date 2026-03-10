@@ -93,6 +93,9 @@ class TripModel {
   final DateTime fechaSolicitud;
   final DateTime? fechaCompletado;
   final DateTime? fechaAceptado;
+  final String? fechaSolicitudColombia;
+  final String? fechaCompletadoColombia;
+  final String? fechaAceptadoColombia;
   final String? origen;
   final String? destino;
   final String clienteNombre;
@@ -119,6 +122,9 @@ class TripModel {
     required this.fechaSolicitud,
     this.fechaCompletado,
     this.fechaAceptado,
+    this.fechaSolicitudColombia,
+    this.fechaCompletadoColombia,
+    this.fechaAceptadoColombia,
     this.origen,
     this.destino,
     required this.clienteNombre,
@@ -218,6 +224,9 @@ class TripModel {
         fechaSolicitud: fechaSolicitud,
         fechaCompletado: parseDate(json['fecha_completado']),
         fechaAceptado: parseDate(json['fecha_aceptado']),
+        fechaSolicitudColombia: json['fecha_solicitud_colombia']?.toString(),
+        fechaCompletadoColombia: json['fecha_completado_colombia']?.toString(),
+        fechaAceptadoColombia: json['fecha_aceptado_colombia']?.toString(),
         origen: json['origen']?.toString(),
         destino: json['destino']?.toString(),
         clienteNombre: json['cliente_nombre']?.toString() ?? '',
@@ -238,6 +247,14 @@ class TripModel {
   }
 
   String get clienteNombreCompleto => '$clienteNombre $clienteApellido';
+
+  String get fechaPrincipalColombia {
+    final formatted = fechaCompletadoColombia ?? fechaSolicitudColombia;
+    if (formatted != null && formatted.trim().isNotEmpty) {
+      return formatted;
+    }
+    return DateTimeUtils.formatForHistoryCard(fechaCompletado ?? fechaSolicitud);
+  }
   
   double get calificacionDouble => (calificacion ?? 0).toDouble();
 

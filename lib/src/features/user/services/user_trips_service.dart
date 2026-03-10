@@ -15,6 +15,8 @@ class UserPriceBreakdownModel {
   final double recargoFestivo;
   final double recargoEspera;
   final double tiempoEsperaMinutos;
+  final double subtotalAntesMinimo;
+  final bool aplicoMinimo;
   final double precioFinal;
 
   UserPriceBreakdownModel({
@@ -26,12 +28,14 @@ class UserPriceBreakdownModel {
     this.recargoFestivo = 0,
     this.recargoEspera = 0,
     this.tiempoEsperaMinutos = 0,
+    this.subtotalAntesMinimo = 0,
+    this.aplicoMinimo = false,
     this.precioFinal = 0,
   });
 
   factory UserPriceBreakdownModel.fromJson(Map<String, dynamic>? json) {
     if (json == null) return UserPriceBreakdownModel();
-    
+
     double parseDouble(dynamic value) {
       if (value == null) return 0;
       if (value is double) return value;
@@ -48,15 +52,17 @@ class UserPriceBreakdownModel {
       recargoFestivo: parseDouble(json['recargo_festivo']),
       recargoEspera: parseDouble(json['recargo_espera']),
       tiempoEsperaMinutos: parseDouble(json['tiempo_espera_minutos']),
+      subtotalAntesMinimo: parseDouble(json['subtotal_antes_minimo']),
+      aplicoMinimo: json['aplico_minimo'] == true,
       precioFinal: parseDouble(json['precio_final']),
     );
   }
 
   /// Indica si hay algún recargo aplicado
-  bool get tieneRecargos => 
-      recargoNocturno > 0 || 
-      recargoHoraPico > 0 || 
-      recargoFestivo > 0 || 
+  bool get tieneRecargos =>
+      recargoNocturno > 0 ||
+      recargoHoraPico > 0 ||
+      recargoFestivo > 0 ||
       recargoEspera > 0;
 
   /// Total de recargos
@@ -71,12 +77,7 @@ class VehicleInfoModel {
   final String? modelo;
   final String? color;
 
-  VehicleInfoModel({
-    this.placa,
-    this.marca,
-    this.modelo,
-    this.color,
-  });
+  VehicleInfoModel({this.placa, this.marca, this.modelo, this.color});
 
   factory VehicleInfoModel.fromJson(Map<String, dynamic>? json) {
     if (json == null) return VehicleInfoModel();
@@ -129,6 +130,9 @@ class UserTripModel {
   final DateTime? fechaSolicitud;
   final DateTime? fechaAceptado;
   final DateTime? fechaCompletado;
+  final String? fechaSolicitudColombia;
+  final String? fechaAceptadoColombia;
+  final String? fechaCompletadoColombia;
 
   UserTripModel({
     required this.id,
@@ -158,6 +162,9 @@ class UserTripModel {
     this.fechaSolicitud,
     this.fechaAceptado,
     this.fechaCompletado,
+    this.fechaSolicitudColombia,
+    this.fechaAceptadoColombia,
+    this.fechaCompletadoColombia,
   });
 
   factory UserTripModel.fromJson(Map<String, dynamic> json) {
@@ -212,7 +219,28 @@ class UserTripModel {
       fechaSolicitud: DateTimeUtils.parseServerDate(json['fecha_solicitud']),
       fechaAceptado: DateTimeUtils.parseServerDate(json['fecha_aceptado']),
       fechaCompletado: DateTimeUtils.parseServerDate(json['fecha_completado']),
+      fechaSolicitudColombia: json['fecha_solicitud_colombia']?.toString(),
+      fechaAceptadoColombia: json['fecha_aceptado_colombia']?.toString(),
+      fechaCompletadoColombia: json['fecha_completado_colombia']?.toString(),
     );
+  }
+
+  String get fechaPrincipalColombia {
+    final formatted = fechaCompletadoColombia ?? fechaSolicitudColombia;
+    if (formatted != null && formatted.trim().isNotEmpty) {
+      return formatted;
+    }
+    return DateTimeUtils.formatForHistoryCard(
+      fechaCompletado ?? fechaSolicitud,
+    );
+  }
+
+  String get fechaCompletaColombia {
+    final formatted = fechaCompletadoColombia ?? fechaSolicitudColombia;
+    if (formatted != null && formatted.trim().isNotEmpty) {
+      return formatted;
+    }
+    return DateTimeUtils.formatShortDateTime(fechaCompletado ?? fechaSolicitud);
   }
 
   String get conductorNombreCompleto {
@@ -237,16 +265,14 @@ class UserTripModel {
     }
   }
 
-  bool get isCompletado => 
-      estado == 'completada' || 
-      estado == 'completado' || 
-      estado == 'entregado' || 
-      estado == 'finalizada' || 
+  bool get isCompletado =>
+      estado == 'completada' ||
+      estado == 'completado' ||
+      estado == 'entregado' ||
+      estado == 'finalizada' ||
       estado == 'finalizado';
 
-  bool get isCancelado => 
-      estado == 'cancelada' || 
-      estado == 'cancelado';
+  bool get isCancelado => estado == 'cancelada' || estado == 'cancelado';
 }
 
 /// Resumen de pagos del usuario
@@ -277,7 +303,8 @@ class UserTripsService {
     DateTime? fechaFin,
   }) async {
     try {
-      var uri = '$baseUrl/get_trip_history.php?usuario_id=$userId&page=$page&limit=$limit';
+      var uri =
+          '$baseUrl/get_trip_history.php?usuario_id=$userId&page=$page&limit=$limit';
       if (estado != null && estado != 'all') {
         uri += '&estado=$estado';
       }
@@ -298,16 +325,20 @@ class UserTripsService {
         return {
           'success': false,
           'viajes': <UserTripModel>[],
-          'error': result.error?.userMessage ?? 'No pudimos obtener tu historial de viajes.',
+          'error':
+              result.error?.userMessage ??
+              'No pudimos obtener tu historial de viajes.',
           'error_type': result.error?.type.name,
         };
       }
 
       final data = result.json!;
       if (data['success'] == true) {
-        final viajes = (data['viajes'] as List?)
-            ?.map((v) => UserTripModel.fromJson(v))
-            .toList() ?? [];
+        final viajes =
+            (data['viajes'] as List?)
+                ?.map((v) => UserTripModel.fromJson(v))
+                .toList() ??
+            [];
 
         return {
           'success': true,
@@ -319,7 +350,9 @@ class UserTripsService {
       return {
         'success': false,
         'viajes': <UserTripModel>[],
-        'error': data['message']?.toString() ?? 'No pudimos obtener tu historial de viajes.',
+        'error':
+            data['message']?.toString() ??
+            'No pudimos obtener tu historial de viajes.',
       };
     } catch (e) {
       print('Error obteniendo historial de viajes: $e');

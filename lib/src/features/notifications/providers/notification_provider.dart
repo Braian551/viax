@@ -21,6 +21,11 @@ class NotificationProvider extends ChangeNotifier {
     'payment_received',
     'payment_pending',
     'admin_company_payment_info_updated',
+    'empresa_payment_submitted',
+    'empresa_payment_approved',
+    'empresa_payment_rejected',
+    'empresa_payment_confirmed',
+    'invoice_generated',
   };
 
   static const Set<String> _documentTypes = {

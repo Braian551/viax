@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/admin/services/admin_company_commissions_service.dart';
 import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/widgets/dialogs/critical_action_dialog.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/features/admin/presentation/screens/document_viewer_screen.dart';
 
 /// Pantalla de administración de comprobantes de pago empresa→admin.
 /// Muestra empresas deudoras y comprobantes pendientes de revisión.
@@ -51,6 +54,24 @@ class _AdminCompanyPaymentReportsScreenState
     decimalDigits: 0,
   );
   final DateFormat _dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'es_CO');
+  static const double _debtEpsilonCop = 1.0;
+
+  double _normalizeSaldoCop(dynamic value) {
+    final saldo = double.tryParse(value?.toString() ?? '0') ?? 0;
+    return saldo.abs() < _debtEpsilonCop ? 0 : saldo;
+  }
+
+  bool _hasActiveDebt(Map<String, dynamic> empresa) {
+    final deudaActivaRaw = empresa['deuda_activa'];
+    if (deudaActivaRaw is bool) {
+      return deudaActivaRaw;
+    }
+    final deudaActivaNum = int.tryParse(deudaActivaRaw?.toString() ?? '');
+    if (deudaActivaNum != null) {
+      return deudaActivaNum == 1;
+    }
+    return _normalizeSaldoCop(empresa['saldo_pendiente']) >= _debtEpsilonCop;
+  }
 
   @override
   void initState() {
@@ -103,11 +124,18 @@ class _AdminCompanyPaymentReportsScreenState
     if (!mounted) return;
 
     if (result['success'] == true) {
+      final rawData = result['data'];
+      final empresasRaw = rawData is List
+          ? rawData
+          : (rawData is Map<String, dynamic>
+              ? (rawData['empresas'] ?? [])
+              : []);
+      final resumenRaw = result['resumen'] ??
+          (rawData is Map<String, dynamic> ? rawData['resumen'] : {});
+
       setState(() {
-        _empresas = List<Map<String, dynamic>>.from(
-            result['data']?['empresas'] ?? []);
-        _resumenDeudoras =
-            Map<String, dynamic>.from(result['data']?['resumen'] ?? {});
+        _empresas = List<Map<String, dynamic>>.from(empresasRaw);
+        _resumenDeudoras = Map<String, dynamic>.from(resumenRaw ?? {});
         _isLoading = false;
       });
     } else {
@@ -125,11 +153,18 @@ class _AdminCompanyPaymentReportsScreenState
     if (!mounted) return;
 
     if (result['success'] == true) {
+      final rawData = result['data'];
+      final reportesRaw = rawData is List
+          ? rawData
+          : (rawData is Map<String, dynamic>
+              ? (rawData['reportes'] ?? [])
+              : []);
+      final resumenRaw = result['resumen'] ??
+          (rawData is Map<String, dynamic> ? rawData['resumen'] : {});
+
       setState(() {
-        _reportes = List<Map<String, dynamic>>.from(
-            result['data']?['reportes'] ?? []);
-        _resumenReportes =
-            Map<String, dynamic>.from(result['data']?['resumen'] ?? {});
+        _reportes = List<Map<String, dynamic>>.from(reportesRaw);
+        _resumenReportes = Map<String, dynamic>.from(resumenRaw ?? {});
         _isLoading = false;
       });
     } else {
@@ -145,11 +180,18 @@ class _AdminCompanyPaymentReportsScreenState
     if (!mounted) return;
 
     if (result['success'] == true) {
+      final rawData = result['data'];
+      final facturasRaw = rawData is List
+          ? rawData
+          : (rawData is Map<String, dynamic>
+              ? (rawData['facturas'] ?? [])
+              : []);
+      final resumenRaw = result['resumen'] ??
+          (rawData is Map<String, dynamic> ? rawData['resumen'] : {});
+
       setState(() {
-        _facturas = List<Map<String, dynamic>>.from(
-            result['data']?['facturas'] ?? []);
-        _resumenFacturas =
-            Map<String, dynamic>.from(result['data']?['resumen'] ?? {});
+        _facturas = List<Map<String, dynamic>>.from(facturasRaw);
+        _resumenFacturas = Map<String, dynamic>.from(resumenRaw ?? {});
         _isLoading = false;
       });
     } else {
@@ -362,8 +404,8 @@ class _AdminCompanyPaymentReportsScreenState
   Widget _buildEmpresaDeudoraCard(
       Map<String, dynamic> empresa, bool isDark) {
     final nombre = empresa['nombre'] ?? 'Empresa';
-    final saldo =
-        double.tryParse(empresa['saldo_pendiente']?.toString() ?? '0') ?? 0;
+    final saldo = _normalizeSaldoCop(empresa['saldo_pendiente']);
+    final deudaActiva = _hasActiveDebt(empresa);
     final reportesPendientes =
         int.tryParse(empresa['reportes_pendientes']?.toString() ?? '0') ?? 0;
     final logoKey = empresa['logo_url'];
@@ -374,7 +416,7 @@ class _AdminCompanyPaymentReportsScreenState
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: saldo > 0
+          color: deudaActiva
               ? AppColors.warning.withValues(alpha: 0.4)
               : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
         ),
@@ -428,16 +470,18 @@ class _AdminCompanyPaymentReportsScreenState
                 Text(
                   _currencyFormat.format(saldo),
                   style: TextStyle(
-                    color: saldo > 0 ? AppColors.warning : AppColors.success,
+                    color:
+                        deudaActiva ? AppColors.warning : AppColors.success,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
                 Text(
-                  saldo > 0 ? 'Pendiente' : 'Al día',
+                  deudaActiva ? 'Pendiente' : 'Al día',
                   style: TextStyle(
                     fontSize: 11,
-                    color: saldo > 0 ? AppColors.warning : AppColors.success,
+                    color:
+                        deudaActiva ? AppColors.warning : AppColors.success,
                   ),
                 ),
               ],
@@ -602,7 +646,7 @@ class _AdminCompanyPaymentReportsScreenState
   Widget _buildReporteCard(Map<String, dynamic> reporte, bool isDark) {
     final empresaNombre = reporte['empresa_nombre'] ?? 'Empresa';
     final monto =
-        double.tryParse(reporte['monto']?.toString() ?? '0') ?? 0;
+        double.tryParse(reporte['monto_reportado']?.toString() ?? reporte['monto']?.toString() ?? '0') ?? 0;
     final estado = reporte['estado'] ?? 'pendiente_revision';
     final fechaStr = reporte['created_at'] ?? '';
     final reporteId =
@@ -788,18 +832,40 @@ class _AdminCompanyPaymentReportsScreenState
   Widget _buildFacturaCard(Map<String, dynamic> factura, bool isDark) {
     final numero = factura['numero_factura'] ?? '';
     final monto =
-        double.tryParse(factura['monto']?.toString() ?? '0') ?? 0;
+        double.tryParse(factura['total']?.toString() ?? factura['monto']?.toString() ?? '0') ?? 0;
     final estado = factura['estado'] ?? 'emitida';
     final emisor = factura['emisor_nombre'] ?? '';
     final fechaStr = factura['fecha_emision'] ?? '';
+    final pdfRuta = factura['pdf_ruta'];
     final pdfUrl = factura['pdf_url'];
+
+    // Resolver URL del PDF a través del R2 proxy
+    String? resolvedPdfUrl;
+    if (pdfRuta != null && pdfRuta.toString().isNotEmpty) {
+      resolvedPdfUrl = '${AppConfig.baseUrl}/r2_proxy.php?key=$pdfRuta';
+    } else if (pdfUrl != null && pdfUrl.toString().isNotEmpty) {
+      resolvedPdfUrl = pdfUrl;
+    }
 
     DateTime? fecha;
     try {
       fecha = DateTime.parse(fechaStr);
     } catch (_) {}
 
-    return Container(
+    return GestureDetector(
+      onTap: resolvedPdfUrl != null
+          ? () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentViewerScreen(
+                    documentUrl: resolvedPdfUrl!,
+                    documentName: numero.isNotEmpty ? numero : 'Factura',
+                    tipoArchivo: 'pdf',
+                  ),
+                ),
+              )
+          : null,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -890,8 +956,19 @@ class _AdminCompanyPaymentReportsScreenState
               ),
             ],
           ),
+          if (resolvedPdfUrl != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Icon(Icons.download_rounded,
+                  size: 20,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.4)),
+            ),
         ],
       ),
+    ),
     );
   }
 
@@ -902,9 +979,9 @@ class _AdminCompanyPaymentReportsScreenState
       Map<String, dynamic> reporte, bool isDark) {
     final estado = reporte['estado'] ?? 'pendiente_revision';
     final monto =
-        double.tryParse(reporte['monto']?.toString() ?? '0') ?? 0;
+        double.tryParse(reporte['monto_reportado']?.toString() ?? reporte['monto']?.toString() ?? '0') ?? 0;
     final empresaNombre = reporte['empresa_nombre'] ?? 'Empresa';
-    final observaciones = reporte['observaciones'] ?? '';
+    final observaciones = reporte['observaciones_empresa'] ?? reporte['observaciones'] ?? '';
     final reporteId =
         int.tryParse(reporte['id']?.toString() ?? '0') ?? 0;
     final comprobanteUrl = reporte['comprobante_url'];
@@ -964,6 +1041,42 @@ class _AdminCompanyPaymentReportsScreenState
                 _buildDetailRow(
                     'Motivo rechazo', motivoRechazo, isDark),
 
+              const SizedBox(height: 12),
+              _buildSectionHeader('Trazabilidad', Icons.timeline_rounded),
+              const SizedBox(height: 8),
+              _buildTimelineTile(
+                isDark: isDark,
+                title: 'Reporte creado',
+                timestamp: reporte['created_at']?.toString(),
+                subtitle: 'Empresa envió comprobante',
+                icon: Icons.upload_file_rounded,
+                color: AppColors.info,
+              ),
+              _buildTimelineTile(
+                isDark: isDark,
+                title: 'Aprobación de comprobante',
+                timestamp: reporte['aprobado_en']?.toString(),
+                subtitle: _actorLabel('Aprobado por', reporte['aprobado_por']),
+                icon: Icons.check_circle_outline_rounded,
+                color: AppColors.success,
+              ),
+              _buildTimelineTile(
+                isDark: isDark,
+                title: 'Rechazo de comprobante',
+                timestamp: reporte['rechazado_en']?.toString(),
+                subtitle: _actorLabel('Rechazado por', reporte['rechazado_por']),
+                icon: Icons.cancel_outlined,
+                color: AppColors.error,
+              ),
+              _buildTimelineTile(
+                isDark: isDark,
+                title: 'Pago confirmado',
+                timestamp: reporte['confirmado_en']?.toString(),
+                subtitle: _actorLabel('Confirmado por', reporte['confirmado_por']),
+                icon: Icons.verified_rounded,
+                color: AppColors.primary,
+              ),
+
               const SizedBox(height: 20),
 
               // Imagen del comprobante
@@ -975,20 +1088,54 @@ class _AdminCompanyPaymentReportsScreenState
                       color: Theme.of(sheetContext).colorScheme.onSurface,
                     )),
                 const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    comprobanteUrl,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 100,
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      child: const Center(
-                          child: Icon(Icons.broken_image_rounded,
-                              size: 40, color: Colors.grey)),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DocumentViewerScreen(
+                          documentUrl: comprobanteUrl,
+                          documentName: 'Comprobante #${reporte['id']}',
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      comprobanteUrl,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 100,
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        child: const Center(
+                            child: Icon(Icons.broken_image_rounded,
+                                size: 40, color: Colors.grey)),
+                      ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DocumentViewerScreen(
+                            documentUrl: comprobanteUrl,
+                            documentName: 'Comprobante #${reporte['id']}',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.fullscreen_rounded),
+                    label: const Text('Ver comprobante completo'),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -1001,10 +1148,13 @@ class _AdminCompanyPaymentReportsScreenState
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: () => _performAction(
+                    onPressed: () => _confirmAndPerformAction(
                       sheetContext,
                       reporteId,
                       'approve',
+                      title: 'Aprobar comprobante',
+                      message:
+                          'Vas a aprobar este comprobante. Luego solo faltará confirmar el pago final.',
                     ),
                     icon: const Icon(Icons.check_circle_rounded),
                     label: const Text('Aprobar comprobante'),
@@ -1037,17 +1187,20 @@ class _AdminCompanyPaymentReportsScreenState
                   child: OutlinedButton.icon(
                     onPressed: () {
                       if (motivoController.text.trim().isEmpty) {
-                        CustomSnackBar.show(
+                        CustomSnackbar.show(
                           sheetContext,
                           message: 'Escribe el motivo del rechazo',
-                          type: SnackBarType.warning,
+                          type: SnackbarType.warning,
                         );
                         return;
                       }
-                      _performAction(
+                      _confirmAndPerformAction(
                         sheetContext,
                         reporteId,
                         'reject',
+                        title: 'Rechazar comprobante',
+                        message:
+                            'Vas a rechazar este comprobante. La empresa deberá enviar uno nuevo.',
                         motivo: motivoController.text.trim(),
                       );
                     },
@@ -1068,10 +1221,13 @@ class _AdminCompanyPaymentReportsScreenState
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: () => _performAction(
+                    onPressed: () => _confirmAndPerformAction(
                       sheetContext,
                       reporteId,
                       'confirm_payment',
+                      title: 'Confirmar pago recibido',
+                      message:
+                          'Esta acción impacta saldos y factura. Solo confirma si el dinero ya está verificado.',
                     ),
                     icon: const Icon(Icons.verified_rounded),
                     label: const Text('Confirmar pago recibido'),
@@ -1114,30 +1270,129 @@ class _AdminCompanyPaymentReportsScreenState
       if (!mounted) return;
 
       if (result['success'] == true) {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: result['message'] ?? 'Acción realizada',
-          type: SnackBarType.success,
+          type: SnackbarType.success,
         );
       } else {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: result['message'] ?? 'Error',
-          type: SnackBarType.error,
+          type: SnackbarType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: 'Error: $e',
-          type: SnackBarType.error,
+          type: SnackbarType.error,
         );
       }
     }
 
     // Recargar datos de la pestaña actual
     _loadTabData(_tabController.index);
+  }
+
+  Future<void> _confirmAndPerformAction(
+    BuildContext sheetContext,
+    int reporteId,
+    String action, {
+    String? motivo,
+    required String title,
+    required String message,
+  }) async {
+    final isDanger = action == 'reject';
+    final confirmed = await CriticalActionDialog.show(
+      sheetContext,
+      title: title,
+      message: message,
+      confirmText: isDanger ? 'Sí, continuar' : 'Sí, confirmar',
+      isDanger: isDanger,
+      icon: isDanger ? Icons.report_problem_rounded : Icons.verified_rounded,
+    );
+
+    if (!confirmed) return;
+    await _performAction(sheetContext, reporteId, action, motivo: motivo);
+  }
+
+  Widget _buildTimelineTile({
+    required bool isDark,
+    required String title,
+    required String? timestamp,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+  }) {
+    final formatted = _formatTimelineTimestamp(timestamp);
+    final isDone = formatted != null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: (isDone ? color : Colors.grey).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: (isDone ? color : Colors.grey).withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: (isDone ? color : Colors.grey).withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: isDone ? color : Colors.grey),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isDone ? '$subtitle · $formatted' : 'Pendiente',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _actorLabel(String prefix, dynamic actorId) {
+    final raw = actorId?.toString() ?? '';
+    if (raw.isEmpty || raw == '0') return prefix;
+    return '$prefix #$raw';
+  }
+
+  String? _formatTimelineTimestamp(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    try {
+      final parsed = DateTime.parse(value).toLocal();
+      return _dateFormat.format(parsed);
+    } catch (_) {
+      return value;
+    }
   }
 
   String _getEstadoLabel(String estado) {
@@ -1195,6 +1450,11 @@ class _AdminCompanyPaymentReportsScreenState
     final tipoController = TextEditingController();
     final documentoController = TextEditingController();
     final referenciaController = TextEditingController();
+    String metodoRecaudo = 'cuenta_bancaria';
+    bool hasInitialized = false;
+    bool isLoadingBanks = true;
+    List<Map<String, String>> banks = [];
+    Map<String, String>? selectedBank;
     bool isLoadingConfig = true;
     bool isSaving = false;
 
@@ -1204,27 +1464,72 @@ class _AdminCompanyPaymentReportsScreenState
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          // Cargar configuración existente
-          if (isLoadingConfig) {
-            AdminCompanyCommissionsService.getBankConfig(
-                    adminId: widget.adminId)
-                .then((result) {
+          if (!hasInitialized) {
+            hasInitialized = true;
+            Future<void>(() async {
+              // Cargar catálogo de bancos (misma API usada por Empresa).
+              try {
+                final banksRes = await http.get(
+                  Uri.parse('${AppConfig.baseUrl}/company/colombia_banks.php'),
+                  headers: {'Accept': 'application/json'},
+                );
+                if (banksRes.statusCode == 200) {
+                  final body = json.decode(banksRes.body);
+                  if (body['success'] == true && body['data'] is List) {
+                    banks = List<Map<String, String>>.from(
+                      (body['data'] as List).map(
+                        (item) => {
+                          'codigo': item['codigo']?.toString() ?? '',
+                          'nombre': item['nombre']?.toString() ?? '',
+                        },
+                      ),
+                    ).where((e) => (e['nombre'] ?? '').isNotEmpty).toList();
+                  }
+                }
+              } catch (_) {
+                banks = [];
+              } finally {
+                if (ctx.mounted) {
+                  setSheetState(() => isLoadingBanks = false);
+                }
+              }
+
+              final result = await AdminCompanyCommissionsService.getBankConfig(
+                adminId: widget.adminId,
+              );
+
               if (result['success'] == true) {
                 final config = result['data'] as Map<String, dynamic>? ?? {};
-                bancoController.text =
-                    config['banco_nombre']?.toString() ?? '';
-                cuentaController.text =
-                    config['numero_cuenta']?.toString() ?? '';
-                titularController.text =
-                    config['titular_cuenta']?.toString() ?? '';
-                tipoController.text =
-                    config['tipo_cuenta']?.toString() ?? '';
-                documentoController.text =
-                    config['documento_titular']?.toString() ?? '';
-                referenciaController.text =
-                    config['referencia_transferencia']?.toString() ?? '';
+                final metodoRaw = (config['metodo_recaudo']?.toString() ?? '').trim();
+                final tipoRaw = (config['tipo_cuenta']?.toString() ?? '').toLowerCase();
+                final bancoRaw = (config['banco_nombre']?.toString() ?? '').toLowerCase();
+                metodoRecaudo = metodoRaw.isNotEmpty
+                    ? metodoRaw
+                    : ((tipoRaw == 'nequi' || bancoRaw == 'nequi')
+                        ? 'nequi'
+                        : 'cuenta_bancaria');
+
+                bancoController.text = config['banco_nombre']?.toString() ?? '';
+                cuentaController.text = config['numero_cuenta']?.toString() ?? '';
+                titularController.text = config['titular_cuenta']?.toString() ?? '';
+                tipoController.text = config['tipo_cuenta']?.toString() ?? '';
+                documentoController.text = config['documento_titular']?.toString() ?? '';
+                referenciaController.text = config['referencia_transferencia']?.toString() ?? '';
+
+                final codigoConfig = config['banco_codigo']?.toString();
+                if (banks.isNotEmpty) {
+                  final candidates = banks.where((b) {
+                    final byCode = codigoConfig != null && codigoConfig.isNotEmpty && b['codigo'] == codigoConfig;
+                    final byName = (b['nombre'] ?? '').toLowerCase() == bancoController.text.trim().toLowerCase();
+                    return byCode || byName;
+                  }).toList();
+                  selectedBank = candidates.isNotEmpty ? candidates.first : null;
+                }
               }
-              setSheetState(() => isLoadingConfig = false);
+
+              if (ctx.mounted) {
+                setSheetState(() => isLoadingConfig = false);
+              }
             });
           }
 
@@ -1262,7 +1567,7 @@ class _AdminCompanyPaymentReportsScreenState
                       )),
                   const SizedBox(height: 6),
                   Text(
-                    'Las empresas verán estos datos para realizar transferencias',
+                    'Las empresas verán estos datos para pagar a la plataforma',
                     style: TextStyle(
                         fontSize: 13,
                         color: Theme.of(ctx)
@@ -1275,14 +1580,89 @@ class _AdminCompanyPaymentReportsScreenState
                   if (isLoadingConfig)
                     const Center(child: CircularProgressIndicator())
                   else ...[
-                    _buildConfigField(
-                        'Banco', bancoController, 'Nombre del banco'),
-                    _buildConfigField('Número de cuenta',
-                        cuentaController, 'Ej: 123-456-789'),
+                    Text(
+                      'Método de recaudo',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(ctx).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment<String>(
+                          value: 'cuenta_bancaria',
+                          label: Text('Cuenta bancaria'),
+                          icon: Icon(Icons.account_balance_rounded),
+                        ),
+                        ButtonSegment<String>(
+                          value: 'nequi',
+                          label: Text('Nequi'),
+                          icon: Icon(Icons.phone_android_rounded),
+                        ),
+                      ],
+                      selected: <String>{metodoRecaudo},
+                      onSelectionChanged: (selection) {
+                        setSheetState(() {
+                          metodoRecaudo = selection.first;
+                          if (metodoRecaudo == 'nequi') {
+                            bancoController.text = 'Nequi';
+                            if (tipoController.text.trim().isEmpty) {
+                              tipoController.text = 'nequi';
+                            }
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    if (metodoRecaudo == 'cuenta_bancaria') ...[
+                      if (isLoadingBanks)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: LinearProgressIndicator(minHeight: 3),
+                        )
+                      else if (banks.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: DropdownButtonFormField<String>(
+                            value: selectedBank?['codigo'],
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: 'Banco',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                            ),
+                            items: banks
+                                .map((b) => DropdownMenuItem<String>(
+                                      value: b['codigo'],
+                                      child: Text(b['nombre'] ?? ''),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              final candidates = banks.where((b) => b['codigo'] == value).toList();
+                              final match = candidates.isNotEmpty ? candidates.first : null;
+                              setSheetState(() {
+                                selectedBank = match;
+                                bancoController.text = match?['nombre'] ?? '';
+                              });
+                            },
+                          ),
+                        )
+                      else
+                        _buildConfigField('Banco', bancoController, 'Nombre del banco'),
+                      _buildConfigField('Tipo de cuenta',
+                          tipoController, 'Ahorros / Corriente'),
+                      _buildConfigField('Número de cuenta',
+                          cuentaController, 'Ej: 123-456-789'),
+                    ] else ...[
+                      _buildConfigField(
+                          'Número de Nequi', cuentaController, 'Ej: 3001234567'),
+                    ],
                     _buildConfigField('Titular',
                         titularController, 'Nombre del titular'),
-                    _buildConfigField('Tipo de cuenta',
-                        tipoController, 'Ahorros / Corriente'),
                     _buildConfigField('Documento titular',
                         documentoController, 'CC / NIT'),
                     _buildConfigField('Referencia transferencia',
@@ -1296,19 +1676,23 @@ class _AdminCompanyPaymentReportsScreenState
                         onPressed: isSaving
                             ? null
                             : () async {
-                                if (bancoController.text
-                                        .trim()
-                                        .isEmpty ||
-                                    cuentaController.text
-                                        .trim()
-                                        .isEmpty ||
-                                    titularController.text
-                                        .trim()
-                                        .isEmpty) {
-                                  CustomSnackBar.show(ctx,
+                            final cuentaValue = cuentaController.text.trim();
+                            final titularValue = titularController.text.trim();
+                            final bancoValue = bancoController.text.trim();
+                            final tipoValue = tipoController.text.trim();
+
+                            final missingBankFields = metodoRecaudo == 'cuenta_bancaria' &&
+                              (bancoValue.isEmpty || tipoValue.isEmpty || cuentaValue.isEmpty || titularValue.isEmpty);
+                            final missingNequiFields = metodoRecaudo == 'nequi' &&
+                              (cuentaValue.isEmpty || titularValue.isEmpty);
+
+                            if (missingBankFields || missingNequiFields) {
+                                    CustomSnackbar.show(ctx,
                                       message:
-                                          'Banco, cuenta y titular son obligatorios',
-                                      type: SnackBarType.warning);
+                                  metodoRecaudo == 'nequi'
+                                    ? 'Número de Nequi y titular son obligatorios'
+                                    : 'Banco, tipo de cuenta, número de cuenta y titular son obligatorios',
+                                      type: SnackbarType.warning);
                                   return;
                                 }
                                 setSheetState(
@@ -1317,17 +1701,21 @@ class _AdminCompanyPaymentReportsScreenState
                                     await AdminCompanyCommissionsService
                                         .updateBankConfig(
                                   adminId: widget.adminId,
-                                  bancoNombre:
-                                      bancoController.text.trim(),
-                                  numeroCuenta:
-                                      cuentaController.text.trim(),
-                                  titularCuenta:
-                                      titularController.text.trim(),
-                                  tipoCuenta:
-                                      tipoController.text.trim(),
+                                    metodoRecaudo: metodoRecaudo,
+                                  bancoNombre: metodoRecaudo == 'nequi'
+                                    ? 'Nequi'
+                                    : bancoValue,
+                                  numeroCuenta: cuentaValue,
+                                  titularCuenta: titularValue,
+                                  tipoCuenta: metodoRecaudo == 'nequi'
+                                    ? 'nequi'
+                                    : tipoValue,
+                                    bancoCodigo: metodoRecaudo == 'nequi'
+                                      ? 'NEQUI'
+                                      : (selectedBank?['codigo'] ?? ''),
                                   documentoTitular:
                                       documentoController.text.trim(),
-                                  referenciaTransferencia:
+                                  referencia:
                                       referenciaController.text
                                           .trim(),
                                 );
@@ -1336,21 +1724,21 @@ class _AdminCompanyPaymentReportsScreenState
 
                                 if (result['success'] == true) {
                                   if (ctx.mounted) {
-                                    CustomSnackBar.show(ctx,
+                                    CustomSnackbar.show(ctx,
                                         message:
                                             'Cuenta actualizada',
                                         type:
-                                            SnackBarType.success);
+                                            SnackbarType.success);
                                     Navigator.of(ctx).pop();
                                   }
                                 } else {
                                   if (ctx.mounted) {
-                                    CustomSnackBar.show(ctx,
+                                    CustomSnackbar.show(ctx,
                                         message:
                                             result['message'] ??
                                                 'Error',
                                         type:
-                                            SnackBarType.error);
+                                            SnackbarType.error);
                                   }
                                 }
                               },
@@ -1431,10 +1819,18 @@ class _AdminCompanyPaymentReportsScreenState
         borderRadius: BorderRadius.circular(16),
       ),
       child: Center(
-        child: Text(
-          message,
-          style:
-              TextStyle(color: Colors.grey.withValues(alpha: 0.7)),
+        child: Column(
+          children: [
+            Icon(Icons.inbox_rounded,
+                size: 38, color: Colors.grey.withValues(alpha: 0.55)),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.grey.withValues(alpha: 0.8)),
+            ),
+          ],
         ),
       ),
     );

@@ -205,6 +205,7 @@ class AdminCompanyCommissionsService {
     required String tipoCuenta,
     required String numeroCuenta,
     required String titularCuenta,
+    String metodoRecaudo = 'cuenta_bancaria',
     String? bancoCodigo,
     String? documentoTitular,
     String? referencia,
@@ -216,6 +217,7 @@ class AdminCompanyCommissionsService {
 
       final payload = {
         'admin_id': adminId,
+        'metodo_recaudo': metodoRecaudo,
         'banco_nombre': bancoNombre,
         'tipo_cuenta': tipoCuenta,
         'numero_cuenta': numeroCuenta,

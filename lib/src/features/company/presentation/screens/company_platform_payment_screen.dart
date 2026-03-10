@@ -1,15 +1,13 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 import 'package:viax/src/features/company/services/company_platform_payment_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
+import 'package:viax/src/widgets/dialogs/critical_action_dialog.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
 /// Pantalla para que la empresa pague su deuda con la plataforma (admin).
@@ -42,12 +40,14 @@ class _CompanyPlatformPaymentScreenState
   bool _isFormattingMonto = false;
   bool _isLoadingDebt = false;
   double _resolvedDebt = 0;
+  late Map<String, dynamic> _contextData;
 
   @override
   void initState() {
     super.initState();
+    _contextData = Map<String, dynamic>.from(widget.contextData);
     _resolvedDebt = double.tryParse(
-            widget.contextData['deuda_actual']?.toString() ?? '0') ??
+            _contextData['deuda_actual']?.toString() ?? '0') ??
         0;
     _prefillAmountWithDebt(_resolvedDebt);
     _montoController.addListener(_formatMontoAsCop);
@@ -108,11 +108,16 @@ class _CompanyPlatformPaymentScreenState
         final data = result['data'] as Map<String, dynamic>? ?? {};
         final serverDebt =
             double.tryParse(data['deuda_actual']?.toString() ?? '0') ?? 0;
-        if (serverDebt > _resolvedDebt) {
-          _resolvedDebt = serverDebt;
-        }
-        if (_resolvedDebt > 0 && _parseMontoCop() <= 0) {
-          _prefillAmountWithDebt(_resolvedDebt);
+        if (mounted) {
+          setState(() {
+            _contextData = data;
+            if (serverDebt > _resolvedDebt) {
+              _resolvedDebt = serverDebt;
+            }
+            if (_resolvedDebt > 0 && _parseMontoCop() <= 0) {
+              _prefillAmountWithDebt(_resolvedDebt);
+            }
+          });
         }
       }
     } catch (_) {}
@@ -121,22 +126,59 @@ class _CompanyPlatformPaymentScreenState
 
   // ─── Enviar comprobante ───
   Future<void> _submit() async {
+    final cuentaTransferencia =
+        _contextData['cuenta_transferencia'] as Map<String, dynamic>? ?? {};
+    final hasCuenta = cuentaTransferencia['configurada'] == true;
+    final estadoReporte = (_contextData['estado_reporte'] ?? 'sin_reporte').toString();
+    final bloqueaEnvio =
+        estadoReporte == 'pendiente_revision' ||
+        estadoReporte == 'comprobante_aprobado';
+
     if (!_formKey.currentState!.validate()) return;
-    if (_comprobanteFile == null) {
-      CustomSnackBar.show(
+    if (bloqueaEnvio) {
+      CustomSnackbar.show(
         context,
-        message: 'Adjunta un comprobante de pago',
-        type: SnackBarType.warning,
+        message:
+            'Ya tienes un comprobante en proceso de revisión. Espera el nuevo estado para enviar otro.',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+    if (!hasCuenta) {
+      CustomSnackbar.show(
+        context,
+        message:
+            'La plataforma aún no tiene cuenta o Nequi configurado para recibir pagos.',
+        type: SnackbarType.warning,
       );
       return;
     }
 
+    if (_comprobanteFile == null) {
+      CustomSnackbar.show(
+        context,
+        message: 'Adjunta un comprobante de pago',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+
+    final confirmed = await CriticalActionDialog.show(
+      context,
+      title: 'Enviar comprobante',
+      message:
+          'Verifica monto y archivo antes de enviar. Este reporte será revisado por el administrador.',
+      confirmText: 'Sí, enviar',
+      icon: Icons.send_rounded,
+    );
+    if (!confirmed) return;
+
     final monto = _parseMontoCop();
     if (monto <= 0) {
-      CustomSnackBar.show(
+      CustomSnackbar.show(
         context,
         message: 'Ingresa un monto válido',
-        type: SnackBarType.warning,
+        type: SnackbarType.warning,
       );
       return;
     }
@@ -155,25 +197,25 @@ class _CompanyPlatformPaymentScreenState
       if (!mounted) return;
 
       if (result['success'] == true) {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: 'Comprobante enviado correctamente',
-          type: SnackBarType.success,
+          type: SnackbarType.success,
         );
         Navigator.of(context).pop(true);
       } else {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: result['message'] ?? 'Error al enviar',
-          type: SnackBarType.error,
+          type: SnackbarType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.show(
+        CustomSnackbar.show(
           context,
           message: 'Error: $e',
-          type: SnackBarType.error,
+          type: SnackbarType.error,
         );
       }
     } finally {
@@ -181,13 +223,29 @@ class _CompanyPlatformPaymentScreenState
     }
   }
 
+  Future<void> _pickComprobante() async {
+    final filePath = await DocumentPickerHelper.pickDocument(
+      context: context,
+      documentType: DocumentType.any,
+    );
+    if (filePath == null || !mounted) return;
+    setState(() => _comprobanteFile = File(filePath));
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cuentaTransferencia =
-        widget.contextData['cuenta_transferencia'] as Map<String, dynamic>? ??
+      _contextData['cuenta_transferencia'] as Map<String, dynamic>? ??
             {};
     final hasCuenta = cuentaTransferencia['configurada'] == true;
+    final reporteActual =
+      _contextData['reporte_actual'] as Map<String, dynamic>? ?? {};
+    final estadoReporte =
+      (_contextData['estado_reporte'] ?? 'sin_reporte').toString();
+    final bloqueaEnvio =
+        estadoReporte == 'pendiente_revision' ||
+        estadoReporte == 'comprobante_aprobado';
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -208,6 +266,51 @@ class _CompanyPlatformPaymentScreenState
               _buildDebtSummaryCard(isDark),
               const SizedBox(height: 20),
 
+              if (!hasCuenta) ...[
+                _buildSafetyBanner(
+                  isDark,
+                  icon: Icons.warning_amber_rounded,
+                  color: AppColors.error,
+                  text:
+                      'No hay cuenta de recaudo configurada por el administrador. Espera antes de transferir dinero.',
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              if (estadoReporte != 'sin_reporte') ...[
+                _buildSafetyBanner(
+                  isDark,
+                  icon: Icons.schedule_rounded,
+                  color: AppColors.warning,
+                  text:
+                      'Estado del último comprobante: ${estadoReporte.replaceAll('_', ' ')}',
+                ),
+                if ((reporteActual['motivo_rechazo'] ?? '').toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Motivo rechazo: ${reporteActual['motivo_rechazo']}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.orangeAccent : AppColors.warning,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+              ],
+
+              if (bloqueaEnvio) ...[
+                _buildSafetyBanner(
+                  isDark,
+                  icon: Icons.lock_clock_rounded,
+                  color: AppColors.primary,
+                  text:
+                      'Tu comprobante está en proceso de revisión. No puedes enviar otro hasta que el administrador cambie el estado.',
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // ─── Cuenta destino ───
               if (hasCuenta) ...[
                 _buildSectionTitle('Cuenta de transferencia', isDark),
@@ -221,9 +324,9 @@ class _CompanyPlatformPaymentScreenState
               const SizedBox(height: 8),
               AuthTextField(
                 controller: _montoController,
-                labelText: 'Monto (COP)',
+                label: 'Monto (COP)',
                 hintText: 'Ej: 150.000',
-                prefixIcon: Icons.attach_money,
+                icon: Icons.attach_money,
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   if ((v ?? '').trim().isEmpty) return 'Ingresa el monto';
@@ -238,11 +341,22 @@ class _CompanyPlatformPaymentScreenState
               const SizedBox(height: 8),
               DocumentUploadWidget(
                 label: 'Adjuntar comprobante',
-                description: 'Foto o PDF del comprobante de transferencia',
-                onFileSelected: (file) {
-                  setState(() => _comprobanteFile = file);
-                },
-                selectedFile: _comprobanteFile,
+                subtitle: 'Foto o PDF del comprobante de transferencia',
+                filePath: _comprobanteFile?.path,
+                acceptedType: DocumentType.any,
+                onTap: bloqueaEnvio
+                    ? () {
+                        CustomSnackbar.show(
+                          context,
+                          message:
+                              'No puedes adjuntar un nuevo comprobante mientras el actual está en revisión.',
+                          type: SnackbarType.info,
+                        );
+                      }
+                    : _pickComprobante,
+                onRemove: _comprobanteFile == null
+                    ? null
+                    : () => setState(() => _comprobanteFile = null),
               ),
               const SizedBox(height: 16),
 
@@ -251,8 +365,9 @@ class _CompanyPlatformPaymentScreenState
               const SizedBox(height: 8),
               AuthTextArea(
                 controller: _observacionesController,
-                labelText: 'Notas adicionales',
-                hintText: 'Referencia de transferencia, detalles...',
+                label: 'Notas adicionales',
+                icon: Icons.notes_rounded,
+                helperText: 'Referencia de transferencia, detalles...',
                 maxLines: 3,
               ),
               const SizedBox(height: 30),
@@ -262,7 +377,7 @@ class _CompanyPlatformPaymentScreenState
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: _isSubmitting ? null : _submit,
+                  onPressed: _isSubmitting || !hasCuenta || bloqueaEnvio ? null : _submit,
                   icon: _isSubmitting
                       ? const SizedBox(
                           width: 20,
@@ -272,7 +387,11 @@ class _CompanyPlatformPaymentScreenState
                             color: Colors.white,
                           ))
                       : const Icon(Icons.send_rounded),
-                  label: Text(_isSubmitting ? 'Enviando...' : 'Enviar comprobante'),
+                    label: Text(_isSubmitting
+                      ? 'Enviando...'
+                      : (bloqueaEnvio
+                          ? 'Comprobante en revisión'
+                          : (hasCuenta ? 'Enviar comprobante' : 'Cuenta no disponible'))),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1976D2),
                     foregroundColor: Colors.white,
@@ -346,7 +465,7 @@ class _CompanyPlatformPaymentScreenState
           ),
           const SizedBox(height: 4),
           Text(
-            'Comisión: ${widget.contextData['comision_porcentaje'] ?? 0}%',
+            'Comisión: ${_contextData['comision_porcentaje'] ?? widget.contextData['comision_porcentaje'] ?? 0}%',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: 12,
@@ -360,6 +479,11 @@ class _CompanyPlatformPaymentScreenState
   // ─── Tarjeta de cuenta de transferencia ───
   Widget _buildTransferAccountCard(
       Map<String, dynamic> cuenta, bool isDark) {
+    final metodo = (cuenta['metodo_recaudo'] ?? '').toString();
+    final isNequi = metodo == 'nequi' ||
+      (cuenta['tipo_cuenta'] ?? '').toString().toLowerCase() == 'nequi' ||
+      (cuenta['banco_nombre'] ?? '').toString().toLowerCase() == 'nequi';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -375,9 +499,15 @@ class _CompanyPlatformPaymentScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('Banco', cuenta['banco_nombre'] ?? '-', isDark),
-          _buildInfoRow('Tipo', cuenta['tipo_cuenta'] ?? '-', isDark),
-          _buildInfoRow('Cuenta', cuenta['numero_cuenta'] ?? '-', isDark),
+          _buildInfoRow(
+              'Método', isNequi ? 'Nequi' : 'Cuenta bancaria', isDark),
+          if (!isNequi) ...[
+            _buildInfoRow('Banco', cuenta['banco_nombre'] ?? '-', isDark),
+            _buildInfoRow('Tipo', cuenta['tipo_cuenta'] ?? '-', isDark),
+            _buildInfoRow('Cuenta', cuenta['numero_cuenta'] ?? '-', isDark),
+          ] else
+            _buildInfoRow(
+                'Número Nequi', cuenta['numero_cuenta'] ?? '-', isDark),
           _buildInfoRow('Titular', cuenta['titular_cuenta'] ?? '-', isDark),
           if ((cuenta['documento_titular'] ?? '').toString().isNotEmpty)
             _buildInfoRow(
@@ -443,6 +573,41 @@ class _CompanyPlatformPaymentScreenState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSafetyBanner(
+    bool isDark, {
+    required IconData icon,
+    required Color color,
+    required String text,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: isDark ? Colors.white.withValues(alpha: 0.92) : AppColors.lightTextPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:viax/firebase_options.dart';
 import 'package:viax/src/routes/app_router.dart';
 import 'package:viax/src/providers/database_provider.dart';
@@ -27,6 +28,7 @@ import 'package:viax/src/core/network/widgets/global_connectivity_banner.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
 
 void main() async {
   runZonedGuarded(
@@ -272,16 +274,73 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription<Uri>? _deepLinkSub;
+  StreamSubscription<String?>? _localNotificationTapSub;
+  StreamSubscription<RemoteMessage>? _pushNotificationTapSub;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
+    _initNotificationRedirects();
 
     Future.microtask(() async {
       await PushNotificationService.syncForCurrentSession();
     });
+  }
+
+  void _initNotificationRedirects() {
+    _localNotificationTapSub =
+        LocalNotificationService.onNotificationClick.listen((payload) {
+      _handleNotificationOpen(payload: payload);
+    });
+
+    _pushNotificationTapSub =
+        PushNotificationService.onNotificationTap.listen((message) {
+      _handleNotificationOpen(data: message.data);
+    });
+  }
+
+  Future<void> _handleNotificationOpen({
+    Map<String, dynamic>? data,
+    String? payload,
+  }) async {
+    final session = await UserService.getSavedSession();
+    final userId = int.tryParse(session?['id']?.toString() ?? '') ?? 0;
+    if (userId <= 0) return;
+
+    final userType = (session?['tipo_usuario'] ?? '').toString().toLowerCase();
+
+    // Si viene referencia explícita de pagos empresa/admin, redirigir a su módulo.
+    final referenceType =
+        (data?['reference_type'] ?? data?['referencia_tipo'] ?? '').toString().toLowerCase();
+    final tipo = (data?['tipo'] ?? '').toString().toLowerCase();
+
+    if ((userType == 'admin' || userType == 'administrador') &&
+        (referenceType == 'pago_empresa_reporte' ||
+            referenceType == 'factura' ||
+            tipo.startsWith('empresa_payment_') ||
+            tipo == 'invoice_generated')) {
+      ActiveTripNavigationService.navigatorKey.currentState?.pushNamed(
+        RouteNames.adminCompanyPaymentReports,
+        arguments: {
+          'admin_id': userId,
+          'admin_user': session,
+        },
+      );
+      return;
+    }
+
+    // Fallback universal: abrir bandeja de notificaciones con contexto del usuario.
+    ActiveTripNavigationService.navigatorKey.currentState?.pushNamed(
+      RouteNames.notifications,
+      arguments: {
+        'userId': userId,
+        'currentUser': session,
+        'userType': userType,
+        if (payload != null) 'payload': payload,
+      },
+    );
   }
 
   /// Initializes deep link handling for `viax://share/{token}` URIs.
@@ -338,6 +397,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     _deepLinkSub?.cancel();
+    _localNotificationTapSub?.cancel();
+    _pushNotificationTapSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

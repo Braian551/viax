@@ -609,6 +609,43 @@ class _NotificationsContentState extends State<_NotificationsContent>
 
     final reportId = notification.referenciaId ?? _asInt(notification.data['reporte_id']);
     final conductorId = _asInt(notification.data['conductor_id']);
+    final adminId = _asInt(widget.currentUser?['id']) ?? widget.userId;
+    final empresaId = _asInt(widget.currentUser?['empresa_id']) ??
+        _asInt(widget.currentUser?['id']);
+
+    Future<bool> openAdminCompanyPayments() async {
+      if (normalizedUserType != 'admin' && normalizedUserType != 'administrador') {
+        return false;
+      }
+
+      await Navigator.pushNamed(
+        context,
+        RouteNames.adminCompanyPaymentReports,
+        arguments: {
+          'admin_id': adminId,
+          'admin_user': widget.currentUser ?? {'id': adminId},
+          if (reportId != null) 'reporte_id': reportId,
+        },
+      );
+      return true;
+    }
+
+    Future<bool> openCompanyPlatformPayment() async {
+      if (normalizedUserType != 'empresa' && normalizedUserType != 'company') {
+        return false;
+      }
+
+      if (widget.currentUser == null || empresaId == null || empresaId <= 0) {
+        return false;
+      }
+
+      await Navigator.pushNamed(
+        context,
+        RouteNames.companyHome,
+        arguments: {'user': widget.currentUser},
+      );
+      return true;
+    }
 
     Future<bool> openConductorCommissions() async {
       if (normalizedUserType != 'conductor') return false;
@@ -631,6 +668,13 @@ class _NotificationsContentState extends State<_NotificationsContent>
           notification.tipo == 'debt_payment_mandatory') {
         return openConductorCommissions();
       }
+
+      if (notification.tipo.startsWith('empresa_payment_') ||
+          notification.tipo == 'invoice_generated') {
+        if (await openAdminCompanyPayments()) return true;
+        return openCompanyPlatformPayment();
+      }
+
       return false;
     }
 
@@ -652,6 +696,11 @@ class _NotificationsContentState extends State<_NotificationsContent>
         }
 
         return openConductorCommissions();
+
+      case 'pago_empresa_reporte':
+      case 'factura':
+        if (await openAdminCompanyPayments()) return true;
+        return openCompanyPlatformPayment();
 
       case 'deuda_comision':
         return openConductorCommissions();

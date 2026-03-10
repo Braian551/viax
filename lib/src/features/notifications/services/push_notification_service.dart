@@ -106,6 +106,8 @@ class PushNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final StreamController<RemoteMessage> _onMessageController =
       StreamController<RemoteMessage>.broadcast();
+  static final StreamController<RemoteMessage> _onNotificationTapController =
+      StreamController<RemoteMessage>.broadcast();
 
   static bool _initialized = false;
   static int? _currentUserId;
@@ -115,6 +117,8 @@ class PushNotificationService {
   static int? _lastRegisteredUserId;
 
   static Stream<RemoteMessage> get onMessage => _onMessageController.stream;
+  static Stream<RemoteMessage> get onNotificationTap =>
+      _onNotificationTapController.stream;
 
   static Future<void> initialize() async {
     if (_initialized) return;
@@ -157,12 +161,14 @@ class PushNotificationService {
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _onMessageController.add(message);
+      _onNotificationTapController.add(message);
     });
 
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _onMessageController.add(initialMessage);
+        _onNotificationTapController.add(initialMessage);
       });
     }
 

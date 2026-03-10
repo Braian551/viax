@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../services/user_trips_service.dart';
 import '../trip_preview/trip_price_formatter.dart';
@@ -170,7 +169,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    _formatDate(widget.trip.fechaSolicitud),
+                                    widget.trip.fechaPrincipalColombia,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: secondaryTextColor,
@@ -436,8 +435,4 @@ class _TripHistoryCardState extends State<TripHistoryCard>
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
-  String _formatDate(DateTime? date) {
-    // Usar DateTimeUtils para formatear fechas ya convertidas a hora local
-    return DateTimeUtils.formatForHistoryCard(date);
-  }
 }

@@ -8,6 +8,7 @@ import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_pr
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/global/services/admin/admin_service.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
+import 'package:viax/src/features/admin/presentation/screens/document_viewer_screen.dart';
 
 class DriverFinancialHistorySheet extends StatefulWidget {
   final Map<String, dynamic> driver;
@@ -627,21 +628,13 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
   }
 
   Future<void> _showProofDialog(String url) async {
-    final isPdf = url.toLowerCase().contains('.pdf');
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Comprobante'),
-        content: isPdf
-            ? const Text('Comprobante en PDF. Ábrelo desde el navegador o descarga el archivo para revisarlo.')
-            : Image.network(
-                url,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Text('No se pudo cargar el comprobante'),
-              ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentViewerScreen(
+          documentUrl: url,
+          documentName: 'Comprobante de pago',
+        ),
       ),
     );
   }

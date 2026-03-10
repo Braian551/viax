@@ -11,14 +11,15 @@ import 'trip_route_info.dart';
 class TripDetailBottomSheet extends StatefulWidget {
   final TripModel trip;
 
-  const TripDetailBottomSheet({
-    super.key,
-    required this.trip,
-  });
+  const TripDetailBottomSheet({super.key, required this.trip});
 
   /// Muestra el bottom sheet con animación
   /// [isDark] es opcional, el tema se detecta automáticamente del contexto
-  static Future<void> show(BuildContext context, TripModel trip, {bool isDark = false}) {
+  static Future<void> show(
+    BuildContext context,
+    TripModel trip, {
+    bool isDark = false,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -46,13 +47,15 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
       vsync: this,
     );
 
-    _slideAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _slideAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
   }
@@ -74,10 +77,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, screenHeight * 0.7 * _slideAnimation.value),
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: child,
-          ),
+          child: Opacity(opacity: _fadeAnimation.value, child: child),
         );
       },
       child: DraggableScrollableSheet(
@@ -147,16 +147,19 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
 
   Widget _buildBody(bool isDark) {
     final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
-    final subtitleColor = isDark ? Colors.white70 : AppColors.lightTextSecondary;
+    final subtitleColor = isDark
+        ? Colors.white70
+        : AppColors.lightTextSecondary;
     final dateFormat = DateFormat('EEEE, dd MMMM yyyy', 'es');
-    final timeFormat = DateFormat('hh:mm a', 'es');
+    final formattedColombia =
+        widget.trip.fechaCompletadoColombia ??
+        widget.trip.fechaSolicitudColombia;
 
-    final fullDate = widget.trip.fechaCompletado != null
-        ? dateFormat.format(widget.trip.fechaCompletado!)
-        : dateFormat.format(widget.trip.fechaSolicitud);
-    final fullTime = widget.trip.fechaCompletado != null
-        ? timeFormat.format(widget.trip.fechaCompletado!)
-        : timeFormat.format(widget.trip.fechaSolicitud);
+    final fullDate =
+        formattedColombia ??
+        (widget.trip.fechaCompletado != null
+            ? dateFormat.format(widget.trip.fechaCompletado!)
+            : dateFormat.format(widget.trip.fechaSolicitud));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,14 +198,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         // Fecha y hora
         _buildDetailTile(
           icon: Icons.calendar_today_rounded,
-          title: 'Fecha',
+          title: 'Fecha y hora',
           value: fullDate,
-          isDark: isDark,
-        ),
-        _buildDetailTile(
-          icon: Icons.access_time_rounded,
-          title: 'Hora',
-          value: fullTime,
           isDark: isDark,
         ),
         const SizedBox(height: 20),
@@ -219,6 +216,13 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         _buildStatsGrid(isDark),
         const SizedBox(height: 20),
 
+        if (widget.trip.desglosePrecio != null) ...[
+          _buildSectionTitle('Desglose del Precio', textColor),
+          const SizedBox(height: 12),
+          _buildPriceBreakdownCard(isDark),
+          const SizedBox(height: 20),
+        ],
+
         // Ganancia
         _buildEarningsCard(isDark, textColor),
         const SizedBox(height: 24),
@@ -228,6 +232,139 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  Widget _buildPriceBreakdownCard(bool isDark) {
+    final breakdown = widget.trip.desglosePrecio!;
+    final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
+    final dividerColor = isDark ? Colors.white24 : Colors.black12;
+
+    final totalRecargos = breakdown.totalRecargos;
+    final subtotal = breakdown.subtotalAntesMinimo > 0
+        ? breakdown.subtotalAntesMinimo
+        : (breakdown.tarifaBase +
+              breakdown.precioDistancia +
+              breakdown.precioTiempo +
+              totalRecargos);
+    final ajusteMinimo = (widget.trip.totalCobradoViaje - subtotal).clamp(
+      0,
+      double.infinity,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildBreakdownRow('Tarifa base', breakdown.tarifaBase, textColor),
+          _buildBreakdownRow(
+            'Costo por distancia',
+            breakdown.precioDistancia,
+            textColor,
+          ),
+          _buildBreakdownRow(
+            'Costo por tiempo',
+            breakdown.precioTiempo,
+            textColor,
+          ),
+          if (breakdown.recargoNocturno > 0)
+            _buildBreakdownRow(
+              'Recargo nocturno',
+              breakdown.recargoNocturno,
+              textColor,
+            ),
+          if (breakdown.recargoHoraPico > 0)
+            _buildBreakdownRow(
+              'Recargo hora pico',
+              breakdown.recargoHoraPico,
+              textColor,
+            ),
+          if (breakdown.recargoFestivo > 0)
+            _buildBreakdownRow(
+              'Recargo festivo',
+              breakdown.recargoFestivo,
+              textColor,
+            ),
+          if (breakdown.recargoEspera > 0)
+            _buildBreakdownRow(
+              'Recargo por espera',
+              breakdown.recargoEspera,
+              textColor,
+            ),
+          const SizedBox(height: 8),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 8),
+          _buildBreakdownRow('Subtotal', subtotal, textColor, isBold: true),
+          if (breakdown.aplicoMinimo || ajusteMinimo > 0)
+            _buildBreakdownRow(
+              'Ajuste por tarifa mínima',
+              ajusteMinimo,
+              textColor,
+            ),
+          const SizedBox(height: 8),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 8),
+          _buildBreakdownRow(
+            'Total cobrado',
+            widget.trip.totalCobradoViaje,
+            textColor,
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBreakdownRow(
+    String label,
+    double value,
+    Color textColor, {
+    bool isBold = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.8),
+              fontSize: 13,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          Text(
+            '\$${_money(value)}',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13,
+              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _money(double value) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: '',
+      decimalDigits: 0,
+    );
+    return currencyFormat.format(value);
   }
 
   Widget _buildSectionTitle(String title, Color textColor) {
@@ -348,7 +485,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     required bool isDark,
   }) {
     final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
-    final subtitleColor = isDark ? Colors.white70 : AppColors.lightTextSecondary;
+    final subtitleColor = isDark
+        ? Colors.white70
+        : AppColors.lightTextSecondary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -361,11 +500,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
               color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 22,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -422,7 +557,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   Widget _buildStatsGrid(bool isDark) {
     final duracionTexto = widget.trip.duracionFormateada;
     final tieneDuracion = duracionTexto != '-';
-    
+
     return Row(
       children: [
         // Siempre mostrar distancia
@@ -434,8 +569,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             isDark: isDark,
           ),
         ),
-        if (tieneDuracion)
-          const SizedBox(width: 12),
+        if (tieneDuracion) const SizedBox(width: 12),
         if (tieneDuracion)
           Expanded(
             child: _buildStatCard(
@@ -456,7 +590,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     required bool isDark,
   }) {
     final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
-    final subtitleColor = isDark ? Colors.white70 : AppColors.lightTextSecondary;
+    final subtitleColor = isDark
+        ? Colors.white70
+        : AppColors.lightTextSecondary;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -502,10 +638,15 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     final ganancia = widget.trip.gananciaNeta;
     final comision = widget.trip.comisionCalculada;
     final totalCobrado = widget.trip.totalCobradoViaje;
-    final isCompleted = widget.trip.estado.toLowerCase() == 'completada' ||
+    final isCompleted =
+        widget.trip.estado.toLowerCase() == 'completada' ||
         widget.trip.estado.toLowerCase() == 'entregado';
-    
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '', decimalDigits: 0);
+
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: '',
+      decimalDigits: 0,
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -555,7 +696,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                           ? 'Comisión: -\$${currencyFormat.format(comision)}'
                           : 'Sin comisión aplicada',
                       style: TextStyle(
-                        color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? Colors.white60
+                            : AppColors.lightTextSecondary,
                         fontSize: 13,
                       ),
                     )
@@ -563,7 +706,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                     Text(
                       'No se realizó cobro',
                       style: TextStyle(
-                        color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? Colors.white60
+                            : AppColors.lightTextSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -600,7 +745,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 child: Text(
                   'Total cobrado: \$${currencyFormat.format(totalCobrado)}',
                   style: TextStyle(
-                    color: isDark ? Colors.white60 : AppColors.lightTextSecondary,
+                    color: isDark
+                        ? Colors.white60
+                        : AppColors.lightTextSecondary,
                     fontSize: 12,
                   ),
                 ),

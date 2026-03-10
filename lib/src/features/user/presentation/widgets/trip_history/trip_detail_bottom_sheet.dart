@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
 import '../trip_preview/trip_price_formatter.dart';
 import '../../../services/user_trips_service.dart';
@@ -16,7 +17,11 @@ class TripDetailBottomSheet extends StatefulWidget {
   });
 
   /// Método estático para mostrar el bottom sheet
-  static void show(BuildContext context, UserTripModel trip, {bool isDark = false}) {
+  static void show(
+    BuildContext context,
+    UserTripModel trip, {
+    bool isDark = false,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -43,13 +48,15 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
       vsync: this,
     );
 
-    _slideAnimation = Tween<double>(begin: 0.3, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _slideAnimation = Tween<double>(
+      begin: 0.3,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
   }
@@ -86,18 +93,21 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isDark 
-        ? AppColors.darkSurface 
+    final backgroundColor = widget.isDark
+        ? AppColors.darkSurface
         : Colors.white;
-    final handleColor = widget.isDark 
-        ? Colors.grey.shade600 
+    final handleColor = widget.isDark
+        ? Colors.grey.shade600
         : Colors.grey.shade300;
-    
+
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, MediaQuery.of(context).size.height * _slideAnimation.value),
+          offset: Offset(
+            0,
+            MediaQuery.of(context).size.height * _slideAnimation.value,
+          ),
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: DraggableScrollableSheet(
@@ -108,7 +118,9 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 return Container(
                   decoration: BoxDecoration(
                     color: backgroundColor,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -156,31 +168,24 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildHeader() {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final bgColor = widget.isDark 
-        ? AppColors.darkBackground 
+    final bgColor = widget.isDark
+        ? AppColors.darkBackground
         : AppColors.lightBackground;
-    
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.7),
-              ],
+              colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Icon(
-            _getServiceIcon(),
-            color: Colors.white,
-            size: 28,
-          ),
+          child: Icon(_getServiceIcon(), color: Colors.white, size: 28),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -197,7 +202,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
               ),
               const SizedBox(height: 4),
               Text(
-                _formatFullDate(widget.trip.fechaSolicitud),
+                widget.trip.fechaCompletaColombia,
                 style: TextStyle(
                   fontSize: 13,
                   color: textColor.withOpacity(0.5),
@@ -209,9 +214,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(Icons.close_rounded, color: textColor),
-          style: IconButton.styleFrom(
-            backgroundColor: bgColor,
-          ),
+          style: IconButton.styleFrom(backgroundColor: bgColor),
         ),
       ],
     );
@@ -242,9 +245,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                     color: statusColor,
                   ),
                 ),
-                if (widget.trip.isCompletado && widget.trip.fechaCompletado != null)
+                if (widget.trip.isCompletado &&
+                    widget.trip.fechaCompletado != null)
                   Text(
-                    'Completado el ${_formatFullDate(widget.trip.fechaCompletado)}',
+                    'Completado el ${widget.trip.fechaCompletadoColombia ?? _formatFullDate(widget.trip.fechaCompletado)}',
                     style: TextStyle(
                       fontSize: 12,
                       color: statusColor.withOpacity(0.8),
@@ -259,14 +263,14 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildRouteSection() {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final bgColor = widget.isDark 
-        ? AppColors.darkBackground.withOpacity(0.5) 
+    final bgColor = widget.isDark
+        ? AppColors.darkBackground.withOpacity(0.5)
         : AppColors.lightBackground.withOpacity(0.5);
     final borderColor = widget.isDark ? AppColors.darkSurface : Colors.white;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -322,8 +326,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.trip.origen.isNotEmpty 
-                          ? widget.trip.origen 
+                      widget.trip.origen.isNotEmpty
+                          ? widget.trip.origen
                           : 'No disponible',
                       style: TextStyle(
                         fontSize: 14,
@@ -364,8 +368,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.trip.destino.isNotEmpty 
-                          ? widget.trip.destino 
+                      widget.trip.destino.isNotEmpty
+                          ? widget.trip.destino
                           : 'No disponible',
                       style: TextStyle(
                         fontSize: 14,
@@ -384,10 +388,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildDetailsSection() {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -431,19 +435,21 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     required String label,
     required String value,
   }) {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final cardColor = widget.isDark 
-        ? AppColors.darkSurface.withOpacity(0.6) 
+    final cardColor = widget.isDark
+        ? AppColors.darkSurface.withOpacity(0.6)
         : Colors.white;
-    
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1)),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
+        ),
       ),
       child: Row(
         children: [
@@ -475,10 +481,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildPaymentSection() {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -489,18 +495,16 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1)),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(widget.isDark ? 0.2 : 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.payments_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
+              Icon(Icons.payments_rounded, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Información de pago',
@@ -513,13 +517,20 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             ],
           ),
           const SizedBox(height: 16),
-          _buildPaymentRow('Método de pago', _capitalize(widget.trip.metodoPago)),
+          _buildPaymentRow(
+            'Método de pago',
+            _capitalize(widget.trip.metodoPago),
+          ),
           const SizedBox(height: 8),
           _buildPaymentRow(
             'Precio estimado',
             formatCurrency(widget.trip.precioEstimado),
           ),
-          if (widget.trip.precioFinal > 0 && 
+          if (widget.trip.desglosePrecio != null) ...[
+            const SizedBox(height: 12),
+            _buildBreakdownRows(),
+          ],
+          if (widget.trip.precioFinal > 0 &&
               widget.trip.precioFinal != widget.trip.precioEstimado) ...[
             const SizedBox(height: 8),
             _buildPaymentRow(
@@ -543,9 +554,11 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                 ),
               ),
               Text(
-                formatCurrency(widget.trip.precioFinal > 0 
-                    ? widget.trip.precioFinal 
-                    : widget.trip.precioEstimado),
+                formatCurrency(
+                  widget.trip.precioFinal > 0
+                      ? widget.trip.precioFinal
+                      : widget.trip.precioEstimado,
+                ),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -559,23 +572,23 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
           Row(
             children: [
               Icon(
-                widget.trip.pagoConfirmado 
-                    ? Icons.verified_rounded 
+                widget.trip.pagoConfirmado
+                    ? Icons.verified_rounded
                     : Icons.pending_rounded,
-                color: widget.trip.pagoConfirmado 
-                    ? AppColors.success 
+                color: widget.trip.pagoConfirmado
+                    ? AppColors.success
                     : AppColors.warning,
                 size: 16,
               ),
               const SizedBox(width: 6),
               Text(
-                widget.trip.pagoConfirmado 
-                    ? 'Pago confirmado' 
+                widget.trip.pagoConfirmado
+                    ? 'Pago confirmado'
                     : 'Pago pendiente',
                 style: TextStyle(
                   fontSize: 12,
-                  color: widget.trip.pagoConfirmado 
-                      ? AppColors.success 
+                  color: widget.trip.pagoConfirmado
+                      ? AppColors.success
                       : AppColors.warning,
                   fontWeight: FontWeight.w500,
                 ),
@@ -587,20 +600,21 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     );
   }
 
-  Widget _buildPaymentRow(String label, String value, {bool isHighlighted = false}) {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+  Widget _buildPaymentRow(
+    String label,
+    String value, {
+    bool isHighlighted = false,
+  }) {
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            color: textColor.withOpacity(0.6),
-          ),
+          style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.6)),
         ),
         Text(
           value,
@@ -614,14 +628,121 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     );
   }
 
-  Widget _buildConductorSection() {
-    final textColor = widget.isDark 
-        ? AppColors.darkTextPrimary 
+  Widget _buildBreakdownRows() {
+    final breakdown = widget.trip.desglosePrecio!;
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final bgColor = widget.isDark 
-        ? AppColors.darkBackground.withOpacity(0.5) 
+
+    final totalRecargos = breakdown.totalRecargos;
+    final subtotal = breakdown.subtotalAntesMinimo > 0
+        ? breakdown.subtotalAntesMinimo
+        : (breakdown.tarifaBase +
+              breakdown.precioDistancia +
+              breakdown.precioTiempo +
+              totalRecargos);
+    final total = widget.trip.precioFinal > 0
+        ? widget.trip.precioFinal
+        : widget.trip.precioEstimado;
+    final ajusteMinimo = (total - subtotal).clamp(0, double.infinity);
+
+    return Column(
+      children: [
+        _buildBreakdownRow('Tarifa base', breakdown.tarifaBase, textColor),
+        _buildBreakdownRow(
+          'Costo por distancia',
+          breakdown.precioDistancia,
+          textColor,
+        ),
+        _buildBreakdownRow(
+          'Costo por tiempo',
+          breakdown.precioTiempo,
+          textColor,
+        ),
+        if (breakdown.recargoNocturno > 0)
+          _buildBreakdownRow(
+            'Recargo nocturno',
+            breakdown.recargoNocturno,
+            textColor,
+          ),
+        if (breakdown.recargoHoraPico > 0)
+          _buildBreakdownRow(
+            'Recargo hora pico',
+            breakdown.recargoHoraPico,
+            textColor,
+          ),
+        if (breakdown.recargoFestivo > 0)
+          _buildBreakdownRow(
+            'Recargo festivo',
+            breakdown.recargoFestivo,
+            textColor,
+          ),
+        if (breakdown.recargoEspera > 0)
+          _buildBreakdownRow(
+            'Recargo por espera',
+            breakdown.recargoEspera,
+            textColor,
+          ),
+        _buildBreakdownRow('Subtotal', subtotal, textColor, isBold: true),
+        if (breakdown.aplicoMinimo || ajusteMinimo > 0)
+          _buildBreakdownRow(
+            'Ajuste por tarifa mínima',
+            ajusteMinimo,
+            textColor,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBreakdownRow(
+    String label,
+    double value,
+    Color textColor, {
+    bool isBold = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: textColor.withOpacity(0.6),
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          Text(
+            _formatCop(value),
+            style: TextStyle(
+              fontSize: 13,
+              color: textColor,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCop(double value) {
+    final formatter = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: '\$',
+      decimalDigits: 0,
+    );
+    return formatter.format(value);
+  }
+
+  Widget _buildConductorSection() {
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final bgColor = widget.isDark
+        ? AppColors.darkBackground.withOpacity(0.5)
         : AppColors.lightBackground.withOpacity(0.5);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -664,9 +785,11 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
                       ...List.generate(5, (index) {
                         final rating = widget.trip.calificacionConductor!;
                         return Icon(
-                          index < rating.floor() 
-                              ? Icons.star_rounded 
-                              : (index < rating ? Icons.star_half_rounded : Icons.star_outline_rounded),
+                          index < rating.floor()
+                              ? Icons.star_rounded
+                              : (index < rating
+                                    ? Icons.star_half_rounded
+                                    : Icons.star_outline_rounded),
                           color: AppColors.warning,
                           size: 16,
                         );
@@ -700,8 +823,18 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     if (date == null) return 'Fecha no disponible';
     final days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     final months = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
     ];
     return '${days[date.weekday - 1]} ${date.day} de ${months[date.month - 1]} ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }

@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../services/conductor_trips_service.dart';
 import 'trip_status_badge.dart';
@@ -79,10 +78,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildCard(bool isDark) {
-    // Usar DateTimeUtils para formatear fechas ya convertidas a hora local
-    final dateStr = widget.trip.fechaCompletado != null
-        ? DateTimeUtils.formatForHistoryCard(widget.trip.fechaCompletado!)
-        : DateTimeUtils.formatForHistoryCard(widget.trip.fechaSolicitud);
+    final dateStr = widget.trip.fechaPrincipalColombia;
 
     return GestureDetector(
       onTap: widget.onTap,
