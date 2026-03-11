@@ -83,6 +83,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   // Polling para actualizar estado
   Timer? _statusTimer;
+  bool _statusRequestInFlight = false;
 
   // Animaciones
   late AnimationController _pulseController;
@@ -633,12 +634,20 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       _checkTripStatus();
     });
 
-    // Primera consulta inmediata
-    _checkTripStatus();
+    // Primera consulta tras el primer frame para evitar acceso temprano a ModalRoute.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _checkTripStatus();
+    });
   }
 
   Future<void> _checkTripStatus() async {
     if (!mounted) return;
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+    if (!isCurrentRoute) return;
+    if (_statusRequestInFlight) return;
+
+    _statusRequestInFlight = true;
 
     try {
       final result = await TripRequestService.getTripStatus(
@@ -734,6 +743,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       }
     } catch (e) {
       debugPrint('Error checking trip status: $e');
+    } finally {
+      _statusRequestInFlight = false;
     }
   }
 

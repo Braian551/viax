@@ -7,6 +7,9 @@ import '../../../global/models/simple_location.dart';
 class TripRequestService {
   static String get baseUrl => AppConfig.baseUrl;
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+  static final Map<int, String> _statusSignatures = <int, String>{};
+  static final Map<int, Future<Map<String, dynamic>>> _inFlightStatusRequests =
+      <int, Future<Map<String, dynamic>>>{};
 
   static String _friendlyMessage(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación.'}) {
     return result.error?.userMessage ?? fallback;
@@ -195,29 +198,67 @@ class TripRequestService {
   static Future<Map<String, dynamic>> getTripStatus({
     required int solicitudId,
   }) async {
-    try {
-      final url = '$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId';
-      print('🌐 [TripRequestService] GET: $url');
-      
-      final result = await _network.getJson(
-        url: Uri.parse(url),
-        headers: {'Accept': 'application/json'},
-        timeout: AppConfig.connectionTimeout,
-      );
+    final inFlight = _inFlightStatusRequests[solicitudId];
+    if (inFlight != null) {
+      return inFlight;
+    }
 
-      if (!result.success || result.json == null) {
-        return _errorResponse(result, fallback: 'No pudimos consultar el estado del viaje.');
+    final requestFuture = () async {
+      try {
+        final queryParams = <String, String>{
+          'solicitud_id': '$solicitudId',
+          'wait_seconds': '20',
+        };
+
+        final lastSignature = _statusSignatures[solicitudId];
+        if (lastSignature != null && lastSignature.isNotEmpty) {
+          queryParams['since_signature'] = lastSignature;
+        }
+
+        final uri = Uri.parse(
+          '$baseUrl/user/get_trip_status.php',
+        ).replace(queryParameters: queryParams);
+        final url = uri.toString();
+        print('🌐 [TripRequestService] GET: $url');
+
+        final result = await _network.getJson(
+          url: uri,
+          headers: {'Accept': 'application/json'},
+          timeout: const Duration(seconds: 25),
+        );
+
+        if (!result.success || result.json == null) {
+          return _errorResponse(
+            result,
+            fallback: 'No pudimos consultar el estado del viaje.',
+          );
+        }
+
+        final payload = result.json!;
+        final signature = payload['meta']?['signature']?.toString();
+        if (signature != null && signature.isNotEmpty) {
+          _statusSignatures[solicitudId] = signature;
+        }
+
+        return payload;
+      } catch (e) {
+        print('❌ Error obteniendo estado: $e');
+        final mapped = AppNetworkException.fromError(e);
+        return {
+          'success': false,
+          'message': mapped.userMessage,
+          'error_type': mapped.type.name,
+        };
       }
+    }();
 
-      return result.json!;
-    } catch (e) {
-      print('❌ Error obteniendo estado: $e');
-      final mapped = AppNetworkException.fromError(e);
-      return {
-        'success': false,
-        'message': mapped.userMessage,
-        'error_type': mapped.type.name,
-      };
+    _inFlightStatusRequests[solicitudId] = requestFuture;
+    try {
+      return await requestFuture;
+    } finally {
+      if (identical(_inFlightStatusRequests[solicitudId], requestFuture)) {
+        _inFlightStatusRequests.remove(solicitudId);
+      }
     }
   }
 

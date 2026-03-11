@@ -644,7 +644,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     final total = widget.trip.precioFinal > 0
         ? widget.trip.precioFinal
         : widget.trip.precioEstimado;
-    final ajusteMinimo = (total - subtotal).clamp(0, double.infinity);
+    final double ajusteMinimo =
+      (total - subtotal).clamp(0.0, double.infinity).toDouble();
 
     return Column(
       children: [

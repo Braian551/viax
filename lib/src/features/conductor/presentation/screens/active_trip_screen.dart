@@ -75,7 +75,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Timer? _pollingTimer; // Timer para polling
   DateTime? _tripStartTime; // Para calcular duración real
   DateTime _lastBackendUpdate = DateTime.now(); // Rate limiting para backend
-  
+
   // Estados de carga para acciones (evitar doble tap y dar feedback)
   bool _isProcessingAction = false;
   String? _processingActionType; // 'arrived', 'start', 'finish'
@@ -126,17 +126,20 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     // Esperamos un poco para que la UI se estabilice
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    
-    final hasPermission = await ActiveTripNavigationService().hasSystemOverlayPermission();
+
+    final hasPermission = await ActiveTripNavigationService()
+        .hasSystemOverlayPermission();
     if (!hasPermission && mounted) {
-      await ActiveTripNavigationService().requestSystemOverlayPermission(context);
+      await ActiveTripNavigationService().requestSystemOverlayPermission(
+        context,
+      );
     }
   }
 
   /// Registra este viaje en el servicio de navegación global
   void _registerActiveTripNavigation() {
     if (widget.solicitudId == null) return;
-    
+
     ActiveTripNavigationService().registerActiveTrip(
       ActiveTripData(
         solicitudId: widget.solicitudId!,
@@ -269,16 +272,17 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _controller.arrivedAtPickup = false;
       // Asegurar que comience el tracking real si no se ha hecho
       if (widget.solicitudId != null) {
-         // Pequeño delay para asegurar que el controller esté listo
-         Future.delayed(Duration.zero, () {
-           if (mounted) {
-             _controller.startRealTimeTracking(
-                solicitudId: widget.solicitudId!, 
-                conductorId: widget.conductorId,
-                startTime: _tripStartTime, // Si recuperamos persistencia, usar ese tiempo
-             );
-           }
-         });
+        // Pequeño delay para asegurar que el controller esté listo
+        Future.delayed(Duration.zero, () {
+          if (mounted) {
+            _controller.startRealTimeTracking(
+              solicitudId: widget.solicitudId!,
+              conductorId: widget.conductorId,
+              startTime:
+                  _tripStartTime, // Si recuperamos persistencia, usar ese tiempo
+            );
+          }
+        });
       }
     }
   }
@@ -433,12 +437,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Future<void> _onArrivedPickup() async {
     // Prevenir doble tap
     if (_isProcessingAction) return;
-    
+
     setState(() {
       _isProcessingAction = true;
       _processingActionType = 'arrived';
     });
-    
+
     if (widget.solicitudId != null) {
       try {
         // Usar servicio resiliente con reintentos
@@ -459,7 +463,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _isProcessingAction = false;
       _processingActionType = null;
     });
-    
+
     _showStatus('¡Llegaste al punto! Espera al pasajero', AppColors.accent);
   }
 
@@ -467,12 +471,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Future<void> _onStartTrip() async {
     // Prevenir doble tap
     if (_isProcessingAction) return;
-    
+
     setState(() {
       _isProcessingAction = true;
       _processingActionType = 'start';
     });
-    
+
     if (widget.solicitudId != null) {
       try {
         // Usar servicio resiliente
@@ -519,7 +523,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _isProcessingAction = false;
       _processingActionType = null;
     });
-    
+
     _showStatus('¡Viaje iniciado! Navegando al destino', AppColors.success);
   }
 
@@ -530,12 +534,12 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       debugPrint('⚠️ Ignorando tap duplicado - acción en progreso');
       return;
     }
-    
+
     setState(() {
       _isProcessingAction = true;
       _processingActionType = 'finish';
     });
-    
+
     // ========== CALCULAR TIEMPO REAL DEL CRONÓMETRO ==========
     // El tiempo se mide desde "comenzar viaje" hasta "finalizar viaje"
     // Este es el tiempo REAL que el conductor usó para el viaje
@@ -566,20 +570,27 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     if (widget.solicitudId != null) {
       try {
         // Usar servicio resiliente para garantizar entrega
-        final result = await ResilientConductorService().completarViajeResilient(
-          conductorId: widget.conductorId,
-          solicitudId: widget.solicitudId!,
-          distanceKm: distanciaKm,
-          elapsedMinutes: duracionMin,
-        );
-        
+        final result = await ResilientConductorService()
+            .completarViajeResilient(
+              conductorId: widget.conductorId,
+              solicitudId: widget.solicitudId!,
+              distanceKm: distanciaKm,
+              elapsedMinutes: duracionMin,
+            );
+
         if (result['success'] != true && result['pending'] != true) {
-          _showStatus('Error al finalizar el viaje. Reintentando...', AppColors.warning);
+          _showStatus(
+            'Error al finalizar el viaje. Reintentando...',
+            AppColors.warning,
+          );
           // No retornar, continuar con la navegación de todos modos (optimistic)
         }
       } catch (e) {
         debugPrint('Error finalizando viaje: $e');
-        _showStatus('Error al finalizar. Se sincronizará después.', AppColors.warning);
+        _showStatus(
+          'Error al finalizar. Se sincronizará después.',
+          AppColors.warning,
+        );
         // Continuar de todos modos - la operación se sincronizará después
       }
     }
@@ -627,6 +638,13 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         trackingResult?.precioFinal ??
         (_controller.precioActual > 0 ? _controller.precioActual : 0.0);
 
+    final resumenCalculo =
+        (trackingResult != null &&
+            (trackingResult.tiempoRealSeg > 0 ||
+                trackingResult.distanciaRealKm > 0))
+        ? 'Valor calculado con el tracking final enviado por el conductor (distancia y tiempo reales).'
+        : 'Valor calculado con datos locales del viaje por falta de respuesta final del tracking.';
+
     debugPrint('📊 [ConductorTracking] Finalizando viaje:');
     debugPrint('   - Precio real tracking: ${trackingResult?.precioFinal}');
     debugPrint('   - Precio usado: $precio');
@@ -648,6 +666,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             duracionSegundos: duracionSeg,
             precio: precio,
             metodoPago: 'Efectivo', // TODO: Obtener del backend
+            resumenCalculo: resumenCalculo,
+            desglosePrecio: trackingResult?.desglose,
             otroUsuarioNombre: widget.clienteNombre ?? 'Pasajero',
             otroUsuarioFoto: widget.clienteFoto,
           ),
@@ -1010,7 +1030,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     HapticFeedback.lightImpact();
     // Marcar que salimos de la pantalla de viaje pero el viaje sigue activo
     ActiveTripNavigationService().setOnTripScreen(false);
-    
+
     // Si podemos hacer pop, genial (caso normal)
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
@@ -1024,7 +1044,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
           context,
           RouteNames.conductorHome,
           (route) => false,
-          arguments: {'conductor_user': session ?? {}}, // Pasar mapa vacío como fallback seguro
+          arguments: {
+            'conductor_user': session ?? {},
+          }, // Pasar mapa vacío como fallback seguro
         );
       }
     }

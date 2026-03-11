@@ -67,6 +67,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   int _searchSeconds = 0;
   double _currentRadiusKm = 2.0;
   bool _tripAccepted = false; // Flag para evitar múltiples navegaciones
+  bool _statusRequestInFlight = false;
   int? _currentEmpresaId;
   String? _currentEmpresaNombre;
   String? _currentEmpresaLogo;
@@ -432,13 +433,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     _statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _checkTripStatus();
     });
-    // También verificar inmediatamente
-    _checkTripStatus();
+    // Primera consulta tras el primer frame para evitar acceso temprano a ModalRoute.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _checkTripStatus();
+    });
   }
 
   /// Verifica el estado de la solicitud para detectar cuando es aceptada
   Future<void> _checkTripStatus() async {
     if (!mounted || _tripAccepted) return;
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+    if (!isCurrentRoute) return;
+    if (_statusRequestInFlight) return;
+    _statusRequestInFlight = true;
     
     debugPrint('🔍 [SearchingDriverScreen] Checking status for solicitud: ${widget.solicitudIdAsInt}');
     
@@ -493,6 +501,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       }
     } catch (e) {
       debugPrint('Error checking trip status: $e');
+    } finally {
+      _statusRequestInFlight = false;
     }
   }
 
