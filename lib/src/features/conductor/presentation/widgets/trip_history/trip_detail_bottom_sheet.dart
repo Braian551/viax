@@ -246,10 +246,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
               breakdown.precioDistancia +
               breakdown.precioTiempo +
               totalRecargos);
-    final ajusteMinimo = (widget.trip.totalCobradoViaje - subtotal).clamp(
-      0,
-      double.infinity,
-    );
+    final double ajusteMinimo =
+        (widget.trip.totalCobradoViaje - subtotal)
+            .clamp(0.0, double.infinity)
+            .toDouble();
 
     return Container(
       padding: const EdgeInsets.all(16),

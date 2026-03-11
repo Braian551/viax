@@ -15,8 +15,10 @@ class TripCompletionData {
   final String origen;
   final String destino;
   final double distanciaKm;
+
   /// Duración en segundos (preferido para formato flexible)
   final int duracionSegundos;
+
   /// Duración en minutos (legacy, se usa si duracionSegundos = 0)
   final int duracionMinutos;
   final double precio;
@@ -24,6 +26,8 @@ class TripCompletionData {
   final String otroUsuarioNombre;
   final String? otroUsuarioFoto;
   final double? otroUsuarioCalificacion;
+  final String? resumenCalculo;
+  final Map<String, dynamic>? desglosePrecio;
 
   const TripCompletionData({
     required this.solicitudId,
@@ -37,6 +41,8 @@ class TripCompletionData {
     required this.otroUsuarioNombre,
     this.otroUsuarioFoto,
     this.otroUsuarioCalificacion,
+    this.resumenCalculo,
+    this.desglosePrecio,
   });
 }
 
@@ -48,10 +54,12 @@ class TripCompletionScreen extends StatefulWidget {
   final TripCompletionData tripData;
   final int miUsuarioId;
   final int otroUsuarioId;
+
   /// Callback para enviar la calificación.
   /// Retorna un Map con 'success' (bool) y opcionalmente 'updated' (bool).
   /// Si 'updated' es true, significa que se actualizó una calificación existente.
-  final Future<Map<String, dynamic>> Function(int rating, String? comentario) onSubmitRating;
+  final Future<Map<String, dynamic>> Function(int rating, String? comentario)
+  onSubmitRating;
   final Future<bool> Function(bool received)? onConfirmPayment;
   final VoidCallback onComplete;
 
@@ -83,7 +91,8 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   bool _clientPaymentConfirmed = false;
   bool _isSubmitting = false;
   bool _ratingSubmitted = false;
-  bool _ratingWasUpdated = false; // Nueva: indica si se actualizó una calificación existente
+  bool _ratingWasUpdated =
+      false; // Nueva: indica si se actualizó una calificación existente
   bool _isReportingPayment = false;
   bool _hasDispute = false;
 
@@ -102,7 +111,7 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
     super.initState();
     _setupAnimations();
     // SIMPLIFICACIÓN: Desactivar verificación de disputas
-    // _checkActiveDispute(); 
+    // _checkActiveDispute();
   }
 
   /// Verifica si el usuario ya tiene una disputa activa al abrir la pantalla
@@ -256,8 +265,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary
-                                    .withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -272,7 +282,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                               Text(
                                 'TOTAL A COBRAR',
                                 style: TextStyle(
-                                  color: isDark ? Colors.white54 : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.white54
+                                      : Colors.grey[600],
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 1.2,
@@ -294,8 +306,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: const Text(
@@ -319,8 +332,11 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                       distanciaKm: widget.tripData.distanciaKm,
                       duracionSegundos: widget.tripData.duracionSegundos,
                       duracionMinutos: widget.tripData.duracionMinutos,
-                      precio: _getFinalPrice(), // Usar precio redondeado si aplica
+                      precio:
+                          _getFinalPrice(), // Usar precio redondeado si aplica
                       metodoPago: widget.tripData.metodoPago,
+                      resumenCalculo: widget.tripData.resumenCalculo,
+                      desglosePrecio: widget.tripData.desglosePrecio,
                       isDark: isDark,
                     ),
 
@@ -332,12 +348,19 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                         padding: const EdgeInsets.only(bottom: 24),
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 20,
+                          ),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.blue.withValues(alpha: 0.05),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.blue.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isDark ? Colors.white12 : Colors.blue.withValues(alpha: 0.2),
+                              color: isDark
+                                  ? Colors.white12
+                                  : Colors.blue.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Column(
@@ -354,7 +377,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white : Colors.blue.shade800,
+                                  color: isDark
+                                      ? Colors.white
+                                      : Colors.blue.shade800,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -363,7 +388,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: isDark ? Colors.white54 : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.white54
+                                      : Colors.grey[600],
                                 ),
                               ),
                             ],
@@ -624,13 +651,15 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _ratingWasUpdated ? Icons.update_rounded : Icons.check_circle_rounded, 
+            _ratingWasUpdated
+                ? Icons.update_rounded
+                : Icons.check_circle_rounded,
             color: AppColors.success,
           ),
           const SizedBox(width: 8),
           Text(
-            _ratingWasUpdated 
-                ? '¡Calificación actualizada!' 
+            _ratingWasUpdated
+                ? '¡Calificación actualizada!'
                 : '¡Gracias por tu calificación!',
             style: TextStyle(
               color: AppColors.success,
@@ -690,7 +719,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
                         Text(
                           _selectedRating > 0
                               ? 'Enviar calificación'
-                              : (_isConductor ? 'Finalizar viaje' : 'Continuar sin calificar'),
+                              : (_isConductor
+                                    ? 'Finalizar viaje'
+                                    : 'Continuar sin calificar'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1343,6 +1374,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
   String _formatCurrency(double amount) {
     return amount
         .toStringAsFixed(0)
-        .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
   }
 }

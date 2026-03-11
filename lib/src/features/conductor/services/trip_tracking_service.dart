@@ -136,7 +136,10 @@ class TripTrackingService {
   // Configuración
   static const Duration _trackingInterval = Duration(seconds: 5);
   static const Duration _batchSyncInterval = Duration(seconds: 10);
-  static const double _minDistanceToRegisterMeters = 10.0; // Filtro de jitter
+  static const double _minDistanceToRegisterMeters = 15.0; // Filtro de jitter
+  static const double _maxAcceptedAccuracyMeters = 80.0;
+  static const double _maxPlausibleSpeedKmh = 140.0;
+  static const double _maxJumpMetersWithoutDelta = 120.0;
   static const int _maxBatchSize = 20;
 
   // Estado del tracking
@@ -379,6 +382,15 @@ class TripTrackingService {
   void _onPositionUpdate(Position position) async {
     if (!_isTracking) return;
 
+    // IMPORTANTE:
+    // Si la precisión es mala, no acumulamos distancia para evitar saltos GPS.
+    if (position.accuracy > _maxAcceptedAccuracyMeters) {
+      debugPrint(
+        '⚠️ [Tracking] Punto descartado por baja precisión: ${position.accuracy.toStringAsFixed(1)}m',
+      );
+      return;
+    }
+
     // Filtrar jitter: solo procesar si se movió suficiente
     if (_ultimaPosicion != null) {
       final distancia = Geolocator.distanceBetween(
@@ -387,6 +399,32 @@ class TripTrackingService {
         position.latitude,
         position.longitude,
       );
+
+      final deltaSegundos = position.timestamp
+          .difference(_ultimaPosicion!.timestamp)
+          .inSeconds;
+      final velocidadCalculadaKmh = deltaSegundos > 0
+          ? (distancia / deltaSegundos) * 3.6
+          : 0.0;
+      final velocidadReportadaKmh =
+          (position.speed.isFinite && position.speed > 0)
+          ? position.speed * 3.6
+          : 0.0;
+      final velocidadReferencia =
+          velocidadCalculadaKmh > velocidadReportadaKmh
+          ? velocidadCalculadaKmh
+          : velocidadReportadaKmh;
+
+      final saltoSinTiempoValido =
+          deltaSegundos <= 0 && distancia > _maxJumpMetersWithoutDelta;
+      final velocidadImprobable = velocidadReferencia > _maxPlausibleSpeedKmh;
+
+      if (saltoSinTiempoValido || velocidadImprobable) {
+        debugPrint(
+          '⚠️ [Tracking] Salto GPS descartado: dist=${distancia.toStringAsFixed(1)}m, dt=${deltaSegundos}s, v=${velocidadReferencia.toStringAsFixed(1)}km/h',
+        );
+        return;
+      }
 
       if (distancia < _minDistanceToRegisterMeters) {
         return; // Muy cerca del último punto, ignorar
