@@ -12,6 +12,7 @@ class ClientTrackingData {
   final int tiempoSegundos;
   final double precioActual;
   final double velocidadConductor;
+  final double headingConductor;
   final double? latitudConductor;
   final double? longitudConductor;
   final bool viajeEnCurso;
@@ -32,6 +33,7 @@ class ClientTrackingData {
     required this.tiempoSegundos,
     required this.precioActual,
     this.velocidadConductor = 0,
+    this.headingConductor = 0,
     this.latitudConductor,
     this.longitudConductor,
     this.viajeEnCurso = true,
@@ -112,6 +114,7 @@ class ClientTrackingData {
       tiempoSegundos: tracking['tiempo_segundos'] ?? 0,
       precioActual: (tracking['precio_actual'] ?? 0).toDouble(),
       velocidadConductor: (tracking['velocidad_kmh'] ?? 0).toDouble(),
+      headingConductor: (tracking['heading_deg'] ?? 0).toDouble(),
       latitudConductor: tracking['ubicacion']?['latitud']?.toDouble(),
       longitudConductor: tracking['ubicacion']?['longitud']?.toDouble(),
       viajeEnCurso: !esTerminal,
@@ -147,6 +150,7 @@ class ClientTrackingData {
           : int.tryParse('${tracking['tiempo_segundos'] ?? 0}') ?? 0,
       precioActual: (tracking['precio_actual'] ?? 0).toDouble(),
       velocidadConductor: (tracking['velocidad_kmh'] ?? 0).toDouble(),
+      headingConductor: (tracking['heading_deg'] ?? 0).toDouble(),
       latitudConductor: tracking['ubicacion']?['latitud']?.toDouble(),
       longitudConductor: tracking['ubicacion']?['longitud']?.toDouble(),
       viajeEnCurso: true,
@@ -173,8 +177,7 @@ class ClientTripTrackingService {
   ClientTripTrackingService._internal();
 
   // Configuración
-  static const Duration _pollInterval = Duration(seconds: 5);
-  static const Duration _fallbackPollInterval = Duration(seconds: 12);
+  static const Duration _fallbackPollInterval = Duration(seconds: 5);
   static const Duration _sseReconnectDelay = Duration(seconds: 2);
   static const Duration _longPollWait = Duration(seconds: 20);
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
@@ -301,14 +304,6 @@ class ClientTripTrackingService {
     }
   }
 
-  Future<void> _runWatchLoop() async {
-    while (_isWatching && _solicitudId != null) {
-      await _fetchTracking(withLongPoll: true);
-      if (!_isWatching) break;
-      await Future.delayed(_pollInterval);
-    }
-  }
-
   Future<void> _runSsePreferredLoop() async {
     var sseHealthy = false;
 
@@ -317,6 +312,19 @@ class ClientTripTrackingService {
         await _connectSseAndConsume(_solicitudId!);
         sseHealthy = true;
       } catch (e) {
+        final message = e.toString().toLowerCase();
+        final transientClose =
+            message.contains('connection closed while receiving data') ||
+            message.contains('connection reset by peer') ||
+            message.contains('software caused connection abort');
+
+        if (transientClose) {
+          debugPrint('ℹ️ [ClientTracking] SSE reconexión rápida: $e');
+          if (!_isWatching) break;
+          await Future.delayed(const Duration(milliseconds: 700));
+          continue;
+        }
+
         debugPrint('⚠️ [ClientTracking] SSE no disponible, fallback polling: $e');
         if (!sseHealthy) {
           onError?.call('Conexión en vivo inestable. Activando modo respaldo.');
@@ -334,10 +342,22 @@ class ClientTripTrackingService {
   Future<void> _runFallbackPollingWindow() async {
     final until = DateTime.now().add(const Duration(seconds: 30));
     while (_isWatching && _solicitudId != null && DateTime.now().isBefore(until)) {
+      final before = _lastData;
       await _fetchTracking(withLongPoll: true);
+      final noFreshData = identical(before, _lastData);
+      if (noFreshData) {
+        _emitCachedFallback();
+      }
       if (!_isWatching) return;
       await Future.delayed(_fallbackPollInterval);
     }
+  }
+
+  void _emitCachedFallback() {
+    final cached = _lastData;
+    if (cached == null) return;
+
+    onTrackingUpdate?.call(cached);
   }
 
   Future<void> _connectSseAndConsume(int solicitudId) async {

@@ -731,7 +731,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           // Reproducir sonido cuando el conductor llegue al punto de encuentro
           _playDriverArrivedSound();
           unawaited(_showDriverArrivedDialog());
-        } else if (estado == 'en_curso' && !_navigatedToActiveTrip) {
+        } else if ((estado == 'recogido' || estado == 'en_curso') && !_navigatedToActiveTrip) {
           // Detener el sonido antes de navegar
           _stopDriverArrivedSound();
           // Navegar a pantalla de viaje en curso (solo una vez)

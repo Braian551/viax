@@ -16,10 +16,10 @@ class TripStatusNavigationService {
     'conductor_asignado',
     'en_camino',
     'conductor_llego',
-    'recogido',
   };
 
   static const Set<String> _inProgressStates = {
+    'recogido',
     'en_curso',
   };
 

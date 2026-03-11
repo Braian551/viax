@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as Math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,7 +68,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Controladores
   final MapController _mapController = MapController();
   late AnimationController _pulseController;
+  late AnimationController _conductorMoveController;
   late Animation<double> _pulseAnimation;
+  Animation<LatLng>? _conductorMoveAnimation;
 
   // Servicio de tracking del cliente
   final ClientTripTrackingService _trackingService =
@@ -83,7 +86,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   bool _disposed = false;
 
   LatLng? _conductorLocation;
-  final double _conductorHeading = 0;
+  LatLng? _targetConductorLocation;
+  double _conductorHeading = 0;
   LatLng? _clientLocation;
   double _clientHeading = 0;
   double _lastClientSpeedMps = 0.0;
@@ -102,6 +106,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Datos de tracking en tiempo real (sincronizado con conductor)
   double _precioActual = 0;
   int _tiempoTranscurridoSeg = 0;
+  int _lastServerTrackingSeconds = 0;
+  DateTime? _lastServerTrackingReceivedAt;
+  double _lastServerDistanceKm = 0.0;
+  DateTime? _lastServerDistanceReceivedAt;
   bool _trackingActivo = false;
   bool _finalMetricsLocked = false;
   Map<String, dynamic>? _desglosePrecioFinal;
@@ -115,6 +123,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   Timer? _routeAnimationTimer;
   Timer? _locationTimer;
   Timer? _localSecondsTimer;
+  Timer? _deadReckoningTimer;
 
   // Control de UI
   bool _isLoading = true;
@@ -125,6 +134,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Estado local para validar coherencia en métricas de tracking.
   double _lastAcceptedTrackingDistanceKm = 0.0;
   DateTime? _lastAcceptedTrackingSampleAt;
+  DateTime? _lastConductorGpsAt;
+  LatLng? _lastConductorGpsPoint;
+  double _lastConductorSpeedKmh = 0.0;
 
   // Compartir ubicación
   LocationShareSession? _shareSession;
@@ -200,10 +212,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _locationTimer = null;
     _localSecondsTimer?.cancel();
     _localSecondsTimer = null;
+    _deadReckoningTimer?.cancel();
+    _deadReckoningTimer = null;
     _messagesSubscription?.cancel();
     _unreadSubscription?.cancel();
     _compassStream?.cancel();
     _pulseController.dispose();
+    _conductorMoveController.dispose();
     _stopClientTracking();
     // Stop live location sharing if active
     final token =
@@ -267,10 +282,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             final previousDistance = _lastAcceptedTrackingDistanceKm;
 
             if (previousTs != null && distanciaFiltrada > previousDistance) {
-              final dtSeconds = sampleTs
-                  .difference(previousTs)
-                  .inSeconds
-                  .abs();
+              final dtSeconds = sampleTs.difference(previousTs).inSeconds.abs();
               final safeDt = dtSeconds > 0 ? dtSeconds : 1;
               final maxStepKm = ((safeDt / 3600.0) * 140.0) + 0.05;
               final maxAllowed = previousDistance + maxStepKm;
@@ -289,10 +301,36 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           }
 
           if (data.tiempoSegundos > 0) {
-            _tiempoTranscurridoSeg =
-                _tiempoTranscurridoSeg > data.tiempoSegundos
-                ? _tiempoTranscurridoSeg
-                : data.tiempoSegundos;
+            // El servidor sigue siendo canónico, pero anclamos un reloj local
+            // para pintar segundos fluidos entre eventos SSE.
+            if (data.tiempoSegundos > _lastServerTrackingSeconds) {
+              _lastServerTrackingSeconds = data.tiempoSegundos;
+              _lastServerTrackingReceivedAt = now;
+            } else {
+              _lastServerTrackingSeconds = Math.max(
+                _lastServerTrackingSeconds,
+                data.tiempoSegundos,
+              );
+              _lastServerTrackingReceivedAt ??= now;
+            }
+            _tiempoTranscurridoSeg = Math.max(
+              _tiempoTranscurridoSeg,
+              _lastServerTrackingSeconds,
+            );
+          }
+
+          if (data.distanciaKm > 0 || (_distanceTraveled ?? 0.0) > 0) {
+            final anchorDistance = Math.max(
+              data.distanciaKm,
+              _distanceTraveled ?? 0.0,
+            );
+            if (anchorDistance >= _lastServerDistanceKm) {
+              _lastServerDistanceKm = anchorDistance;
+              _lastServerDistanceReceivedAt = now;
+            }
+            _lastConductorSpeedKmh = data.velocidadConductor > 0
+                ? data.velocidadConductor
+                : _lastConductorSpeedKmh;
           }
 
           if (data.precioActual > 0 &&
@@ -313,10 +351,17 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
         // Actualizar ubicación del conductor desde tracking
         if (data.latitudConductor != null && data.longitudConductor != null) {
-          _conductorLocation = LatLng(
+          final target = LatLng(
             data.latitudConductor!,
             data.longitudConductor!,
           );
+          _lastConductorGpsAt = data.ultimaActualizacion ?? DateTime.now();
+          _lastConductorGpsPoint = target;
+          _lastConductorSpeedKmh = data.velocidadConductor;
+          if (data.headingConductor.isFinite && data.headingConductor >= 0) {
+            _conductorHeading = _normalizeHeading(data.headingConductor);
+          }
+          _animateConductorMarker(target);
         }
       });
     };
@@ -327,25 +372,105 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
     _trackingService.startWatching(solicitudId: widget.solicitudId);
 
-    // Timer local para contar segundos en tiempo real
-    // Esto asegura que el tiempo se actualice cada segundo
-    // incluso cuando el backend no envía datos de tracking
+    // Timer local para suavizar UI entre eventos del backend.
     _localSecondsTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted || _disposed || _tripCompleted) return;
-      if (_tripStartTime != null) {
-        final localSeconds = DateTime.now()
-            .difference(_tripStartTime!)
-            .inSeconds;
-        final shouldUpdate =
-            (!_trackingActivo) || (localSeconds > _tiempoTranscurridoSeg);
-        if (!shouldUpdate) return;
+      if (_tripState != 'en_curso') return;
+      if (_finalMetricsLocked) return;
 
-        setState(() {
-          if (localSeconds > _tiempoTranscurridoSeg) {
-            _tiempoTranscurridoSeg = localSeconds;
-          }
-        });
+      final now = DateTime.now();
+      int? nextSeconds;
+      double? nextDistance;
+
+      if (_lastServerTrackingSeconds > 0 &&
+          _lastServerTrackingReceivedAt != null) {
+        final sinceServer = now
+            .difference(_lastServerTrackingReceivedAt!)
+            .inSeconds;
+        final projected = _lastServerTrackingSeconds + Math.max(0, sinceServer);
+        final capped = Math.min(projected, _lastServerTrackingSeconds + 15);
+        if (capped > _tiempoTranscurridoSeg) {
+          nextSeconds = capped.toInt();
+        }
+      } else if (_tripStartTime != null) {
+        final localSeconds = now.difference(_tripStartTime!).inSeconds;
+        if (localSeconds > _tiempoTranscurridoSeg) {
+          nextSeconds = localSeconds;
+        }
       }
+
+      if (_lastServerDistanceReceivedAt != null && _trackingActivo) {
+        final sinceDistance = now
+            .difference(_lastServerDistanceReceivedAt!)
+            .inSeconds;
+        final speedKmh = _lastConductorSpeedKmh.clamp(0.0, 90.0);
+        if (sinceDistance > 0 && speedKmh >= 3.0) {
+          final projectedDistance =
+              _lastServerDistanceKm + (speedKmh / 3600.0) * sinceDistance;
+          final cappedDistance = Math.min(
+            projectedDistance,
+            _lastServerDistanceKm + 0.20,
+          );
+          if (cappedDistance > (_distanceTraveled ?? 0.0)) {
+            nextDistance = cappedDistance;
+          }
+        }
+      }
+
+      if (nextSeconds == null && nextDistance == null) return;
+
+      setState(() {
+        if (nextSeconds != null) {
+          _tiempoTranscurridoSeg = nextSeconds;
+          _elapsedMinutes = _tiempoTranscurridoSeg ~/ 60;
+        }
+        if (nextDistance != null) {
+          _distanceTraveled = nextDistance;
+        }
+      });
+    });
+
+    _deadReckoningTimer?.cancel();
+    _deadReckoningTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      _,
+    ) {
+      _applyDeadReckoning();
+    });
+  }
+
+  void _applyDeadReckoning() {
+    if (!mounted || _disposed || _tripCompleted) return;
+    if (_lastConductorGpsAt == null || _lastConductorGpsPoint == null) return;
+
+    final now = DateTime.now();
+    final sinceGps = now.difference(_lastConductorGpsAt!).inMilliseconds;
+
+    if (sinceGps <= 2000 || sinceGps > 6000) {
+      return;
+    }
+
+    final speedMps = _lastConductorSpeedKmh / 3.6;
+    if (!speedMps.isFinite || speedMps <= 0) return;
+
+    final dtSec = sinceGps / 1000.0;
+    final headingRad = _conductorHeading * (3.141592653589793 / 180.0);
+
+    final dNorth = speedMps * dtSec * Math.cos(headingRad);
+    final dEast = speedMps * dtSec * Math.sin(headingRad);
+
+    final anchor = _lastConductorGpsPoint!;
+    final latDelta = dNorth / 111320.0;
+    final lonScale =
+        111320.0 * Math.cos(anchor.latitude * (3.141592653589793 / 180.0));
+    if (lonScale.abs() < 1e-6) return;
+    final lonDelta = dEast / lonScale;
+
+    final predicted = LatLng(
+      anchor.latitude + latDelta,
+      anchor.longitude + lonDelta,
+    );
+    setState(() {
+      _conductorLocation = predicted;
     });
   }
 
@@ -391,9 +516,59 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       vsync: this,
     )..repeat(reverse: true);
 
+    _conductorMoveController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _conductorMoveController.addListener(() {
+      final animation = _conductorMoveAnimation;
+      if (!mounted || animation == null) return;
+      setState(() {
+        _conductorLocation = animation.value;
+      });
+    });
+
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+  }
+
+  void _animateConductorMarker(LatLng nextPoint) {
+    if (!mounted) return;
+
+    final current = _conductorLocation;
+    _targetConductorLocation = nextPoint;
+
+    if (current == null) {
+      _conductorLocation = nextPoint;
+      return;
+    }
+
+    final distanceMeters = const Distance().as(
+      LengthUnit.Meter,
+      current,
+      nextPoint,
+    );
+
+    if (distanceMeters < 1.0) {
+      _conductorLocation = nextPoint;
+      return;
+    }
+
+    final durationMs = distanceMeters > 60 ? 1800 : 1200;
+    _conductorMoveController.duration = Duration(milliseconds: durationMs);
+    _conductorMoveController.stop();
+
+    _conductorMoveAnimation =
+        LatLngTween(begin: _conductorLocation!, end: nextPoint).animate(
+          CurvedAnimation(
+            parent: _conductorMoveController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _conductorMoveController.forward(from: 0);
   }
 
   Future<void> _initializeTrip() async {
@@ -684,14 +859,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         if (trip['duracion_segundos'] != null &&
             (trip['duracion_segundos'] as num) > 0) {
           _tiempoTranscurridoSeg = (trip['duracion_segundos'] as num).toInt();
+          _lastServerTrackingSeconds = _tiempoTranscurridoSeg;
+          _lastServerTrackingReceivedAt = DateTime.now();
         } else if (trip['tiempo_transcurrido_seg'] != null &&
             (trip['tiempo_transcurrido_seg'] as num) > 0) {
           _tiempoTranscurridoSeg = (trip['tiempo_transcurrido_seg'] as num)
               .toInt();
+          _lastServerTrackingSeconds = _tiempoTranscurridoSeg;
+          _lastServerTrackingReceivedAt = DateTime.now();
         } else if (trip['tiempo_transcurrido'] != null &&
             (trip['tiempo_transcurrido'] as num) > 0) {
           _tiempoTranscurridoSeg =
               (trip['tiempo_transcurrido'] as num).toInt() * 60;
+          _lastServerTrackingSeconds = _tiempoTranscurridoSeg;
+          _lastServerTrackingReceivedAt = DateTime.now();
         } else if (_tripStartTime != null && _tiempoTranscurridoSeg == 0) {
           // Fallback local: contar desde hora de inicio
           _tiempoTranscurridoSeg = DateTime.now()
@@ -716,6 +897,11 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                 ? currentDistance
                 : distanceFromStatus;
             _distanceTraveled = nextDistance;
+            _lastServerDistanceKm = Math.max(
+              _lastServerDistanceKm,
+              nextDistance,
+            );
+            _lastServerDistanceReceivedAt = DateTime.now();
             _lastAcceptedTrackingDistanceKm = nextDistance;
             _lastAcceptedTrackingSampleAt = DateTime.now();
           }
@@ -875,7 +1061,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             LatLng(widget.destinoLat, widget.destinoLng),
           );
 
-          nextTripProgress = 1 - (remainingDistance / totalDistance).clamp(0, 1);
+          nextTripProgress =
+              1 - (remainingDistance / totalDistance).clamp(0, 1);
           nextDistanceKm = remainingDistance;
           nextEtaMinutes = (remainingDistance / 0.5 * 60)
               .ceil(); // ~30km/h promedio
@@ -908,16 +1095,16 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                         newConductorLocation,
                       ) >=
                       _driverMoveRefreshThresholdKm);
-            final currentVehicle = _conductor?['vehiculo'] as Map<String, dynamic>?;
-            final nextVehicle = conductor?['vehiculo'] as Map<String, dynamic>?;
-            final conductorInfoChanged =
+          final currentVehicle =
+              _conductor?['vehiculo'] as Map<String, dynamic>?;
+          final nextVehicle = conductor?['vehiculo'] as Map<String, dynamic>?;
+          final conductorInfoChanged =
               conductor != null &&
-              (
-                _conductor == null ||
-                _conductor?['id'] != conductor['id'] ||
-                _conductor?['nombre'] != conductor['nombre'] ||
-                _conductor?['foto'] != conductor['foto'] ||
-                currentVehicle?['placa'] != nextVehicle?['placa']);
+              (_conductor == null ||
+                  _conductor?['id'] != conductor['id'] ||
+                  _conductor?['nombre'] != conductor['nombre'] ||
+                  _conductor?['foto'] != conductor['foto'] ||
+                  currentVehicle?['placa'] != nextVehicle?['placa']);
 
           final shouldRefreshUi =
               stateChanged ||
@@ -946,7 +1133,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               _conductor = conductor;
             }
             if (conductorMovedEnough && newConductorLocation != null) {
-              _conductorLocation = newConductorLocation;
+              _animateConductorMarker(newConductorLocation);
             }
           });
 
@@ -1389,9 +1576,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Usar tiempo real del tracking en segundos
     final duracionSegundos = _tiempoTranscurridoSeg > 0
         ? _tiempoTranscurridoSeg
-      : (_tripStartTime != null
-          ? DateTime.now().difference(_tripStartTime!).inSeconds
-          : (_elapsedMinutes * 60));
+        : (_tripStartTime != null
+              ? DateTime.now().difference(_tripStartTime!).inSeconds
+              : (_elapsedMinutes * 60));
 
     final resumenCalculo = _precioActual > 0
         ? 'Total calculado con seguimiento del viaje en tiempo real (distancia y tiempo acumulados).'
@@ -1819,6 +2006,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 // =============================================================================
 // WIDGETS AUXILIARES
 // =============================================================================
+
+class LatLngTween extends Tween<LatLng> {
+  LatLngTween({required super.begin, required super.end});
+
+  @override
+  LatLng lerp(double t) {
+    final start = begin!;
+    final finish = end!;
+    return LatLng(
+      start.latitude + (finish.latitude - start.latitude) * t,
+      start.longitude + (finish.longitude - start.longitude) * t,
+    );
+  }
+}
 
 class _ClientMarker extends StatelessWidget {
   final double heading;
