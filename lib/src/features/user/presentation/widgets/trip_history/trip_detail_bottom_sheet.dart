@@ -80,6 +80,30 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   IconData _getServiceIcon() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').toLowerCase().trim();
+    switch (vehicleType) {
+      case 'moto':
+        return Icons.two_wheeler_rounded;
+      case 'mototaxi':
+      case 'moto_taxi':
+        return Icons.electric_rickshaw_rounded;
+      case 'motorcycle':
+        return Icons.two_wheeler_rounded;
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'taxi':
+      case 'car':
+        return Icons.directions_car_rounded;
+      case 'camioneta':
+      case 'van':
+      case 'microbus':
+        return Icons.airport_shuttle_rounded;
+      case 'camion':
+      case 'camion_carga':
+        return Icons.local_shipping_rounded;
+    }
+
     switch (widget.trip.tipoServicio.toLowerCase()) {
       case 'mudanza':
         return Icons.home_work_rounded;
@@ -193,7 +217,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _capitalize(widget.trip.tipoServicio),
+                _getTripTitle(),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -818,6 +842,42 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   String _capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  String _getTripTitle() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').trim();
+    if (vehicleType.isNotEmpty) {
+      return _getVehicleName(vehicleType);
+    }
+
+    return _capitalize(widget.trip.tipoServicio);
+  }
+
+  String _getVehicleName(String vehicleType) {
+    switch (vehicleType.toLowerCase().trim()) {
+      case 'moto':
+        return 'Moto';
+      case 'mototaxi':
+      case 'moto_taxi':
+        return 'Mototaxi';
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'car':
+        return 'Carro';
+      case 'taxi':
+        return 'Taxi';
+      case 'camioneta':
+        return 'Camioneta';
+      case 'van':
+      case 'microbus':
+        return 'Van';
+      case 'camion':
+      case 'camion_carga':
+        return 'Camion';
+      default:
+        return _capitalize(vehicleType);
+    }
   }
 
   String _formatFullDate(DateTime? date) {

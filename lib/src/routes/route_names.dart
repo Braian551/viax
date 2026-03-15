@@ -16,6 +16,7 @@
   static const String forgotPassword = '/forgot-password';
   static const String passwordRecoveryVerification = '/password-recovery-verification';
   static const String resetPassword = '/reset-password';
+  static const String pendingDeletionReactivation = '/pending-deletion-reactivation';
   static const String passwordChangeVerification = '/password-change-verification';
   static const String passwordChangeSetNew = '/password-change-set-new';
   

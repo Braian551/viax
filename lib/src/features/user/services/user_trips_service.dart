@@ -219,9 +219,15 @@ class UserTripModel {
       fechaSolicitud: DateTimeUtils.parseServerDate(json['fecha_solicitud']),
       fechaAceptado: DateTimeUtils.parseServerDate(json['fecha_aceptado']),
       fechaCompletado: DateTimeUtils.parseServerDate(json['fecha_completado']),
-      fechaSolicitudColombia: json['fecha_solicitud_colombia']?.toString(),
-      fechaAceptadoColombia: json['fecha_aceptado_colombia']?.toString(),
-      fechaCompletadoColombia: json['fecha_completado_colombia']?.toString(),
+        fechaSolicitudColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_solicitud']?.toString()) ??
+          json['fecha_solicitud_colombia']?.toString(),
+        fechaAceptadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_aceptado']?.toString()) ??
+          json['fecha_aceptado_colombia']?.toString(),
+        fechaCompletadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_completado']?.toString()) ??
+          json['fecha_completado_colombia']?.toString(),
     );
   }
 

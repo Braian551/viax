@@ -24,7 +24,9 @@ import 'package:viax/src/global/widgets/floating_trip_fab.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import 'package:viax/src/core/network/connectivity_service.dart';
+import 'package:viax/src/core/network/network_status_service.dart';
 import 'package:viax/src/core/network/widgets/global_connectivity_banner.dart';
+import 'package:viax/src/core/offline/trip_command_queue.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
@@ -109,7 +111,7 @@ void main() async {
         );
       };
 
-      await initializeDateFormatting('es_ES', null);
+      await initializeDateFormatting('es_CO', null);
 
       // ============================================
       // INICIALIZAR FIREBASE
@@ -198,6 +200,20 @@ void main() async {
         await ConnectivityService().initialize();
       } catch (e) {
         debugPrint('⚠️ Error inicializando ConnectivityService: $e');
+      }
+
+      // Inicializar cola offline de comandos críticos del viaje
+      try {
+        await TripCommandQueue.instance.initialize();
+      } catch (e) {
+        debugPrint('⚠️ Error inicializando TripCommandQueue: $e');
+      }
+
+      // Inicializar escucha de red para flush automático al reconectar
+      try {
+        await NetworkStatusService.instance.initialize();
+      } catch (e) {
+        debugPrint('⚠️ Error inicializando NetworkStatusService: $e');
       }
 
       runApp(

@@ -142,6 +142,9 @@ class AppConfig {
   
   /// Microservicio de Mapas (futuro)
   static String get mapServiceUrl => '$baseUrl/map';
+
+  /// Módulo de cuenta (eliminación y reactivación)
+  static String get accountServiceUrl => '$baseUrl/account';
   
   // Alias para compatibilidad con cÃ³digo legacy
   @Deprecated('Usar authServiceUrl en su lugar')

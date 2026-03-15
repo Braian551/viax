@@ -14,6 +14,10 @@ import '../../../../global/services/active_trip_navigation_service.dart';
 import '../../../../global/widgets/chat/chat_widgets.dart';
 import '../../../../routes/route_names.dart';
 import '../../../../theme/app_colors.dart';
+import '../../services/driver_marker_controller.dart';
+import '../../services/driver_position_predictor.dart';
+import '../../services/driver_tracking_stream_service.dart';
+import '../../services/gps_filter.dart';
 import '../../services/trip_request_service.dart';
 import '../widgets/user_trip_accepted/draggable_driver_panel.dart';
 import '../widgets/user_trip_accepted/user_trip_accepted_focus_button.dart';
@@ -59,6 +63,9 @@ class UserTripAcceptedScreen extends StatefulWidget {
 
 class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     with TickerProviderStateMixin {
+  static const int _fastStatusWaitSeconds = 2;
+  static const Duration _fallbackStatusTick = Duration(seconds: 2);
+
   final MapController _mapController = MapController();
 
   // Ubicación del cliente
@@ -71,7 +78,6 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Info del conductor (actualizada con polling)
   Map<String, dynamic>? _conductor;
   LatLng? _conductorLocation;
-  LatLng? _lastConductorLocation; // Para detectar movimiento
   double _conductorHeading = 0.0; // Dirección del conductor calculada
   double? _conductorEtaMinutes;
   double? _conductorDistanceKm;
@@ -84,6 +90,22 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Polling para actualizar estado
   Timer? _statusTimer;
   bool _statusRequestInFlight = false;
+  bool _sseHealthy = false;
+  bool _sseConnecting = false;
+  Timer? _sseReconnectTimer;
+  Timer? _predictiveTimer;
+  int _sseBackoffSeconds = 1;
+  final DriverTrackingStreamService _driverTrackingStreamService =
+      DriverTrackingStreamService();
+
+  final ValueNotifier<LatLng?> _driverMarkerPosition = ValueNotifier<LatLng?>(
+    null,
+  );
+  final ValueNotifier<double> _driverMarkerHeading = ValueNotifier<double>(0);
+  LatLng? _lastAcceptedDriverLocation;
+  DateTime? _lastAcceptedDriverAt;
+  DateTime? _lastDriverRealtimeAt;
+  double _lastDriverSpeedKmh = 0.0;
 
   // Animaciones
   late AnimationController _pulseController;
@@ -94,6 +116,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   // Estado de la UI
   bool _isLoading = true;
+  bool _isMapReady = false;
   String _tripState = 'aceptada';
   bool _isFocusedOnClient = false; // Toggle para el botón de enfoque
   bool _initialAnimationDone = false;
@@ -108,12 +131,19 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Chat y notificaciones
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
+  Timer? _unreadSyncTimer;
   int _unreadCount = 0;
   final Set<int> _notifiedIncomingMessageIds = <int>{};
   bool _chatBootstrapCompleted = false;
 
   // Tamaño actual del panel draggable para posicionar el botón de enfoque
   double _currentPanelSize = 0.38; // Valor inicial (midSize)
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ActiveTripNavigationService().setOnTripScreen(true);
+  }
 
   @override
   void initState() {
@@ -124,8 +154,6 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _startLocationTracking();
     _startStatusPolling();
     _startChatPolling(); // Iniciar polling del chat
-
-
   }
 
   void _registerActiveTripNavigation({String initialStatus = 'aceptada'}) {
@@ -168,6 +196,26 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     if (_messagesSubscription == null) {
       _setupChatListeners();
     }
+    _startUnreadSync();
+  }
+
+  void _startUnreadSync() {
+    _unreadSyncTimer?.cancel();
+    _syncUnreadCountOnce();
+    _unreadSyncTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _syncUnreadCountOnce();
+    });
+  }
+
+  Future<void> _syncUnreadCountOnce() async {
+    try {
+      final count = await ChatService.getUnreadCount(
+        solicitudId: widget.solicitudId,
+        usuarioId: widget.clienteId,
+      );
+      if (!mounted) return;
+      setState(() => _unreadCount = count);
+    } catch (_) {}
   }
 
   /// Configurar listeners del chat para mensajes y notificaciones
@@ -380,7 +428,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       // Cuando el usuario va lento o quieto, la brújula es más útil que el heading GPS
       if (_lastClientSpeedMps < 1.5) {
         setState(() {
-          _clientHeading = _smoothHeading(_clientHeading, _normalizeHeading(heading));
+          _clientHeading = _smoothHeading(
+            _clientHeading,
+            _normalizeHeading(heading),
+          );
         });
       }
     });
@@ -391,7 +442,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
     // Heading GPS válido normalmente cuando hay movimiento real
     if (heading.isFinite && heading >= 0) {
-      _clientHeading = _smoothHeading(_clientHeading, _normalizeHeading(heading));
+      _clientHeading = _smoothHeading(
+        _clientHeading,
+        _normalizeHeading(heading),
+      );
     }
   }
 
@@ -406,7 +460,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 
   void _fitMapToBounds() {
-    if (_clientLocation == null) return;
+    if (_clientLocation == null || !_isMapReady) return;
 
     try {
       final points = <LatLng>[
@@ -554,12 +608,13 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       double targetZoom = 14.0;
       if (maxDiff < 0.01) {
         targetZoom = 16.0;
-      } else if (maxDiff < 0.02)
+      } else if (maxDiff < 0.02) {
         targetZoom = 15.0;
-      else if (maxDiff < 0.05)
+      } else if (maxDiff < 0.05) {
         targetZoom = 14.0;
-      else
+      } else {
         targetZoom = 13.0;
+      }
 
       _smoothCameraMove(targetCenter, targetZoom);
     } catch (e) {
@@ -581,6 +636,10 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
   /// Movimiento suave de cámara con interpolación
   void _smoothCameraMove(LatLng target, double targetZoom) {
+    if (!_isMapReady) {
+      return;
+    }
+
     final startLat = _mapController.camera.center.latitude;
     final startLng = _mapController.camera.center.longitude;
     final startZoom = _mapController.camera.zoom;
@@ -606,7 +665,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       final lng = startLng + (target.longitude - startLng) * t;
       final zoom = startZoom + (targetZoom - startZoom) * t;
 
-      _mapController.move(LatLng(lat, lng), zoom);
+      if (_isMapReady) {
+        _mapController.move(LatLng(lat, lng), zoom);
+      }
     });
   }
 
@@ -629,22 +690,292 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   }
 
   void _startStatusPolling() {
-    // Consultar estado cada 5 segundos
-    _statusTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      _checkTripStatus();
+    _statusTimer = Timer.periodic(_fallbackStatusTick, (timer) {
+      unawaited(_checkTripStatus());
     });
 
     // Primera consulta tras el primer frame para evitar acceso temprano a ModalRoute.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _checkTripStatus();
+      _startSseTracking();
     });
+  }
+
+  void _startSseTracking() {
+    _predictiveTimer?.cancel();
+    _predictiveTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      _tickDriverPrediction();
+    });
+    _connectSse();
+  }
+
+  Future<void> _connectSse() async {
+    if (!mounted || _sseConnecting || _navigatedToActiveTrip) return;
+    _sseConnecting = true;
+
+    try {
+      _sseHealthy = false;
+      _sseBackoffSeconds = 1;
+
+      await _driverTrackingStreamService.connect(
+        tripId: widget.solicitudId,
+        onEvent: (evt) {
+          if (!mounted || _navigatedToActiveTrip) return;
+          _sseHealthy = true;
+          _sseBackoffSeconds = 1;
+          _handleSseEvent(evt);
+        },
+        onDisconnect: (error) {
+          _sseHealthy = false;
+          debugPrint('⚠️ [TripAccepted][SSE] desconectado: $error');
+          unawaited(_checkTripStatus());
+          _scheduleSseReconnect();
+        },
+      );
+    } catch (e) {
+      _sseHealthy = false;
+      debugPrint('⚠️ [TripAccepted][SSE] desconectado: $e');
+      _scheduleSseReconnect();
+    } finally {
+      _sseConnecting = false;
+    }
+  }
+
+  void _scheduleSseReconnect() {
+    if (!mounted || _navigatedToActiveTrip) return;
+
+    _sseReconnectTimer?.cancel();
+    final wait = _sseBackoffSeconds;
+    _sseBackoffSeconds = (_sseBackoffSeconds * 2).clamp(1, 20);
+
+    _sseReconnectTimer = Timer(Duration(seconds: wait), () {
+      if (!mounted || _navigatedToActiveTrip) return;
+      _connectSse();
+    });
+  }
+
+  void _handleSseEvent(DriverTrackingEvent evt) {
+    final event = evt.event;
+    if (event == 'ping' || event == 'connected' || event == 'timeout') {
+      return;
+    }
+
+    try {
+      final parsed = evt.payload;
+
+      if (event == 'trip_status') {
+        final status = parsed['status']?.toString();
+        final normalized = _normalizeTripState(status);
+        if (normalized != null) {
+          _applyTripStateChange(normalized);
+        }
+        return;
+      }
+
+      if (event == 'trip_started') {
+        _applyTripStateChange('recogido');
+        return;
+      }
+
+      final tracking = parsed['tracking_actual'] as Map<String, dynamic>?;
+      final location = tracking?['ubicacion'] as Map<String, dynamic>?;
+      final lat =
+          (location?['latitud'] as num?)?.toDouble() ??
+          (parsed['lat'] as num?)?.toDouble();
+      final lng =
+          (location?['longitud'] as num?)?.toDouble() ??
+          (parsed['lng'] as num?)?.toDouble();
+      final speed =
+          (tracking?['velocidad_kmh'] as num?)?.toDouble() ??
+          (parsed['speed'] as num?)?.toDouble();
+      final bearing =
+          (tracking?['heading_deg'] as num?)?.toDouble() ??
+          (parsed['bearing'] as num?)?.toDouble();
+
+      if (lat != null && lng != null) {
+        _applyDriverLocationUpdate(
+          LatLng(lat, lng),
+          speedKmh: speed,
+          bearingDeg: bearing,
+        );
+      }
+
+      if (tracking != null) {
+        final phase = tracking['fase']?.toString();
+        if (phase == 'conductor_llego') {
+          _applyTripStateChange('conductor_llego');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [TripAccepted][SSE] payload inválido: $e');
+    }
+  }
+
+  void _applyDriverLocationUpdate(
+    LatLng incoming, {
+    double? speedKmh,
+    double? bearingDeg,
+  }) {
+    final now = DateTime.now();
+    final previous = _lastAcceptedDriverLocation;
+
+    final accepted = GpsFilter.shouldAccept(
+      previous: previous,
+      current: incoming,
+      previousTs: _lastAcceptedDriverAt,
+      currentTs: now,
+      speedKmh: speedKmh,
+    );
+
+    if (!accepted) {
+      return;
+    }
+
+    var targetBearing = bearingDeg;
+    if ((targetBearing == null || !targetBearing.isFinite) &&
+        previous != null) {
+      final dKm = _calculateDistance(
+        previous.latitude,
+        previous.longitude,
+        incoming.latitude,
+        incoming.longitude,
+      );
+      if (dKm > 0.005) {
+        targetBearing = _calculateBearing(previous, incoming);
+      }
+    }
+
+    final nextHeading = DriverMarkerController.smoothBearing(
+      current: _driverMarkerHeading.value,
+      target: (targetBearing ?? _driverMarkerHeading.value).toDouble(),
+      maxDelta: 45,
+    );
+
+    _lastAcceptedDriverLocation = incoming;
+    _lastAcceptedDriverAt = now;
+    _lastDriverRealtimeAt = now;
+    if (speedKmh != null && speedKmh.isFinite) {
+      _lastDriverSpeedKmh = speedKmh;
+    }
+
+    _conductorLocation = incoming;
+    _conductorHeading = nextHeading;
+    _driverMarkerPosition.value = incoming;
+    _driverMarkerHeading.value = nextHeading;
+
+    final shouldRefreshRoute =
+        previous == null ||
+        _calculateDistance(
+              previous.latitude,
+              previous.longitude,
+              incoming.latitude,
+              incoming.longitude,
+            ) >
+            0.02;
+
+    if (shouldRefreshRoute) {
+      _updateConductorRoute(incoming);
+    }
+  }
+
+  void _tickDriverPrediction() {
+    if (!mounted || _navigatedToActiveTrip) return;
+    if (!_sseHealthy) return;
+    if (_lastAcceptedDriverLocation == null || _lastDriverRealtimeAt == null) {
+      return;
+    }
+    if (_lastDriverSpeedKmh <= 0) return;
+
+    final now = DateTime.now();
+    final stale = now.difference(_lastDriverRealtimeAt!);
+    if (stale <= const Duration(seconds: 2) ||
+        stale > const Duration(seconds: 8)) {
+      return;
+    }
+
+    final predicted = DriverPositionPredictor.predict(
+      lastPosition: _lastAcceptedDriverLocation!,
+      bearingDeg: _driverMarkerHeading.value,
+      speedKmh: _lastDriverSpeedKmh,
+      delta: stale,
+    );
+
+    _driverMarkerPosition.value = predicted;
+  }
+
+  String? _normalizeTripState(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+
+    switch (value) {
+      case 'pendiente':
+      case 'aceptada':
+      case 'conductor_llego':
+      case 'recogido':
+      case 'en_curso':
+      case 'cancelada':
+      case 'completada':
+      case 'completado':
+      case 'finalizada':
+      case 'finalizado':
+        return value;
+      case 'trip_started':
+        return 'recogido';
+      case 'driver_arrived':
+        return 'conductor_llego';
+      case 'driver_assigned':
+        return 'aceptada';
+      case 'trip_in_progress':
+      case 'en_viaje':
+      case 'iniciado':
+        return 'en_curso';
+      case 'trip_completed':
+        return 'completada';
+      case 'trip_cancelled':
+        return 'cancelada';
+      default:
+        return null;
+    }
+  }
+
+  void _applyTripStateChange(String estado) {
+    final normalized = _normalizeTripState(estado);
+    if (normalized == null) return;
+
+    _syncActiveTripNavigationState(normalized);
+
+    if (!mounted) return;
+    setState(() {
+      _tripState = normalized;
+    });
+
+    if (normalized == 'conductor_llego') {
+      _playDriverArrivedSound();
+      unawaited(_showDriverArrivedDialog());
+    } else if ((normalized == 'recogido' || normalized == 'en_curso') &&
+        !_navigatedToActiveTrip) {
+      _stopDriverArrivedSound();
+      _dismissDriverArrivedDialogIfNeeded();
+      _navigateToActiveTrip();
+    } else if (normalized == 'cancelada') {
+      _stopDriverArrivedSound();
+      _dismissDriverArrivedDialogIfNeeded();
+      _showCancelledDialog();
+    }
+  }
+
+  void _dismissDriverArrivedDialogIfNeeded() {
+    if (!_driverArrivedDialogShowing || !mounted) return;
+    try {
+      Navigator.of(context, rootNavigator: true).pop();
+    } catch (_) {}
   }
 
   Future<void> _checkTripStatus() async {
     if (!mounted) return;
-    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
-    if (!isCurrentRoute) return;
+    if (_navigatedToActiveTrip) return;
     if (_statusRequestInFlight) return;
 
     _statusRequestInFlight = true;
@@ -652,13 +983,14 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     try {
       final result = await TripRequestService.getTripStatus(
         solicitudId: widget.solicitudId,
+        waitSeconds: _fastStatusWaitSeconds,
       );
 
       if (!mounted) return;
 
       if (result['success'] == true) {
         final trip = result['trip'];
-        final estado = trip['estado'] as String?;
+        final estado = _normalizeTripState(trip['estado'] as String?);
         final conductor = trip['conductor'] as Map<String, dynamic>?;
 
         LatLng? newConductorLocation;
@@ -667,48 +999,29 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
           // Actualizar ubicación del conductor
           final ubicacion = conductor['ubicacion'] as Map<String, dynamic>?;
           if (ubicacion != null) {
-            final lat = ubicacion['latitud'] as double?;
-            final lng = ubicacion['longitud'] as double?;
+            final lat = (ubicacion['latitud'] as num?)?.toDouble();
+            final lng = (ubicacion['longitud'] as num?)?.toDouble();
             if (lat != null && lng != null) {
               newConductorLocation = LatLng(lat, lng);
             }
           }
         }
 
-        // Verificar si la ubicación del conductor cambió significativamente (más de 50m)
-        bool shouldUpdateRoute = false;
-        double newHeading = _conductorHeading;
         if (newConductorLocation != null) {
-          if (_lastConductorLocation == null) {
-            shouldUpdateRoute = true;
-          } else {
-            final distance = _calculateDistance(
-              _lastConductorLocation!.latitude,
-              _lastConductorLocation!.longitude,
-              newConductorLocation.latitude,
-              newConductorLocation.longitude,
-            );
-            // Calcular heading basado en el movimiento (si se movió más de 10m)
-            if (distance > 0.01) {
-              newHeading = _calculateBearing(
-                _lastConductorLocation!,
-                newConductorLocation,
-              );
-            }
-            if (distance > 0.05) {
-              // Más de 50 metros
-              shouldUpdateRoute = true;
-            }
-          }
+          final speed = (conductor?['velocidad_kmh'] as num?)?.toDouble();
+          final bearing = (conductor?['heading_deg'] as num?)?.toDouble();
+          _applyDriverLocationUpdate(
+            newConductorLocation,
+            speedKmh: speed,
+            bearingDeg: bearing,
+          );
         }
 
         setState(() {
           _tripState = estado ?? 'aceptada';
-          _conductorHeading = newHeading;
 
           if (conductor != null) {
             _conductor = conductor;
-            _conductorLocation = newConductorLocation;
             _conductorDistanceKm = (conductor['distancia_km'] as num?)
                 ?.toDouble();
             _conductorEtaMinutes = (conductor['eta_minutos'] as num?)
@@ -718,27 +1031,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         _syncActiveTripNavigationState(estado);
 
-
-
-        // Actualizar ruta si la ubicación cambió
-        if (shouldUpdateRoute && newConductorLocation != null) {
-          _lastConductorLocation = newConductorLocation;
-          _updateConductorRoute(newConductorLocation);
-        }
-
-        // Verificar cambios de estado importantes
-        if (estado == 'conductor_llego') {
-          // Reproducir sonido cuando el conductor llegue al punto de encuentro
-          _playDriverArrivedSound();
-          unawaited(_showDriverArrivedDialog());
-        } else if ((estado == 'recogido' || estado == 'en_curso') && !_navigatedToActiveTrip) {
-          // Detener el sonido antes de navegar
-          _stopDriverArrivedSound();
-          // Navegar a pantalla de viaje en curso (solo una vez)
-          _navigateToActiveTrip();
-        } else if (estado == 'cancelada') {
-          _stopDriverArrivedSound();
-          _showCancelledDialog();
+        if (estado != null && estado.isNotEmpty) {
+          _applyTripStateChange(estado);
         }
       }
     } catch (e) {
@@ -1040,12 +1334,18 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     // Cancelar subscripciones de chat
     _messagesSubscription?.cancel();
     _unreadSubscription?.cancel();
+    _unreadSyncTimer?.cancel();
     ChatService.stopPolling();
 
     // Cancelar otros streams y timers
     _positionStream?.cancel();
     _compassStream?.cancel();
     _statusTimer?.cancel();
+    _sseReconnectTimer?.cancel();
+    _predictiveTimer?.cancel();
+    _driverTrackingStreamService.close();
+    _driverMarkerPosition.dispose();
+    _driverMarkerHeading.dispose();
 
     // Dispose de animaciones
     _pulseController.dispose();
@@ -1073,12 +1373,21 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
             animatedRoute: _animatedRoute,
             conductorLocation: _conductorLocation,
             conductorHeading: _conductorHeading,
+            conductorLocationListenable: _driverMarkerPosition,
+            conductorHeadingListenable: _driverMarkerHeading,
             conductorVehicleType: _conductor?['vehiculo']?['tipo'] as String?,
             clientLocation: _clientLocation,
             clientHeading: _clientHeading,
             pulseAnimation: _pulseController,
             waveAnimation: _waveController,
             pickupLabel: 'Punto de encuentro',
+            onMapReady: () {
+              _isMapReady = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _fitMapToBounds();
+              });
+            },
           ),
 
           // HEADER

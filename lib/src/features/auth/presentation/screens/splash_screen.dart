@@ -200,6 +200,11 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateAfterDelay() async {
+    final recoveryStartedAt = DateTime.now();
+    debugPrint(
+      '[TripRecovery] ts=${recoveryStartedAt.toIso8601String()} tripId=0 latency_ms=0 result=start',
+    );
+
     // Wait for animation to complete
     await Future.delayed(const Duration(milliseconds: 3000));
 
@@ -231,6 +236,7 @@ class _SplashScreenState extends State<SplashScreen>
         userRole = savedTrip.userRole;
         final tripStatus = await TripRequestService.getTripStatus(
           solicitudId: savedTrip.tripId,
+          waitSeconds: 2,
         );
         if (tripStatus['success'] == true) {
           tripToRecover = tripStatus['trip'];
@@ -274,6 +280,11 @@ class _SplashScreenState extends State<SplashScreen>
       // 4. Procesar redirección si se encontró un viaje
       if (tripToRecover != null && userRole != null) {
         final trip = Map<String, dynamic>.from(tripToRecover);
+        final recoveredTripId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
+        debugPrint(
+          '[TripRecovery] ts=${DateTime.now().toIso8601String()} tripId=$recoveredTripId '
+          'latency_ms=${DateTime.now().difference(recoveryStartedAt).inMilliseconds} result=trip_found',
+        );
         final status = TripStatusNavigationService.normalizeStatus(
           trip['estado'],
         );
@@ -286,6 +297,9 @@ class _SplashScreenState extends State<SplashScreen>
               );
 
           if (showSummary && mounted && _isCurrentRoute) {
+            // Evita bucle de resumen al reabrir app: limpiar persistencia antes de navegar.
+            await TripPersistenceService().clearActiveTrip();
+
             final solicitudId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
             final origen =
                 (trip['origen']?['direccion'] ??
@@ -380,6 +394,8 @@ class _SplashScreenState extends State<SplashScreen>
                     );
                   },
                   onComplete: () {
+                    // Refuerzo defensivo por si el flujo vuelve al splash.
+                    TripPersistenceService().clearActiveTrip();
                     Navigator.of(
                       context,
                     ).pushNamedAndRemoveUntil('/', (route) => false);
@@ -417,6 +433,10 @@ class _SplashScreenState extends State<SplashScreen>
         }
       }
     } catch (e) {
+      debugPrint(
+        '[TripRecovery] ts=${DateTime.now().toIso8601String()} tripId=0 '
+        'latency_ms=${DateTime.now().difference(recoveryStartedAt).inMilliseconds} result=error_$e',
+      );
       debugPrint('⚠️ Error en recuperación de viaje: $e');
     }
 

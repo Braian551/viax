@@ -118,6 +118,7 @@ class _ConductorSearchingPassengersScreenState
   }
 
   void _setCurrentLocation(double lat, double lng) {
+    if (!mounted) return;
     setState(() {
       _currentLocation = LatLng(lat, lng);
     });
@@ -129,10 +130,12 @@ class _ConductorSearchingPassengersScreenState
   }
 
   void _fallbackLocation() {
+    if (!mounted) return;
     setState(() {
       _currentLocation = const LatLng(4.6097, -74.0817);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       if (_currentLocation != null) {
         _mapController.move(_currentLocation!, 15);
       }

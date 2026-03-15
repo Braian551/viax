@@ -27,6 +27,8 @@ class ClientTrackingData {
   final int? diferenciaTiempo;
   final double? diferenciaPrecio;
   final String? mensajeComparacion;
+  final int? backendElapsedSeconds;
+  final double? backendPriceActual;
 
   ClientTrackingData({
     required this.distanciaKm,
@@ -46,7 +48,53 @@ class ClientTrackingData {
     this.diferenciaTiempo,
     this.diferenciaPrecio,
     this.mensajeComparacion,
+    this.backendElapsedSeconds,
+    this.backendPriceActual,
   });
+
+  ClientTrackingData copyWith({
+    double? distanciaKm,
+    int? tiempoSegundos,
+    double? precioActual,
+    double? velocidadConductor,
+    double? headingConductor,
+    double? latitudConductor,
+    double? longitudConductor,
+    bool? viajeEnCurso,
+    String? fase,
+    String? estadoViaje,
+    bool? metricsLocked,
+    bool? esTerminal,
+    DateTime? ultimaActualizacion,
+    double? diferenciaDistancia,
+    int? diferenciaTiempo,
+    double? diferenciaPrecio,
+    String? mensajeComparacion,
+    int? backendElapsedSeconds,
+    double? backendPriceActual,
+  }) {
+    return ClientTrackingData(
+      distanciaKm: distanciaKm ?? this.distanciaKm,
+      tiempoSegundos: tiempoSegundos ?? this.tiempoSegundos,
+      precioActual: precioActual ?? this.precioActual,
+      velocidadConductor: velocidadConductor ?? this.velocidadConductor,
+      headingConductor: headingConductor ?? this.headingConductor,
+      latitudConductor: latitudConductor ?? this.latitudConductor,
+      longitudConductor: longitudConductor ?? this.longitudConductor,
+      viajeEnCurso: viajeEnCurso ?? this.viajeEnCurso,
+      fase: fase ?? this.fase,
+      estadoViaje: estadoViaje ?? this.estadoViaje,
+      metricsLocked: metricsLocked ?? this.metricsLocked,
+      esTerminal: esTerminal ?? this.esTerminal,
+      ultimaActualizacion: ultimaActualizacion ?? this.ultimaActualizacion,
+      diferenciaDistancia: diferenciaDistancia ?? this.diferenciaDistancia,
+      diferenciaTiempo: diferenciaTiempo ?? this.diferenciaTiempo,
+      diferenciaPrecio: diferenciaPrecio ?? this.diferenciaPrecio,
+      mensajeComparacion: mensajeComparacion ?? this.mensajeComparacion,
+      backendElapsedSeconds: backendElapsedSeconds ?? this.backendElapsedSeconds,
+      backendPriceActual: backendPriceActual ?? this.backendPriceActual,
+    );
+  }
 
   int get tiempoMinutos => tiempoSegundos ~/ 60;
 
@@ -77,6 +125,25 @@ class ClientTrackingData {
     final tracking = json['tracking_actual'];
     final comparacion = json['comparacion'];
     final viaje = json['viaje'] as Map<String, dynamic>?;
+    double asDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString()) ?? 0.0;
+    }
+
+    int asInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString()) ?? 0;
+    }
+
+    final fallbackPrice = asDouble(viaje?['precio_en_tracking']) > 0
+        ? asDouble(viaje?['precio_en_tracking'])
+        : asDouble(viaje?['precio_estimado']);
+    final fallbackElapsed = asInt(viaje?['duracion_segundos']) > 0
+        ? asInt(viaje?['duracion_segundos'])
+        : asInt(viaje?['tiempo_transcurrido_seg']);
+
     final estado = (json['status'] ?? viaje?['estado'])
         ?.toString()
         .toLowerCase();
@@ -96,23 +163,29 @@ class ClientTrackingData {
         estado == 'rejected';
 
     if (tracking == null) {
-      // Sin tracking aún - retornar 0, NO usar estimados
-      // El tracking real comenzará cuando el conductor inicie el viaje
+      // Sin tracking aún: usar tarifa base/estimada para no iniciar en 0.
       return ClientTrackingData(
         distanciaKm: 0.0,
-        tiempoSegundos: 0,
-        precioActual: 0.0,
+        tiempoSegundos: fallbackElapsed,
+        precioActual: fallbackPrice,
         viajeEnCurso: false,
         estadoViaje: estado,
         metricsLocked: metricsLocked,
         esTerminal: esTerminal,
+        backendElapsedSeconds: fallbackElapsed,
+        backendPriceActual: fallbackPrice,
       );
     }
 
+    final trackingElapsed = asInt(tracking['tiempo_segundos']);
+    final trackingPrice = asDouble(tracking['precio_actual']);
+    final mergedElapsed = trackingElapsed > 0 ? trackingElapsed : fallbackElapsed;
+    final mergedPrice = trackingPrice > 0 ? trackingPrice : fallbackPrice;
+
     return ClientTrackingData(
       distanciaKm: (tracking['distancia_km'] ?? 0).toDouble(),
-      tiempoSegundos: tracking['tiempo_segundos'] ?? 0,
-      precioActual: (tracking['precio_actual'] ?? 0).toDouble(),
+      tiempoSegundos: mergedElapsed,
+      precioActual: mergedPrice,
       velocidadConductor: (tracking['velocidad_kmh'] ?? 0).toDouble(),
       headingConductor: (tracking['heading_deg'] ?? 0).toDouble(),
       latitudConductor: tracking['ubicacion']?['latitud']?.toDouble(),
@@ -129,6 +202,8 @@ class ClientTrackingData {
       diferenciaTiempo: comparacion?['diferencia_tiempo_min'],
       diferenciaPrecio: comparacion?['diferencia_precio']?.toDouble(),
       mensajeComparacion: comparacion?['mensaje'],
+      backendElapsedSeconds: trackingElapsed,
+      backendPriceActual: trackingPrice,
     );
   }
 
@@ -158,6 +233,10 @@ class ClientTrackingData {
       ultimaActualizacion: tracking['ultima_actualizacion'] != null
           ? DateTime.tryParse(tracking['ultima_actualizacion'].toString())
           : null,
+      backendElapsedSeconds: tracking['tiempo_segundos'] is num
+          ? (tracking['tiempo_segundos'] as num).toInt()
+          : int.tryParse('${tracking['tiempo_segundos'] ?? 0}') ?? 0,
+      backendPriceActual: (tracking['precio_actual'] ?? 0).toDouble(),
     );
   }
 }
@@ -178,17 +257,29 @@ class ClientTripTrackingService {
 
   // Configuración
   static const Duration _fallbackPollInterval = Duration(seconds: 5);
-  static const Duration _sseReconnectDelay = Duration(seconds: 2);
-  static const Duration _longPollWait = Duration(seconds: 20);
+  static const Duration _sseReconnectDelay = Duration(seconds: 3);
+  static const Duration _longPollWait = Duration(seconds: 4);
+  static const Duration _interpolationTick = Duration(seconds: 1);
+  static const int _maxElapsedDriftSec = 240;
+  static const Duration _maxBackendSilence = Duration(seconds: 12);
+  static const Duration _staleRefreshInterval = Duration(seconds: 4);
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   // Estado
   bool _isWatching = false;
   int? _solicitudId;
-  Future<void>? _watchLoop;
   HttpClient? _sseClient;
   bool _isFetching = false;
   String? _lastSinceTs;
+  Timer? _interpolationTimer;
+  Timer? _priceSmoothingTimer;
+  int _lastBackendElapsedSeconds = 0;
+  DateTime? _lastSyncTimestamp;
+  double _backendPrice = 0.0;
+  double _displayPrice = 0.0;
+  int _sseBackoffSeconds = _sseReconnectDelay.inSeconds;
+  DateTime? _lastSyncLogAt;
+  DateTime? _lastForcedRefreshAt;
 
   // Último tracking conocido
   ClientTrackingData? _lastData;
@@ -218,9 +309,10 @@ class ClientTripTrackingService {
 
       // Obtener datos iniciales por HTTP para pintar pantalla de inmediato.
       await _fetchTracking();
+      _startInterpolationTimer();
 
       // Modo push preferido: SSE. Si falla, degradar a polling resiliente.
-      _watchLoop = _runSsePreferredLoop();
+      unawaited(_runSsePreferredLoop());
 
       return true;
     } catch (e) {
@@ -241,6 +333,17 @@ class ClientTripTrackingService {
     _lastData = null;
     _lastSinceTs = null;
     _isFetching = false;
+    _interpolationTimer?.cancel();
+    _interpolationTimer = null;
+    _priceSmoothingTimer?.cancel();
+    _priceSmoothingTimer = null;
+    _lastBackendElapsedSeconds = 0;
+    _lastSyncTimestamp = null;
+    _backendPrice = 0.0;
+    _displayPrice = 0.0;
+    _sseBackoffSeconds = _sseReconnectDelay.inSeconds;
+    _lastSyncLogAt = null;
+    _lastForcedRefreshAt = null;
     try {
       _sseClient?.close(force: true);
     } catch (_) {}
@@ -311,20 +414,11 @@ class ClientTripTrackingService {
       try {
         await _connectSseAndConsume(_solicitudId!);
         sseHealthy = true;
+        _sseBackoffSeconds = _sseReconnectDelay.inSeconds;
       } catch (e) {
-        final message = e.toString().toLowerCase();
-        final transientClose =
-            message.contains('connection closed while receiving data') ||
-            message.contains('connection reset by peer') ||
-            message.contains('software caused connection abort');
-
-        if (transientClose) {
-          debugPrint('ℹ️ [ClientTracking] SSE reconexión rápida: $e');
-          if (!_isWatching) break;
-          await Future.delayed(const Duration(milliseconds: 700));
-          continue;
-        }
-
+        debugPrint(
+          '[SSE_DISCONNECTED] ts=${DateTime.now().toIso8601String()} tripId=$_solicitudId latency_ms=0 result=$e',
+        );
         debugPrint('⚠️ [ClientTracking] SSE no disponible, fallback polling: $e');
         if (!sseHealthy) {
           onError?.call('Conexión en vivo inestable. Activando modo respaldo.');
@@ -335,7 +429,12 @@ class ClientTripTrackingService {
       }
 
       if (!_isWatching) break;
-      await Future.delayed(_sseReconnectDelay);
+      final wait = Duration(seconds: _sseBackoffSeconds);
+      await Future.delayed(wait);
+      _sseBackoffSeconds = _sseReconnectDelay.inSeconds;
+      debugPrint(
+        '[SSE_RECONNECTED] ts=${DateTime.now().toIso8601String()} tripId=$_solicitudId latency_ms=${wait.inMilliseconds} result=retry',
+      );
     }
   }
 
@@ -362,7 +461,15 @@ class ClientTripTrackingService {
 
   Future<void> _connectSseAndConsume(int solicitudId) async {
     final since = _lastData?.ultimaActualizacion?.toIso8601String() ?? '';
-    final uri = Uri.parse('${AppConfig.baseUrl}/user/stream_trip_updates.php').replace(
+    final primaryUri = Uri.parse('${AppConfig.baseUrl}/sse/trip_updates.php').replace(
+      queryParameters: {
+        'trip_id': '$solicitudId',
+        'wait_seconds': '35',
+        if (since.isNotEmpty) 'since_signature': sha1Lite(since),
+      },
+    );
+
+    final legacyUri = Uri.parse('${AppConfig.baseUrl}/user/stream_trip_updates.php').replace(
       queryParameters: {
         'trip_id': '$solicitudId',
         'wait_seconds': '35',
@@ -372,13 +479,27 @@ class ClientTripTrackingService {
 
     _sseClient?.close(force: true);
     _sseClient = HttpClient()..connectionTimeout = const Duration(seconds: 12);
-    final request = await _sseClient!.getUrl(uri);
+
+    var activeUri = primaryUri;
+    var request = await _sseClient!.getUrl(activeUri);
     request.headers.set(HttpHeaders.acceptHeader, 'text/event-stream');
-    final response = await request.close();
+    var response = await request.close();
+
+    // Compatibilidad: si el endpoint nuevo no existe, usar el endpoint legacy.
+    if (response.statusCode == 404) {
+      activeUri = legacyUri;
+      request = await _sseClient!.getUrl(activeUri);
+      request.headers.set(HttpHeaders.acceptHeader, 'text/event-stream');
+      response = await request.close();
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('SSE status ${response.statusCode}');
     }
+
+    debugPrint(
+      '[SSE_CONNECTED] ts=${DateTime.now().toIso8601String()} tripId=$solicitudId latency_ms=0 result=connected uri=$activeUri',
+    );
 
     String? currentEvent;
     StringBuffer dataBuffer = StringBuffer();
@@ -416,12 +537,7 @@ class ClientTripTrackingService {
 
       if (event == 'trip_update') {
         final data = ClientTrackingData.fromSsePayload(parsed);
-        _lastData = data;
-        onTrackingUpdate?.call(data);
-
-        debugPrint(
-          '📡 [ClientTracking][SSE] ${data.distanciaFormateada}, ${data.tiempoFormateado}, ${data.precioFormateado}',
-        );
+        _ingestBackendData(data);
       }
     } catch (e) {
       debugPrint('⚠️ [ClientTracking] SSE payload inválido: $e');
@@ -455,7 +571,7 @@ class ClientTripTrackingService {
       );
 
       if (data != null) {
-        _lastData = data;
+        _ingestBackendData(data);
 
         if (data.esTerminal) {
           debugPrint(
@@ -464,12 +580,6 @@ class ClientTripTrackingService {
           stopWatching();
         }
 
-        onTrackingUpdate?.call(data);
-
-        // Log periódico para debug
-        debugPrint(
-          '📍 [ClientTracking] Actualización: ${data.distanciaFormateada}, ${data.tiempoFormateado}, ${data.precioFormateado}',
-        );
       } else {
         debugPrint('⚠️ [ClientTracking] No hay datos de tracking disponibles');
       }
@@ -478,5 +588,165 @@ class ClientTripTrackingService {
     } finally {
       _isFetching = false;
     }
+  }
+
+  void _startInterpolationTimer() {
+    _interpolationTimer?.cancel();
+    _interpolationTimer = Timer.periodic(_interpolationTick, (_) {
+      if (!_isWatching || _lastData == null) return;
+      _emitInterpolatedSnapshot();
+    });
+  }
+
+  void _ingestBackendData(ClientTrackingData incoming) {
+    final now = DateTime.now();
+
+    if (incoming.tiempoSegundos > 0) {
+      _lastBackendElapsedSeconds = incoming.tiempoSegundos;
+      _lastSyncTimestamp = now;
+    }
+
+    if (incoming.precioActual > 0) {
+      _backendPrice = incoming.precioActual;
+      _syncDisplayPriceWithBackend(_backendPrice);
+    }
+
+    final localElapsed = _computeLocalElapsed(now);
+    final emitted = incoming.copyWith(
+      tiempoSegundos: localElapsed > incoming.tiempoSegundos
+          ? localElapsed
+          : incoming.tiempoSegundos,
+      precioActual: _displayPrice > 0 ? _displayPrice : incoming.precioActual,
+      backendElapsedSeconds: incoming.tiempoSegundos,
+      backendPriceActual: incoming.precioActual,
+    );
+
+    _lastData = emitted;
+    onTrackingUpdate?.call(emitted);
+    _logTrackingSync(emitted);
+  }
+
+  int _computeLocalElapsed(DateTime now) {
+    if (_lastBackendElapsedSeconds <= 0 || _lastSyncTimestamp == null) {
+      return _lastData?.tiempoSegundos ?? 0;
+    }
+
+    final drift = now.difference(_lastSyncTimestamp!).inSeconds;
+    final safeDrift = drift < 0 ? 0 : drift;
+    final projected = _lastBackendElapsedSeconds + safeDrift;
+    final maxAllowed = _lastBackendElapsedSeconds + _maxElapsedDriftSec;
+    return projected > maxAllowed ? maxAllowed : projected;
+  }
+
+  void _syncDisplayPriceWithBackend(double newBackendPrice) {
+    if (_displayPrice <= 0) {
+      _displayPrice = newBackendPrice;
+      return;
+    }
+
+    final base = _displayPrice.abs() < 1 ? 1.0 : _displayPrice.abs();
+    final diffRatio = ((newBackendPrice - _displayPrice).abs()) / base;
+
+    if (diffRatio > 0.20) {
+      _priceSmoothingTimer?.cancel();
+      _displayPrice = newBackendPrice;
+      return;
+    }
+
+    _priceSmoothingTimer?.cancel();
+    const totalSteps = 5;
+    final start = _displayPrice;
+    final delta = (newBackendPrice - start) / totalSteps;
+    var step = 0;
+
+    _priceSmoothingTimer = Timer.periodic(const Duration(milliseconds: 200), (
+      timer,
+    ) {
+      step += 1;
+      if (step >= totalSteps) {
+        _displayPrice = newBackendPrice;
+        timer.cancel();
+        return;
+      }
+      _displayPrice = start + (delta * step);
+      _emitInterpolatedSnapshot();
+    });
+  }
+
+  void _emitInterpolatedSnapshot() {
+    final base = _lastData;
+    if (base == null) return;
+
+    final now = DateTime.now();
+    final localElapsed = _computeLocalElapsed(now);
+
+    final emitted = base.copyWith(
+      tiempoSegundos: localElapsed > base.tiempoSegundos
+          ? localElapsed
+          : base.tiempoSegundos,
+      precioActual: _displayPrice > 0 ? _displayPrice : base.precioActual,
+      backendElapsedSeconds: _lastBackendElapsedSeconds,
+      backendPriceActual: _backendPrice,
+    );
+
+    final unchangedElapsed = emitted.tiempoSegundos == base.tiempoSegundos;
+    final unchangedPrice =
+        (emitted.precioActual - base.precioActual).abs() < 0.01;
+    if (unchangedElapsed && unchangedPrice) {
+      return;
+    }
+
+    _lastData = emitted;
+    onTrackingUpdate?.call(emitted);
+    _logTrackingSync(emitted);
+    _maybeForceRefreshOnStale(now);
+  }
+
+  void _maybeForceRefreshOnStale(DateTime now) {
+    if (!_isWatching || _solicitudId == null || _isFetching) {
+      return;
+    }
+    if (_lastSyncTimestamp == null) {
+      return;
+    }
+
+    final silence = now.difference(_lastSyncTimestamp!);
+    if (silence < _maxBackendSilence) {
+      return;
+    }
+
+    if (_lastForcedRefreshAt != null &&
+        now.difference(_lastForcedRefreshAt!) < _staleRefreshInterval) {
+      return;
+    }
+
+    _lastForcedRefreshAt = now;
+    debugPrint(
+      '[ClientTracking] stale_detected tripId=${_solicitudId ?? 0} '
+      'silence_s=${silence.inSeconds} forcing_refresh=true',
+    );
+    unawaited(_fetchTracking(withLongPoll: false));
+  }
+
+  void _logTrackingSync(ClientTrackingData data) {
+    if (!kDebugMode) return;
+    final now = DateTime.now();
+    if (_lastSyncLogAt != null &&
+        now.difference(_lastSyncLogAt!).inMilliseconds < 900) {
+      return;
+    }
+    _lastSyncLogAt = now;
+
+    debugPrint(
+      '[TripSync] ts=${now.toIso8601String()} tripId=${_solicitudId ?? 0} latency_ms=0 '
+      'result=tracking_update backendElapsed=${data.backendElapsedSeconds ?? _lastBackendElapsedSeconds} '
+      'localElapsed=${data.tiempoSegundos}',
+    );
+    debugPrint(
+      '[PriceSync] ts=${now.toIso8601String()} tripId=${_solicitudId ?? 0} latency_ms=0 '
+      'result=price_update backendPrice=${(data.backendPriceActual ?? _backendPrice).toStringAsFixed(2)} '
+      'localElapsed=${data.tiempoSegundos} '
+      'displayPrice=${data.precioActual.toStringAsFixed(2)}',
+    );
   }
 }

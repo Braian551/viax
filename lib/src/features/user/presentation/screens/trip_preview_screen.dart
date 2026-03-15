@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import 'dart:ui';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/route_preview_cache.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../../../theme/app_colors.dart';
@@ -24,6 +25,7 @@ class TripPreviewScreen extends StatefulWidget {
   final SimpleLocation destination;
   final List<SimpleLocation> stops;
   final String vehicleType;
+  final MapboxRoute? preloadedRoute;
 
   const TripPreviewScreen({
     super.key,
@@ -31,6 +33,7 @@ class TripPreviewScreen extends StatefulWidget {
     required this.destination,
     this.stops = const [],
     required this.vehicleType,
+    this.preloadedRoute,
   });
 
   @override
@@ -109,6 +112,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   bool _sheetListenerAttached = false;
 
   List<LatLng> _animatedRoutePoints = [];
+  String? _lastRouteGeometryHash;
+  int _lastAnimatedRouteCount = -1;
 
   // Valores animados del precio
   double _animatedPrice = 0;
@@ -181,8 +186,90 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         return; // Don't load route
       }
 
-      _loadRouteAndQuote();
+      final waypoints = _buildWaypoints();
+      final cached = RoutePreviewCache.instance.getCachedRoute(
+        waypoints: waypoints,
+      );
+      final preloaded = widget.preloadedRoute ?? cached?.route;
+
+      if (preloaded != null) {
+        debugPrint(
+          '[RoutePreview] cache_hit source=${widget.preloadedRoute != null ? 'navigation' : 'memory'}',
+        );
+        unawaited(() async {
+          final watch = Stopwatch()..start();
+          await _prepareRouteForRendering(preloaded);
+          await _loadQuoteForRoute(preloaded, watch);
+          debugPrint('[RoutePreview] done ms=${watch.elapsedMilliseconds}');
+          watch.stop();
+        }());
+      } else {
+        _loadRouteAndQuote();
+      }
     });
+  }
+
+  List<LatLng> _buildWaypoints() {
+    return [
+      widget.origin.toLatLng(),
+      ...widget.stops.map((s) => s.toLatLng()),
+      widget.destination.toLatLng(),
+    ];
+  }
+
+  Future<void> _prepareRouteForRendering(MapboxRoute route) async {
+    if (!mounted) return;
+
+    final routeHash = _hashRouteGeometry(route.geometry);
+    final shouldRefreshGeometry = routeHash != _lastRouteGeometryHash;
+    _lastRouteGeometryHash = routeHash;
+
+    _setStateSafe(() {
+      _route = route;
+      _isLoadingRoute = false;
+      if (shouldRefreshGeometry) {
+        _animatedRoutePoints = List<LatLng>.from(route.geometry);
+        _lastAnimatedRouteCount = _animatedRoutePoints.length;
+      }
+      _errorMessage = null;
+    });
+
+    debugPrint('[RoutePreview] route_rendered points=${route.geometry.length}');
+
+    await _fitMapToRouteAnimated();
+    if (!mounted) return;
+
+    _topPanelAnimationController.forward();
+    _markerAnimationController.forward();
+    _routeAnimationController.forward();
+  }
+
+  Future<void> _loadQuoteForRoute(MapboxRoute route, Stopwatch loadWatch) async {
+    await _loadCompanyVehicles(route);
+
+    debugPrint(
+      '[RoutePreview] quotes_ready ms=${loadWatch.elapsedMilliseconds}',
+    );
+
+    if (!mounted) {
+      debugPrint(
+        '🔍 TripPreviewScreen: Widget no longer mounted after _loadCompanyVehicles',
+      );
+      return;
+    }
+
+    _setStateSafe(() {
+      _quote = _vehicleQuotes[_selectedVehicleType];
+      _isLoadingQuote = false;
+      if (_quote != null) {
+        _targetPrice = _quote!.totalPrice;
+        _animatedPrice = _quote!.totalPrice;
+      }
+    });
+
+    await Future.delayed(const Duration(milliseconds: 220));
+    if (!mounted) return;
+    _slideAnimationController.forward();
   }
 
   @override
@@ -239,8 +326,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         if (_route != null) {
           final totalPoints = _route!.geometry.length;
           final animatedCount = (totalPoints * _routeAnimation.value).round();
-          setState(() {
+          if (animatedCount == _lastAnimatedRouteCount) {
+            return;
+          }
+          _setStateSafe(() {
             _animatedRoutePoints = _route!.geometry.sublist(0, animatedCount);
+            _lastAnimatedRouteCount = animatedCount;
           });
         }
       });
@@ -341,7 +432,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Future<void> _loadRouteAndQuote() async {
-    debugPrint('🔍 TripPreviewScreen: _loadRouteAndQuote called');
+    final loadWatch = Stopwatch()..start();
+    debugPrint('[RoutePreview] start waypoints=${2 + widget.stops.length}');
     // Asegurar que el teclado esté cerrado antes de iniciar cálculos pesados
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -352,15 +444,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     });
 
     try {
-      // Prepare waypoints: Origin -> Stops -> Destination
-      final waypoints = [
-        widget.origin.toLatLng(),
-        ...widget.stops.map((s) => s.toLatLng()),
-        widget.destination.toLatLng(),
-      ];
+      final waypoints = _buildWaypoints();
 
-      // Obtener ruta de Mapbox con timeout para evitar spinner infinito
-      final route = await MapboxService.getRoute(waypoints: waypoints).timeout(
+      final route = await RoutePreviewCache.instance
+          .getOrFetchRoute(waypoints: waypoints)
+          .timeout(
         const Duration(seconds: 12),
         onTimeout: () {
           debugPrint('Mapbox routing timeout after 12s');
@@ -376,73 +464,20 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         debugPrint('🔍 TripPreviewScreen: aborted - not mounted after routing');
         return;
       }
-      debugPrint('🔍 TripPreviewScreen: Route calculated successfully');
-      setState(() {
-        _route = route;
-        _isLoadingRoute = false;
-      });
-
-      // Ajustar el mapa para mostrar la ruta completa con animación suave
-      await _fitMapToRouteAnimated();
-      if (!mounted) return;
-
-      // Animar el panel superior
-      _topPanelAnimationController.forward();
-      if (!mounted) return;
-
-      // Animar los marcadores
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) return;
-      _markerAnimationController.forward();
-
-      // Animar la línea de ruta
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return;
-      _routeAnimationController.forward();
-
-      // Calcular cotización para todos los vehículos (Backend)
-      await _loadCompanyVehicles(route);
-
-      debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles completed');
-
-      if (!mounted) {
-        debugPrint(
-          '🔍 TripPreviewScreen: Widget no longer mounted after _loadCompanyVehicles',
-        );
-        return;
-      }
-
       debugPrint(
-        '🔍 TripPreviewScreen: About to call setState for quote update',
+        '[RoutePreview] route_ready ms=${loadWatch.elapsedMilliseconds} points=${route.geometry.length} km=${route.distanceKm.toStringAsFixed(2)}',
       );
+      await _prepareRouteForRendering(route);
+      await _loadQuoteForRoute(route, loadWatch);
       debugPrint(
-        '🔍 TripPreviewScreen: _selectedVehicleType = $_selectedVehicleType',
+        '[RoutePreview] done ms=${loadWatch.elapsedMilliseconds}',
       );
-      debugPrint(
-        '🔍 TripPreviewScreen: _vehicleQuotes.keys = ${_vehicleQuotes.keys.toList()}',
-      );
-
-      setState(() {
-        _quote = _vehicleQuotes[_selectedVehicleType];
-        _isLoadingQuote = false;
-        if (_quote != null) {
-          _targetPrice = _quote!.totalPrice;
-          _animatedPrice = _quote!.totalPrice;
-        }
-      });
-
-      debugPrint(
-        '🔍 TripPreviewScreen: setState completed, starting slide animation delay',
-      );
-
-      // Animar la aparición del panel de detalles
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (!mounted) return;
-      debugPrint('🔍 TripPreviewScreen: Starting slide animation');
-      _slideAnimationController.forward();
     } on TimeoutException catch (e, stackTrace) {
       debugPrint('Timeout loading route/quote: $e');
       debugPrint('Stack trace: $stackTrace');
+      debugPrint(
+        '[RoutePreview] timeout ms=${loadWatch.elapsedMilliseconds}',
+      );
       if (!mounted) return;
       setState(() {
         _errorMessage =
@@ -453,12 +488,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     } catch (e, stackTrace) {
       debugPrint('Error loading route and quote: $e');
       debugPrint('Stack trace: $stackTrace');
+      debugPrint(
+        '[RoutePreview] error ms=${loadWatch.elapsedMilliseconds} error=$e',
+      );
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Error: ${e.toString()}';
         _isLoadingRoute = false;
         _isLoadingQuote = false;
       });
+    } finally {
+      loadWatch.stop();
     }
   }
 
@@ -470,16 +510,29 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     final int duracionMin = route.durationMinutes.ceil();
 
     // Extraer municipio con fallback robusto
-    String municipio =
+    final municipio =
         widget.origin.municipality ??
+        widget.destination.municipality ??
         CompanyVehicleService.extractMunicipalityFromAddress(
           widget.origin.address,
         ) ??
         CompanyVehicleService.findNearestMunicipality(
           start.latitude,
           start.longitude,
-        ) ??
-        'Medellín';
+        );
+
+    if (municipio == null || municipio.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          _noVehiclesAvailable = true;
+          _noVehiclesMessage =
+              'No hay empresas disponibles cerca de tu punto de origen';
+          _vehicles = [];
+          _vehicleQuotes.clear();
+        });
+      }
+      return;
+    }
 
     debugPrint('🔍 TripPreviewScreen: _loadCompanyVehicles started');
     debugPrint('🏘️ Municipio resuelto para cotización: $municipio');
@@ -513,6 +566,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         }
 
         final normalizedMunicipio = normalize(municipio);
+        const maxDriverDistanceKm = 35.0;
 
         // Crear mapa de detalles de empresas para búsqueda rápida
         final companyDetailsMap = {for (var e in response.empresas) e.id: e};
@@ -522,37 +576,33 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         final filteredVehicles = <AvailableVehicleType>[];
         for (var v in response.vehiculosDisponibles) {
           final exactMunicipioCompanies = <CompanyVehicleOption>[];
-          final fallbackCompanies = <CompanyVehicleOption>[];
 
           for (final e in v.empresas) {
             final details = companyDetailsMap[e.id];
             final companyMunicipio = details?.municipio;
 
+            final driverDistanceKm = e.distanciaConductorKm;
+            if (driverDistanceKm != null && driverDistanceKm > maxDriverDistanceKm) {
+              continue;
+            }
+
             // Si no hay municipio en metadata, mantener como válido por defecto.
             if (companyMunicipio == null || companyMunicipio.trim().isEmpty) {
-              exactMunicipioCompanies.add(e);
+              // Solo aceptar sin municipio cuando el conductor realmente está cerca.
+              if (driverDistanceKm != null && driverDistanceKm <= maxDriverDistanceKm) {
+                exactMunicipioCompanies.add(e);
+              }
               continue;
             }
 
             final companyMun = normalize(companyMunicipio);
             if (companyMun == normalizedMunicipio) {
               exactMunicipioCompanies.add(e);
-            } else {
-              fallbackCompanies.add(e);
             }
           }
 
-          // Priorizar coincidencia exacta por municipio; si no existe,
-          // usar fallback para no ocultar tipos de vehículo.
-          final availableCompanies = exactMunicipioCompanies.isNotEmpty
-              ? exactMunicipioCompanies
-              : fallbackCompanies;
-
-          if (exactMunicipioCompanies.isEmpty && fallbackCompanies.isNotEmpty) {
-            debugPrint(
-              '⚠️ Usando fallback de municipio para ${v.tipo} en zona $municipio',
-            );
-          }
+          // Mantener filtro estricto por municipio de origen.
+          final availableCompanies = exactMunicipioCompanies;
 
           if (availableCompanies.isNotEmpty) {
             // Asegurar que la empresa recomendada original esté de primera si aún está disponible
@@ -662,15 +712,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           _companiesPerVehicle[v.tipo] = v.empresas;
 
           // Modo por defecto: "Al azar" (sin empresa fija).
-          // La cotización se muestra usando la empresa recomendada/primera para ese tipo.
+          // La cotización se muestra como promedio entre empresas para ese tipo.
           _selectedCompanyPerVehicle.remove(v.tipo);
-          final defaultOption =
-              v.empresaRecomendada ??
-              (v.empresas.isNotEmpty ? v.empresas.first : null);
-          if (defaultOption != null) {
-            _updateQuoteForVehicle(v.tipo, defaultOption);
+          if (v.empresas.isNotEmpty) {
+            _buildRandomQuoteForVehicle(v.tipo, v.empresas);
             debugPrint(
-              '💰 Quote base (azar) para ${v.tipo}: \$${defaultOption.tarifaTotal}',
+              '💰 Quote promedio (azar) para ${v.tipo}: \$${_vehicleQuotes[v.tipo]?.totalPrice ?? 0}',
             );
           }
         }
@@ -778,7 +825,12 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     }).toList();
   }
 
-  void _updateQuoteForVehicle(String type, CompanyVehicleOption option) {
+  void _updateQuoteForVehicle(
+    String type,
+    CompanyVehicleOption option, {
+    bool isRandomEstimate = false,
+    int randomCompanyCount = 0,
+  }) {
     // Usar datos de la ruta si está disponible, con safety checks
     double distKm = _route?.distanceKm ?? 0;
     double durMinRaw = _route?.durationMinutes ?? 0;
@@ -799,6 +851,84 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       totalPrice: option.tarifaTotal,
       periodType: option.periodo,
       surchargePercentage: option.recargoPorcentaje,
+      surgeMultiplier: option.surgeMultiplier,
+      pickupEtaMinutes: option.pickupEtaMinutes,
+      driverDistanceKm: option.distanciaConductorKm,
+      companyId: isRandomEstimate ? null : option.id,
+      companyName: isRandomEstimate ? 'Al azar' : option.nombre,
+      companyLogoUrl: isRandomEstimate ? null : option.logoUrl,
+      isRandomEstimate: isRandomEstimate,
+      randomCompanyCount: randomCompanyCount,
+    );
+  }
+
+  void _buildRandomQuoteForVehicle(
+    String type,
+    List<CompanyVehicleOption> companies,
+  ) {
+    if (companies.isEmpty) return;
+
+    final count = companies.length;
+    double avgTarifaBase = 0;
+    double avgCostoDistancia = 0;
+    double avgCostoTiempo = 0;
+    double avgRecargo = 0;
+    double avgTarifaTotal = 0;
+    double avgSurge = 0;
+
+    double etaSum = 0;
+    int etaCount = 0;
+    double driverDistSum = 0;
+    int driverDistCount = 0;
+
+    for (final company in companies) {
+      avgTarifaBase += company.tarifaBase;
+      avgCostoDistancia += company.costoDistancia;
+      avgCostoTiempo += company.costoTiempo;
+      avgRecargo += company.recargoPrecio;
+      avgTarifaTotal += company.tarifaTotal;
+      avgSurge += company.surgeMultiplier;
+
+      if (company.pickupEtaMinutes != null) {
+        etaSum += company.pickupEtaMinutes!;
+        etaCount++;
+      }
+      if (company.distanciaConductorKm != null) {
+        driverDistSum += company.distanciaConductorKm!;
+        driverDistCount++;
+      }
+    }
+
+    final base = avgTarifaBase / count;
+    final dist = avgCostoDistancia / count;
+    final time = avgCostoTiempo / count;
+    final surcharge = avgRecargo / count;
+    final total = avgTarifaTotal / count;
+    final surge = avgSurge / count;
+
+    final first = companies.first;
+    final randomOption = CompanyVehicleOption(
+      id: 0,
+      nombre: 'Al azar',
+      conductores: companies.fold<int>(0, (acc, e) => acc + e.conductores),
+      tarifaTotal: total,
+      tarifaBase: base,
+      costoDistancia: dist,
+      costoTiempo: time,
+      recargoPrecio: surcharge,
+      periodo: first.periodo,
+      recargoPorcentaje: first.recargoPorcentaje,
+      surgeMultiplier: surge,
+      pickupEtaMinutes: etaCount > 0 ? (etaSum / etaCount) : null,
+      distanciaConductorKm:
+          driverDistCount > 0 ? (driverDistSum / driverDistCount) : null,
+    );
+
+    _updateQuoteForVehicle(
+      type,
+      randomOption,
+      isRandomEstimate: true,
+      randomCompanyCount: count,
     );
   }
 
@@ -814,7 +944,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
     CompanyVehicleOption? newOption;
     if (newCompanyId == null) {
-      newOption = defaultOption;
+      _buildRandomQuoteForVehicle(vehicleType, companies);
     } else {
       for (final company in companies) {
         if (company.id == newCompanyId) {
@@ -829,9 +959,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         );
         newOption = defaultOption;
       }
-    }
 
-    final resolvedOption = newOption ?? defaultOption;
+      _updateQuoteForVehicle(vehicleType, newOption ?? defaultOption);
+    }
 
     setState(() {
       final existsInCurrentList =
@@ -842,7 +972,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       } else {
         _selectedCompanyPerVehicle[vehicleType] = newCompanyId;
       }
-      _updateQuoteForVehicle(vehicleType, resolvedOption);
 
       if (_selectedVehicleType == vehicleType) {
         _quote = _vehicleQuotes[vehicleType];
@@ -1064,10 +1193,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                 ),
               ),
             ),
-
-          // Indicador de carga
-          if (_isLoadingRoute || _isLoadingQuote) _buildLoadingOverlay(isDark),
-
           // Mensaje de error
           if (_errorMessage != null) _buildErrorOverlay(isDark),
 
@@ -1375,10 +1500,6 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     );
   }
 
-  Widget _buildLoadingOverlay(bool isDark) {
-    return _RouteLoader(isDark: isDark);
-  }
-
   Widget _buildErrorOverlay(bool isDark) {
     return Container(
       color: Colors.black.withValues(alpha: 0.5),
@@ -1593,6 +1714,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     } catch (e) {
       debugPrint('Error opening sheet: $e');
     }
+  }
+
+  void _setStateSafe(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
+
+  String _hashRouteGeometry(List<LatLng> points) {
+    if (points.isEmpty) return 'empty';
+    final first = points.first;
+    final last = points.last;
+    return '${points.length}|${first.latitude.toStringAsFixed(5)},${first.longitude.toStringAsFixed(5)}|${last.latitude.toStringAsFixed(5)},${last.longitude.toStringAsFixed(5)}';
   }
 }
 
@@ -1830,7 +1963,7 @@ class _RouteLoaderState extends State<_RouteLoader>
 
                 // Titles
                 Text(
-                  'Calculando ruta...',
+                  'Preparando viaje...',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

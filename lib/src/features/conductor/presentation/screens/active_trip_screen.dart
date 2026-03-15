@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/core/network/connectivity_service.dart';
 import 'package:viax/src/features/conductor/services/conductor_service.dart';
 import 'package:viax/src/features/conductor/services/trip_tracking_service.dart';
-import 'package:viax/src/features/conductor/services/resilient_conductor_service.dart';
 import 'package:viax/src/global/widgets/chat/chat_widgets.dart';
 import 'package:viax/src/global/widgets/trip_completion/trip_completion_widgets.dart';
 import 'package:viax/src/global/services/rating_service.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
+import 'package:viax/src/core/offline/trip_command_executor.dart';
+import 'package:viax/src/core/offline/trip_command_queue.dart';
 import '../../../../global/services/chat_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/auth/user_service.dart';
@@ -67,6 +70,8 @@ class ConductorActiveTripScreen extends StatefulWidget {
 class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     with WidgetsBindingObserver {
   late final ActiveTripController _controller;
+  static const double _pickupAutoArrivalMeters = 60.0;
+  static const Duration _pickupAutoArrivalCooldown = Duration(seconds: 12);
 
   // Estado para mensajes flotantes
   String? _statusMessage;
@@ -79,6 +84,16 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   // Estados de carga para acciones (evitar doble tap y dar feedback)
   bool _isProcessingAction = false;
   String? _processingActionType; // 'arrived', 'start', 'finish'
+  bool _pendingFinishSync = false;
+  bool _isRetryingPendingFinish = false;
+  bool _serverCompletionHandled = false;
+  TrackingFinalResult? _lastTrackingFinalResult;
+  Map<String, dynamic>? _lastServerCompletedTrip;
+  bool _autoArrivalTriggered = false;
+  DateTime? _lastAutoArrivalAttempt;
+  bool _wasOffline = false;
+  VoidCallback? _connectivityListener;
+  Timer? _pendingFinishRetryTimer;
 
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
@@ -117,8 +132,34 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _checkRecovery();
     _startTripStatusPolling();
     _registerActiveTripNavigation();
+    _setupConnectivityStatusListener();
     // Solicitar permiso de overlay al iniciar el viaje
     _requestSystemOverlayPermission();
+  }
+
+  void _setupConnectivityStatusListener() {
+    final connectivity = ConnectivityService();
+    _wasOffline = !connectivity.isOnline;
+
+    _connectivityListener = () {
+      final nowOnline = connectivity.isOnline;
+      if (!nowOnline) {
+        _wasOffline = true;
+        _showStatus('Sin conexión. Reintentando sincronización...', AppColors.warning);
+        return;
+      }
+
+      if (_wasOffline) {
+        _wasOffline = false;
+        _showStatus('Reconectado. Internet restablecido.', AppColors.success);
+        if (_pendingFinishSync) {
+          _showStatus('Reconectado. Sincronizando finalización...', AppColors.warning);
+          unawaited(_retryPendingFinishWithoutTap());
+        }
+      }
+    };
+
+    connectivity.isOnlineListenable.addListener(_connectivityListener!);
   }
 
   /// Solicita permiso para el overlay del sistema
@@ -174,24 +215,173 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _checkTripStatus();
     });
+
+    // Primer chequeo inmediato para no esperar el primer tick.
+    unawaited(_checkTripStatus());
   }
 
   Future<void> _checkTripStatus() async {
     if (widget.solicitudId == null || !mounted) return;
-
-    final tripData = await ConductorService.checkTripStatus(
-      widget.solicitudId!,
-    );
-
-    if (tripData != null && mounted) {
-      final estado = tripData['estado'] as String?;
-
-      // Si el usuario canceló
-      if (estado == 'cancelada' || estado == 'cancelada_por_usuario') {
-        _pollingTimer?.cancel();
-        _handleUserCancellation();
+    try {
+      // Si hay finalización pendiente por red, reintentar flush en cada ciclo.
+      if (_pendingFinishSync) {
+        await _retryPendingFinishWithoutTap();
       }
+
+      final tripData = await ConductorService.checkTripStatus(
+        widget.solicitudId!,
+      );
+
+      if (tripData != null && mounted) {
+        final estado = (tripData['estado'] as String?)?.toLowerCase();
+
+        // Si el usuario canceló
+        if (estado == 'cancelada' || estado == 'cancelada_por_usuario') {
+          _pollingTimer?.cancel();
+          _handleUserCancellation();
+          return;
+        }
+
+        // Si el backend ya marcó completado, cerrar flujo automáticamente.
+        final isCompleted = estado == 'completada' ||
+            estado == 'completado' ||
+            estado == 'finalizada' ||
+            estado == 'finalizado' ||
+            estado == 'completed';
+
+        if (isCompleted && !_serverCompletionHandled) {
+          if (!_tripHasCanonicalSettlement(tripData)) {
+            _showStatus('Finalizando liquidación en servidor...', AppColors.warning);
+            return;
+          }
+
+          _lastServerCompletedTrip = tripData;
+          _serverCompletionHandled = true;
+          _pollingTimer?.cancel();
+          await TripPersistenceService().clearActiveTrip();
+          ActiveTripNavigationService().clearActiveTrip();
+
+          if (!mounted) return;
+          _showStatus('Finalización confirmada por servidor', AppColors.success);
+          _navigateToTripCompletion(
+            trackingResult: _lastTrackingFinalResult,
+            serverTripData: tripData,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [TripStatus] Error consultando estado: $e');
     }
+  }
+
+  bool _tripHasCanonicalSettlement(Map<String, dynamic> tripData) {
+    double? toDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString());
+    }
+
+    final canonicalPrice = toDouble(tripData['price_final_canonical']);
+    final finalPrice = toDouble(tripData['precio_final']);
+    final metricsLocked = tripData['metrics_locked'] == true || tripData['finalized_at'] != null;
+    return (canonicalPrice != null && canonicalPrice > 0) ||
+        (finalPrice != null && finalPrice > 0) ||
+        metricsLocked;
+  }
+
+  Future<Map<String, dynamic>?> _awaitCanonicalCompletedTrip({
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    if (widget.solicitudId == null) return null;
+
+    final startedAt = DateTime.now();
+    while (DateTime.now().difference(startedAt) < timeout) {
+      final tripData = await ConductorService.checkTripStatus(widget.solicitudId!);
+      if (tripData != null) {
+        final estado = (tripData['estado'] as String?)?.toLowerCase();
+        final isCompleted = estado == 'completada' ||
+            estado == 'completado' ||
+            estado == 'finalizada' ||
+            estado == 'finalizado' ||
+            estado == 'completed';
+
+        if (isCompleted && _tripHasCanonicalSettlement(tripData)) {
+          return tripData;
+        }
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
+    return null;
+  }
+
+  Future<void> _retryPendingFinishWithoutTap() async {
+    if (widget.solicitudId == null || _isRetryingPendingFinish) return;
+    if (!ConnectivityService().isOnline) return;
+
+    _isRetryingPendingFinish = true;
+
+    try {
+      final pendingBefore = await TripCommandQueue.instance.getPendingCommands();
+      final hasPendingFinishBefore = pendingBefore.any(
+        (cmd) =>
+            cmd.tripId == widget.solicitudId &&
+            cmd.commandType == TripCommandType.finishTrip.wireValue,
+      );
+
+      if (!hasPendingFinishBefore) {
+        if (_pendingFinishSync && mounted) {
+          setState(() {
+            _pendingFinishSync = false;
+          });
+        } else {
+          _pendingFinishSync = false;
+        }
+        _stopPendingFinishRetry();
+        return;
+      }
+
+      await TripCommandExecutor.instance.flushQueue();
+
+      final pendingAfter = await TripCommandQueue.instance.getPendingCommands();
+      final hasPendingFinishAfter = pendingAfter.any(
+        (cmd) =>
+            cmd.tripId == widget.solicitudId &&
+            cmd.commandType == TripCommandType.finishTrip.wireValue,
+      );
+
+      if (!hasPendingFinishAfter && mounted) {
+        setState(() {
+          _pendingFinishSync = false;
+        });
+        _stopPendingFinishRetry();
+        _showStatus('Finalización sincronizada. Confirmando estado...', AppColors.success);
+        unawaited(_checkTripStatus());
+      }
+    } catch (e) {
+      debugPrint('⚠️ [TripFinalize] Reintento pendiente falló: $e');
+    } finally {
+      _isRetryingPendingFinish = false;
+    }
+  }
+
+  void _startPendingFinishRetry() {
+    _pendingFinishRetryTimer?.cancel();
+    _pendingFinishRetryTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!_pendingFinishSync || !mounted) {
+        _stopPendingFinishRetry();
+        return;
+      }
+      if (!ConnectivityService().isOnline) {
+        return;
+      }
+      unawaited(_retryPendingFinishWithoutTap());
+    });
+  }
+
+  void _stopPendingFinishRetry() {
+    _pendingFinishRetryTimer?.cancel();
+    _pendingFinishRetryTimer = null;
   }
 
   void _handleUserCancellation() {
@@ -264,10 +454,16 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     );
 
     // Configurar estado inicial según el status del backend
-    if (widget.initialTripStatus == 'conductor_llego') {
+    final normalizedStatus = (widget.initialTripStatus ?? '').toLowerCase();
+
+    if (normalizedStatus == 'conductor_llego' ||
+        normalizedStatus == 'driver_arrived') {
       _controller.toPickup = false;
       _controller.arrivedAtPickup = true;
-    } else if (widget.initialTripStatus == 'en_curso') {
+    } else if (normalizedStatus == 'en_curso' ||
+        normalizedStatus == 'recogido' ||
+        normalizedStatus == 'picked_up' ||
+        normalizedStatus == 'in_progress') {
       _controller.toPickup = false;
       _controller.arrivedAtPickup = false;
       // Asegurar que comience el tracking real si no se ha hecho
@@ -292,6 +488,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     WidgetsBinding.instance.removeObserver(this);
     // Notificar que salimos de la pantalla de viaje
     ActiveTripNavigationService().setOnTripScreen(false);
+    if (_connectivityListener != null) {
+      ConnectivityService().isOnlineListenable.removeListener(_connectivityListener!);
+      _connectivityListener = null;
+    }
+    _stopPendingFinishRetry();
     _controller.dispose();
     _messagesSubscription?.cancel();
     _unreadSubscription?.cancel();
@@ -387,8 +588,45 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   void _onControllerStateChanged() {
     if (mounted && !_controller.isDisposed) {
       setState(() {});
+      _maybeAutoMarkArrivedPickup();
       _checkAndSyncBackend();
     }
+  }
+
+  void _maybeAutoMarkArrivedPickup() {
+    if (!mounted || _controller.isDisposed) return;
+    if (_autoArrivalTriggered) return;
+    if (_isProcessingAction) return;
+    if (widget.solicitudId == null) return;
+    if (!_controller.toPickup || _controller.arrivedAtPickup) return;
+
+    final driver = _controller.driverLocation;
+    if (driver == null) return;
+
+    final meters = _controller.calculateDistance(driver, _controller.pickup);
+    if (meters > _pickupAutoArrivalMeters) return;
+
+    final now = DateTime.now();
+    if (_lastAutoArrivalAttempt != null &&
+        now.difference(_lastAutoArrivalAttempt!) < _pickupAutoArrivalCooldown) {
+      return;
+    }
+    _lastAutoArrivalAttempt = now;
+
+    debugPrint(
+      '📍 [ConductorActiveTrip] Auto llegada detectada a ${meters.toStringAsFixed(1)}m del pickup',
+    );
+
+    unawaited(() async {
+      try {
+        await _onArrivedPickup();
+        if (mounted) {
+          _autoArrivalTriggered = true;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [ConductorActiveTrip] Auto llegada falló: $e');
+      }
+    }());
   }
 
   /// Sincroniza la ubicación y datos del viaje con el backend con throttling
@@ -444,20 +682,35 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     });
 
     if (widget.solicitudId != null) {
-      try {
-        // Usar servicio resiliente con reintentos
-        await ResilientConductorService().notificarLlegadaRecogidaResilient(
-          conductorId: widget.conductorId,
-          solicitudId: widget.solicitudId!,
+      final arrivedResult = await TripCommandExecutor.instance.enqueueAndTryNow(
+        tripId: widget.solicitudId!,
+        type: TripCommandType.driverArrived,
+        payload: <String, dynamic>{
+          'conductor_id': widget.conductorId,
+          'solicitud_id': widget.solicitudId,
+          'nuevo_estado': 'conductor_llego',
+        },
+      );
+
+      if (!arrivedResult.success) {
+        setState(() {
+          _isProcessingAction = false;
+          _processingActionType = null;
+        });
+        _showStatus(
+          arrivedResult.pending
+              ? 'No se pudo confirmar llegada. Reintenta al recuperar conexión.'
+              : 'Error al confirmar llegada. Intenta nuevamente.',
+          AppColors.warning,
         );
-      } catch (e) {
-        debugPrint('Error notificando llegada: $e');
-        // Continuar de todos modos (optimistic update)
+        return;
       }
     }
 
     await _controller.onArrivedPickup();
     if (!mounted || _controller.isDisposed) return;
+
+    _autoArrivalTriggered = true;
 
     setState(() {
       _isProcessingAction = false;
@@ -478,33 +731,35 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     });
 
     if (widget.solicitudId != null) {
-      try {
-        // Usar servicio resiliente
-        final success = await ResilientConductorService().iniciarViajeResilient(
-          conductorId: widget.conductorId,
-          solicitudId: widget.solicitudId!,
-        );
-        if (!success) {
-          _showStatus('Error al iniciar el viaje', AppColors.error);
-          setState(() {
-            _isProcessingAction = false;
-            _processingActionType = null;
-          });
-          return;
-        }
-      } catch (e) {
-        debugPrint('Error iniciando viaje: $e');
-        _showStatus('Error al iniciar el viaje', AppColors.error);
+      final startResult = await TripCommandExecutor.instance.enqueueAndTryNow(
+        tripId: widget.solicitudId!,
+        type: TripCommandType.startTrip,
+        payload: <String, dynamic>{
+          'conductor_id': widget.conductorId,
+          'solicitud_id': widget.solicitudId,
+          'nuevo_estado': 'recogido',
+        },
+      );
+
+      if (!startResult.success) {
         setState(() {
           _isProcessingAction = false;
           _processingActionType = null;
         });
+        _showStatus(
+          startResult.pending
+              ? 'Inicio pendiente por conexión. Reintenta en unos segundos.'
+              : 'Error al iniciar el viaje. Intenta nuevamente.',
+          AppColors.warning,
+        );
         return;
       }
     }
 
     await _controller.onStartTrip();
     if (!mounted || _controller.isDisposed) return;
+
+    _autoArrivalTriggered = false;
 
     // Registrar tiempo de inicio - ESTE ES EL CRONÓMETRO OFICIAL
     _tripStartTime = DateTime.now();
@@ -540,6 +795,8 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _processingActionType = 'finish';
     });
 
+    _showStatus('Finalizando viaje...', AppColors.warning);
+
     // ========== CALCULAR TIEMPO REAL DEL CRONÓMETRO ==========
     // El tiempo se mide desde "comenzar viaje" hasta "finalizar viaje"
     // Este es el tiempo REAL que el conductor usó para el viaje
@@ -555,6 +812,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final trackingResult = await _controller.finalizeTracking(
       tiempoRealSegundos: tiempoRealSeg,
     );
+    _lastTrackingFinalResult = trackingResult;
 
     // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
     // Si no hay tracking, usar 0 (no se movió)
@@ -568,52 +826,133 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final duracionMin = (tiempoRealSeg / 60).ceil();
 
     if (widget.solicitudId != null) {
-      try {
-        // Usar servicio resiliente para garantizar entrega
-        final result = await ResilientConductorService()
-            .completarViajeResilient(
-              conductorId: widget.conductorId,
-              solicitudId: widget.solicitudId!,
-              distanceKm: distanciaKm,
-              elapsedMinutes: duracionMin,
-            );
+      final finalizeStartedAt = DateTime.now();
 
-        if (result['success'] != true && result['pending'] != true) {
-          _showStatus(
-            'Error al finalizar el viaje. Reintentando...',
-            AppColors.warning,
-          );
-          // No retornar, continuar con la navegación de todos modos (optimistic)
+      final payload = <String, dynamic>{
+        'conductor_id': widget.conductorId,
+        'solicitud_id': widget.solicitudId,
+        'nuevo_estado': 'completada',
+        'trip_state': 'completed',
+        'distancia_recorrida': distanciaKm,
+        'tiempo_transcurrido': duracionMin,
+      };
+
+      final finalizeResult = await TripCommandExecutor.instance.enqueueAndTryNow(
+        tripId: widget.solicitudId!,
+        type: TripCommandType.finishTrip,
+        payload: payload,
+      );
+
+      final finalizeLatency = DateTime.now()
+          .difference(finalizeStartedAt)
+          .inMilliseconds;
+      debugPrint(
+        '[TripFinalize] ts=${DateTime.now().toIso8601String()} tripId=${widget.solicitudId} '
+        'latency_ms=$finalizeLatency result=${finalizeResult.success ? 'confirmed' : (finalizeResult.pending ? 'pending_retry' : 'failed')}',
+      );
+
+      if (!finalizeResult.success) {
+        setState(() {
+          _isProcessingAction = false;
+          _processingActionType = null;
+          _pendingFinishSync = finalizeResult.pending;
+        });
+
+        if (finalizeResult.pending) {
+          _startPendingFinishRetry();
         }
-      } catch (e) {
-        debugPrint('Error finalizando viaje: $e');
+
         _showStatus(
-          'Error al finalizar. Se sincronizará después.',
+          finalizeResult.pending
+              ? 'Sin conexión estable. Se reintentará automáticamente al reconectar.'
+              : 'Error al confirmar finalización. Intenta nuevamente.',
           AppColors.warning,
         );
-        // Continuar de todos modos - la operación se sincronizará después
+        return;
       }
     }
-
-    // Limpiar persistencia
-    await TripPersistenceService().clearActiveTrip();
-    ActiveTripNavigationService().clearActiveTrip();
 
     setState(() {
       _isProcessingAction = false;
       _processingActionType = null;
+      _pendingFinishSync = false;
     });
+    _stopPendingFinishRetry();
+
+    final canonicalTrip = await _awaitCanonicalCompletedTrip();
+    if (canonicalTrip != null) {
+      _lastServerCompletedTrip = canonicalTrip;
+    }
 
     if (!mounted) return;
 
+    if (canonicalTrip == null) {
+      _showStatus(
+        'Viaje finalizado. Esperando liquidación final del servidor...',
+        AppColors.warning,
+      );
+      return;
+    }
+
     // Navegar a pantalla de completación con datos del tracking
-    _navigateToTripCompletion(trackingResult: trackingResult);
+    _navigateToTripCompletion(
+      trackingResult: trackingResult,
+      serverTripData: canonicalTrip,
+    );
   }
 
   /// Navega a la pantalla de completación del viaje.
-  void _navigateToTripCompletion({TrackingFinalResult? trackingResult}) {
+  void _navigateToTripCompletion({
+    TrackingFinalResult? trackingResult,
+    Map<String, dynamic>? serverTripData,
+  }) {
+    final authoritativeTrip = serverTripData ?? _lastServerCompletedTrip;
+
+    double? toDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString());
+    }
+
+    int? toInt(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString());
+    }
+
+    Map<String, dynamic>? extractBreakdown(dynamic raw) {
+      if (raw is Map<String, dynamic>) {
+        return raw;
+      }
+      if (raw is String && raw.trim().isNotEmpty) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is Map<String, dynamic>) {
+            return decoded;
+          }
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    // Limpiar persistencia justo al navegar al resumen final.
+    TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
+
+    final canonicalDistance = toDouble(authoritativeTrip?['distance_final']) ??
+        toDouble(authoritativeTrip?['distancia_recorrida']);
+    final canonicalDuration = toInt(authoritativeTrip?['duration_final']) ??
+        toInt(authoritativeTrip?['duracion_segundos']) ??
+        toInt(authoritativeTrip?['tiempo_transcurrido_seg']);
+    final canonicalPrice = toDouble(authoritativeTrip?['price_final_canonical']) ??
+        toDouble(authoritativeTrip?['precio_final']);
+    final canonicalBreakdown = extractBreakdown(authoritativeTrip?['desglose_precio']);
+
     // Usar datos del tracking - distancia REAL recorrida (NO la estimada)
     final distanciaKm =
+        canonicalDistance ??
         trackingResult?.distanciaRealKm ??
         (_controller.distanciaRecorridaKm > 0
             ? _controller.distanciaRecorridaKm
@@ -623,7 +962,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     // El tiempo se envió al backend y vuelve en trackingResult.tiempoRealSeg
     // Este es el tiempo REAL medido desde "comenzar viaje" hasta "finalizar"
     int duracionSeg;
-    if (trackingResult != null && trackingResult.tiempoRealSeg > 0) {
+    if (canonicalDuration != null && canonicalDuration > 0) {
+      duracionSeg = canonicalDuration;
+    } else if (trackingResult != null && trackingResult.tiempoRealSeg > 0) {
       // Tiempo del cronómetro del conductor (el más preciso)
       duracionSeg = trackingResult.tiempoRealSeg;
     } else if (_tripStartTime != null) {
@@ -635,15 +976,14 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
 
     // Usar precio real del tracking si está disponible
     final precio =
-        trackingResult?.precioFinal ??
+      canonicalPrice ??
+      trackingResult?.precioFinal ??
         (_controller.precioActual > 0 ? _controller.precioActual : 0.0);
 
-    final resumenCalculo =
-        (trackingResult != null &&
-            (trackingResult.tiempoRealSeg > 0 ||
-                trackingResult.distanciaRealKm > 0))
-        ? 'Valor calculado con el tracking final enviado por el conductor (distancia y tiempo reales).'
-        : 'Valor calculado con datos locales del viaje por falta de respuesta final del tracking.';
+    final hasCanonical = canonicalPrice != null && canonicalPrice > 0;
+    final resumenCalculo = hasCanonical
+      ? 'Total confirmado al finalizar el viaje con métricas y recargos oficiales.'
+      : 'Total provisional del viaje. Se actualizará cuando termine la validación final.';
 
     debugPrint('📊 [ConductorTracking] Finalizando viaje:');
     debugPrint('   - Precio real tracking: ${trackingResult?.precioFinal}');
@@ -667,7 +1007,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             precio: precio,
             metodoPago: 'Efectivo', // TODO: Obtener del backend
             resumenCalculo: resumenCalculo,
-            desglosePrecio: trackingResult?.desglose,
+            desglosePrecio: canonicalBreakdown ?? trackingResult?.desglose,
             otroUsuarioNombre: widget.clienteNombre ?? 'Pasajero',
             otroUsuarioFoto: widget.clienteFoto,
           ),
@@ -956,6 +1296,10 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
                 right: 16,
                 child: ErrorBanner(
                   message: _controller.error!,
+                  onRetry: () {
+                    HapticFeedback.lightImpact();
+                    _controller.loadRoute();
+                  },
                   onDismiss: () => setState(() => _controller.error = null),
                 ),
               ),

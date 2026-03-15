@@ -7,7 +7,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 
 import '../../../../global/models/simple_location.dart';
+import '../../../../global/models/location_data.dart';
+import '../../../../global/services/app_secrets_service.dart';
+import '../../../../global/services/google_places_service.dart';
+import '../../../../global/services/landmark_resolver_service.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/poi_resolver_service.dart';
+import '../../../../global/services/text_search_resolver_service.dart';
+import '../../services/roads_map_matching_service.dart';
 import 'pickup/pickup_center_button.dart';
 import 'pickup/pickup_center_pin.dart';
 import 'pickup/pickup_map.dart';
@@ -46,11 +53,15 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
   double _clientHeading = 0.0;
 
   String _address = 'Cargando dirección...';
+  LocationData? _normalizedLocation;
   bool _isLoadingAddress = false;
+  bool _isLoadingPoi = false;
   bool _isSnappingToRoad = false;
   bool _isMapMoving = false;
 
   Timer? _addressUpdateTimer;
+  LatLng? _lastResolvedPoint;
+  int _addressRequestToken = 0;
   late AnimationController _pinBounceController;
 
   @override
@@ -89,7 +100,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
 
   void _onMapMoveStart() {
     if (!_isMapMoving) {
-      setState(() => _isMapMoving = true);
+      _safeSetState(() => _isMapMoving = true);
     }
   }
 
@@ -98,7 +109,7 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
     _addressUpdateTimer = Timer(const Duration(milliseconds: 300), () async {
       if (!mounted) return;
       final center = _mapController.camera.center;
-      setState(() {
+      _safeSetState(() {
         _selectedPoint = center;
         _isMapMoving = false;
       });
@@ -111,7 +122,19 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
   Future<void> _snapAndUpdateAddress() async {
     if (_selectedPoint == null) return;
 
-    setState(() => _isSnappingToRoad = true);
+    if (_lastResolvedPoint != null) {
+      final movedMeters = const Distance().as(
+        LengthUnit.Meter,
+        _lastResolvedPoint!,
+        _selectedPoint!,
+      );
+      if (movedMeters < 15) {
+        debugPrint('[GeoResolver] skip_recalc moved_m=${movedMeters.toStringAsFixed(1)}');
+        return;
+      }
+    }
+
+    _safeSetState(() => _isSnappingToRoad = true);
 
     try {
       final snappedPoint = await _snapToNearestRoad(_selectedPoint!);
@@ -128,75 +151,151 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
         }
 
         _selectedPoint = snappedPoint;
+        _lastResolvedPoint = snappedPoint;
       }
     } catch (e) {
       debugPrint('Error snapping to road: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isSnappingToRoad = false);
-      }
+      _safeSetState(() => _isSnappingToRoad = false);
     }
 
     await _updateAddress();
   }
 
   Future<LatLng?> _snapToNearestRoad(LatLng point) async {
+    final stopwatch = Stopwatch()..start();
     try {
-      final snappedPoint = await MapboxService.snapToStreet(point: point);
+      final roadsApiKey = AppSecretsService.instance.googlePlacesApiKey;
+      final service = RoadsMapMatchingService(roadsApiKey);
+      final snappedPoint = await service.snapLastPoint([point]);
 
       if (snappedPoint != null) {
+        debugPrint('[SnapToRoad] success latency_ms=${stopwatch.elapsedMilliseconds} lat=${snappedPoint.latitude} lng=${snappedPoint.longitude}');
         return snappedPoint;
       }
 
-      final offsets = [
-        const LatLng(0.0003, 0.0),
-        const LatLng(-0.0003, 0.0),
-        const LatLng(0.0, 0.0003),
-        const LatLng(0.0, -0.0003),
-      ];
-
-      for (final offset in offsets) {
-        final candidate = LatLng(
-          point.latitude + offset.latitude,
-          point.longitude + offset.longitude,
-        );
-
-        final nearbySnapped = await MapboxService.snapToStreet(point: candidate);
-        if (nearbySnapped != null) {
-          return nearbySnapped;
-        }
-      }
-
-      return null;
+      debugPrint('[SnapToRoad] fallback_original_point latency_ms=${stopwatch.elapsedMilliseconds}');
+      return point;
     } catch (e) {
       debugPrint('Error in snapToNearestRoad: $e');
-      return null;
+      debugPrint('[SnapToRoad] error_fallback_original latency_ms=${stopwatch.elapsedMilliseconds}');
+      return point;
+    } finally {
+      stopwatch.stop();
     }
   }
 
   Future<void> _updateAddress() async {
     if (_selectedPoint == null) return;
 
-    setState(() => _isLoadingAddress = true);
+    final requestToken = ++_addressRequestToken;
+    final selectedSnapshot = _selectedPoint!;
+
+    _safeSetState(() => _isLoadingAddress = true);
 
     try {
-      final place = await MapboxService.reverseGeocodeStreetOnly(
-        position: _selectedPoint!,
+      final normalized = await GooglePlacesService.reverseGeocodeLocationData(
+        position: selectedSnapshot,
+        sourceType: 'map_pin',
       );
 
-      if (mounted) {
-        setState(() {
-          _address = place?.placeName ?? 'Punto en la vía';
-          _isLoadingAddress = false;
-        });
+      if (!mounted || requestToken != _addressRequestToken) {
+        return;
       }
+
+      final label = resolveDisplayLabel(
+        landmarkName: null,
+        poiName: null,
+        route: null,
+        streetNumber: null,
+        neighborhood: null,
+        sublocality: null,
+        locality: normalized?.municipality,
+        administrativeAreaLevel2: normalized?.municipality,
+        administrativeAreaLevel1: normalized?.department,
+        isUrban: normalized?.isUrban ?? false,
+      );
+
+      _safeSetState(() {
+        _normalizedLocation = normalized;
+        _address = (normalized?.address?.isNotEmpty == true)
+            ? normalized!.address!
+            : label.fullText;
+        _isLoadingAddress = false;
+      });
+
+      unawaited(_resolveLandmarkPoiAndTextSearchAndUpdateAddress(
+        requestToken: requestToken,
+        selectedSnapshot: selectedSnapshot,
+        normalized: normalized,
+      ));
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _address = 'Punto en la vía';
-          _isLoadingAddress = false;
-        });
+      if (requestToken != _addressRequestToken) return;
+      _safeSetState(() {
+        _address = 'Punto en la vía';
+        _isLoadingAddress = false;
+      });
+    }
+  }
+
+  Future<void> _resolveLandmarkPoiAndTextSearchAndUpdateAddress({
+    required int requestToken,
+    required LatLng selectedSnapshot,
+    required LocationData? normalized,
+  }) async {
+    _safeSetState(() => _isLoadingPoi = true);
+    try {
+      // Pipeline: landmark -> nearby poi -> text search poi fallback.
+      final landmark = await LandmarkResolverService.resolveNearestLandmark(
+        position: selectedSnapshot,
+      );
+      final poi = await PoiResolverService.resolveNearestPoi(
+        position: selectedSnapshot,
+      );
+      final textSearchPoi = await TextSearchResolverService
+          .resolveNearestTextSearchPoi(
+        position: selectedSnapshot,
+      );
+
+      if (!mounted || requestToken != _addressRequestToken) {
+        return;
       }
+
+      final landmarkName = landmark?.name.trim() ?? '';
+      final poiName = poi?.name.trim() ?? '';
+      final textSearchPoiName = textSearchPoi?.name.trim() ?? '';
+
+      if (landmarkName.isEmpty &&
+          poiName.isEmpty &&
+          textSearchPoiName.isEmpty) {
+        return;
+      }
+
+      final label = resolveDisplayLabel(
+        landmarkName: landmarkName.isNotEmpty ? landmarkName : null,
+        poiName: poiName.isNotEmpty ? poiName : null,
+        textSearchPoiName:
+            textSearchPoiName.isNotEmpty ? textSearchPoiName : null,
+        route: null,
+        streetNumber: null,
+        neighborhood: null,
+        sublocality: null,
+        locality: normalized?.municipality,
+        administrativeAreaLevel2: normalized?.municipality,
+        administrativeAreaLevel1: normalized?.department,
+        isUrban: normalized?.isUrban ?? false,
+      );
+
+      _safeSetState(() {
+        _address = label.fullText;
+      });
+    } catch (_) {
+      // Se mantiene silencioso para no bloquear la selección del usuario.
+    } finally {
+      if (!mounted || requestToken != _addressRequestToken) return;
+        _safeSetState(() {
+        _isLoadingPoi = false;
+      });
     }
   }
 
@@ -212,7 +311,8 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
 
       final latLng = LatLng(position.latitude, position.longitude);
 
-      setState(() {
+      if (!mounted) return;
+      _safeSetState(() {
         _clientLocation = latLng;
         _clientHeading = position.heading;
         _selectedPoint = latLng;
@@ -226,10 +326,13 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
     }
   }
 
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
+
   bool get _canConfirm =>
       !_isMapMoving &&
-      !_isLoadingAddress &&
-      !_isSnappingToRoad &&
       _selectedPoint != null;
 
   void _confirmLocation() {
@@ -241,6 +344,11 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
       latitude: _selectedPoint!.latitude,
       longitude: _selectedPoint!.longitude,
       address: _address.isEmpty ? 'Punto en la vía' : _address,
+      municipality: _normalizedLocation?.municipality,
+      department: _normalizedLocation?.department,
+      country: _normalizedLocation?.country,
+      placeId: _normalizedLocation?.placeId,
+      sourceType: _normalizedLocation?.sourceType ?? 'map_pin',
     );
 
     widget.onLocationSelected(location);
@@ -447,7 +555,9 @@ class _MapLocationPickerSheetState extends State<MapLocationPickerSheet>
                                 Text(
                                   _isSnappingToRoad
                                       ? 'Ajustando a la calle...'
-                                      : 'Buscando dirección...',
+                                      : (_isLoadingPoi
+                                          ? 'Refinando punto de interés...'
+                                          : 'Buscando dirección...'),
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: isDark ? Colors.white70 : Colors.grey[600],

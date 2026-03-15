@@ -107,13 +107,13 @@ class ResilientConductorService {
       payload: {
         'conductor_id': conductorId,
         'solicitud_id': solicitudId,
-        'nuevo_estado': 'en_curso',
+        'nuevo_estado': 'recogido',
       },
       syncFunction: () async {
         final result = await _actualizarEstadoViajeResilient(
           conductorId: conductorId,
           solicitudId: solicitudId,
-          nuevoEstado: 'en_curso',
+          nuevoEstado: 'recogido',
           idempotencyKey: idempotencyKey,
         );
         return SyncResult(

@@ -53,7 +53,7 @@ class DocumentUploadWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: hasFile
-                    ? const Color(0xFFFFFF00).withValues(alpha: 0.3)
+                    ? AppColors.primary.withValues(alpha: 0.35)
                     : Colors.white.withValues(alpha: 0.1),
                 width: 1.5,
               ),
@@ -111,7 +111,7 @@ class DocumentUploadWidget extends StatelessWidget {
                                 : subtitle ?? _getAcceptedTypesText(),
                             style: TextStyle(
                               color: hasFile
-                                  ? const Color(0xFFFFFF00)
+                                  ? AppColors.primaryLight
                                   : Colors.white54,
                               fontSize: 13,
                             ),
@@ -139,7 +139,7 @@ class DocumentUploadWidget extends StatelessWidget {
                             ? Icons.check_circle_rounded
                             : Icons.add_circle_outline_rounded,
                         color: hasFile
-                            ? const Color(0xFFFFFF00)
+                            ? AppColors.primary
                             : Colors.white.withValues(alpha: 0.3),
                         size: 28,
                       ),
@@ -155,12 +155,12 @@ class DocumentUploadWidget extends StatelessWidget {
                       icon: const Icon(
                         Icons.visibility_rounded,
                         size: 18,
-                        color: Color(0xFFFFFF00),
+                        color: AppColors.primary,
                       ),
                       label: const Text(
                         'Ver imagen completa',
                         style: TextStyle(
-                          color: Color(0xFFFFFF00),
+                          color: AppColors.primary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -170,7 +170,7 @@ class DocumentUploadWidget extends StatelessWidget {
                           horizontal: 12,
                           vertical: 8,
                         ),
-                        backgroundColor: const Color(0xFFFFFF00).withValues(alpha: 0.1),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -191,12 +191,12 @@ class DocumentUploadWidget extends StatelessWidget {
       height: 80,
       decoration: BoxDecoration(
         color: hasFile
-            ? const Color(0xFFFFFF00).withValues(alpha: 0.15)
+            ? AppColors.primary.withValues(alpha: 0.16)
             : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: hasFile
-              ? const Color(0xFFFFFF00).withValues(alpha: 0.3)
+              ? AppColors.primary.withValues(alpha: 0.4)
               : Colors.white.withValues(alpha: 0.1),
           width: 1.5,
         ),
@@ -241,7 +241,7 @@ class DocumentUploadWidget extends StatelessWidget {
                               ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                               : null,
                           strokeWidth: 2,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
                       ),
                     );

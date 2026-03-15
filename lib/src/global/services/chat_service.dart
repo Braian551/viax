@@ -166,6 +166,7 @@ class ChatService {
         solicitudId: solicitudId,
         usuarioId: usuarioId,
         desdeId: _lastMessageId,
+        markAsRead: isChatOpen,
       );
       
       if (messages.isNotEmpty) {
@@ -253,9 +254,10 @@ class ChatService {
     required int usuarioId,
     int? desdeId,
     int limite = 50,
+    bool markAsRead = true,
   }) async {
     try {
-      var url = '$baseUrl/chat/get_messages.php?solicitud_id=$solicitudId&usuario_id=$usuarioId&limite=$limite';
+      var url = '$baseUrl/chat/get_messages.php?solicitud_id=$solicitudId&usuario_id=$usuarioId&limite=$limite&marcar_leidos=${markAsRead ? 1 : 0}';
       
       if (desdeId != null) {
         url += '&desde_id=$desdeId';

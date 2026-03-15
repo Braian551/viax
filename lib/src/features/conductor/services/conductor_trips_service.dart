@@ -224,9 +224,15 @@ class TripModel {
         fechaSolicitud: fechaSolicitud,
         fechaCompletado: parseDate(json['fecha_completado']),
         fechaAceptado: parseDate(json['fecha_aceptado']),
-        fechaSolicitudColombia: json['fecha_solicitud_colombia']?.toString(),
-        fechaCompletadoColombia: json['fecha_completado_colombia']?.toString(),
-        fechaAceptadoColombia: json['fecha_aceptado_colombia']?.toString(),
+        fechaSolicitudColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_solicitud']?.toString()) ??
+          json['fecha_solicitud_colombia']?.toString(),
+        fechaCompletadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_completado']?.toString()) ??
+          json['fecha_completado_colombia']?.toString(),
+        fechaAceptadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_aceptado']?.toString()) ??
+          json['fecha_aceptado_colombia']?.toString(),
         origen: json['origen']?.toString(),
         destino: json['destino']?.toString(),
         clienteNombre: json['cliente_nombre']?.toString() ?? '',

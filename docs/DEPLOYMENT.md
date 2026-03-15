@@ -7,19 +7,17 @@
 - URL backend: `http://76.13.114.194`
 
 ## Flujo recomendado de despliegue (backend)
-1. Conectarse al servidor:
+1. Subir cambios por SCP/SSH desde local (sin git en servidor):
+   - `./backend/scripts/update_server.sh root@76.13.114.194`
+2. Conectarse al servidor para verificación:
    - `ssh root@76.13.114.194`
-2. Ir al backend:
+3. Confirmar que no exista metadata git en backend remoto:
+   - `test ! -d /var/www/viax/.git && test ! -d /var/www/viax/backend/.git && echo "OK sin git"`
+4. Dependencias y migraciones (si aplica un release manual):
    - `cd /var/www/viax/backend`
-3. Verificar estado git:
-   - `git status --short --branch`
-4. Desplegar cambios:
-   - Si el árbol está limpio: `git pull origin main`
-   - Si hay cambios locales: respaldar o hacer `git stash` antes de `git pull`
-5. Dependencias y migraciones:
    - `composer install --no-dev --optimize-autoloader`
-   - `php migrations/run_migrations.php`
-6. Permisos:
+   - `php scripts/run_migrations.php`
+5. Permisos:
    - `mkdir -p logs uploads`
    - `chmod 755 logs uploads`
 

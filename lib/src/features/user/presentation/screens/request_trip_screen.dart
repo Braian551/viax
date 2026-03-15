@@ -2,10 +2,21 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../../features/maps/data/datasources/map_remote_datasource.dart';
+import '../../../../features/maps/data/models/location_model.dart';
+import '../../data/local/search_history_service.dart';
 import '../../../../global/models/simple_location.dart';
+import '../../../../global/services/route_preview_cache.dart';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/google_places_service.dart';
+import '../../../../global/services/landmark_resolver_service.dart';
+import '../../../../global/services/poi_resolver_service.dart';
+import '../../../../global/services/text_search_resolver_service.dart';
+import '../../../../global/services/auth/user_service.dart';
 import '../../../../theme/app_colors.dart';
 import 'trip_preview_screen.dart';
 import 'location_picker_screen.dart';
@@ -39,9 +50,16 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   SimpleLocation? _selectedDestination;
 
   List<SimpleLocation> _suggestions = [];
+  List<SimpleLocation> _recentSearches = [];
   bool _isLoadingSuggestions = false;
   bool _isGettingLocation = false;
   bool _isProgrammaticChange = false;
+  int? _currentUserId;
+  SearchHistoryService? _searchHistoryService;
+  final Map<String, int> _labelResolveTokens = {};
+
+  late final http.Client _httpClient;
+  late final MapRemoteDataSource _mapRemoteDataSource;
   
   // Track which field was last focused (for validation when focus is lost)
   String _lastFocusedField = 'origin';
@@ -55,11 +73,21 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   @override
   void initState() {
     super.initState();
+
+    _httpClient = http.Client();
+    _mapRemoteDataSource = MapRemoteDataSourceImpl(
+      client: _httpClient,
+      baseUrl: AppConfig.baseUrl,
+    );
     
     _setupAnimations();
     
     // Auto-fetch current location for origin (non-blocking)
     Future.microtask(() => _setCurrentLocation(targetField: 'origin'));
+    Future.microtask(() async {
+      await _loadCurrentUserId();
+      await _loadRecentSearches();
+    });
 
     _originController.addListener(() => _onTextChanged(targetField: 'origin'));
     _destinationController.addListener(() => _onTextChanged(targetField: 'destination'));
@@ -127,7 +155,135 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     }
     
     _debounce?.cancel();
+    _httpClient.close();
     super.dispose();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    try {
+      final user = await UserService.getSavedSession();
+      if (!mounted || user == null) return;
+      final userId = user['id'] is int
+          ? (user['id'] as int)
+          : int.tryParse(user['id'].toString());
+      if (userId != null && userId > 0) {
+        setState(() {
+          _currentUserId = userId;
+          _searchHistoryService = SearchHistoryService(userId: userId);
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadRecentSearches() async {
+    if (_searchHistoryService == null) return;
+    try {
+      var mapped = (await _searchHistoryService!.getRecentSearches())
+          .map(
+            (item) => SimpleLocation(
+              latitude: item.lat,
+              longitude: item.lng,
+              address: item.address,
+              placeName:
+                  _formatAddressForDisplay(item.address.split(',').first.trim()),
+              subtitle: _formatAddressForDisplay(item.address),
+            ),
+          )
+          .toList();
+
+      // Fallback opcional: hidratar cache local desde API si aún no hay historial.
+      if (mapped.isEmpty && _currentUserId != null && _currentUserId! > 0) {
+        final recent = await _mapRemoteDataSource.getRecentSearches(
+          userId: _currentUserId!,
+        );
+
+        for (final loc in recent) {
+          final address = loc.direccion ?? '';
+          await _searchHistoryService!.saveSearch(
+            address,
+            loc.latitud,
+            loc.longitud,
+          );
+        }
+
+        mapped = (await _searchHistoryService!.getRecentSearches())
+            .map(
+              (item) => SimpleLocation(
+                latitude: item.lat,
+                longitude: item.lng,
+                address: item.address,
+                placeName: _formatAddressForDisplay(
+                  item.address.split(',').first.trim(),
+                ),
+                subtitle: _formatAddressForDisplay(item.address),
+              ),
+            )
+            .toList();
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _recentSearches = mapped;
+        if (_currentlyFocusedField != null && _suggestions.isEmpty) {
+          _suggestions = List<SimpleLocation>.from(_recentSearches);
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _saveRecentSearch(SimpleLocation location) async {
+    if (_searchHistoryService == null) return;
+    try {
+      await _searchHistoryService!.saveSearch(
+        location.address,
+        location.latitude,
+        location.longitude,
+      );
+
+      await _loadRecentSearches();
+
+      // Mantener compatibilidad: sincronización best-effort al backend.
+      if (_currentUserId != null && _currentUserId! > 0) {
+      await _mapRemoteDataSource.saveRecentSearch(
+        userId: _currentUserId!,
+        location: LocationModel(
+          latitud: location.latitude,
+          longitud: location.longitude,
+          direccion: location.address,
+        ),
+      );
+      }
+    } catch (_) {}
+  }
+
+  List<LatLng>? _currentPreviewWaypoints() {
+    if (_selectedOrigin == null || _selectedDestination == null) {
+      return null;
+    }
+
+    return [
+      _selectedOrigin!.toLatLng(),
+      ..._stops.map((stop) => stop.toLatLng()),
+      _selectedDestination!.toLatLng(),
+    ];
+  }
+
+  Future<MapboxRoute?> _prefetchPreviewRoute({
+    bool awaitCompletion = false,
+  }) async {
+    final waypoints = _currentPreviewWaypoints();
+    if (waypoints == null || waypoints.length < 2) {
+      return null;
+    }
+
+    if (awaitCompletion) {
+      return RoutePreviewCache.instance.getOrFetchRoute(waypoints: waypoints);
+    }
+
+    unawaited(RoutePreviewCache.instance.prefetchRoute(waypoints: waypoints));
+    final cached = RoutePreviewCache.instance.getCachedRoute(waypoints: waypoints);
+    return cached?.route;
   }
 
   bool get _isValid => _selectedOrigin != null && _selectedDestination != null && 
@@ -295,10 +451,11 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   void _onFieldFocused(String targetField) {
     _lastFocusedField = targetField;
     _currentlyFocusedField = targetField;
+    unawaited(_ensureRecentSearchesForFocus());
     
-    // Clear suggestions initially and trigger rebuild
+    // Al enfocar, mostrar recientes mientras no haya texto para buscar.
     setState(() {
-      _suggestions = [];
+      _suggestions = List<SimpleLocation>.from(_recentSearches);
     });
     
     // Check if there is text to search
@@ -318,6 +475,38 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     // because _suggestions is empty and we have focus.
     if (query.isNotEmpty) {
       _searchLocation(query, targetField);
+    }
+  }
+
+  Future<void> _ensureRecentSearchesForFocus() async {
+    if (_searchHistoryService == null) {
+      await _loadCurrentUserId();
+    }
+
+    if (_recentSearches.isEmpty && _searchHistoryService != null) {
+      await _loadRecentSearches();
+    }
+
+    if (!mounted) return;
+    if (_currentlyFocusedField == null) return;
+
+    final activeField = _currentlyFocusedField!;
+    String query = '';
+    if (activeField == 'origin') {
+      query = _originController.text.trim();
+    } else if (activeField == 'destination') {
+      query = _destinationController.text.trim();
+    } else if (activeField.startsWith('stop_')) {
+      final index = int.tryParse(activeField.split('_')[1]);
+      if (index != null && index >= 0 && index < _stopControllers.length) {
+        query = _stopControllers[index].text.trim();
+      }
+    }
+
+    if (query.isEmpty && _recentSearches.isNotEmpty) {
+      setState(() {
+        _suggestions = List<SimpleLocation>.from(_recentSearches);
+      });
     }
   }
 
@@ -357,7 +546,9 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       if (query.isNotEmpty) {
         _searchLocation(query, targetField);
       } else {
-        if (mounted) setState(() => _suggestions = []);
+        if (mounted) {
+          setState(() => _suggestions = List<SimpleLocation>.from(_recentSearches));
+        }
       }
     });
   }
@@ -755,9 +946,18 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
   Widget _buildSuggestionsList(bool isDark) {
     // Use explicit state variable for reliable focus detection
     final focusedField = _currentlyFocusedField;
+    final activeQuery = focusedField == null
+        ? ''
+        : _getActiveQueryForField(focusedField);
+    final showQuickActions = focusedField != null && activeQuery.isEmpty;
+    final effectiveSuggestions = (_suggestions.isEmpty &&
+            focusedField != null &&
+            _recentSearches.isNotEmpty)
+        ? _recentSearches
+        : _suggestions;
 
     // If there is focus and NO search results (empty query), show default options
-    if (_suggestions.isEmpty && focusedField != null) {
+    if (effectiveSuggestions.isEmpty && focusedField != null) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
         child: ListView(
@@ -789,15 +989,42 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       );
     }
 
-    if (_suggestions.isEmpty) return const SizedBox.shrink();
+    if (effectiveSuggestions.isEmpty) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 100),
-        itemCount: _suggestions.length,
+        itemCount: effectiveSuggestions.length + (showQuickActions ? 2 : 0),
         itemBuilder: (context, index) {
-          final suggestion = _suggestions[index];
+          if (showQuickActions && index == 0) {
+            return _buildDefaultActionItem(
+              isDark: isDark,
+              icon: Icons.my_location_rounded,
+              title: 'Usar mi ubicación actual',
+              subtitle: 'Usa el GPS para localizarte',
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                _setCurrentLocation(targetField: focusedField);
+              },
+            );
+          }
+
+          if (showQuickActions && index == 1) {
+            return _buildDefaultActionItem(
+              isDark: isDark,
+              icon: Icons.map_rounded,
+              title: 'Seleccionar en el mapa',
+              subtitle: 'Elige el punto exacto en el mapa',
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                _openMapPicker(focusedField);
+              },
+            );
+          }
+
+          final suggestionIndex = showQuickActions ? index - 2 : index;
+          final suggestion = effectiveSuggestions[suggestionIndex];
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             child: Material(
@@ -834,6 +1061,19 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                     _suggestions = [];
                     FocusScope.of(context).unfocus();
                   });
+
+                  if (targetField == 'destination' || targetField == 'origin') {
+                    unawaited(_prefetchPreviewRoute());
+                  }
+
+                  unawaited(
+                    _enrichLocationLabel(
+                      targetField: targetField,
+                      baseLocation: suggestion,
+                    ),
+                  );
+
+                  unawaited(_saveRecentSearch(suggestion));
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
@@ -901,6 +1141,22 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
     );
   }
 
+  String _getActiveQueryForField(String field) {
+    if (field == 'origin') {
+      return _originController.text.trim();
+    }
+    if (field == 'destination') {
+      return _destinationController.text.trim();
+    }
+    if (field.startsWith('stop_')) {
+      final index = int.tryParse(field.split('_')[1]);
+      if (index != null && index >= 0 && index < _stopControllers.length) {
+        return _stopControllers[index].text.trim();
+      }
+    }
+    return '';
+  }
+
   Widget _buildBottomButton(bool isDark) {
     if (!_isValid) return const SizedBox.shrink();
 
@@ -927,7 +1183,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
               ],
             ),
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 // Validación final: Origen y Destino
                 if (_selectedOrigin != null && _selectedDestination != null) {
                   // Usamos el helper que ya tiene la lógica de 200m y Strings
@@ -937,8 +1193,24 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                   }
                 }
 
+                if (_selectedOrigin != null) {
+                  unawaited(_saveRecentSearch(_selectedOrigin!));
+                }
+                if (_selectedDestination != null) {
+                  unawaited(_saveRecentSearch(_selectedDestination!));
+                }
+
                 // Filter out empty stops just in case
                 final validStops = _stops.where((s) => s.latitude != 0 && s.longitude != 0).toList();
+
+                final preloadedRoute = await _prefetchPreviewRoute(
+                  awaitCompletion: true,
+                ).timeout(
+                  const Duration(milliseconds: 500),
+                  onTimeout: () => null,
+                );
+
+                if (!mounted) return;
                 
                 Navigator.push(
                   context,
@@ -948,6 +1220,7 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
                       destination: _selectedDestination!,
                       stops: validStops, // Pass stops
                       vehicleType: 'auto',
+                      preloadedRoute: preloadedRoute,
                     ),
                   ),
                 );
@@ -1048,12 +1321,25 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
       // Verify widget is still mounted after async gap before using context or setState
       if (!mounted) return;
 
+      final normalized = await GooglePlacesService.reverseGeocodeLocationData(
+        position: LatLng(position.latitude, position.longitude),
+        sourceType: 'gps',
+      );
       final address = await _reverseGeocode(position.latitude, position.longitude);
       
       final location = SimpleLocation(
         latitude: position.latitude,
         longitude: position.longitude,
-        address: address ?? '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
+        address:
+            normalized?.address ??
+            address ??
+            '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
+        municipality: normalized?.municipality,
+        department: normalized?.department,
+        country: normalized?.country,
+        placeId: normalized?.placeId,
+        sourceType: normalized?.sourceType ?? 'gps',
+        placeType: 'gps',
       );
       
       if (mounted) {
@@ -1083,6 +1369,13 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
              }
           }
         });
+
+        unawaited(
+          _enrichLocationLabel(
+            targetField: targetField,
+            baseLocation: location,
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Error or timeout getting location: $e');
@@ -1099,7 +1392,22 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
 
   Future<String?> _reverseGeocode(double lat, double lon) async {
     try {
-      final place = await MapboxService.reverseGeocode(position: LatLng(lat, lon));
+      final streetPlace = await MapboxService.reverseGeocodeStreetOnly(
+        position: LatLng(lat, lon),
+      );
+      if (streetPlace != null) {
+        final streetAddress = streetPlace.placeName.isNotEmpty
+            ? streetPlace.placeName
+            : streetPlace.text;
+        final formattedStreet = _formatAddressForDisplay(streetAddress);
+        if (formattedStreet.trim().isNotEmpty) {
+          return formattedStreet;
+        }
+      }
+
+      final place = await MapboxService.reverseGeocode(
+        position: LatLng(lat, lon),
+      );
       if (place != null) {
         // Formatear la dirección para que sea más legible
         final addressToFormat = place.placeName.isNotEmpty ? place.placeName : place.text;
@@ -1228,22 +1536,12 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
           ? LatLng(_selectedOrigin!.latitude, _selectedOrigin!.longitude) 
           : null;
       
-      // NUEVA ESTRATEGIA: Buscar SIN bounding box para obtener todos los POIs
-      // Luego filtrar y ordenar por distancia del lado del cliente
-      // Mapbox usará proximity para priorizar resultados cercanos
-      
-      // Tipos de lugares a buscar: POIs primero (escuelas, negocios), luego direcciones
-      const poiTypes = ['poi', 'poi.landmark', 'address', 'place', 'neighborhood'];
-      
-      // Buscar con proximity (la API priorizará resultados cercanos)
-      // SIN bounding box restrictivo que pueda excluir POIs
-      final places = await MapboxService.searchPlaces(
-        query: query,
-        limit: 15, // Obtener más resultados para filtrar
-        proximity: referencePoint, // Mapbox priorizará resultados cercanos
-        country: 'co', // Solo Colombia
-        types: poiTypes,
-        fuzzyMatch: true,
+      final places = await _mapRemoteDataSource.searchNearbyPlaces(
+        referencePoint?.latitude ?? 0,
+        referencePoint?.longitude ?? 0,
+        query,
+        50,
+        userId: _currentUserId,
       );
       
       // Convertir a SimpleLocation con distancias y formato mejorado
@@ -1256,39 +1554,31 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
           distanceKm = distanceCalculator.as(
             LengthUnit.Kilometer,
             referencePoint,
-            place.coordinates,
+            LatLng(place.latitud, place.longitud),
           );
         }
-        
-        // Extraer nombre y subtítulo del contexto de Mapbox
-        // Aplicar formato para remover códigos postales
-        String placeName = _formatAddressForDisplay(place.text);
-        String subtitle = '';
-        
-        final fullName = place.placeName;
-        if (fullName.contains(',')) {
-          final parts = fullName.split(',').map((e) => e.trim()).toList();
-          if (parts.length > 1) {
-            final startIndex = parts[0] == place.text ? 1 : 0;
-            // Formatear cada parte del subtítulo para remover códigos postales
-            final subtitleParts = parts.sublist(startIndex).take(3).toList();
-            subtitle = _formatAddressForDisplay(subtitleParts.join(', '));
-          }
-        }
-        
-        // Formatear la dirección completa
-        final cleanAddress = _formatAddressForDisplay(place.placeName);
+
+        final fullAddress = place.direccion ?? '';
+        final parts = fullAddress.split(',').map((e) => e.trim()).toList();
+        final placeName = parts.isNotEmpty
+            ? _formatAddressForDisplay(parts.first)
+            : _formatAddressForDisplay(fullAddress);
+        final subtitle = parts.length > 1
+            ? _formatAddressForDisplay(parts.sublist(1).join(', '))
+            : '';
+        final cleanAddress = _formatAddressForDisplay(fullAddress);
         
         return SimpleLocation(
-          latitude: place.coordinates.latitude,
-          longitude: place.coordinates.longitude,
+          latitude: place.latitud,
+          longitude: place.longitud,
           address: cleanAddress,
           placeName: placeName,
-          subtitle: subtitle.isNotEmpty ? subtitle : (place.address != null ? _formatAddressForDisplay(place.address!) : ''),
+          subtitle: subtitle,
           distanceKm: distanceKm,
-          placeType: place.placeType,
+          placeType: 'search',
+          sourceType: 'search',
         );
-      }).toList();
+      }).where((e) => e.latitude != 0 && e.longitude != 0).toList();
       
       // Ordenar por distancia (más cercanos primero)
       if (referencePoint != null) {
@@ -1299,8 +1589,8 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
         });
       }
       
-      // Limitar a 8 resultados para UI limpia
-      final limitedResults = results.take(8).toList();
+      // Limitar a 10 resultados para alinear con backend.
+      final limitedResults = results.take(10).toList();
       
       if (mounted) {
         // Verificar si el campo que solicitó la búsqueda sigue siendo el enfocado
@@ -1369,6 +1659,111 @@ class _RequestTripScreenState extends State<RequestTripScreen> with TickerProvid
         }
         _suggestions = [];
       });
+
+      unawaited(
+        _enrichLocationLabel(
+          targetField: targetField,
+          baseLocation: result,
+        ),
+      );
+    }
+  }
+
+  int _nextLabelResolveToken(String targetField) {
+    final next = (_labelResolveTokens[targetField] ?? 0) + 1;
+    _labelResolveTokens[targetField] = next;
+    return next;
+  }
+
+  bool _isLabelResolveTokenCurrent(String targetField, int token) {
+    return _labelResolveTokens[targetField] == token;
+  }
+
+  Future<void> _enrichLocationLabel({
+    required String targetField,
+    required SimpleLocation baseLocation,
+  }) async {
+    final token = _nextLabelResolveToken(targetField);
+
+    try {
+      final latLng = baseLocation.toLatLng();
+      final landmark = await LandmarkResolverService.resolveNearestLandmark(
+        position: latLng,
+      );
+      final poi = await PoiResolverService.resolveNearestPoi(
+        position: latLng,
+      );
+      final textSearchPoi = await TextSearchResolverService
+          .resolveNearestTextSearchPoi(
+        position: latLng,
+      );
+
+      if (!mounted || !_isLabelResolveTokenCurrent(targetField, token)) {
+        return;
+      }
+
+      final landmarkName = landmark?.name.trim() ?? '';
+      final poiName = poi?.name.trim() ?? '';
+      final textSearchPoiName = textSearchPoi?.name.trim() ?? '';
+
+      if (landmarkName.isEmpty &&
+          poiName.isEmpty &&
+          textSearchPoiName.isEmpty) {
+        return;
+      }
+
+      final label = resolveDisplayLabel(
+        landmarkName: landmarkName.isNotEmpty ? landmarkName : null,
+        poiName: poiName.isNotEmpty ? poiName : null,
+        textSearchPoiName:
+            textSearchPoiName.isNotEmpty ? textSearchPoiName : null,
+        route: null,
+        streetNumber: null,
+        neighborhood: null,
+        sublocality: null,
+        locality: baseLocation.municipality,
+        administrativeAreaLevel2: baseLocation.municipality,
+        administrativeAreaLevel1: baseLocation.department,
+        isUrban: true,
+      );
+
+      final enriched = baseLocation.copyWith(
+        address: label.fullText,
+        placeName: label.label,
+        subtitle: label.subtitle,
+        placeType: landmarkName.isNotEmpty
+          ? 'landmark'
+          : (poiName.isNotEmpty ? 'poi' : 'text_search_poi'),
+        placeId:
+            landmark?.placeId ??
+            poi?.placeId ??
+          textSearchPoi?.placeId ??
+            baseLocation.placeId,
+      );
+
+      setState(() {
+        if (targetField == 'origin') {
+          _selectedOrigin = enriched;
+          _isProgrammaticChange = true;
+          _originController.text = _formatAddressForDisplay(enriched.address);
+          _isProgrammaticChange = false;
+        } else if (targetField == 'destination') {
+          _selectedDestination = enriched;
+          _isProgrammaticChange = true;
+          _destinationController.text = _formatAddressForDisplay(enriched.address);
+          _isProgrammaticChange = false;
+        } else if (targetField.startsWith('stop_')) {
+          final index = int.parse(targetField.split('_')[1]);
+          if (index < _stops.length) {
+            _stops[index] = enriched;
+            _isProgrammaticChange = true;
+            _stopControllers[index].text = _formatAddressForDisplay(enriched.address);
+            _isProgrammaticChange = false;
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint('[GeoResolver] label_enrich_error field=$targetField error=$e');
     }
   }
 

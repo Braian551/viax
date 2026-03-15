@@ -385,6 +385,7 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
         direccionDestino: widget.destination.address,
         tipoServicio: 'viaje',
         tipoVehiculo: widget.vehicleType,
+        vehicleTypeId: widget.vehicleType,
         distanciaKm: widget.quote.distanceKm,
         duracionMinutos: widget.quote.durationMinutes,
         precioEstimado: widget.quote.totalPrice,

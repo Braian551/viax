@@ -18,9 +18,9 @@ class InlineWaypoints extends StatelessWidget {
   final bool hasDestinationSelected;
   final ValueChanged<SimpleLocation> onOriginSelected;
   final ValueChanged<SimpleLocation> onDestinationSelected;
+  final Future<void> Function() onUseCurrentLocation;
   final VoidCallback onOriginChanged;
   final VoidCallback onDestinationChanged;
-  final Future<String?> Function(LatLng point) reverseGeocode;
   final VoidCallback openOriginMap;
   final VoidCallback openDestinationMap;
 
@@ -37,9 +37,9 @@ class InlineWaypoints extends StatelessWidget {
     required this.hasDestinationSelected,
     required this.onOriginSelected,
     required this.onDestinationSelected,
+    required this.onUseCurrentLocation,
     required this.onOriginChanged,
     required this.onDestinationChanged,
-    required this.reverseGeocode,
     required this.openOriginMap,
     required this.openDestinationMap,
   });
@@ -63,18 +63,9 @@ class InlineWaypoints extends StatelessWidget {
             hasLocationSelected: hasOriginSelected,
             onLocationSelected: onOriginSelected,
             onTextChanged: onOriginChanged,
-            onUseCurrentLocation: userLocation == null
-                ? null
-                : () async {
-                    final address = await reverseGeocode(userLocation!);
-                    onOriginSelected(
-                      SimpleLocation(
-                        latitude: userLocation!.latitude,
-                        longitude: userLocation!.longitude,
-                        address: address ?? 'Mi ubicación',
-                      ),
-                    );
-                  },
+            onUseCurrentLocation: () async {
+              await onUseCurrentLocation();
+            },
             onOpenMap: openOriginMap,
           ),
         ),

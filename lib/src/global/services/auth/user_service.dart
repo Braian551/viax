@@ -430,12 +430,101 @@ class UserService {
       return {
         'success': false,
         'message': data['message']?.toString() ?? 'No pudimos validar tus credenciales.',
+        'error_code': data['error_code']?.toString(),
+        'data': data['data'] is Map<String, dynamic> ? data['data'] : null,
       };
     } catch (e) {
       print('Error en login: $e');
       return {
         'success': false,
         'message': 'No se pudo completar el inicio de sesión. Verifica tu conexión e inténtalo de nuevo.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> requestAccountDeletionCode({
+    required int userId,
+    required String email,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/delete-request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'request_code',
+          'user_id': userId,
+          'email': email,
+        }),
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo enviar el código de eliminación.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> confirmAccountDeletion({
+    required int userId,
+    required String email,
+    required String verificationCode,
+    required String userType,
+    String? reason,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/delete-request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'confirm',
+          'user_id': userId,
+          'email': email,
+          'verification_code': verificationCode,
+          'user_type': userType,
+          'reason': reason,
+        }),
+      );
+
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo completar la eliminación de la cuenta.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> reactivateAccount({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/reactivate.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo reactivar la cuenta.',
       };
     }
   }

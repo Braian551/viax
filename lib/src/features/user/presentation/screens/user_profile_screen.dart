@@ -9,6 +9,8 @@ import 'package:viax/src/features/user/presentation/widgets/profile/user_profile
 import 'package:viax/src/features/conductor/presentation/screens/driver_registration_screen.dart';
 import 'package:viax/src/features/user/data/models/user_model.dart';
 import 'package:viax/src/global/services/rating_service.dart';
+import 'package:viax/src/features/profile/presentation/widgets/account_deletion/danger_zone_section.dart';
+import 'package:viax/src/features/profile/presentation/utils/account_deletion_flow.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -192,6 +194,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     if (confirmed == true) await _performLogout();
   }
 
+  Future<void> _handleDeleteAccount() async {
+    if (_userId == null || (_userEmail == null || _userEmail!.isEmpty)) {
+      CustomSnackbar.showError(context, message: 'No fue posible identificar tu cuenta.');
+      return;
+    }
+
+    await AccountDeletionFlow.start(
+      context: context,
+      userId: _userId!,
+      email: _userEmail!,
+      userName: _userName ?? 'Usuario',
+      userType: 'cliente',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -335,6 +352,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                             ), */
                             
                             const SizedBox(height: 24),
+
+                            DangerZoneSection(
+                              onDeletePressed: _handleDeleteAccount,
+                            ),
+
+                            const SizedBox(height: 20),
                             
                             // Botón Cerrar Sesión
                             Container(

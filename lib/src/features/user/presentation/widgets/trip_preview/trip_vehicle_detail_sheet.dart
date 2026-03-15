@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../theme/app_colors.dart';
 import '../../../domain/models/trip_models.dart';
+import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'trip_price_formatter.dart';
 
 Future<void> showTripVehicleDetailSheet({
@@ -151,6 +152,73 @@ Future<void> showTripVehicleDetailSheet({
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(
+                        'Fuente:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black54,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (quote.isRandomEstimate) ...[
+                        const Icon(
+                          Icons.shuffle_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            quote.randomCompanyCount > 1
+                                ? 'Al azar (promedio de ${quote.randomCompanyCount} empresas)'
+                                : 'Al azar',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ] else ...[
+                        if ((quote.companyLogoUrl ?? '').isNotEmpty)
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CompanyLogo(
+                              logoKey: quote.companyLogoUrl,
+                              nombreEmpresa: quote.companyName ?? 'Empresa',
+                              size: 20,
+                              fontSize: 10,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.business_rounded,
+                            size: 16,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            quote.companyName ?? 'Empresa seleccionada',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   Padding(

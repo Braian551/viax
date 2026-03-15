@@ -57,13 +57,23 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
   void initState() {
     super.initState();
     widget.controller.addListener(_onTextChanged);
+    widget.focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
+    widget.focusNode.removeListener(_onFocusChanged);
     _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!widget.focusNode.hasFocus) return;
+    final query = widget.controller.text.trim();
+    if (query.length < 2) {
+      _loadRecentSuggestions();
+    }
   }
 
   void _onTextChanged() {
@@ -77,7 +87,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
 
     final query = widget.controller.text.trim();
     if (query.length < 2) {
-      setState(() => _suggestions = []);
+      _loadRecentSuggestions();
       return;
     }
 
@@ -106,6 +116,20 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
     }
   }
 
+  Future<void> _loadRecentSuggestions() async {
+    setState(() => _isLoading = true);
+    try {
+      final recents = await widget.suggestionService.getRecentSuggestions(limit: 5);
+      if (mounted && widget.focusNode.hasFocus && widget.controller.text.trim().length < 2) {
+        setState(() => _suggestions = recents);
+      }
+    } catch (e) {
+      debugPrint('Recent suggestions error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _selectLocation(SimpleLocation location) async {
     HapticFeedback.selectionClick();
     widget.controller.text = location.address;
@@ -116,10 +140,13 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
     if (location.needsDetails) {
       final detailedLocation = await widget.suggestionService.getPlaceDetails(location);
       if (detailedLocation != null) {
+        widget.suggestionService.saveRecentSelection(detailedLocation);
         widget.onLocationSelected(detailedLocation);
         return;
       }
     }
+
+    widget.suggestionService.saveRecentSelection(location);
     
     widget.onLocationSelected(location);
   }
@@ -431,8 +458,6 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             widget.isOrigin &&
             widget.onUseCurrentLocation != null &&
             !widget.hasLocationSelected &&
-            _suggestions.isEmpty &&
-            !_isLoading &&
             widget.controller.text.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -453,8 +478,6 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             padding: EdgeInsets.only(
               top: widget.isOrigin &&
                       widget.onUseCurrentLocation != null &&
-                      _suggestions.isEmpty &&
-                      !_isLoading &&
                       widget.controller.text.isEmpty
                   ? 8
                   : 12,
@@ -673,6 +696,8 @@ class _SuggestionTile extends StatelessWidget {
   /// Icono basado en el tipo de lugar
   IconData _getIconForPlaceType(String? placeType) {
     switch (placeType) {
+      case 'recent':
+        return Icons.history_rounded;
       case 'poi':
         return Icons.place_rounded;
       case 'address':

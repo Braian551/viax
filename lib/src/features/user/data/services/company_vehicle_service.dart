@@ -24,6 +24,7 @@ class CompanyVehicleService {
       );
 
       debugPrint('🚗 CompanyVehicleService: Buscando empresas...');
+      debugPrint('[CompanySearch] municipality_detected=$municipio');
       debugPrint('   📍 Lat: $latitud, Lon: $longitud');
       debugPrint('   🏘️ Municipio: $municipio');
       debugPrint(
@@ -56,6 +57,7 @@ class CompanyVehicleService {
         final result = CompanyVehicleResponse.fromJson(data);
 
         debugPrint('✅ Empresas encontradas: ${result.totalEmpresas}');
+        debugPrint('[CompanySearch] companies_found=${result.totalEmpresas}');
         debugPrint('✅ Tipos de vehículo: ${result.totalTiposVehiculo}');
         for (var v in result.vehiculosDisponibles) {
           debugPrint('   🚙 ${v.tipo}: ${v.empresas.length} empresas');
@@ -283,9 +285,10 @@ class CompanyVehicleService {
       }
     });
 
-    // Si el más cercano está a más de 30km, asumimos que está fuera de cobertura operativa
-    // (Aunque podríamos ser más permisivos dependiendo del negocio)
-    if (minDistance > 30) {
+    // Evitar forzar municipios demasiado lejanos para no mostrar
+    // empresas fuera del radio operativo real del origen.
+    const maxMunicipalityFallbackKm = 30.0;
+    if (minDistance > maxMunicipalityFallbackKm) {
       debugPrint('📍 Ubicación fuera de rango operativo: ${minDistance.toStringAsFixed(1)}km de $closest');
       return null;
     }

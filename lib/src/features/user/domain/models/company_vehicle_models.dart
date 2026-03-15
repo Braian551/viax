@@ -34,6 +34,8 @@ class CompanyVehicleOption {
   final String periodo;
   final double recargoPorcentaje;
   final double calificacion;
+  final double surgeMultiplier;
+  final double? pickupEtaMinutes;
 
   CompanyVehicleOption({
     required this.id,
@@ -49,6 +51,8 @@ class CompanyVehicleOption {
     required this.periodo,
     required this.recargoPorcentaje,
     this.calificacion = 0.0,
+    this.surgeMultiplier = 1.0,
+    this.pickupEtaMinutes,
   });
 
   /// Indica si hay conductores disponibles para esta empresa/vehículo
@@ -68,8 +72,15 @@ class CompanyVehicleOption {
       logoUrl: json['logo_url'],
       conductores: _toInt(conductoresValue),
       distanciaConductorKm:
-          json['distancia_conductor_km'] != null
-              ? _toDouble(json['distancia_conductor_km'])
+          (json['distancia_conductor_km'] ??
+                json['driver_distance'] ??
+                json['driverDistance']) !=
+              null
+            ? _toDouble(
+              json['distancia_conductor_km'] ??
+                json['driver_distance'] ??
+                json['driverDistance'],
+            )
               : null,
       tarifaTotal: _toDouble(json['tarifa_total']),
       tarifaBase: _toDouble(json['tarifa_base']),
@@ -79,6 +90,14 @@ class CompanyVehicleOption {
       periodo: json['periodo'] ?? 'normal',
       recargoPorcentaje: _toDouble(json['recargo_porcentaje']),
       calificacion: _toDouble(json['calificacion']),
+      surgeMultiplier: _toDouble(
+        json['surge_multiplier'] ?? json['surgeMultiplier'],
+        fallback: 1.0,
+      ),
+      pickupEtaMinutes:
+          (json['pickup_eta_minutes'] ?? json['pickupEtaMinutes']) != null
+          ? _toDouble(json['pickup_eta_minutes'] ?? json['pickupEtaMinutes'])
+          : null,
     );
   }
 }

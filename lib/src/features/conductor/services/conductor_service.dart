@@ -337,7 +337,9 @@ class ConductorService {
     final result = await actualizarEstadoViaje(
       conductorId: conductorId,
       solicitudId: solicitudId,
-      nuevoEstado: 'en_curso',
+      // Usar recogido para respetar la transición estricta:
+      // conductor_llego -> recogido -> en_curso.
+      nuevoEstado: 'recogido',
     );
     return result['success'] == true;
   }

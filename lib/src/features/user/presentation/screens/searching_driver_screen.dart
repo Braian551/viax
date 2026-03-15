@@ -78,6 +78,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
   static const int _companySwitchIntervalNoDriversSec = 8;
   static const int _companySwitchIntervalWithDriversSec = 18;
+  static const int _statusWaitSeconds = 3;
 
   bool get _isFixedCompanyMode => widget.initialEmpresaId != null;
   
@@ -429,8 +430,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   /// Inicia el polling para detectar cuando un conductor acepta la solicitud
   void _startStatusPolling() {
     debugPrint('🚀 [SearchingDriverScreen] INICIANDO POLLING para solicitud ${widget.solicitudIdAsInt}');
-    // Consultar estado cada 3 segundos
-    _statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    // Tick rápido + long-poll corto para transiciones de vista más ágiles.
+    _statusTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       _checkTripStatus();
     });
     // Primera consulta tras el primer frame para evitar acceso temprano a ModalRoute.
@@ -453,6 +454,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     try {
       final result = await TripRequestService.getTripStatus(
         solicitudId: widget.solicitudIdAsInt,
+        waitSeconds: _statusWaitSeconds,
       );
       
       debugPrint('📩 [SearchingDriverScreen] Response: $result');

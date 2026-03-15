@@ -9,6 +9,8 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_security_screen.dart';
+import 'package:viax/src/features/profile/presentation/widgets/account_deletion/danger_zone_section.dart';
+import 'package:viax/src/features/profile/presentation/utils/account_deletion_flow.dart';
 
 class CompanyProfileTab extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -66,6 +68,27 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
     final confirmed = await LogoutDialog.show(context);
 
     if (confirmed == true) await _performLogout();
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final rawUserId = widget.user['id'];
+    final userId = rawUserId is int ? rawUserId : int.tryParse(rawUserId?.toString() ?? '');
+    final email = widget.user['email']?.toString();
+
+    if (userId == null || email == null || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No fue posible identificar esta cuenta.')),
+      );
+      return;
+    }
+
+    await AccountDeletionFlow.start(
+      context: context,
+      userId: userId,
+      email: email,
+      userName: widget.user['nombre']?.toString() ?? 'Empresa',
+      userType: 'empresa',
+    );
   }
 
   @override
@@ -166,6 +189,10 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                   subtitle: 'Tratamiento de datos corporativos',
                   isDark: isDark,
                   onTap: _openPrivacy,
+                ),
+                const SizedBox(height: 12),
+                DangerZoneSection(
+                  onDeletePressed: _handleDeleteAccount,
                 ),
                 const SizedBox(height: 32),
                 _buildLogoutButton(isDark),

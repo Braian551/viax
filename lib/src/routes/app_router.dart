@@ -17,6 +17,7 @@ import 'package:viax/src/features/auth/presentation/screens/email_verification_s
 import 'package:viax/src/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/password_recovery_verification_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:viax/src/features/auth/presentation/screens/pending_deletion_reactivation_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/password_change_verification_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/set_new_password_after_verification_screen.dart';
 import 'package:viax/src/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -130,6 +131,18 @@ class AppRouter {
             page: ResetPasswordScreen(
               email: args?['email'] ?? '',
               userName: args?['userName'] ?? '',
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.pendingDeletionReactivation:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return FadeSlidePageRoute(
+            page: PendingDeletionReactivationScreen(
+              email: args?['email']?.toString() ?? '',
+              password: args?['password']?.toString(),
+              deletionScheduledAt: args?['deletionScheduledAt']?.toString(),
             ),
             settings: settings,
           );
@@ -267,8 +280,8 @@ class AppRouter {
           final destino = args?['destino'] as Map<String, dynamic>?;
           return MaterialPageRoute(
             builder: (_) => UserActiveTripScreen(
-              solicitudId: args?['solicitud_id'] ?? 0,
-              clienteId: args?['cliente_id'] ?? 0,
+              solicitudId: args?['solicitud_id'] ?? args?['solicitudId'] ?? 0,
+              clienteId: args?['cliente_id'] ?? args?['clienteId'] ?? 0,
               origenLat: (origen?['latitud'] as num?)?.toDouble() ?? 0,
               origenLng: (origen?['longitud'] as num?)?.toDouble() ?? 0,
               direccionOrigen: origen?['direccion'] ?? 'Origen',
@@ -307,15 +320,26 @@ class AppRouter {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
             builder: (_) => UserTripAcceptedScreen(
-              solicitudId: args?['solicitudId'] ?? 0,
-              clienteId: args?['clienteId'] ?? 0,
-              latitudOrigen: (args?['latitudOrigen'] as num?)?.toDouble() ?? 0,
-              longitudOrigen: (args?['longitudOrigen'] as num?)?.toDouble() ?? 0,
-              direccionOrigen: args?['direccionOrigen'] ?? 'Origen',
-              latitudDestino: (args?['latitudDestino'] as num?)?.toDouble() ?? 0,
-              longitudDestino: (args?['longitudDestino'] as num?)?.toDouble() ?? 0,
-              direccionDestino: args?['direccionDestino'] ?? 'Destino',
-              conductorInfo: args?['conductorInfo'],
+              solicitudId: args?['solicitudId'] ?? args?['solicitud_id'] ?? 0,
+              clienteId: args?['clienteId'] ?? args?['cliente_id'] ?? 0,
+              latitudOrigen: (args?['latitudOrigen'] as num?)?.toDouble() ??
+                  (args?['latitud_origen'] as num?)?.toDouble() ??
+                  0,
+              longitudOrigen: (args?['longitudOrigen'] as num?)?.toDouble() ??
+                  (args?['longitud_origen'] as num?)?.toDouble() ??
+                  0,
+              direccionOrigen:
+                  args?['direccionOrigen'] ?? args?['direccion_origen'] ?? 'Origen',
+              latitudDestino: (args?['latitudDestino'] as num?)?.toDouble() ??
+                  (args?['latitud_destino'] as num?)?.toDouble() ??
+                  0,
+              longitudDestino: (args?['longitudDestino'] as num?)?.toDouble() ??
+                  (args?['longitud_destino'] as num?)?.toDouble() ??
+                  0,
+              direccionDestino: args?['direccionDestino'] ??
+                  args?['direccion_destino'] ??
+                  'Destino',
+              conductorInfo: args?['conductorInfo'] ?? args?['conductor'],
             ),
             settings: settings,
           );

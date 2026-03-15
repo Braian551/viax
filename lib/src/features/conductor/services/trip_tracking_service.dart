@@ -135,12 +135,12 @@ class TripTrackingService {
 
   // Configuración
   static const Duration _trackingInterval = Duration(seconds: 2);
-  static const Duration _batchSyncInterval = Duration(seconds: 10);
+  static const Duration _batchSyncInterval = Duration(seconds: 4);
   static const double _minDistanceToRegisterMeters = 5.0;
   static const double _minMovementMetersToSend = 5.0;
   static const double _minHeadingChangeToSend = 10.0;
   static const double _minSpeedDeltaToSend = 4.0;
-  static const Duration _maxSendInterval = Duration(seconds: 10);
+  static const Duration _maxSendInterval = Duration(seconds: 3);
   static const double _maxAcceptedAccuracyMeters = 80.0;
   static const double _maxPlausibleSpeedKmh = 140.0;
   static const double _maxJumpMetersWithoutDelta = 120.0;
@@ -533,9 +533,9 @@ class TripTrackingService {
   }
 
   Duration _resolveAdaptiveInterval(double speedKmh) {
-    if (speedKmh < 5.0) return const Duration(seconds: 8);
-    if (speedKmh < 20.0) return const Duration(seconds: 4);
-    return const Duration(seconds: 2);
+    if (speedKmh < 5.0) return const Duration(seconds: 3);
+    if (speedKmh < 20.0) return const Duration(seconds: 2);
+    return const Duration(seconds: 1);
   }
 
   double _headingDeltaDeg(double from, double to) {

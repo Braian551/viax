@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 class DateTimeUtils {
   // Locale por defecto para formato en español Colombia
   static const String defaultLocale = 'es_CO';
+  static const Duration _colombiaUtcOffset = Duration(hours: 5);
   
   // Formateadores pre-configurados (cached para performance)
   static final DateFormat _fullDateTimeFormat = DateFormat('EEEE d \'de\' MMMM yyyy, HH:mm', defaultLocale);
@@ -79,6 +80,52 @@ class DateTimeUtils {
       }());
       return null;
     }
+  }
+
+  /// Parsea una fecha del servidor y la conserva en UTC.
+  static DateTime? parseServerDateUtc(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return null;
+
+    try {
+      DateTime parsed;
+
+      if (dateString.endsWith('Z')) {
+        parsed = DateTime.parse(dateString);
+      } else if (dateString.contains('+') ||
+          (dateString.contains('-') && dateString.lastIndexOf('-') > 10)) {
+        parsed = DateTime.parse(dateString);
+      } else {
+        var cleanDate = dateString.trim();
+        if (cleanDate.contains(' ') && !cleanDate.contains('T')) {
+          cleanDate = cleanDate.replaceFirst(' ', 'T');
+        }
+        if (!cleanDate.endsWith('Z')) {
+          cleanDate = '${cleanDate}Z';
+        }
+        parsed = DateTime.parse(cleanDate);
+      }
+
+      return parsed.toUtc();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Convierte un DateTime UTC a hora oficial de Colombia (UTC-5).
+  static DateTime toColombiaTime(DateTime utcDate) {
+    final utc = utcDate.isUtc ? utcDate : utcDate.toUtc();
+    return utc.subtract(_colombiaUtcOffset);
+  }
+
+  /// Formatea una fecha de servidor a texto corto en hora de Colombia.
+  /// Ejemplo: 15/03/2026 8:47 p. m.
+  static String? formatServerDateToColombia(String? dateString) {
+    final utc = parseServerDateUtc(dateString);
+    if (utc == null) return null;
+
+    final colombiaTime = toColombiaTime(utc);
+    final raw = DateFormat('dd/MM/yyyy h:mm a', defaultLocale).format(colombiaTime);
+    return raw.replaceAll('AM', 'a. m.').replaceAll('PM', 'p. m.');
   }
   
   /// Parsea y convierte una fecha, retornando DateTime.now() si falla
