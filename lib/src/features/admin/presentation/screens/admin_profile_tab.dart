@@ -282,6 +282,20 @@ class _AdminProfileTabState extends State<AdminProfileTab>
         ),
         const SizedBox(height: 10),
         _buildSettingItem(
+          icon: Icons.support_agent_rounded,
+          title: 'Centro de Soporte',
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              RouteNames.adminSupport,
+              arguments: {
+                'admin_id': _adminId,
+              },
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        _buildSettingItem(
           icon: Icons.info_outline_rounded,
           title: 'Acerca de',
           onTap: () => _showAboutDialog(),

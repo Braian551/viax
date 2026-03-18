@@ -54,8 +54,10 @@ import 'package:viax/src/features/auth/presentation/screens/phone_required_scree
 import 'package:viax/src/features/auth/presentation/screens/empresa_register_screen.dart';
 import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:viax/src/features/support/presentation/screens/support_tech_home_screen.dart';
 import 'package:viax/src/widgets/help/help_screen.dart';
 import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
+import 'package:viax/src/features/thali/presentation/screens/thali_love_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -409,6 +411,11 @@ class AppRouter {
             case 'company':
               userType = HelpUserType.company;
               break;
+            case 'admin':
+            case 'administrador':
+            case 'soporte_tecnico':
+              userType = HelpUserType.admin;
+              break;
             default:
               userType = HelpUserType.user;
           }
@@ -454,6 +461,17 @@ class AppRouter {
             ),
           );
         }
+
+      case RouteNames.supportHome:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => SupportTechHomeScreen(
+              supportUser: args?['support_user'] ?? args?['admin_user'] ?? {},
+            ),
+          );
+        }
+
       case RouteNames.adminUsers:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -511,6 +529,17 @@ class AppRouter {
             builder: (_) => AdminCompanyPaymentReportsScreen(
               adminId: args?['admin_id'] ?? 0,
               adminUser: args?['admin_user'] ?? {},
+            ),
+          );
+        }
+
+      case RouteNames.adminSupport:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => HelpScreen(
+              userType: HelpUserType.admin,
+              userId: args?['admin_id'] ?? 0,
             ),
           );
         }
@@ -658,6 +687,12 @@ class AppRouter {
             settings: settings,
           );
         }
+
+      case RouteNames.thaliLove:
+        return FadeSlidePageRoute(
+          page: const ThaliLoveScreen(),
+          settings: settings,
+        );
 
       // Agregar más rutas aquí
       default:

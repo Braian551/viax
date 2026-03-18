@@ -19,6 +19,7 @@ import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../services/trip_request_search_service.dart';
 import '../../services/demand_zone_service.dart';
 import '../../models/demand_zone_model.dart';
+import '../models/trip_request_view.dart';
 import 'conductor_searching_passengers_screen.dart';
 import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
@@ -66,6 +67,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   bool _isMapReady = false;
   bool _isOnline = false;
   StreamSubscription<geo.Position>? _positionStream;
+  Timer? _pendingCenterRetryTimer;
+  geo.Position? _pendingCenterPosition;
 
   // Variables para búsqueda de solicitudes
   bool _isSearchingRequests = false;
@@ -116,14 +119,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _startNotificationPolling();
     _initializeBackgroundSessionGuards();
 
-    // Marcar mapa como listo
+    // Cargar datos iniciales sin forzar estado de mapa listo.
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!_isDisposed && mounted) {
-        _safeSetState(() {
-          _isMapReady = true;
-        });
-        debugPrint('✅ Mapa listo');
-
         // Verificar onboarding del conductor
         _checkDriverOnboarding();
         _loadCompanyInfo();
@@ -660,10 +658,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   }
 
   void _centerMapOnLocation(geo.Position position) {
+    if (!_isMapReady) {
+      _pendingCenterPosition = position;
+      return;
+    }
+
     try {
       _mapController.move(LatLng(position.latitude, position.longitude), 16.0);
+      _pendingCenterPosition = null;
+      _pendingCenterRetryTimer?.cancel();
     } catch (e) {
       debugPrint('Error al centrar mapa: $e');
+      _pendingCenterPosition = position;
+      _pendingCenterRetryTimer?.cancel();
+      _pendingCenterRetryTimer = Timer(const Duration(milliseconds: 350), () {
+        if (_isDisposed || !mounted || !_isMapReady || _pendingCenterPosition == null) {
+          return;
+        }
+        _centerMapOnLocation(_pendingCenterPosition!);
+      });
     }
   }
 
@@ -772,6 +785,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         return;
       }
 
+      final firstRequest = requests.first;
+      final requestView = TripRequestView.fromMap(firstRequest);
+      final initialLocation = (_currentPosition != null)
+          ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+          : null;
+      final Future<MapboxRoute?>? preloadedRouteFuture = initialLocation == null
+          ? null
+          : MapboxService.getRoute(
+              waypoints: [initialLocation, requestView.origen],
+            );
+
       // Navegar a pantalla de solicitud con LA PRIMERA solicitud únicamente
       // Lógica tipo Uber/InDrive: muestra una a la vez
       Navigator.push(
@@ -783,7 +807,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 widget.conductorUser['nombre']?.toString() ?? 'Conductor',
             tipoVehiculo:
                 widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Sedan',
-            solicitud: requests.first, // SOLO LA PRIMERA solicitud
+            solicitud: firstRequest, // SOLO LA PRIMERA solicitud
+            initialDriverLocation: initialLocation,
+            preloadedRouteFuture: preloadedRouteFuture,
           ),
         ),
       ).then((result) {
@@ -1072,6 +1098,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _slideController.dispose();
     _positionStream?.cancel();
     _notificationTimer?.cancel();
+    _pendingCenterRetryTimer?.cancel();
     _mapController.dispose();
 
     // Detener búsqueda si está activa
@@ -1444,6 +1471,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           onMapReady: () {
             onMapReady();
             _isMapReady = true;
+            debugPrint('✅ Mapa listo');
+            if (_currentPosition != null) {
+              _centerMapOnLocation(_currentPosition!);
+            }
           },
         ),
         children: [

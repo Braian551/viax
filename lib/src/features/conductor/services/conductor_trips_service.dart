@@ -100,6 +100,8 @@ class TripModel {
   final String? destino;
   final String clienteNombre;
   final String clienteApellido;
+  final String? clienteTelefono;
+  final String? clienteEmail;
   final int? calificacion;
   final String? comentario;
   final double? gananciaViaje;
@@ -129,6 +131,8 @@ class TripModel {
     this.destino,
     required this.clienteNombre,
     required this.clienteApellido,
+    this.clienteTelefono,
+    this.clienteEmail,
     this.calificacion,
     this.comentario,
     this.gananciaViaje,
@@ -237,6 +241,8 @@ class TripModel {
         destino: json['destino']?.toString(),
         clienteNombre: json['cliente_nombre']?.toString() ?? '',
         clienteApellido: json['cliente_apellido']?.toString() ?? '',
+        clienteTelefono: json['cliente_telefono']?.toString(),
+        clienteEmail: json['cliente_email']?.toString(),
         calificacion: parseInt(json['calificacion']),
         comentario: json['comentario']?.toString(),
         gananciaViaje: parseDouble(json['ganancia_viaje']),

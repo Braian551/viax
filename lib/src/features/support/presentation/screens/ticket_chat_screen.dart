@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/support/services/support_service.dart';
 
 /// Pantalla de chat para un ticket de soporte
 class TicketChatScreen extends StatefulWidget {
   final int ticketId;
-  final int userId;
+  final int? userId;
+  final int? agentId;
 
   const TicketChatScreen({
     super.key,
     required this.ticketId,
-    required this.userId,
+    this.userId,
+    this.agentId,
   });
 
   @override
@@ -20,38 +25,62 @@ class TicketChatScreen extends StatefulWidget {
 class _TicketChatScreenState extends State<TicketChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _pollTimer;
   
   Map<String, dynamic>? _ticket;
   List<TicketMessage> _messages = [];
   bool _isLoading = true;
   bool _isSending = false;
 
+  bool get _isAgentMode => widget.agentId != null;
+
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    _startPolling();
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    setState(() => _isLoading = true);
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _loadMessages(showLoader: false);
+    });
+  }
+
+  Future<void> _loadMessages({bool showLoader = true}) async {
+    if (showLoader) {
+      setState(() => _isLoading = true);
+    }
+
     final result = await SupportService.getTicketMessages(
       ticketId: widget.ticketId,
-      userId: widget.userId,
+      userId: _isAgentMode ? null : widget.userId,
+      agentId: _isAgentMode ? widget.agentId : null,
     );
+
     if (mounted && result != null) {
+      final nextMessages = result['mensajes'] as List<TicketMessage>;
+      final previousLastId = _messages.isNotEmpty ? _messages.last.id : 0;
+      final nextLastId = nextMessages.isNotEmpty ? nextMessages.last.id : 0;
+      final hasNewMessages = nextLastId != previousLastId || nextMessages.length != _messages.length;
+
       setState(() {
         _ticket = result['ticket'];
-        _messages = result['mensajes'] as List<TicketMessage>;
+        _messages = nextMessages;
         _isLoading = false;
       });
-      _scrollToBottom();
+      if (showLoader || hasNewMessages) {
+        _scrollToBottom();
+      }
     } else if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -78,7 +107,8 @@ class _TicketChatScreenState extends State<TicketChatScreen> {
 
     final message = await SupportService.sendMessage(
       ticketId: widget.ticketId,
-      userId: widget.userId,
+      userId: _isAgentMode ? null : widget.userId,
+      agentId: _isAgentMode ? widget.agentId : null,
       message: text,
     );
 
@@ -86,8 +116,7 @@ class _TicketChatScreenState extends State<TicketChatScreen> {
       setState(() => _isSending = false);
       
       if (message != null) {
-        setState(() => _messages.add(message));
-        _scrollToBottom();
+        await _loadMessages(showLoader: false);
       } else {
         _messageController.text = text;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -125,7 +154,9 @@ class _TicketChatScreenState extends State<TicketChatScreen> {
             ),
             if (_ticket != null)
               Text(
-                _ticket!['asunto'] ?? '',
+                _isAgentMode
+                    ? '${_ticket!['asunto'] ?? ''} • Modo agente'
+                    : (_ticket!['asunto'] ?? ''),
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.white60 : Colors.black54,
@@ -394,17 +425,19 @@ class _TicketChatScreenState extends State<TicketChatScreen> {
   }
 
   String _formatTime(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
+    final utc = date.isUtc ? date : date.toUtc();
+    final bogotaDate = utc.subtract(const Duration(hours: 5));
+    final nowBogota = DateTime.now().toUtc().subtract(const Duration(hours: 5));
 
-    if (diff.inMinutes < 1) {
-      return 'Ahora';
-    } else if (diff.inMinutes < 60) {
-      return 'Hace ${diff.inMinutes}m';
-    } else if (diff.inHours < 24 && date.day == now.day) {
-      return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } else {
-      return '${date.day}/${date.month} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    }
+    final sameDay =
+        bogotaDate.year == nowBogota.year &&
+        bogotaDate.month == nowBogota.month &&
+        bogotaDate.day == nowBogota.day;
+
+    final pattern = sameDay ? 'hh:mm a' : 'dd/MM hh:mm a';
+    final formatted = DateFormat(pattern, 'es_CO').format(bogotaDate);
+    return formatted
+        .replaceAll('a. m.', 'AM')
+        .replaceAll('p. m.', 'PM');
   }
 }

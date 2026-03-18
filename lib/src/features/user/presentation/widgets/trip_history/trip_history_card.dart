@@ -402,52 +402,196 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildConductorInfo(Color bgColor, Color textColor, Color secondaryColor) {
+    return InkWell(
+      onTap: _showConductorContactSheet,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            TripConductorAvatar(
+              photoUrl: widget.trip.conductorFoto,
+              conductorName: widget.trip.conductorNombreCompleto,
+              radius: 16,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.trip.conductorNombreCompleto,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  if (widget.trip.calificacionConductor != null)
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+                        const SizedBox(width: 2),
+                        Text(
+                          widget.trip.calificacionConductor!.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: secondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: textColor.withOpacity(0.3),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConductorContactSheet() {
+    final isDark = widget.isDark;
+    final conductorName = widget.trip.conductorNombreCompleto;
+    final conductorPhone = (widget.trip.conductorTelefono ?? '').trim();
+    final conductorEmail = (widget.trip.conductorEmail ?? '').trim();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.55,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (_, controller) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      TripConductorAvatar(
+                        photoUrl: widget.trip.conductorFoto,
+                        conductorName: conductorName,
+                        radius: 30,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              conductorName,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Perfil del conductor',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildContactItem(
+                    Icons.phone_rounded,
+                    'Telefono',
+                    conductorPhone.isEmpty ? 'No disponible' : conductorPhone,
+                    isDark,
+                  ),
+                  _buildContactItem(
+                    Icons.email_rounded,
+                    'Correo',
+                    conductorEmail.isEmpty ? 'No disponible' : conductorEmail,
+                    isDark,
+                  ),
+                  if (widget.trip.calificacionConductor != null)
+                    _buildContactItem(
+                      Icons.star_rounded,
+                      'Calificacion',
+                      widget.trip.calificacionConductor!.toStringAsFixed(1),
+                      isDark,
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildContactItem(IconData icon, String label, String value, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.5),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          TripConductorAvatar(
-            photoUrl: widget.trip.conductorFoto,
-            conductorName: widget.trip.conductorNombreCompleto,
-            radius: 16,
-          ),
+          Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.trip.conductorNombreCompleto,
+                  label,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
+                    fontSize: 11,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
-                if (widget.trip.calificacionConductor != null)
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
-                      const SizedBox(width: 2),
-                      Text(
-                        widget.trip.calificacionConductor!.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: secondaryColor,
-                        ),
-                      ),
-                    ],
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                   ),
+                ),
               ],
             ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: textColor.withOpacity(0.3),
           ),
         ],
       ),

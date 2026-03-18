@@ -17,6 +17,9 @@ class MapRetryWrapper extends StatefulWidget {
   final String title;
   final String subtitle;
   final Future<void> Function()? onRetry;
+  final bool enableAutoRetry;
+  final int maxAutoRetries;
+  final Duration autoRetryDelay;
 
   const MapRetryWrapper({
     super.key,
@@ -27,6 +30,9 @@ class MapRetryWrapper extends StatefulWidget {
     this.title = 'No se pudo cargar el mapa',
     this.subtitle = 'Puede ser un fallo temporal del SDK o de la conexión.',
     this.onRetry,
+    this.enableAutoRetry = true,
+    this.maxAutoRetries = 2,
+    this.autoRetryDelay = const Duration(seconds: 2),
   });
 
   @override
@@ -35,10 +41,12 @@ class MapRetryWrapper extends StatefulWidget {
 
 class _MapRetryWrapperState extends State<MapRetryWrapper> {
   Timer? _timeoutTimer;
+  Timer? _autoRetryTimer;
   bool _isMapReady = false;
   bool _hasMapLoadError = false;
   bool _isRetrying = false;
   int _tileLoadErrors = 0;
+  int _autoRetryCount = 0;
   Key _mapWidgetKey = UniqueKey();
 
   @override
@@ -50,6 +58,7 @@ class _MapRetryWrapperState extends State<MapRetryWrapper> {
   @override
   void dispose() {
     _timeoutTimer?.cancel();
+    _autoRetryTimer?.cancel();
     super.dispose();
   }
 
@@ -60,7 +69,7 @@ class _MapRetryWrapperState extends State<MapRetryWrapper> {
     _timeoutTimer = Timer(widget.timeout, () {
       if (!mounted) return;
       if (!_isMapReady) {
-        setState(() => _hasMapLoadError = true);
+        _handleMapLoadFailure();
       }
     });
   }
@@ -72,6 +81,7 @@ class _MapRetryWrapperState extends State<MapRetryWrapper> {
     setState(() {
       _isMapReady = true;
       _tileLoadErrors = 0;
+      _autoRetryCount = 0;
       _hasMapLoadError = false;
     });
   }
@@ -82,12 +92,28 @@ class _MapRetryWrapperState extends State<MapRetryWrapper> {
 
     _tileLoadErrors++;
     if (_tileLoadErrors >= widget.maxTileErrors) {
-      setState(() => _hasMapLoadError = true);
+      _handleMapLoadFailure();
     }
   }
 
-  Future<void> _retry() async {
-    if (_isRetrying) return;
+  void _handleMapLoadFailure() {
+    if (!mounted) return;
+
+    if (widget.enableAutoRetry && _autoRetryCount < widget.maxAutoRetries) {
+      _autoRetryCount++;
+      _autoRetryTimer?.cancel();
+      _autoRetryTimer = Timer(widget.autoRetryDelay, () {
+        if (!mounted) return;
+        _performRetry();
+      });
+      return;
+    }
+
+    setState(() => _hasMapLoadError = true);
+  }
+
+  Future<void> _performRetry() async {
+    if (_isRetrying || !mounted) return;
 
     setState(() {
       _isRetrying = true;
@@ -105,6 +131,11 @@ class _MapRetryWrapperState extends State<MapRetryWrapper> {
 
     if (!mounted) return;
     setState(() => _isRetrying = false);
+  }
+
+  Future<void> _retry() async {
+    _autoRetryCount = 0;
+    await _performRetry();
   }
 
   @override

@@ -228,6 +228,11 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         selectedLabel: _selectedColorName,
         headerIcon: Icons.palette_rounded,
         itemIcon: Icons.lens_rounded,
+        itemColor: (item) {
+          final rawHex = (item['hex_code'] ?? item['hex'] ?? item['codigo_hex'] ?? '').toString().trim();
+          if (rawHex.isEmpty) return null;
+          return _parseColor(rawHex);
+        },
         onSelected: (selected) {
           final selectedName = (selected['nombre'] as String?) ?? '';
           if (selectedName.isEmpty) return;

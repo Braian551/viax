@@ -42,11 +42,13 @@
   
   // Rutas de administrador
   static const String adminHome = '/admin/home';
+  static const String supportHome = '/support/home';
   static const String adminUsers = '/admin/users';
   static const String adminStatistics = '/admin/statistics';
   static const String adminAuditLogs = '/admin/audit-logs';
   static const String adminConfig = '/admin/config';
   static const String adminConductorDocs = '/admin/conductor-docs';
+  static const String adminSupport = '/admin/support';
 
   static const String adminEmpresas = '/admin/empresas';
   static const String adminPlatformEarnings = '/admin/platform-earnings';
@@ -73,4 +75,7 @@
 
   // Compartir ubicación
   static const String sharedLocationView = '/share/location';
+
+  // Thali
+  static const String thaliLove = '/thali/love';
 }

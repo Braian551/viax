@@ -20,6 +20,12 @@ class NotificationProvider extends ChangeNotifier {
   static const Set<String> _paymentTypes = {
     'payment_received',
     'payment_pending',
+    'debt_payment_submitted',
+    'debt_payment_approved',
+    'debt_payment_rejected',
+    'debt_payment_confirmed',
+    'debt_payment_reminder',
+    'debt_payment_mandatory',
     'admin_company_payment_info_updated',
     'empresa_payment_submitted',
     'empresa_payment_approved',
@@ -32,6 +38,7 @@ class NotificationProvider extends ChangeNotifier {
     'document_approved',
     'document_rejected',
     'driver_document_update',
+    'company_driver_application_submitted',
     'admin_company_documents_submitted',
   };
 

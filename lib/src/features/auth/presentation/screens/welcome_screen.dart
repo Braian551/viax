@@ -30,12 +30,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (session != null && mounted) {
       // Verificar si necesita ingresar teléfono
       final requiresPhone = await GoogleAuthService.checkRequiresPhone();
-      if (requiresPhone && mounted) {
+        if (requiresPhone && mounted) {
         Navigator.of(
           context,
         ).pushReplacementNamed(RouteNames.phoneRequired, arguments: session);
       } else if (mounted) {
-        Navigator.of(context).pushReplacementNamed(RouteNames.home);
+          final tipoUsuario = (session['tipo_usuario'] ?? 'cliente').toString();
+          if (tipoUsuario == 'soporte_tecnico') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.supportHome,
+              arguments: {'support_user': session},
+            );
+          } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.adminHome,
+              arguments: {'admin_user': session},
+            );
+          } else if (tipoUsuario == 'conductor') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.conductorHome,
+              arguments: {'conductor_user': session},
+            );
+          } else if (tipoUsuario == 'empresa') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.companyHome,
+              arguments: {'user': session},
+            );
+          } else {
+            Navigator.of(context).pushReplacementNamed(RouteNames.home);
+          }
       }
     }
   }
@@ -71,7 +94,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           final user = result['user'];
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
 
-          if (tipoUsuario == 'administrador') {
+          if (tipoUsuario == 'soporte_tecnico') {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.supportHome,
+              (route) => false,
+              arguments: {'support_user': user},
+            );
+          } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.adminHome,

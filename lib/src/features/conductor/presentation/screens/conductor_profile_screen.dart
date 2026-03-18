@@ -8,13 +8,10 @@ import '../../models/conductor_profile_model.dart';
 // import 'license_registration_screen.dart';
 import 'vehicle_only_registration_screen.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
-import 'package:viax/src/widgets/dialogs/logout_dialog.dart';
 import 'package:viax/src/routes/route_names.dart';
 import '../../../profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/features/company/presentation/widgets/company_logo.dart';
 import 'package:viax/src/core/utils/colombian_plate_utils.dart';
-import 'package:viax/src/features/profile/presentation/widgets/account_deletion/danger_zone_section.dart';
-import 'package:viax/src/features/profile/presentation/utils/account_deletion_flow.dart';
 
 class ConductorProfileScreen extends StatefulWidget {
   final int conductorId;
@@ -104,30 +101,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
     super.dispose();
   }
 
-  Future<void> _handleDeleteAccount() async {
-    final rawId = _conductorUser?['id'] ?? widget.conductorId;
-    final userId = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
-    final email = _conductorUser?['email']?.toString();
-
-    if (userId == null || email == null || email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No fue posible identificar tu cuenta para eliminarla.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    await AccountDeletionFlow.start(
-      context: context,
-      userId: userId,
-      email: email,
-      userName: _conductorUser?['nombre']?.toString() ?? 'Conductor',
-      userType: 'conductor',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -160,16 +133,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
                         _buildApprovedContent(profile, isDark)
                       else
                         _buildVerificationContent(profile, isDark),
-
-                      const SizedBox(height: 24),
-
-                      DangerZoneSection(
-                        onDeletePressed: _handleDeleteAccount,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      _buildLogoutButton(isDark),
 
                       const SizedBox(height: 24),
                     ],
@@ -1013,43 +976,6 @@ class _ConductorProfileScreenState extends State<ConductorProfileScreen> with Si
       ),
     );
   }
-
-  Widget _buildLogoutButton(bool isDark) {
-    return TextButton(
-      onPressed: () async {
-        print('DEBUG: ProfileScreen - Mostrando diálogo de logout');
-        final shouldLogout = await LogoutDialog.show(context);
-        print('DEBUG: ProfileScreen - Logout confirmado? $shouldLogout');
-
-        if (shouldLogout == true && mounted) {
-          print('DEBUG: ProfileScreen - Limpiando sesión...');
-          await UserService.clearSession();
-          print('DEBUG: ProfileScreen - Sesión limpiada. Navegando a welcome...');
-          if (!mounted) return;
-          Navigator.of(context).pushNamedAndRemoveUntil(RouteNames.welcome, (route) => false);
-        }
-      },
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        foregroundColor: AppColors.error,
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.logout_rounded, size: 20),
-          SizedBox(width: 8),
-          Text(
-            'Cerrar Sesión',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
 
   Widget _buildShimmerLoading(bool isDark) {
     return Shimmer.fromColors(

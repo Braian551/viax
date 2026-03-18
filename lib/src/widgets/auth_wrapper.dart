@@ -75,10 +75,15 @@ class _AuthWrapperState extends State<AuthWrapper>
 
         if (tipoUsuarioGuardado != null) {
           // Usar el tipo guardado directamente para navegación más rápida
-          if (tipoUsuarioGuardado == 'administrador') {
+          if (tipoUsuarioGuardado == 'soporte_tecnico') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.supportHome,
+              arguments: {'support_user': session},
+            );
+          } else if (tipoUsuarioGuardado == 'administrador' || tipoUsuarioGuardado == 'admin') {
             // Debug: verificar ID del administrador
             print('AuthWrapper: Admin ID desde sesiÃ³n: ${session['id']}');
-            
+
             // Para administradores, siempre usar los datos de la sesión que ya incluyen el ID
             Navigator.of(context).pushReplacementNamed(
               RouteNames.adminHome,
@@ -118,10 +123,15 @@ class _AuthWrapperState extends State<AuthWrapper>
             await UserService.saveSession(user);
 
             // Redirigir según el tipo de usuario
-            if (tipoUsuario == 'administrador') {
+            if (tipoUsuario == 'soporte_tecnico') {
+              Navigator.of(context).pushReplacementNamed(
+                RouteNames.supportHome,
+                arguments: {'support_user': user},
+              );
+            } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
               // Debug: verificar ID del administrador
               print('AuthWrapper: Admin ID desde perfil: ${user?['id']}');
-              
+
               Navigator.of(context).pushReplacementNamed(
                 RouteNames.adminHome,
                 arguments: {'admin_user': user},

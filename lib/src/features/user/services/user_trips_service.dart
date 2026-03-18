@@ -123,6 +123,7 @@ class UserTripModel {
   final String? conductorApellido;
   final String? conductorFoto;
   final String? conductorTelefono;
+  final String? conductorEmail;
   final double? calificacionConductor;
   final VehicleInfoModel? vehiculo;
   final int? calificacionDada;
@@ -155,6 +156,7 @@ class UserTripModel {
     this.conductorApellido,
     this.conductorFoto,
     this.conductorTelefono,
+    this.conductorEmail,
     this.calificacionConductor,
     this.vehiculo,
     this.calificacionDada,
@@ -211,6 +213,7 @@ class UserTripModel {
       conductorApellido: json['conductor_apellido'],
       conductorFoto: json['conductor_foto'],
       conductorTelefono: json['conductor_telefono'],
+      conductorEmail: json['conductor_email'],
       calificacionConductor: json['calificacion_conductor']?.toDouble(),
       vehiculo: vehiculo,
       calificacionDada: json['calificacion_dada'],

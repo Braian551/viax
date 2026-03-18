@@ -98,7 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (mounted) {
             // Redirigir según el tipo de usuario
-            if (tipoUsuario == 'administrador') {
+            if (tipoUsuario == 'soporte_tecnico') {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                RouteNames.supportHome,
+                (route) => false,
+                arguments: {'support_user': user},
+              );
+            } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 RouteNames.adminHome,

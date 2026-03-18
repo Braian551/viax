@@ -33,6 +33,9 @@ class HomeUserScreen extends StatefulWidget {
 }
 
 class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStateMixin {
+  // Temporary reviewer override: disable country lock while QA/review is active.
+  static const bool _allowOutsideColombiaForReviewers = true;
+
   // Mapa y Ubicación
   final MapController _mapController = MapController();
   geo.Position? _currentPosition;
@@ -115,6 +118,22 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       final position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high,
       );
+
+      if (_allowOutsideColombiaForReviewers) {
+        if (mounted) {
+          setState(() {
+            _currentPosition = position;
+            _isLoadingLocation = false;
+            _hasMapLoadError = false;
+            _countryRestricted = false;
+            _detectedCountry = null;
+          });
+
+          _startMapLoadWatchdog();
+          _centerMapOnLocation(position);
+        }
+        return;
+      }
 
       final countryValidation =
           await CountryAvailabilityService.validateColombiaOnly(

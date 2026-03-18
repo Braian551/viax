@@ -22,6 +22,7 @@ import '../widgets/active_trip/active_trip_widgets.dart';
 import '../widgets/common/floating_button.dart';
 import '../controllers/active_trip_controller.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
+import 'package:viax/src/widgets/help/help_screen.dart';
 import 'conductor_home_screen.dart';
 
 /// Pantalla de viaje activo para el conductor.
@@ -852,6 +853,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       );
 
       if (!finalizeResult.success) {
+        if (!mounted) return;
         setState(() {
           _isProcessingAction = false;
           _processingActionType = null;
@@ -872,6 +874,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _isProcessingAction = false;
       _processingActionType = null;
@@ -1137,11 +1140,15 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         },
         onSupport: () {
           Navigator.pop(ctx);
-          // TODO: Implementar soporte
-        },
-        onReport: () {
-          Navigator.pop(ctx);
-          // TODO: Implementar reporte
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => HelpScreen(
+                userType: HelpUserType.conductor,
+                userId: widget.conductorId,
+              ),
+            ),
+          );
         },
       ),
     );
@@ -1543,13 +1550,11 @@ class _OptionsSheet extends StatelessWidget {
   final bool isDark;
   final VoidCallback onCancel;
   final VoidCallback onSupport;
-  final VoidCallback onReport;
 
   const _OptionsSheet({
     required this.isDark,
     required this.onCancel,
     required this.onSupport,
-    required this.onReport,
   });
 
   @override
@@ -1579,7 +1584,6 @@ class _OptionsSheet extends StatelessWidget {
             isDark: isDark,
             onTap: onCancel,
           ),
-          /* // Funcionalidades a implementar próximamente
           const SizedBox(height: 8),
           _OptionItem(
             icon: Icons.support_agent_rounded,
@@ -1587,14 +1591,6 @@ class _OptionsSheet extends StatelessWidget {
             isDark: isDark,
             onTap: onSupport,
           ),
-          const SizedBox(height: 8),
-          _OptionItem(
-            icon: Icons.report_problem_outlined,
-            label: 'Reportar problema',
-            isDark: isDark,
-            onTap: onReport,
-          ),
-          */
         ],
       ),
     );

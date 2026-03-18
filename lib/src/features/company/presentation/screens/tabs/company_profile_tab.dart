@@ -9,7 +9,6 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/company/presentation/screens/company_data_screen.dart';
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/features/company/presentation/screens/company_security_screen.dart';
-import 'package:viax/src/features/profile/presentation/widgets/account_deletion/danger_zone_section.dart';
 import 'package:viax/src/features/profile/presentation/utils/account_deletion_flow.dart';
 
 class CompanyProfileTab extends StatefulWidget {
@@ -174,7 +173,20 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                   title: 'Soporte',
                   subtitle: 'Contactar ayuda',
                   isDark: isDark,
-                  onTap: () {},
+                  onTap: () {
+                    final rawUserId = widget.user['id'];
+                    final userId = rawUserId is int
+                        ? rawUserId
+                        : int.tryParse(rawUserId?.toString() ?? '');
+                    Navigator.pushNamed(
+                      context,
+                      RouteNames.help,
+                      arguments: {
+                        'userType': 'company',
+                        'userId': userId,
+                      },
+                    );
+                  },
                 ),
                 _buildOptionTile(
                   icon: Icons.description_outlined,
@@ -190,11 +202,15 @@ class _CompanyProfileTabState extends State<CompanyProfileTab> {
                   isDark: isDark,
                   onTap: _openPrivacy,
                 ),
-                const SizedBox(height: 12),
-                DangerZoneSection(
-                  onDeletePressed: _handleDeleteAccount,
+                _buildOptionTile(
+                  icon: Icons.delete_forever_rounded,
+                  title: 'Eliminar cuenta',
+                  subtitle: 'Programar eliminación segura de la cuenta',
+                  isDark: isDark,
+                  onTap: _handleDeleteAccount,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+                const SizedBox(height: 20),
                 _buildLogoutButton(isDark),
                 const SizedBox(height: 80),
               ],

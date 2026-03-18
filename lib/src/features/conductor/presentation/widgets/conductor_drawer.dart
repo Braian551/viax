@@ -319,7 +319,7 @@ class _ConductorDrawerState extends State<ConductorDrawer> {
                           isDark: isDark,
                         ),
                         
-/*                         _buildMenuItem(
+                        _buildMenuItem(
                            context: context,
                            icon: Icons.help_outline_rounded,
                            title: 'Ayuda y Soporte',
@@ -332,7 +332,7 @@ class _ConductorDrawerState extends State<ConductorDrawer> {
                              );
                            },
                            isDark: isDark,
-                         ), */
+                         ),
                         
                         _buildDivider(isDark),
                         

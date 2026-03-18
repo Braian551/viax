@@ -111,7 +111,7 @@ class ReportsSummaryCards extends StatelessWidget {
                       title: 'Ganancia Neta',
                       value: '\$${_formatNumber(earningsStats.gananciaNeta)}',
                       subtitle:
-                          'Comisión: \$${earningsStats.comisionEmpresa.toStringAsFixed(0)}',
+                          'Comisión admin: \$${earningsStats.comisionAdmin.toStringAsFixed(0)}',
                       icon: Icons.account_balance_wallet_rounded,
                       color: AppColors.success,
                       isDark: isDark,

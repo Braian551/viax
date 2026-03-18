@@ -71,7 +71,9 @@ flutter:
     - assets/images/
     - assets/images/vehicles/
     - assets/images/vehicles/iconvehicles/
+    - assets/images/thali/
     - assets/sounds/
+    - assets/sounds/music/
 
 flutter_launcher_icons:
   android: "launcher_icon"

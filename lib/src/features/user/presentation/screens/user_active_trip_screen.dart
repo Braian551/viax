@@ -26,6 +26,7 @@ import 'package:viax/src/global/services/trip_persistence_service.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
 import '../widgets/user_active_trip/user_active_trip_widgets.dart';
 import '../widgets/user_active_trip/driver_detail_sheet.dart';
+import 'package:viax/src/widgets/help/help_screen.dart';
 
 /// Pantalla de viaje activo para el usuario/cliente.
 ///
@@ -1350,7 +1351,15 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
-                // TODO: Implementar soporte
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HelpScreen(
+                      userType: HelpUserType.user,
+                      userId: widget.clienteId,
+                    ),
+                  ),
+                );
               },
             ),
           ],

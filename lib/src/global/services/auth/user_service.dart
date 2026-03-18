@@ -996,19 +996,72 @@ class UserService {
 
   static Future<List<Map<String, dynamic>>> getVehicleColors() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/utils/get_colors.php'));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['data']);
+      final uris = [
+        Uri.parse('${AppConfig.conductorServiceUrl}/vehicle_catalog.php?action=colors'),
+        Uri.parse('${AppConfig.baseUrl}/utils/get_colors.php'),
+      ];
+
+      for (final uri in uris) {
+        final response = await http.get(uri, headers: {'Accept': 'application/json'});
+        if (response.statusCode != 200) {
+          continue;
+        }
+
+        final parsed = _parseVehicleColorsResponse(response.body);
+        if (parsed.isNotEmpty) {
+          return parsed;
         }
       }
+
       return [];
     } catch (e) {
       print('Error getting colors: $e');
       return [];
     }
+  }
+
+  static List<Map<String, dynamic>> _parseVehicleColorsResponse(String body) {
+    dynamic payload;
+    try {
+      payload = jsonDecode(body);
+    } catch (_) {
+      return [];
+    }
+
+    dynamic items;
+    if (payload is Map<String, dynamic>) {
+      if (payload['success'] == false) {
+        return [];
+      }
+      items = payload['data'] ?? payload['colors'] ?? payload['result'];
+    } else if (payload is List) {
+      items = payload;
+    }
+
+    if (items is! List) {
+      return [];
+    }
+
+    final normalized = <Map<String, dynamic>>[];
+    for (final item in items) {
+      if (item is! Map) {
+        continue;
+      }
+
+      final map = Map<String, dynamic>.from(item);
+      final name = (map['nombre'] ?? map['name'] ?? map['color'] ?? '')
+          .toString()
+          .trim();
+      if (name.isEmpty) {
+        continue;
+      }
+
+      map['name'] = name;
+      map['nombre'] = name;
+      normalized.add(map);
+    }
+
+    return normalized;
   }
 
   static Future<List<Map<String, dynamic>>> getVehicleBrands({

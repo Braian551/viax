@@ -35,6 +35,15 @@ class _SetNewPasswordAfterVerificationScreenState
     if (userType == 'conductor') {
       return RouteNames.conductorHome;
     }
+    if (userType == 'empresa') {
+      return RouteNames.companyHome;
+    }
+    if (userType == 'soporte_tecnico') {
+      return RouteNames.supportHome;
+    }
+    if (userType == 'administrador' || userType == 'admin') {
+      return RouteNames.adminHome;
+    }
     return RouteNames.home;
   }
 

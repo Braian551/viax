@@ -67,6 +67,18 @@ class _CompanyDriverDetailsSheetState extends State<CompanyDriverDetailsSheet> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final resumen = data['resumen'] is Map<String, dynamic>
+            ? data['resumen'] as Map<String, dynamic>
+            : <String, dynamic>{};
+        final deudaResumen = double.tryParse(
+          resumen['deuda_actual']?.toString() ?? '',
+        );
+
+        if (deudaResumen != null) {
+          setState(() => _companyDebtFromTransactions = deudaResumen > 0 ? deudaResumen : 0);
+          return;
+        }
+
         final rows = List<Map<String, dynamic>>.from(data['data'] ?? []);
 
         double totalCargos = 0;

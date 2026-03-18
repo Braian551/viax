@@ -168,87 +168,193 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildCustomerInfo(Color textColor, Color subtitleColor, bool isDark) {
-    return Row(
-      children: [
-        // Avatar
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              widget.trip.clienteNombre.isNotEmpty
-                  ? widget.trip.clienteNombre[0].toUpperCase()
-                  : 'U',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+    return InkWell(
+      onTap: _showClientContactSheet,
+      borderRadius: BorderRadius.circular(14),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        
-        // Nombre y calificación
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.trip.clienteNombreCompleto,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
+            child: Center(
+              child: Text(
+                widget.trip.clienteNombre.isNotEmpty
+                    ? widget.trip.clienteNombre[0].toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
-              if (widget.trip.calificacion != null)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      color: Colors.amber,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.trip.calificacionDouble.toStringAsFixed(1),
-                      style: TextStyle(
-                        color: subtitleColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                )
-              else
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Nombre y calificación
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'Sin calificar',
+                  widget.trip.clienteNombreCompleto,
                   style: TextStyle(
-                    color: subtitleColor.withValues(alpha: 0.7),
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 4),
+                if (widget.trip.calificacion != null)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        widget.trip.calificacionDouble.toStringAsFixed(1),
+                        style: TextStyle(
+                          color: subtitleColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    'Sin calificar',
+                    style: TextStyle(
+                      color: subtitleColor.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Tipo de servicio
+          _buildServiceTypeBadge(isDark),
+        ],
+      ),
+    );
+  }
+
+  void _showClientContactSheet() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final phone = (widget.trip.clienteTelefono ?? '').trim();
+    final email = (widget.trip.clienteEmail ?? '').trim();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.35,
+        maxChildSize: 0.85,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Perfil del cliente',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildContactItem(Icons.person_rounded, 'Nombre', widget.trip.clienteNombreCompleto, isDark),
+              _buildContactItem(
+                Icons.phone_rounded,
+                'Telefono',
+                phone.isEmpty ? 'No disponible' : phone,
+                isDark,
+              ),
+              _buildContactItem(
+                Icons.email_rounded,
+                'Correo',
+                email.isEmpty ? 'No disponible' : email,
+                isDark,
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
 
-        // Tipo de servicio
-        _buildServiceTypeBadge(isDark),
-      ],
+  Widget _buildContactItem(IconData icon, String label, String value, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

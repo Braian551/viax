@@ -93,6 +93,7 @@ class EarningsStats {
   final double ingresoMaximo;
   final double ingresoMinimo;
   final double comisionEmpresa;
+  final double comisionAdmin;
   final double gananciaNeta;
 
   EarningsStats({
@@ -101,6 +102,7 @@ class EarningsStats {
     required this.ingresoMaximo,
     required this.ingresoMinimo,
     required this.comisionEmpresa,
+    required this.comisionAdmin,
     required this.gananciaNeta,
   });
 
@@ -111,6 +113,7 @@ class EarningsStats {
       ingresoMaximo: (json['ingreso_maximo'] ?? 0).toDouble(),
       ingresoMinimo: (json['ingreso_minimo'] ?? 0).toDouble(),
       comisionEmpresa: (json['comision_empresa'] ?? 0).toDouble(),
+      comisionAdmin: (json['comision_admin'] ?? 0).toDouble(),
       gananciaNeta: (json['ganancia_neta'] ?? 0).toDouble(),
     );
   }

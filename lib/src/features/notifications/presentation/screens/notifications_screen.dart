@@ -613,6 +613,40 @@ class _NotificationsContentState extends State<_NotificationsContent>
     final empresaId = _asInt(widget.currentUser?['empresa_id']) ??
         _asInt(widget.currentUser?['id']);
 
+    Future<bool> openSupportCenter() async {
+      if (normalizedUserType == 'admin' || normalizedUserType == 'administrador') {
+        await Navigator.pushNamed(
+          context,
+          RouteNames.adminSupport,
+          arguments: {
+            'admin_id': adminId,
+          },
+        );
+        return true;
+      }
+
+      if (normalizedUserType == 'soporte_tecnico') {
+        await Navigator.pushNamed(
+          context,
+          RouteNames.supportHome,
+          arguments: {
+            'support_user': widget.currentUser ?? {'id': adminId},
+          },
+        );
+        return true;
+      }
+
+      await Navigator.pushNamed(
+        context,
+        RouteNames.help,
+        arguments: {
+          'userType': normalizedUserType,
+          'userId': widget.userId,
+        },
+      );
+      return true;
+    }
+
     Future<bool> openAdminCompanyPayments() async {
       if (normalizedUserType != 'admin' && normalizedUserType != 'administrador') {
         return false;
@@ -675,6 +709,10 @@ class _NotificationsContentState extends State<_NotificationsContent>
         return openCompanyPlatformPayment();
       }
 
+      if (notification.tipo == 'chat_message') {
+        return openSupportCenter();
+      }
+
       return false;
     }
 
@@ -735,10 +773,17 @@ class _NotificationsContentState extends State<_NotificationsContent>
       case 'pago':
         return openConductorCommissions();
 
+      case 'ticket_soporte':
+      case 'ticket':
+        return openSupportCenter();
+
       default:
         if (notification.tipo.startsWith('debt_payment_') ||
             referenceType == 'deuda_comision') {
           return openConductorCommissions();
+        }
+        if (notification.tipo == 'chat_message') {
+          return openSupportCenter();
         }
         return false;
     }

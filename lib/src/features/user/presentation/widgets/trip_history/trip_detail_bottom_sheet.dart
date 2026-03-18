@@ -768,69 +768,197 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         ? AppColors.darkBackground.withOpacity(0.5)
         : AppColors.lightBackground.withOpacity(0.5);
 
+    return InkWell(
+      onTap: _showConductorProfileSheet,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            TripConductorAvatar(
+              photoUrl: widget.trip.conductorFoto,
+              conductorName: widget.trip.conductorNombreCompleto,
+              radius: 28,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tu conductor',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: textColor.withOpacity(0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.trip.conductorNombreCompleto,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                  if (widget.trip.calificacionConductor != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        ...List.generate(5, (index) {
+                          final rating = widget.trip.calificacionConductor!;
+                          return Icon(
+                            index < rating.floor()
+                                ? Icons.star_rounded
+                                : (index < rating
+                                      ? Icons.star_half_rounded
+                                      : Icons.star_outline_rounded),
+                            color: AppColors.warning,
+                            size: 16,
+                          );
+                        }),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.trip.calificacionConductor!.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textColor.withOpacity(0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: textColor.withOpacity(0.35),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConductorProfileSheet() {
+    final conductorName = widget.trip.conductorNombreCompleto;
+    final conductorPhone = (widget.trip.conductorTelefono ?? '').trim();
+    final conductorEmail = (widget.trip.conductorEmail ?? '').trim();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: widget.isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  TripConductorAvatar(
+                    photoUrl: widget.trip.conductorFoto,
+                    conductorName: conductorName,
+                    radius: 30,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          conductorName,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        Text(
+                          'Perfil del conductor',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: widget.isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildProfileInfoTile(Icons.phone_rounded, 'Telefono', conductorPhone.isEmpty ? 'No disponible' : conductorPhone),
+              _buildProfileInfoTile(Icons.email_rounded, 'Correo', conductorEmail.isEmpty ? 'No disponible' : conductorEmail),
+              if (widget.trip.calificacionConductor != null)
+                _buildProfileInfoTile(
+                  Icons.star_rounded,
+                  'Calificacion',
+                  widget.trip.calificacionConductor!.toStringAsFixed(1),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileInfoTile(IconData icon, String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        color: widget.isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          TripConductorAvatar(
-            photoUrl: widget.trip.conductorFoto,
-            conductorName: widget.trip.conductorNombreCompleto,
-            radius: 28,
-          ),
-          const SizedBox(width: 14),
+          Icon(icon, color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tu conductor',
+                  label,
                   style: TextStyle(
                     fontSize: 11,
-                    color: textColor.withOpacity(0.5),
-                    fontWeight: FontWeight.w500,
+                    color: widget.isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  widget.trip.conductorNombreCompleto,
+                  value,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: textColor,
+                    color: widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                   ),
                 ),
-                if (widget.trip.calificacionConductor != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      ...List.generate(5, (index) {
-                        final rating = widget.trip.calificacionConductor!;
-                        return Icon(
-                          index < rating.floor()
-                              ? Icons.star_rounded
-                              : (index < rating
-                                    ? Icons.star_half_rounded
-                                    : Icons.star_outline_rounded),
-                          color: AppColors.warning,
-                          size: 16,
-                        );
-                      }),
-                      const SizedBox(width: 6),
-                      Text(
-                        widget.trip.calificacionConductor!.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textColor.withOpacity(0.6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ],
             ),
           ),

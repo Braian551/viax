@@ -23,12 +23,16 @@ class ConductorSearchingPassengersScreen extends StatefulWidget {
     required this.conductorNombre,
     required this.tipoVehiculo,
     required this.solicitud,
+    this.initialDriverLocation,
+    this.preloadedRouteFuture,
   });
 
   final int conductorId;
   final String conductorNombre;
   final String tipoVehiculo;
   final Map<String, dynamic> solicitud;
+  final LatLng? initialDriverLocation;
+  final Future<MapboxRoute?>? preloadedRouteFuture;
 
   @override
   State<ConductorSearchingPassengersScreen> createState() =>
@@ -44,11 +48,18 @@ class _ConductorSearchingPassengersScreenState
   TripRequestView? _selectedRequest;
   MapboxRoute? _routeToClient;
   bool _requestProcessed = false;
+  bool _isFetchingRoute = false;
 
   @override
   void initState() {
     super.initState();
     _selectedRequest = TripRequestView.fromMap(widget.solicitud);
+    _currentLocation = widget.initialDriverLocation;
+
+    if (widget.preloadedRouteFuture != null) {
+      unawaited(_applyPreloadedRoute(widget.preloadedRouteFuture!));
+    }
+
     _startLocationTracking();
     _playNotificationSound();
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchRouteToClient());
@@ -59,6 +70,17 @@ class _ConductorSearchingPassengersScreenState
     _positionStream?.cancel();
     SoundService.stopSound();
     super.dispose();
+  }
+
+  Future<void> _applyPreloadedRoute(Future<MapboxRoute?> routeFuture) async {
+    try {
+      final route = await routeFuture;
+      if (!mounted || route == null) return;
+
+      setState(() => _routeToClient = route);
+    } catch (_) {
+      // El fetch normal se encarga del fallback.
+    }
   }
 
   Future<void> _playNotificationSound() async {
@@ -143,7 +165,10 @@ class _ConductorSearchingPassengersScreenState
   }
 
   Future<void> _fetchRouteToClient() async {
+    if (_isFetchingRoute || _routeToClient != null) return;
     if (_currentLocation == null || _selectedRequest == null) return;
+
+    _isFetchingRoute = true;
     try {
       final route = await MapboxService.getRoute(
         waypoints: [
@@ -155,6 +180,8 @@ class _ConductorSearchingPassengersScreenState
       setState(() => _routeToClient = route);
     } catch (e) {
       debugPrint('Error obteniendo ruta al cliente: $e');
+    } finally {
+      _isFetchingRoute = false;
     }
   }
 
