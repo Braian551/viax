@@ -1,4 +1,7 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
+import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
@@ -36,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   int _currentStep = 0;
   final int _totalSteps = 3;
+  String? _acceptedLegalVersion;
 
   @override
   void initState() {
@@ -58,6 +62,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = true);
       
       try {
+        final accepted = await _ensureLegalAcceptanceBeforeRegister();
+        if (!accepted) {
+          return;
+        }
+
         final bool userExists = await UserService.checkUserExists(widget.email);
         if (userExists) {
           _showSnackBar('El usuario ya existe. Inicia sesión.', isError: true);
@@ -80,7 +89,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         try {
           final data = response['data'] as Map<String, dynamic>?;
           if (data != null && data['user'] != null) {
-            await UserService.saveSession(data['user']);
+            final user = Map<String, dynamic>.from(data['user']);
+            await UserService.saveSession(user);
+
+            final userId = int.tryParse(user['id']?.toString() ?? '0') ?? 0;
+            if (userId > 0 && _acceptedLegalVersion != null) {
+              final deviceUuid = await DeviceIdService.getOrCreateDeviceUuid();
+              await context.read<LegalProvider>().acceptTerms(
+                userId: userId,
+                role: 'cliente',
+                deviceId: deviceUuid,
+                version: _acceptedLegalVersion!,
+              );
+            }
           } else {
             await UserService.saveSession({'email': widget.email});
           }
@@ -107,6 +128,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<bool> _ensureLegalAcceptanceBeforeRegister() async {
+    final legalProvider = context.read<LegalProvider>();
+    final version = await legalProvider.fetchCurrentVersion(role: 'cliente');
+
+    if (version == null || version.isEmpty) {
+      _showSnackBar('No pudimos validar la version legal. Intenta nuevamente.', isError: true);
+      return false;
+    }
+
+    final accepted = await Navigator.of(context).pushNamed(
+      RouteNames.legalAcceptance,
+      arguments: {
+        'role': 'cliente',
+        'version': version,
+        'returnResultOnAccept': true,
+        'isBlocking': false,
+      },
+    );
+
+    if (accepted == true) {
+      _acceptedLegalVersion = version;
+      return true;
+    }
+
+    _showSnackBar('Debes aceptar terminos y privacidad para completar el registro.', isError: true);
+    return false;
   }
 
   void _showSnackBar(String message, {bool isError = false}) {

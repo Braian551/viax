@@ -245,6 +245,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   Future<void> _searchDrivers() async {
     if (!mounted) return;
     final drivers = await TripRequestService.findNearbyDrivers(
+      userId: widget.clienteId,
       latitude: widget.latitudOrigen,
       longitude: widget.longitudOrigen,
       vehicleType: widget.tipoVehiculo,

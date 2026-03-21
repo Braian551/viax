@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '879318355876',
     projectId: 'viax-81a5e',
     storageBucket: 'viax-81a5e.firebasestorage.app',
-    iosBundleId: 'com.example.viax',
+    iosBundleId: 'com.viax.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

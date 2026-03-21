@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui' as ui;
@@ -13,6 +13,7 @@ import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_profile_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_trips_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_earnings_provider.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/core/di/service_locator.dart';
 import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:viax/src/core/config/app_config.dart';
@@ -221,6 +222,9 @@ void main() async {
           providers: [
             // Theme Provider (debe estar primero)
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
+
+            // Legal Provider (Anti-Bypass)
+            ChangeNotifierProvider(create: (_) => LegalProvider()..init()),
 
             // Database Provider (legacy)
             ChangeNotifierProvider(create: (_) => DatabaseProvider()),

@@ -80,6 +80,7 @@ class PriceBreakdownModel {
 /// Modelo para un viaje individual
 class TripModel {
   final int id;
+  final int? clienteId;
   final String tipoServicio;
   final String? tipoVehiculo;
   final String estado;
@@ -111,6 +112,7 @@ class TripModel {
 
   TripModel({
     required this.id,
+    this.clienteId,
     required this.tipoServicio,
     this.tipoVehiculo,
     required this.estado,
@@ -215,6 +217,7 @@ class TripModel {
       
       return TripModel(
         id: id,
+        clienteId: parseInt(json['cliente_id']),
         tipoServicio: json['tipo_servicio']?.toString() ?? 'viaje',
         tipoVehiculo: json['tipo_vehiculo']?.toString(),
         estado: json['estado']?.toString() ?? 'completado',

@@ -300,7 +300,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen>
                 ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
                 : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
             subdomains: const ['a', 'b', 'c', 'd'],
-            userAgentPackageName: 'com.example.viax',
+            userAgentPackageName: 'com.viax.app',
             errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
           ),
           // Marcador de ubicación del usuario

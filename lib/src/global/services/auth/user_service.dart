@@ -403,7 +403,26 @@ class UserService {
         timeout: AppConfig.connectionTimeout,
       );
 
-      if (!result.success || result.json == null) {
+      if (!result.success) {
+        final serverJson = result.json;
+        if (serverJson != null) {
+          return {
+            'success': false,
+            'message': serverJson['message']?.toString() ?? result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
+            'error_code': serverJson['error_code']?.toString(),
+            'data': serverJson['data'] is Map<String, dynamic> ? serverJson['data'] : null,
+            'error_type': result.error?.type.name,
+          };
+        }
+
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      if (result.json == null) {
         return {
           'success': false,
           'message': result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',

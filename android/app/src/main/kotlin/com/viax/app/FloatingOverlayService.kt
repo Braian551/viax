@@ -1,4 +1,4 @@
-package com.example.viax
+package com.viax.app
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -57,8 +57,8 @@ class FloatingOverlayService : Service() {
     companion object {
         const val CHANNEL_ID = "viax_floating_overlay"
         const val NOTIFICATION_ID = 1001
-        const val ACTION_SHOW = "com.example.viax.ACTION_SHOW_OVERLAY"
-        const val ACTION_HIDE = "com.example.viax.ACTION_HIDE_OVERLAY"
+        const val ACTION_SHOW = "com.viax.app.ACTION_SHOW_OVERLAY"
+        const val ACTION_HIDE = "com.viax.app.ACTION_HIDE_OVERLAY"
         const val EXTRA_USER_ROLE = "user_role"
         const val EXTRA_SOLICITUD_ID = "solicitud_id"
         
@@ -484,7 +484,7 @@ class FloatingOverlayService : Service() {
     }
 
     private fun sendBroadcastToFlutter(action: String) {
-        val intent = Intent("com.example.viax.OVERLAY_ACTION").apply {
+        val intent = Intent("com.viax.app.OVERLAY_ACTION").apply {
             putExtra("action", action)
         }
         sendBroadcast(intent)

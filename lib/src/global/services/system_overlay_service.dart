@@ -17,7 +17,7 @@ class SystemOverlayService {
     _setupMethodCallHandler();
   }
 
-  static const MethodChannel _channel = MethodChannel('com.example.viax/floating_overlay');
+  static const MethodChannel _channel = MethodChannel('com.viax.app/floating_overlay');
 
   // Estado del overlay
   bool _isOverlayVisible = false;
@@ -167,18 +167,52 @@ class SystemOverlayService {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.picture_in_picture_alt, color: Color(0xFF2196F3)),
+            Icon(Icons.picture_in_picture_alt, color: Color(0xFF2196F3), size: 28),
             SizedBox(width: 12),
-            Text('Permiso requerido'),
+            Expanded(
+              child: Text(
+                'Botón flotante durante viajes',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
-        content: const Text(
-          'Para mostrar el botón flotante cuando salgas de la app '
-          'durante un viaje, necesitamos permiso para mostrar '
-          'contenido sobre otras aplicaciones.\n\n'
-          '¿Deseas activar este permiso?',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Para qué se usa?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Durante un viaje activo, cuando abras Google Maps o Waze para '
+              'navegar, Viax mostrará un pequeño botón flotante en tu pantalla '
+              'para que puedas volver a la app con un solo toque.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '¿Por qué es importante?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Esto reduce las distracciones al volante, ya que no necesitas '
+              'buscar la app en el menú de aplicaciones recientes mientras conduces.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Este permiso es opcional. Si prefieres no activarlo ahora, '
+              'podrás seguir usando Viax con normalidad.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF757575), height: 1.4),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -190,6 +224,7 @@ class SystemOverlayService {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2196F3),
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text('Activar'),
           ),

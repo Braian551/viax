@@ -92,6 +92,12 @@ class TripRequestService {
       );
 
       if (!result.success || result.json == null) {
+        print(
+          '❌ createTripRequest HTTP/network failure: '
+          'status=${result.statusCode}, '
+          'error_type=${result.error?.type.name}, '
+          'technical=${result.error?.technicalMessage}',
+        );
         throw Exception(
           _friendlyMessage(
             result,
@@ -120,6 +126,7 @@ class TripRequestService {
   /// Buscar conductores cercanos disponibles
   /// Filtra por tipo de vehículo y opcionalmente por empresa
   static Future<List<Map<String, dynamic>>> findNearbyDrivers({
+    required int userId,
     required double latitude,
     required double longitude,
     required String vehicleType,
@@ -128,6 +135,7 @@ class TripRequestService {
   }) async {
     try {
       final requestBody = {
+        'usuario_id': userId,
         'latitud': latitude,
         'longitud': longitude,
         'tipo_vehiculo': vehicleType,

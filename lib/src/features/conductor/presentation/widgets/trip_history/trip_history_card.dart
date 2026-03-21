@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../../../services/conductor_trips_service.dart';
 import 'trip_status_badge.dart';
 import 'trip_route_info.dart';
@@ -12,12 +13,14 @@ class TripHistoryCard extends StatefulWidget {
   final TripModel trip;
   final VoidCallback onTap;
   final int index;
+  final int? currentUserId;
 
   const TripHistoryCard({
     super.key,
     required this.trip,
     required this.onTap,
     this.index = 0,
+    this.currentUserId,
   });
 
   @override
@@ -257,104 +260,20 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   void _showClientContactSheet() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final phone = (widget.trip.clienteTelefono ?? '').trim();
-    final email = (widget.trip.clienteEmail ?? '').trim();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.35,
-        maxChildSize: 0.85,
-        builder: (_, controller) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: ListView(
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Perfil del cliente',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildContactItem(Icons.person_rounded, 'Nombre', widget.trip.clienteNombreCompleto, isDark),
-              _buildContactItem(
-                Icons.phone_rounded,
-                'Telefono',
-                phone.isEmpty ? 'No disponible' : phone,
-                isDark,
-              ),
-              _buildContactItem(
-                Icons.email_rounded,
-                'Correo',
-                email.isEmpty ? 'No disponible' : email,
-                isDark,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContactItem(IconData icon, String label, String value, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del cliente',
+      name: widget.trip.clienteNombreCompleto,
+      phone: widget.trip.clienteTelefono,
+      email: widget.trip.clienteEmail,
+      rating: widget.trip.calificacionDouble,
+      isDark: isDark,
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.clienteId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'cliente',
     );
   }
 

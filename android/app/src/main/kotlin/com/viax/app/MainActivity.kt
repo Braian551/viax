@@ -1,4 +1,4 @@
-package com.example.viax
+package com.viax.app
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -20,7 +20,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     companion object {
-        private const val OVERLAY_CHANNEL = "com.example.viax/floating_overlay"
+        private const val OVERLAY_CHANNEL = "com.viax.app/floating_overlay"
         private const val REQUEST_OVERLAY_PERMISSION = 1001
     }
 
@@ -92,13 +92,13 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(
                 overlayReceiver,
-                IntentFilter("com.example.viax.OVERLAY_ACTION"),
+                IntentFilter("com.viax.app.OVERLAY_ACTION"),
                 RECEIVER_NOT_EXPORTED
             )
         } else {
             registerReceiver(
                 overlayReceiver,
-                IntentFilter("com.example.viax.OVERLAY_ACTION")
+                IntentFilter("com.viax.app.OVERLAY_ACTION")
             )
         }
     }

@@ -56,7 +56,9 @@ class AccountDeletionFlow {
                   const SizedBox(height: 14),
                   VerificationCodeWidget(
                     onCodeChanged: (value) {
-                      verificationCode = value;
+                      setState(() {
+                        verificationCode = value;
+                      });
                     },
                   ),
                   const SizedBox(height: 12),

@@ -1,6 +1,8 @@
 ﻿// lib/src/features/auth/presentation/screens/welcome_screen.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
@@ -83,15 +85,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
 
       if (result['success'] == true) {
+        final user = (result['user'] as Map?)?.cast<String, dynamic>();
+        final isNewUser = result['is_new_user'] == true;
+
+        if (isNewUser && user != null) {
+          final allowed = await _ensureLegalAcceptedForUser(user);
+          if (!allowed) {
+            await GoogleAuthService.signOut();
+            await UserService.clearSession();
+            _showErrorSnackBar('Debes aceptar terminos y privacidad para continuar.');
+            return;
+          }
+        }
+
         // Verificar si necesita teléfono
         if (result['requires_phone'] == true) {
           Navigator.of(context).pushReplacementNamed(
             RouteNames.phoneRequired,
-            arguments: result['user'],
+            arguments: user,
           );
         } else {
           // Determinar redirección basada en rol
-          final user = result['user'];
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
 
           if (tipoUsuario == 'soporte_tecnico') {
@@ -151,6 +165,36 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         });
       }
     }
+  }
+
+  Future<bool> _ensureLegalAcceptedForUser(Map<String, dynamic> user) async {
+    final role = (user['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
+    final userId = int.tryParse(user['id']?.toString() ?? '0') ?? 0;
+    if (userId <= 0) return false;
+
+    final legalProvider = context.read<LegalProvider>();
+    final status = await legalProvider.checkLegalStatus(role: role, userId: userId);
+    if (status == LegalStatus.accepted) {
+      return true;
+    }
+
+    final version = await legalProvider.fetchCurrentVersion(role: role);
+    if (version == null || version.isEmpty) {
+      return false;
+    }
+
+    final accepted = await Navigator.of(context).pushNamed(
+      RouteNames.legalAcceptance,
+      arguments: {
+        'role': role,
+        'userId': userId,
+        'version': version,
+        'returnResultOnAccept': true,
+        'isBlocking': false,
+      },
+    );
+
+    return accepted == true;
   }
 
   Future<void> _openTerms() async {

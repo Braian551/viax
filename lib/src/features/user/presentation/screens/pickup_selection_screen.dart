@@ -425,9 +425,18 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _isRequestingTrip = false);
+        final rawMessage = e.toString();
+        final cleanMessage = rawMessage.replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(
+              cleanMessage.trim().isNotEmpty
+                  ? cleanMessage
+                  : 'No pudimos crear la solicitud de viaje.',
+            ),
             backgroundColor: Colors.red,
           ),
         );

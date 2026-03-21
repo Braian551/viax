@@ -191,11 +191,14 @@ class ActiveTripNavigationService extends ChangeNotifier {
     debugPrint('🗑️ [ActiveTripNav] Viaje activo eliminado');
   }
 
-  /// Muestra el overlay del sistema (cuando el usuario minimiza la app)
+  /// Muestra el overlay del sistema (cuando el usuario minimiza la app).
+  /// Solo se activa para conductores — los clientes no deben usar overlay.
   Future<void> showSystemOverlay() async {
     if (!Platform.isAndroid) return;
     if (_activeTripData == null) return;
     if (!_systemOverlayEnabled) return;
+    // Solo conductores pueden mostrar el overlay del sistema
+    if (_activeTripData!.userRole != 'conductor') return;
 
     final data = _activeTripData!;
     await _systemOverlay.showOverlay(
@@ -210,9 +213,14 @@ class ActiveTripNavigationService extends ChangeNotifier {
     await _systemOverlay.hideOverlay();
   }
 
-  /// Solicita permiso para el overlay del sistema
+  /// Solicita permiso para el overlay del sistema.
+  /// Solo se solicita para conductores — los clientes no usan overlay.
   Future<bool> requestSystemOverlayPermission(BuildContext context) async {
     if (!Platform.isAndroid) return false;
+    // Bloquear solicitud de permiso para roles que no sean conductor
+    if (_activeTripData != null && _activeTripData!.userRole != 'conductor') {
+      return false;
+    }
     return await _systemOverlay.showPermissionDialog(context);
   }
 

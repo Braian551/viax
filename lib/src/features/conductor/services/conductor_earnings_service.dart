@@ -30,9 +30,24 @@ class EarningsModel {
       totalCobrado: double.tryParse(json['total_cobrado']?.toString() ?? '0') ?? 0.0,
       totalViajes: int.tryParse(json['total_viajes']?.toString() ?? '0') ?? 0,
       promedioPorViaje: double.tryParse(json['promedio_por_viaje']?.toString() ?? '0') ?? 0.0,
-      comisionPeriodo: double.tryParse(json['comision_periodo']?.toString() ?? '0') ?? 0.0,
-      comisionAdeudada: double.tryParse(json['comision_adeudada']?.toString() ?? '0') ?? 0.0,
-      comisionPromedioPorcentaje: double.tryParse(json['comision_promedio_porcentaje']?.toString() ?? '10') ?? 10.0,
+        comisionPeriodo: double.tryParse(
+          json['comision_empresa_periodo']?.toString() ??
+            json['comision_periodo']?.toString() ??
+            '0',
+          ) ??
+          0.0,
+        comisionAdeudada: double.tryParse(
+          json['comision_empresa_adeudada']?.toString() ??
+            json['comision_adeudada']?.toString() ??
+            '0',
+          ) ??
+          0.0,
+        comisionPromedioPorcentaje: double.tryParse(
+          json['comision_empresa_promedio_porcentaje']?.toString() ??
+            json['comision_promedio_porcentaje']?.toString() ??
+            '10',
+          ) ??
+          10.0,
       desgloseDiario: (json['desglose_diario'] as List?)
           ?.map((item) => EarningsDayModel.fromJson(item))
           .toList() ?? [],

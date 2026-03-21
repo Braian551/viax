@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/user_block_action_button.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../trip_preview/trip_price_formatter.dart';
 import '../../../services/user_trips_service.dart';
 import 'trip_conductor_avatar.dart';
@@ -9,10 +11,12 @@ import 'trip_conductor_avatar.dart';
 class TripDetailBottomSheet extends StatefulWidget {
   final UserTripModel trip;
   final bool isDark;
+  final int currentUserId;
 
   const TripDetailBottomSheet({
     super.key,
     required this.trip,
+    required this.currentUserId,
     this.isDark = false,
   });
 
@@ -20,13 +24,15 @@ class TripDetailBottomSheet extends StatefulWidget {
   static void show(
     BuildContext context,
     UserTripModel trip, {
+    required int currentUserId,
     bool isDark = false,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => TripDetailBottomSheet(trip: trip, isDark: isDark),
+      builder: (context) =>
+          TripDetailBottomSheet(trip: trip, currentUserId: currentUserId, isDark: isDark),
     );
   }
 
@@ -849,82 +855,23 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
 
   void _showConductorProfileSheet() {
     final conductorName = widget.trip.conductorNombreCompleto;
-    final conductorPhone = (widget.trip.conductorTelefono ?? '').trim();
-    final conductorEmail = (widget.trip.conductorEmail ?? '').trim();
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.55,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        builder: (_, controller) => Container(
-          decoration: BoxDecoration(
-            color: widget.isDark ? AppColors.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: ListView(
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  TripConductorAvatar(
-                    photoUrl: widget.trip.conductorFoto,
-                    conductorName: conductorName,
-                    radius: 30,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          conductorName,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Perfil del conductor',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildProfileInfoTile(Icons.phone_rounded, 'Telefono', conductorPhone.isEmpty ? 'No disponible' : conductorPhone),
-              _buildProfileInfoTile(Icons.email_rounded, 'Correo', conductorEmail.isEmpty ? 'No disponible' : conductorEmail),
-              if (widget.trip.calificacionConductor != null)
-                _buildProfileInfoTile(
-                  Icons.star_rounded,
-                  'Calificacion',
-                  widget.trip.calificacionConductor!.toStringAsFixed(1),
-                ),
-            ],
-          ),
-        ),
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del conductor',
+      name: conductorName,
+      phone: widget.trip.conductorTelefono,
+      email: widget.trip.conductorEmail,
+      rating: widget.trip.calificacionConductor,
+      isDark: widget.isDark,
+      avatar: TripConductorAvatar(
+        photoUrl: widget.trip.conductorFoto,
+        conductorName: conductorName,
+        radius: 30,
       ),
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.conductorId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'conductor',
     );
   }
 

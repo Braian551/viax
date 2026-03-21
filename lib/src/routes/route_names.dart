@@ -1,4 +1,4 @@
-﻿class RouteNames {
+class RouteNames {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String authWrapper = '/auth-wrapper';
@@ -78,4 +78,8 @@
 
   // Thali
   static const String thaliLove = '/thali/love';
+
+  // Sistema Legal Anti-Bypass
+  static const String legalAcceptance = '/legal/acceptance';
+  static const String backgroundLocationDisclosure = '/legal/background-location-disclosure';
 }

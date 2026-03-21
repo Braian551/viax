@@ -231,10 +231,53 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Trabajo en segundo plano'),
-        content: const Text(
-          '¿Deseas mantenerte disponible en segundo plano cuando estés en línea? '
-          'Así podrás recibir solicitudes aunque minimices la app.',
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.wifi_tethering, color: Color(0xFF4CAF50), size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Mantener conexión activa',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Para qué se usa?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Cuando estés en línea y minimices la app, Viax mantendrá '
+              'tu conexión activa para que puedas recibir nuevas solicitudes '
+              'de viaje sin necesidad de tener la app abierta.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '¿Cómo funciona?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Verás una pequeña notificación permanente indicando que Viax '
+              'está activo. Esto te permite seguir recibiendo viajes mientras '
+              'usas otras apps o tu teléfono está en reposo.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Esta función es opcional. Si no la activas, solo recibirás '
+              'solicitudes mientras la app esté abierta en pantalla.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF757575), height: 1.4),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -243,6 +286,11 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             child: const Text('Habilitar'),
           ),
         ],

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/biometric_step_widget.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:image_picker/image_picker.dart';
@@ -245,6 +248,11 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
   }
 
   Future<void> _submitRegistration() async {
+    final accepted = await _ensureConductorLegalAccepted();
+    if (!accepted) {
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -357,6 +365,45 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
         CustomSnackbar.showError(context, message: 'Ocurrió un error inesperado: $e');
       }
     }
+  }
+
+  Future<bool> _ensureConductorLegalAccepted() async {
+    final session = await UserService.getSavedSession();
+    final userId = int.tryParse(session?['id']?.toString() ?? '0') ?? 0;
+    if (userId <= 0) {
+      CustomSnackbar.showError(context, message: 'No se pudo validar tu sesion.');
+      return false;
+    }
+
+    final legalProvider = context.read<LegalProvider>();
+    final status = await legalProvider.checkLegalStatus(role: 'conductor', userId: userId);
+    if (status == LegalStatus.accepted) {
+      return true;
+    }
+
+    final version = await legalProvider.fetchCurrentVersion(role: 'conductor');
+    if (version == null || version.isEmpty) {
+      CustomSnackbar.showError(context, message: 'No se pudo validar la version legal de conductor.');
+      return false;
+    }
+
+    final accepted = await Navigator.of(context).pushNamed(
+      RouteNames.legalAcceptance,
+      arguments: {
+        'role': 'conductor',
+        'userId': userId,
+        'version': version,
+        'returnResultOnAccept': true,
+        'isBlocking': false,
+      },
+    );
+
+    if (accepted == true) {
+      return true;
+    }
+
+    CustomSnackbar.showError(context, message: 'Debes aceptar terminos y privacidad para continuar.');
+    return false;
   }
 
   @override

@@ -555,7 +555,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
                   child: CommissionKpiCard(
                     isDark: isDark,
                     icon: Icons.percent_rounded,
-                    title: 'Comisión del periodo',
+                    title: 'Comisión empresa del periodo',
                     value: formatCurrency(commissions.comisionPeriodo),
                     accentColor: AppColors.primary,
                     subtitle: '${commissions.totalViajes} viajes',

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/user/presentation/screens/home_user.dart';
 import 'package:viax/src/features/user/presentation/screens/confirm_trip_screen.dart';
@@ -58,6 +58,9 @@ import 'package:viax/src/features/support/presentation/screens/support_tech_home
 import 'package:viax/src/widgets/help/help_screen.dart';
 import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
 import 'package:viax/src/features/thali/presentation/screens/thali_love_screen.dart';
+import 'package:viax/src/features/legal/presentation/screens/legal_acceptance_screen.dart';
+import 'package:viax/src/features/legal/presentation/screens/background_location_disclosure_screen.dart';
+import 'package:viax/src/features/legal/guards/legal_guard.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -193,6 +196,29 @@ class AppRouter {
         return FadeSlidePageRoute(page: const EmpresaRegisterScreen(), settings: settings);
       case RouteNames.welcomeSplash:
         return FadeSlidePageRoute(page: const WelcomeSplashScreen(), settings: settings);
+      
+      // Pantallas Sistema Legal
+      case RouteNames.legalAcceptance:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final rawUserId = args?['userId'];
+          final userId = rawUserId is int
+              ? rawUserId
+              : int.tryParse(rawUserId?.toString() ?? '');
+          return MaterialPageRoute(
+            builder: (_) => LegalAcceptanceScreen(
+              role: args?['role'] ?? 'cliente',
+              version: args?['version'] ?? 'v1.0',
+              userId: userId,
+              returnResultOnAccept: args?['returnResultOnAccept'] == true,
+              isBlocking: args?['isBlocking'] != false,
+            ),
+            settings: settings,
+          );
+        }
+      case RouteNames.backgroundLocationDisclosure:
+        return MaterialPageRoute(builder: (_) => const BackgroundLocationDisclosureScreen());
+      
       case RouteNames.locationPicker:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -209,7 +235,7 @@ class AppRouter {
         return FadeSlidePageRoute(page: const DriverRegistrationScreen(), settings: settings);
       case RouteNames.home:
         // Cuando el usuario se autentique debe ir a la pantalla principal (HomeUserScreen)
-        return MaterialPageRoute(builder: (_) => const HomeUserScreen());
+        return MaterialPageRoute(builder: (_) => const LegalGuard(child: HomeUserScreen()));
       
       // Rutas de usuario
       case RouteNames.requestTrip:
@@ -456,8 +482,10 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => AdminHomeScreen(
-              adminUser: args?['admin_user'] ?? {},
+            builder: (_) => LegalGuard(
+              child: AdminHomeScreen(
+                adminUser: args?['admin_user'] ?? {},
+              ),
             ),
           );
         }
@@ -555,8 +583,10 @@ class AppRouter {
           return MaterialPageRoute(
             builder: (_) => ChangeNotifierProvider(
               create: (_) => CompanyProvider(empresaId: empresaId),
-              child: CompanyHomeScreen(
-                user: user,
+              child: LegalGuard(
+                child: CompanyHomeScreen(
+                  user: user,
+                ),
               ),
             ),
           );
@@ -567,8 +597,10 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => ConductorHomeScreen(
-              conductorUser: args?['conductor_user'] ?? {},
+            builder: (_) => LegalGuard(
+              child: ConductorHomeScreen(
+                conductorUser: args?['conductor_user'] ?? {},
+              ),
             ),
           );
         }

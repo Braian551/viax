@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'dart:ui';
+import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
@@ -27,6 +30,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
   final int _totalSteps = 5;
+  String? _acceptedLegalVersion;
   
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -232,6 +236,11 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   }
 
   Future<void> _submitForm() async {
+    final hasAccepted = await _ensureLegalAcceptanceBeforeRegister();
+    if (!hasAccepted) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       _showError('Por favor completa todos los campos requeridos');
       return;
@@ -279,6 +288,7 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       debugPrint('===========================================');
 
       if (result['success'] == true) {
+        await _registerLegalAcceptanceIfPossible(result, deviceUuid);
         if (mounted) {
           _showRegistrationSuccessDialog();
         }
@@ -303,6 +313,64 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
 
+  }
+
+  Future<bool> _ensureLegalAcceptanceBeforeRegister() async {
+    final legalProvider = context.read<LegalProvider>();
+    final version = await legalProvider.fetchCurrentVersion(role: 'empresa');
+
+    if (version == null || version.isEmpty) {
+      _showError('No pudimos validar la version legal de empresa. Intenta de nuevo.');
+      return false;
+    }
+
+    final accepted = await Navigator.of(context).pushNamed(
+      RouteNames.legalAcceptance,
+      arguments: {
+        'role': 'empresa',
+        'version': version,
+        'returnResultOnAccept': true,
+        'isBlocking': false,
+      },
+    );
+
+    if (accepted == true) {
+      _acceptedLegalVersion = version;
+      return true;
+    }
+
+    _showError('Debes aceptar terminos y privacidad para registrar la empresa.');
+    return false;
+  }
+
+  Future<void> _registerLegalAcceptanceIfPossible(
+    Map<String, dynamic> result,
+    String deviceUuid,
+  ) async {
+    final version = _acceptedLegalVersion;
+    if (version == null || version.isEmpty) return;
+
+    final dynamic data = result['data'];
+    int? userId;
+
+    if (data is Map<String, dynamic>) {
+      final dynamic nestedUser = data['user'];
+      if (nestedUser is Map<String, dynamic>) {
+        userId = int.tryParse(nestedUser['id']?.toString() ?? '');
+      }
+      userId ??= int.tryParse(data['user_id']?.toString() ?? '');
+      userId ??= int.tryParse(data['id_usuario']?.toString() ?? '');
+      userId ??= int.tryParse(data['id']?.toString() ?? '');
+    }
+
+    if (userId != null && userId > 0) {
+      await context.read<LegalProvider>().acceptTerms(
+        userId: userId,
+        role: 'empresa',
+        deviceId: deviceUuid,
+        version: version,
+      );
+    }
   }
 
   void _showRegistrationSuccessDialog() {

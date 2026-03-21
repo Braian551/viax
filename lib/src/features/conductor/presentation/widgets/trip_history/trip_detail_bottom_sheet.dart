@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/user_block_action_button.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../../../services/conductor_trips_service.dart';
 import 'trip_status_badge.dart';
 import 'trip_route_info.dart';
@@ -10,14 +12,16 @@ import 'trip_route_info.dart';
 /// Diseño profesional con animaciones suaves
 class TripDetailBottomSheet extends StatefulWidget {
   final TripModel trip;
+  final int currentUserId;
 
-  const TripDetailBottomSheet({super.key, required this.trip});
+  const TripDetailBottomSheet({super.key, required this.trip, required this.currentUserId});
 
   /// Muestra el bottom sheet con animación
   /// [isDark] es opcional, el tema se detecta automáticamente del contexto
   static Future<void> show(
     BuildContext context,
     TripModel trip, {
+    required int currentUserId,
     bool isDark = false,
   }) {
     return showModalBottomSheet(
@@ -25,7 +29,7 @@ class TripDetailBottomSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (context) => TripDetailBottomSheet(trip: trip),
+      builder: (context) => TripDetailBottomSheet(trip: trip, currentUserId: currentUserId),
     );
   }
 
@@ -490,88 +494,18 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
 
   void _showClientProfileSheet() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
-    final subtitleColor = isDark ? Colors.white70 : AppColors.lightTextSecondary;
-    final clientPhone = (widget.trip.clienteTelefono ?? '').trim();
-    final clientEmail = (widget.trip.clienteEmail ?? '').trim();
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.55,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        builder: (_, controller) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: ListView(
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: textColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  _buildProfileAvatar(widget.trip.clienteNombreCompleto, 60, 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.trip.clienteNombreCompleto,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          'Perfil del cliente',
-                          style: TextStyle(color: subtitleColor, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildProfileInfoTile(
-                icon: Icons.phone_rounded,
-                label: 'Telefono',
-                value: clientPhone.isEmpty ? 'No disponible' : clientPhone,
-                isDark: isDark,
-              ),
-              _buildProfileInfoTile(
-                icon: Icons.email_rounded,
-                label: 'Correo',
-                value: clientEmail.isEmpty ? 'No disponible' : clientEmail,
-                isDark: isDark,
-              ),
-              if (widget.trip.calificacion != null)
-                _buildProfileInfoTile(
-                  icon: Icons.star_rounded,
-                  label: 'Calificacion',
-                  value: widget.trip.calificacionDouble.toStringAsFixed(1),
-                  isDark: isDark,
-                ),
-            ],
-          ),
-        ),
-      ),
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del cliente',
+      name: widget.trip.clienteNombreCompleto,
+      phone: widget.trip.clienteTelefono,
+      email: widget.trip.clienteEmail,
+      rating: widget.trip.calificacionDouble,
+      isDark: isDark,
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.clienteId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'cliente',
     );
   }
 
