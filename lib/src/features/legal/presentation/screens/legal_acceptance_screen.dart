@@ -4,6 +4,7 @@ import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/features/legal/services/legal_content_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
+import 'package:viax/src/shared/widgets/global_overlay_message.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'package:viax/src/theme/app_colors.dart';
@@ -136,9 +137,14 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
       }
     } else {
       if (mounted) {
+        final legalProv = context.read<LegalProvider>();
+        final backendMessage = legalProv.lastError?.trim();
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al procesar la aceptación. Intenta de nuevo.')),
+        GlobalOverlayMessage.showError(
+          context,
+          (backendMessage != null && backendMessage.isNotEmpty)
+            ? backendMessage
+            : 'Error al procesar la aceptación. Intenta de nuevo.',
         );
       }
     }

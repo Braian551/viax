@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 import 'package:viax/src/features/conductor/services/debt_payment_service.dart';
+import 'package:viax/src/global/services/secure_account_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
@@ -34,6 +35,9 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
   bool _isSubmitting = false;
   bool _isFormattingMonto = false;
   bool _isLoadingDebt = false;
+  bool _isRevealingAccount = false;
+  bool _showFullAccount = false;
+  String? _revealedAccountNumber;
   double _resolvedDebt = 0;
 
   @override
@@ -253,6 +257,44 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
     );
   }
 
+  Future<void> _revealEmpresaAccountNumber(int empresaId) async {
+    if (_isRevealingAccount || empresaId <= 0) return;
+    setState(() => _isRevealingAccount = true);
+
+    try {
+      final result = await SecureAccountService.revealAccountNumber(
+        actorUserId: widget.conductorId,
+        resource: 'empresa_bank',
+        resourceId: empresaId,
+      );
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        final data = result['data'] as Map<String, dynamic>? ?? {};
+        setState(() {
+          _revealedAccountNumber = data['account_number']?.toString();
+          _showFullAccount = true;
+        });
+      } else {
+        CustomSnackbar.showError(
+          context,
+          message: result['message']?.toString() ?? 'No se pudo revelar la cuenta',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      CustomSnackbar.showError(
+        context,
+        message: 'No se pudo revelar la cuenta: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRevealingAccount = false);
+      }
+    }
+  }
+
   Widget _buildTransferCard(
     bool isDark,
     String companyName,
@@ -262,6 +304,7 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
     String titular,
     String documento,
     String referencia,
+    VoidCallback onToggleReveal,
   ) {
     return Container(
       width: double.infinity,
@@ -285,6 +328,22 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _isRevealingAccount ? null : onToggleReveal,
+                icon: _isRevealingAccount
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(_showFullAccount ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                label: Text(_showFullAccount ? 'Ocultar' : 'Mostrar'),
+              ),
+            ],
+          ),
           Row(
             children: [
               Container(
@@ -571,10 +630,15 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cuenta = (widget.contextData['cuenta_transferencia'] as Map<String, dynamic>?) ?? {};
     final empresa = (widget.contextData['empresa'] as Map<String, dynamic>?) ?? {};
+    final empresaId = int.tryParse(empresa['id']?.toString() ?? '') ?? 0;
 
     final banco = cuenta['banco_nombre']?.toString() ?? '-';
     final tipoCuenta = cuenta['tipo_cuenta']?.toString() ?? '-';
-    final numeroCuenta = cuenta['numero_cuenta']?.toString() ?? '-';
+    final numeroCuentaMasked =
+      (cuenta['numero_cuenta_masked'] ?? cuenta['numero_cuenta'] ?? '-').toString();
+    final numeroCuenta = _showFullAccount
+      ? (_revealedAccountNumber ?? numeroCuentaMasked)
+      : numeroCuentaMasked;
     final titular = cuenta['titular_cuenta']?.toString() ?? '-';
     final documento = cuenta['documento_titular']?.toString() ?? '-';
     final referencia = cuenta['referencia_transferencia']?.toString() ?? '';
@@ -612,6 +676,13 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
                 titular,
                 documento,
                 referencia,
+                () {
+                  if (_showFullAccount) {
+                    setState(() => _showFullAccount = false);
+                  } else {
+                    _revealEmpresaAccountNumber(empresaId);
+                  }
+                },
               ),
               const SizedBox(height: 16),
               _buildSectionTitle(

@@ -83,6 +83,21 @@ class AppNetworkException implements Exception {
       );
     }
 
+    final rawMessage = error.toString().trim();
+    final cleanedMessage = rawMessage.startsWith('Exception:')
+        ? rawMessage.replaceFirst('Exception:', '').trim()
+        : rawMessage;
+    if (cleanedMessage.isNotEmpty &&
+        cleanedMessage.toLowerCase() != 'exception' &&
+        cleanedMessage.toLowerCase() != 'null') {
+      return AppNetworkException(
+        type: AppNetworkErrorType.business,
+        technicalMessage: rawMessage,
+        backendMessage: cleanedMessage,
+        statusCode: statusCode,
+      );
+    }
+
     return AppNetworkException(
       type: AppNetworkErrorType.unknown,
       technicalMessage: error.toString(),

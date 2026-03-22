@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/document_upload_widget.dart';
 import 'package:viax/src/features/company/services/company_platform_payment_service.dart';
+import 'package:viax/src/global/services/secure_account_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
@@ -39,6 +40,9 @@ class _CompanyPlatformPaymentScreenState
   bool _isSubmitting = false;
   bool _isFormattingMonto = false;
   bool _isLoadingDebt = false;
+  bool _isRevealingAccount = false;
+  bool _showFullAccount = false;
+  String? _revealedAccountNumber;
   double _resolvedDebt = 0;
   late Map<String, dynamic> _contextData;
 
@@ -230,6 +234,45 @@ class _CompanyPlatformPaymentScreenState
     );
     if (filePath == null || !mounted) return;
     setState(() => _comprobanteFile = File(filePath));
+  }
+
+  Future<void> _revealAdminAccountNumber() async {
+    if (_isRevealingAccount) return;
+    setState(() => _isRevealingAccount = true);
+
+    try {
+      final result = await SecureAccountService.revealAccountNumber(
+        actorUserId: widget.userId,
+        resource: 'admin_bank',
+      );
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        final data = result['data'] as Map<String, dynamic>? ?? {};
+        setState(() {
+          _revealedAccountNumber = data['account_number']?.toString();
+          _showFullAccount = true;
+        });
+      } else {
+        CustomSnackbar.show(
+          context,
+          message: result['message']?.toString() ?? 'No se pudo revelar la cuenta',
+          type: SnackbarType.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      CustomSnackbar.show(
+        context,
+        message: 'No se pudo revelar la cuenta: $e',
+        type: SnackbarType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRevealingAccount = false);
+      }
+    }
   }
 
   @override
@@ -484,6 +527,11 @@ class _CompanyPlatformPaymentScreenState
       (cuenta['tipo_cuenta'] ?? '').toString().toLowerCase() == 'nequi' ||
       (cuenta['banco_nombre'] ?? '').toString().toLowerCase() == 'nequi';
 
+    final maskedFromApi = (cuenta['numero_cuenta_masked'] ?? cuenta['numero_cuenta'] ?? '-').toString();
+    final shownAccountNumber = _showFullAccount
+      ? (_revealedAccountNumber ?? maskedFromApi)
+      : maskedFromApi;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -499,15 +547,39 @@ class _CompanyPlatformPaymentScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _isRevealingAccount
+                    ? null
+                    : () {
+                        if (_showFullAccount) {
+                          setState(() => _showFullAccount = false);
+                        } else {
+                          _revealAdminAccountNumber();
+                        }
+                      },
+                icon: _isRevealingAccount
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(_showFullAccount ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                label: Text(_showFullAccount ? 'Ocultar' : 'Mostrar'),
+              ),
+            ],
+          ),
           _buildInfoRow(
               'Método', isNequi ? 'Nequi' : 'Cuenta bancaria', isDark),
           if (!isNequi) ...[
             _buildInfoRow('Banco', cuenta['banco_nombre'] ?? '-', isDark),
             _buildInfoRow('Tipo', cuenta['tipo_cuenta'] ?? '-', isDark),
-            _buildInfoRow('Cuenta', cuenta['numero_cuenta'] ?? '-', isDark),
+            _buildInfoRow('Cuenta', shownAccountNumber, isDark),
           ] else
             _buildInfoRow(
-                'Número Nequi', cuenta['numero_cuenta'] ?? '-', isDark),
+                'Número Nequi', shownAccountNumber, isDark),
           _buildInfoRow('Titular', cuenta['titular_cuenta'] ?? '-', isDark),
           if ((cuenta['documento_titular'] ?? '').toString().isNotEmpty)
             _buildInfoRow(
