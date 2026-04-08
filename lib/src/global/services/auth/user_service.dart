@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';
+import 'package:viax/src/core/realtime/realtime_service.dart';
 
 class UserService {
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
@@ -365,6 +366,11 @@ class UserService {
   }
 
   static Future<void> clearSession() async {
+    // Desconectar WebSocket al cerrar sesión.
+    try {
+      RealtimeService.instance.shutdown();
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kUserEmail);
     await prefs.remove(_kUserId);
@@ -403,7 +409,26 @@ class UserService {
         timeout: AppConfig.connectionTimeout,
       );
 
-      if (!result.success || result.json == null) {
+      if (!result.success) {
+        final serverJson = result.json;
+        if (serverJson != null) {
+          return {
+            'success': false,
+            'message': serverJson['message']?.toString() ?? result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
+            'error_code': serverJson['error_code']?.toString(),
+            'data': serverJson['data'] is Map<String, dynamic> ? serverJson['data'] : null,
+            'error_type': result.error?.type.name,
+          };
+        }
+
+        return {
+          'success': false,
+          'message': result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
+          'error_type': result.error?.type.name,
+        };
+      }
+
+      if (result.json == null) {
         return {
           'success': false,
           'message': result.error?.userMessage ?? 'No pudimos iniciar sesión. Intenta nuevamente.',
@@ -430,12 +455,119 @@ class UserService {
       return {
         'success': false,
         'message': data['message']?.toString() ?? 'No pudimos validar tus credenciales.',
+        'error_code': data['error_code']?.toString(),
+        'data': data['data'] is Map<String, dynamic> ? data['data'] : null,
       };
     } catch (e) {
       print('Error en login: $e');
       return {
         'success': false,
         'message': 'No se pudo completar el inicio de sesión. Verifica tu conexión e inténtalo de nuevo.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> requestAccountDeletionCode({
+    required int userId,
+    required String email,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/delete-request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'request_code',
+          'user_id': userId,
+          'email': email,
+        }),
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo enviar el código de eliminación.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> confirmAccountDeletion({
+    required int userId,
+    required String email,
+    required String verificationCode,
+    required String userType,
+    String? reason,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/delete-request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'action': 'confirm',
+          'user_id': userId,
+          'email': email,
+          'verification_code': verificationCode,
+          'user_type': userType,
+          'reason': reason,
+        }),
+      );
+
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo completar la eliminación de la cuenta.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> reactivateAccount({
+    required String email,
+    String? password,
+    String? idToken,
+    String? accessToken,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'email': email,
+      };
+
+      final trimmedPassword = password?.trim() ?? '';
+      if (trimmedPassword.isNotEmpty) {
+        body['password'] = trimmedPassword;
+      }
+
+      final trimmedIdToken = idToken?.trim() ?? '';
+      if (trimmedIdToken.isNotEmpty) {
+        body['id_token'] = trimmedIdToken;
+      }
+
+      final trimmedAccessToken = accessToken?.trim() ?? '';
+      if (trimmedAccessToken.isNotEmpty) {
+        body['access_token'] = trimmedAccessToken;
+      }
+
+      final response = await http.post(
+        Uri.parse('${AppConfig.accountServiceUrl}/reactivate.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No se pudo reactivar la cuenta.',
       };
     }
   }
@@ -907,19 +1039,72 @@ class UserService {
 
   static Future<List<Map<String, dynamic>>> getVehicleColors() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/utils/get_colors.php'));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['data']);
+      final uris = [
+        Uri.parse('${AppConfig.conductorServiceUrl}/vehicle_catalog.php?action=colors'),
+        Uri.parse('${AppConfig.baseUrl}/utils/get_colors.php'),
+      ];
+
+      for (final uri in uris) {
+        final response = await http.get(uri, headers: {'Accept': 'application/json'});
+        if (response.statusCode != 200) {
+          continue;
+        }
+
+        final parsed = _parseVehicleColorsResponse(response.body);
+        if (parsed.isNotEmpty) {
+          return parsed;
         }
       }
+
       return [];
     } catch (e) {
       print('Error getting colors: $e');
       return [];
     }
+  }
+
+  static List<Map<String, dynamic>> _parseVehicleColorsResponse(String body) {
+    dynamic payload;
+    try {
+      payload = jsonDecode(body);
+    } catch (_) {
+      return [];
+    }
+
+    dynamic items;
+    if (payload is Map<String, dynamic>) {
+      if (payload['success'] == false) {
+        return [];
+      }
+      items = payload['data'] ?? payload['colors'] ?? payload['result'];
+    } else if (payload is List) {
+      items = payload;
+    }
+
+    if (items is! List) {
+      return [];
+    }
+
+    final normalized = <Map<String, dynamic>>[];
+    for (final item in items) {
+      if (item is! Map) {
+        continue;
+      }
+
+      final map = Map<String, dynamic>.from(item);
+      final name = (map['nombre'] ?? map['name'] ?? map['color'] ?? '')
+          .toString()
+          .trim();
+      if (name.isEmpty) {
+        continue;
+      }
+
+      map['name'] = name;
+      map['nombre'] = name;
+      normalized.add(map);
+    }
+
+    return normalized;
   }
 
   static Future<List<Map<String, dynamic>>> getVehicleBrands({

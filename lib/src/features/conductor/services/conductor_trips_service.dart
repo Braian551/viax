@@ -80,6 +80,7 @@ class PriceBreakdownModel {
 /// Modelo para un viaje individual
 class TripModel {
   final int id;
+  final int? clienteId;
   final String tipoServicio;
   final String? tipoVehiculo;
   final String estado;
@@ -100,6 +101,8 @@ class TripModel {
   final String? destino;
   final String clienteNombre;
   final String clienteApellido;
+  final String? clienteTelefono;
+  final String? clienteEmail;
   final int? calificacion;
   final String? comentario;
   final double? gananciaViaje;
@@ -109,6 +112,7 @@ class TripModel {
 
   TripModel({
     required this.id,
+    this.clienteId,
     required this.tipoServicio,
     this.tipoVehiculo,
     required this.estado,
@@ -129,6 +133,8 @@ class TripModel {
     this.destino,
     required this.clienteNombre,
     required this.clienteApellido,
+    this.clienteTelefono,
+    this.clienteEmail,
     this.calificacion,
     this.comentario,
     this.gananciaViaje,
@@ -211,6 +217,7 @@ class TripModel {
       
       return TripModel(
         id: id,
+        clienteId: parseInt(json['cliente_id']),
         tipoServicio: json['tipo_servicio']?.toString() ?? 'viaje',
         tipoVehiculo: json['tipo_vehiculo']?.toString(),
         estado: json['estado']?.toString() ?? 'completado',
@@ -224,13 +231,21 @@ class TripModel {
         fechaSolicitud: fechaSolicitud,
         fechaCompletado: parseDate(json['fecha_completado']),
         fechaAceptado: parseDate(json['fecha_aceptado']),
-        fechaSolicitudColombia: json['fecha_solicitud_colombia']?.toString(),
-        fechaCompletadoColombia: json['fecha_completado_colombia']?.toString(),
-        fechaAceptadoColombia: json['fecha_aceptado_colombia']?.toString(),
+        fechaSolicitudColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_solicitud']?.toString()) ??
+          json['fecha_solicitud_colombia']?.toString(),
+        fechaCompletadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_completado']?.toString()) ??
+          json['fecha_completado_colombia']?.toString(),
+        fechaAceptadoColombia:
+          DateTimeUtils.formatServerDateToColombia(json['fecha_aceptado']?.toString()) ??
+          json['fecha_aceptado_colombia']?.toString(),
         origen: json['origen']?.toString(),
         destino: json['destino']?.toString(),
         clienteNombre: json['cliente_nombre']?.toString() ?? '',
         clienteApellido: json['cliente_apellido']?.toString() ?? '',
+        clienteTelefono: json['cliente_telefono']?.toString(),
+        clienteEmail: json['cliente_email']?.toString(),
         calificacion: parseInt(json['calificacion']),
         comentario: json['comentario']?.toString(),
         gananciaViaje: parseDouble(json['ganancia_viaje']),

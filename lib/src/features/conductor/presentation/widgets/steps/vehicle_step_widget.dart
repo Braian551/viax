@@ -214,6 +214,36 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
     );
   }
 
+  Future<void> _openColorSheet(BuildContext context) async {
+    if (_isLoadingColors || _colors.isEmpty) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VehicleSearchableSheet<Map<String, dynamic>>(
+        title: 'Seleccionar Color',
+        items: _colors,
+        itemLabel: (item) => (item['nombre'] as String?) ?? '',
+        selectedLabel: _selectedColorName,
+        headerIcon: Icons.palette_rounded,
+        itemIcon: Icons.lens_rounded,
+        itemColor: (item) {
+          final rawHex = (item['hex_code'] ?? item['hex'] ?? item['codigo_hex'] ?? '').toString().trim();
+          if (rawHex.isEmpty) return null;
+          return _parseColor(rawHex);
+        },
+        onSelected: (selected) {
+          final selectedName = (selected['nombre'] as String?) ?? '';
+          if (selectedName.isEmpty) return;
+          setState(() => _selectedColorName = selectedName);
+          widget.colorController.text = selectedName;
+        },
+        searchHint: 'Buscar color...',
+      ),
+    );
+  }
+
   Future<void> _pickVehicleYear() async {
     final now = DateTime.now();
     final currentYear = int.tryParse(widget.yearController.text.trim()) ?? now.year;
@@ -468,9 +498,9 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
           const SizedBox(height: 16),
           _buildYearPickerField(),
           const SizedBox(height: 16),
-          _isLoadingColors 
-             ? Center(child: CircularProgressIndicator(strokeWidth: 2)) 
-             : _buildColorDropdown(context),
+           _isLoadingColors
+             ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+             : _buildColorSelector(context),
           const SizedBox(height: 16),
           AuthTextField(
             controller: widget.plateController,
@@ -517,6 +547,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         ),
       ),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: _isLoadingBrands || _brands.isEmpty
             ? null
             : () {
@@ -651,6 +682,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
         ),
       ),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: isDisabled || _isLoadingModels || _models.isEmpty
             ? null
             : () {
@@ -754,6 +786,7 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
 
   Widget _buildYearPickerField() {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _pickVehicleYear,
       child: AbsorbPointer(
         child: AuthTextField(
@@ -773,14 +806,14 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
 
 
   
-  Widget _buildColorDropdown(BuildContext context) {
-    // Determine isDark from context or widget prop (widget.isDark seems reliable)
+  Widget _buildColorSelector(BuildContext context) {
     final bool isDark = widget.isDark;
-    final selectedValue = _colors.any(
-      (color) => (color['nombre'] ?? '').toString() == _selectedColorName,
-    )
-        ? _selectedColorName
-        : null;
+    final selectedColor = _colors.cast<Map<String, dynamic>?>().firstWhere(
+      (color) => (color?['nombre'] ?? '').toString() == _selectedColorName,
+      orElse: () => null,
+    );
+    final selectedColorName = selectedColor?['nombre'] as String?;
+    final selectedColorHex = selectedColor?['hex_code']?.toString();
 
     return Container(
       decoration: BoxDecoration(
@@ -809,80 +842,83 @@ class _VehicleStepWidgetState extends State<VehicleStepWidget> {
           ),
         ],
       ),
-      child: DropdownButtonFormField<String>(
-        menuMaxHeight: 300, // Limit height to allow scrolling
-        initialValue: selectedValue,
-        items: _colors.map((color) {
-          return DropdownMenuItem<String>(
-            value: color['nombre'],
-            child: Row(
-              children: [
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: _parseColor(color['hex_code']?.toString()),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300)
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _openColorSheet(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryLight],
                   ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  color['nombre'],
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-        onChanged: (val) {
-          if (val != null) {
-            setState(() => _selectedColorName = val);
-            widget.colorController.text = val;
-          }
-        },
-        validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
-        style: TextStyle(
-          color: Theme.of(context).textTheme.bodyLarge?.color,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.3,
-        ),
-        decoration: InputDecoration(
-          labelText: 'Color',
-          labelStyle: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryLight],
+                child: const Icon(Icons.palette_rounded, color: Colors.white, size: 20),
               ),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  spreadRadius: 1,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Color',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (selectedColorHex != null) ...[
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: _parseColor(selectedColorHex),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            selectedColorName ?? 'Seleccionar color',
+                            style: TextStyle(
+                              color: selectedColorName != null
+                                  ? (isDark ? Colors.white : Colors.black87)
+                                  : Colors.grey,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Icon(Icons.palette_rounded, color: Colors.white, size: 20),
+              ),
+              Icon(Icons.arrow_drop_down, color: Colors.grey),
+              const SizedBox(width: 8),
+            ],
           ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
-        dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-        icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white70 : Colors.black54),
       ),
     );
   }

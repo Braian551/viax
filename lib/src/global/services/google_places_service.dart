@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';
+import 'package:viax/src/global/models/location_data.dart';
 import 'app_secrets_service.dart';
+import 'location_cache_service.dart';
 
 /// Servicio para interactuar con la API de Google Places (New)
 /// Usa la nueva API v1 para autocompletado y detalles de lugares
@@ -170,6 +172,7 @@ class GooglePlacesService {
       final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/geocode/json'
         '?latlng=${position.latitude},${position.longitude}'
+        '&result_type=locality|administrative_area_level_2'
         '&key=$apiKey'
         '&language=$language'
       );
@@ -193,6 +196,292 @@ class GooglePlacesService {
       debugPrint('GooglePlacesService reverseGeocode error: $e');
       return null;
     }
+  }
+
+  /// Normaliza componentes administrativos para municipio/departamento/país.
+  /// Nunca usa formatted_address para extraer municipio.
+  static Future<LocationData?> reverseGeocodeLocationData({
+    required LatLng position,
+    required String sourceType,
+    String language = 'es',
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      final cacheKey = LocationCacheService.buildKey(position);
+      final cached = LocationCacheService.getReverse<LocationData>(position);
+      if (cached != null) {
+        debugPrint(
+          '[GeoResolver] cache_hit key=$cacheKey latency_ms=${stopwatch.elapsedMilliseconds}',
+        );
+        return cached;
+      }
+
+      debugPrint('[GeoResolver] cache_miss key=$cacheKey');
+
+      final apiKey = AppSecretsService.instance.googlePlacesApiKey;
+      if (apiKey.isEmpty) {
+        return null;
+      }
+
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json'
+        '?latlng=${position.latitude},${position.longitude}'
+        '&key=$apiKey'
+        '&language=$language',
+      );
+
+      final result = await _network.getJson(
+        url: url,
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (!result.success || result.json == null) {
+        return null;
+      }
+
+      final data = result.json!;
+      final resolved = await compute(
+        _resolveLocationDataFromPayload,
+        jsonEncode({
+          'lat': position.latitude,
+          'lng': position.longitude,
+          'sourceType': sourceType,
+          'response': data,
+        }),
+      );
+
+      if (resolved == null) {
+        return null;
+      }
+
+      final locationData = LocationData(
+        lat: position.latitude,
+        lng: position.longitude,
+        municipality: resolved['municipality']?.toString() ?? '',
+        department: resolved['department']?.toString(),
+        country: resolved['country']?.toString(),
+        placeId: resolved['placeId']?.toString(),
+        sourceType: sourceType,
+        address: resolved['displayAddress']?.toString(),
+        contextType: resolved['contextType']?.toString() ?? 'rural',
+        isUrban: resolved['isUrban'] == true,
+      );
+
+      LocationCacheService.setReverse<LocationData>(position, locationData);
+
+      debugPrint(
+        '[GeoResolver] resolved key=$cacheKey latency_ms=${stopwatch.elapsedMilliseconds} context=${locationData.contextType} municipality=${locationData.municipality} display=${locationData.address}',
+      );
+
+      return locationData;
+    } catch (e) {
+      debugPrint('GooglePlacesService reverseGeocodeLocationData error: $e');
+      return null;
+    } finally {
+      stopwatch.stop();
+    }
+  }
+}
+
+Map<String, dynamic>? _resolveLocationDataFromPayload(String payload) {
+  final decoded = jsonDecode(payload) as Map<String, dynamic>;
+  final response = decoded['response'] as Map<String, dynamic>?;
+  final results = response?['results'] as List<dynamic>? ?? const [];
+  if ((response?['status']?.toString() ?? '') != 'OK' || results.isEmpty) {
+    return null;
+  }
+
+  String? route;
+  String? streetNumber;
+  String? neighborhood;
+  String? sublocality;
+  String? locality;
+  String? adminLevel2;
+  String? adminLevel1;
+  String? country;
+  String? placeId;
+
+  for (final rawResult in results) {
+    final resultItem = rawResult as Map<String, dynamic>;
+    placeId ??= resultItem['place_id']?.toString();
+
+    final components = resultItem['address_components'] as List<dynamic>? ?? const [];
+    for (final rawComponent in components) {
+      final component = rawComponent as Map<String, dynamic>;
+      final types = (component['types'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[];
+      final longName = component['long_name']?.toString();
+      if (longName == null || longName.isEmpty) continue;
+
+      if (types.contains('route')) route ??= longName;
+      if (types.contains('street_number')) streetNumber ??= longName;
+      if (types.contains('neighborhood')) neighborhood ??= longName;
+      if (types.contains('sublocality') || types.contains('sublocality_level_1')) {
+        sublocality ??= longName;
+      }
+      if (types.contains('locality')) locality ??= longName;
+      if (types.contains('administrative_area_level_2')) adminLevel2 ??= longName;
+      if (types.contains('administrative_area_level_1')) adminLevel1 ??= longName;
+      if (types.contains('country')) country ??= longName;
+    }
+  }
+
+  final isUrban = (route != null && route!.isNotEmpty) ||
+      (streetNumber != null && streetNumber!.isNotEmpty);
+  final contextType = isUrban ? 'urban' : 'rural';
+
+  final municipality = locality ?? adminLevel2 ?? adminLevel1 ?? '';
+  if (municipality.isEmpty) {
+    return null;
+  }
+
+  final displayAddress = resolveDisplayAddress(
+    route: route,
+    streetNumber: streetNumber,
+    neighborhood: neighborhood,
+    sublocality: sublocality,
+    locality: locality,
+    administrativeAreaLevel2: adminLevel2,
+    administrativeAreaLevel1: adminLevel1,
+    isUrban: isUrban,
+  );
+
+  return {
+    'municipality': municipality,
+    'department': adminLevel1,
+    'country': country,
+    'placeId': placeId,
+    'displayAddress': displayAddress,
+    'contextType': contextType,
+    'isUrban': isUrban,
+  };
+}
+
+String resolveDisplayAddress({
+  String? route,
+  String? streetNumber,
+  String? neighborhood,
+  String? sublocality,
+  String? locality,
+  String? administrativeAreaLevel2,
+  String? administrativeAreaLevel1,
+  required bool isUrban,
+}) {
+  final display = resolveDisplayLabel(
+    poiName: null,
+    textSearchPoiName: null,
+    route: route,
+    streetNumber: streetNumber,
+    neighborhood: neighborhood,
+    sublocality: sublocality,
+    locality: locality,
+    administrativeAreaLevel2: administrativeAreaLevel2,
+    administrativeAreaLevel1: administrativeAreaLevel1,
+    isUrban: isUrban,
+  );
+  return display.fullText;
+}
+
+ResolvedDisplayLabel resolveDisplayLabel({
+  String? landmarkName,
+  String? poiName,
+  String? textSearchPoiName,
+  String? route,
+  String? streetNumber,
+  String? neighborhood,
+  String? sublocality,
+  String? locality,
+  String? administrativeAreaLevel2,
+  String? administrativeAreaLevel1,
+  required bool isUrban,
+}) {
+  final cleanLandmark = (landmarkName ?? '').trim();
+  final cleanPoi = (poiName ?? '').trim();
+  final cleanTextSearchPoi = (textSearchPoiName ?? '').trim();
+  final municipality =
+      (locality ?? administrativeAreaLevel2 ?? administrativeAreaLevel1 ?? '')
+          .trim();
+  final department = (administrativeAreaLevel1 ?? '').trim();
+  final subtitle = _composeSubtitle(municipality, department);
+
+  if (cleanLandmark.isNotEmpty) {
+    return ResolvedDisplayLabel(
+      label: cleanLandmark,
+      subtitle: subtitle,
+    );
+  }
+
+  if (cleanPoi.isNotEmpty) {
+    return ResolvedDisplayLabel(
+      label: cleanPoi,
+      subtitle: subtitle,
+    );
+  }
+
+  if (cleanTextSearchPoi.isNotEmpty) {
+    return ResolvedDisplayLabel(
+      label: cleanTextSearchPoi,
+      subtitle: subtitle,
+    );
+  }
+
+  final cleanRoute = (route ?? '').trim();
+  final cleanStreetNumber = (streetNumber ?? '').trim();
+  if (isUrban && cleanRoute.isNotEmpty) {
+    final streetLabel = cleanStreetNumber.isNotEmpty
+        ? '$cleanRoute #$cleanStreetNumber'
+        : cleanRoute;
+    return ResolvedDisplayLabel(
+      label: streetLabel,
+      subtitle: subtitle,
+    );
+  }
+
+  final cleanNeighborhood = (neighborhood ?? '').trim();
+  if (cleanNeighborhood.isNotEmpty) {
+    return ResolvedDisplayLabel(
+      label: cleanNeighborhood,
+      subtitle: subtitle,
+    );
+  }
+
+  final cleanSublocality = (sublocality ?? '').trim();
+  if (cleanSublocality.isNotEmpty) {
+    return ResolvedDisplayLabel(
+      label: cleanSublocality,
+      subtitle: subtitle,
+    );
+  }
+
+  final fallback = subtitle.isNotEmpty ? subtitle : 'Punto en la vía';
+  return ResolvedDisplayLabel(label: fallback, subtitle: '');
+}
+
+String _composeSubtitle(String municipality, String department) {
+  if (municipality.isNotEmpty &&
+      department.isNotEmpty &&
+      municipality != department) {
+    return '$municipality, $department';
+  }
+  return municipality.isNotEmpty ? municipality : department;
+}
+
+class ResolvedDisplayLabel {
+  final String label;
+  final String subtitle;
+
+  const ResolvedDisplayLabel({
+    required this.label,
+    required this.subtitle,
+  });
+
+  String get fullText {
+    if (subtitle.trim().isEmpty) {
+      return label.trim().isEmpty ? 'Punto en la vía' : label.trim();
+    }
+    return '${label.trim()}, ${subtitle.trim()}';
   }
 }
 

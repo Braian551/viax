@@ -317,7 +317,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                                 );
                               },
                             ),
-/*                              _buildOptionTile(
+                            _buildOptionTile(
                               icon: Icons.help_outline_rounded,
                               title: 'Ayuda y Soporte',
                               subtitle: 'Centro de ayuda, contactar',
@@ -332,9 +332,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                                   },
                                 );
                               },
-                            ), */
+                            ),
                             
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 20),
                             
                             // Botón Cerrar Sesión
                             Container(

@@ -52,6 +52,10 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
     }
   }
 
+  double _driverListDebt() {
+    return double.tryParse(widget.driver['deuda_actual']?.toString() ?? '0') ?? 0;
+  }
+
   @override
   void dispose() {
     _amountController.removeListener(_formatAmountInput);
@@ -124,10 +128,35 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
+          final resumen = data['resumen'] is Map<String, dynamic>
+              ? data['resumen'] as Map<String, dynamic>
+              : <String, dynamic>{};
+          final deudaResumen = double.tryParse(resumen['deuda_actual']?.toString() ?? '');
+          final debtFromList = _driverListDebt();
+
           if (mounted) {
             setState(() {
               _transactions = List<Map<String, dynamic>>.from(data['data']);
-              _recalculateDebtFromTransactions();
+              if (deudaResumen != null) {
+                double resolvedDebt = deudaResumen;
+                if (debtFromList > resolvedDebt) {
+                  resolvedDebt = debtFromList;
+                }
+                _currentDebt = resolvedDebt > 0 ? resolvedDebt : 0;
+                if (_currentDebt <= 0) {
+                  _amountController.clear();
+                } else {
+                  final currentInput = _parseCopInput(_amountController.text);
+                  if (currentInput <= 0) {
+                    _setAmountValue(_currentDebt);
+                  }
+                }
+              } else {
+                _recalculateDebtFromTransactions();
+                if (debtFromList > _currentDebt) {
+                  _currentDebt = debtFromList;
+                }
+              }
               _isLoading = false;
             });
           }
@@ -350,7 +379,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
               children: [
                 Text(nombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 const SizedBox(height: 8),
-                Text('Deuda Total', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                Text('Deuda ciclo actual', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                 Text(
                   _currencyFormat.format(deuda),
                   style: TextStyle(
@@ -484,7 +513,7 @@ class _DriverFinancialHistorySheetState extends State<DriverFinancialHistoryShee
                             controller: _amountController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'Monto a pagar',
+                              labelText: 'Monto a pagar (ciclo actual)',
                               prefixText: '\$ ',
                               border: OutlineInputBorder(),
                               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),

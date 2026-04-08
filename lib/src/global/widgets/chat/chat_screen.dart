@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 import '../../services/chat_service.dart';
+import '../../services/user_block_service.dart';
+import '../../services/user_report_service.dart';
 import '../../../features/conductor/services/document_upload_service.dart';
+import '../../../shared/widgets/global_overlay_message.dart';
 import 'chat_bubble.dart';
 import 'chat_input_field.dart';
 import 'quick_messages.dart';
@@ -47,6 +50,8 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage> _messages = [];
   bool _isLoading = true;
   bool _isSending = false;
+  bool _isActionLoading = false;
+  UserBlockState? _blockState;
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
 
   @override
@@ -55,6 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
     ChatService.isChatOpen = true; // Indicar que el chat está abierto
     _loadMessages();
     _subscribeToMessages();
+    _loadBlockState();
     
     // Marcar todos los mensajes como leídos al abrir el chat
     ChatService.markAsRead(
@@ -66,6 +72,189 @@ class _ChatScreenState extends State<ChatScreen> {
     // del viaje activo (UserActiveTripScreen o ConductorActiveTripScreen).
     // Si se inicia aquí, al cerrar el chat se detendría todo el polling
     // y el usuario dejaría de recibir notificaciones.
+  }
+
+  Future<void> _loadBlockState() async {
+    try {
+      final state = await UserBlockService.getBlockState(
+        actorId: widget.miUsuarioId,
+        otherUserId: widget.otroUsuarioId,
+      );
+      if (!mounted) return;
+      setState(() => _blockState = state);
+    } catch (_) {
+      // Si falla la consulta no bloqueamos el chat; se reintenta al ejecutar acciones.
+    }
+  }
+
+  Future<void> _onBlockActionSelected() async {
+    if (_isActionLoading) return;
+
+    final current = _blockState;
+    final currentlyBlockedByMe = current?.blockedByMe == true;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(currentlyBlockedByMe ? 'Desbloquear usuario' : 'Bloquear usuario'),
+        content: Text(
+          currentlyBlockedByMe
+              ? '¿Deseas desbloquear a este usuario para permitir futuros viajes?'
+              : '¿Deseas bloquear a este usuario? Se bloquearán coincidencias futuras.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(currentlyBlockedByMe ? 'Desbloquear' : 'Bloquear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isActionLoading = true);
+    try {
+      UserBlockState next;
+      if (currentlyBlockedByMe) {
+        next = await UserBlockService.unblockUser(
+          actorId: widget.miUsuarioId,
+          blockedUserId: widget.otroUsuarioId,
+        );
+      } else {
+        next = await UserBlockService.blockUser(
+          actorId: widget.miUsuarioId,
+          blockedUserId: widget.otroUsuarioId,
+          solicitudId: widget.solicitudId,
+        );
+      }
+
+      if (!mounted) return;
+      setState(() => _blockState = next);
+
+      GlobalOverlayMessage.showSuccess(
+        context,
+        currentlyBlockedByMe
+            ? 'Usuario desbloqueado correctamente.'
+            : 'Usuario bloqueado correctamente.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      GlobalOverlayMessage.showError(
+        context,
+        UserBlockService.friendlyFromError(e),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isActionLoading = false);
+      }
+    }
+  }
+
+  Future<void> _onReportActionSelected() async {
+    if (_isActionLoading) return;
+
+    final reasons = <String, String>{
+      'comportamiento_inapropiado': 'Comportamiento inapropiado',
+      'acoso_o_amenaza': 'Acoso o amenaza',
+      'fraude_o_estafa': 'Fraude o estafa',
+      'incumplimiento_servicio': 'Incumplimiento del servicio',
+      'contenido_inapropiado_chat': 'Contenido inapropiado en chat',
+      'otro': 'Otro',
+    };
+
+    String selectedReason = reasons.keys.first;
+    final detailsController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          title: const Text('Reportar usuario'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cuéntanos qué ocurrió. Este reporte será revisado por soporte.',
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedReason,
+                  decoration: const InputDecoration(labelText: 'Motivo'),
+                  items: reasons.entries
+                      .map(
+                        (entry) => DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => selectedReason = value);
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: detailsController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Detalles (opcional)',
+                    hintText: 'Describe brevemente la situación reportada.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Enviar reporte'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) {
+      detailsController.dispose();
+      return;
+    }
+
+    setState(() => _isActionLoading = true);
+    try {
+      await UserReportService.reportUser(
+        reporterUserId: widget.miUsuarioId,
+        reportedUserId: widget.otroUsuarioId,
+        solicitudId: widget.solicitudId,
+        motivo: selectedReason,
+        descripcion: detailsController.text,
+      );
+
+      if (!mounted) return;
+      GlobalOverlayMessage.showSuccess(
+        context,
+        'Reporte enviado. Gracias por ayudarte a mantener la comunidad segura.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      GlobalOverlayMessage.showError(
+        context,
+        UserReportService.friendlyFromError(e),
+      );
+    } finally {
+      detailsController.dispose();
+      if (mounted) {
+        setState(() => _isActionLoading = false);
+      }
+    }
   }
 
   @override
@@ -184,6 +373,22 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: _buildAppBar(isDark),
       body: Column(
         children: [
+          if (_blockState?.eitherBlocked == true)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: AppColors.warning.withValues(alpha: 0.15),
+              child: Text(
+                _blockState?.hasActiveTrip == true
+                    ? 'Existe un bloqueo activo. Este chat seguirá disponible solo durante el viaje en curso.'
+                    : 'Existe un bloqueo activo entre ambos usuarios.',
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           // Lista de mensajes
           Expanded(
             child: _isLoading
@@ -278,13 +483,53 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       actions: [
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'block_toggle') {
+              _onBlockActionSelected();
+            }
+            if (value == 'report_user') {
+              _onReportActionSelected();
+            }
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem<String>(
+              value: 'block_toggle',
+              child: Row(
+                children: [
+                  Icon(
+                    _blockState?.blockedByMe == true
+                        ? Icons.lock_open_rounded
+                        : Icons.block_rounded,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(_blockState?.blockedByMe == true ? 'Desbloquear usuario' : 'Bloquear usuario'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'report_user',
+              child: Row(
+                children: [
+                  Icon(Icons.flag_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Text('Reportar usuario'),
+                ],
+              ),
+            ),
+          ],
+        ),
         // Botón de llamada
         IconButton(
           icon: Icon(
             Icons.phone_rounded,
             color: isDark ? Colors.white : Colors.black,
           ),
-          onPressed: () {
+          onPressed: _isActionLoading
+              ? null
+              : () {
             // TODO: Implementar llamada
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Llamando...')),

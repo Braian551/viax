@@ -1,5 +1,6 @@
 // lib/src/global/services/mapbox_service.dart
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';
@@ -10,7 +11,15 @@ import 'quota_monitor_service.dart';
 /// Maneja mapas, rutas, geocoding y optimizaciÃ³n de rutas
 class MapboxService {
   static const String _baseUrl = 'https://api.mapbox.com';
+  static const String _routeCacheVersion = 'v2_geojson_full';
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+  static const Distance _distance = Distance();
+  static const Duration _routeCacheTtl = Duration(minutes: 5);
+  static const double _routeReuseThresholdMeters = 80.0;
+  static const double _routeSimplifyToleranceMeters = 10.0;
+  static final Map<String, _RouteCacheEntry> _routeCache = {};
+  static String? _lastRouteCacheKey;
+  static List<LatLng>? _lastRouteWaypoints;
 
   // ============================================
   // DIRECTIONS API (Rutas y NavegaciÃ³n)
@@ -27,15 +36,50 @@ class MapboxService {
   static Future<MapboxRoute?> getRoute({
     required List<LatLng> waypoints,
     String profile = 'driving', // driving, walking, cycling, driving-traffic
-    bool alternatives = true,
-    bool steps = true,
+    bool alternatives = false,
+    bool steps = false,
     bool geometries = true,
   }) async {
+    final stopwatch = Stopwatch()..start();
     try {
       if (waypoints.length < 2) {
         throw Exception(
           'Se necesitan al menos 2 puntos para calcular una ruta',
         );
+      }
+
+      _pruneRouteCache();
+
+      final cacheKey = _buildRouteCacheKey(
+        waypoints,
+        profile: profile,
+        alternatives: alternatives,
+        steps: steps,
+      );
+
+      final directHit = _routeCache[cacheKey];
+      if (directHit != null && !directHit.isExpired) {
+        debugPrint(
+          '[RoutePreview] cache_hit=direct ms=${stopwatch.elapsedMilliseconds} points=${directHit.route.geometry.length}',
+        );
+        _rememberRouteContext(cacheKey, waypoints);
+        return directHit.route;
+      }
+
+      if (_lastRouteCacheKey != null &&
+          _lastRouteWaypoints != null &&
+          _canReuseLastRoute(
+            previous: _lastRouteWaypoints!,
+            current: waypoints,
+          )) {
+        final nearbyEntry = _routeCache[_lastRouteCacheKey!];
+        if (nearbyEntry != null && !nearbyEntry.isExpired) {
+          debugPrint(
+            '[RoutePreview] cache_hit=movement_threshold threshold_m=$_routeReuseThresholdMeters ms=${stopwatch.elapsedMilliseconds} points=${nearbyEntry.route.geometry.length}',
+          );
+          _rememberRouteContext(_lastRouteCacheKey!, waypoints);
+          return nearbyEntry.route;
+        }
       }
 
       // Construir string de coordenadas: "lng,lat;lng,lat;..."
@@ -62,16 +106,221 @@ class MapboxService {
         // Incrementar contador de uso
         await QuotaMonitorService.incrementMapboxRouting();
 
-        return await compute(_parseDirectionsResponse, jsonEncode(result.json));
+        final rawRoute = await compute(
+          _parseDirectionsResponse,
+          jsonEncode(result.json),
+        );
+        if (rawRoute == null) {
+          debugPrint(
+            '[RoutePreview] api_empty ms=${stopwatch.elapsedMilliseconds}',
+          );
+          return null;
+        }
+
+        _routeCache[cacheKey] = _RouteCacheEntry(
+          route: rawRoute,
+          expiresAt: DateTime.now().add(_routeCacheTtl),
+        );
+        _rememberRouteContext(cacheKey, waypoints);
+
+        debugPrint(
+          '[RoutePreview] cache_miss source=mapbox duration_ms=${stopwatch.elapsedMilliseconds} polyline_points=${rawRoute.geometry.length}',
+        );
+
+        return rawRoute;
       } else {
+        debugPrint(
+          '[RoutePreview] api_error ms=${stopwatch.elapsedMilliseconds} reason=${result.error?.userMessage}',
+        );
         print('Error en Mapbox Directions: ${result.error?.userMessage}');
       }
 
       return null;
     } catch (e) {
+      debugPrint(
+        '[RoutePreview] exception ms=${stopwatch.elapsedMilliseconds} error=$e',
+      );
       print('Error obteniendo ruta de Mapbox: $e');
       return null;
+    } finally {
+      stopwatch.stop();
     }
+  }
+
+  static void _rememberRouteContext(String key, List<LatLng> waypoints) {
+    _lastRouteCacheKey = key;
+    _lastRouteWaypoints = List<LatLng>.from(waypoints);
+  }
+
+  static void _pruneRouteCache() {
+    if (_routeCache.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final expiredKeys = _routeCache.entries
+        .where((entry) => entry.value.expiresAt.isBefore(now))
+        .map((entry) => entry.key)
+        .toList();
+
+    for (final key in expiredKeys) {
+      _routeCache.remove(key);
+    }
+  }
+
+  static String _buildRouteCacheKey(
+    List<LatLng> waypoints, {
+    required String profile,
+    required bool alternatives,
+    required bool steps,
+  }) {
+    final pointsKey = waypoints
+        .map(
+          (point) =>
+              '${point.latitude.toStringAsFixed(5)},${point.longitude.toStringAsFixed(5)}',
+        )
+        .join('|');
+    return '$_routeCacheVersion|$profile|alt=$alternatives|steps=$steps|$pointsKey';
+  }
+
+  static bool _canReuseLastRoute({
+    required List<LatLng> previous,
+    required List<LatLng> current,
+  }) {
+    if (previous.length != current.length || previous.length < 2) {
+      return false;
+    }
+
+    final originMovement = _distance.as(
+      LengthUnit.Meter,
+      previous.first,
+      current.first,
+    );
+    final destinationMovement = _distance.as(
+      LengthUnit.Meter,
+      previous.last,
+      current.last,
+    );
+
+    return originMovement <= _routeReuseThresholdMeters &&
+        destinationMovement <= _routeReuseThresholdMeters;
+  }
+
+  static MapboxRoute _simplifyRoute(
+    MapboxRoute route, {
+    required double toleranceMeters,
+  }) {
+    final geometry = route.geometry;
+    if (geometry.length < 3) {
+      return route;
+    }
+
+    final simplified = _douglasPeucker(geometry, toleranceMeters);
+    if (simplified.length < 2 || simplified.length >= geometry.length) {
+      return route;
+    }
+
+    return route.copyWith(geometry: simplified);
+  }
+
+  static List<LatLng> _douglasPeucker(
+    List<LatLng> points,
+    double toleranceMeters,
+  ) {
+    if (points.length <= 2) {
+      return List<LatLng>.from(points);
+    }
+
+    final keep = List<bool>.filled(points.length, false);
+    keep[0] = true;
+    keep[points.length - 1] = true;
+    _simplifySegment(points, 0, points.length - 1, toleranceMeters, keep);
+
+    final result = <LatLng>[];
+    for (var i = 0; i < points.length; i++) {
+      if (keep[i]) {
+        result.add(points[i]);
+      }
+    }
+
+    return result.length >= 2 ? result : List<LatLng>.from(points);
+  }
+
+  static void _simplifySegment(
+    List<LatLng> points,
+    int start,
+    int end,
+    double toleranceMeters,
+    List<bool> keep,
+  ) {
+    if (end <= start + 1) {
+      return;
+    }
+
+    final startPoint = points[start];
+    final endPoint = points[end];
+    double maxDistance = -1.0;
+    int maxIndex = -1;
+
+    for (var i = start + 1; i < end; i++) {
+      final distance = _distanceToSegmentMeters(
+        points[i],
+        startPoint,
+        endPoint,
+      );
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        maxIndex = i;
+      }
+    }
+
+    if (maxDistance > toleranceMeters && maxIndex > start && maxIndex < end) {
+      keep[maxIndex] = true;
+      _simplifySegment(points, start, maxIndex, toleranceMeters, keep);
+      _simplifySegment(points, maxIndex, end, toleranceMeters, keep);
+    }
+  }
+
+  static double _distanceToSegmentMeters(
+    LatLng point,
+    LatLng segmentStart,
+    LatLng segmentEnd,
+  ) {
+    final projectedStart = _projectToMeters(segmentStart);
+    final projectedEnd = _projectToMeters(segmentEnd);
+    final projectedPoint = _projectToMeters(point);
+
+    final dx = projectedEnd.x - projectedStart.x;
+    final dy = projectedEnd.y - projectedStart.y;
+
+    if (dx == 0 && dy == 0) {
+      final distX = projectedPoint.x - projectedStart.x;
+      final distY = projectedPoint.y - projectedStart.y;
+      return math.sqrt((distX * distX) + (distY * distY));
+    }
+
+    final t = (((projectedPoint.x - projectedStart.x) * dx) +
+            ((projectedPoint.y - projectedStart.y) * dy)) /
+        ((dx * dx) + (dy * dy));
+    final clampedT = t.clamp(0.0, 1.0);
+
+    final closestX = projectedStart.x + (dx * clampedT);
+    final closestY = projectedStart.y + (dy * clampedT);
+    final distX = projectedPoint.x - closestX;
+    final distY = projectedPoint.y - closestY;
+
+    return math.sqrt((distX * distX) + (distY * distY));
+  }
+
+  static math.Point<double> _projectToMeters(LatLng point) {
+    const metersPerDegreeLat = 111320.0;
+    final metersPerDegreeLng =
+        metersPerDegreeLat * math.cos(point.latitude * math.pi / 180.0);
+
+    return math.Point<double>(
+      point.longitude * metersPerDegreeLng,
+      point.latitude * metersPerDegreeLat,
+    );
   }
 
   /// Optimizar orden de mÃºltiples waypoints para la ruta mÃ¡s eficiente
@@ -496,12 +745,15 @@ class MapboxRoute {
   factory MapboxRoute.fromJson(Map<String, dynamic> json) {
     List<LatLng> geometry = [];
 
-    // Parsear geometrÃ­a GeoJSON
-    if (json['geometry'] != null && json['geometry']['coordinates'] != null) {
+    // Parsear geometría GeoJSON o polyline codificada.
+    if (json['geometry'] is Map<String, dynamic> &&
+        json['geometry']['coordinates'] != null) {
       final coords = json['geometry']['coordinates'] as List;
       geometry = coords.map((coord) {
-        return LatLng(coord[1] as double, coord[0] as double);
+        return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
       }).toList();
+    } else if (json['geometry'] is String) {
+      geometry = _decodePolyline(json['geometry'] as String);
     }
 
     // Parsear steps
@@ -520,6 +772,22 @@ class MapboxRoute {
       geometry: geometry,
       steps: steps,
       routeSummary: json['summary'],
+    );
+  }
+
+  MapboxRoute copyWith({
+    double? distance,
+    double? duration,
+    List<LatLng>? geometry,
+    List<MapboxStep>? steps,
+    String? routeSummary,
+  }) {
+    return MapboxRoute(
+      distance: distance ?? this.distance,
+      duration: duration ?? this.duration,
+      geometry: geometry ?? this.geometry,
+      steps: steps ?? this.steps,
+      routeSummary: routeSummary ?? this.routeSummary,
     );
   }
 
@@ -556,6 +824,46 @@ class MapboxRoute {
     final mins = (durationMinutes % 60).toStringAsFixed(0);
     return '${hours}h ${mins}min';
   }
+}
+
+List<LatLng> _decodePolyline(String encoded) {
+  final points = <LatLng>[];
+  int index = 0;
+  int lat = 0;
+  int lng = 0;
+
+  while (index < encoded.length) {
+    int result = 0;
+    int shift = 0;
+    int b;
+    do {
+      if (index >= encoded.length) {
+        return points;
+      }
+      b = encoded.codeUnitAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    final dLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lat += dLat;
+
+    result = 0;
+    shift = 0;
+    do {
+      if (index >= encoded.length) {
+        return points;
+      }
+      b = encoded.codeUnitAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    final dLng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lng += dLng;
+
+    points.add(LatLng(lat / 1e5, lng / 1e5));
+  }
+
+  return points;
 }
 
 /// Paso de instrucciÃ³n de ruta
@@ -615,6 +923,18 @@ class MapMarker {
   final String color; // hexadecimal sin #, ej: 'ff0000'
 
   MapMarker({required this.position, this.label = 'a', this.color = 'ff0000'});
+}
+
+class _RouteCacheEntry {
+  final MapboxRoute route;
+  final DateTime expiresAt;
+
+  _RouteCacheEntry({
+    required this.route,
+    required this.expiresAt,
+  });
+
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
 }
 
 /// Lugar encontrado por Geocoding API
@@ -696,6 +1016,116 @@ List<MapboxPlace> _parsePlacesResponse(String responseBody) {
     return features.map((f) => MapboxPlace.fromJson(f)).toList();
   }
   return [];
+}
+
+List<List<double>>? _simplifyRouteGeometryInIsolate(String payload) {
+  final decoded = jsonDecode(payload) as Map<String, dynamic>;
+  final tolerance = (decoded['toleranceMeters'] as num?)?.toDouble() ?? 10.0;
+  final geometryRaw = decoded['geometry'] as List<dynamic>? ?? const [];
+  if (geometryRaw.length < 3) {
+    return geometryRaw
+        .map((p) => [
+              ((p as List)[0] as num).toDouble(),
+              (p[1] as num).toDouble(),
+            ])
+        .toList();
+  }
+
+  final points = geometryRaw
+      .map((p) => [
+            ((p as List)[0] as num).toDouble(),
+            (p[1] as num).toDouble(),
+          ])
+      .toList();
+
+  final keep = List<bool>.filled(points.length, false);
+  keep[0] = true;
+  keep[points.length - 1] = true;
+
+  void simplifySegment(int start, int end) {
+    if (end <= start + 1) return;
+
+    final startPoint = points[start];
+    final endPoint = points[end];
+    double maxDistance = -1;
+    int maxIndex = -1;
+
+    for (var i = start + 1; i < end; i++) {
+      final point = points[i];
+      final distance = _distanceToSegmentMetersInIsolate(
+        point,
+        startPoint,
+        endPoint,
+      );
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        maxIndex = i;
+      }
+    }
+
+    if (maxDistance > tolerance && maxIndex > start && maxIndex < end) {
+      keep[maxIndex] = true;
+      simplifySegment(start, maxIndex);
+      simplifySegment(maxIndex, end);
+    }
+  }
+
+  simplifySegment(0, points.length - 1);
+
+  final simplified = <List<double>>[];
+  for (var i = 0; i < points.length; i++) {
+    if (keep[i]) {
+      simplified.add(points[i]);
+    }
+  }
+
+  if (simplified.length < 2 || simplified.length >= points.length) {
+    return points;
+  }
+
+  return simplified;
+}
+
+double _distanceToSegmentMetersInIsolate(
+  List<double> point,
+  List<double> start,
+  List<double> end,
+) {
+  final projectedStart = _projectToMetersInIsolate(start[0], start[1]);
+  final projectedEnd = _projectToMetersInIsolate(end[0], end[1]);
+  final projectedPoint = _projectToMetersInIsolate(point[0], point[1]);
+
+  final dx = projectedEnd.x - projectedStart.x;
+  final dy = projectedEnd.y - projectedStart.y;
+
+  if (dx == 0 && dy == 0) {
+    final distX = projectedPoint.x - projectedStart.x;
+    final distY = projectedPoint.y - projectedStart.y;
+    return math.sqrt((distX * distX) + (distY * distY));
+  }
+
+  final t = (((projectedPoint.x - projectedStart.x) * dx) +
+          ((projectedPoint.y - projectedStart.y) * dy)) /
+      ((dx * dx) + (dy * dy));
+  final clampedT = t.clamp(0.0, 1.0);
+
+  final closestX = projectedStart.x + (dx * clampedT);
+  final closestY = projectedStart.y + (dy * clampedT);
+  final distX = projectedPoint.x - closestX;
+  final distY = projectedPoint.y - closestY;
+
+  return math.sqrt((distX * distX) + (distY * distY));
+}
+
+math.Point<double> _projectToMetersInIsolate(double lat, double lng) {
+  const metersPerDegreeLat = 111320.0;
+  final metersPerDegreeLng =
+      metersPerDegreeLat * math.cos(lat * math.pi / 180.0);
+
+  return math.Point<double>(
+    lng * metersPerDegreeLng,
+    lat * metersPerDegreeLat,
+  );
 }
 
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Promptbase"
+  short_description: "Deploy seguro y legal en Viax"
+  default_prompt: "Usa $promptbase para desplegar cambios backend de Viax o sincronizar terminos y condiciones con legal content y documentacion."
+policy:
+  allow_implicit_invocation: true

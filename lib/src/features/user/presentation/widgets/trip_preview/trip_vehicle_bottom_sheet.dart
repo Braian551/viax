@@ -415,6 +415,22 @@ class _VehicleListItem extends StatelessWidget {
                                 color: isDark ? Colors.white54 : Colors.black45,
                               ),
                             ),
+                            if (quote?.pickupEtaMinutes != null)
+                              Text(
+                                'Recogida aprox. ${quote!.formattedPickupEta}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? Colors.white54 : Colors.black54,
+                                ),
+                              ),
+                            if (quote?.driverDistanceKm != null)
+                              Text(
+                                'Conductor a ${quote!.formattedDriverDistance}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? Colors.white54 : Colors.black54,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -439,6 +455,15 @@ class _VehicleListItem extends StatelessWidget {
                                   fontSize: 10,
                                   color: Colors.orange,
                                   fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (quote!.surgeMultiplier > 1.0)
+                              Text(
+                                'x${quote!.surgeMultiplier.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                           ],
@@ -485,7 +510,11 @@ class _VehicleListItem extends StatelessWidget {
                               
                             const SizedBox(width: 6),
                             Text(
-                              selectedCompany?.nombre ?? 'Al azar',
+                              selectedCompany?.nombre ??
+                                  (quote?.isRandomEstimate == true &&
+                                          (quote?.randomCompanyCount ?? 0) > 1
+                                      ? 'Al azar (promedio)'
+                                      : 'Al azar'),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,

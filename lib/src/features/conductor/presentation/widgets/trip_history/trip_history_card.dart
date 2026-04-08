@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../../../services/conductor_trips_service.dart';
 import 'trip_status_badge.dart';
 import 'trip_route_info.dart';
@@ -12,12 +13,14 @@ class TripHistoryCard extends StatefulWidget {
   final TripModel trip;
   final VoidCallback onTap;
   final int index;
+  final int? currentUserId;
 
   const TripHistoryCard({
     super.key,
     required this.trip,
     required this.onTap,
     this.index = 0,
+    this.currentUserId,
   });
 
   @override
@@ -168,87 +171,109 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildCustomerInfo(Color textColor, Color subtitleColor, bool isDark) {
-    return Row(
-      children: [
-        // Avatar
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              widget.trip.clienteNombre.isNotEmpty
-                  ? widget.trip.clienteNombre[0].toUpperCase()
-                  : 'U',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+    return InkWell(
+      onTap: _showClientContactSheet,
+      borderRadius: BorderRadius.circular(14),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        
-        // Nombre y calificación
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.trip.clienteNombreCompleto,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
+            child: Center(
+              child: Text(
+                widget.trip.clienteNombre.isNotEmpty
+                    ? widget.trip.clienteNombre[0].toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
-              if (widget.trip.calificacion != null)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      color: Colors.amber,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.trip.calificacionDouble.toStringAsFixed(1),
-                      style: TextStyle(
-                        color: subtitleColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                )
-              else
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Nombre y calificación
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'Sin calificar',
+                  widget.trip.clienteNombreCompleto,
                   style: TextStyle(
-                    color: subtitleColor.withValues(alpha: 0.7),
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-            ],
+                const SizedBox(height: 4),
+                if (widget.trip.calificacion != null)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        widget.trip.calificacionDouble.toStringAsFixed(1),
+                        style: TextStyle(
+                          color: subtitleColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    'Sin calificar',
+                    style: TextStyle(
+                      color: subtitleColor.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
 
-        // Tipo de servicio
-        _buildServiceTypeBadge(isDark),
-      ],
+          // Tipo de servicio
+          _buildServiceTypeBadge(isDark),
+        ],
+      ),
+    );
+  }
+
+  void _showClientContactSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del cliente',
+      name: widget.trip.clienteNombreCompleto,
+      phone: widget.trip.clienteTelefono,
+      email: widget.trip.clienteEmail,
+      rating: widget.trip.calificacionDouble,
+      isDark: isDark,
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.clienteId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'cliente',
     );
   }
 

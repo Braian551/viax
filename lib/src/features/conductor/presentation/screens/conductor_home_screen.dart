@@ -19,6 +19,7 @@ import '../../../../global/widgets/map_retry_wrapper.dart';
 import '../../services/trip_request_search_service.dart';
 import '../../services/demand_zone_service.dart';
 import '../../models/demand_zone_model.dart';
+import '../models/trip_request_view.dart';
 import 'conductor_searching_passengers_screen.dart';
 import 'driver_onboarding_screen.dart';
 import '../widgets/conductor_drawer.dart';
@@ -33,6 +34,7 @@ import 'package:viax/src/features/notifications/services/notification_service.da
 import 'package:viax/src/global/services/local_notification_service.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import '../../services/conductor_background_session_service.dart';
+import 'package:viax/src/global/services/country_availability_service.dart';
 
 /// Pantalla principal del conductor - Diseño profesional y minimalista
 /// Inspirado en Uber/Didi pero con identidad propia
@@ -65,6 +67,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   bool _isMapReady = false;
   bool _isOnline = false;
   StreamSubscription<geo.Position>? _positionStream;
+  Timer? _pendingCenterRetryTimer;
+  geo.Position? _pendingCenterPosition;
 
   // Variables para búsqueda de solicitudes
   bool _isSearchingRequests = false;
@@ -90,6 +94,8 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   Timer? _notificationTimer;
   bool _isAppInForeground = true;
   bool _backgroundModeEnabled = false;
+  bool _countryRestricted = false;
+  String? _detectedCountry;
   final Set<int> _backgroundNotifiedRequestIds = <int>{};
 
   late AnimationController _pulseController;
@@ -113,14 +119,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _startNotificationPolling();
     _initializeBackgroundSessionGuards();
 
-    // Marcar mapa como listo
+    // Cargar datos iniciales sin forzar estado de mapa listo.
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!_isDisposed && mounted) {
-        _safeSetState(() {
-          _isMapReady = true;
-        });
-        debugPrint('✅ Mapa listo');
-
         // Verificar onboarding del conductor
         _checkDriverOnboarding();
         _loadCompanyInfo();
@@ -230,10 +231,53 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Trabajo en segundo plano'),
-        content: const Text(
-          '¿Deseas mantenerte disponible en segundo plano cuando estés en línea? '
-          'Así podrás recibir solicitudes aunque minimices la app.',
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.wifi_tethering, color: Color(0xFF4CAF50), size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Mantener conexión activa',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Para qué se usa?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Cuando estés en línea y minimices la app, Viax mantendrá '
+              'tu conexión activa para que puedas recibir nuevas solicitudes '
+              'de viaje sin necesidad de tener la app abierta.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '¿Cómo funciona?',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Verás una pequeña notificación permanente indicando que Viax '
+              'está activo. Esto te permite seguir recibiendo viajes mientras '
+              'usas otras apps o tu teléfono está en reposo.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Esta función es opcional. Si no la activas, solo recibirás '
+              'solicitudes mientras la app esté abierta en pantalla.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF757575), height: 1.4),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -242,6 +286,11 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             child: const Text('Habilitar'),
           ),
         ],
@@ -577,12 +626,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         desiredAccuracy: geo.LocationAccuracy.high,
       );
 
+      final countryValidation =
+          await CountryAvailabilityService.validateColombiaOnly(
+        position: LatLng(position.latitude, position.longitude),
+      );
+
       if (_isDisposed) return;
 
       _safeSetState(() {
         _currentPosition = position;
         _isLoadingLocation = false;
+        _countryRestricted = !countryValidation.isAllowed;
+        _detectedCountry = countryValidation.detectedCountry;
       });
+
+      if (!countryValidation.isAllowed) {
+        await _forceOfflineNow(reason: 'outside_colombia');
+        _showCountryRestrictionDialog();
+        return;
+      }
 
       // Centrar mapa en la ubicación actual
       _centerMapOnLocation(position);
@@ -644,10 +706,25 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
   }
 
   void _centerMapOnLocation(geo.Position position) {
+    if (!_isMapReady) {
+      _pendingCenterPosition = position;
+      return;
+    }
+
     try {
       _mapController.move(LatLng(position.latitude, position.longitude), 16.0);
+      _pendingCenterPosition = null;
+      _pendingCenterRetryTimer?.cancel();
     } catch (e) {
       debugPrint('Error al centrar mapa: $e');
+      _pendingCenterPosition = position;
+      _pendingCenterRetryTimer?.cancel();
+      _pendingCenterRetryTimer = Timer(const Duration(milliseconds: 350), () {
+        if (_isDisposed || !mounted || !_isMapReady || _pendingCenterPosition == null) {
+          return;
+        }
+        _centerMapOnLocation(_pendingCenterPosition!);
+      });
     }
   }
 
@@ -756,6 +833,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         return;
       }
 
+      final firstRequest = requests.first;
+      final requestView = TripRequestView.fromMap(firstRequest);
+      final initialLocation = (_currentPosition != null)
+          ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+          : null;
+      final Future<MapboxRoute?>? preloadedRouteFuture = initialLocation == null
+          ? null
+          : MapboxService.getRoute(
+              waypoints: [initialLocation, requestView.origen],
+            );
+
       // Navegar a pantalla de solicitud con LA PRIMERA solicitud únicamente
       // Lógica tipo Uber/InDrive: muestra una a la vez
       Navigator.push(
@@ -767,7 +855,9 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 widget.conductorUser['nombre']?.toString() ?? 'Conductor',
             tipoVehiculo:
                 widget.conductorUser['tipo_vehiculo']?.toString() ?? 'Sedan',
-            solicitud: requests.first, // SOLO LA PRIMERA solicitud
+            solicitud: firstRequest, // SOLO LA PRIMERA solicitud
+            initialDriverLocation: initialLocation,
+            preloadedRouteFuture: preloadedRouteFuture,
           ),
         ),
       ).then((result) {
@@ -1056,6 +1146,7 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     _slideController.dispose();
     _positionStream?.cancel();
     _notificationTimer?.cancel();
+    _pendingCenterRetryTimer?.cancel();
     _mapController.dispose();
 
     // Detener búsqueda si está activa
@@ -1069,6 +1160,49 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_countryRestricted) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Scaffold(
+        body: Container(
+          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.public_off_rounded,
+                  size: 34,
+                  color: AppColors.error,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'App disponible solo en Colombia',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Muy pronto estará disponible en otros países.'
+                  '${_detectedCountry != null ? '\n\nUbicación detectada: $_detectedCountry' : ''}',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       extendBodyBehindAppBar: true,
@@ -1081,6 +1215,28 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
           // Overlay con controles
           _buildOverlay(),
+        ],
+      ),
+    );
+  }
+
+  void _showCountryRestrictionDialog() {
+    if (!mounted || _isDisposed) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Servicio no disponible'),
+        content: Text(
+          'Esta app solo está disponible en Colombia por el momento. '
+          'Muy pronto estará disponible en otros países.'
+          '${_detectedCountry != null ? '\n\nUbicación detectada: $_detectedCountry' : ''}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido'),
+          ),
         ],
       ),
     );
@@ -1363,6 +1519,10 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
           onMapReady: () {
             onMapReady();
             _isMapReady = true;
+            debugPrint('✅ Mapa listo');
+            if (_currentPosition != null) {
+              _centerMapOnLocation(_currentPosition!);
+            }
           },
         ),
         children: [

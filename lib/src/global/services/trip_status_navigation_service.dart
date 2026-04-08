@@ -11,15 +11,32 @@ class TripNavigationDecision {
 }
 
 class TripStatusNavigationService {
+  static const Map<String, String> _statusAliases = {
+    'requested': 'pendiente',
+    'accepted': 'aceptada',
+    'picked_up': 'recogido',
+    'in_progress': 'en_curso',
+    'completed': 'completada',
+    'cancelled': 'cancelada',
+    'driver_assigned': 'aceptada',
+    'driver_arrived': 'conductor_llego',
+    'trip_started': 'recogido',
+    'trip_in_progress': 'en_curso',
+    'en_viaje': 'en_curso',
+    'iniciado': 'en_curso',
+    'trip_completed': 'completada',
+    'trip_cancelled': 'cancelada',
+  };
+
   static const Set<String> _meetingPointStates = {
     'aceptada',
     'conductor_asignado',
     'en_camino',
     'conductor_llego',
-    'recogido',
   };
 
   static const Set<String> _inProgressStates = {
+    'recogido',
     'en_curso',
   };
 
@@ -44,7 +61,9 @@ class TripStatusNavigationService {
   };
 
   static String normalizeStatus(dynamic rawStatus) {
-    return (rawStatus?.toString() ?? '').trim().toLowerCase();
+    final normalized = (rawStatus?.toString() ?? '').trim().toLowerCase();
+    if (normalized.isEmpty) return normalized;
+    return _statusAliases[normalized] ?? normalized;
   }
 
   static bool isCompletedStatus(dynamic status) {

@@ -7,7 +7,7 @@ import 'package:viax/src/features/support/presentation/screens/support_tickets_s
 import 'package:viax/src/features/support/services/support_service.dart';
 
 /// Tipos de usuario soportados
-enum HelpUserType { user, conductor, company }
+enum HelpUserType { user, conductor, company, admin }
 
 /// Pantalla de Ayuda y Soporte compartida
 /// 
@@ -131,6 +131,22 @@ class _HelpScreenState extends State<HelpScreen>
     },
   ];
 
+  // FAQs específicas para administradores
+  final List<Map<String, String>> _adminFaqs = [
+    {
+      'category': 'Soporte',
+      'question': '¿Cómo reviso tickets de soporte?',
+      'answer':
+          'Desde Gestión > Soporte técnico puedes abrir la bandeja de tickets, responder mensajes y dar seguimiento al estado.',
+    },
+    {
+      'category': 'Operación',
+      'question': '¿Cómo priorizo incidentes críticos?',
+      'answer':
+          'Marca el ticket con prioridad alta y responde por chat dentro del ticket para mantener trazabilidad de la atención.',
+    },
+  ];
+
   List<Map<String, String>> get _faqs {
     List<Map<String, String>> faqs = [..._generalFaqs];
     switch (widget.userType) {
@@ -142,6 +158,9 @@ class _HelpScreenState extends State<HelpScreen>
         break;
       case HelpUserType.company:
         faqs.addAll(_companyFaqs);
+        break;
+      case HelpUserType.admin:
+        faqs.addAll(_adminFaqs);
         break;
     }
     return faqs;
@@ -196,18 +215,12 @@ class _HelpScreenState extends State<HelpScreen>
     return _faqs.where((faq) => faq['category'] == _selectedCategory).toList();
   }
 
-  Future<void> _launchPhone(String phoneNumber) async {
-    final uri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-
   Future<void> _launchEmail(String email) async {
     final subject = switch (widget.userType) {
       HelpUserType.user => 'Soporte VIAX Usuario',
       HelpUserType.conductor => 'Soporte VIAX Conductor',
       HelpUserType.company => 'Soporte VIAX Empresa',
+      HelpUserType.admin => 'Soporte VIAX Admin',
     };
     final uri = Uri(
       scheme: 'mailto',
@@ -390,42 +403,6 @@ class _HelpScreenState extends State<HelpScreen>
     );
   }
 
-  void _handleEmergency() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.emergency_rounded, color: AppColors.error),
-            const SizedBox(width: 10),
-            const Text('Emergencia'),
-          ],
-        ),
-        content: const Text(
-          '¿Estás en una situación de emergencia? Esto contactará inmediatamente a nuestro equipo de seguridad.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _launchPhone('911');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Llamar ahora'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -533,12 +510,8 @@ class _HelpScreenState extends State<HelpScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner de emergencia
-                  EmergencyBanner(
-                    onEmergencyCall: _handleEmergency,
-                  ),
-
-                  const SizedBox(height: 24),
+                  // Banner de emergencia oculto temporalmente.
+                  const SizedBox(height: 4),
 
                   // Sección de contacto
                   Text(
@@ -554,17 +527,6 @@ class _HelpScreenState extends State<HelpScreen>
                   // Grid de opciones de contacto
                   Row(
                     children: [
-                      Expanded(
-                        child: SupportContactCard(
-                          icon: Icons.phone_rounded,
-                          title: 'Teléfono',
-                          subtitle: 'Lun-Sab 8am-8pm',
-                          iconColor: AppColors.success,
-                          onTap: () => _launchPhone('+573001234567'),
-                          animationIndex: 0,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Expanded(
                         child: SupportContactCard(
                           icon: Icons.email_rounded,

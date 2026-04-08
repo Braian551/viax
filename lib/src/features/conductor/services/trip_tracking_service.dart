@@ -134,9 +134,16 @@ class TripTrackingService {
   TripTrackingService._internal();
 
   // Configuración
-  static const Duration _trackingInterval = Duration(seconds: 5);
-  static const Duration _batchSyncInterval = Duration(seconds: 10);
-  static const double _minDistanceToRegisterMeters = 10.0; // Filtro de jitter
+  static const Duration _trackingInterval = Duration(seconds: 2);
+  static const Duration _batchSyncInterval = Duration(seconds: 4);
+  static const double _minDistanceToRegisterMeters = 5.0;
+  static const double _minMovementMetersToSend = 5.0;
+  static const double _minHeadingChangeToSend = 10.0;
+  static const double _minSpeedDeltaToSend = 4.0;
+  static const Duration _maxSendInterval = Duration(seconds: 3);
+  static const double _maxAcceptedAccuracyMeters = 80.0;
+  static const double _maxPlausibleSpeedKmh = 140.0;
+  static const double _maxJumpMetersWithoutDelta = 120.0;
   static const int _maxBatchSize = 20;
 
   // Estado del tracking
@@ -157,6 +164,10 @@ class TripTrackingService {
   DateTime _lastBatchSync = DateTime.fromMillisecondsSinceEpoch(0);
   bool _isSyncingBatch = false;
   bool _syncBlockedByPricingConfig = false;
+  DateTime? _lastSentAt;
+  Position? _lastSentPosition;
+  double _lastSentSpeedKmh = 0.0;
+  double _lastSentHeading = 0.0;
 
   // Cola de puntos pendientes (para modo offline)
   final List<TrackingPoint> _pendingPoints = [];
@@ -200,6 +211,10 @@ class TripTrackingService {
       _lastBatchSync = DateTime.now();
       _isSyncingBatch = false;
       _syncBlockedByPricingConfig = false;
+      _lastSentAt = null;
+      _lastSentPosition = null;
+      _lastSentSpeedKmh = 0.0;
+      _lastSentHeading = 0.0;
       _isTracking = true;
 
       debugPrint('🚀 [Tracking] Iniciando tracking para viaje $solicitudId');
@@ -228,8 +243,7 @@ class TripTrackingService {
         ),
       ).listen(_onPositionUpdate, onError: _onPositionError);
 
-      // Timer de sincronización periódica - envía punto actual cada 5 segundos
-      // Esto asegura que el tiempo se actualice aunque el conductor esté estático
+      // Timer de verificación rápida para respetar mínimo/máximo de envío.
       _syncTimer = Timer.periodic(_trackingInterval, (_) => _periodicSync());
 
       return true;
@@ -244,7 +258,8 @@ class TripTrackingService {
   Future<void> _periodicSync() async {
     if (!_isTracking || _solicitudId == null) return;
     
-    // Registrar punto actual para mantener tiempo actualizado
+    // Registrar punto actual para mantener tiempo actualizado.
+    // El filtro decide si se envía (máximo 10s entre envíos).
     if (_ultimaPosicion != null) {
       await _registrarPunto(_ultimaPosicion!);
       _notifyUpdate(_ultimaPosicion!);
@@ -379,6 +394,15 @@ class TripTrackingService {
   void _onPositionUpdate(Position position) async {
     if (!_isTracking) return;
 
+    // IMPORTANTE:
+    // Si la precisión es mala, no acumulamos distancia para evitar saltos GPS.
+    if (position.accuracy > _maxAcceptedAccuracyMeters) {
+      debugPrint(
+        '⚠️ [Tracking] Punto descartado por baja precisión: ${position.accuracy.toStringAsFixed(1)}m',
+      );
+      return;
+    }
+
     // Filtrar jitter: solo procesar si se movió suficiente
     if (_ultimaPosicion != null) {
       final distancia = Geolocator.distanceBetween(
@@ -387,6 +411,32 @@ class TripTrackingService {
         position.latitude,
         position.longitude,
       );
+
+      final deltaSegundos = position.timestamp
+          .difference(_ultimaPosicion!.timestamp)
+          .inSeconds;
+      final velocidadCalculadaKmh = deltaSegundos > 0
+          ? (distancia / deltaSegundos) * 3.6
+          : 0.0;
+      final velocidadReportadaKmh =
+          (position.speed.isFinite && position.speed > 0)
+          ? position.speed * 3.6
+          : 0.0;
+      final velocidadReferencia =
+          velocidadCalculadaKmh > velocidadReportadaKmh
+          ? velocidadCalculadaKmh
+          : velocidadReportadaKmh;
+
+      final saltoSinTiempoValido =
+          deltaSegundos <= 0 && distancia > _maxJumpMetersWithoutDelta;
+      final velocidadImprobable = velocidadReferencia > _maxPlausibleSpeedKmh;
+
+      if (saltoSinTiempoValido || velocidadImprobable) {
+        debugPrint(
+          '⚠️ [Tracking] Salto GPS descartado: dist=${distancia.toStringAsFixed(1)}m, dt=${deltaSegundos}s, v=${velocidadReferencia.toStringAsFixed(1)}km/h',
+        );
+        return;
+      }
 
       if (distancia < _minDistanceToRegisterMeters) {
         return; // Muy cerca del último punto, ignorar
@@ -427,23 +477,95 @@ class TripTrackingService {
       evento: evento,
     );
 
-    _pendingPoints.add(punto);
-
-    if (forceSync || _pendingPoints.length >= _maxBatchSize) {
-      await _syncPendingPoints();
+    final shouldSend = _shouldSendUpdate(position, punto, forceSync || evento != null);
+    if (!shouldSend) {
+      return;
     }
+
+    final sent = await _enviarPunto(punto);
+    if (!sent) {
+      _pendingPoints.add(punto);
+      return;
+    }
+
+    _markPointAsSent(position, punto);
+  }
+
+  bool _shouldSendUpdate(Position position, TrackingPoint punto, bool force) {
+    if (force) return true;
+
+    final now = DateTime.now();
+    if (_lastSentAt == null || _lastSentPosition == null) {
+      return true;
+    }
+
+    final elapsed = now.difference(_lastSentAt!);
+    if (elapsed >= _maxSendInterval) {
+      return true;
+    }
+
+    final minInterval = _resolveAdaptiveInterval(punto.velocidad);
+
+    final distance = Geolocator.distanceBetween(
+      _lastSentPosition!.latitude,
+      _lastSentPosition!.longitude,
+      position.latitude,
+      position.longitude,
+    );
+
+    final headingDelta = _headingDeltaDeg(_lastSentHeading, punto.bearing);
+    final speedDelta = (punto.velocidad - _lastSentSpeedKmh).abs();
+
+    final significantChange =
+        distance >= _minMovementMetersToSend ||
+        headingDelta >= _minHeadingChangeToSend ||
+        speedDelta >= _minSpeedDeltaToSend;
+
+    if (significantChange) {
+      return true;
+    }
+
+    if (elapsed < minInterval) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Duration _resolveAdaptiveInterval(double speedKmh) {
+    if (speedKmh < 5.0) return const Duration(seconds: 3);
+    if (speedKmh < 20.0) return const Duration(seconds: 2);
+    return const Duration(seconds: 1);
+  }
+
+  double _headingDeltaDeg(double from, double to) {
+    final delta = ((to - from + 540.0) % 360.0) - 180.0;
+    return delta.abs();
+  }
+
+  void _markPointAsSent(Position position, TrackingPoint punto) {
+    _lastSentAt = DateTime.now();
+    _lastSentPosition = position;
+    _lastSentSpeedKmh = punto.velocidad;
+    _lastSentHeading = punto.bearing;
+    _lastBatchSync = _lastSentAt!;
   }
 
   Future<bool> _enviarPunto(TrackingPoint punto) async {
     if (_solicitudId == null || _conductorId == null) return false;
 
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/conductor/tracking/register_point.php');
+      final url = Uri.parse('${AppConfig.baseUrl}/driver/tracking/update.php');
       
       final body = {
-        'solicitud_id': _solicitudId,
+        'trip_id': _solicitudId,
         'conductor_id': _conductorId,
-        ...punto.toJson(),
+        'lat': punto.latitud,
+        'lng': punto.longitud,
+        'speed': punto.velocidad,
+        'heading': punto.bearing,
+        'precision_gps': punto.precisionGps,
+        'timestamp': punto.timestamp.toUtc().toIso8601String(),
       };
 
       debugPrint('📤 [Tracking] Enviando punto: dist=${punto.distanciaAcumuladaKm.toStringAsFixed(2)}km, tiempo=${punto.tiempoTranscurridoSeg}s');
@@ -458,9 +580,12 @@ class TripTrackingService {
         final data = jsonDecode(response.body);
         
         if (data['success'] == true) {
-          // Actualizar precio desde servidor
           final nuevoPrecio = (data['data']?['precio_parcial'] ?? _precioActual).toDouble();
           _precioActual = nuevoPrecio;
+          final serverDistance = data['data']?['distance_km'];
+          if (serverDistance is num && serverDistance.toDouble() > _distanciaAcumuladaKm) {
+            _distanciaAcumuladaKm = serverDistance.toDouble();
+          }
           debugPrint('✅ [Tracking] Punto registrado. Precio actual: \$$nuevoPrecio');
           return true;
         } else {
@@ -484,62 +609,17 @@ class TripTrackingService {
     _isSyncingBatch = true;
     try {
       while (_pendingPoints.isNotEmpty) {
-        final currentBatch = _pendingPoints
-            .take(_maxBatchSize)
-            .map((point) => point.toJson())
-            .toList();
-
-        debugPrint('🔄 [Tracking] Sincronizando lote de ${currentBatch.length} puntos (${_pendingPoints.length} pendientes)');
-
-        final enviado = await _enviarLote(currentBatch);
+        final next = _pendingPoints.first;
+        final enviado = await _enviarPunto(next);
         if (!enviado) {
           break;
         }
 
-        _pendingPoints.removeRange(0, currentBatch.length);
+        _pendingPoints.removeAt(0);
         _lastBatchSync = DateTime.now();
       }
     } finally {
       _isSyncingBatch = false;
-    }
-  }
-
-  Future<bool> _enviarLote(List<Map<String, dynamic>> puntos) async {
-    if (_solicitudId == null || _conductorId == null || puntos.isEmpty) return false;
-
-    try {
-      final url = Uri.parse('${AppConfig.baseUrl}/conductor/tracking/register_points_batch.php');
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'solicitud_id': _solicitudId,
-          'conductor_id': _conductorId,
-          'puntos': puntos,
-        }),
-      ).timeout(const Duration(seconds: 8));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final nuevoPrecio = (data['data']?['precio_parcial'] ?? _precioActual).toDouble();
-          _precioActual = nuevoPrecio;
-          return true;
-        }
-      }
-
-      final backendMessage = _extractBackendMessage(response.body);
-      if (_isMissingPricingConfigError(response.statusCode, backendMessage)) {
-        _handleMissingPricingConfig(backendMessage);
-        return true;
-      }
-
-      debugPrint('⚠️ [Tracking] Error enviando lote: HTTP ${response.statusCode} ${response.body}');
-      return false;
-    } catch (e) {
-      debugPrint('⚠️ [Tracking] Error enviando lote: $e');
-      return false;
     }
   }
 

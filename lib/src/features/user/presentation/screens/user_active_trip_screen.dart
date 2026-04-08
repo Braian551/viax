@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as Math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +26,8 @@ import 'package:viax/src/global/services/trip_persistence_service.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
 import '../widgets/user_active_trip/user_active_trip_widgets.dart';
 import '../widgets/user_active_trip/driver_detail_sheet.dart';
+import 'package:viax/src/widgets/help/help_screen.dart';
+import '../../../../core/realtime/realtime_service.dart';
 
 /// Pantalla de viaje activo para el usuario/cliente.
 ///
@@ -59,10 +63,17 @@ class UserActiveTripScreen extends StatefulWidget {
 
 class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     with TickerProviderStateMixin {
+  static const int _statusWaitSeconds = 2;
+  static const double _headerDistanceRefreshThresholdKm = 0.03;
+  static const double _headerProgressRefreshThreshold = 0.005;
+  static const double _driverMoveRefreshThresholdKm = 0.02;
+
   // Controladores
   final MapController _mapController = MapController();
   late AnimationController _pulseController;
+  late AnimationController _conductorMoveController;
   late Animation<double> _pulseAnimation;
+  Animation<LatLng>? _conductorMoveAnimation;
 
   // Servicio de tracking del cliente
   final ClientTripTrackingService _trackingService =
@@ -73,12 +84,14 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
   int _unreadCount = 0;
+  Timer? _unreadSyncTimer;
   final Set<int> _notifiedIncomingMessageIds = <int>{};
   bool _chatBootstrapCompleted = false;
   bool _disposed = false;
 
   LatLng? _conductorLocation;
-  final double _conductorHeading = 0;
+  LatLng? _targetConductorLocation;
+  double _conductorHeading = 0;
   LatLng? _clientLocation;
   double _clientHeading = 0;
   double _lastClientSpeedMps = 0.0;
@@ -89,14 +102,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   List<LatLng> _routePoints = [];
   List<LatLng> _animatedRoute = [];
   double _distanceKm = 0; // Distancia RESTANTE
+  double? _plannedRouteDistanceKm; // Distancia total estimada de la ruta
   double? _distanceTraveled; // Distancia RECORRIDA (real)
   int _etaMinutes = 0;
   double _tripProgress = 0;
 
   // Datos de tracking en tiempo real (sincronizado con conductor)
   double _precioActual = 0;
+  double _precioFijoMostrado = 0;
+  double? _precioCongelado;
   int _tiempoTranscurridoSeg = 0;
-  bool _trackingActivo = false;
+  int _lastServerTrackingSeconds = 0;
+  double _lastServerDistanceKm = 0.0;
+  bool _finalMetricsLocked = false;
+  Map<String, dynamic>? _desglosePrecioFinal;
 
   // Tiempos reales
   DateTime? _tripStartTime;
@@ -106,15 +125,32 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   Timer? _statusTimer;
   Timer? _routeAnimationTimer;
   Timer? _locationTimer;
+  Timer? _deadReckoningTimer;
 
   // Control de UI
   bool _isLoading = true;
   bool _tripCompleted = false;
   bool _isMapReady = false;
+  bool _statusRequestInFlight = false;
+  String? _routeLoadError;
+
+  // Estado local para validar coherencia en métricas de tracking.
+  double _lastAcceptedTrackingDistanceKm = 0.0;
+  DateTime? _lastAcceptedTrackingSampleAt;
+  DateTime? _lastConductorGpsAt;
+  LatLng? _lastConductorGpsPoint;
+  double _lastConductorSpeedKmh = 0.0;
 
   // Compartir ubicación
   LocationShareSession? _shareSession;
   bool _isSharingLocation = false;
+
+  // WebSocket realtime
+  RealtimeSubscription? _tripWsSub;
+  RealtimeSubscription? _chatWsSub;
+  StreamSubscription<RealtimeEvent>? _tripWsStreamSub;
+  StreamSubscription<RealtimeEvent>? _chatWsStreamSub;
+  bool _wsActive = false;
 
   @override
   void didChangeDependencies() {
@@ -130,24 +166,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _initializeTrip();
     _startClientTracking();
     _registerActiveTripNavigation();
-    // Solicitar permiso de overlay al iniciar el viaje
-    _requestSystemOverlayPermission();
   }
 
-  /// Solicita permiso para el overlay del sistema
-  Future<void> _requestSystemOverlayPermission() async {
-    // Esperamos un poco para que la UI se estabilice
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
 
-    final hasPermission = await ActiveTripNavigationService()
-        .hasSystemOverlayPermission();
-    if (!hasPermission && mounted) {
-      await ActiveTripNavigationService().requestSystemOverlayPermission(
-        context,
-      );
-    }
-  }
 
   /// Registra este viaje en el servicio de navegación global
   void _registerActiveTripNavigation() {
@@ -184,10 +205,19 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _routeAnimationTimer = null;
     _locationTimer?.cancel();
     _locationTimer = null;
+    _deadReckoningTimer?.cancel();
+    _deadReckoningTimer = null;
+    // Limpiar suscripciones WebSocket
+    _tripWsStreamSub?.cancel();
+    _chatWsStreamSub?.cancel();
+    _tripWsSub?.cancel();
+    _chatWsSub?.cancel();
     _messagesSubscription?.cancel();
     _unreadSubscription?.cancel();
+    _unreadSyncTimer?.cancel();
     _compassStream?.cancel();
     _pulseController.dispose();
+    _conductorMoveController.dispose();
     _stopClientTracking();
     // Stop live location sharing if active
     final token =
@@ -228,20 +258,90 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   void _startClientTracking() {
     _trackingService.onTrackingUpdate = (data) {
       if (!mounted || _disposed) return;
+      if (_finalMetricsLocked) return;
+
+      final backendElapsed = data.backendElapsedSeconds ?? data.tiempoSegundos;
 
       setState(() {
-        _distanceTraveled = data.distanciaKm;
-        _tiempoTranscurridoSeg = data.tiempoSegundos;
-        _precioActual = data.precioActual;
-        _trackingActivo = data.viajeEnCurso;
-        _elapsedMinutes = data.tiempoMinutos;
+        // Solo aceptar metricas de tracking si traen avance real.
+        if (data.viajeEnCurso) {
+          final distanciaActual = _distanceTraveled ?? 0.0;
+          final now = DateTime.now();
+
+          final tiempoBase = data.tiempoSegundos > 0
+              ? data.tiempoSegundos
+              : _tiempoTranscurridoSeg;
+
+          if (data.distanciaKm > 0 && tiempoBase > 0) {
+            var distanciaFiltrada = _clampRealtimeDistanceByTimeAndRoute(
+              rawDistanceKm: data.distanciaKm,
+              elapsedSeconds: tiempoBase,
+            );
+
+            final sampleTs = data.ultimaActualizacion ?? now;
+            final previousTs = _lastAcceptedTrackingSampleAt;
+            final previousDistance = _lastAcceptedTrackingDistanceKm;
+
+            if (previousTs != null && distanciaFiltrada > previousDistance) {
+              final dtSeconds = sampleTs.difference(previousTs).inSeconds.abs();
+              final safeDt = dtSeconds > 0 ? dtSeconds : 1;
+              final maxStepKm = ((safeDt / 3600.0) * 140.0) + 0.05;
+              final maxAllowed = previousDistance + maxStepKm;
+              if (distanciaFiltrada > maxAllowed) {
+                distanciaFiltrada = maxAllowed;
+              }
+            }
+
+            final nuevaDistancia = distanciaActual > distanciaFiltrada
+                ? distanciaActual
+                : distanciaFiltrada;
+
+            _distanceTraveled = nuevaDistancia;
+            _lastAcceptedTrackingDistanceKm = nuevaDistancia;
+            _lastAcceptedTrackingSampleAt = sampleTs;
+          }
+
+          if (data.tiempoSegundos > 0) {
+            // Nunca permitimos retrocesos visuales en el tiempo.
+            _tiempoTranscurridoSeg = Math.max(
+              _tiempoTranscurridoSeg,
+              data.tiempoSegundos,
+            );
+            _lastServerTrackingSeconds = Math.max(
+              _lastServerTrackingSeconds,
+              backendElapsed,
+            );
+          }
+
+          if (data.distanciaKm > 0 || (_distanceTraveled ?? 0.0) > 0) {
+            final anchorDistance = Math.max(
+              data.distanciaKm,
+              _distanceTraveled ?? 0.0,
+            );
+            if (anchorDistance >= _lastServerDistanceKm) {
+              _lastServerDistanceKm = anchorDistance;
+            }
+            _lastConductorSpeedKmh = data.velocidadConductor > 0
+                ? data.velocidadConductor
+                : _lastConductorSpeedKmh;
+          }
+
+          _elapsedMinutes = _tiempoTranscurridoSeg ~/ 60;
+        }
 
         // Actualizar ubicación del conductor desde tracking
         if (data.latitudConductor != null && data.longitudConductor != null) {
-          _conductorLocation = LatLng(
+          final target = LatLng(
             data.latitudConductor!,
             data.longitudConductor!,
           );
+          _lastConductorGpsAt = data.ultimaActualizacion ?? DateTime.now();
+          _lastConductorGpsPoint = target;
+          _lastConductorSpeedKmh = data.velocidadConductor;
+          if (data.headingConductor.isFinite && data.headingConductor >= 0) {
+            _conductorHeading = _normalizeHeading(data.headingConductor);
+          }
+          _animateConductorMarker(target);
         }
       });
     };
@@ -251,6 +351,76 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     };
 
     _trackingService.startWatching(solicitudId: widget.solicitudId);
+
+    _deadReckoningTimer?.cancel();
+    _deadReckoningTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      _,
+    ) {
+      _applyDeadReckoning();
+    });
+  }
+
+  void _applyDeadReckoning() {
+    if (!mounted || _disposed || _tripCompleted) return;
+    if (_lastConductorGpsAt == null || _lastConductorGpsPoint == null) return;
+
+    final now = DateTime.now();
+    final sinceGps = now.difference(_lastConductorGpsAt!).inMilliseconds;
+
+    if (sinceGps <= 2000 || sinceGps > 6000) {
+      return;
+    }
+
+    final speedMps = _lastConductorSpeedKmh / 3.6;
+    if (!speedMps.isFinite || speedMps <= 0) return;
+
+    final dtSec = sinceGps / 1000.0;
+    final headingRad = _conductorHeading * (3.141592653589793 / 180.0);
+
+    final dNorth = speedMps * dtSec * Math.cos(headingRad);
+    final dEast = speedMps * dtSec * Math.sin(headingRad);
+
+    final anchor = _lastConductorGpsPoint!;
+    final latDelta = dNorth / 111320.0;
+    final lonScale =
+        111320.0 * Math.cos(anchor.latitude * (3.141592653589793 / 180.0));
+    if (lonScale.abs() < 1e-6) return;
+    final lonDelta = dEast / lonScale;
+
+    final predicted = LatLng(
+      anchor.latitude + latDelta,
+      anchor.longitude + lonDelta,
+    );
+    setState(() {
+      _conductorLocation = predicted;
+    });
+  }
+
+  double _clampRealtimeDistanceByTimeAndRoute({
+    required double rawDistanceKm,
+    required int elapsedSeconds,
+  }) {
+    var safe = rawDistanceKm.isFinite ? rawDistanceKm : 0.0;
+    if (safe < 0) safe = 0;
+    if (elapsedSeconds <= 0) {
+      return 0.0;
+    }
+
+    // Regla física: velocidad promedio no puede exceder un umbral alto pero plausible.
+    final maxByTime = ((elapsedSeconds / 3600.0) * 140.0) + 0.15;
+    if (safe > maxByTime) {
+      safe = maxByTime;
+    }
+
+    // Regla de negocio: durante viaje en curso no debería exceder ampliamente la ruta prevista.
+    if (_plannedRouteDistanceKm != null && _plannedRouteDistanceKm! > 0) {
+      final maxByRoute = (_plannedRouteDistanceKm! * 1.6) + 1.0;
+      if (safe > maxByRoute) {
+        safe = maxByRoute;
+      }
+    }
+
+    return safe;
   }
 
   /// Detiene la observación del tracking
@@ -266,9 +436,88 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       vsync: this,
     )..repeat(reverse: true);
 
+    _conductorMoveController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _conductorMoveController.addListener(() {
+      final animation = _conductorMoveAnimation;
+      if (!mounted || animation == null) return;
+      setState(() {
+        _conductorLocation = animation.value;
+      });
+    });
+
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+  }
+
+  double? _extractUpfrontPrice(Map<String, dynamic> trip) {
+    final precioFijo = trip['precio_fijo'];
+    if (precioFijo is num && precioFijo > 0) {
+      return precioFijo.toDouble();
+    }
+
+    final precioEstimado = trip['precio_estimado'];
+    if (precioEstimado is num && precioEstimado > 0) {
+      return precioEstimado.toDouble();
+    }
+
+    return null;
+  }
+
+  void _freezeVisiblePrice(Map<String, dynamic> trip) {
+    if (_precioCongelado != null && _precioCongelado! > 0) {
+      _precioFijoMostrado = _precioCongelado!;
+      _precioActual = _precioCongelado!;
+      return;
+    }
+
+    final upfront = _extractUpfrontPrice(trip);
+    if (upfront != null && upfront > 0) {
+      _precioCongelado = upfront;
+      _precioFijoMostrado = upfront;
+      _precioActual = upfront;
+    }
+  }
+
+  void _animateConductorMarker(LatLng nextPoint) {
+    if (!mounted) return;
+
+    final current = _conductorLocation;
+    _targetConductorLocation = nextPoint;
+
+    if (current == null) {
+      _conductorLocation = nextPoint;
+      return;
+    }
+
+    final distanceMeters = const Distance().as(
+      LengthUnit.Meter,
+      current,
+      nextPoint,
+    );
+
+    if (distanceMeters < 1.0) {
+      _conductorLocation = nextPoint;
+      return;
+    }
+
+    final durationMs = distanceMeters > 60 ? 1800 : 1200;
+    _conductorMoveController.duration = Duration(milliseconds: durationMs);
+    _conductorMoveController.stop();
+
+    _conductorMoveAnimation =
+        LatLngTween(begin: _conductorLocation!, end: nextPoint).animate(
+          CurvedAnimation(
+            parent: _conductorMoveController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _conductorMoveController.forward(from: 0);
   }
 
   Future<void> _initializeTrip() async {
@@ -281,8 +530,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     // Calcular ruta inicial
     await _loadRoute();
 
-    // Iniciar polling de estado
-    _startStatusPolling();
+    // Configurar WebSocket si está disponible, luego iniciar polling.
+    _setupRealtimeOrPolling();
 
     // Iniciar polling de chat
     ChatService.startPolling(
@@ -306,6 +555,77 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       );
     } catch (e) {
       debugPrint('Error guardando persistencia: $e');
+    }
+  }
+
+  /// Configura WebSocket como fuente primaria de eventos o cae a polling normal.
+  void _setupRealtimeOrPolling() {
+    final realtime = RealtimeService.instance;
+    if (realtime.isRealtimeEnabled && realtime.isWebSocketConnected) {
+      _wsActive = true;
+      debugPrint('[ActiveTrip] WS conectado, suscribiendo trip:${widget.solicitudId}');
+
+      // Suscripción a eventos de estado del viaje
+      _tripWsSub = RealtimeService.instance.subscribeToTrip(widget.solicitudId);
+      if (_tripWsSub != null && _tripWsSub!.isWebSocketBacked) {
+        _tripWsStreamSub = _tripWsSub!.stream.listen(
+          _onTripRealtimeEvent,
+          onError: (_) => _wsActive = false,
+          onDone: () => _wsActive = false,
+        );
+      }
+
+      // Suscripción a eventos de chat
+      _chatWsSub = RealtimeService.instance.subscribeToChat(widget.solicitudId);
+      if (_chatWsSub != null && _chatWsSub!.isWebSocketBacked) {
+        _chatWsStreamSub = _chatWsSub!.stream.listen(
+          _onChatRealtimeEvent,
+          onError: (_) {},
+        );
+      }
+
+      // Con WS activo no usamos polling continuo (solo fallback real).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _checkTripStatus();
+      });
+    } else {
+      // Sin WS: polling normal de 5s.
+      _startStatusPolling();
+    }
+  }
+
+  /// Maneja eventos de viaje recibidos vía WebSocket.
+  void _onTripRealtimeEvent(RealtimeEvent event) {
+    if (_disposed || _tripCompleted) return;
+    debugPrint('[ActiveTrip] WS event: ${event.type}');
+
+    switch (event.type) {
+      case 'trip.status_changed':
+        // Forzar poll inmediato para obtener datos completos del nuevo estado.
+        _checkTripStatus();
+        break;
+      case 'trip.driver_assigned':
+      case 'trip.assigned':
+        _checkTripStatus();
+        break;
+      case 'trip.cancelled':
+        _checkTripStatus();
+        break;
+      case 'trip.location_updated':
+      case 'trip.tracking':
+      case 'trip_update':
+        // Tracking ya lo maneja ClientTripTrackingService vía WS directo.
+        break;
+    }
+  }
+
+  /// Maneja eventos de chat recibidos vía WebSocket.
+  void _onChatRealtimeEvent(RealtimeEvent event) {
+    if (_disposed) return;
+    if (event.type == 'chat.new_message' || event.type == 'chat.message') {
+      // Forzar sincronización de no leídos inmediata.
+      _syncUnreadCountOnce();
     }
   }
 
@@ -404,10 +724,13 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   }
 
   void _startStatusPolling() {
-    _statusTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _statusTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       _checkTripStatus();
     });
-    _checkTripStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _checkTripStatus();
+    });
   }
 
   void _setupChatListeners() {
@@ -482,14 +805,46 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         });
       }
     });
+
+    _startUnreadSync();
+  }
+
+  void _startUnreadSync() {
+    _unreadSyncTimer?.cancel();
+    _syncUnreadCountOnce();
+    // Con WS activo, sincronizar cada 10s como respaldo; sin WS, cada 3s.
+    final interval = _wsActive
+        ? const Duration(seconds: 10)
+        : const Duration(seconds: 3);
+    _unreadSyncTimer = Timer.periodic(interval, (_) {
+      _syncUnreadCountOnce();
+    });
+  }
+
+  Future<void> _syncUnreadCountOnce() async {
+    if (_disposed) return;
+    try {
+      final count = await ChatService.getUnreadCount(
+        solicitudId: widget.solicitudId,
+        usuarioId: widget.clienteId,
+      );
+      if (!mounted || _disposed) return;
+      setState(() => _unreadCount = count);
+    } catch (_) {}
   }
 
   Future<void> _checkTripStatus() async {
     if (!mounted || _tripCompleted) return;
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+    if (!isCurrentRoute) return;
+    if (_statusRequestInFlight) return;
+
+    _statusRequestInFlight = true;
 
     try {
       final result = await TripRequestService.getTripStatus(
         solicitudId: widget.solicitudId,
+        waitSeconds: _statusWaitSeconds,
       );
 
       if (!mounted || _tripCompleted) return;
@@ -497,8 +852,42 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       if (result['success'] == true) {
         final trip = result['trip'];
         final estado = trip['estado'] as String?;
+        final estadoNorm = (estado ?? '').toLowerCase();
+        final hasTripStarted =
+            estadoNorm == 'en_curso' ||
+            estadoNorm == 'completada' ||
+            estadoNorm == 'completado' ||
+            estadoNorm == 'entregado' ||
+            estadoNorm == 'finalizado';
+        final metricsLocked = trip['metrics_locked'] == true;
+        final desgloseRaw = trip['desglose_precio'];
+        if (desgloseRaw is Map<String, dynamic>) {
+          _desglosePrecioFinal = desgloseRaw;
+        } else if (desgloseRaw is String && desgloseRaw.trim().isNotEmpty) {
+          try {
+            final parsed = jsonDecode(desgloseRaw);
+            if (parsed is Map<String, dynamic>) {
+              _desglosePrecioFinal = parsed;
+            }
+          } catch (_) {
+            // Ignorar payload malformado y conservar último desglose válido.
+          }
+        }
+
         // El conductor viene dentro de trip, no en la raíz
         final conductor = trip['conductor'] as Map<String, dynamic>?;
+
+        double? toDouble(dynamic v) {
+          if (v == null) return null;
+          if (v is num) return v.toDouble();
+          return double.tryParse(v.toString());
+        }
+
+        int? toInt(dynamic v) {
+          if (v == null) return null;
+          if (v is num) return v.toInt();
+          return int.tryParse(v.toString());
+        }
 
         // Recuperar hora de inicio real
         if (trip['hora_inicio'] != null) {
@@ -512,43 +901,121 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           }
         }
 
-        // Actualizar datos de tracking desde la solicitud
-        // SOLO si el tracking en tiempo real NO está activo (evita parpadeos)
-        if (!_trackingActivo) {
-          if (trip['distancia_recorrida'] != null) {
-            _distanceTraveled = (trip['distancia_recorrida'] as num).toDouble();
-          }
+        // Si ya hay tracking en vivo, no sobreescribir con fallback de status polling
+        // para evitar saltos (ej. interpretar segundos como minutos).
+        final hasLiveSecondBySecond = _lastServerTrackingSeconds > 0;
 
-          // Obtener tiempo del tracking si está disponible
-          // Prioridad: duracion_segundos > tiempo_transcurrido_seg > tiempo_transcurrido*60
-          if (trip['duracion_segundos'] != null &&
-              (trip['duracion_segundos'] as num) > 0) {
-            _tiempoTranscurridoSeg = (trip['duracion_segundos'] as num).toInt();
-          } else if (trip['tiempo_transcurrido_seg'] != null &&
-              (trip['tiempo_transcurrido_seg'] as num) > 0) {
-            _tiempoTranscurridoSeg = (trip['tiempo_transcurrido_seg'] as num)
-                .toInt();
-          } else if (trip['tiempo_transcurrido'] != null &&
-              (trip['tiempo_transcurrido'] as num) > 0) {
-            // Fallback: tiempo_transcurrido puede estar en minutos (viejo formato)
-            _tiempoTranscurridoSeg =
-                (trip['tiempo_transcurrido'] as num).toInt() * 60;
-          }
+        // Obtener tiempo del tracking si está disponible
+        // Prioridad: duracion_segundos > tiempo_transcurrido_seg > local
+        if (!hasLiveSecondBySecond &&
+            trip['duracion_segundos'] != null &&
+            (trip['duracion_segundos'] as num) > 0) {
+          _tiempoTranscurridoSeg = Math.max(
+            _tiempoTranscurridoSeg,
+            (trip['duracion_segundos'] as num).toInt(),
+          );
+          _lastServerTrackingSeconds = Math.max(
+            _lastServerTrackingSeconds,
+            _tiempoTranscurridoSeg,
+          );
+        } else if (!hasLiveSecondBySecond &&
+            trip['tiempo_transcurrido_seg'] != null &&
+            (trip['tiempo_transcurrido_seg'] as num) > 0) {
+          _tiempoTranscurridoSeg = Math.max(
+            _tiempoTranscurridoSeg,
+            (trip['tiempo_transcurrido_seg'] as num).toInt(),
+          );
+          _lastServerTrackingSeconds = Math.max(
+            _lastServerTrackingSeconds,
+            _tiempoTranscurridoSeg,
+          );
+        } else if (!hasLiveSecondBySecond &&
+            _tripStartTime != null &&
+            _tiempoTranscurridoSeg == 0) {
+          // Fallback local: contar desde hora de inicio
+          _tiempoTranscurridoSeg = DateTime.now()
+              .difference(_tripStartTime!)
+              .inSeconds;
+        }
 
-          // Precio: prioridad -> precio_final > precio_en_tracking > precio_estimado
-          if (trip['precio_final'] != null &&
-              (trip['precio_final'] as num) > 0) {
-            _precioActual = (trip['precio_final'] as num).toDouble();
-          } else if (trip['precio_en_tracking'] != null &&
-              (trip['precio_en_tracking'] as num) > 0) {
-            _precioActual = (trip['precio_en_tracking'] as num).toDouble();
-          } else if (trip['precio_estimado'] != null && _precioActual == 0) {
-            _precioActual = (trip['precio_estimado'] as num).toDouble();
+        // Actualizar distancia real desde status solo si hay tiempo coherente o métricas cerradas.
+        if (trip['distancia_recorrida'] != null &&
+            (trip['distancia_recorrida'] as num) > 0) {
+          final rawDistance = (trip['distancia_recorrida'] as num).toDouble();
+          final canUse = _tiempoTranscurridoSeg > 0 || metricsLocked;
+          if (canUse) {
+            final distanceFromStatus = _clampRealtimeDistanceByTimeAndRoute(
+              rawDistanceKm: rawDistance,
+              elapsedSeconds: _tiempoTranscurridoSeg > 0
+                  ? _tiempoTranscurridoSeg
+                  : 1,
+            );
+            final currentDistance = _distanceTraveled ?? 0.0;
+            final nextDistance = currentDistance > distanceFromStatus
+                ? currentDistance
+                : distanceFromStatus;
+            _distanceTraveled = nextDistance;
+            _lastServerDistanceKm = Math.max(
+              _lastServerDistanceKm,
+              nextDistance,
+            );
+            _lastAcceptedTrackingDistanceKm = nextDistance;
+            _lastAcceptedTrackingSampleAt = DateTime.now();
           }
         }
 
+        // Precio visible SIEMPRE congelado (upfront): se fija una sola vez en memoria.
+        _freezeVisiblePrice(Map<String, dynamic>.from(trip));
+
+        // Iniciar hora de inicio local solo cuando el viaje realmente arrancó.
+        if (_tripStartTime == null && hasTripStarted) {
+          if (trip['hora_inicio'] != null) {
+            try {
+              _tripStartTime = DateTime.parse(trip['hora_inicio']);
+            } catch (_) {}
+          }
+
+          if (_tripStartTime == null && trip['fecha_aceptado'] != null) {
+            try {
+              _tripStartTime = DateTime.parse(trip['fecha_aceptado']);
+            } catch (_) {}
+          }
+
+          _tripStartTime ??= DateTime.now();
+        }
+
         // VERIFICAR ESTADOS FINALES
-        if (estado == 'completada' || estado == 'entregado') {
+        if (estado == 'completada' ||
+            estado == 'entregado' ||
+            estado == 'completado' ||
+            estado == 'finalizado') {
+          _finalMetricsLocked = metricsLocked || trip['finalized_at'] != null;
+          if (_finalMetricsLocked) {
+            _stopClientTracking();
+            debugPrint(
+              '🛑 [TrackingStopped] trip_id=${widget.solicitudId} por metrics_locked',
+            );
+          }
+
+          final canonicalDistance = toDouble(trip['distance_final']);
+          final canonicalDuration = toInt(trip['duration_final']);
+          final canonicalPrice = toDouble(trip['price_final_canonical']);
+          final backendFinalPrice = toDouble(trip['precio_final']);
+          final fixedPrice = toDouble(trip['precio_fijo']);
+
+          final hasAuthoritativeSettlement =
+              (fixedPrice != null && fixedPrice > 0) ||
+              (canonicalPrice != null && canonicalPrice > 0) ||
+              (backendFinalPrice != null && backendFinalPrice > 0) ||
+              _finalMetricsLocked;
+
+          if (!hasAuthoritativeSettlement) {
+            debugPrint(
+              '⏳ [Cliente] Esperando liquidación final canónica del backend antes de cerrar el viaje',
+            );
+            return;
+          }
+
           // Cuando el viaje está completo, SIEMPRE leer datos finales de la BD
           debugPrint('📊 [Cliente] Datos crudos del backend:');
           debugPrint(
@@ -561,7 +1028,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           debugPrint('   - precio_final: ${trip['precio_final']}');
 
           // Distancia: usar real si existe
-          if (trip['distancia_recorrida'] != null &&
+          if (canonicalDistance != null) {
+            _distanceTraveled = canonicalDistance;
+          } else if (trip['distancia_recorrida'] != null &&
               (trip['distancia_recorrida'] as num) > 0) {
             _distanceTraveled = (trip['distancia_recorrida'] as num).toDouble();
           }
@@ -571,7 +1040,11 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           int tiempoFinalSegundos = 0;
 
           // Prioridad 1: usar duracion_segundos (valor exacto del backend)
-          if (trip['duracion_segundos'] != null &&
+          if (canonicalDuration != null) {
+            tiempoFinalSegundos = canonicalDuration;
+          }
+          // Prioridad 1: usar duracion_segundos (valor exacto del backend)
+          else if (trip['duracion_segundos'] != null &&
               (trip['duracion_segundos'] as num) > 0) {
             tiempoFinalSegundos = (trip['duracion_segundos'] as num).toInt();
           }
@@ -590,8 +1063,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               (trip['duracion_minutos'] as num) > 0) {
             tiempoFinalSegundos =
                 (trip['duracion_minutos'] as num).toInt() * 60;
-          } else if (_elapsedMinutes > 0) {
-            tiempoFinalSegundos = _elapsedMinutes * 60;
+          } else if (_tripStartTime != null) {
+            tiempoFinalSegundos = DateTime.now()
+                .difference(_tripStartTime!)
+                .inSeconds;
           }
 
           // Usar el tiempo en segundos directamente
@@ -604,11 +1079,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                 .inSeconds;
           }
 
-          // Precio: usar precio_final
-          if (trip['precio_final'] != null &&
-              (trip['precio_final'] as num) > 0) {
-            _precioActual = (trip['precio_final'] as num).toDouble();
-          }
+          // Precio visible: mantener upfront congelado, nunca derivar de precio final real.
+          _freezeVisiblePrice(Map<String, dynamic>.from(trip));
 
           debugPrint('📊 [Cliente] Viaje completado - Datos finales:');
           debugPrint('   - Distancia: $_distanceTraveled km');
@@ -634,6 +1106,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         }
 
         // Calcular progreso y ETA
+        double? nextTripProgress;
+        double? nextDistanceKm;
+        int? nextEtaMinutes;
         if (newConductorLocation != null) {
           final totalDistance = const Distance().as(
             LengthUnit.Kilometer,
@@ -647,9 +1122,10 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             LatLng(widget.destinoLat, widget.destinoLng),
           );
 
-          _tripProgress = 1 - (remainingDistance / totalDistance).clamp(0, 1);
-          _distanceKm = remainingDistance;
-          _etaMinutes = (remainingDistance / 0.5 * 60)
+          nextTripProgress =
+              1 - (remainingDistance / totalDistance).clamp(0, 1);
+          nextDistanceKm = remainingDistance;
+          nextEtaMinutes = (remainingDistance / 0.5 * 60)
               .ceil(); // ~30km/h promedio
         }
 
@@ -659,13 +1135,66 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           if (estado != null && estado.isNotEmpty) {
             ActiveTripNavigationService().updateActiveTripStatus(estado);
           }
+
+          final stateChanged = (estado ?? 'en_curso') != _tripState;
+          final progressChanged =
+              nextTripProgress != null &&
+              (nextTripProgress - _tripProgress).abs() >=
+                  _headerProgressRefreshThreshold;
+          final distanceChanged =
+              nextDistanceKm != null &&
+              (nextDistanceKm - _distanceKm).abs() >=
+                  _headerDistanceRefreshThresholdKm;
+          final etaChanged =
+              nextEtaMinutes != null && nextEtaMinutes != _etaMinutes;
+          final conductorMovedEnough =
+              newConductorLocation != null &&
+              (_conductorLocation == null ||
+                  const Distance().as(
+                        LengthUnit.Kilometer,
+                        _conductorLocation!,
+                        newConductorLocation,
+                      ) >=
+                      _driverMoveRefreshThresholdKm);
+          final currentVehicle =
+              _conductor?['vehiculo'] as Map<String, dynamic>?;
+          final nextVehicle = conductor?['vehiculo'] as Map<String, dynamic>?;
+          final conductorInfoChanged =
+              conductor != null &&
+              (_conductor == null ||
+                  _conductor?['id'] != conductor['id'] ||
+                  _conductor?['nombre'] != conductor['nombre'] ||
+                  _conductor?['foto'] != conductor['foto'] ||
+                  currentVehicle?['placa'] != nextVehicle?['placa']);
+
+          final shouldRefreshUi =
+              stateChanged ||
+              progressChanged ||
+              distanceChanged ||
+              etaChanged ||
+              conductorMovedEnough ||
+              conductorInfoChanged;
+
+          if (!shouldRefreshUi) {
+            return;
+          }
+
           setState(() {
             _tripState = estado ?? 'en_curso';
+            if (nextTripProgress != null) {
+              _tripProgress = nextTripProgress;
+            }
+            if (nextDistanceKm != null) {
+              _distanceKm = nextDistanceKm;
+            }
+            if (nextEtaMinutes != null) {
+              _etaMinutes = nextEtaMinutes;
+            }
             if (conductor != null) {
               _conductor = conductor;
             }
-            if (newConductorLocation != null) {
-              _conductorLocation = newConductorLocation;
+            if (conductorMovedEnough && newConductorLocation != null) {
+              _animateConductorMarker(newConductorLocation);
             }
           });
 
@@ -681,26 +1210,51 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       }
     } catch (e) {
       debugPrint('Error checking trip status: $e');
+    } finally {
+      _statusRequestInFlight = false;
     }
   }
 
   Future<void> _loadRoute() async {
     try {
+      if (mounted) {
+        setState(() {
+          _routeLoadError = null;
+        });
+      }
+
       final start = LatLng(widget.origenLat, widget.origenLng);
       final end = LatLng(widget.destinoLat, widget.destinoLng);
 
       final route = await MapboxService.getRoute(waypoints: [start, end]);
-      if (route != null && mounted) {
+      if (route == null) {
+        if (mounted) {
+          setState(() {
+            _routeLoadError = 'No se pudo calcular la ruta';
+          });
+        }
+        return;
+      }
+
+      if (mounted) {
         setState(() {
           _routePoints = route.geometry;
+          _animatedRoute = [];
           _distanceKm = route.distanceKm;
+          _plannedRouteDistanceKm = route.distanceKm;
           _etaMinutes = route.durationMinutes.ceil();
+          _routeLoadError = null;
         });
         _animateRoute();
         _fitMapToRoute();
       }
     } catch (e) {
       debugPrint('Error loading route: $e');
+      if (mounted) {
+        setState(() {
+          _routeLoadError = 'Error al calcular la ruta';
+        });
+      }
     }
   }
 
@@ -745,29 +1299,32 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     await _stopLocationSharingSession();
 
     HapticFeedback.heavyImpact();
-    SoundService.playAcceptSound();
+    await SoundService.stopSound();
 
-    // Obtener datos finales del tracking antes de navegar
-    // Esto asegura que tenemos los datos más recientes del servidor
-    try {
-      final trackingData = await _trackingService.getTrackingOnce(
-        widget.solicitudId,
-      );
-      if (trackingData != null && trackingData.tiempoSegundos > 0) {
-        _tiempoTranscurridoSeg = trackingData.tiempoSegundos;
-        _distanceTraveled = trackingData.distanciaKm;
-        _precioActual = trackingData.precioActual;
-        debugPrint('✅ [Cliente] Datos finales del tracking obtenidos:');
-        debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s');
-        debugPrint('   - Distancia: $_distanceTraveled km');
-        debugPrint('   - Precio: $_precioActual');
+    // Si las métricas canónicas ya están bloqueadas por el backend,
+    // NO volver a pedir tracking porque podría llegar un snapshot tardío.
+    if (!_finalMetricsLocked) {
+      try {
+        final trackingData = await _trackingService.getTrackingOnce(
+          widget.solicitudId,
+        );
+        if (trackingData != null &&
+            !trackingData.esTerminal &&
+            trackingData.tiempoSegundos > 0) {
+          _tiempoTranscurridoSeg = trackingData.tiempoSegundos;
+          _distanceTraveled = trackingData.distanciaKm;
+          debugPrint('✅ [Cliente] Datos finales del tracking obtenidos:');
+          debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s');
+          debugPrint('   - Distancia: $_distanceTraveled km');
+          debugPrint('   - Precio fijo: ${_precioFijoMostrado > 0 ? _precioFijoMostrado : _precioActual}');
+        }
+      } catch (e) {
+        debugPrint('⚠️ [Cliente] Error obteniendo tracking final: $e');
       }
-    } catch (e) {
-      debugPrint('⚠️ [Cliente] Error obteniendo tracking final: $e');
     }
 
-    // Mostrar diálogo de finalización
-    _showCompletionDialog();
+    // Navegar directamente a la pantalla de completación
+    _navigateToTripCompletion();
   }
 
   void _onTripCancelled() {
@@ -830,7 +1387,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.grey[300],
+                color: isDark ? Colors.white24 : Colors.black12,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -865,7 +1422,15 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
-                // TODO: Implementar soporte
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HelpScreen(
+                      userType: HelpUserType.user,
+                      userId: widget.clienteId,
+                    ),
+                  ),
+                );
               },
             ),
           ],
@@ -1084,63 +1649,50 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     Share.share(message, subject: 'Mi ubicación en Viax');
   }
 
-  void _showCompletionDialog() {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.success, size: 28),
-            SizedBox(width: 12),
-            Expanded(child: Text('Viaje completado')),
-          ],
-        ),
-        content: const Text('Tu viaje finalizó correctamente.'),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _navigateToTripCompletion();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Continuar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Navega a la pantalla de completación del viaje.
   void _navigateToTripCompletion() {
     // Limpiar el viaje activo al completar
     TripPersistenceService().clearActiveTrip();
     ActiveTripNavigationService().clearActiveTrip();
 
-    // Usar precio real del tracking si está disponible, sino tarifa mínima
-    final precioFinal = _precioActual > 0
-        ? _precioActual
-        : 5000.0; // Tarifa mínima como fallback
+    final precioFinal = (_precioCongelado != null && _precioCongelado! > 0)
+        ? _precioCongelado!
+        : (_precioFijoMostrado > 0
+              ? _precioFijoMostrado
+              : (_precioActual > 0 ? _precioActual : 5000.0));
 
-    // Usar distancia real del tracking - si no hay tracking, es 0 (no se movió)
-    final distanciaFinal = _distanceTraveled ?? 0.0;
-
-    // Usar tiempo real del tracking en segundos
-    final duracionSegundos = _tiempoTranscurridoSeg > 0
+    final distanciaReal = _distanceTraveled ?? 0.0;
+    final duracionRealSeg = _tiempoTranscurridoSeg > 0
         ? _tiempoTranscurridoSeg
-        : (_elapsedMinutes * 60);
+        : (_tripStartTime != null
+              ? DateTime.now().difference(_tripStartTime!).inSeconds
+              : (_elapsedMinutes * 60));
+    final trackingValido = distanciaReal > 0.1 && duracionRealSeg > 30;
+
+    final distanciaEstimada =
+        _plannedRouteDistanceKm ??
+        const Distance().as(
+          LengthUnit.Kilometer,
+          LatLng(widget.origenLat, widget.origenLng),
+          LatLng(widget.destinoLat, widget.destinoLng),
+        );
+    final tiempoEstimadoSeg = _etaMinutes > 0
+        ? _etaMinutes * 60
+        : (_elapsedMinutes > 0 ? _elapsedMinutes * 60 : duracionRealSeg);
+
+    final distanciaFinal = trackingValido ? distanciaReal : distanciaEstimada;
+    final duracionSegundos = trackingValido ? duracionRealSeg : tiempoEstimadoSeg;
+
+    final resumenCalculo = trackingValido
+        ? 'Precio fijo confirmado. Métricas reales validadas para el cierre del viaje.'
+        : 'Precio fijo confirmado. Se muestran métricas estimadas porque el tracking real fue insuficiente.';
 
     debugPrint('📊 [ClientTracking] Finalizando viaje:');
-    debugPrint('   - Precio real tracking: $_precioActual');
-    debugPrint('   - Distancia real: $distanciaFinal km');
+    debugPrint('   - Precio fijo: $precioFinal');
+    debugPrint('   - Tracking válido: $trackingValido');
+    debugPrint('   - Distancia mostrada: $distanciaFinal km');
     debugPrint(
-      '   - Tiempo real: ${duracionSegundos}s (${(duracionSegundos / 60).toStringAsFixed(1)} min)',
+      '   - Tiempo mostrado: ${duracionSegundos}s (${(duracionSegundos / 60).toStringAsFixed(1)} min)',
     );
 
     Navigator.pushReplacement(
@@ -1156,6 +1708,8 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
             duracionSegundos: duracionSegundos,
             precio: precioFinal,
             metodoPago: 'Efectivo', // TODO: Obtener del backend
+            resumenCalculo: resumenCalculo,
+            desglosePrecio: _desglosePrecioFinal,
             otroUsuarioNombre: _conductor?['nombre'] ?? 'Conductor',
             otroUsuarioFoto: _conductor?['foto'] as String?,
             otroUsuarioCalificacion: (_conductor?['calificacion'] as num?)
@@ -1270,7 +1824,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               child: TripProgressCard(
                 distanceKm: _distanceKm,
                 etaMinutes: _etaMinutes,
-                elapsedMinutes: _elapsedMinutes > 0 ? _elapsedMinutes : null,
+                elapsedMinutes: (_tiempoTranscurridoSeg ~/ 60) > 0
+                    ? (_tiempoTranscurridoSeg ~/ 60)
+                    : null,
                 progress: _tripProgress,
                 isDark: isDark,
               ),
@@ -1293,6 +1849,14 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
             // Panel inferior
             _buildBottomPanel(isDark),
+
+            if (_routeLoadError != null)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 82,
+                left: 16,
+                right: 16,
+                child: _buildRouteErrorBanner(isDark),
+              ),
 
             // Loading
             if (_isLoading)
@@ -1395,6 +1959,55 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     );
   }
 
+  Widget _buildRouteErrorBanner(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.error,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.error.withValues(alpha: 0.28),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _routeLoadError ?? 'Error de ruta',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _loadRoute();
+            },
+            child: const Text(
+              'Recargar',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => setState(() => _routeLoadError = null),
+            icon: const Icon(Icons.close, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDriverDetails() {
     debugPrint('🚀 _showDriverDetails called. Conductor: $_conductor');
     if (_conductor == null) {
@@ -1492,7 +2105,11 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                       distanceKm: _distanceKm,
                       etaMinutes: _etaMinutes,
                       isDark: isDark,
-                      precioActual: _precioActual,
+                      precioActual: (_precioCongelado != null && _precioCongelado! > 0)
+                          ? _precioCongelado!
+                          : (_precioFijoMostrado > 0
+                              ? _precioFijoMostrado
+                              : _precioActual),
                       distanciaRecorrida: _distanceTraveled,
                       tiempoTranscurrido: _tiempoTranscurridoSeg,
                       onDriverTap: _showDriverDetails,
@@ -1556,6 +2173,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 // =============================================================================
 // WIDGETS AUXILIARES
 // =============================================================================
+
+class LatLngTween extends Tween<LatLng> {
+  LatLngTween({required super.begin, required super.end});
+
+  @override
+  LatLng lerp(double t) {
+    final start = begin!;
+    final finish = end!;
+    return LatLng(
+      start.latitude + (finish.latitude - start.latitude) * t,
+      start.longitude + (finish.longitude - start.longitude) * t,
+    );
+  }
+}
 
 class _ClientMarker extends StatelessWidget {
   final double heading;

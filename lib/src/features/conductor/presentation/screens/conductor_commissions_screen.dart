@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class ConductorCommissionsScreen extends StatefulWidget {
 }
 
 class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
-    with SingleTickerProviderStateMixin {
+  with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   late AnimationController _headerController;
@@ -49,18 +50,39 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
   bool _hasShownMandatoryDialog = false;
   CommissionPeriod _period = CommissionPeriod.month;
   CommissionsTrendMetric _trendMetric = CommissionsTrendMetric.commission;
+  Timer? _autoRefreshTimer;
+  bool _pendingReload = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initAnimations();
+    _startAutoRefresh();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _autoRefreshTimer?.cancel();
     _headerController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _loadData(silent: true);
+    }
+  }
+
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!mounted || _isLoading) return;
+      _loadData(silent: true);
+    });
   }
 
   void _initAnimations() {
@@ -89,11 +111,18 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     _headerController.forward();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  Future<void> _loadData({bool silent = false}) async {
+    if (_isLoading) {
+      _pendingReload = true;
+      return;
+    }
+    _isLoading = true;
+
+    if (!silent) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
 
     try {
       Map<String, dynamic> response;
@@ -146,6 +175,11 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+
+      if (_pendingReload && mounted) {
+        _pendingReload = false;
+        unawaited(_loadData(silent: true));
       }
     }
   }
@@ -262,7 +296,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     );
 
     if (refreshed == true) {
-      _loadData();
+      await _loadData(silent: true);
     }
   }
 
@@ -530,7 +564,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
                   child: CommissionKpiCard(
                     isDark: isDark,
                     icon: Icons.percent_rounded,
-                    title: 'Comisión del periodo',
+                    title: 'Comisión empresa del periodo',
                     value: formatCurrency(commissions.comisionPeriodo),
                     accentColor: AppColors.primary,
                     subtitle: '${commissions.totalViajes} viajes',

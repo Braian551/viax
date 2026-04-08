@@ -8,6 +8,8 @@ class SearchingDriverBottomPanel extends StatelessWidget {
     required this.isDark,
     required this.currentRadiusKm,
     required this.nearbyDriversCount,
+    required this.statusTitle,
+    this.statusSubtitle,
     required this.direccionOrigen,
     required this.direccionDestino,
     required this.isCancelling,
@@ -18,6 +20,8 @@ class SearchingDriverBottomPanel extends StatelessWidget {
   final bool isDark;
   final double currentRadiusKm;
   final int nearbyDriversCount;
+  final String statusTitle;
+  final String? statusSubtitle;
   final String direccionOrigen;
   final String direccionDestino;
   final bool isCancelling;
@@ -63,7 +67,7 @@ class SearchingDriverBottomPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Buscando conductor',
+                      statusTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -78,10 +82,14 @@ class SearchingDriverBottomPanel extends StatelessWidget {
                         child: child,
                       ),
                       child: Text(
-                        nearbyDriversCount == 0
-                            ? 'Radio: ${currentRadiusKm.toStringAsFixed(0)} km...'
-                            : '$nearbyDriversCount conductor${nearbyDriversCount == 1 ? "" : "es"} cerca',
-                        key: ValueKey('$nearbyDriversCount-${currentRadiusKm.toStringAsFixed(0)}'),
+                        statusSubtitle != null && statusSubtitle!.trim().isNotEmpty
+                            ? statusSubtitle!
+                            : (nearbyDriversCount == 0
+                                  ? 'Radio: ${currentRadiusKm.toStringAsFixed(0)} km...'
+                                  : '$nearbyDriversCount conductor${nearbyDriversCount == 1 ? "" : "es"} cerca'),
+                        key: ValueKey(
+                          '${statusTitle}_${statusSubtitle ?? ''}_${nearbyDriversCount}_${currentRadiusKm.toStringAsFixed(0)}',
+                        ),
                         style: TextStyle(
                           fontSize: 14,
                           color: isDark ? Colors.white60 : Colors.black54,

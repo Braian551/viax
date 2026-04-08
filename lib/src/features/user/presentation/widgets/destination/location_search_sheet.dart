@@ -49,6 +49,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) _searchFocusNode.requestFocus();
     });
+    _loadRecentSuggestions();
   }
 
   @override
@@ -63,7 +64,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     _debounce?.cancel();
     
     if (query.trim().length < 2) {
-      setState(() => _suggestions = []);
+      _loadRecentSuggestions();
       return;
     }
     
@@ -92,6 +93,20 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     }
   }
 
+  Future<void> _loadRecentSuggestions() async {
+    setState(() => _isLoading = true);
+    try {
+      final recents = await widget.suggestionService.getRecentSuggestions(limit: 6);
+      if (mounted && _searchController.text.trim().length < 2) {
+        setState(() => _suggestions = recents);
+      }
+    } catch (e) {
+      debugPrint('Recent search sheet error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _selectLocation(SimpleLocation location) async {
     HapticFeedback.selectionClick();
     
@@ -105,6 +120,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
         return; // No se pudieron obtener detalles
       }
     }
+
+    widget.suggestionService.saveRecentSelection(finalLocation);
     
     // VALIDACIÓN: Verificar que no sea igual al otro campo
     if (widget.otherLocation != null && mounted) {
@@ -521,6 +538,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   /// Icono basado en el tipo de lugar
   IconData _getIconForPlaceType(String? placeType) {
     switch (placeType) {
+      case 'recent':
+        return Icons.history_rounded;
       case 'poi':
         return Icons.place_rounded;
       case 'address':

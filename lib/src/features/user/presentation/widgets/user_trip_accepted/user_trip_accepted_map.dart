@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,6 +19,8 @@ class UserTripAcceptedMap extends StatelessWidget {
 
   final LatLng? conductorLocation;
   final double conductorHeading;
+  final ValueListenable<LatLng?>? conductorLocationListenable;
+  final ValueListenable<double>? conductorHeadingListenable;
   final String? conductorVehicleType;
 
   final LatLng? clientLocation;
@@ -26,6 +29,7 @@ class UserTripAcceptedMap extends StatelessWidget {
 
   final Animation<double> waveAnimation;
   final String pickupLabel;
+  final VoidCallback? onMapReady;
 
   const UserTripAcceptedMap({
     super.key,
@@ -35,105 +39,144 @@ class UserTripAcceptedMap extends StatelessWidget {
     required this.animatedRoute,
     required this.conductorLocation,
     required this.conductorHeading,
+    this.conductorLocationListenable,
+    this.conductorHeadingListenable,
     required this.conductorVehicleType,
     required this.clientLocation,
     required this.clientHeading,
     required this.pulseAnimation,
     required this.waveAnimation,
     required this.pickupLabel,
+    this.onMapReady,
   });
 
   @override
   Widget build(BuildContext context) {
     return MapRetryWrapper(
       isDark: isDark,
-      builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
-        key: mapKey,
-        mapController: mapController,
-        options: MapOptions(
-          initialCenter: pickupPoint,
-          initialZoom: 16.0,
-          onMapReady: onMapReady,
-          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
-        ),
-        children: [
-          // Capa de tiles
-          TileLayer(
-            urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-            userAgentPackageName: 'com.viax.app',
-            errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
-          ),
-
-          // Sombra de la ruta (efecto de profundidad)
-          if (animatedRoute.length > 1)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: animatedRoute,
-                  strokeWidth: 8.0,
-                  color: Colors.black.withValues(alpha: 0.15),
-                ),
-              ],
+      builder: ({required mapKey, required onMapReady, required onTileError}) =>
+          FlutterMap(
+            key: mapKey,
+            mapController: mapController,
+            options: MapOptions(
+              initialCenter: pickupPoint,
+              initialZoom: 16.0,
+              onMapReady: () {
+                onMapReady();
+                this.onMapReady?.call();
+              },
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
             ),
-
-          // Ruta del conductor al punto de encuentro (animada)
-          if (animatedRoute.length > 1)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: animatedRoute,
-                  strokeWidth: 5.0,
-                  color: AppColors.primary,
-                  borderStrokeWidth: 1.5,
-                  borderColor: Colors.white,
-                ),
-              ],
-            ),
-
-          // Marcadores
-          MarkerLayer(
-            markers: [
-              // Marcador del conductor (primero, para que quede debajo)
-              if (conductorLocation != null)
-                Marker(
-                  point: conductorLocation!,
-                  width: 56,
-                  height: 56,
-                  child: DriverMarker(
-                    vehicleType: conductorVehicleType ?? 'auto',
-                    heading: conductorHeading,
-                    size: 56,
-                    showShadow: false,
-                  ),
-                ),
-
-              // Punto de encuentro (aumentado para que la etiqueta no se recorte)
-              Marker(
-                point: pickupPoint,
-                width: 220,
-                height: 140,
-                child: PickupPointMarker(
-                  waveAnimation: waveAnimation,
-                  label: pickupLabel,
-                  showLabel: true,
-                ),
+            children: [
+              // Capa de tiles
+              TileLayer(
+                urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
+                userAgentPackageName: 'com.viax.app',
+                errorTileCallback: (tile, error, stackTrace) =>
+                    onTileError(error, stackTrace),
               ),
 
-              // Marcador del cliente con orientación (brújula) - encima de todo
-              if (clientLocation != null)
-                Marker(
-                  point: clientLocation!,
-                  width: 70,
-                  height: 70,
-                  child: _ClientMarker(
-                    pulseAnimation: pulseAnimation,
-                    heading: clientHeading,
+              // Sombra de la ruta (efecto de profundidad)
+              if (animatedRoute.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: animatedRoute,
+                      strokeWidth: 8.0,
+                      color: Colors.black.withValues(alpha: 0.15),
+                    ),
+                  ],
+                ),
+
+              // Ruta del conductor al punto de encuentro (animada)
+              if (animatedRoute.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: animatedRoute,
+                      strokeWidth: 5.0,
+                      color: AppColors.primary,
+                      borderStrokeWidth: 1.5,
+                      borderColor: Colors.white,
+                    ),
+                  ],
+                ),
+
+              // Marcadores estáticos (pickup + cliente)
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: pickupPoint,
+                    width: 220,
+                    height: 140,
+                    child: PickupPointMarker(
+                      waveAnimation: waveAnimation,
+                      label: pickupLabel,
+                      showLabel: true,
+                    ),
                   ),
+                  if (clientLocation != null)
+                    Marker(
+                      point: clientLocation!,
+                      width: 70,
+                      height: 70,
+                      child: _ClientMarker(
+                        pulseAnimation: pulseAnimation,
+                        heading: clientHeading,
+                      ),
+                    ),
+                ],
+              ),
+
+              // Marcador del conductor desacoplado para updates realtime ligeros.
+              if (conductorLocationListenable != null &&
+                  conductorHeadingListenable != null)
+                ValueListenableBuilder<LatLng?>(
+                  valueListenable: conductorLocationListenable!,
+                  builder: (context, liveLocation, _) {
+                    if (liveLocation == null) return const SizedBox.shrink();
+                    return ValueListenableBuilder<double>(
+                      valueListenable: conductorHeadingListenable!,
+                      builder: (context, liveHeading, _) {
+                        return MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: liveLocation,
+                              width: 56,
+                              height: 56,
+                              child: DriverMarker(
+                                vehicleType: conductorVehicleType ?? 'auto',
+                                heading: liveHeading,
+                                size: 56,
+                                showShadow: false,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                )
+              else if (conductorLocation != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: conductorLocation!,
+                      width: 56,
+                      height: 56,
+                      child: DriverMarker(
+                        vehicleType: conductorVehicleType ?? 'auto',
+                        heading: conductorHeading,
+                        size: 56,
+                        showShadow: false,
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
-        ],
-      ),
     );
   }
 }
@@ -142,10 +185,7 @@ class _ClientMarker extends StatelessWidget {
   final Animation<double> pulseAnimation;
   final double heading;
 
-  const _ClientMarker({
-    required this.pulseAnimation,
-    required this.heading,
-  });
+  const _ClientMarker({required this.pulseAnimation, required this.heading});
 
   @override
   Widget build(BuildContext context) {
@@ -174,10 +214,10 @@ class _ClientMarker extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                              AppColors.primary.withValues(alpha: 0.5),
-                              AppColors.primary.withValues(alpha: 0.15),
-                              AppColors.primary.withValues(alpha: 0.0),
-                            ],
+                            AppColors.primary.withValues(alpha: 0.5),
+                            AppColors.primary.withValues(alpha: 0.15),
+                            AppColors.primary.withValues(alpha: 0.0),
+                          ],
                         ),
                       ),
                     ),

@@ -277,7 +277,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Deuda Total',
+                      'Deuda ciclo actual',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
@@ -290,6 +290,14 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Sin arrastrar saldos históricos',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -413,7 +421,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            'Comisión: ${_currencyFormat.format(totalComision)}',
+                            'Comisión ciclo: ${_currencyFormat.format(totalComision)}',
                             style: TextStyle(
                               fontSize: 12,
                               color: Theme.of(
@@ -423,7 +431,7 @@ class _CompanyCommissionsScreenState extends State<CompanyCommissionsScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '• Pagado: ${_currencyFormat.format(totalPagado)}',
+                            '• Pagado ciclo: ${_currencyFormat.format(totalPagado)}',
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.success,

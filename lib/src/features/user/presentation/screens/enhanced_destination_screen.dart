@@ -5,8 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../global/models/location_data.dart';
 import '../../../../global/models/simple_location.dart';
+import '../../../../global/services/google_places_service.dart';
 import '../../../../global/services/location_suggestion_service.dart';
+import '../../../../global/services/route_preview_cache.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';
 import '../widgets/destination/enhanced/confirm_button.dart';
@@ -120,18 +123,11 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     if (_userLocation == null) return;
 
     try {
-      final address = await _suggestionService.reverseGeocode(
-        _userLocation!.latitude,
-        _userLocation!.longitude,
-      );
+      final originLocation = await _buildNormalizedLocation(_userLocation!);
 
       if (mounted) {
         setState(() {
-          _selectedOrigin = SimpleLocation(
-            latitude: _userLocation!.latitude,
-            longitude: _userLocation!.longitude,
-            address: address ?? 'Mi ubicación',
-          );
+          _selectedOrigin = originLocation;
           _originController.text = _selectedOrigin!.address;
           // Marcar el origen como seleccionado para ocultar sugerencias automáticas
           _hasOriginSelected = true;
@@ -195,18 +191,11 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _userLocation = LatLng(position.latitude, position.longitude);
       _suggestionService.setUserContext(location: _userLocation);
 
-      final address = await _suggestionService.reverseGeocode(
-        position.latitude,
-        position.longitude,
-      );
+      final originLocation = await _buildNormalizedLocation(_userLocation!);
 
       if (mounted) {
         setState(() {
-          _selectedOrigin = SimpleLocation(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            address: address ?? 'Mi ubicación',
-          );
+          _selectedOrigin = originLocation;
           _originController.text = _selectedOrigin!.address;
           // Marcar el origen como seleccionado para ocultar sugerencias automáticas
           _hasOriginSelected = true;
@@ -221,6 +210,61 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     } finally {
       if (mounted) setState(() => _isGettingLocation = false);
     }
+  }
+
+  Future<SimpleLocation> _buildNormalizedLocation(LatLng point) async {
+    LocationData? normalized;
+    try {
+      normalized = await GooglePlacesService.reverseGeocodeLocationData(
+        position: point,
+        sourceType: 'gps',
+      );
+    } catch (e) {
+      debugPrint('Error normalizing location: $e');
+    }
+
+    String address = normalized?.address?.trim() ?? '';
+    if (address.isEmpty) {
+      final fallback = await _suggestionService.reverseGeocode(
+        point.latitude,
+        point.longitude,
+      );
+      address = (fallback ?? '').trim();
+    }
+
+    if (address.isEmpty) {
+      address = 'Mi ubicación actual';
+    }
+
+    return SimpleLocation(
+      latitude: point.latitude,
+      longitude: point.longitude,
+      address: address,
+      municipality: normalized?.municipality,
+      department: normalized?.department,
+      country: normalized?.country,
+      placeId: normalized?.placeId,
+      sourceType: normalized?.sourceType ?? 'gps',
+      placeType: normalized?.isUrban == true ? 'address' : 'place',
+    );
+  }
+
+  Future<void> _useCurrentLocationForOrigin() async {
+    LatLng? current = _userLocation;
+
+    if (current == null) {
+      await _getCurrentLocation();
+      current = _userLocation;
+    }
+
+    if (current == null) {
+      _showError('No pudimos obtener tu ubicación actual');
+      return;
+    }
+
+    final location = await _buildNormalizedLocation(current);
+    if (!mounted) return;
+    _onOriginSelected(location);
   }
 
   void _showError(String message) {
@@ -404,7 +448,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
 
-  void _goToTripPreview() {
+  Future<void> _goToTripPreview() async {
     if (_selectedOrigin == null || _selectedDestination == null) return;
 
     HapticFeedback.mediumImpact();
@@ -412,6 +456,18 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         .where((s) => s != null)
         .cast<SimpleLocation>()
         .toList();
+
+    final waypoints = [
+      _selectedOrigin!.toLatLng(),
+      ...validStops.map((stop) => stop.toLatLng()),
+      _selectedDestination!.toLatLng(),
+    ];
+
+    final preloadedRoute = await RoutePreviewCache.instance
+        .getOrFetchRoute(waypoints: waypoints)
+        .timeout(const Duration(milliseconds: 500), onTimeout: () => null);
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -422,6 +478,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
               destination: _selectedDestination!,
               stops: validStops,
               vehicleType: 'auto',
+              preloadedRoute: preloadedRoute,
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
@@ -496,11 +553,10 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       hasDestinationSelected: _hasDestinationSelected,
       onOriginSelected: _onOriginSelected,
       onDestinationSelected: _onDestinationSelected,
+      onUseCurrentLocation: _useCurrentLocationForOrigin,
       onOriginChanged: () => setState(() => _hasOriginSelected = false),
       onDestinationChanged: () =>
           setState(() => _hasDestinationSelected = false),
-      reverseGeocode: (point) =>
-          _suggestionService.reverseGeocode(point.latitude, point.longitude),
       openOriginMap: _openMapForOrigin,
       openDestinationMap: _openMapForDestination,
     );

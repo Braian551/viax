@@ -1,4 +1,4 @@
-﻿class RouteNames {
+class RouteNames {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String authWrapper = '/auth-wrapper';
@@ -16,6 +16,7 @@
   static const String forgotPassword = '/forgot-password';
   static const String passwordRecoveryVerification = '/password-recovery-verification';
   static const String resetPassword = '/reset-password';
+  static const String pendingDeletionReactivation = '/pending-deletion-reactivation';
   static const String passwordChangeVerification = '/password-change-verification';
   static const String passwordChangeSetNew = '/password-change-set-new';
   
@@ -41,11 +42,13 @@
   
   // Rutas de administrador
   static const String adminHome = '/admin/home';
+  static const String supportHome = '/support/home';
   static const String adminUsers = '/admin/users';
   static const String adminStatistics = '/admin/statistics';
   static const String adminAuditLogs = '/admin/audit-logs';
   static const String adminConfig = '/admin/config';
   static const String adminConductorDocs = '/admin/conductor-docs';
+  static const String adminSupport = '/admin/support';
 
   static const String adminEmpresas = '/admin/empresas';
   static const String adminPlatformEarnings = '/admin/platform-earnings';
@@ -72,4 +75,11 @@
 
   // Compartir ubicación
   static const String sharedLocationView = '/share/location';
+
+  // Thali
+  static const String thaliLove = '/thali/love';
+
+  // Sistema Legal Anti-Bypass
+  static const String legalAcceptance = '/legal/acceptance';
+  static const String backgroundLocationDisclosure = '/legal/background-location-disclosure';
 }

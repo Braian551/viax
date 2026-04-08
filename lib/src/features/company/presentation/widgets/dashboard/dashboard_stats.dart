@@ -57,7 +57,7 @@ class DashboardStats extends StatelessWidget {
               _buildStatItem(
                 context,
                 value: provider.gananciasDisplay,
-                label: 'Ganancias',
+                label: 'Ganancia Neta',
                 icon: Icons.attach_money_rounded,
                 color: Colors.greenAccent,
                 isMoney: true,

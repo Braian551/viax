@@ -98,7 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (mounted) {
             // Redirigir según el tipo de usuario
-            if (tipoUsuario == 'administrador') {
+            if (tipoUsuario == 'soporte_tecnico') {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                RouteNames.supportHome,
+                (route) => false,
+                arguments: {'support_user': user},
+              );
+            } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 RouteNames.adminHome,
@@ -133,9 +140,23 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           final message = (resp['message'] ?? 'Credenciales inválidas').toString();
           final errorType = resp['error_type']?.toString();
+          final errorCode = resp['error_code']?.toString();
           final data = resp['data'] is Map<String, dynamic> ? resp['data'] as Map<String, dynamic> : null;
           final bool tooMany = data?['too_many_attempts'] == true;
           final int failAttempts = (data?['fail_attempts'] is int) ? data!['fail_attempts'] as int : _localFailAttempts;
+
+          if (errorCode == 'ACCOUNT_PENDING_DELETION' || data?['pending_deletion'] == true) {
+            Navigator.pushReplacementNamed(
+              context,
+              RouteNames.pendingDeletionReactivation,
+              arguments: {
+                'email': emailToUse,
+                'password': _passwordController.text,
+                'deletionScheduledAt': data?['deletion_scheduled_at'],
+              },
+            );
+            return;
+          }
 
           if (message.contains('Contrase')) {
             _localFailAttempts = failAttempts;
@@ -169,6 +190,8 @@ class _LoginScreenState extends State<LoginScreen> {
             _showError('No se encontró una cuenta con este email. Verifica que el email sea correcto.');
           } else if (message.contains('Contrase')) {
             _showError('La contraseña es incorrecta. Intento $_localFailAttempts/5');
+          } else if (errorCode == 'ACCOUNT_DELETED') {
+            _showError('Esta cuenta ya fue eliminada de forma definitiva.');
           } else if (tooMany) {
             _showError('Demasiados intentos fallidos. Verifica tu correo.');
           } else {

@@ -283,7 +283,13 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
             trip: trip,
             index: index,
             isDark: isDark,
-            onTap: () => TripDetailBottomSheet.show(context, trip, isDark: isDark),
+            currentUserId: widget.userId,
+            onTap: () => TripDetailBottomSheet.show(
+              context,
+              trip,
+              currentUserId: widget.userId,
+              isDark: isDark,
+            ),
           );
         },
         childCount: provider.trips.length,

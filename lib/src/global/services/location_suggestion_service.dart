@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/config/app_config.dart';
 import '../models/simple_location.dart';
+import 'auth/user_service.dart';
 import 'google_places_service.dart';
 import 'mapbox_service.dart';
 
@@ -12,6 +16,8 @@ import 'mapbox_service.dart';
 class LocationSuggestionService {
   static final Map<String, List<SimpleLocation>> _cache = {};
   static const int _cacheMaxSize = 50;
+  static const int _maxRecentSuggestions = 8;
+  static int? _cachedUserId;
   
   // UUID generator para session tokens de Google Places
   static final Uuid _uuid = Uuid();
@@ -58,7 +64,7 @@ class LocationSuggestionService {
     bool localFirst = true,
   }) async {
     if (query.trim().length < 2) {
-      return [];
+      return getRecentSuggestions(limit: limit);
     }
     
     final distanceRef = referencePoint ?? userLocation;
@@ -134,6 +140,7 @@ class LocationSuggestionService {
   /// Obtener los detalles completos (coordenadas) de un lugar seleccionado
   Future<SimpleLocation?> getPlaceDetails(SimpleLocation place) async {
     if (place.placeId == null || place.placeId!.isEmpty) {
+      saveRecentSelection(place);
       return place; // Ya tiene coordenadas
     }
     
@@ -148,7 +155,7 @@ class LocationSuggestionService {
       _refreshSessionToken();
       
       if (details != null) {
-        return SimpleLocation(
+        final resolved = SimpleLocation(
           latitude: details.coordinates.latitude,
           longitude: details.coordinates.longitude,
           address: details.formattedAddress,
@@ -157,6 +164,7 @@ class LocationSuggestionService {
           distanceKm: place.distanceKm,
           placeType: place.placeType,
         );
+        return resolved;
       }
     } catch (e) {
       debugPrint('Error getting place details: $e');
@@ -180,6 +188,155 @@ class LocationSuggestionService {
   /// Esto refresca el session token para la próxima búsqueda
   void onPlaceSelected() {
     _refreshSessionToken();
+  }
+
+  void saveRecentSelection(SimpleLocation location) {
+    unawaited(_saveRecentToBackend(location));
+  }
+
+  Future<List<SimpleLocation>> getRecentSuggestions({int limit = 8}) async {
+    final userId = await _resolveUserId();
+    if (userId == null || userId <= 0) return [];
+
+    try {
+      final uri = Uri.parse('${AppConfig.baseUrl}/user/get_recent_searches.php')
+          .replace(queryParameters: {
+            'user_id': '$userId',
+            '_ts': DateTime.now().millisecondsSinceEpoch.toString(),
+          });
+      final response = await http
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body);
+      if (data is! Map<String, dynamic> || data['success'] != true) return [];
+
+      final rows = (data['recent_searches'] as List<dynamic>?) ??
+          (data['places'] as List<dynamic>?) ??
+          <dynamic>[];
+
+        final parsed = rows
+          .map((row) {
+            if (row is! Map) return null;
+            final map = Map<String, dynamic>.from(row);
+            final lat = _toDouble(map['lat'] ?? map['latitud']);
+            final lng = _toDouble(map['lng'] ?? map['longitud']);
+            final address = (map['address'] ?? map['direccion'] ?? map['name'] ?? '')
+                .toString()
+                .trim();
+            if (lat == null || lng == null || address.isEmpty) return null;
+
+            final parts = address.split(',').map((e) => e.trim()).toList();
+            return SimpleLocation(
+              latitude: lat,
+              longitude: lng,
+              address: address,
+              placeName: parts.isNotEmpty ? parts.first : address,
+              subtitle: parts.length > 1 ? parts.sublist(1).join(', ') : '',
+              placeType: 'recent',
+            );
+          })
+          .whereType<SimpleLocation>()
+          .toList();
+
+      return _dedupeAndLimitRecents(parsed, limit: limit);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  List<SimpleLocation> _dedupeAndLimitRecents(
+    List<SimpleLocation> recents, {
+    required int limit,
+  }) {
+    final normalizedLimit = limit.clamp(1, _maxRecentSuggestions);
+    final unique = <String, SimpleLocation>{};
+
+    for (final item in recents) {
+      final key = _recentKey(item);
+      unique.putIfAbsent(key, () => item);
+      if (unique.length >= normalizedLimit) {
+        break;
+      }
+    }
+
+    return unique.values.toList();
+  }
+
+  String _recentKey(SimpleLocation location) {
+    final normalizedAddress = location.address.trim().toLowerCase();
+    if (normalizedAddress.isNotEmpty) {
+      return normalizedAddress;
+    }
+    final lat = location.latitude.toStringAsFixed(5);
+    final lng = location.longitude.toStringAsFixed(5);
+    return '$lat|$lng';
+  }
+
+  static Future<int?> _resolveUserId() async {
+    try {
+      final session = await UserService.getSavedSession();
+      if (session == null) {
+        _cachedUserId = null;
+        return null;
+      }
+
+      final rawId = session['id'];
+      if (rawId is int && rawId > 0) {
+        if (_cachedUserId != rawId) {
+          _cachedUserId = rawId;
+        }
+        return _cachedUserId;
+      }
+
+      final parsed = int.tryParse(rawId?.toString() ?? '');
+      if (parsed != null && parsed > 0) {
+        if (_cachedUserId != parsed) {
+          _cachedUserId = parsed;
+        }
+        return _cachedUserId;
+      }
+    } catch (_) {}
+
+    _cachedUserId = null;
+    return null;
+  }
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Future<void> _saveRecentToBackend(SimpleLocation location) async {
+    if (!location.hasValidCoordinates || location.address.trim().isEmpty) {
+      return;
+    }
+
+    final userId = await _resolveUserId();
+    if (userId == null || userId <= 0) return;
+
+    try {
+      final payload = {
+        'user_id': userId,
+        'place_name': location.displayName,
+        'place_address': location.address,
+        'place_lat': location.latitude,
+        'place_lng': location.longitude,
+      };
+
+      await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/user/save_recent_search.php'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // No bloquear UX por fallas de red en sincronización de recientes.
+    }
   }
   
   /// Geocodificación inversa usando Google Places

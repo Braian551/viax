@@ -13,6 +13,7 @@ import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_profile_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_trips_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_earnings_provider.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/core/di/service_locator.dart';
 import 'package:viax/src/global/services/app_secrets_service.dart';
 import 'package:viax/src/core/config/app_config.dart';
@@ -24,11 +25,14 @@ import 'package:viax/src/global/widgets/floating_trip_fab.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import 'package:viax/src/core/network/connectivity_service.dart';
+import 'package:viax/src/core/network/network_status_service.dart';
 import 'package:viax/src/core/network/widgets/global_connectivity_banner.dart';
+import 'package:viax/src/core/offline/trip_command_queue.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/map_preload_service.dart';
 
 void main() async {
   runZonedGuarded(
@@ -109,7 +113,7 @@ void main() async {
         );
       };
 
-      await initializeDateFormatting('es_ES', null);
+      await initializeDateFormatting('es_CO', null);
 
       // ============================================
       // INICIALIZAR FIREBASE
@@ -158,6 +162,13 @@ void main() async {
         debugPrint('⚠️ Error inicializando Mapbox: $e');
       }
 
+      try {
+        await MapPreloadService.preload();
+        debugPrint('✅ Map preload listo');
+      } catch (e) {
+        debugPrint('⚠️ Error en map preload: $e');
+      }
+
       // ============================================
       // INICIALIZAR NOTIFICACIONES LOCALES
       // ============================================
@@ -200,11 +211,28 @@ void main() async {
         debugPrint('⚠️ Error inicializando ConnectivityService: $e');
       }
 
+      // Inicializar cola offline de comandos críticos del viaje
+      try {
+        await TripCommandQueue.instance.initialize();
+      } catch (e) {
+        debugPrint('⚠️ Error inicializando TripCommandQueue: $e');
+      }
+
+      // Inicializar escucha de red para flush automático al reconectar
+      try {
+        await NetworkStatusService.instance.initialize();
+      } catch (e) {
+        debugPrint('⚠️ Error inicializando NetworkStatusService: $e');
+      }
+
       runApp(
         MultiProvider(
           providers: [
             // Theme Provider (debe estar primero)
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
+
+            // Legal Provider (Anti-Bypass)
+            ChangeNotifierProvider(create: (_) => LegalProvider()..init()),
 
             // Database Provider (legacy)
             ChangeNotifierProvider(create: (_) => DatabaseProvider()),
@@ -276,6 +304,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription<Uri>? _deepLinkSub;
   StreamSubscription<String?>? _localNotificationTapSub;
   StreamSubscription<RemoteMessage>? _pushNotificationTapSub;
+  bool _databaseInitTriggered = false;
 
   @override
   void initState() {
@@ -283,20 +312,43 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
     _initNotificationRedirects();
+    _initDatabaseInBackgroundOnce();
 
     Future.microtask(() async {
       await PushNotificationService.syncForCurrentSession();
     });
   }
 
-  void _initNotificationRedirects() {
-    _localNotificationTapSub =
-        LocalNotificationService.onNotificationClick.listen((payload) {
-      _handleNotificationOpen(payload: payload);
-    });
+  void _initDatabaseInBackgroundOnce() {
+    if (!widget.enableDatabaseInit || _databaseInitTriggered) {
+      return;
+    }
+    _databaseInitTriggered = true;
 
-    _pushNotificationTapSub =
-        PushNotificationService.onNotificationTap.listen((message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final databaseProvider = context.read<DatabaseProvider>();
+      Future.microtask(() async {
+        try {
+          await databaseProvider.initializeDatabase();
+        } catch (e) {
+          print('Error initializing database: $e');
+          // Continue without crashing the app
+        }
+      });
+    });
+  }
+
+  void _initNotificationRedirects() {
+    _localNotificationTapSub = LocalNotificationService.onNotificationClick
+        .listen((payload) {
+          _handleNotificationOpen(payload: payload);
+        });
+
+    _pushNotificationTapSub = PushNotificationService.onNotificationTap.listen((
+      message,
+    ) {
       _handleNotificationOpen(data: message.data);
     });
   }
@@ -313,7 +365,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     // Si viene referencia explícita de pagos empresa/admin, redirigir a su módulo.
     final referenceType =
-        (data?['reference_type'] ?? data?['referencia_tipo'] ?? '').toString().toLowerCase();
+        (data?['reference_type'] ?? data?['referencia_tipo'] ?? '')
+            .toString()
+            .toLowerCase();
     final tipo = (data?['tipo'] ?? '').toString().toLowerCase();
 
     if ((userType == 'admin' || userType == 'administrador') &&
@@ -323,10 +377,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             tipo == 'invoice_generated')) {
       ActiveTripNavigationService.navigatorKey.currentState?.pushNamed(
         RouteNames.adminCompanyPaymentReports,
-        arguments: {
-          'admin_id': userId,
-          'admin_user': session,
-        },
+        arguments: {'admin_id': userId, 'admin_user': session},
       );
       return;
     }
@@ -357,7 +408,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     // Handle links while app is running
     _deepLinkSub = appLinks.uriLinkStream.listen(
-      _handleDeepLink,
+      _handleDeepLink, 
       onError: (e) => debugPrint('[DeepLink] Error: $e'),
     );
   }
@@ -432,26 +483,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final databaseProvider = Provider.of<DatabaseProvider>(
-      context,
-      listen: false,
-    );
-
     // Obtener el theme provider
     final themeProvider = Provider.of<ThemeProvider>(context);
-
-    // Inicializar la base de datos en background cuando se carga la app
-    if (widget.enableDatabaseInit) {
-      // No bloqueamos la UI: inicializamos en background y dejamos que el RouterScreen se muestre.
-      Future.microtask(() async {
-        try {
-          await databaseProvider.initializeDatabase();
-        } catch (e) {
-          print('Error initializing database: $e');
-          // Continue without crashing the app
-        }
-      });
-    }
 
     return MaterialApp(
       navigatorKey: ActiveTripNavigationService

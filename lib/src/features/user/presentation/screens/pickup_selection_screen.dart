@@ -385,6 +385,7 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
         direccionDestino: widget.destination.address,
         tipoServicio: 'viaje',
         tipoVehiculo: widget.vehicleType,
+        vehicleTypeId: widget.vehicleType,
         distanciaKm: widget.quote.distanceKm,
         duracionMinutos: widget.quote.durationMinutes,
         precioEstimado: widget.quote.totalPrice,
@@ -424,9 +425,18 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _isRequestingTrip = false);
+        final rawMessage = e.toString();
+        final cleanMessage = rawMessage.replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(
+              cleanMessage.trim().isNotEmpty
+                  ? cleanMessage
+                  : 'No pudimos crear la solicitud de viaje.',
+            ),
             backgroundColor: Colors.red,
           ),
         );

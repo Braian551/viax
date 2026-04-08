@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/user_block_action_button.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../trip_preview/trip_price_formatter.dart';
 import '../../../services/user_trips_service.dart';
 import 'trip_conductor_avatar.dart';
@@ -9,10 +11,12 @@ import 'trip_conductor_avatar.dart';
 class TripDetailBottomSheet extends StatefulWidget {
   final UserTripModel trip;
   final bool isDark;
+  final int currentUserId;
 
   const TripDetailBottomSheet({
     super.key,
     required this.trip,
+    required this.currentUserId,
     this.isDark = false,
   });
 
@@ -20,13 +24,15 @@ class TripDetailBottomSheet extends StatefulWidget {
   static void show(
     BuildContext context,
     UserTripModel trip, {
+    required int currentUserId,
     bool isDark = false,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => TripDetailBottomSheet(trip: trip, isDark: isDark),
+      builder: (context) =>
+          TripDetailBottomSheet(trip: trip, currentUserId: currentUserId, isDark: isDark),
     );
   }
 
@@ -80,6 +86,30 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   IconData _getServiceIcon() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').toLowerCase().trim();
+    switch (vehicleType) {
+      case 'moto':
+        return Icons.two_wheeler_rounded;
+      case 'mototaxi':
+      case 'moto_taxi':
+        return Icons.electric_rickshaw_rounded;
+      case 'motorcycle':
+        return Icons.two_wheeler_rounded;
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'taxi':
+      case 'car':
+        return Icons.directions_car_rounded;
+      case 'camioneta':
+      case 'van':
+      case 'microbus':
+        return Icons.airport_shuttle_rounded;
+      case 'camion':
+      case 'camion_carga':
+        return Icons.local_shipping_rounded;
+    }
+
     switch (widget.trip.tipoServicio.toLowerCase()) {
       case 'mudanza':
         return Icons.home_work_rounded;
@@ -193,7 +223,7 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _capitalize(widget.trip.tipoServicio),
+                _getTripTitle(),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -644,7 +674,8 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
     final total = widget.trip.precioFinal > 0
         ? widget.trip.precioFinal
         : widget.trip.precioEstimado;
-    final ajusteMinimo = (total - subtotal).clamp(0, double.infinity);
+    final double ajusteMinimo =
+      (total - subtotal).clamp(0.0, double.infinity).toDouble();
 
     return Column(
       children: [
@@ -743,69 +774,138 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
         ? AppColors.darkBackground.withOpacity(0.5)
         : AppColors.lightBackground.withOpacity(0.5);
 
+    return InkWell(
+      onTap: _showConductorProfileSheet,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            TripConductorAvatar(
+              photoUrl: widget.trip.conductorFoto,
+              conductorName: widget.trip.conductorNombreCompleto,
+              radius: 28,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tu conductor',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: textColor.withOpacity(0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.trip.conductorNombreCompleto,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                  if (widget.trip.calificacionConductor != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        ...List.generate(5, (index) {
+                          final rating = widget.trip.calificacionConductor!;
+                          return Icon(
+                            index < rating.floor()
+                                ? Icons.star_rounded
+                                : (index < rating
+                                      ? Icons.star_half_rounded
+                                      : Icons.star_outline_rounded),
+                            color: AppColors.warning,
+                            size: 16,
+                          );
+                        }),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.trip.calificacionConductor!.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textColor.withOpacity(0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: textColor.withOpacity(0.35),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConductorProfileSheet() {
+    final conductorName = widget.trip.conductorNombreCompleto;
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del conductor',
+      name: conductorName,
+      phone: widget.trip.conductorTelefono,
+      email: widget.trip.conductorEmail,
+      rating: widget.trip.calificacionConductor,
+      isDark: widget.isDark,
+      avatar: TripConductorAvatar(
+        photoUrl: widget.trip.conductorFoto,
+        conductorName: conductorName,
+        radius: 30,
+      ),
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.conductorId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'conductor',
+    );
+  }
+
+  Widget _buildProfileInfoTile(IconData icon, String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        color: widget.isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          TripConductorAvatar(
-            photoUrl: widget.trip.conductorFoto,
-            conductorName: widget.trip.conductorNombreCompleto,
-            radius: 28,
-          ),
-          const SizedBox(width: 14),
+          Icon(icon, color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tu conductor',
+                  label,
                   style: TextStyle(
                     fontSize: 11,
-                    color: textColor.withOpacity(0.5),
-                    fontWeight: FontWeight.w500,
+                    color: widget.isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  widget.trip.conductorNombreCompleto,
+                  value,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: textColor,
+                    color: widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                   ),
                 ),
-                if (widget.trip.calificacionConductor != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      ...List.generate(5, (index) {
-                        final rating = widget.trip.calificacionConductor!;
-                        return Icon(
-                          index < rating.floor()
-                              ? Icons.star_rounded
-                              : (index < rating
-                                    ? Icons.star_half_rounded
-                                    : Icons.star_outline_rounded),
-                          color: AppColors.warning,
-                          size: 16,
-                        );
-                      }),
-                      const SizedBox(width: 6),
-                      Text(
-                        widget.trip.calificacionConductor!.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textColor.withOpacity(0.6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ],
             ),
           ),
@@ -817,6 +917,42 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   String _capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  String _getTripTitle() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').trim();
+    if (vehicleType.isNotEmpty) {
+      return _getVehicleName(vehicleType);
+    }
+
+    return _capitalize(widget.trip.tipoServicio);
+  }
+
+  String _getVehicleName(String vehicleType) {
+    switch (vehicleType.toLowerCase().trim()) {
+      case 'moto':
+        return 'Moto';
+      case 'mototaxi':
+      case 'moto_taxi':
+        return 'Mototaxi';
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'car':
+        return 'Carro';
+      case 'taxi':
+        return 'Taxi';
+      case 'camioneta':
+        return 'Camioneta';
+      case 'van':
+      case 'microbus':
+        return 'Van';
+      case 'camion':
+      case 'camion_carga':
+        return 'Camion';
+      default:
+        return _capitalize(vehicleType);
+    }
   }
 
   String _formatFullDate(DateTime? date) {

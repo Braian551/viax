@@ -8,6 +8,7 @@ import 'package:viax/src/features/company/presentation/widgets/dashboard/promo_b
 import 'package:viax/src/features/company/services/company_platform_payment_service.dart';
 import 'package:viax/src/features/company/presentation/widgets/vehicles/vehicle_management_sheet.dart';
 import 'package:viax/src/features/company/presentation/screens/company_reports_screen.dart';
+import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/snackbars/custom_snackbar.dart';
 
@@ -34,6 +35,10 @@ class CompanyDashboardTab extends StatefulWidget {
 class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
   bool _isLoadingPaymentContext = false;
   Map<String, dynamic>? _paymentContext;
+
+  String _formatCopValue(double value) {
+    return formatCurrency(value.roundToDouble());
+  }
 
   @override
   void initState() {
@@ -179,7 +184,7 @@ class _CompanyDashboardTabState extends State<CompanyDashboardTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Deuda actual: ${deuda <= 0 ? 'Al día' : '\$${deuda.toStringAsFixed(0)}'}',
+              'Deuda actual: ${deuda <= 0 ? 'Al día' : _formatCopValue(deuda)}',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,

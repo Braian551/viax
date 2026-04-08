@@ -25,6 +25,15 @@ class SimpleLocation {
   /// Municipio al que pertenece (ej: "Medellín", "Bello")
   final String? municipality;
 
+  /// Departamento/estado normalizado por reverse geocoding.
+  final String? department;
+
+  /// País normalizado por reverse geocoding.
+  final String? country;
+
+  /// Fuente de la selección: search | map_pin | gps
+  final String? sourceType;
+
   const SimpleLocation({
     required this.latitude,
     required this.longitude,
@@ -35,6 +44,9 @@ class SimpleLocation {
     this.placeType,
     this.placeId,
     this.municipality,
+    this.department,
+    this.country,
+    this.sourceType,
   });
 
   LatLng toLatLng() => LatLng(latitude, longitude);
@@ -90,6 +102,9 @@ class SimpleLocation {
     String? placeType,
     String? placeId,
     String? municipality,
+    String? department,
+    String? country,
+    String? sourceType,
   }) {
     return SimpleLocation(
       latitude: latitude ?? this.latitude,
@@ -101,6 +116,9 @@ class SimpleLocation {
       placeType: placeType ?? this.placeType,
       placeId: placeId ?? this.placeId,
       municipality: municipality ?? this.municipality,
+      department: department ?? this.department,
+      country: country ?? this.country,
+      sourceType: sourceType ?? this.sourceType,
     );
   }
   

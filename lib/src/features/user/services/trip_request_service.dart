@@ -7,12 +7,21 @@ import '../../../global/models/simple_location.dart';
 class TripRequestService {
   static String get baseUrl => AppConfig.baseUrl;
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
+  static final Map<int, String> _statusSignatures = <int, String>{};
+  static final Map<int, Future<Map<String, dynamic>>> _inFlightStatusRequests =
+      <int, Future<Map<String, dynamic>>>{};
 
-  static String _friendlyMessage(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación.'}) {
+  static String _friendlyMessage(
+    NetworkRequestResult result, {
+    String fallback = 'No pudimos completar la operación.',
+  }) {
     return result.error?.userMessage ?? fallback;
   }
 
-  static Map<String, dynamic> _errorResponse(NetworkRequestResult result, {String fallback = 'No pudimos completar la operación.'}) {
+  static Map<String, dynamic> _errorResponse(
+    NetworkRequestResult result, {
+    String fallback = 'No pudimos completar la operación.',
+  }) {
     return {
       'success': false,
       'message': _friendlyMessage(result, fallback: fallback),
@@ -31,6 +40,7 @@ class TripRequestService {
     required String direccionDestino,
     required String tipoServicio, // 'viaje' o 'paquete'
     required String tipoVehiculo, // 'moto', 'auto', 'mototaxi'
+    String? vehicleTypeId,
     required double distanciaKm,
     required int duracionMinutos,
     required double precioEstimado,
@@ -40,7 +50,7 @@ class TripRequestService {
     try {
       final url = '$baseUrl/user/create_trip_request.php';
       print('📍 Enviando solicitud a: $url');
-      
+
       final requestBody = {
         'usuario_id': userId,
         'latitud_origen': latitudOrigen,
@@ -51,6 +61,8 @@ class TripRequestService {
         'direccion_destino': direccionDestino,
         'tipo_servicio': tipoServicio,
         'tipo_vehiculo': tipoVehiculo,
+        if (vehicleTypeId != null && vehicleTypeId.trim().isNotEmpty)
+          'vehicle_type_id': vehicleTypeId,
         'distancia_km': distanciaKm,
         'duracion_minutos': duracionMinutos,
         'precio_estimado': precioEstimado,
@@ -59,15 +71,19 @@ class TripRequestService {
 
       // Agregar paradas si existen
       if (stops != null && stops.isNotEmpty) {
-        requestBody['paradas'] = stops.map((stop) => {
-          'latitud': stop.latitude,
-          'longitud': stop.longitude,
-          'direccion': stop.address,
-        }).toList();
+        requestBody['paradas'] = stops
+            .map(
+              (stop) => {
+                'latitud': stop.latitude,
+                'longitud': stop.longitude,
+                'direccion': stop.address,
+              },
+            )
+            .toList();
       }
-      
+
       print('📦 Datos enviados: $requestBody');
-      
+
       final result = await _network.postJson(
         url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -76,7 +92,18 @@ class TripRequestService {
       );
 
       if (!result.success || result.json == null) {
-        throw Exception(_friendlyMessage(result, fallback: 'No pudimos crear tu solicitud de viaje.'));
+        print(
+          '❌ createTripRequest HTTP/network failure: '
+          'status=${result.statusCode}, '
+          'error_type=${result.error?.type.name}, '
+          'technical=${result.error?.technicalMessage}',
+        );
+        throw Exception(
+          _friendlyMessage(
+            result,
+            fallback: 'No pudimos crear tu solicitud de viaje.',
+          ),
+        );
       }
 
       final data = result.json!;
@@ -85,7 +112,9 @@ class TripRequestService {
         return data;
       }
 
-      final backendMessage = data['message']?.toString() ?? 'No pudimos crear tu solicitud de viaje.';
+      final backendMessage =
+          data['message']?.toString() ??
+          'No pudimos crear tu solicitud de viaje.';
       throw Exception(backendMessage);
     } catch (e) {
       print('❌ Error en createTripRequest: $e');
@@ -97,6 +126,7 @@ class TripRequestService {
   /// Buscar conductores cercanos disponibles
   /// Filtra por tipo de vehículo y opcionalmente por empresa
   static Future<List<Map<String, dynamic>>> findNearbyDrivers({
+    required int userId,
     required double latitude,
     required double longitude,
     required String vehicleType,
@@ -105,13 +135,14 @@ class TripRequestService {
   }) async {
     try {
       final requestBody = {
+        'usuario_id': userId,
         'latitud': latitude,
         'longitud': longitude,
         'tipo_vehiculo': vehicleType,
         'radio_km': radiusKm,
         if (empresaId != null) 'empresa_id': empresaId,
       };
-      
+
       final result = await _network.postJson(
         url: Uri.parse('$baseUrl/user/find_nearby_drivers.php'),
         headers: {'Content-Type': 'application/json'},
@@ -139,19 +170,22 @@ class TripRequestService {
   static Future<bool> cancelTripRequest(int solicitudId) async {
     try {
       print('🚫 Cancelando solicitud ID: $solicitudId');
-      
+
       final url = '$baseUrl/user/cancel_trip_request.php';
       final result = await _network.postJson(
         url: Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'solicitud_id': solicitudId,
-        }),
+        body: jsonEncode({'solicitud_id': solicitudId}),
         timeout: AppConfig.connectionTimeout,
       );
 
       if (!result.success || result.json == null) {
-        throw Exception(_friendlyMessage(result, fallback: 'No pudimos cancelar la solicitud.'));
+        throw Exception(
+          _friendlyMessage(
+            result,
+            fallback: 'No pudimos cancelar la solicitud.',
+          ),
+        );
       }
 
       final data = result.json!;
@@ -160,7 +194,9 @@ class TripRequestService {
         return true;
       }
 
-      throw Exception(data['message']?.toString() ?? 'No pudimos cancelar la solicitud.');
+      throw Exception(
+        data['message']?.toString() ?? 'No pudimos cancelar la solicitud.',
+      );
     } catch (e) {
       print('❌ Error cancelando solicitud: $e');
       rethrow;
@@ -168,10 +204,14 @@ class TripRequestService {
   }
 
   /// Obtener estado de la solicitud
-  static Future<Map<String, dynamic>?> getTripRequestStatus(int solicitudId) async {
+  static Future<Map<String, dynamic>?> getTripRequestStatus(
+    int solicitudId,
+  ) async {
     try {
       final result = await _network.getJson(
-        url: Uri.parse('$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId'),
+        url: Uri.parse(
+          '$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId',
+        ),
         timeout: AppConfig.connectionTimeout,
       );
 
@@ -194,30 +234,69 @@ class TripRequestService {
   /// Obtener estado completo del viaje con info del conductor
   static Future<Map<String, dynamic>> getTripStatus({
     required int solicitudId,
+    int waitSeconds = 20,
   }) async {
-    try {
-      final url = '$baseUrl/user/get_trip_status.php?solicitud_id=$solicitudId';
-      print('🌐 [TripRequestService] GET: $url');
-      
-      final result = await _network.getJson(
-        url: Uri.parse(url),
-        headers: {'Accept': 'application/json'},
-        timeout: AppConfig.connectionTimeout,
-      );
+    final inFlight = _inFlightStatusRequests[solicitudId];
+    if (inFlight != null) {
+      return inFlight;
+    }
 
-      if (!result.success || result.json == null) {
-        return _errorResponse(result, fallback: 'No pudimos consultar el estado del viaje.');
+    final requestFuture = () async {
+      try {
+        final queryParams = <String, String>{
+          'solicitud_id': '$solicitudId',
+          'wait_seconds': '${waitSeconds.clamp(1, 30)}',
+        };
+
+        final lastSignature = _statusSignatures[solicitudId];
+        if (lastSignature != null && lastSignature.isNotEmpty) {
+          queryParams['since_signature'] = lastSignature;
+        }
+
+        final uri = Uri.parse(
+          '$baseUrl/user/get_trip_status.php',
+        ).replace(queryParameters: queryParams);
+        final url = uri.toString();
+        print('🌐 [TripRequestService] GET: $url');
+
+        final result = await _network.getJson(
+          url: uri,
+          headers: {'Accept': 'application/json'},
+          timeout: Duration(seconds: waitSeconds.clamp(1, 30) + 8),
+        );
+
+        if (!result.success || result.json == null) {
+          return _errorResponse(
+            result,
+            fallback: 'No pudimos consultar el estado del viaje.',
+          );
+        }
+
+        final payload = result.json!;
+        final signature = payload['meta']?['signature']?.toString();
+        if (signature != null && signature.isNotEmpty) {
+          _statusSignatures[solicitudId] = signature;
+        }
+
+        return payload;
+      } catch (e) {
+        print('❌ Error obteniendo estado: $e');
+        final mapped = AppNetworkException.fromError(e);
+        return {
+          'success': false,
+          'message': mapped.userMessage,
+          'error_type': mapped.type.name,
+        };
       }
+    }();
 
-      return result.json!;
-    } catch (e) {
-      print('❌ Error obteniendo estado: $e');
-      final mapped = AppNetworkException.fromError(e);
-      return {
-        'success': false,
-        'message': mapped.userMessage,
-        'error_type': mapped.type.name,
-      };
+    _inFlightStatusRequests[solicitudId] = requestFuture;
+    try {
+      return await requestFuture;
+    } finally {
+      if (identical(_inFlightStatusRequests[solicitudId], requestFuture)) {
+        _inFlightStatusRequests.remove(solicitudId);
+      }
     }
   }
 
@@ -271,8 +350,10 @@ class TripRequestService {
     String canceladoPor = 'cliente',
   }) async {
     try {
-      print('🚫 [TripRequestService] Cancelando solicitud ID: $solicitudId por: $canceladoPor');
-      
+      print(
+        '🚫 [TripRequestService] Cancelando solicitud ID: $solicitudId por: $canceladoPor',
+      );
+
       // Si tenemos conductorId, usamos el endpoint de actualización de estado (más robusto para viajes en curso)
       if (conductorId != null && conductorId > 0) {
         final body = {
@@ -282,8 +363,10 @@ class TripRequestService {
           'motivo_cancelacion': motivo,
           'cancelado_por': canceladoPor,
         };
-        
-        print('📦 [TripRequestService] Usando endpoint conductor (update_trip_status). Body: $body');
+
+        print(
+          '📦 [TripRequestService] Usando endpoint conductor (update_trip_status). Body: $body',
+        );
 
         final result = await _network.postJson(
           url: Uri.parse('$baseUrl/conductor/update_trip_status.php'),
@@ -293,11 +376,14 @@ class TripRequestService {
         );
 
         if (!result.success || result.json == null) {
-          return _errorResponse(result, fallback: 'No pudimos cancelar el viaje en este momento.');
+          return _errorResponse(
+            result,
+            fallback: 'No pudimos cancelar el viaje en este momento.',
+          );
         }
 
         return result.json!;
-      } 
+      }
       // Si no hay conductor (ej. aún buscando), usamos el endpoint de cancelación simple del cliente
       else {
         final body = {
@@ -306,8 +392,10 @@ class TripRequestService {
           'motivo': motivo,
           'cancelado_por': canceladoPor,
         };
-        
-        print('📦 [TripRequestService] Usando endpoint cliente (cancel_trip_request). Body: $body');
+
+        print(
+          '📦 [TripRequestService] Usando endpoint cliente (cancel_trip_request). Body: $body',
+        );
 
         final result = await _network.postJson(
           url: Uri.parse('$baseUrl/user/cancel_trip_request.php'),
@@ -317,7 +405,10 @@ class TripRequestService {
         );
 
         if (!result.success || result.json == null) {
-          return _errorResponse(result, fallback: 'No pudimos cancelar la solicitud en este momento.');
+          return _errorResponse(
+            result,
+            fallback: 'No pudimos cancelar la solicitud en este momento.',
+          );
         }
 
         return result.json!;
@@ -332,15 +423,17 @@ class TripRequestService {
       };
     }
   }
+
   /// Verificar si el usuario tiene un viaje activo
   static Future<Map<String, dynamic>> checkActiveTrip({
     required int userId,
     required String role,
   }) async {
     try {
-      final url = '$baseUrl/user/check_active_trip.php?user_id=$userId&role=$role';
+      final url =
+          '$baseUrl/user/check_active_trip.php?user_id=$userId&role=$role';
       print('查询 [TripRequestService] check active: $url');
-      
+
       final result = await _network.getJson(
         url: Uri.parse(url),
         headers: {'Accept': 'application/json'},
@@ -348,7 +441,10 @@ class TripRequestService {
       );
 
       if (!result.success || result.json == null) {
-        return _errorResponse(result, fallback: 'No pudimos validar si tienes un viaje activo.');
+        return _errorResponse(
+          result,
+          fallback: 'No pudimos validar si tienes un viaje activo.',
+        );
       }
 
       return result.json!;

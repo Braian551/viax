@@ -5,6 +5,23 @@ enum LegalRole { cliente, conductor, empresa, administrador, servidor }
 class LegalLinksService {
   static const String _websiteBaseUrl = 'https://viaxcol.online';
 
+  static LegalRole fromString(String role) {
+    switch (role.toLowerCase()) {
+      case 'conductor':
+        return LegalRole.conductor;
+      case 'empresa':
+        return LegalRole.empresa;
+      case 'administrador':
+      case 'admin':
+        return LegalRole.administrador;
+      case 'servidor':
+        return LegalRole.servidor;
+      case 'cliente':
+      default:
+        return LegalRole.cliente;
+    }
+  }
+
   static String _roleParam(LegalRole role) {
     switch (role) {
       case LegalRole.cliente:
@@ -28,6 +45,10 @@ class LegalLinksService {
   static Uri privacyUri({required LegalRole role}) {
     final roleParam = _roleParam(role);
     return Uri.parse('$_websiteBaseUrl/legal/?doc=privacy&role=$roleParam');
+  }
+
+  static Uri contentJsonUri() {
+    return Uri.parse('$_websiteBaseUrl/legal_content.json');
   }
 
   static Future<bool> openTerms({required LegalRole role}) async {

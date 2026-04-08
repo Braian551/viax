@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/conductor/presentation/widgets/settings/settings_widgets.dart';
+import 'package:viax/src/features/profile/presentation/utils/account_deletion_flow.dart';
 import 'package:viax/src/features/notifications/services/push_notification_service.dart';
+import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/models/app_user_settings.dart';
 import 'package:viax/src/global/services/app_user_settings_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
@@ -25,6 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   late Animation<Offset> _headerSlideAnimation;
 
   int? _userId;
+  String _userEmail = '';
+  String _userName = 'Usuario';
   bool _isLoadingSettings = true;
 
   bool _notificationsEnabled = true;
@@ -32,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _vibrationEnabled = true;
   bool _biometricEnabled = false;
   bool _darkMode = false;
+  String _settingsQuery = '';
 
   @override
   void initState() {
@@ -78,6 +83,12 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     setState(() {
       _userId = userId;
+      _userEmail = session?['email']?.toString() ?? '';
+      final firstName = session?['nombre']?.toString() ?? '';
+      final lastName = session?['apellido']?.toString() ?? '';
+      _userName = ('$firstName $lastName').trim().isEmpty
+          ? 'Usuario'
+          : ('$firstName $lastName').trim();
       _notificationsEnabled = settings.notificationsEnabled;
       _soundEnabled = settings.soundEnabled;
       _vibrationEnabled = settings.vibrationEnabled;
@@ -187,6 +198,28 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  Future<void> _handleDeleteAccount() async {
+    if (_userId == null || _userEmail.isEmpty) {
+      _showSnackbar('No se pudo identificar tu cuenta');
+      return;
+    }
+
+    await AccountDeletionFlow.start(
+      context: context,
+      userId: _userId!,
+      email: _userEmail,
+      userName: _userName,
+      userType: 'cliente',
+    );
+  }
+
+  bool _matchesSettingsQuery(String title, [String subtitle = '']) {
+    if (_settingsQuery.trim().isEmpty) return true;
+    final normalized = _settingsQuery.toLowerCase();
+    return title.toLowerCase().contains(normalized) ||
+        subtitle.toLowerCase().contains(normalized);
+  }
+
   @override
   void dispose() {
     _headerController.dispose();
@@ -217,9 +250,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else ...[
+                    TextField(
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search_rounded),
+                        hintText: 'Buscar configuración...',
+                      ),
+                      onChanged: (value) {
+                        setState(() => _settingsQuery = value);
+                        if (value == 'Thaliana062025') {
+                          Navigator.pushNamed(context, RouteNames.thaliLove);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     SettingsSection(
                       title: 'Notificaciones',
                       children: [
+                        if (_matchesSettingsQuery('Notificaciones', 'Recibir alertas de viajes'))
                         SettingsItem(
                           icon: Icons.notifications_rounded,
                           title: 'Notificaciones',
@@ -230,6 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             onChanged: _toggleNotifications,
                           ),
                         ),
+                        if (_matchesSettingsQuery('Sonidos', 'Sonidos de notificacion'))
                         SettingsItem(
                           icon: Icons.volume_up_rounded,
                           title: 'Sonidos',
@@ -243,6 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             },
                           ),
                         ),
+                        if (_matchesSettingsQuery('Vibracion', 'Vibrar al recibir notificaciones'))
                         SettingsItem(
                           icon: Icons.vibration_rounded,
                           title: 'Vibracion',
@@ -261,6 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     SettingsSection(
                       title: 'Privacidad y Seguridad',
                       children: [
+                        if (_matchesSettingsQuery('Cambiar Contrasena', 'Actualiza tu contrasena'))
                         SettingsItem(
                           icon: Icons.lock_rounded,
                           title: 'Cambiar Contrasena',
@@ -268,6 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           animationIndex: 3,
                           onTap: _openChangePasswordScreen,
                         ),
+                        if (_matchesSettingsQuery('Autenticacion Biometrica', 'Usar huella o Face ID'))
                         SettingsItem(
                           icon: Icons.fingerprint_rounded,
                           title: 'Autenticacion Biometrica',
@@ -283,6 +334,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     SettingsSection(
                       title: 'Apariencia',
                       children: [
+                        if (_matchesSettingsQuery('Modo Oscuro', 'Cambiar tema de la aplicacion'))
                         SettingsItem(
                           icon: Icons.dark_mode_rounded,
                           title: 'Modo Oscuro',
@@ -296,20 +348,53 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ],
                     ),
                     SettingsSection(
+                      title: 'Cuenta',
+                      children: [
+                        if (_matchesSettingsQuery('Eliminar cuenta', 'Programar eliminación segura de la cuenta'))
+                        SettingsItem(
+                          icon: Icons.delete_forever_rounded,
+                          title: 'Eliminar cuenta',
+                          subtitle: 'Programar eliminación segura de la cuenta',
+                          animationIndex: 6,
+                          iconColor: AppColors.error,
+                          onTap: _handleDeleteAccount,
+                        ),
+                      ],
+                    ),
+                    SettingsSection(
                       title: 'Acerca de',
                       children: [
+                        if (_matchesSettingsQuery('Ayuda y Soporte', 'Centro de ayuda y tickets'))
+                        SettingsItem(
+                          icon: Icons.support_agent_rounded,
+                          title: 'Ayuda y Soporte',
+                          subtitle: 'Centro de ayuda y tickets',
+                          animationIndex: 7,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.help,
+                              arguments: {
+                                'userType': 'user',
+                                'userId': _userId,
+                              },
+                            );
+                          },
+                        ),
+                        if (_matchesSettingsQuery('Términos y Condiciones', 'Condiciones de uso para clientes'))
                         SettingsItem(
                           icon: Icons.description_rounded,
                           title: 'Términos y Condiciones',
                           subtitle: 'Condiciones de uso para clientes',
-                          animationIndex: 6,
+                          animationIndex: 8,
                           onTap: _openTerms,
                         ),
+                        if (_matchesSettingsQuery('Política de Privacidad', 'Tratamiento de datos personales'))
                         SettingsItem(
                           icon: Icons.privacy_tip_rounded,
                           title: 'Política de Privacidad',
                           subtitle: 'Tratamiento de datos personales',
-                          animationIndex: 7,
+                          animationIndex: 9,
                           onTap: _openPrivacy,
                         ),
                       ],

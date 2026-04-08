@@ -68,8 +68,8 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
   String? _validateNit(String? value) {
     final text = value?.trim() ?? '';
     if (text.isEmpty) return 'NIT es requerido';
-    if (!RegExp(r'^\d{6,15}$').hasMatch(text)) {
-      return 'NIT debe contener solo números (6 a 15 dígitos)';
+    if (!RegExp(r'^\d{6,15}(-\d{1,3})?$').hasMatch(text)) {
+      return 'NIT inválido. Usa formato 123456789 o 123456789-1';
     }
     return null;
   }
@@ -311,25 +311,42 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
     }
   }
 
+  void _showSaveMessage(
+    String message, {
+    bool isError = false,
+  }) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.error : Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+  }
+
   Future<void> _saveData() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      _showSaveMessage(
+        'Revisa los campos marcados antes de guardar.',
+        isError: true,
+      );
+      return;
+    }
     
     if (_selectedDepartment == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Selecciona un departamento')),
-        );
+        _showSaveMessage('Selecciona un departamento.', isError: true);
         return;
     }
     if (_selectedCity == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Selecciona un municipio')),
-        );
+        _showSaveMessage('Selecciona un municipio.', isError: true);
         return;
     }
     if (_selectedBank == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona un banco')), 
-      );
+      _showSaveMessage('Selecciona un banco.', isError: true);
       return;
     }
 
@@ -348,11 +365,9 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
 
     if (!profileSaved) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Error al guardar'),
-          backgroundColor: AppColors.error,
-        ),
+      _showSaveMessage(
+        (provider.errorMessage ?? 'Error al guardar').replaceFirst('Exception: ', ''),
+        isError: true,
       );
       return;
     }
@@ -370,19 +385,15 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
     if (!mounted) return;
 
     if (settingsSaved) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Datos actualizados exitosamente'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      _showSaveMessage('Datos actualizados exitosamente.');
+      // Espera breve para que el usuario vea el feedback antes de cerrar.
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+      if (!mounted) return;
+      Navigator.pop(context, true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Error al guardar'),
-          backgroundColor: AppColors.error,
-        ),
+      _showSaveMessage(
+        (provider.errorMessage ?? 'Error al guardar').replaceFirst('Exception: ', ''),
+        isError: true,
       );
     }
   }
@@ -534,11 +545,11 @@ class _CompanyDataScreenState extends State<CompanyDataScreen> {
                   controller: _nitController,
                   label: 'NIT',
                   icon: Icons.badge_outlined,
-                  keyboardType: TextInputType.number,
-                  helperText: 'Solo números, entre 6 y 15 dígitos.',
+                  keyboardType: TextInputType.text,
+                  helperText: 'Formato: 123456789 o 123456789-1.',
                   inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(15),
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
+                    LengthLimitingTextInputFormatter(19),
                   ],
                   validator: _validateNit,
                 ),

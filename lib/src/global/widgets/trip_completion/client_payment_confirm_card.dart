@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../../../theme/app_colors.dart';
 
 /// Card para que el cliente confirme que pagó en efectivo.
@@ -29,7 +28,6 @@ class ClientPaymentConfirmCard extends StatefulWidget {
 
 class _ClientPaymentConfirmCardState extends State<ClientPaymentConfirmCard>
     with SingleTickerProviderStateMixin {
-  final AudioPlayer _audioPlayer = AudioPlayer();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   bool _hasConfirmed = false;
@@ -39,7 +37,6 @@ class _ClientPaymentConfirmCardState extends State<ClientPaymentConfirmCard>
   void initState() {
     super.initState();
     _setupAnimation();
-    _playAlertSound();
   }
 
   void _setupAnimation() {
@@ -53,25 +50,14 @@ class _ClientPaymentConfirmCardState extends State<ClientPaymentConfirmCard>
     );
   }
 
-  Future<void> _playAlertSound() async {
-    try {
-      await _audioPlayer.play(AssetSource('sounds/request_notification.wav'));
-    } catch (e) {
-      // Si no hay archivo, usar vibración
-      HapticFeedback.mediumImpact();
-    }
-  }
-
   @override
   void dispose() {
     _pulseController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
   void _confirmPayment(bool didPay) {
     HapticFeedback.mediumImpact();
-    _audioPlayer.stop();
     setState(() {
       _hasConfirmed = true;
       _confirmedValue = didPay;

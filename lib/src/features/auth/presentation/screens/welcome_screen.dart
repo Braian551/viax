@@ -1,6 +1,8 @@
 ﻿// lib/src/features/auth/presentation/screens/welcome_screen.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
@@ -30,12 +32,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (session != null && mounted) {
       // Verificar si necesita ingresar teléfono
       final requiresPhone = await GoogleAuthService.checkRequiresPhone();
-      if (requiresPhone && mounted) {
+        if (requiresPhone && mounted) {
         Navigator.of(
           context,
         ).pushReplacementNamed(RouteNames.phoneRequired, arguments: session);
       } else if (mounted) {
-        Navigator.of(context).pushReplacementNamed(RouteNames.home);
+          final tipoUsuario = (session['tipo_usuario'] ?? 'cliente').toString();
+          if (tipoUsuario == 'soporte_tecnico') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.supportHome,
+              arguments: {'support_user': session},
+            );
+          } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.adminHome,
+              arguments: {'admin_user': session},
+            );
+          } else if (tipoUsuario == 'conductor') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.conductorHome,
+              arguments: {'conductor_user': session},
+            );
+          } else if (tipoUsuario == 'empresa') {
+            Navigator.of(context).pushReplacementNamed(
+              RouteNames.companyHome,
+              arguments: {'user': session},
+            );
+          } else {
+            Navigator.of(context).pushReplacementNamed(RouteNames.home);
+          }
       }
     }
   }
@@ -60,18 +85,42 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
 
       if (result['success'] == true) {
+        final user = (result['user'] as Map?)?.cast<String, dynamic>();
+        final isNewUser = result['is_new_user'] == true;
+
+        if (isNewUser && user != null) {
+          final allowed = await _ensureLegalAcceptedForUser(user);
+          if (!mounted) return;
+          if (!allowed) {
+            await GoogleAuthService.signOut();
+            await UserService.clearSession();
+            if (!mounted) return;
+            _showErrorSnackBar('Debes aceptar terminos y privacidad para continuar.');
+            return;
+          }
+        }
+
         // Verificar si necesita teléfono
         if (result['requires_phone'] == true) {
+          if (!mounted) return;
           Navigator.of(context).pushReplacementNamed(
             RouteNames.phoneRequired,
-            arguments: result['user'],
+            arguments: user,
           );
         } else {
           // Determinar redirección basada en rol
-          final user = result['user'];
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
 
-          if (tipoUsuario == 'administrador') {
+          if (tipoUsuario == 'soporte_tecnico') {
+            if (!mounted) return;
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.supportHome,
+              (route) => false,
+              arguments: {'support_user': user},
+            );
+          } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.adminHome,
@@ -79,6 +128,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               arguments: {'admin_user': user},
             );
           } else if (tipoUsuario == 'conductor') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.conductorHome,
@@ -86,6 +136,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               arguments: {'conductor_user': user},
             );
           } else if (tipoUsuario == 'empresa') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.companyHome,
@@ -94,6 +145,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             );
           } else {
             // Cliente
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.home,
@@ -102,6 +154,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           }
         }
       } else {
+        final errorCode = result['error_code']?.toString();
+        final data = result['data'] is Map<String, dynamic>
+            ? result['data'] as Map<String, dynamic>
+            : null;
+
+        if (errorCode == 'ACCOUNT_PENDING_DELETION' || data?['pending_deletion'] == true) {
+          final pendingEmail = data?['email']?.toString() ?? result['email']?.toString() ?? '';
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(
+            context,
+            RouteNames.pendingDeletionReactivation,
+            arguments: {
+              'email': pendingEmail,
+              'deletionScheduledAt': data?['deletion_scheduled_at']?.toString(),
+              'authProvider': 'google',
+              'idToken': result['id_token']?.toString(),
+              'accessToken': result['access_token']?.toString(),
+            },
+          );
+          return;
+        }
+
         _showErrorSnackBar(
           (result['message'] ??
                   'No pudimos completar el inicio de sesión con Google')
@@ -121,6 +195,37 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         });
       }
     }
+  }
+
+  Future<bool> _ensureLegalAcceptedForUser(Map<String, dynamic> user) async {
+    final role = (user['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
+    final userId = int.tryParse(user['id']?.toString() ?? '0') ?? 0;
+    if (userId <= 0) return false;
+
+    final legalProvider = context.read<LegalProvider>();
+    final status = await legalProvider.checkLegalStatus(role: role, userId: userId);
+    if (status == LegalStatus.accepted) {
+      return true;
+    }
+
+    final version = await legalProvider.fetchCurrentVersion(role: role);
+    if (!mounted) return false;
+    if (version == null || version.isEmpty) {
+      return false;
+    }
+
+    final accepted = await Navigator.of(context).pushNamed(
+      RouteNames.legalAcceptance,
+      arguments: {
+        'role': role,
+        'userId': userId,
+        'version': version,
+        'returnResultOnAccept': true,
+        'isBlocking': false,
+      },
+    );
+
+    return accepted == true;
   }
 
   Future<void> _openTerms() async {

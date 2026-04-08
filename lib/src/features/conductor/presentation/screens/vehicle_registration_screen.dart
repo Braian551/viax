@@ -371,6 +371,14 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         selectedLabel: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
         headerIcon: Icons.palette_rounded,
         itemIcon: Icons.lens_rounded,
+        itemColor: (item) {
+          final rawHex = (item['hex_code'] ?? item['hex'] ?? item['codigo_hex'] ?? '').toString().trim();
+          if (rawHex.isEmpty) return null;
+          final hex = rawHex.replaceAll('#', '');
+          final value = int.tryParse(hex.length == 6 ? 'FF$hex' : hex, radix: 16);
+          if (value == null) return null;
+          return Color(value);
+        },
         onSelected: (selected) {
           final selectedName = (selected['nombre'] as String?) ?? '';
           if (selectedName.isEmpty) return;

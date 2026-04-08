@@ -19,6 +19,11 @@ import 'package:viax/src/features/notifications/notifications.dart';
 import 'package:viax/src/features/user/presentation/widgets/home/map_loading_shimmer.dart';
 import 'package:viax/src/global/widgets/active_trip_alert.dart';
 import 'package:viax/src/features/user/services/user_trips_service.dart';
+import 'package:viax/src/global/models/simple_location.dart';
+import 'package:viax/src/global/services/location_suggestion_service.dart';
+import 'package:viax/src/global/services/route_preview_cache.dart';
+import 'package:viax/src/features/user/presentation/screens/trip_preview_screen.dart';
+import 'package:viax/src/global/services/country_availability_service.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -28,6 +33,9 @@ class HomeUserScreen extends StatefulWidget {
 }
 
 class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStateMixin {
+  // Temporary reviewer override: disable country lock while QA/review is active.
+  static const bool _allowOutsideColombiaForReviewers = true;
+
   // Mapa y Ubicación
   final MapController _mapController = MapController();
   geo.Position? _currentPosition;
@@ -55,10 +63,16 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   // Navegación
   int _selectedIndex = 0;
+  late final LocationSuggestionService _locationSuggestionService;
+  List<SimpleLocation> _homeRecentDestinations = [];
+  bool _loadingHomeRecents = false;
+  bool _countryRestricted = false;
+  String? _detectedCountry;
 
   @override
   void initState() {
     super.initState();
+    _locationSuggestionService = LocationSuggestionService();
     _setupAnimations();
     _loadUserData();
     _requestLocationPermission();
@@ -104,12 +118,42 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       final position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high,
       );
+
+      if (_allowOutsideColombiaForReviewers) {
+        if (mounted) {
+          setState(() {
+            _currentPosition = position;
+            _isLoadingLocation = false;
+            _hasMapLoadError = false;
+            _countryRestricted = false;
+            _detectedCountry = null;
+          });
+
+          _startMapLoadWatchdog();
+          _centerMapOnLocation(position);
+        }
+        return;
+      }
+
+      final countryValidation =
+          await CountryAvailabilityService.validateColombiaOnly(
+        position: LatLng(position.latitude, position.longitude),
+      );
+
       if (mounted) {
         setState(() {
           _currentPosition = position;
           _isLoadingLocation = false;
           _hasMapLoadError = false;
+          _countryRestricted = !countryValidation.isAllowed;
+          _detectedCountry = countryValidation.detectedCountry;
         });
+
+        if (!countryValidation.isAllowed) {
+          _showCountryRestrictionDialog();
+          return;
+        }
+
         _startMapLoadWatchdog();
         _centerMapOnLocation(position);
       }
@@ -220,6 +264,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
             if (_userId != null) {
               _loadUnreadNotifications();
               _startNotificationPolling();
+              _loadHomeRecentDestinations();
             }
           }
         }
@@ -229,6 +274,163 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     if (_loadingUser && mounted) {
       setState(() => _loadingUser = false);
       _animationController.forward();
+    }
+  }
+
+  Future<void> _loadHomeRecentDestinations() async {
+    if (_loadingHomeRecents) return;
+    setState(() => _loadingHomeRecents = true);
+    try {
+      final recents = await _locationSuggestionService.getRecentSuggestions(limit: 2);
+      if (!mounted) return;
+      setState(() {
+        _homeRecentDestinations = recents.take(2).toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _homeRecentDestinations = const [];
+      });
+    } finally {
+      if (mounted) setState(() => _loadingHomeRecents = false);
+    }
+  }
+
+  Future<bool> _hasRemoteActiveTrip() async {
+    if (_userId == null) return false;
+    try {
+      final result = await UserTripsService.getHistorial(userId: _userId!, limit: 5);
+      if (result['success'] == true) {
+        final trips = result['viajes'] as List<UserTripModel>;
+        return trips.any((t) => !t.isCompletado && !t.isCancelado);
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<bool> _guardActiveTripBeforeNavigate() async {
+    if (ActiveTripNavigationService().hasActiveTrip) {
+      showActiveTripAlert(context, isConductor: false, userId: _userId);
+      return true;
+    }
+
+    final hasRemoteActive = await _hasRemoteActiveTrip();
+    if (!mounted) return true;
+    if (hasRemoteActive) {
+      showActiveTripAlert(context, isConductor: false, userId: _userId);
+      return true;
+    }
+
+    return false;
+  }
+
+  Future<SimpleLocation?> _buildCurrentOriginLocation() async {
+    if (_currentPosition == null) {
+      await _getCurrentLocation();
+    }
+
+    final current = _currentPosition;
+    if (current == null) {
+      return null;
+    }
+
+    String address = 'Mi ubicación actual';
+    try {
+      final resolved = await _locationSuggestionService.reverseGeocode(
+        current.latitude,
+        current.longitude,
+      );
+      if (resolved != null && resolved.trim().isNotEmpty) {
+        address = resolved;
+      }
+    } catch (_) {}
+
+    return SimpleLocation(
+      latitude: current.latitude,
+      longitude: current.longitude,
+      address: address,
+      placeType: 'current',
+    );
+  }
+
+  Future<void> _openDestinationSearch() async {
+    if (_countryRestricted) {
+      _showCountryRestrictionDialog();
+      return;
+    }
+
+    final hasBlocked = await _guardActiveTripBeforeNavigate();
+    if (hasBlocked || !mounted) return;
+
+    await _animationController.reverse();
+    await Navigator.pushNamed(
+      context,
+      RouteNames.requestTrip,
+      arguments: {
+        'selecting': 'destination',
+        'currentPosition': _currentPosition,
+      },
+    );
+    if (mounted) {
+      _animationController.forward();
+      _loadHomeRecentDestinations();
+    }
+  }
+
+  Future<void> _openQuickTripFromRecent(SimpleLocation destination) async {
+    if (_countryRestricted) {
+      _showCountryRestrictionDialog();
+      return;
+    }
+
+    final hasBlocked = await _guardActiveTripBeforeNavigate();
+    if (hasBlocked || !mounted) return;
+
+    final origin = await _buildCurrentOriginLocation();
+    if (!mounted) return;
+    if (origin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No pudimos obtener tu ubicación actual')),
+      );
+      return;
+    }
+
+    final preloadedRoute = await RoutePreviewCache.instance
+        .getOrFetchRoute(
+          waypoints: [origin.toLatLng(), destination.toLatLng()],
+        )
+        .timeout(const Duration(milliseconds: 500), onTimeout: () => null);
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => TripPreviewScreen(
+          origin: origin,
+          destination: destination,
+          vehicleType: 'auto',
+          preloadedRoute: preloadedRoute,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.05),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+
+    if (mounted) {
+      _loadHomeRecentDestinations();
     }
   }
 
@@ -296,6 +498,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           // 3. Otras Pestañas (Historial, Perfil, etc)
           if (_selectedIndex != 0)
             _buildTabContent(isDark),
+
+          if (_countryRestricted)
+            _buildCountryRestrictionOverlay(isDark),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
@@ -307,6 +512,65 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           CustomNavBarItem(icon: Icons.history_rounded, label: 'Viajes'),
           CustomNavBarItem(icon: Icons.person_rounded, label: 'Perfil'),
         ],
+      ),
+    );
+  }
+
+  void _showCountryRestrictionDialog() {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Servicio no disponible'),
+        content: Text(
+          'Esta app solo está disponible en Colombia por el momento. '
+          'Muy pronto estará disponible en otros países.'
+          '${_detectedCountry != null ? '\n\nUbicación detectada: $_detectedCountry' : ''}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountryRestrictionOverlay(bool isDark) {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.58),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.public_off_rounded, size: 34, color: AppColors.error),
+              const SizedBox(height: 10),
+              const Text(
+                'App disponible solo en Colombia',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Muy pronto estará disponible en otros países.',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -648,50 +912,82 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                           placeholder: 'Buscar destino',
                           isDark: isDark,
                           isDestination: true,
-                          onTap: () async {
-                            // Verificar viaje activo
-                            // 1. Verificación local (más rápida y fiable si la app sigue vivía)
-                            if (ActiveTripNavigationService().hasActiveTrip) {
-                               showActiveTripAlert(context, isConductor: false, userId: _userId);
-                               return;
-                            }
-
-                            // 2. Verificación remota
-                            if (_userId != null) {
-                              try {
-                                final result = await UserTripsService.getHistorial(userId: _userId!, limit: 5);
-                                if (result['success'] == true) {
-                                  final trips = result['viajes'] as List<UserTripModel>;
-                                  // Un viaje se considera activo si no está completado ni cancelado
-                                  final hasActive = trips.any((t) => !t.isCompletado && !t.isCancelado);
-                                  
-                                  if (hasActive) {
-                                    if (!mounted) return;
-                                    showActiveTripAlert(context, isConductor: false, userId: _userId);
-                                    return;
-                                  }
-                                }
-                              } catch (_) {}
-                            }
-
-                            // Animación: ocultar el overlay para que no se vean duplicados
-                            await _animationController.reverse();
-                            await Navigator.pushNamed(
-                              context,
-                              RouteNames.requestTrip,
-                              arguments: {
-                                'selecting': 'destination',
-                                'currentPosition': _currentPosition,
-                              },
-                            );
-                            // Restaurar overlay al volver
-                            if (mounted) _animationController.forward();
-                          },
+                          onTap: _openDestinationSearch,
                           onClear: null,
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
+                    if (_homeRecentDestinations.isNotEmpty) ...[
+                      Column(
+                        children: _homeRecentDestinations.map((recent) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () => _openQuickTripFromRecent(recent),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.white.withValues(alpha: 0.58),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.07)
+                                        : Colors.black.withValues(alpha: 0.05),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.history_rounded,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            recent.displayName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white : Colors.black87,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (recent.displaySubtitle.isNotEmpty)
+                                            Text(
+                                              recent.displaySubtitle,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white54 : Colors.black45,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Icon(
+                                      Icons.north_west_rounded,
+                                      size: 14,
+                                      color: AppColors.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                     // Accesos rápidos (Casa, Trabajo)
                   ],
                 ),

@@ -15,6 +15,7 @@ class VehicleSearchableSheet<T> extends StatefulWidget {
   final IconData headerIcon;
   final String? selectedLabel;
   final IconData itemIcon;
+  final Color? Function(T item)? itemColor;
 
   const VehicleSearchableSheet({
     super.key,
@@ -29,6 +30,7 @@ class VehicleSearchableSheet<T> extends StatefulWidget {
     this.headerIcon = Icons.directions_car_rounded,
     this.selectedLabel,
     this.itemIcon = Icons.directions_car_filled_outlined,
+    this.itemColor,
   });
 
   @override
@@ -299,13 +301,33 @@ class _VehicleSearchableSheetState<T> extends State<VehicleSearchableSheet<T>> {
                           final isSelected =
                               widget.selectedLabel != null && widget.selectedLabel!.toLowerCase() == label.toLowerCase();
 
+                          final resolvedItemColor = widget.itemColor?.call(item);
+
                           return ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-                            leading: Icon(
-                              isSelected ? Icons.check_circle_rounded : widget.itemIcon,
-                              size: 20,
-                              color: isSelected ? AppColors.primary : (isDark ? Colors.white54 : Colors.black45),
-                            ),
+                            leading: resolvedItemColor != null
+                                ? Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      color: resolvedItemColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : (isDark ? Colors.white24 : Colors.black26),
+                                        width: isSelected ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: isSelected
+                                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
+                                        : null,
+                                  )
+                                : Icon(
+                                    isSelected ? Icons.check_circle_rounded : widget.itemIcon,
+                                    size: 20,
+                                    color: isSelected ? AppColors.primary : (isDark ? Colors.white54 : Colors.black45),
+                                  ),
                             title: Text(
                               label,
                               style: TextStyle(

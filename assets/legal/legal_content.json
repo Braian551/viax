@@ -1,0 +1,1333 @@
+{
+  "cliente": {
+    "terms": {
+      "title": "Términos y Condiciones - Usuario Cliente",
+      "intro": "Estos términos regulan el uso de la plataforma tecnológica Viax en Colombia. Al utilizar nuestra aplicación, aceptas las condiciones aquí establecidas. Te recomendamos leer este documento con atención.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "intermediation",
+          "heading": "Nuestra Función: Intermediación Tecnológica",
+          "summary": "Viax es una plataforma tecnológica que conecta a usuarios con conductores y empresas de transporte. No prestamos el servicio de transporte directamente.",
+          "bullets": [
+            "Naturaleza: Viax opera exclusivamente como plataforma de intermediación tecnológica entre usuarios y prestadores del servicio de transporte.",
+            "Alcance: No prestamos el servicio de transporte ni actuamos como empresa transportadora. La responsabilidad del transporte recae en el conductor y su empresa afiliada.",
+            "Independencia: Viax no establece relación laboral directa con los conductores o empresas. La naturaleza de la relación se rige por la legislación colombiana y las condiciones reales de prestación del servicio.",
+            "Limitación operativa: Viax no controla, dirige ni supervisa en tiempo real la prestación del servicio de transporte. La ejecución del servicio es responsabilidad exclusiva del conductor y la empresa de transporte.",
+            "Responsabilidad: Viax actúa como intermediario tecnológico, sin perjuicio de las obligaciones legales que le correspondan como plataforma tecnológica conforme a la legislación colombiana, incluyendo las disposiciones aplicables de protección al consumidor y tratamiento de datos personales."
+          ]
+        },
+        {
+          "id": "legal_framework",
+          "heading": "Marco Normativo",
+          "summary": "Tus derechos están protegidos bajo las leyes colombianas vigentes sobre protección de datos, comercio electrónico y derechos del consumidor.",
+          "bullets": [
+            "Datos Personales: Tratamos tu información conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.",
+            "Validez electrónica: Las firmas electrónicas, códigos OTP y aceptaciones digitales tienen plena validez jurídica conforme a la Ley 527 de 1999.",
+            "Consumidor: Se garantizan todos tus derechos como consumidor conforme a la Ley 1480 de 2011. Ninguna cláusula de estos términos limita tus derechos irrenunciables como consumidor."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "service_availability",
+          "heading": "Disponibilidad del Servicio y Precisión del GPS",
+          "summary": "Viax se esfuerza por mantener la plataforma disponible, pero no puede garantizar un funcionamiento ininterrumpido debido a factores externos.",
+          "bullets": [
+            "Disponibilidad: El servicio puede experimentar interrupciones temporales por mantenimiento, actualizaciones o factores ajenos a nuestro control, como fallas en redes de telecomunicaciones.",
+            "GPS: Las ubicaciones y rutas mostradas en la aplicación dependen de servicios de geolocalización de terceros (GPS), cuya precisión puede variar según las condiciones del dispositivo y la cobertura. Las imprecisiones del GPS no constituyen un incumplimiento por parte de Viax."
+          ]
+        },
+        {
+          "id": "client_responsibility",
+          "heading": "Responsabilidades del Cliente",
+          "summary": "Al solicitar un servicio, te comprometes a utilizar la plataforma de manera respetuosa y conforme a la ley.",
+          "bullets": [
+            "Información veraz: Debes proporcionar datos reales y actualizados al registrarte y solicitar servicios.",
+            "Prohibiciones: Está prohibido utilizar la plataforma para transportar sustancias ilegales, elementos prohibidos por la ley o cualquier objeto que ponga en riesgo la seguridad.",
+            "Edad mínima: El uso de la plataforma está permitido únicamente para personas mayores de 18 años.",
+            "Conducta: El uso abusivo de la plataforma, como cancelaciones fraudulentas, daños al vehículo o evasión de pago, podrá dar lugar a la suspensión o cancelación de tu cuenta."
+          ]
+        },
+        {
+          "id": "payments",
+          "heading": "Pagos, Tarifas y Comisiones",
+          "summary": "El uso de la plataforma tecnológica implica costos y tarifas necesarios para su funcionamiento y mantenimiento.",
+          "bullets": [
+            "Usuario: El cliente paga el servicio según las tarifas mostradas en pantalla al momento de solicitar y finalizar el viaje.",
+            "Conductores: Viax cobra una comisión de intermediación sobre cada viaje completado. La morosidad reiterada podrá generar restricciones en la asignación de nuevos servicios.",
+            "Empresas: La conciliación financiera se realiza mediante comprobantes de depósito o sistema de saldos prepagados.",
+            "Impuestos: Las obligaciones tributarias derivadas de la actividad de transporte son responsabilidad del prestador del servicio (conductor y/o empresa), conforme a la normativa fiscal vigente."
+          ]
+        },
+        {
+          "heading": "Eliminación de Cuenta",
+          "summary": "Puedes solicitar la eliminación de tu cuenta en cualquier momento. La eliminación de datos personales está sujeta a las obligaciones legales de retención aplicables.",
+          "bullets": [
+            "Solicitud: Puedes solicitar la eliminación de tu cuenta desde la aplicación o enviando un correo electrónico a viaxoficialcol@gmail.com con el asunto \"Eliminación de cuenta\".",
+            "Período de gracia: Durante los 15 días siguientes a tu solicitud, la cuenta quedará suspendida. Si inicias sesión durante este período, la solicitud se cancelará automáticamente.",
+            "Eliminación de datos: Una vez confirmada la eliminación, tus datos personales serán suprimidos de nuestros sistemas. En caso de no existir obligación legal de retención, la eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Retención legal: Conforme a la normativa vigente, Viax conservará únicamente los registros exigidos por obligaciones contables, fiscales o de seguridad por el plazo legal correspondiente, tras lo cual serán eliminados."
+          ]
+        },
+        {
+          "id": "financial_limitation",
+          "heading": "Límites de Responsabilidad",
+          "summary": "Como intermediario tecnológico, la responsabilidad de Viax se limita conforme a la legislación aplicable, sin eximir el deber de diligencia propio de la plataforma.",
+          "bullets": [
+            "Intermediación: Viax actúa como intermediario tecnológico y no ejecuta directamente el servicio de transporte. La cobertura de daños derivados del transporte corresponde al SOAT y las pólizas del vehículo, conforme a la normativa vigente.",
+            "Deber de diligencia: Viax se compromete a actuar con la diligencia razonablemente esperada de una plataforma tecnológica, implementando las medidas de seguridad y verificación disponibles para proteger la integridad del servicio.",
+            "Responsabilidad indirecta: En caso de fallas atribuibles a la plataforma que generen perjuicios verificables, Viax responderá conforme a la legislación colombiana, limitándose a los daños directos y probados.",
+            "Disponibilidad: Las interrupciones temporales de la plataforma por causas técnicas ajenas al control razonable de Viax no generan responsabilidad por lucro cesante, salvo que se demuestre dolo o culpa grave.",
+            "Derechos del consumidor: Lo anterior se entiende sin perjuicio de los derechos irrenunciables del consumidor conforme a la Ley 1480 de 2011."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    },
+    "privacy": {
+      "title": "Política de Privacidad - Cliente",
+      "intro": "Esta política describe cómo recolectamos, utilizamos y protegemos tu información personal cuando usas la aplicación Viax como cliente.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "data_controller",
+          "heading": "Responsable del Tratamiento y Uso de Datos",
+          "summary": "VIAX TECHNOLOGY S.A.S. (NIT 902040253-1) es el responsable del tratamiento de tus datos personales y los protege conforme a la ley colombiana. No comercializamos tu información.",
+          "bullets": [
+            "VIAX TECHNOLOGY S.A.S., identificada con NIT 902040253-1, es el Responsable del Tratamiento de los datos personales recolectados a través de la aplicación y el sitio web.",
+            "Utilizamos tus datos únicamente con tu consentimiento previo y para las finalidades necesarias para la prestación del servicio.",
+            "La conservación de datos se limita al período estrictamente necesario según la finalidad del tratamiento o el plazo exigido por la normativa vigente."
+          ]
+        },
+        {
+          "id": "permissions_usage",
+          "heading": "Uso de Permisos del Dispositivo",
+          "summary": "Solicitamos ciertos permisos en tu dispositivo exclusivamente para que la aplicación funcione correctamente.",
+          "bullets": [
+            "Ubicación: Utilizada únicamente para la asignación de viajes, navegación de rutas y funciones de seguridad.",
+            "Cámara (si aplica): Para verificación de identidad del perfil o validación de documentos requeridos.",
+            "Almacenamiento (si aplica): Para guardar temporalmente comprobantes o archivos necesarios del servicio.",
+            "Estos permisos no se utilizan para fines publicitarios ni se comparten con terceros para tales fines.",
+            "Puedes revocar los permisos en cualquier momento desde la configuración de tu dispositivo, lo cual puede limitar algunas funcionalidades de la aplicación."
+          ]
+        },
+        {
+          "id": "biometry_consent",
+          "heading": "Datos Biométricos",
+          "summary": "Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012. Su uso en Viax es opcional, requiere tu consentimiento expreso e independiente, y se utiliza exclusivamente para fines de seguridad.",
+          "bullets": [
+            "Datos sensibles: Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012 y su tratamiento está sujeto a las garantías especiales previstas para este tipo de información.",
+            "Consentimiento: El uso de verificación biométrica (como reconocimiento facial) requiere tu autorización previa, expresa e informada, otorgada de forma independiente a la aceptación de estos términos.",
+            "Finalidad: Los datos biométricos se utilizan exclusivamente para fines de verificación de identidad, seguridad y prevención de fraude.",
+            "Almacenamiento: Los datos biométricos pueden ser procesados mediante servicios seguros de terceros o almacenados de forma cifrada. En ningún caso se utilizan para fines distintos a la verificación de identidad.",
+            "Carácter opcional: La verificación biométrica NO es obligatoria para utilizar la plataforma. Viax ofrece siempre métodos alternativos de verificación que no requieren datos biométricos.",
+            "No comercialización: Viax no comercializa, vende ni comparte datos biométricos con terceros bajo ninguna circunstancia.",
+            "Eliminación: Los datos biométricos son eliminados de nuestros sistemas una vez cumplida la finalidad para la cual fueron recolectados, o cuando el usuario solicite su eliminación."
+          ]
+        },
+        {
+          "id": "international_transfer",
+          "heading": "Transferencia Internacional de Datos",
+          "summary": "Viax utiliza proveedores de servicios en la nube que pueden almacenar datos fuera de Colombia, siempre con medidas de protección adecuadas conforme a la Ley 1581 de 2012.",
+          "bullets": [
+            "Base legal: La transferencia internacional de datos se realiza conforme al artículo 26 de la Ley 1581 de 2012 y sus decretos reglamentarios, garantizando niveles adecuados de protección.",
+            "Proveedores: Viax utiliza servicios de Firebase (Google LLC) y Cloudflare, Inc., cuyos servidores pueden estar ubicados fuera de Colombia, en países que pueden incluir Estados Unidos y otras jurisdicciones donde estos proveedores operan.",
+            "Estándares de seguridad: Estos proveedores cumplen con estándares internacionales de seguridad de la información, incluyendo certificaciones ISO 27001, SOC 2 y el cumplimiento del GDPR.",
+            "Medidas de protección: Se implementan medidas técnicas y contractuales adecuadas para garantizar la protección de tus datos personales durante y después de la transferencia.",
+            "Finalidad: La transferencia se realiza únicamente para garantizar la prestación del servicio, la seguridad de la plataforma y el almacenamiento seguro de la información.",
+            "Consentimiento: Al aceptar esta política de privacidad, el usuario autoriza expresamente la transferencia internacional de sus datos personales a los proveedores indicados, conforme a lo dispuesto en la Ley 1581 de 2012."
+          ]
+        },
+        {
+          "id": "google_play_data_safety",
+          "heading": "Seguridad de Datos (Google Play)",
+          "summary": "Información sobre las prácticas de recolección, uso y seguridad de datos de Viax, conforme a los requisitos de transparencia de Google Play.",
+          "bullets": [
+            "Datos recolectados: Viax recolecta datos de ubicación (para asignación de viajes y navegación), datos de identificación personal (nombre, correo electrónico, número de teléfono para el registro y prestación del servicio) y datos de uso de la aplicación (para mejorar la experiencia y la seguridad).",
+            "Finalidad: Todos los datos recolectados se utilizan exclusivamente para la prestación del servicio de intermediación tecnológica, la seguridad de los usuarios y el cumplimiento de obligaciones legales.",
+            "No venta de datos: Viax NO vende datos personales de los usuarios a terceros bajo ninguna circunstancia.",
+            "Cifrado: Toda la información transmitida entre tu dispositivo y nuestros servidores está protegida mediante cifrado HTTPS/TLS.",
+            "Retención: Los datos personales se conservan mientras tu cuenta esté activa y durante el período adicional que la normativa vigente exija. Una vez eliminada la cuenta, solo se retienen los datos requeridos por obligación legal.",
+            "Eliminación: Puedes solicitar la eliminación de tus datos personales en cualquier momento desde la aplicación o enviando un correo a viaxoficialcol@gmail.com. Los datos serán eliminados conforme a lo establecido en la sección de Eliminación de Cuenta.",
+            "Compartición con terceros: Los datos personales solo se comparten con proveedores de infraestructura tecnológica (como Firebase de Google LLC y Cloudflare, Inc.) en calidad de encargados del tratamiento (data processors), exclusivamente para la operación, almacenamiento y seguridad del servicio. Estos terceros no están autorizados a usar los datos para fines propios, comerciales o publicitarios.",
+            "Seguridad avanzada: Los datos sensibles, incluyendo información financiera, son protegidos mediante cifrado fuerte (AES-256) y controles de acceso por roles en los sistemas internos.",
+            "Base legal del tratamiento: El tratamiento de datos personales se realiza con base en el consentimiento del usuario y en la necesidad de ejecutar la relación contractual derivada del uso de la plataforma.",
+            "Seguridad del usuario: Viax implementa medidas para prevenir accesos no autorizados, incluyendo validación de identidad, control de sesiones y monitoreo de actividad sospechosa."
+          ]
+        },
+        {
+          "id": "cookies_and_storage",
+          "heading": "Cookies y Almacenamiento Local",
+          "summary": "Información sobre el uso de cookies en el sitio web y el almacenamiento local en la aplicación móvil.",
+          "bullets": [
+            "Sitio web (Cookies): Utilizamos cookies estrictamente necesarias para el funcionamiento del sitio web, como la gestión de sesiones y preferencias de usuario.",
+            "Aplicación (almacenamiento local): La app almacena tokens de autenticación de forma segura en el dispositivo para mantener tu sesión activa. Al desinstalar la aplicación, estos datos se eliminan automáticamente.",
+            "No rastreo: No utilizamos cookies ni almacenamiento local para rastrear tu actividad fuera de la plataforma Viax."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "security_and_fraud",
+          "heading": "Seguridad y Prevención de Fraude",
+          "summary": "Viax implementa medidas de seguridad tecnológica para proteger a los usuarios y prevenir actividades fraudulentas en la plataforma.",
+          "bullets": [
+            "Cifrado: Todas las comunicaciones entre la aplicación y los servidores de Viax están protegidas mediante cifrado HTTPS/TLS. Los datos sensibles se almacenan de forma cifrada en los sistemas de la plataforma.",
+            "Monitoreo: Viax realiza monitoreo técnico de actividad sospechosa, incluyendo análisis de direcciones IP y patrones de uso, para detectar y prevenir conductas fraudulentas.",
+            "Responsabilidad de la cuenta: El usuario es responsable de mantener la confidencialidad de sus credenciales. Viax podrá considerar como válidas las acciones realizadas desde una cuenta autenticada, sin perjuicio del derecho del usuario a reportar accesos no autorizados.",
+            "Gestión de sesiones: Viax puede invalidar sesiones activas y restringir accesos concurrentes sospechosos para proteger la cuenta del usuario, conforme a la normativa vigente.",
+            "Medidas: Viax podrá suspender o cancelar cuentas cuando detecte actividades que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes."
+          ]
+        },
+        {
+          "id": "rights_privacy",
+          "heading": "Tus Derechos como Titular de Datos (Habeas Data)",
+          "summary": "Tienes derecho a conocer, actualizar, rectificar y solicitar la eliminación de tus datos personales en cualquier momento.",
+          "bullets": [
+            "Derechos: Conforme a la Ley 1581 de 2012, puedes ejercer tus derechos de acceso, actualización, rectificación, supresión y revocatoria del consentimiento sobre tus datos personales.",
+            "Canal: Para ejercer estos derechos, envía tu solicitud a viaxoficialcol@gmail.com indicando tu nombre completo, número de identificación y el derecho que deseas ejercer. Responderemos dentro de los plazos legales establecidos."
+          ]
+        },
+        {
+          "heading": "Eliminación de Cuenta",
+          "summary": "Puedes solicitar la eliminación de tu cuenta en cualquier momento. La eliminación de datos personales está sujeta a las obligaciones legales de retención aplicables.",
+          "bullets": [
+            "Solicitud: Puedes solicitar la eliminación de tu cuenta desde la aplicación o enviando un correo electrónico a viaxoficialcol@gmail.com con el asunto \"Eliminación de cuenta\".",
+            "Período de gracia: Durante los 15 días siguientes a tu solicitud, la cuenta quedará suspendida. Si inicias sesión durante este período, la solicitud se cancelará automáticamente.",
+            "Eliminación de datos: Una vez confirmada la eliminación, tus datos personales serán suprimidos de nuestros sistemas. En caso de no existir obligación legal de retención, la eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Retención legal: Conforme a la normativa vigente, Viax conservará únicamente los registros exigidos por obligaciones contables, fiscales o de seguridad por el plazo legal correspondiente, tras lo cual serán eliminados."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    }
+  },
+  "conductor": {
+    "terms": {
+      "title": "Términos y Condiciones - Conductor",
+      "intro": "Estos términos regulan el uso de la plataforma Viax por parte de los conductores afiliados y empresas de transporte que utilizan nuestra tecnología para recibir solicitudes de servicio.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "intermediation",
+          "heading": "Nuestra Función: Intermediación Tecnológica",
+          "summary": "Viax es una plataforma tecnológica que conecta a usuarios con conductores y empresas de transporte. No prestamos el servicio de transporte directamente.",
+          "bullets": [
+            "Naturaleza: Viax opera exclusivamente como plataforma de intermediación tecnológica entre usuarios y prestadores del servicio de transporte.",
+            "Alcance: No prestamos el servicio de transporte ni actuamos como empresa transportadora. La responsabilidad del transporte recae en el conductor y su empresa afiliada.",
+            "Independencia: Viax no establece relación laboral directa con los conductores o empresas. La naturaleza de la relación se rige por la legislación colombiana y las condiciones reales de prestación del servicio.",
+            "Limitación operativa: Viax no controla, dirige ni supervisa en tiempo real la prestación del servicio de transporte. La ejecución del servicio es responsabilidad exclusiva del conductor y la empresa de transporte.",
+            "Responsabilidad: Viax actúa como intermediario tecnológico, sin perjuicio de las obligaciones legales que le correspondan como plataforma tecnológica conforme a la legislación colombiana, incluyendo las disposiciones aplicables de protección al consumidor y tratamiento de datos personales."
+          ]
+        },
+        {
+          "id": "legal_framework",
+          "heading": "Marco Normativo",
+          "summary": "Tus derechos están protegidos bajo las leyes colombianas vigentes sobre protección de datos, comercio electrónico y derechos del consumidor.",
+          "bullets": [
+            "Datos Personales: Tratamos tu información conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.",
+            "Validez electrónica: Las firmas electrónicas, códigos OTP y aceptaciones digitales tienen plena validez jurídica conforme a la Ley 527 de 1999.",
+            "Consumidor: Se garantizan todos tus derechos como consumidor conforme a la Ley 1480 de 2011. Ninguna cláusula de estos términos limita tus derechos irrenunciables como consumidor."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "service_availability",
+          "heading": "Disponibilidad del Servicio y Precisión del GPS",
+          "summary": "Viax se esfuerza por mantener la plataforma disponible, pero no puede garantizar un funcionamiento ininterrumpido debido a factores externos.",
+          "bullets": [
+            "Disponibilidad: El servicio puede experimentar interrupciones temporales por mantenimiento, actualizaciones o factores ajenos a nuestro control, como fallas en redes de telecomunicaciones.",
+            "GPS: Las ubicaciones y rutas mostradas en la aplicación dependen de servicios de geolocalización de terceros (GPS), cuya precisión puede variar según las condiciones del dispositivo y la cobertura. Las imprecisiones del GPS no constituyen un incumplimiento por parte de Viax."
+          ]
+        },
+        {
+          "id": "driver_responsibility",
+          "heading": "Responsabilidades del Conductor",
+          "summary": "Como conductor registrado en Viax, te comprometes a cumplir con las normas de tránsito y a mantener tu documentación vigente.",
+          "bullets": [
+            "Afiliación: Debes estar vinculado a una empresa de transporte legalmente habilitada. No se admite el registro como conductor independiente sin empresa.",
+            "Documentación: Tu licencia de conducción, SOAT y revisión técnico-mecánica deben ser auténticos y estar vigentes.",
+            "Edad mínima: El uso de la plataforma está permitido únicamente para personas mayores de 18 años.",
+            "Autonomía: Tú defines tus propios horarios y tiempos de conexión. Viax no exige exclusividad ni establece relación de dependencia."
+          ]
+        },
+        {
+          "id": "payments",
+          "heading": "Pagos, Tarifas y Comisiones",
+          "summary": "El uso de la plataforma tecnológica implica costos y tarifas necesarios para su funcionamiento y mantenimiento.",
+          "bullets": [
+            "Usuario: El cliente paga el servicio según las tarifas mostradas en pantalla al momento de solicitar y finalizar el viaje.",
+            "Conductores: Viax cobra una comisión de intermediación sobre cada viaje completado. La morosidad reiterada podrá generar restricciones en la asignación de nuevos servicios.",
+            "Empresas: La conciliación financiera se realiza mediante comprobantes de depósito o sistema de saldos prepagados.",
+            "Impuestos: Las obligaciones tributarias derivadas de la actividad de transporte son responsabilidad del prestador del servicio (conductor y/o empresa), conforme a la normativa fiscal vigente."
+          ]
+        },
+        {
+          "heading": "Eliminación de Cuenta de Conductor",
+          "summary": "Puedes solicitar la eliminación de tu cuenta como conductor. Algunos registros se conservarán según lo exija la normativa vigente.",
+          "bullets": [
+            "Solicitud: Puedes iniciar el proceso desde la aplicación o enviando un correo electrónico a viaxoficialcol@gmail.com. El proceso tomará hasta 15 días hábiles.",
+            "Eliminación de datos: La eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Datos biométricos: Si se capturaron datos biométricos, su eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Retención legal: Se conservarán únicamente los registros de viajes e información financiera exigidos por las autoridades fiscales o de tránsito, conforme a la normativa aplicable."
+          ]
+        },
+        {
+          "id": "financial_limitation",
+          "heading": "Límites de Responsabilidad",
+          "summary": "Como intermediario tecnológico, la responsabilidad de Viax se limita conforme a la legislación aplicable, sin eximir el deber de diligencia propio de la plataforma.",
+          "bullets": [
+            "Intermediación: Viax actúa como intermediario tecnológico y no ejecuta directamente el servicio de transporte. La cobertura de daños derivados del transporte corresponde al SOAT y las pólizas del vehículo, conforme a la normativa vigente.",
+            "Deber de diligencia: Viax se compromete a actuar con la diligencia razonablemente esperada de una plataforma tecnológica, implementando las medidas de seguridad y verificación disponibles para proteger la integridad del servicio.",
+            "Responsabilidad indirecta: En caso de fallas atribuibles a la plataforma que generen perjuicios verificables, Viax responderá conforme a la legislación colombiana, limitándose a los daños directos y probados.",
+            "Disponibilidad: Las interrupciones temporales de la plataforma por causas técnicas ajenas al control razonable de Viax no generan responsabilidad por lucro cesante, salvo que se demuestre dolo o culpa grave.",
+            "Derechos del consumidor: Lo anterior se entiende sin perjuicio de los derechos irrenunciables del consumidor conforme a la Ley 1480 de 2011."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    },
+    "privacy": {
+      "title": "Política de Privacidad - Conductor",
+      "intro": "Esta política detalla cómo tratamos la información personal y de ubicación de los conductores registrados en la plataforma Viax.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "data_controller",
+          "heading": "Responsable del Tratamiento y Uso de Datos",
+          "summary": "VIAX TECHNOLOGY S.A.S. (NIT 902040253-1) es el responsable del tratamiento de tus datos personales y los protege conforme a la ley colombiana. No comercializamos tu información.",
+          "bullets": [
+            "VIAX TECHNOLOGY S.A.S., identificada con NIT 902040253-1, es el Responsable del Tratamiento de los datos personales recolectados a través de la aplicación y el sitio web.",
+            "Utilizamos tus datos únicamente con tu consentimiento previo y para las finalidades necesarias para la prestación del servicio.",
+            "La conservación de datos se limita al período estrictamente necesario según la finalidad del tratamiento o el plazo exigido por la normativa vigente."
+          ]
+        },
+        {
+          "id": "permissions_usage",
+          "heading": "Uso de Permisos del Dispositivo",
+          "summary": "Solicitamos ciertos permisos en tu dispositivo exclusivamente para que la aplicación funcione correctamente.",
+          "bullets": [
+            "Ubicación: Utilizada únicamente para la asignación de viajes, navegación de rutas y funciones de seguridad.",
+            "Cámara (si aplica): Para verificación de identidad del perfil o validación de documentos requeridos.",
+            "Almacenamiento (si aplica): Para guardar temporalmente comprobantes o archivos necesarios del servicio.",
+            "Estos permisos no se utilizan para fines publicitarios ni se comparten con terceros para tales fines.",
+            "Puedes revocar los permisos en cualquier momento desde la configuración de tu dispositivo, lo cual puede limitar algunas funcionalidades de la aplicación.",
+            "Superposición (overlay): Viax puede solicitar permiso para mostrar un elemento flotante sobre otras aplicaciones durante un viaje activo. Esta función permite al conductor gestionar el servicio sin salir de la aplicación en uso. Su activación es completamente opcional y solo se utiliza durante la ejecución de un viaje. No se utiliza para fines publicitarios ni para recolectar información sensible. No se utiliza para capturar información de otras aplicaciones ni para monitorear actividad fuera del contexto del servicio."
+          ]
+        },
+        {
+          "id": "biometry_consent",
+          "heading": "Datos Biométricos",
+          "summary": "Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012. Su uso en Viax es opcional, requiere tu consentimiento expreso e independiente, y se utiliza exclusivamente para fines de seguridad.",
+          "bullets": [
+            "Datos sensibles: Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012 y su tratamiento está sujeto a las garantías especiales previstas para este tipo de información.",
+            "Consentimiento: El uso de verificación biométrica (como reconocimiento facial) requiere tu autorización previa, expresa e informada, otorgada de forma independiente a la aceptación de estos términos.",
+            "Finalidad: Los datos biométricos se utilizan exclusivamente para fines de verificación de identidad, seguridad y prevención de fraude.",
+            "Almacenamiento: Los datos biométricos pueden ser procesados mediante servicios seguros de terceros o almacenados de forma cifrada. En ningún caso se utilizan para fines distintos a la verificación de identidad.",
+            "Carácter opcional: La verificación biométrica NO es obligatoria para utilizar la plataforma. Viax ofrece siempre métodos alternativos de verificación que no requieren datos biométricos.",
+            "No comercialización: Viax no comercializa, vende ni comparte datos biométricos con terceros bajo ninguna circunstancia.",
+            "Eliminación: Los datos biométricos son eliminados de nuestros sistemas una vez cumplida la finalidad para la cual fueron recolectados, o cuando el usuario solicite su eliminación."
+          ]
+        },
+        {
+          "id": "international_transfer",
+          "heading": "Transferencia Internacional de Datos",
+          "summary": "Viax utiliza proveedores de servicios en la nube que pueden almacenar datos fuera de Colombia, siempre con medidas de protección adecuadas conforme a la Ley 1581 de 2012.",
+          "bullets": [
+            "Base legal: La transferencia internacional de datos se realiza conforme al artículo 26 de la Ley 1581 de 2012 y sus decretos reglamentarios, garantizando niveles adecuados de protección.",
+            "Proveedores: Viax utiliza servicios de Firebase (Google LLC) y Cloudflare, Inc., cuyos servidores pueden estar ubicados fuera de Colombia, en países que pueden incluir Estados Unidos y otras jurisdicciones donde estos proveedores operan.",
+            "Estándares de seguridad: Estos proveedores cumplen con estándares internacionales de seguridad de la información, incluyendo certificaciones ISO 27001, SOC 2 y el cumplimiento del GDPR.",
+            "Medidas de protección: Se implementan medidas técnicas y contractuales adecuadas para garantizar la protección de tus datos personales durante y después de la transferencia.",
+            "Finalidad: La transferencia se realiza únicamente para garantizar la prestación del servicio, la seguridad de la plataforma y el almacenamiento seguro de la información.",
+            "Consentimiento: Al aceptar esta política de privacidad, el usuario autoriza expresamente la transferencia internacional de sus datos personales a los proveedores indicados, conforme a lo dispuesto en la Ley 1581 de 2012."
+          ]
+        },
+        {
+          "id": "google_play_data_safety",
+          "heading": "Seguridad de Datos (Google Play)",
+          "summary": "Información sobre las prácticas de recolección, uso y seguridad de datos de Viax, conforme a los requisitos de transparencia de Google Play.",
+          "bullets": [
+            "Datos recolectados: Viax recolecta datos de ubicación (para asignación de viajes y navegación), datos de identificación personal (nombre, correo electrónico, número de teléfono para el registro y prestación del servicio) y datos de uso de la aplicación (para mejorar la experiencia y la seguridad).",
+            "Finalidad: Todos los datos recolectados se utilizan exclusivamente para la prestación del servicio de intermediación tecnológica, la seguridad de los usuarios y el cumplimiento de obligaciones legales.",
+            "No venta de datos: Viax NO vende datos personales de los usuarios a terceros bajo ninguna circunstancia.",
+            "Cifrado: Toda la información transmitida entre tu dispositivo y nuestros servidores está protegida mediante cifrado HTTPS/TLS.",
+            "Retención: Los datos personales se conservan mientras tu cuenta esté activa y durante el período adicional que la normativa vigente exija. Una vez eliminada la cuenta, solo se retienen los datos requeridos por obligación legal.",
+            "Eliminación: Puedes solicitar la eliminación de tus datos personales en cualquier momento desde la aplicación o enviando un correo a viaxoficialcol@gmail.com. Los datos serán eliminados conforme a lo establecido en la sección de Eliminación de Cuenta.",
+            "Compartición con terceros: Los datos personales solo se comparten con proveedores de infraestructura tecnológica (como Firebase de Google LLC y Cloudflare, Inc.) en calidad de encargados del tratamiento (data processors), exclusivamente para la operación, almacenamiento y seguridad del servicio. Estos terceros no están autorizados a usar los datos para fines propios, comerciales o publicitarios.",
+            "Seguridad avanzada: Los datos sensibles, incluyendo información financiera, son protegidos mediante cifrado fuerte (AES-256) y controles de acceso por roles en los sistemas internos.",
+            "Base legal del tratamiento: El tratamiento de datos personales se realiza con base en el consentimiento del usuario y en la necesidad de ejecutar la relación contractual derivada del uso de la plataforma.",
+            "Seguridad del usuario: Viax implementa medidas para prevenir accesos no autorizados, incluyendo validación de identidad, control de sesiones y monitoreo de actividad sospechosa."
+          ]
+        },
+        {
+          "id": "cookies_and_storage",
+          "heading": "Cookies y Almacenamiento Local",
+          "summary": "Información sobre el uso de cookies en el sitio web y el almacenamiento local en la aplicación móvil.",
+          "bullets": [
+            "Sitio web (Cookies): Utilizamos cookies estrictamente necesarias para el funcionamiento del sitio web, como la gestión de sesiones y preferencias de usuario.",
+            "Aplicación (almacenamiento local): La app almacena tokens de autenticación de forma segura en el dispositivo para mantener tu sesión activa. Al desinstalar la aplicación, estos datos se eliminan automáticamente.",
+            "No rastreo: No utilizamos cookies ni almacenamiento local para rastrear tu actividad fuera de la plataforma Viax."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "security_and_fraud",
+          "heading": "Seguridad y Prevención de Fraude",
+          "summary": "Viax implementa medidas de seguridad tecnológica para proteger a los usuarios y prevenir actividades fraudulentas en la plataforma.",
+          "bullets": [
+            "Cifrado: Todas las comunicaciones entre la aplicación y los servidores de Viax están protegidas mediante cifrado HTTPS/TLS. Los datos sensibles se almacenan de forma cifrada en los sistemas de la plataforma.",
+            "Monitoreo: Viax realiza monitoreo técnico de actividad sospechosa, incluyendo análisis de direcciones IP y patrones de uso, para detectar y prevenir conductas fraudulentas.",
+            "Responsabilidad de la cuenta: El usuario es responsable de mantener la confidencialidad de sus credenciales. Viax podrá considerar como válidas las acciones realizadas desde una cuenta autenticada, sin perjuicio del derecho del usuario a reportar accesos no autorizados.",
+            "Gestión de sesiones: Viax puede invalidar sesiones activas y restringir accesos concurrentes sospechosos para proteger la cuenta del usuario, conforme a la normativa vigente.",
+            "Medidas: Viax podrá suspender o cancelar cuentas cuando detecte actividades que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes.",
+            "Uso contextual de funciones: Funcionalidades como la superposición en pantalla (overlay) se activan únicamente en contextos específicos del servicio, como viajes activos, y nunca de forma permanente o invasiva."
+          ]
+        },
+        {
+          "id": "rights_privacy",
+          "heading": "Tus Derechos como Titular de Datos (Habeas Data)",
+          "summary": "Tienes derecho a conocer, actualizar, rectificar y solicitar la eliminación de tus datos personales en cualquier momento.",
+          "bullets": [
+            "Derechos: Conforme a la Ley 1581 de 2012, puedes ejercer tus derechos de acceso, actualización, rectificación, supresión y revocatoria del consentimiento sobre tus datos personales.",
+            "Canal: Para ejercer estos derechos, envía tu solicitud a viaxoficialcol@gmail.com indicando tu nombre completo, número de identificación y el derecho que deseas ejercer. Responderemos dentro de los plazos legales establecidos."
+          ]
+        },
+        {
+          "heading": "Eliminación de Cuenta de Conductor",
+          "summary": "Puedes solicitar la eliminación de tu cuenta como conductor. Algunos registros se conservarán según lo exija la normativa vigente.",
+          "bullets": [
+            "Solicitud: Puedes iniciar el proceso desde la aplicación o enviando un correo electrónico a viaxoficialcol@gmail.com. El proceso tomará hasta 15 días hábiles.",
+            "Eliminación de datos: La eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Datos biométricos: Si se capturaron datos biométricos, su eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Retención legal: Se conservarán únicamente los registros de viajes e información financiera exigidos por las autoridades fiscales o de tránsito, conforme a la normativa aplicable."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    }
+  },
+  "empresa": {
+    "terms": {
+      "title": "Términos y Condiciones - Empresa de Transporte",
+      "intro": "Estos términos están dirigidos a las personas jurídicas y empresas de transporte que administran flotas de vehículos a través de la plataforma Viax.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "intermediation",
+          "heading": "Nuestra Función: Intermediación Tecnológica",
+          "summary": "Viax es una plataforma tecnológica que conecta a usuarios con conductores y empresas de transporte. No prestamos el servicio de transporte directamente.",
+          "bullets": [
+            "Naturaleza: Viax opera exclusivamente como plataforma de intermediación tecnológica entre usuarios y prestadores del servicio de transporte.",
+            "Alcance: No prestamos el servicio de transporte ni actuamos como empresa transportadora. La responsabilidad del transporte recae en el conductor y su empresa afiliada.",
+            "Independencia: Viax no establece relación laboral directa con los conductores o empresas. La naturaleza de la relación se rige por la legislación colombiana y las condiciones reales de prestación del servicio.",
+            "Limitación operativa: Viax no controla, dirige ni supervisa en tiempo real la prestación del servicio de transporte. La ejecución del servicio es responsabilidad exclusiva del conductor y la empresa de transporte.",
+            "Responsabilidad: Viax actúa como intermediario tecnológico, sin perjuicio de las obligaciones legales que le correspondan como plataforma tecnológica conforme a la legislación colombiana, incluyendo las disposiciones aplicables de protección al consumidor y tratamiento de datos personales."
+          ]
+        },
+        {
+          "id": "legal_framework",
+          "heading": "Marco Normativo",
+          "summary": "Tus derechos están protegidos bajo las leyes colombianas vigentes sobre protección de datos, comercio electrónico y derechos del consumidor.",
+          "bullets": [
+            "Datos Personales: Tratamos tu información conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.",
+            "Validez electrónica: Las firmas electrónicas, códigos OTP y aceptaciones digitales tienen plena validez jurídica conforme a la Ley 527 de 1999.",
+            "Consumidor: Se garantizan todos tus derechos como consumidor conforme a la Ley 1480 de 2011. Ninguna cláusula de estos términos limita tus derechos irrenunciables como consumidor."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "service_availability",
+          "heading": "Disponibilidad del Servicio y Precisión del GPS",
+          "summary": "Viax se esfuerza por mantener la plataforma disponible, pero no puede garantizar un funcionamiento ininterrumpido debido a factores externos.",
+          "bullets": [
+            "Disponibilidad: El servicio puede experimentar interrupciones temporales por mantenimiento, actualizaciones o factores ajenos a nuestro control, como fallas en redes de telecomunicaciones.",
+            "GPS: Las ubicaciones y rutas mostradas en la aplicación dependen de servicios de geolocalización de terceros (GPS), cuya precisión puede variar según las condiciones del dispositivo y la cobertura. Las imprecisiones del GPS no constituyen un incumplimiento por parte de Viax."
+          ]
+        },
+        {
+          "id": "enterprise_responsibility",
+          "heading": "Responsabilidades de la Empresa",
+          "summary": "La empresa registrada es responsable ante la ley por la idoneidad de sus vehículos y la conducta de sus conductores afiliados.",
+          "bullets": [
+            "Garante: La empresa es responsable de verificar la idoneidad de los vehículos y la documentación de los conductores vinculados a su flota.",
+            "Edad mínima: El uso de la plataforma está permitido únicamente para personas mayores de 18 años.",
+            "Obligaciones legales: Asumes la responsabilidad sobre el cumplimiento de las obligaciones tributarias, laborales y de seguridad social de tu operación de transporte."
+          ]
+        },
+        {
+          "id": "payments",
+          "heading": "Pagos, Tarifas y Comisiones",
+          "summary": "El uso de la plataforma tecnológica implica costos y tarifas necesarios para su funcionamiento y mantenimiento.",
+          "bullets": [
+            "Usuario: El cliente paga el servicio según las tarifas mostradas en pantalla al momento de solicitar y finalizar el viaje.",
+            "Conductores: Viax cobra una comisión de intermediación sobre cada viaje completado. La morosidad reiterada podrá generar restricciones en la asignación de nuevos servicios.",
+            "Empresas: La conciliación financiera se realiza mediante comprobantes de depósito o sistema de saldos prepagados.",
+            "Impuestos: Las obligaciones tributarias derivadas de la actividad de transporte son responsabilidad del prestador del servicio (conductor y/o empresa), conforme a la normativa fiscal vigente."
+          ]
+        },
+        {
+          "heading": "Desvinculación de la Empresa",
+          "summary": "La empresa puede solicitar su desvinculación de la plataforma a través de los canales autorizados.",
+          "bullets": [
+            "Solicitud formal: La desvinculación debe ser solicitada por el representante legal o administrador autorizado de la empresa, a través de la plataforma o del correo viaxoficialcol@gmail.com.",
+            "Eliminación de datos: La eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Saldos pendientes: Cualquier saldo pendiente de pago será liquidado antes de completar la desvinculación."
+          ]
+        },
+        {
+          "id": "financial_limitation",
+          "heading": "Límites de Responsabilidad",
+          "summary": "Como intermediario tecnológico, la responsabilidad de Viax se limita conforme a la legislación aplicable, sin eximir el deber de diligencia propio de la plataforma.",
+          "bullets": [
+            "Intermediación: Viax actúa como intermediario tecnológico y no ejecuta directamente el servicio de transporte. La cobertura de daños derivados del transporte corresponde al SOAT y las pólizas del vehículo, conforme a la normativa vigente.",
+            "Deber de diligencia: Viax se compromete a actuar con la diligencia razonablemente esperada de una plataforma tecnológica, implementando las medidas de seguridad y verificación disponibles para proteger la integridad del servicio.",
+            "Responsabilidad indirecta: En caso de fallas atribuibles a la plataforma que generen perjuicios verificables, Viax responderá conforme a la legislación colombiana, limitándose a los daños directos y probados.",
+            "Disponibilidad: Las interrupciones temporales de la plataforma por causas técnicas ajenas al control razonable de Viax no generan responsabilidad por lucro cesante, salvo que se demuestre dolo o culpa grave.",
+            "Derechos del consumidor: Lo anterior se entiende sin perjuicio de los derechos irrenunciables del consumidor conforme a la Ley 1480 de 2011."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    },
+    "privacy": {
+      "title": "Política de Privacidad - Empresa",
+      "intro": "Esta política describe el tratamiento de datos de las empresas registradas en Viax, incluyendo la información de sus conductores y operaciones.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "data_controller",
+          "heading": "Responsable del Tratamiento y Uso de Datos",
+          "summary": "VIAX TECHNOLOGY S.A.S. (NIT 902040253-1) es el responsable del tratamiento de tus datos personales y los protege conforme a la ley colombiana. No comercializamos tu información.",
+          "bullets": [
+            "VIAX TECHNOLOGY S.A.S., identificada con NIT 902040253-1, es el Responsable del Tratamiento de los datos personales recolectados a través de la aplicación y el sitio web.",
+            "Utilizamos tus datos únicamente con tu consentimiento previo y para las finalidades necesarias para la prestación del servicio.",
+            "La conservación de datos se limita al período estrictamente necesario según la finalidad del tratamiento o el plazo exigido por la normativa vigente."
+          ]
+        },
+        {
+          "id": "permissions_usage",
+          "heading": "Uso de Permisos del Dispositivo",
+          "summary": "Solicitamos ciertos permisos en tu dispositivo exclusivamente para que la aplicación funcione correctamente.",
+          "bullets": [
+            "Ubicación: Utilizada únicamente para la asignación de viajes, navegación de rutas y funciones de seguridad.",
+            "Cámara (si aplica): Para verificación de identidad del perfil o validación de documentos requeridos.",
+            "Almacenamiento (si aplica): Para guardar temporalmente comprobantes o archivos necesarios del servicio.",
+            "Estos permisos no se utilizan para fines publicitarios ni se comparten con terceros para tales fines.",
+            "Puedes revocar los permisos en cualquier momento desde la configuración de tu dispositivo, lo cual puede limitar algunas funcionalidades de la aplicación."
+          ]
+        },
+        {
+          "id": "biometry_consent",
+          "heading": "Datos Biométricos",
+          "summary": "Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012. Su uso en Viax es opcional, requiere tu consentimiento expreso e independiente, y se utiliza exclusivamente para fines de seguridad.",
+          "bullets": [
+            "Datos sensibles: Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012 y su tratamiento está sujeto a las garantías especiales previstas para este tipo de información.",
+            "Consentimiento: El uso de verificación biométrica (como reconocimiento facial) requiere tu autorización previa, expresa e informada, otorgada de forma independiente a la aceptación de estos términos.",
+            "Finalidad: Los datos biométricos se utilizan exclusivamente para fines de verificación de identidad, seguridad y prevención de fraude.",
+            "Almacenamiento: Los datos biométricos pueden ser procesados mediante servicios seguros de terceros o almacenados de forma cifrada. En ningún caso se utilizan para fines distintos a la verificación de identidad.",
+            "Carácter opcional: La verificación biométrica NO es obligatoria para utilizar la plataforma. Viax ofrece siempre métodos alternativos de verificación que no requieren datos biométricos.",
+            "No comercialización: Viax no comercializa, vende ni comparte datos biométricos con terceros bajo ninguna circunstancia.",
+            "Eliminación: Los datos biométricos son eliminados de nuestros sistemas una vez cumplida la finalidad para la cual fueron recolectados, o cuando el usuario solicite su eliminación."
+          ]
+        },
+        {
+          "id": "international_transfer",
+          "heading": "Transferencia Internacional de Datos",
+          "summary": "Viax utiliza proveedores de servicios en la nube que pueden almacenar datos fuera de Colombia, siempre con medidas de protección adecuadas conforme a la Ley 1581 de 2012.",
+          "bullets": [
+            "Base legal: La transferencia internacional de datos se realiza conforme al artículo 26 de la Ley 1581 de 2012 y sus decretos reglamentarios, garantizando niveles adecuados de protección.",
+            "Proveedores: Viax utiliza servicios de Firebase (Google LLC) y Cloudflare, Inc., cuyos servidores pueden estar ubicados fuera de Colombia, en países que pueden incluir Estados Unidos y otras jurisdicciones donde estos proveedores operan.",
+            "Estándares de seguridad: Estos proveedores cumplen con estándares internacionales de seguridad de la información, incluyendo certificaciones ISO 27001, SOC 2 y el cumplimiento del GDPR.",
+            "Medidas de protección: Se implementan medidas técnicas y contractuales adecuadas para garantizar la protección de tus datos personales durante y después de la transferencia.",
+            "Finalidad: La transferencia se realiza únicamente para garantizar la prestación del servicio, la seguridad de la plataforma y el almacenamiento seguro de la información.",
+            "Consentimiento: Al aceptar esta política de privacidad, el usuario autoriza expresamente la transferencia internacional de sus datos personales a los proveedores indicados, conforme a lo dispuesto en la Ley 1581 de 2012."
+          ]
+        },
+        {
+          "id": "google_play_data_safety",
+          "heading": "Seguridad de Datos (Google Play)",
+          "summary": "Información sobre las prácticas de recolección, uso y seguridad de datos de Viax, conforme a los requisitos de transparencia de Google Play.",
+          "bullets": [
+            "Datos recolectados: Viax recolecta datos de ubicación (para asignación de viajes y navegación), datos de identificación personal (nombre, correo electrónico, número de teléfono para el registro y prestación del servicio) y datos de uso de la aplicación (para mejorar la experiencia y la seguridad).",
+            "Finalidad: Todos los datos recolectados se utilizan exclusivamente para la prestación del servicio de intermediación tecnológica, la seguridad de los usuarios y el cumplimiento de obligaciones legales.",
+            "No venta de datos: Viax NO vende datos personales de los usuarios a terceros bajo ninguna circunstancia.",
+            "Cifrado: Toda la información transmitida entre tu dispositivo y nuestros servidores está protegida mediante cifrado HTTPS/TLS.",
+            "Retención: Los datos personales se conservan mientras tu cuenta esté activa y durante el período adicional que la normativa vigente exija. Una vez eliminada la cuenta, solo se retienen los datos requeridos por obligación legal.",
+            "Eliminación: Puedes solicitar la eliminación de tus datos personales en cualquier momento desde la aplicación o enviando un correo a viaxoficialcol@gmail.com. Los datos serán eliminados conforme a lo establecido en la sección de Eliminación de Cuenta.",
+            "Compartición con terceros: Los datos personales solo se comparten con proveedores de infraestructura tecnológica (como Firebase de Google LLC y Cloudflare, Inc.) en calidad de encargados del tratamiento (data processors), exclusivamente para la operación, almacenamiento y seguridad del servicio. Estos terceros no están autorizados a usar los datos para fines propios, comerciales o publicitarios.",
+            "Seguridad avanzada: Los datos sensibles, incluyendo información financiera, son protegidos mediante cifrado fuerte (AES-256) y controles de acceso por roles en los sistemas internos.",
+            "Base legal del tratamiento: El tratamiento de datos personales se realiza con base en el consentimiento del usuario y en la necesidad de ejecutar la relación contractual derivada del uso de la plataforma.",
+            "Seguridad del usuario: Viax implementa medidas para prevenir accesos no autorizados, incluyendo validación de identidad, control de sesiones y monitoreo de actividad sospechosa."
+          ]
+        },
+        {
+          "id": "cookies_and_storage",
+          "heading": "Cookies y Almacenamiento Local",
+          "summary": "Información sobre el uso de cookies en el sitio web y el almacenamiento local en la aplicación móvil.",
+          "bullets": [
+            "Sitio web (Cookies): Utilizamos cookies estrictamente necesarias para el funcionamiento del sitio web, como la gestión de sesiones y preferencias de usuario.",
+            "Aplicación (almacenamiento local): La app almacena tokens de autenticación de forma segura en el dispositivo para mantener tu sesión activa. Al desinstalar la aplicación, estos datos se eliminan automáticamente.",
+            "No rastreo: No utilizamos cookies ni almacenamiento local para rastrear tu actividad fuera de la plataforma Viax."
+          ]
+        },
+        {
+          "id": "chat_and_ugc",
+          "heading": "Chat y Contenido Generado por Usuarios",
+          "summary": "Viax ofrece un sistema de chat interno entre pasajeros y conductores durante el servicio. La plataforma cuenta con herramientas de moderación para garantizar un entorno seguro.",
+          "bullets": [
+            "Reportar: Los usuarios pueden reportar contenido o conductas inapropiadas directamente desde la aplicación. Cada reporte será revisado por el equipo de Viax.",
+            "Bloquear: Los usuarios pueden bloquear a otros usuarios para evitar comunicaciones no deseadas durante y después del servicio.",
+            "Moderación: Viax podrá revisar, moderar y tomar acciones sobre el contenido generado por los usuarios cuando se presenten reportes o se detecten posibles infracciones a estas políticas.",
+            "Acciones: En caso de incumplimiento verificado, Viax podrá aplicar medidas que incluyen advertencias, suspensión temporal, eliminación de contenido o cancelación definitiva de la cuenta.",
+            "Privacidad del chat: Los mensajes del chat son confidenciales y solo serán revisados por Viax en caso de reporte, disputa entre usuarios u orden de autoridad competente."
+          ]
+        },
+        {
+          "id": "security_and_fraud",
+          "heading": "Seguridad y Prevención de Fraude",
+          "summary": "Viax implementa medidas de seguridad tecnológica para proteger a los usuarios y prevenir actividades fraudulentas en la plataforma.",
+          "bullets": [
+            "Cifrado: Todas las comunicaciones entre la aplicación y los servidores de Viax están protegidas mediante cifrado HTTPS/TLS. Los datos sensibles se almacenan de forma cifrada en los sistemas de la plataforma.",
+            "Monitoreo: Viax realiza monitoreo técnico de actividad sospechosa, incluyendo análisis de direcciones IP y patrones de uso, para detectar y prevenir conductas fraudulentas.",
+            "Responsabilidad de la cuenta: El usuario es responsable de mantener la confidencialidad de sus credenciales. Viax podrá considerar como válidas las acciones realizadas desde una cuenta autenticada, sin perjuicio del derecho del usuario a reportar accesos no autorizados.",
+            "Gestión de sesiones: Viax puede invalidar sesiones activas y restringir accesos concurrentes sospechosos para proteger la cuenta del usuario, conforme a la normativa vigente.",
+            "Medidas: Viax podrá suspender o cancelar cuentas cuando detecte actividades que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes."
+          ]
+        },
+        {
+          "id": "rights_privacy",
+          "heading": "Tus Derechos como Titular de Datos (Habeas Data)",
+          "summary": "Tienes derecho a conocer, actualizar, rectificar y solicitar la eliminación de tus datos personales en cualquier momento.",
+          "bullets": [
+            "Derechos: Conforme a la Ley 1581 de 2012, puedes ejercer tus derechos de acceso, actualización, rectificación, supresión y revocatoria del consentimiento sobre tus datos personales.",
+            "Canal: Para ejercer estos derechos, envía tu solicitud a viaxoficialcol@gmail.com indicando tu nombre completo, número de identificación y el derecho que deseas ejercer. Responderemos dentro de los plazos legales establecidos."
+          ]
+        },
+        {
+          "heading": "Desvinculación de la Empresa",
+          "summary": "La empresa puede solicitar su desvinculación de la plataforma a través de los canales autorizados.",
+          "bullets": [
+            "Solicitud formal: La desvinculación debe ser solicitada por el representante legal o administrador autorizado de la empresa, a través de la plataforma o del correo viaxoficialcol@gmail.com.",
+            "Eliminación de datos: La eliminación podrá realizarse en el menor tiempo posible, sujeta a validaciones técnicas y obligaciones legales aplicables.",
+            "Saldos pendientes: Cualquier saldo pendiente de pago será liquidado antes de completar la desvinculación."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    }
+  },
+  "administrador": {
+    "terms": {
+      "title": "Términos de Uso - Panel de Administración",
+      "intro": "Estos términos regulan el acceso y uso del panel de administración de Viax por parte del personal autorizado. Todo acceso está sujeto a confidencialidad y auditoría.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "legal_framework",
+          "heading": "Marco Normativo",
+          "summary": "Tus derechos están protegidos bajo las leyes colombianas vigentes sobre protección de datos, comercio electrónico y derechos del consumidor.",
+          "bullets": [
+            "Datos Personales: Tratamos tu información conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.",
+            "Validez electrónica: Las firmas electrónicas, códigos OTP y aceptaciones digitales tienen plena validez jurídica conforme a la Ley 527 de 1999.",
+            "Consumidor: Se garantizan todos tus derechos como consumidor conforme a la Ley 1480 de 2011. Ninguna cláusula de estos términos limita tus derechos irrenunciables como consumidor."
+          ]
+        },
+        {
+          "id": "admin_responsibility",
+          "heading": "Confidencialidad y Secreto Comercial",
+          "summary": "Los administradores del sistema están sujetos a estrictas políticas de confidencialidad para proteger la información de la plataforma y sus usuarios.",
+          "bullets": [
+            "Confidencialidad: El acceso a la información del sistema es exclusivamente funcional. La extracción no autorizada de datos está prohibida y puede generar responsabilidad legal.",
+            "Auditoría: Todo acceso y operación realizada en el panel de administración queda registrado. Se realizarán auditorías periódicas para verificar el uso adecuado del sistema."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    },
+    "privacy": {
+      "title": "Política de Privacidad y Auditoría - Administrador",
+      "intro": "Toda operación realizada en el panel de administración es registrada en un sistema de auditoría para garantizar la transparencia y seguridad de la plataforma.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "data_controller",
+          "heading": "Responsable del Tratamiento y Uso de Datos",
+          "summary": "VIAX TECHNOLOGY S.A.S. (NIT 902040253-1) es el responsable del tratamiento de tus datos personales y los protege conforme a la ley colombiana. No comercializamos tu información.",
+          "bullets": [
+            "VIAX TECHNOLOGY S.A.S., identificada con NIT 902040253-1, es el Responsable del Tratamiento de los datos personales recolectados a través de la aplicación y el sitio web.",
+            "Utilizamos tus datos únicamente con tu consentimiento previo y para las finalidades necesarias para la prestación del servicio.",
+            "La conservación de datos se limita al período estrictamente necesario según la finalidad del tratamiento o el plazo exigido por la normativa vigente."
+          ]
+        },
+        {
+          "id": "permissions_usage",
+          "heading": "Uso de Permisos del Dispositivo",
+          "summary": "Solicitamos ciertos permisos en tu dispositivo exclusivamente para que la aplicación funcione correctamente.",
+          "bullets": [
+            "Ubicación: Utilizada únicamente para la asignación de viajes, navegación de rutas y funciones de seguridad.",
+            "Cámara (si aplica): Para verificación de identidad del perfil o validación de documentos requeridos.",
+            "Almacenamiento (si aplica): Para guardar temporalmente comprobantes o archivos necesarios del servicio.",
+            "Estos permisos no se utilizan para fines publicitarios ni se comparten con terceros para tales fines.",
+            "Puedes revocar los permisos en cualquier momento desde la configuración de tu dispositivo, lo cual puede limitar algunas funcionalidades de la aplicación."
+          ]
+        },
+        {
+          "id": "biometry_consent",
+          "heading": "Datos Biométricos",
+          "summary": "Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012. Su uso en Viax es opcional, requiere tu consentimiento expreso e independiente, y se utiliza exclusivamente para fines de seguridad.",
+          "bullets": [
+            "Datos sensibles: Los datos biométricos son considerados datos sensibles conforme a la Ley 1581 de 2012 y su tratamiento está sujeto a las garantías especiales previstas para este tipo de información.",
+            "Consentimiento: El uso de verificación biométrica (como reconocimiento facial) requiere tu autorización previa, expresa e informada, otorgada de forma independiente a la aceptación de estos términos.",
+            "Finalidad: Los datos biométricos se utilizan exclusivamente para fines de verificación de identidad, seguridad y prevención de fraude.",
+            "Almacenamiento: Los datos biométricos pueden ser procesados mediante servicios seguros de terceros o almacenados de forma cifrada. En ningún caso se utilizan para fines distintos a la verificación de identidad.",
+            "Carácter opcional: La verificación biométrica NO es obligatoria para utilizar la plataforma. Viax ofrece siempre métodos alternativos de verificación que no requieren datos biométricos.",
+            "No comercialización: Viax no comercializa, vende ni comparte datos biométricos con terceros bajo ninguna circunstancia.",
+            "Eliminación: Los datos biométricos son eliminados de nuestros sistemas una vez cumplida la finalidad para la cual fueron recolectados, o cuando el usuario solicite su eliminación."
+          ]
+        },
+        {
+          "id": "international_transfer",
+          "heading": "Transferencia Internacional de Datos",
+          "summary": "Viax utiliza proveedores de servicios en la nube que pueden almacenar datos fuera de Colombia, siempre con medidas de protección adecuadas conforme a la Ley 1581 de 2012.",
+          "bullets": [
+            "Base legal: La transferencia internacional de datos se realiza conforme al artículo 26 de la Ley 1581 de 2012 y sus decretos reglamentarios, garantizando niveles adecuados de protección.",
+            "Proveedores: Viax utiliza servicios de Firebase (Google LLC) y Cloudflare, Inc., cuyos servidores pueden estar ubicados fuera de Colombia, en países que pueden incluir Estados Unidos y otras jurisdicciones donde estos proveedores operan.",
+            "Estándares de seguridad: Estos proveedores cumplen con estándares internacionales de seguridad de la información, incluyendo certificaciones ISO 27001, SOC 2 y el cumplimiento del GDPR.",
+            "Medidas de protección: Se implementan medidas técnicas y contractuales adecuadas para garantizar la protección de tus datos personales durante y después de la transferencia.",
+            "Finalidad: La transferencia se realiza únicamente para garantizar la prestación del servicio, la seguridad de la plataforma y el almacenamiento seguro de la información.",
+            "Consentimiento: Al aceptar esta política de privacidad, el usuario autoriza expresamente la transferencia internacional de sus datos personales a los proveedores indicados, conforme a lo dispuesto en la Ley 1581 de 2012."
+          ]
+        },
+        {
+          "id": "security_and_fraud",
+          "heading": "Seguridad y Prevención de Fraude",
+          "summary": "Viax implementa medidas de seguridad tecnológica para proteger a los usuarios y prevenir actividades fraudulentas en la plataforma.",
+          "bullets": [
+            "Cifrado: Todas las comunicaciones entre la aplicación y los servidores de Viax están protegidas mediante cifrado HTTPS/TLS. Los datos sensibles se almacenan de forma cifrada en los sistemas de la plataforma.",
+            "Monitoreo: Viax realiza monitoreo técnico de actividad sospechosa, incluyendo análisis de direcciones IP y patrones de uso, para detectar y prevenir conductas fraudulentas.",
+            "Responsabilidad de la cuenta: El usuario es responsable de mantener la confidencialidad de sus credenciales. Viax podrá considerar como válidas las acciones realizadas desde una cuenta autenticada, sin perjuicio del derecho del usuario a reportar accesos no autorizados.",
+            "Gestión de sesiones: Viax puede invalidar sesiones activas y restringir accesos concurrentes sospechosos para proteger la cuenta del usuario, conforme a la normativa vigente.",
+            "Medidas: Viax podrá suspender o cancelar cuentas cuando detecte actividades que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes."
+          ]
+        },
+        {
+          "id": "admin_security",
+          "heading": "Auditoría de Administradores",
+          "summary": "Todas las operaciones realizadas por los administradores de la plataforma quedan registradas en un log de auditoría inmutable.",
+          "bullets": [
+            "Registro de actividad: Cada acción realizada por un administrador sobre cuentas, valores o configuraciones del sistema queda registrada con fecha, hora y usuario responsable."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    }
+  },
+  "servidor": {
+    "terms": {
+      "title": "Términos de Uso - API y Conexiones Externas",
+      "intro": "Estas políticas regulan el comportamiento de integraciones, bots y conexiones automatizadas que interactúan con los servicios de la plataforma Viax.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "legal_framework",
+          "heading": "Marco Normativo",
+          "summary": "Tus derechos están protegidos bajo las leyes colombianas vigentes sobre protección de datos, comercio electrónico y derechos del consumidor.",
+          "bullets": [
+            "Datos Personales: Tratamos tu información conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.",
+            "Validez electrónica: Las firmas electrónicas, códigos OTP y aceptaciones digitales tienen plena validez jurídica conforme a la Ley 527 de 1999.",
+            "Consumidor: Se garantizan todos tus derechos como consumidor conforme a la Ley 1480 de 2011. Ninguna cláusula de estos términos limita tus derechos irrenunciables como consumidor."
+          ]
+        },
+        {
+          "id": "server_responsibility",
+          "heading": "Reglas para Conexiones Externas (APIs)",
+          "summary": "Medidas de seguridad para regular el tráfico automatizado y proteger la estabilidad de la plataforma.",
+          "bullets": [
+            "Restricciones: Se aplicarán bloqueos automáticos a conexiones que realicen solicitudes masivas, extracción de datos o cualquier actividad que comprometa la estabilidad del servicio."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    },
+    "privacy": {
+      "title": "Política de Seguridad - Infraestructura y Telemetría",
+      "intro": "Esta política describe las medidas de seguridad aplicadas a las conexiones externas y el tráfico automatizado sobre la infraestructura de Viax.",
+      "meta": "Última actualización: 21 de marzo de 2026",
+      "sections": [
+        {
+          "id": "company_identification",
+          "heading": "Identificación de la Empresa",
+          "summary": "Datos de identificación de la entidad responsable de la plataforma tecnológica Viax.",
+          "bullets": [
+            "Razón social: VIAX TECHNOLOGY S.A.S.",
+            "NIT: 902040253-1.",
+            "País de constitución: República de Colombia.",
+            "Domicilio: Bogotá D.C., Colombia.",
+            "Contacto y canal oficial: viaxoficialcol@gmail.com. Este correo es el canal oficial para notificaciones, solicitudes legales, PQR y comunicaciones formales relacionadas con la plataforma.",
+            "Publicación en tienda: La aplicación puede ser publicada en plataformas digitales a través de cuentas de desarrollador administradas por representantes autorizados, sin que ello afecte la titularidad de la plataforma, la cual pertenece exclusivamente a VIAX TECHNOLOGY S.A.S."
+          ]
+        },
+        {
+          "id": "server_security",
+          "heading": "Protección de Infraestructura",
+          "summary": "Viax implementa medidas de seguridad perimetral y cifrado para proteger la infraestructura tecnológica de la plataforma.",
+          "bullets": [
+            "Seguridad: Se emplean firewalls, protección contra ataques DDoS, cifrado en tránsito (HTTPS/TLS) y monitoreo continuo sobre la infraestructura alojada en servicios de nube corporativos."
+          ]
+        },
+        {
+          "id": "service_termination",
+          "heading": "Suspensión y Terminación del Servicio",
+          "summary": "Viax podrá suspender o cancelar cuentas que incumplan estos términos o la legislación vigente, garantizando el debido proceso.",
+          "bullets": [
+            "Causales: Viax podrá suspender o cancelar cuentas en casos de fraude, acoso, incumplimiento de la documentación requerida, conductas que pongan en riesgo la seguridad de otros usuarios, o cualquier infracción grave de estos términos.",
+            "Proceso: Antes de la cancelación definitiva, Viax notificará al usuario las razones de la medida, salvo en casos que representen un riesgo inminente para la seguridad. El usuario podrá presentar descargos dentro de los 5 días hábiles siguientes a la notificación."
+          ]
+        },
+        {
+          "id": "terms_modification",
+          "heading": "Actualizaciones de este Acuerdo",
+          "summary": "Viax podrá actualizar estos términos y te notificará sobre los cambios relevantes para que puedas revisarlos.",
+          "bullets": [
+            "Notificación: Te informaremos sobre cambios significativos en estos términos a través de la aplicación o correo electrónico. El uso continuado de la plataforma después de la notificación constituye la aceptación de los términos actualizados."
+          ]
+        },
+        {
+          "id": "jurisdiction",
+          "heading": "Ley Aplicable y Resolución de Conflictos",
+          "summary": "Estos términos se rigen por la legislación colombiana. Ante cualquier conflicto, priorizamos la solución directa y el diálogo.",
+          "bullets": [
+            "Legislación: Estos términos se rigen por las leyes de la República de Colombia, con jurisdicción principal en Bogotá D.C., sin perjuicio del derecho del consumidor a acudir a su jurisdicción local conforme a la ley.",
+            "Quejas y reclamos (PQR): Para quejas, reclamos o peticiones, escríbenos a viaxoficialcol@gmail.com. Responderemos dentro de los 15 días hábiles establecidos por la normativa vigente.",
+            "Mecanismos alternativos: Las partes podrán acudir a mecanismos alternativos de solución de conflictos como conciliación o mediación antes de iniciar acciones judiciales, cuando sea aplicable.",
+            "Cooperación con autoridades: Viax colaborará de manera oportuna con las autoridades competentes que requieran información conforme a la ley."
+          ]
+        },
+        {
+          "id": "final_clause",
+          "heading": "Consentimiento y Disposiciones Finales",
+          "summary": "Al utilizar Viax, confirmas que has leído, comprendido y aceptado estos términos.",
+          "bullets": [
+            "Aceptación digital: La aceptación de estos términos mediante medios electrónicos (OTP, botón de aceptación, clic) tiene la misma validez jurídica que una firma manuscrita, conforme a la Ley 527 de 1999.",
+            "Consentimiento de privacidad: El tratamiento de datos personales se rige por la Política de Privacidad, la cual es aceptada de manera independiente por el usuario al momento del registro en la plataforma.",
+            "Divisibilidad: Si alguna cláusula de estos términos es declarada inválida o inaplicable por autoridad competente, las demás cláusulas mantendrán su plena validez y efecto."
+          ]
+        }
+      ],
+      "version": "v1.0.0-2026-03-21"
+    }
+  }
+}

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/user_block_action_button.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../../../services/conductor_trips_service.dart';
 import 'trip_status_badge.dart';
 import 'trip_route_info.dart';
@@ -10,14 +12,16 @@ import 'trip_route_info.dart';
 /// Diseño profesional con animaciones suaves
 class TripDetailBottomSheet extends StatefulWidget {
   final TripModel trip;
+  final int currentUserId;
 
-  const TripDetailBottomSheet({super.key, required this.trip});
+  const TripDetailBottomSheet({super.key, required this.trip, required this.currentUserId});
 
   /// Muestra el bottom sheet con animación
   /// [isDark] es opcional, el tema se detecta automáticamente del contexto
   static Future<void> show(
     BuildContext context,
     TripModel trip, {
+    required int currentUserId,
     bool isDark = false,
   }) {
     return showModalBottomSheet(
@@ -25,7 +29,7 @@ class TripDetailBottomSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (context) => TripDetailBottomSheet(trip: trip),
+      builder: (context) => TripDetailBottomSheet(trip: trip, currentUserId: currentUserId),
     );
   }
 
@@ -246,10 +250,10 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
               breakdown.precioDistancia +
               breakdown.precioTiempo +
               totalRecargos);
-    final ajusteMinimo = (widget.trip.totalCobradoViaje - subtotal).clamp(
-      0,
-      double.infinity,
-    );
+    final double ajusteMinimo =
+        (widget.trip.totalCobradoViaje - subtotal)
+            .clamp(0.0, double.infinity)
+            .toDouble();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -380,96 +384,167 @@ class _TripDetailBottomSheetState extends State<TripDetailBottomSheet>
   }
 
   Widget _buildClientCard(bool isDark, Color textColor, Color subtitleColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
+    return InkWell(
+      onTap: _showClientProfileSheet,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.15),
-          width: 1,
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.grey.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
+        child: Row(
+          children: [
+            _buildProfileAvatar(widget.trip.clienteNombre, 60, 26),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.trip.clienteNombreCompleto,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  if (widget.trip.calificacion != null)
+                    Row(
+                      children: [
+                        ...List.generate(5, (index) {
+                          return Icon(
+                            index < widget.trip.calificacion!
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: Colors.amber,
+                            size: 20,
+                          );
+                        }),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.trip.calificacionDouble.toStringAsFixed(1),
+                          style: TextStyle(
+                            color: subtitleColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      'Sin calificación',
+                      style: TextStyle(
+                        color: subtitleColor.withValues(alpha: 0.7),
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: subtitleColor.withValues(alpha: 0.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileAvatar(String name, double size, double fontSize) {
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : 'U';
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClientProfileSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del cliente',
+      name: widget.trip.clienteNombreCompleto,
+      phone: widget.trip.clienteTelefono,
+      email: widget.trip.clienteEmail,
+      rating: widget.trip.calificacionDouble,
+      isDark: isDark,
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.clienteId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'cliente',
+    );
+  }
+
+  Widget _buildProfileInfoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          // Avatar grande
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                widget.trip.clienteNombre.isNotEmpty
-                    ? widget.trip.clienteNombre[0].toUpperCase()
-                    : 'U',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
+          Icon(icon, color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.trip.clienteNombreCompleto,
+                  label,
                   style: TextStyle(
-                    color: textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(height: 6),
-                if (widget.trip.calificacion != null)
-                  Row(
-                    children: [
-                      ...List.generate(5, (index) {
-                        return Icon(
-                          index < widget.trip.calificacion!
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                          color: Colors.amber,
-                          size: 20,
-                        );
-                      }),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.trip.calificacionDouble.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: subtitleColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  Text(
-                    'Sin calificación',
-                    style: TextStyle(
-                      color: subtitleColor.withValues(alpha: 0.7),
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                    ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
               ],
             ),
           ),

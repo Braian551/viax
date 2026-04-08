@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../../theme/app_colors.dart';
+import '../../../../../shared/widgets/trip_user_profile_sheet.dart';
 import '../../../services/user_trips_service.dart';
 import '../trip_preview/trip_price_formatter.dart';
 import 'trip_conductor_avatar.dart';
@@ -11,6 +12,7 @@ class TripHistoryCard extends StatefulWidget {
   final VoidCallback? onTap;
   final int index;
   final bool isDark;
+  final int? currentUserId;
 
   const TripHistoryCard({
     super.key,
@@ -18,6 +20,7 @@ class TripHistoryCard extends StatefulWidget {
     this.onTap,
     this.index = 0,
     this.isDark = false,
+    this.currentUserId,
   });
 
   @override
@@ -74,6 +77,30 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   IconData _getServiceIcon() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').toLowerCase().trim();
+    switch (vehicleType) {
+      case 'moto':
+        return Icons.two_wheeler_rounded;
+      case 'mototaxi':
+      case 'moto_taxi':
+        return Icons.electric_rickshaw_rounded;
+      case 'motorcycle':
+        return Icons.two_wheeler_rounded;
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'taxi':
+      case 'car':
+        return Icons.directions_car_rounded;
+      case 'camioneta':
+      case 'van':
+      case 'microbus':
+        return Icons.airport_shuttle_rounded;
+      case 'camion':
+      case 'camion_carga':
+        return Icons.local_shipping_rounded;
+    }
+
     switch (widget.trip.tipoServicio.toLowerCase()) {
       case 'mudanza':
         return Icons.home_work_rounded;
@@ -160,7 +187,7 @@ class _TripHistoryCardState extends State<TripHistoryCard>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _capitalize(widget.trip.tipoServicio),
+                                    _getTripTitle(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -378,61 +405,124 @@ class _TripHistoryCardState extends State<TripHistoryCard>
   }
 
   Widget _buildConductorInfo(Color bgColor, Color textColor, Color secondaryColor) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          TripConductorAvatar(
-            photoUrl: widget.trip.conductorFoto,
-            conductorName: widget.trip.conductorNombreCompleto,
-            radius: 16,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.trip.conductorNombreCompleto,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-                if (widget.trip.calificacionConductor != null)
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
-                      const SizedBox(width: 2),
-                      Text(
-                        widget.trip.calificacionConductor!.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: secondaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
+    return InkWell(
+      onTap: _showConductorContactSheet,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            TripConductorAvatar(
+              photoUrl: widget.trip.conductorFoto,
+              conductorName: widget.trip.conductorNombreCompleto,
+              radius: 16,
             ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: textColor.withOpacity(0.3),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.trip.conductorNombreCompleto,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  if (widget.trip.calificacionConductor != null)
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+                        const SizedBox(width: 2),
+                        Text(
+                          widget.trip.calificacionConductor!.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: secondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: textColor.withOpacity(0.3),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showConductorContactSheet() {
+    final conductorName = widget.trip.conductorNombreCompleto;
+
+    TripUserProfileSheet.show(
+      context,
+      title: 'Perfil del conductor',
+      name: conductorName,
+      phone: widget.trip.conductorTelefono,
+      email: widget.trip.conductorEmail,
+      rating: widget.trip.calificacionConductor,
+      isDark: widget.isDark,
+      avatar: TripConductorAvatar(
+        photoUrl: widget.trip.conductorFoto,
+        conductorName: conductorName,
+        radius: 30,
+      ),
+      actorId: widget.currentUserId,
+      otherUserId: widget.trip.conductorId,
+      solicitudId: widget.trip.id,
+      targetLabel: 'conductor',
     );
   }
 
   String _capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  String _getTripTitle() {
+    final vehicleType = (widget.trip.tipoVehiculo ?? '').trim();
+    if (vehicleType.isNotEmpty) {
+      return _getVehicleName(vehicleType);
+    }
+
+    return _capitalize(widget.trip.tipoServicio);
+  }
+
+  String _getVehicleName(String vehicleType) {
+    switch (vehicleType.toLowerCase().trim()) {
+      case 'moto':
+        return 'Moto';
+      case 'mototaxi':
+      case 'moto_taxi':
+        return 'Mototaxi';
+      case 'auto':
+      case 'carro':
+      case 'automovil':
+      case 'car':
+        return 'Carro';
+      case 'taxi':
+        return 'Taxi';
+      case 'camioneta':
+        return 'Camioneta';
+      case 'van':
+      case 'microbus':
+        return 'Van';
+      case 'camion':
+      case 'camion_carga':
+        return 'Camion';
+      default:
+        return _capitalize(vehicleType);
+    }
   }
 
 }

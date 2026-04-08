@@ -22,8 +22,17 @@ class NetworkRequestResult {
     return NetworkRequestResult._(success: true, json: json, statusCode: statusCode);
   }
 
-  factory NetworkRequestResult.fail(AppNetworkException error, {int? statusCode}) {
-    return NetworkRequestResult._(success: false, error: error, statusCode: statusCode);
+  factory NetworkRequestResult.fail(
+    AppNetworkException error, {
+    int? statusCode,
+    Map<String, dynamic>? json,
+  }) {
+    return NetworkRequestResult._(
+      success: false,
+      error: error,
+      statusCode: statusCode,
+      json: json,
+    );
   }
 }
 
@@ -129,6 +138,7 @@ class NetworkRequestExecutor {
             backendMessage: backendMessage,
           ),
           statusCode: response.statusCode,
+          json: json,
         );
       }
 

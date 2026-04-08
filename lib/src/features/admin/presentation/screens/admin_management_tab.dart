@@ -211,6 +211,22 @@ class _AdminManagementTabState extends State<AdminManagementTab>
               );
             },
           ),
+          const SizedBox(height: 12),
+          ManagementMenuItem(
+            title: 'Mesa de Soporte',
+            subtitle: 'Gestionar tickets y conversaciones de soporte',
+            icon: Icons.support_agent_rounded,
+            accentColor: AppColors.primary,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                RouteNames.adminSupport,
+                arguments: {
+                  'admin_id': adminId,
+                },
+              );
+            },
+          ),
 
           const SizedBox(height: 24),
         ],
