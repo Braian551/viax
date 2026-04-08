@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../services/trip_request_service.dart';
+import '../../../../core/realtime/realtime_service.dart';
 import '../../../../global/services/mapbox_service.dart';
 import '../../../../global/services/sound_service.dart';
 import '../../../../global/services/trip_status_navigation_service.dart';
@@ -61,16 +62,25 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   final MapController _mapController = MapController();
   
   Timer? _searchTimer;
-  Timer? _statusTimer; // Polling para detectar aceptación
+  Timer? _statusTimer; // Polling fallback para detectar aceptación
   List<Map<String, dynamic>> _nearbyDrivers = [];
   bool _isCancelling = false;
   int _searchSeconds = 0;
   double _currentRadiusKm = 2.0;
   bool _tripAccepted = false; // Flag para evitar múltiples navegaciones
   bool _statusRequestInFlight = false;
+
+  // ─── WebSocket realtime ─────────────────────────────────────────
+  RealtimeSubscription? _requestSub;
+  RealtimeSubscription? _userSub;
+  StreamSubscription<RealtimeEvent>? _requestStreamSub;
+  StreamSubscription<RealtimeEvent>? _userStreamSub;
   int? _currentEmpresaId;
   String? _currentEmpresaNombre;
   String? _currentEmpresaLogo;
+  String _searchMode = 'empresa';
+  Map<String, dynamic>? _driverChecking;
+  String _matchingStatus = 'searching';
   bool _syncingCompany = false;
   final List<_SearchCompanyCandidate> _companyRotationQueue = [];
   int _currentCompanyIndex = -1;
@@ -79,8 +89,69 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   static const int _companySwitchIntervalNoDriversSec = 8;
   static const int _companySwitchIntervalWithDriversSec = 18;
   static const int _statusWaitSeconds = 3;
+  static const int _fallbackUxRotationSec = 5;
 
   bool get _isFixedCompanyMode => widget.initialEmpresaId != null;
+
+  bool get _isSearchFinishedWithoutDriver {
+    return _matchingStatus == 'sin_conductores' ||
+        _matchingStatus == 'timeout' ||
+        _matchingStatus == 'exhausted';
+  }
+
+  String get _statusTitle {
+    final candidateName = _driverChecking?['nombre']?.toString().trim();
+    if (candidateName != null && candidateName.isNotEmpty) {
+      return '$candidateName esta revisando tu solicitud';
+    }
+
+    switch (_matchingStatus) {
+      case 'expanding_search':
+      case 'search_expanded':
+        return 'Buscando mas conductores...';
+      case 'matched':
+        return 'Conductor encontrado';
+      case 'timeout':
+      case 'exhausted':
+      case 'sin_conductores':
+        return 'No se encontro conductor';
+      default:
+        return 'Buscando conductores...';
+    }
+  }
+
+  String? get _statusSubtitle {
+    if (_matchingStatus == 'expanding_search') {
+      return 'Ampliando busqueda...';
+    }
+    if (_matchingStatus == 'search_expanded') {
+      return (_searchSeconds ~/ _fallbackUxRotationSec).isEven
+          ? 'Buscando mas conductores cerca...'
+          : 'Ampliando busqueda...';
+    }
+    if (_matchingStatus == 'sin_conductores') {
+      return 'No encontramos conductores cercanos';
+    }
+    if (_matchingStatus == 'timeout' || _matchingStatus == 'exhausted') {
+      return 'Seguimos buscando opciones disponibles...';
+    }
+
+    final candidateCompany = _driverChecking?['empresa']?.toString().trim();
+    if (candidateCompany != null && candidateCompany.isNotEmpty) {
+      return '$candidateCompany esta evaluando tu viaje';
+    }
+
+    if (_searchMode == 'azar') {
+      return 'Modo al azar activo';
+    }
+
+    final company = _currentEmpresaNombre?.trim();
+    if (company != null && company.isNotEmpty) {
+      return '$company esta evaluando tu viaje';
+    }
+
+    return null;
+  }
   
   late AnimationController _pulseController;
   late AnimationController _waveController;
@@ -94,7 +165,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     _initializeCompanyRotation();
     _initAnimations();
     _startSearching();
-    _startStatusPolling(); // Iniciar polling de estado
+    _setupRealtimeOrPolling();
   }
 
   void _initializeCompanyRotation() {
@@ -137,6 +208,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       _currentEmpresaId = widget.initialEmpresaId;
       _currentEmpresaNombre = widget.initialCompanyName;
       _currentEmpresaLogo = widget.initialCompanyLogoUrl;
+      _searchMode = 'empresa';
       final idx = _companyRotationQueue.indexWhere((c) => c.id == widget.initialEmpresaId);
       _currentCompanyIndex = idx >= 0 ? idx : (_companyRotationQueue.isNotEmpty ? 0 : -1);
     } else if (_companyRotationQueue.isNotEmpty) {
@@ -145,6 +217,9 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       _currentEmpresaId = first.id;
       _currentEmpresaNombre = first.nombre;
       _currentEmpresaLogo = first.logoUrl;
+      _searchMode = 'empresa';
+    } else {
+      _searchMode = 'azar';
     }
 
     debugPrint(
@@ -375,10 +450,15 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
         setState(() {
           _currentEmpresaId = empresaId;
+          _searchMode = empresaId == null ? 'azar' : 'empresa';
+          _driverChecking = null;
+          _matchingStatus = 'searching';
           _currentEmpresaNombre =
-              forcedName ?? backendCompany?['nombre']?.toString() ?? _currentEmpresaNombre;
+              forcedName ?? backendCompany?['nombre']?.toString() ?? (empresaId == null ? 'Al azar' : _currentEmpresaNombre);
           _currentEmpresaLogo =
-              forcedLogo ?? backendCompany?['logo_url']?.toString() ?? _currentEmpresaLogo;
+              empresaId == null
+                  ? null
+                  : (forcedLogo ?? backendCompany?['logo_url']?.toString() ?? _currentEmpresaLogo);
           if (forcedIndex != null) {
             _currentCompanyIndex = forcedIndex;
           } else {
@@ -428,6 +508,73 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
     }
   }
 
+  /// Configura realtime: intenta WebSocket, si no está disponible usa polling.
+  void _setupRealtimeOrPolling() {
+    final realtime = RealtimeService.instance;
+    final solId = widget.solicitudIdAsInt;
+
+    if (realtime.isWebSocketConnected) {
+      // WebSocket activo → suscribirse a canales
+      _requestSub = realtime.subscribeToRequest(solId);
+      _userSub = realtime.subscribeToUser(widget.clienteId);
+
+      _requestStreamSub = _requestSub!.stream.listen(_onRealtimeEvent);
+      _userStreamSub = _userSub!.stream.listen(_onRealtimeEvent);
+
+      debugPrint('🔌 [SearchingDriverScreen] WebSocket activo — solicitud=$solId');
+
+      // Sin polling mientras WS esté activo. Solo sincronización inicial.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _checkTripStatus();
+      });
+    } else {
+      // Sin WebSocket → polling normal
+      debugPrint('📡 [SearchingDriverScreen] Sin WebSocket — usando polling');
+      _startStatusPolling();
+    }
+  }
+
+  /// Maneja un evento realtime recibido por WebSocket.
+  void _onRealtimeEvent(RealtimeEvent event) {
+    if (!mounted || _tripAccepted) return;
+
+    debugPrint('⚡ [SearchingDriverScreen] Evento WS: ${event.type}');
+
+    switch (event.type) {
+      case 'request.driver_assigned':
+      case 'trip.driver_assigned':
+      case 'trip.assigned':
+        // Conductor asignado → hacer polling inmediato para obtener datos completos
+        _checkTripStatus();
+        break;
+
+      case 'request.status_changed':
+        final status = event.payload['status']?.toString();
+        if (status == 'sin_conductores' || status == 'timeout' || status == 'exhausted') {
+          setState(() => _matchingStatus = status!);
+          _statusTimer?.cancel();
+          _searchTimer?.cancel();
+        } else if (status == 'cancelada' || status == 'cancelada_por_usuario') {
+          _statusTimer?.cancel();
+          _searchTimer?.cancel();
+          if (!_isCancelling) _showCancelledDialog();
+        } else {
+          // Cualquier otro cambio → sincronizar
+          _checkTripStatus();
+        }
+        break;
+
+      case 'trip.status_changed':
+        // Cambio de estado de viaje → polling inmediato para navegar
+        _checkTripStatus();
+        break;
+
+      default:
+        break;
+    }
+  }
+
   /// Inicia el polling para detectar cuando un conductor acepta la solicitud
   void _startStatusPolling() {
     debugPrint('🚀 [SearchingDriverScreen] INICIANDO POLLING para solicitud ${widget.solicitudIdAsInt}');
@@ -465,8 +612,51 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
       if (result['success'] == true) {
         final trip = Map<String, dynamic>.from(result['trip'] as Map);
         final estado = trip['estado'] as String?;
+        final normalizedEstado = TripStatusNavigationService.normalizeStatus(estado);
+        final backendSearchModeRaw = trip['search_mode']?.toString().toLowerCase().trim();
+        final backendSearchMode = backendSearchModeRaw == 'empresa' ? 'empresa' : 'azar';
+        final backendEmpresaId = trip['empresa_id'] is num
+            ? (trip['empresa_id'] as num).toInt()
+            : int.tryParse('${trip['empresa_id']}');
+        final rawDriverChecking = trip['driver_checking'];
+        final parsedDriverChecking = rawDriverChecking is Map
+          ? Map<String, dynamic>.from(rawDriverChecking)
+            : null;
+        final backendMatchingStatus = (trip['matching_status'] ?? result['meta']?['matching_status'])
+          ?.toString()
+          .toLowerCase()
+          .trim();
+        final effectiveMatchingStatus = _resolveMatchingStatus(
+          backendMatchingStatus: backendMatchingStatus,
+          normalizedEstado: normalizedEstado,
+        );
         
         debugPrint('📊 [SearchingDriverScreen] Estado actual: $estado');
+
+        if (mounted) {
+        setState(() {
+          _searchMode = backendSearchMode;
+          _driverChecking = parsedDriverChecking;
+            _matchingStatus = effectiveMatchingStatus;
+
+          if (backendSearchMode == 'azar') {
+            if (!_isFixedCompanyMode) {
+                _currentEmpresaId = null;
+                _currentEmpresaNombre = 'Al azar';
+                _currentEmpresaLogo = null;
+                _currentCompanyIndex = -1;
+              }
+            } else {
+              if (backendEmpresaId != null && backendEmpresaId > 0) {
+                _currentEmpresaId = backendEmpresaId;
+              }
+              final checkingCompany = parsedDriverChecking?['empresa']?.toString().trim();
+              if (checkingCompany != null && checkingCompany.isNotEmpty) {
+                _currentEmpresaNombre = checkingCompany;
+              }
+            }
+          });
+        }
         
         final decision = TripStatusNavigationService.resolveUserNavigation(
           trip: trip,
@@ -500,6 +690,10 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           if (mounted && !_isCancelling) {
             _showCancelledDialog();
           }
+        } else if (_isSearchFinishedWithoutDriver) {
+          // Estado terminal sin conductor: no seguir haciendo polling infinito.
+          _statusTimer?.cancel();
+          _searchTimer?.cancel();
         }
       }
     } catch (e) {
@@ -543,6 +737,14 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
 
   Future<void> _cancelTrip() async {
     if (_isCancelling) return;
+
+    // Si la búsqueda ya terminó sin conductor, sólo cerramos la pantalla.
+    if (_isSearchFinishedWithoutDriver) {
+      _searchTimer?.cancel();
+      _statusTimer?.cancel();
+      _goToHomeAfterCancel();
+      return;
+    }
 
     _searchTimer?.cancel();
     _statusTimer?.cancel();
@@ -600,14 +802,18 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
           children: [
             Icon(Icons.cancel_rounded, color: AppColors.error),
             const SizedBox(width: 12),
-            const Text('¿Cancelar viaje?'),
+            Text(_isSearchFinishedWithoutDriver ? 'Cerrar búsqueda' : '¿Cancelar viaje?'),
           ],
         ),
-        content: const Text('Se cancelará tu solicitud. Esta acción no se puede deshacer.'),
+        content: Text(
+          _isSearchFinishedWithoutDriver
+              ? 'Ya no hay conductores disponibles para esta solicitud. Puedes volver al inicio e intentarlo de nuevo.'
+              : 'Se cancelará tu solicitud. Esta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Seguir buscando'),
+            child: Text(_isSearchFinishedWithoutDriver ? 'Quedarme aquí' : 'Seguir buscando'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -615,11 +821,34 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
               Navigator.pop(ctx);
               _cancelTrip();
             },
-            child: const Text('Sí, cancelar', style: TextStyle(color: Colors.white)),
+            child: Text(
+              _isSearchFinishedWithoutDriver ? 'Volver al inicio' : 'Sí, cancelar',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  String _resolveMatchingStatus({
+    required String? backendMatchingStatus,
+    required String normalizedEstado,
+  }) {
+    if (backendMatchingStatus != null && backendMatchingStatus.isNotEmpty) {
+      return backendMatchingStatus;
+    }
+
+    if (normalizedEstado == 'sin_conductores') {
+      return 'sin_conductores';
+    }
+    if (normalizedEstado == 'pendiente' ||
+        normalizedEstado == 'buscando' ||
+        normalizedEstado == 'buscando_conductor') {
+      return 'searching';
+    }
+
+    return 'searching';
   }
 
   String get _formattedTime {
@@ -632,6 +861,10 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
   void dispose() {
     _searchTimer?.cancel();
     _statusTimer?.cancel();
+    _requestStreamSub?.cancel();
+    _userStreamSub?.cancel();
+    _requestSub?.cancel();
+    _userSub?.cancel();
     _pulseController.dispose();
     _waveController.dispose();
     _panelController.dispose();
@@ -738,6 +971,8 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen>
                   isDark: isDark,
                   currentRadiusKm: _currentRadiusKm,
                   nearbyDriversCount: _nearbyDrivers.length,
+                  statusTitle: _statusTitle,
+                  statusSubtitle: _statusSubtitle,
                   direccionOrigen: widget.direccionOrigen,
                   direccionDestino: widget.direccionDestino,
                   isCancelling: _isCancelling,

@@ -110,6 +110,15 @@ class GoogleAuthService {
         accessToken: accessToken,
         deviceUuid: deviceUuid,
       );
+
+      if (result['success'] != true) {
+        return {
+          ...result,
+          'email': googleUser.email,
+          if (idToken != null) 'id_token': idToken,
+          if (accessToken != null) 'access_token': accessToken,
+        };
+      }
       
       return result;
       
@@ -153,35 +162,46 @@ class GoogleAuthService {
         requireDataPayload: false,
       );
 
-      if (!result.success || result.json == null) {
+      if (result.json != null) {
+        final data = result.json!;
+
+        if (data['success'] == true && data['data'] != null) {
+          final userData = data['data'];
+          final user = userData['user'];
+
+          if (user != null) {
+            await UserService.saveSession(user);
+          }
+
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Autenticación exitosa',
+            'user': user,
+            'is_new_user': userData['is_new_user'] ?? false,
+            'requires_phone': userData['requires_phone'] ?? user?['requiere_telefono'] ?? false,
+            'error_code': data['error_code']?.toString(),
+            'data': userData,
+          };
+        }
+
+        return {
+          'success': false,
+          'message': data['message']?.toString() ?? result.error?.userMessage ?? 'No fue posible validar tu cuenta de Google.',
+          'error_code': data['error_code']?.toString(),
+          'data': data['data'],
+        };
+      }
+
+      if (!result.success) {
         return {
           'success': false,
           'message': result.error?.userMessage ?? 'No fue posible validar tu cuenta de Google.',
         };
       }
 
-      final data = result.json!;
-
-      if (data['success'] == true && data['data'] != null) {
-        final userData = data['data'];
-        final user = userData['user'];
-
-        if (user != null) {
-          await UserService.saveSession(user);
-        }
-
-        return {
-          'success': true,
-          'message': data['message'] ?? 'Autenticación exitosa',
-          'user': user,
-          'is_new_user': userData['is_new_user'] ?? false,
-          'requires_phone': userData['requires_phone'] ?? user?['requiere_telefono'] ?? false,
-        };
-      }
-
       return {
         'success': false,
-        'message': data['message']?.toString() ?? 'No fue posible validar tu cuenta de Google.',
+        'message': 'No fue posible validar tu cuenta de Google.',
       };
     } catch (e) {
       debugPrint('Error enviando token al backend: $e');

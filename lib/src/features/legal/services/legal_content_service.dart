@@ -9,6 +9,11 @@ class LegalContentService {
 
   static Future<String> fetchTerms({required LegalRole role}) async {
     try {
+      final remoteJsonText = await _loadFromRemoteJson(role: role, docType: 'terms');
+      if (_isSubstantive(remoteJsonText)) return remoteJsonText;
+    } catch (_) {}
+
+    try {
       final text = await _fetchAndNormalize(
         LegalLinksService.termsUri(role: role),
         mainTitle: 'Terminos y Condiciones',
@@ -21,6 +26,11 @@ class LegalContentService {
 
   static Future<String> fetchPrivacy({required LegalRole role}) async {
     try {
+      final remoteJsonText = await _loadFromRemoteJson(role: role, docType: 'privacy');
+      if (_isSubstantive(remoteJsonText)) return remoteJsonText;
+    } catch (_) {}
+
+    try {
       final text = await _fetchAndNormalize(
         LegalLinksService.privacyUri(role: role),
         mainTitle: 'Politica de Privacidad',
@@ -29,6 +39,23 @@ class LegalContentService {
     } catch (_) {}
 
     return _loadFromLocalAsset(role: role, docType: 'privacy');
+  }
+
+  static Future<String> _loadFromRemoteJson({
+    required LegalRole role,
+    required String docType,
+  }) async {
+    final response = await http.get(
+      LegalLinksService.contentJsonUri(),
+      headers: const {'Accept': 'application/json'},
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+      throw Exception('No se pudo cargar JSON legal remoto.');
+    }
+
+    final raw = utf8.decode(response.bodyBytes);
+    return _renderDocumentFromJson(raw, role: role, docType: docType);
   }
 
   static Future<String> _fetchAndNormalize(
@@ -90,6 +117,14 @@ class LegalContentService {
     required String docType,
   }) async {
     final raw = await rootBundle.loadString(_localAssetPath);
+    return _renderDocumentFromJson(raw, role: role, docType: docType);
+  }
+
+  static String _renderDocumentFromJson(
+    String raw, {
+    required LegalRole role,
+    required String docType,
+  }) {
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
       throw Exception('Contenido legal local invalido.');

@@ -229,24 +229,15 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
       // Endpoint dedicado.
       final primary = await client.get(
         Uri.parse('$_apiBaseUrl/user/get_recent_searches.php').replace(
-          queryParameters: {'user_id': '$userId'},
+          queryParameters: {
+            'user_id': '$userId',
+            '_ts': DateTime.now().millisecondsSinceEpoch.toString(),
+          },
         ),
         headers: {'Content-Type': 'application/json'},
       );
 
-      final primaryItems = await parseRecentResponse(primary);
-      if (primaryItems.isNotEmpty) {
-        return primaryItems;
-      }
-
-      // Fallback compatible: buscar con query vacía (recientes).
-      final fallback = await client.get(
-        Uri.parse('$_apiBaseUrl/user/search_places.php').replace(
-          queryParameters: {'user_id': '$userId', 'query': ''},
-        ),
-        headers: {'Content-Type': 'application/json'},
-      );
-      return parseRecentResponse(fallback);
+      return parseRecentResponse(primary);
     } catch (e) {
       if (e is ServerException) rethrow;
       throw NetworkException('Error de conexión: ${e.toString()}');

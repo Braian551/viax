@@ -149,6 +149,9 @@ class AppRouter {
               email: args?['email']?.toString() ?? '',
               password: args?['password']?.toString(),
               deletionScheduledAt: args?['deletionScheduledAt']?.toString(),
+              authProvider: args?['authProvider']?.toString(),
+              idToken: args?['idToken']?.toString(),
+              accessToken: args?['accessToken']?.toString(),
             ),
             settings: settings,
           );
@@ -218,7 +221,14 @@ class AppRouter {
           );
         }
       case RouteNames.backgroundLocationDisclosure:
-        return MaterialPageRoute(builder: (_) => const BackgroundLocationDisclosureScreen());
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => BackgroundLocationDisclosureScreen(
+              role: args?['role']?.toString() ?? '',
+            ),
+          );
+        }
       
       case RouteNames.locationPicker:
         {

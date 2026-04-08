@@ -47,6 +47,10 @@ class LegalLinksService {
     return Uri.parse('$_websiteBaseUrl/legal/?doc=privacy&role=$roleParam');
   }
 
+  static Uri contentJsonUri() {
+    return Uri.parse('$_websiteBaseUrl/legal_content.json');
+  }
+
   static Future<bool> openTerms({required LegalRole role}) async {
     final uri = termsUri(role: role);
     if (!await canLaunchUrl(uri)) return false;

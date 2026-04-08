@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <!-- Location permissions required for device geolocation -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -17,6 +19,15 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Foreground service for overlay -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Remove media permissions injected by dependencies (not used in Viax) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"
+        tools:node="remove" />
+
     <application
         android:label="Viax"
         android:name="${applicationName}"
@@ -70,6 +81,7 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorPrimary" />
     </application>
+
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
@@ -121,4 +133,5 @@
             <data android:scheme="tel" />
         </intent>
     </queries>
+
 </manifest>

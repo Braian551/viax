@@ -90,9 +90,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
         if (isNewUser && user != null) {
           final allowed = await _ensureLegalAcceptedForUser(user);
+          if (!mounted) return;
           if (!allowed) {
             await GoogleAuthService.signOut();
             await UserService.clearSession();
+            if (!mounted) return;
             _showErrorSnackBar('Debes aceptar terminos y privacidad para continuar.');
             return;
           }
@@ -100,6 +102,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
         // Verificar si necesita teléfono
         if (result['requires_phone'] == true) {
+          if (!mounted) return;
           Navigator.of(context).pushReplacementNamed(
             RouteNames.phoneRequired,
             arguments: user,
@@ -109,6 +112,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
 
           if (tipoUsuario == 'soporte_tecnico') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.supportHome,
@@ -116,6 +120,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               arguments: {'support_user': user},
             );
           } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.adminHome,
@@ -123,6 +128,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               arguments: {'admin_user': user},
             );
           } else if (tipoUsuario == 'conductor') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.conductorHome,
@@ -130,6 +136,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               arguments: {'conductor_user': user},
             );
           } else if (tipoUsuario == 'empresa') {
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.companyHome,
@@ -138,6 +145,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             );
           } else {
             // Cliente
+            if (!mounted) return;
             Navigator.pushNamedAndRemoveUntil(
               context,
               RouteNames.home,
@@ -146,6 +154,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           }
         }
       } else {
+        final errorCode = result['error_code']?.toString();
+        final data = result['data'] is Map<String, dynamic>
+            ? result['data'] as Map<String, dynamic>
+            : null;
+
+        if (errorCode == 'ACCOUNT_PENDING_DELETION' || data?['pending_deletion'] == true) {
+          final pendingEmail = data?['email']?.toString() ?? result['email']?.toString() ?? '';
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(
+            context,
+            RouteNames.pendingDeletionReactivation,
+            arguments: {
+              'email': pendingEmail,
+              'deletionScheduledAt': data?['deletion_scheduled_at']?.toString(),
+              'authProvider': 'google',
+              'idToken': result['id_token']?.toString(),
+              'accessToken': result['access_token']?.toString(),
+            },
+          );
+          return;
+        }
+
         _showErrorSnackBar(
           (result['message'] ??
                   'No pudimos completar el inicio de sesión con Google')
@@ -179,6 +209,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
 
     final version = await legalProvider.fetchCurrentVersion(role: role);
+    if (!mounted) return false;
     if (version == null || version.isEmpty) {
       return false;
     }

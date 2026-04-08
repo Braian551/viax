@@ -200,7 +200,10 @@ class LocationSuggestionService {
 
     try {
       final uri = Uri.parse('${AppConfig.baseUrl}/user/get_recent_searches.php')
-          .replace(queryParameters: {'user_id': '$userId'});
+          .replace(queryParameters: {
+            'user_id': '$userId',
+            '_ts': DateTime.now().millisecondsSinceEpoch.toString(),
+          });
       final response = await http
           .get(uri, headers: {'Content-Type': 'application/json'})
           .timeout(const Duration(seconds: 8));
@@ -273,25 +276,31 @@ class LocationSuggestionService {
   }
 
   static Future<int?> _resolveUserId() async {
-    if (_cachedUserId != null && _cachedUserId! > 0) return _cachedUserId;
-
     try {
       final session = await UserService.getSavedSession();
-      if (session == null) return null;
+      if (session == null) {
+        _cachedUserId = null;
+        return null;
+      }
 
       final rawId = session['id'];
       if (rawId is int && rawId > 0) {
-        _cachedUserId = rawId;
-        return rawId;
+        if (_cachedUserId != rawId) {
+          _cachedUserId = rawId;
+        }
+        return _cachedUserId;
       }
 
       final parsed = int.tryParse(rawId?.toString() ?? '');
       if (parsed != null && parsed > 0) {
-        _cachedUserId = parsed;
-        return parsed;
+        if (_cachedUserId != parsed) {
+          _cachedUserId = parsed;
+        }
+        return _cachedUserId;
       }
     } catch (_) {}
 
+    _cachedUserId = null;
     return null;
   }
 

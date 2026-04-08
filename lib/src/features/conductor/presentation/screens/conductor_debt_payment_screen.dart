@@ -8,6 +8,7 @@ import 'package:viax/src/features/conductor/presentation/widgets/document_upload
 import 'package:viax/src/features/conductor/services/debt_payment_service.dart';
 import 'package:viax/src/global/services/secure_account_service.dart';
 import 'package:viax/src/features/user/presentation/widgets/trip_preview/trip_price_formatter.dart';
+import 'package:viax/src/shared/widgets/global_overlay_message.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/widgets/auth_text_area.dart';
 import 'package:viax/src/widgets/auth_text_field.dart';
@@ -172,12 +173,12 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
 
     final monto = _parseMontoCop();
     if (monto <= 0) {
-      CustomSnackbar.showError(context, message: 'Ingresa un monto válido');
+      GlobalOverlayMessage.showError(context, 'Ingresa un monto válido');
       return;
     }
 
     if (_comprobanteFile == null) {
-      CustomSnackbar.showError(context, message: 'Debes adjuntar el comprobante');
+      GlobalOverlayMessage.showError(context, 'Debes adjuntar el comprobante');
       return;
     }
 
@@ -195,12 +196,18 @@ class _ConductorDebtPaymentScreenState extends State<ConductorDebtPaymentScreen>
     setState(() => _isSubmitting = false);
 
     if (result['success'] == true) {
-      CustomSnackbar.showSuccess(context, message: result['message']?.toString() ?? 'Comprobante enviado');
+      GlobalOverlayMessage.showSuccess(
+        context,
+        result['message']?.toString() ?? 'Comprobante enviado',
+      );
       Navigator.pop(context, true);
       return;
     }
 
-    CustomSnackbar.showError(context, message: result['message']?.toString() ?? 'No se pudo enviar el comprobante');
+    GlobalOverlayMessage.showError(
+      context,
+      result['message']?.toString() ?? 'No se pudo enviar el comprobante',
+    );
   }
 
   bool _isImageFile(File file) {

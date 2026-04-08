@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/features/legal/services/legal_content_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
+import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/shared/widgets/global_overlay_message.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -75,17 +76,89 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >= _scrollController.position.maxScrollExtent && !_hasReadToBottom) {
+    if (!_scrollController.hasClients) return;
+
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    if (maxExtent <= 0 && !_hasReadToBottom) {
+      setState(() {
+        _hasReadToBottom = true;
+      });
+      return;
+    }
+
+    if (_scrollController.offset >= (maxExtent - 12) && !_hasReadToBottom) {
       setState(() {
         _hasReadToBottom = true;
       });
     }
   }
 
+  Future<void> _scrollToBottom() async {
+    if (!_scrollController.hasClients) return;
+
+    await _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateToRoleHome() async {
+    final session = await UserService.getSavedSession();
+    if (!mounted) return;
+
+    final routeRole = widget.role.trim().toLowerCase();
+    final sessionRole = (session?['tipo_usuario']?.toString().toLowerCase() ?? '').trim();
+
+    // Si el rol de ruta viene por defecto como cliente, priorizar el rol real de sesión.
+    String effectiveRole = routeRole;
+    if (sessionRole.isNotEmpty && (effectiveRole.isEmpty || effectiveRole == 'cliente')) {
+      effectiveRole = sessionRole;
+    }
+
+    switch (effectiveRole) {
+      case 'conductor':
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.backgroundLocationDisclosure,
+          (route) => false,
+          arguments: {'role': effectiveRole},
+        );
+        break;
+      case 'empresa':
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.companyHome,
+          (route) => false,
+          arguments: {'user': session ?? {}},
+        );
+        break;
+      case 'administrador':
+      case 'admin':
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.adminHome,
+          (route) => false,
+          arguments: {'admin_user': session ?? {}},
+        );
+        break;
+      case 'soporte_tecnico':
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.supportHome,
+          (route) => false,
+          arguments: {'support_user': session ?? {}},
+        );
+        break;
+      default:
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.home,
+          (route) => false,
+          arguments: {'email': session?['email'], 'user': session ?? {}},
+        );
+    }
   }
 
   Future<void> _handleAcceptance() async {
@@ -123,18 +196,7 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
         return;
       }
 
-      // Si es conductor, redirigir al Disclosure de Ubicación antes de entrar a la Home
-      if (widget.role == 'conductor') {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteNames.backgroundLocationDisclosure,
-          (route) => false,
-        );
-      } else {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteNames.home,
-          (route) => false,
-        );
-      }
+      await _navigateToRoleHome();
     } else {
       if (mounted) {
         final legalProv = context.read<LegalProvider>();
@@ -319,42 +381,97 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
                             ],
                           ),
                         )
-                      : Scrollbar(
-                          controller: _scrollController,
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            controller: _scrollController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Actualizamos nuestras políticas',
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      : Stack(
+                          children: [
+                            Scrollbar(
+                              controller: _scrollController,
+                              thumbVisibility: true,
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Actualizamos nuestras pol\u00edticas',
+                                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Para continuar en Viax debes revisar y aceptar los documentos legales vigentes para tu rol: ${widget.role}.',
+                                      style: TextStyle(fontSize: 14, color: subtitleColor),
+                                    ),
+                                    const Divider(height: 32),
+                                    _buildDocumentBlock(
+                                      title: 'T\u00c9RMINOS Y CONDICIONES',
+                                      content: _termsText,
+                                      textColor: textColor,
+                                      subtitleColor: subtitleColor,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    _buildDocumentBlock(
+                                      title: 'POL\u00cdTICA DE PRIVACIDAD',
+                                      content: _privacyText,
+                                      textColor: textColor,
+                                      subtitleColor: subtitleColor,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Para continuar en Viax debes revisar y aceptar los documentos legales vigentes para tu rol: ${widget.role}.',
-                                  style: TextStyle(fontSize: 14, color: subtitleColor),
-                                ),
-                                const Divider(height: 32),
-                                _buildDocumentBlock(
-                                  title: 'TÉRMINOS Y CONDICIONES',
-                                  content: _termsText,
-                                  textColor: textColor,
-                                  subtitleColor: subtitleColor,
-                                ),
-                                const SizedBox(height: 24),
-                                _buildDocumentBlock(
-                                  title: 'POLÍTICA DE PRIVACIDAD',
-                                  content: _privacyText,
-                                  textColor: textColor,
-                                  subtitleColor: subtitleColor,
-                                ),
-                                const SizedBox(height: 12),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
+                            Positioned(
+                              right: 12,
+                              bottom: 12,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 180),
+                                opacity: _hasReadToBottom ? 0 : 1,
+                                child: IgnorePointer(
+                                  ignoring: _hasReadToBottom,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _scrollToBottom,
+                                      borderRadius: BorderRadius.circular(28),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(alpha: isDark ? 0.95 : 0.92),
+                                          borderRadius: BorderRadius.circular(28),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.16),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Ir al final',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            SizedBox(width: 6),
+                                            Icon(
+                                              Icons.keyboard_double_arrow_down_rounded,
+                                              size: 20,
+                                              color: Colors.white,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
             ),
           ),
           Container(

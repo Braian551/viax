@@ -4,6 +4,7 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/core/realtime/realtime_service.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -70,6 +71,9 @@ class _AuthWrapperState extends State<AuthWrapper>
       if (!mounted) return;
 
       if (session != null && session['email'] != null) {
+        // Inicializar conexión WebSocket para recibir eventos en tiempo real.
+        RealtimeService.instance.initialize();
+
         // Verificar si tenemos el tipo de usuario guardado
         final tipoUsuarioGuardado = session['tipo_usuario'];
 
