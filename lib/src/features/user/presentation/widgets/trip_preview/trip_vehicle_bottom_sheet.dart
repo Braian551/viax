@@ -459,7 +459,7 @@ class _VehicleListItem extends StatelessWidget {
                               ),
                             if (quote!.surgeMultiplier > 1.0)
                               Text(
-                                'x${quote!.surgeMultiplier.toStringAsFixed(2)}',
+                                _demandLabel(quote!),
                                 style: const TextStyle(
                                   fontSize: 10,
                                   color: Colors.orange,
@@ -604,8 +604,26 @@ class _VehicleListItem extends StatelessWidget {
   }
 
   String _surchargeLabel(TripQuote quote) {
-    final suffix = quote.periodType == 'nocturno' ? 'noct.' : 'pico';
-    return '+${quote.surchargePercentage.toInt()}% $suffix';
+    final period = quote.periodType.trim().toLowerCase();
+    if (period.isEmpty || period == 'normal') {
+      return '+${quote.surchargePercentage.toInt()}% recargos';
+    }
+
+    final normalized = period.replaceAll('+', ' + ');
+    return '+${quote.surchargePercentage.toInt()}% $normalized';
+  }
+
+  String _demandLabel(TripQuote quote) {
+    if (quote.surgeMultiplier >= 1.6) {
+      return 'Alta demanda, pocos conductores disponibles';
+    }
+    if (quote.surgeMultiplier >= 1.3) {
+      return 'Alta demanda en la zona';
+    }
+    if (quote.surgeMultiplier > 1.0) {
+      return 'Demanda ligeramente alta';
+    }
+    return '';
   }
 }
 

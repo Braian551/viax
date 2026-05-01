@@ -86,9 +86,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
 
   // Estados de carga para acciones (evitar doble tap y dar feedback)
   bool _isProcessingAction = false;
-  String? _processingActionType; // 'arrived', 'start', 'finish'
+  String? _processingActionType; // 'arrived', 'start', 'finish', 'cancel'
   bool _pendingFinishSync = false;
   bool _isRetryingPendingFinish = false;
+  bool _pendingCancelSync = false;
+  bool _isRetryingPendingCancel = false;
   bool _serverCompletionHandled = false;
   TrackingFinalResult? _lastTrackingFinalResult;
   Map<String, dynamic>? _lastServerCompletedTrip;
@@ -97,6 +99,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   bool _wasOffline = false;
   VoidCallback? _connectivityListener;
   Timer? _pendingFinishRetryTimer;
+  Timer? _pendingCancelRetryTimer;
 
   StreamSubscription<List<ChatMessage>>? _messagesSubscription;
   StreamSubscription<int>? _unreadSubscription;
@@ -153,11 +156,17 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   /// Configura WebSocket como fuente de eventos o cae a polling normal.
   void _setupRealtimeOrPolling() {
     final realtime = RealtimeService.instance;
-    if (realtime.isRealtimeEnabled && realtime.isWebSocketConnected && widget.solicitudId != null) {
+    if (realtime.isRealtimeEnabled &&
+        realtime.isWebSocketConnected &&
+        widget.solicitudId != null) {
       _wsActive = true;
-      debugPrint('[ConductorTrip] WS conectado, suscribiendo trip:${widget.solicitudId}');
+      debugPrint(
+        '[ConductorTrip] WS conectado, suscribiendo trip:${widget.solicitudId}',
+      );
 
-      _tripWsSub = RealtimeService.instance.subscribeToTrip(widget.solicitudId!);
+      _tripWsSub = RealtimeService.instance.subscribeToTrip(
+        widget.solicitudId!,
+      );
       if (_tripWsSub != null && _tripWsSub!.isWebSocketBacked) {
         _tripWsStreamSub = _tripWsSub!.stream.listen(
           _onTripRealtimeEvent,
@@ -166,7 +175,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         );
       }
 
-      _chatWsSub = RealtimeService.instance.subscribeToChat(widget.solicitudId!);
+      _chatWsSub = RealtimeService.instance.subscribeToChat(
+        widget.solicitudId!,
+      );
       if (_chatWsSub != null && _chatWsSub!.isWebSocketBacked) {
         _chatWsStreamSub = _chatWsSub!.stream.listen(
           _onChatRealtimeEvent,
@@ -225,6 +236,13 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
             AppColors.warning,
           );
           unawaited(_retryPendingFinishWithoutTap());
+        }
+        if (_pendingCancelSync) {
+          _showStatus(
+            'Reconectado. Sincronizando cancelación...',
+            AppColors.warning,
+          );
+          unawaited(_retryPendingCancelWithoutTap());
         }
       }
     };
@@ -297,6 +315,9 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       if (_pendingFinishSync) {
         await _retryPendingFinishWithoutTap();
       }
+      if (_pendingCancelSync) {
+        await _retryPendingCancelWithoutTap();
+      }
 
       final tripData = await ConductorService.checkTripStatus(
         widget.solicitudId!,
@@ -308,7 +329,11 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
         // Si el usuario canceló
         if (estado == 'cancelada' || estado == 'cancelada_por_usuario') {
           _pollingTimer?.cancel();
-          _handleUserCancellation();
+          if (_pendingCancelSync) {
+            _completePendingCancelAndNavigate();
+          } else {
+            _handleUserCancellation();
+          }
           return;
         }
 
@@ -398,6 +423,20 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     return null;
   }
 
+  bool _isTripCancelledState(String? estado) {
+    return estado == 'cancelada' || estado == 'cancelada_por_usuario';
+  }
+
+  Future<bool> _hasPendingCommandForTrip(TripCommandType type) async {
+    if (widget.solicitudId == null) return false;
+
+    final pending = await TripCommandQueue.instance.getPendingCommands();
+    return pending.any(
+      (cmd) =>
+          cmd.tripId == widget.solicitudId && cmd.commandType == type.wireValue,
+    );
+  }
+
   Future<void> _retryPendingFinishWithoutTap() async {
     if (widget.solicitudId == null || _isRetryingPendingFinish) return;
     if (!ConnectivityService().isOnline) return;
@@ -452,6 +491,78 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     }
   }
 
+  Future<void> _retryPendingCancelWithoutTap() async {
+    if (widget.solicitudId == null || _isRetryingPendingCancel) return;
+    if (!ConnectivityService().isOnline) return;
+
+    _isRetryingPendingCancel = true;
+
+    try {
+      final hasPendingCancelBefore = await _hasPendingCommandForTrip(
+        TripCommandType.cancelTrip,
+      );
+
+      if (!hasPendingCancelBefore) {
+        final tripData = await ConductorService.checkTripStatus(
+          widget.solicitudId!,
+        );
+        final estado = (tripData?['estado'] as String?)?.toLowerCase();
+
+        if (_isTripCancelledState(estado)) {
+          _completePendingCancelAndNavigate();
+          return;
+        }
+
+        if (mounted) {
+          setState(() {
+            _pendingCancelSync = false;
+            _isProcessingAction = false;
+            _processingActionType = null;
+          });
+        } else {
+          _pendingCancelSync = false;
+          _isProcessingAction = false;
+          _processingActionType = null;
+        }
+
+        _stopPendingCancelRetry();
+        _showStatus(
+          'No se pudo confirmar la cancelación. Intenta nuevamente.',
+          AppColors.warning,
+        );
+        return;
+      }
+
+      await TripCommandExecutor.instance.flushQueue();
+
+      final hasPendingCancelAfter = await _hasPendingCommandForTrip(
+        TripCommandType.cancelTrip,
+      );
+
+      if (!hasPendingCancelAfter) {
+        final tripData = await ConductorService.checkTripStatus(
+          widget.solicitudId!,
+        );
+        final estado = (tripData?['estado'] as String?)?.toLowerCase();
+
+        if (_isTripCancelledState(estado)) {
+          _completePendingCancelAndNavigate();
+          return;
+        }
+
+        _showStatus(
+          'Cancelación enviada. Confirmando estado del viaje...',
+          AppColors.warning,
+        );
+        unawaited(_checkTripStatus());
+      }
+    } catch (e) {
+      debugPrint('⚠️ [TripCancel] Reintento pendiente falló: $e');
+    } finally {
+      _isRetryingPendingCancel = false;
+    }
+  }
+
   void _startPendingFinishRetry() {
     _pendingFinishRetryTimer?.cancel();
     _pendingFinishRetryTimer = Timer.periodic(const Duration(seconds: 3), (_) {
@@ -471,8 +582,50 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     _pendingFinishRetryTimer = null;
   }
 
+  void _startPendingCancelRetry() {
+    _pendingCancelRetryTimer?.cancel();
+    _pendingCancelRetryTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!_pendingCancelSync || !mounted) {
+        _stopPendingCancelRetry();
+        return;
+      }
+      if (!ConnectivityService().isOnline) {
+        return;
+      }
+      unawaited(_retryPendingCancelWithoutTap());
+    });
+  }
+
+  void _stopPendingCancelRetry() {
+    _pendingCancelRetryTimer?.cancel();
+    _pendingCancelRetryTimer = null;
+  }
+
+  void _completePendingCancelAndNavigate() {
+    if (!mounted) return;
+
+    setState(() {
+      _pendingCancelSync = false;
+      _isProcessingAction = false;
+      _processingActionType = null;
+    });
+    _stopPendingCancelRetry();
+
+    TripTrackingService().stopTracking();
+    TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
+
+    _showStatus(
+      'Cancelación sincronizada. Cerrando viaje...',
+      AppColors.success,
+    );
+    unawaited(_navigateToHome());
+  }
+
   void _handleUserCancellation() {
     if (!mounted) return;
+
+    _stopPendingCancelRetry();
 
     // Detener tracking
     TripTrackingService().stopTracking();
@@ -582,6 +735,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
       _connectivityListener = null;
     }
     _stopPendingFinishRetry();
+    _stopPendingCancelRetry();
     GlobalMapHolder.invalidate(ownerKey: _mapOwnerKey);
     _controller.dispose();
     // Limpiar suscripciones WebSocket
@@ -1069,6 +1223,7 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final canonicalBreakdown = extractBreakdown(
       authoritativeTrip?['desglose_precio'],
     );
+    final breakdownFinalPrice = toDouble(canonicalBreakdown?['precio_final']);
     final estimatedDistance =
         toDouble(authoritativeTrip?['distancia_estimada']) ?? 0.0;
     final estimatedMinutes =
@@ -1108,14 +1263,14 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
     final duracionSeg = trackingValido
         ? realDurationSeg
         : (estimatedMinutes > 0 ? estimatedMinutes * 60 : realDurationSeg);
-    final precio = fixedPrice ?? 0.0;
+    final precio = canonicalPrice ?? breakdownFinalPrice ?? fixedPrice ?? 0.0;
 
     final resumenCalculo = trackingValido
-        ? 'Precio fijo confirmado. Métricas reales validadas para el resumen del viaje.'
-        : 'Precio fijo confirmado. Se mostraron métricas estimadas porque el tracking real fue insuficiente.';
+        ? 'Precio final confirmado. Métricas reales validadas para el resumen del viaje.'
+        : 'Precio final confirmado. Se mostraron métricas estimadas porque el tracking real fue insuficiente.';
 
     debugPrint('📊 [ConductorTracking] Finalizando viaje:');
-    debugPrint('   - Precio fijo: $precio');
+    debugPrint('   - Precio final mostrado: $precio');
     debugPrint('   - Tracking válido: $trackingValido');
     debugPrint('   - Distancia mostrada: $distanciaKm km');
     debugPrint(
@@ -1283,28 +1438,76 @@ class _ConductorActiveTripScreenState extends State<ConductorActiveTripScreen>
   Future<void> _onCancelTrip() async {
     if (widget.solicitudId == null) return;
 
+    if (_isProcessingAction) {
+      return;
+    }
+
+    if (_pendingCancelSync) {
+      if (!ConnectivityService().isOnline) {
+        _showStatus(
+          'Cancelación pendiente. Se sincronizará al reconectar.',
+          AppColors.warning,
+        );
+        return;
+      }
+
+      _showStatus('Reintentando cancelación pendiente...', AppColors.warning);
+      await _retryPendingCancelWithoutTap();
+      return;
+    }
+
+    setState(() {
+      _isProcessingAction = true;
+      _processingActionType = 'cancel';
+    });
+
     _showStatus('Cancelando viaje...', AppColors.primary);
 
-    final result = await ConductorService.actualizarEstadoViaje(
-      conductorId: widget.conductorId,
-      solicitudId: widget.solicitudId!,
-      nuevoEstado: 'cancelada',
-      motivoCancelacion: 'Cancelado por el conductor',
+    final payload = <String, dynamic>{
+      'conductor_id': widget.conductorId,
+      'solicitud_id': widget.solicitudId,
+      'nuevo_estado': 'cancelada',
+      'motivo_cancelacion': 'Cancelado por el conductor',
+    };
+
+    final cancelResult = await TripCommandExecutor.instance.enqueueAndTryNow(
+      tripId: widget.solicitudId!,
+      type: TripCommandType.cancelTrip,
+      payload: payload,
     );
 
-    if (result['success'] == true) {
-      // Limpiar estado
-      TripTrackingService().stopTracking();
-      TripPersistenceService().clearActiveTrip();
-      ActiveTripNavigationService().clearActiveTrip();
+    if (cancelResult.success) {
+      _completePendingCancelAndNavigate();
+      return;
+    }
 
-      if (mounted) {
-        _navigateToHome(); // Ir al home
-      }
+    if (mounted) {
+      setState(() {
+        _isProcessingAction = false;
+        _processingActionType = null;
+        _pendingCancelSync = cancelResult.pending;
+      });
     } else {
+      _isProcessingAction = false;
+      _processingActionType = null;
+      _pendingCancelSync = cancelResult.pending;
+    }
+
+    if (cancelResult.pending) {
+      _startPendingCancelRetry();
       _showStatus(
-        result['message'] ?? 'Error al cancelar viaje',
-        AppColors.error,
+        'Sin conexión estable. La cancelación se enviará al reconectar.',
+        AppColors.warning,
+      );
+      return;
+    }
+
+    if (mounted) {
+      _showStatus(
+        cancelResult.message.isNotEmpty
+            ? cancelResult.message
+            : 'Error al cancelar viaje',
+        AppColors.warning,
       );
     }
   }

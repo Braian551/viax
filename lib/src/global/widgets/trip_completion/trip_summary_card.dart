@@ -231,19 +231,60 @@ class TripSummaryCard extends StatelessWidget {
     final tarifaBase = _toDouble(data['tarifa_base']);
     final precioDistancia = _toDouble(data['precio_distancia']);
     final precioTiempo = _toDouble(data['precio_tiempo']);
+    final descuentoDistancia = _toDouble(data['descuento_distancia_larga']);
     final recargoNocturno = _toDouble(data['recargo_nocturno']);
     final recargoHoraPico = _toDouble(data['recargo_hora_pico']);
     final recargoFestivo = _toDouble(data['recargo_festivo']);
     final recargoEspera = _toDouble(data['recargo_espera']);
-    final subtotal = _toDouble(data['subtotal_sin_recargos']);
+    final totalRecargosBackend = _toDouble(data['total_recargos']);
+    final subtotalSinRecargos = _toDouble(data['subtotal_sin_recargos']);
+    final subtotalConDescuentoBackend = _toDouble(
+      data['subtotal_con_descuento'],
+    );
     final aplicoMinimo = data['aplico_tarifa_minima'] == true;
+    final ajusteMinimoBackend = _toDouble(data['ajuste_tarifa_minima']);
+    final precioRealBackend = _toDouble(data['precio_real']);
+    final precioFinalBackend = _toDouble(data['precio_final']);
+    final precioCongelado = data['precio_congelado'] == true;
 
-    final totalRecargos =
-        recargoNocturno + recargoHoraPico + recargoFestivo + recargoEspera;
-    final subtotalCalculado = subtotal > 0
-        ? subtotal + totalRecargos
-        : tarifaBase + precioDistancia + precioTiempo + totalRecargos;
-    final ajusteMinimo = (precio - subtotalCalculado).clamp(0.0, double.infinity);
+    final totalRecargos = totalRecargosBackend > 0
+        ? totalRecargosBackend
+        : recargoNocturno + recargoHoraPico + recargoFestivo + recargoEspera;
+
+    final subtotalBase = subtotalSinRecargos > 0
+        ? subtotalSinRecargos
+        : tarifaBase + precioDistancia + precioTiempo;
+
+    final subtotalConDescuento = subtotalConDescuentoBackend > 0
+        ? subtotalConDescuentoBackend
+        : (subtotalBase - descuentoDistancia).clamp(0.0, double.infinity);
+
+    final subtotalOperativo = subtotalConDescuento + totalRecargos;
+
+    final ajusteTarifaMinima = ajusteMinimoBackend > 0
+        ? ajusteMinimoBackend
+        : (aplicoMinimo
+              ? (precioRealBackend > 0
+                    ? (precioRealBackend - subtotalOperativo).clamp(
+                        0.0,
+                        double.infinity,
+                      )
+                    : 0.0)
+              : 0.0);
+
+    final totalFinal = precioFinalBackend > 0 ? precioFinalBackend : precio;
+            final subtotalOperativoCop = subtotalOperativo.round();
+            final ajusteTarifaMinimaCop = ajusteTarifaMinima.round();
+            final totalFinalCop = totalFinal.round();
+            final subtotalComponentesCop = subtotalOperativoCop + ajusteTarifaMinimaCop;
+            final ajustePrecioFinalCop = totalFinalCop - subtotalComponentesCop;
+
+            final mostrarAjusteFinal = ajustePrecioFinalCop != 0;
+            final etiquetaAjusteFinal = precioCongelado
+        ? 'Ajuste por precio fijo'
+              : (ajustePrecioFinalCop.abs() < 100
+          ? 'Ajuste por redondeo'
+          : 'Ajuste final aplicado');
 
     return Container(
       width: double.infinity,
@@ -268,6 +309,11 @@ class TripSummaryCard extends StatelessWidget {
           _buildBreakdownRow('Tarifa base', tarifaBase),
           _buildBreakdownRow('Costo por distancia', precioDistancia),
           _buildBreakdownRow('Costo por tiempo', precioTiempo),
+          if (descuentoDistancia > 0)
+            _buildBreakdownRow(
+              'Descuento por distancia larga',
+              -descuentoDistancia,
+            ),
           if (recargoNocturno > 0)
             _buildBreakdownRow('Recargo nocturno', recargoNocturno),
           if (recargoHoraPico > 0)
@@ -276,15 +322,47 @@ class TripSummaryCard extends StatelessWidget {
             _buildBreakdownRow('Recargo festivo', recargoFestivo),
           if (recargoEspera > 0)
             _buildBreakdownRow('Recargo por espera', recargoEspera),
-          _buildBreakdownRow('Subtotal', subtotalCalculado, isStrong: true),
-          if (aplicoMinimo || ajusteMinimo > 0)
-            _buildBreakdownRow('Ajuste por tarifa mínima', ajusteMinimo),
+          _buildBreakdownRow(
+            'Subtotal operativo',
+            subtotalOperativoCop.toDouble(),
+            isStrong: true,
+          ),
+          if (ajusteTarifaMinimaCop > 0)
+            _buildBreakdownRow(
+              'Ajuste por tarifa mínima',
+              ajusteTarifaMinimaCop.toDouble(),
+            ),
+          if (mostrarAjusteFinal)
+            _buildBreakdownRow(
+              etiquetaAjusteFinal,
+              ajustePrecioFinalCop.toDouble(),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Divider(
+              color: isDark ? Colors.white12 : Colors.grey[300],
+              height: 1,
+            ),
+          ),
+          _buildBreakdownRow(
+            'Total final',
+            totalFinalCop.toDouble(),
+            isStrong: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBreakdownRow(String label, double value, {bool isStrong = false}) {
+  Widget _buildBreakdownRow(
+    String label,
+    double value, {
+    bool isStrong = false,
+  }) {
+    final isNegative = value < 0;
+    final amountText =
+        '${isNegative ? '-\$' : '\$'}${_formatCurrency(value.abs())}';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -299,10 +377,12 @@ class TripSummaryCard extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${_formatCurrency(value)}',
+            amountText,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white : Colors.grey[900],
+              color: isNegative
+                  ? AppColors.error
+                  : (isDark ? Colors.white : Colors.grey[900]),
               fontWeight: isStrong ? FontWeight.w700 : FontWeight.w600,
             ),
           ),

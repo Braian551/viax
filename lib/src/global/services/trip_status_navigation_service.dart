@@ -23,9 +23,20 @@ class TripStatusNavigationService {
     'trip_started': 'recogido',
     'trip_in_progress': 'en_curso',
     'en_viaje': 'en_curso',
+    'en_viaje_activo': 'en_curso',
     'iniciado': 'en_curso',
+    'in_progressing': 'en_curso',
+    'en_curso_activo': 'en_curso',
     'trip_completed': 'completada',
     'trip_cancelled': 'cancelada',
+    'searching': 'buscando',
+    'matching': 'buscando',
+    'no_driver': 'sin_conductores',
+    'no_drivers': 'sin_conductores',
+    'sin_conductor': 'sin_conductores',
+    'timed_out': 'timeout',
+    'search_timeout': 'timeout',
+    'exhausted_search': 'exhausted',
   };
 
   static const Set<String> _meetingPointStates = {
@@ -44,6 +55,14 @@ class TripStatusNavigationService {
     'pendiente',
     'buscando',
     'buscando_conductor',
+    'search_expanded',
+    'expanding_search',
+  };
+
+  static const Set<String> _noDriverTerminalStates = {
+    'sin_conductores',
+    'timeout',
+    'exhausted',
   };
 
   static const Set<String> _completedStates = {
@@ -58,10 +77,14 @@ class TripStatusNavigationService {
     'cancelada',
     'cancelado',
     'cancelada_por_usuario',
+    'cancelada_por_conductor',
+    'rechazado',
+    'rechazada',
+    'rejected',
   };
 
   static String normalizeStatus(dynamic rawStatus) {
-    final normalized = (rawStatus?.toString() ?? '').trim().toLowerCase();
+    final normalized = _normalizeStatusKey(rawStatus);
     if (normalized.isEmpty) return normalized;
     return _statusAliases[normalized] ?? normalized;
   }
@@ -72,6 +95,10 @@ class TripStatusNavigationService {
 
   static bool isCancelledStatus(dynamic status) {
     return _cancelledStates.contains(normalizeStatus(status));
+  }
+
+  static bool isNoDriverTerminalStatus(dynamic status) {
+    return _noDriverTerminalStates.contains(normalizeStatus(status));
   }
 
   static bool shouldShowPendingSummary({
@@ -107,12 +134,25 @@ class TripStatusNavigationService {
     required int fallbackClienteId,
   }) {
     final status = normalizeStatus(trip['estado']);
-    if (status.isEmpty || isCancelledStatus(status)) return null;
+    if (status.isEmpty ||
+        isCancelledStatus(status) ||
+        isCompletedStatus(status) ||
+        isNoDriverTerminalStatus(status)) {
+      return null;
+    }
 
-    final solicitudId = _asInt(trip['id']);
-    final clienteId = _asInt(trip['cliente_id']) == 0
-        ? fallbackClienteId
-        : _asInt(trip['cliente_id']);
+    final solicitudId = _firstNonZeroInt([
+      trip['id'],
+      trip['solicitud_id'],
+      trip['request_id'],
+      trip['trip_id'],
+    ]);
+    final clienteId = _firstNonZeroInt([
+      trip['cliente_id'],
+      trip['user_id'],
+      fallbackClienteId,
+    ]);
+    if (solicitudId == 0) return null;
 
     final origenLat = _asDouble(trip['origen']?['latitud'] ?? trip['latitud_recogida'] ?? trip['latitud_origen']);
     final origenLng = _asDouble(trip['origen']?['longitud'] ?? trip['longitud_recogida'] ?? trip['longitud_origen']);
@@ -184,15 +224,26 @@ class TripStatusNavigationService {
     required int fallbackConductorId,
   }) {
     final status = normalizeStatus(trip['estado']);
-    if (status.isEmpty || isCancelledStatus(status) || isCompletedStatus(status)) {
+    if (status.isEmpty ||
+        isCancelledStatus(status) ||
+        isCompletedStatus(status) ||
+        isNoDriverTerminalStatus(status)) {
       return null;
     }
 
-    final solicitudId = _asInt(trip['id']);
-    final conductorId = _asInt(trip['conductor_id']) == 0
-        ? fallbackConductorId
-        : _asInt(trip['conductor_id']);
+    final solicitudId = _firstNonZeroInt([
+      trip['id'],
+      trip['solicitud_id'],
+      trip['request_id'],
+      trip['trip_id'],
+    ]);
+    final conductorId = _firstNonZeroInt([
+      trip['conductor_id'],
+      trip['driver_id'],
+      fallbackConductorId,
+    ]);
     final clienteId = _asNullableInt(trip['cliente_id']);
+    if (solicitudId == 0 || conductorId == 0) return null;
 
     final origenLat = _asDouble(trip['origen']?['latitud'] ?? trip['latitud_recogida'] ?? trip['latitud_origen']);
     final origenLng = _asDouble(trip['origen']?['longitud'] ?? trip['longitud_recogida'] ?? trip['longitud_origen']);
@@ -229,6 +280,31 @@ class TripStatusNavigationService {
   static int _asInt(dynamic value) {
     if (value is int) return value;
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static int _firstNonZeroInt(List<dynamic> candidates) {
+    for (final candidate in candidates) {
+      final parsed = _asInt(candidate);
+      if (parsed != 0) return parsed;
+    }
+    return 0;
+  }
+
+  static String _normalizeStatusKey(dynamic rawStatus) {
+    var value = (rawStatus?.toString() ?? '').trim().toLowerCase();
+    if (value.isEmpty) return value;
+
+    value = value
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ñ', 'n')
+        .replaceAll(RegExp(r'[\s\-]+'), '_')
+        .replaceAll(RegExp(r'_+'), '_');
+
+    return value;
   }
 
   static int? _asNullableInt(dynamic value) {
