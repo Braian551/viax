@@ -180,7 +180,7 @@ flutter pub get
 
 El archivo `lib/src/core/config/env_config.dart` ya tiene tu token configurado:
 ```dart
-static const String mapboxPublicToken = 'pk.eyJ1IjoiYnJhaW5waW5nbzIiLCJhIjoiY21neHYzYnF3MWprMTJ3cHU4M3kzeHM1aiJ9.ICn4bFPZVRHcf2fyW7qBEA';
+static const String mapboxPublicToken = String.fromEnvironment('MAPBOX_ACCESS_TOKEN');
 ```
 
 Para TomTom (opcional), registra en https://developer.tomtom.com/

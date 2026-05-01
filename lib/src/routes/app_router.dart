@@ -9,6 +9,7 @@ import 'package:viax/src/features/user/presentation/screens/settings_screen.dart
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/searching_driver/searching_driver_state.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -55,27 +56,54 @@ import 'package:viax/src/features/auth/presentation/screens/empresa_register_scr
 import 'package:viax/src/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:viax/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:viax/src/features/support/presentation/screens/support_tech_home_screen.dart';
+import 'package:viax/src/features/support/presentation/screens/support_agent_desk_screen.dart';
 import 'package:viax/src/widgets/help/help_screen.dart';
 import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
 import 'package:viax/src/features/thali/presentation/screens/thali_love_screen.dart';
 import 'package:viax/src/features/legal/presentation/screens/legal_acceptance_screen.dart';
 import 'package:viax/src/features/legal/presentation/screens/background_location_disclosure_screen.dart';
 import 'package:viax/src/features/legal/guards/legal_guard.dart';
+import 'package:viax/src/global/announcements/announcement_gate.dart';
+import 'package:viax/src/global/announcements/announcement_models.dart';
 
 class AppRouter {
+  static Widget _buildHomeWithAnnouncements({
+    required Widget child,
+    required AppAnnouncementRole role,
+    int? companyId,
+    bool requiresLegalGuard = true,
+  }) {
+    final announcedChild = AppAnnouncementGate(
+      viewer: AppAnnouncementViewer(role: role, companyId: companyId),
+      child: child,
+    );
+
+    if (!requiresLegalGuard) {
+      return announcedChild;
+    }
+
+    return LegalGuard(child: announcedChild);
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        // initial route used by Navigator(initialRoute: '/')
+        // Ruta inicial usada por Navigator(initialRoute: '/')
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case RouteNames.splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case RouteNames.onboarding:
-        return FadeSlidePageRoute(page: const OnboardingScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const OnboardingScreen(),
+          settings: settings,
+        );
       case RouteNames.authWrapper:
         return MaterialPageRoute(builder: (_) => const AuthWrapper());
       case RouteNames.welcome:
-        return FadeSlidePageRoute(page: const WelcomeScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const WelcomeScreen(),
+          settings: settings,
+        );
       case RouteNames.login:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -88,7 +116,10 @@ class AppRouter {
           );
         }
       case RouteNames.phoneAuth:
-        return FadeSlidePageRoute(page: const PhoneAuthScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const PhoneAuthScreen(),
+          settings: settings,
+        );
       case RouteNames.phoneRequired:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -98,7 +129,10 @@ class AppRouter {
           );
         }
       case RouteNames.emailAuth:
-        return FadeSlidePageRoute(page: const EmailAuthScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const EmailAuthScreen(),
+          settings: settings,
+        );
       case RouteNames.emailVerification:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -111,7 +145,10 @@ class AppRouter {
           );
         }
       case RouteNames.forgotPassword:
-        return FadeSlidePageRoute(page: const ForgotPasswordScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const ForgotPasswordScreen(),
+          settings: settings,
+        );
       case RouteNames.passwordRecoveryVerification:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -148,6 +185,9 @@ class AppRouter {
               email: args?['email']?.toString() ?? '',
               password: args?['password']?.toString(),
               deletionScheduledAt: args?['deletionScheduledAt']?.toString(),
+              authProvider: args?['authProvider']?.toString(),
+              idToken: args?['idToken']?.toString(),
+              accessToken: args?['accessToken']?.toString(),
             ),
             settings: settings,
           );
@@ -193,10 +233,16 @@ class AppRouter {
           );
         }
       case RouteNames.empresaRegister:
-        return FadeSlidePageRoute(page: const EmpresaRegisterScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const EmpresaRegisterScreen(),
+          settings: settings,
+        );
       case RouteNames.welcomeSplash:
-        return FadeSlidePageRoute(page: const WelcomeSplashScreen(), settings: settings);
-      
+        return FadeSlidePageRoute(
+          page: const WelcomeSplashScreen(),
+          settings: settings,
+        );
+
       // Pantallas Sistema Legal
       case RouteNames.legalAcceptance:
         {
@@ -217,8 +263,15 @@ class AppRouter {
           );
         }
       case RouteNames.backgroundLocationDisclosure:
-        return MaterialPageRoute(builder: (_) => const BackgroundLocationDisclosureScreen());
-      
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => BackgroundLocationDisclosureScreen(
+              role: args?['role']?.toString() ?? '',
+            ),
+          );
+        }
+
       case RouteNames.locationPicker:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -232,11 +285,19 @@ class AppRouter {
           );
         }
       case RouteNames.driverRegistration:
-        return FadeSlidePageRoute(page: const DriverRegistrationScreen(), settings: settings);
+        return FadeSlidePageRoute(
+          page: const DriverRegistrationScreen(),
+          settings: settings,
+        );
       case RouteNames.home:
         // Cuando el usuario se autentique debe ir a la pantalla principal (HomeUserScreen)
-        return MaterialPageRoute(builder: (_) => const LegalGuard(child: HomeUserScreen()));
-      
+        return MaterialPageRoute(
+          builder: (_) => _buildHomeWithAnnouncements(
+            role: AppAnnouncementRole.client,
+            child: const HomeUserScreen(),
+          ),
+        );
+
       // Rutas de usuario
       case RouteNames.requestTrip:
         {
@@ -257,49 +318,93 @@ class AppRouter {
       case RouteNames.userSearchingDriver:
         {
           final args = settings.arguments as Map<String, dynamic>?;
+          final initialFlowStateName =
+              (args?['initialFlowState'] ?? args?['flowState'] ?? '')
+                  .toString();
+          final initialFlowState = SearchFlowState.values.firstWhere(
+            (value) => value.name == initialFlowStateName,
+            orElse: () => SearchFlowState.searchingDriver,
+          );
+          final estimatedPriceRaw =
+              args?['estimatedPrice'] ??
+              args?['precioEstimado'] ??
+              args?['precio_estimado'];
+          final estimatedPriceLabel = estimatedPriceRaw is num
+              ? '\$${estimatedPriceRaw.toStringAsFixed(0)}'
+              : estimatedPriceRaw?.toString();
 
-          final solicitudId = args?['solicitudId'] ?? args?['solicitud_id'] ?? 0;
+          final solicitudId =
+              args?['solicitudId'] ?? args?['solicitud_id'] ?? 0;
           final clienteId = args?['clienteId'] ?? args?['cliente_id'] ?? 0;
-          final latitudOrigen = (args?['latitudOrigen'] as num?)?.toDouble() ??
-            (args?['origen']?['latitud'] as num?)?.toDouble() ??
-            0.0;
-          final longitudOrigen = (args?['longitudOrigen'] as num?)?.toDouble() ??
-            (args?['origen']?['longitud'] as num?)?.toDouble() ??
-            0.0;
-          final latitudDestino = (args?['latitudDestino'] as num?)?.toDouble() ??
-            (args?['destino']?['latitud'] as num?)?.toDouble() ??
-            0.0;
-          final longitudDestino = (args?['longitudDestino'] as num?)?.toDouble() ??
-            (args?['destino']?['longitud'] as num?)?.toDouble() ??
-            0.0;
+          final latitudOrigen =
+              (args?['latitudOrigen'] as num?)?.toDouble() ??
+              (args?['origen']?['latitud'] as num?)?.toDouble() ??
+              0.0;
+          final longitudOrigen =
+              (args?['longitudOrigen'] as num?)?.toDouble() ??
+              (args?['origen']?['longitud'] as num?)?.toDouble() ??
+              0.0;
+          final latitudDestino =
+              (args?['latitudDestino'] as num?)?.toDouble() ??
+              (args?['destino']?['latitud'] as num?)?.toDouble() ??
+              0.0;
+          final longitudDestino =
+              (args?['longitudDestino'] as num?)?.toDouble() ??
+              (args?['destino']?['longitud'] as num?)?.toDouble() ??
+              0.0;
           final direccionOrigen =
-            args?['direccionOrigen'] ?? args?['direccion_origen'] ?? args?['origen']?['direccion'] ?? 'Origen';
+              args?['direccionOrigen'] ??
+              args?['direccion_origen'] ??
+              args?['origen']?['direccion'] ??
+              'Origen';
           final direccionDestino =
-            args?['direccionDestino'] ?? args?['direccion_destino'] ?? args?['destino']?['direccion'] ?? 'Destino';
+              args?['direccionDestino'] ??
+              args?['direccion_destino'] ??
+              args?['destino']?['direccion'] ??
+              'Destino';
 
           return MaterialPageRoute(
-          builder: (_) => SearchingDriverScreen(
-            solicitudId: solicitudId,
-            clienteId: clienteId,
-            latitudOrigen: latitudOrigen,
-            longitudOrigen: longitudOrigen,
-            direccionOrigen: direccionOrigen,
-            latitudDestino: latitudDestino,
-            longitudDestino: longitudDestino,
-            direccionDestino: direccionDestino,
-            tipoVehiculo: args?['tipoVehiculo'] ?? args?['tipo_vehiculo'] ?? 'mototaxi',
-            initialEmpresaId: args?['initialEmpresaId'] ?? args?['empresa_id'],
-            initialCompanyName: args?['initialCompanyName'] ?? args?['empresa_nombre'],
-            initialCompanyLogoUrl: args?['initialCompanyLogoUrl'] ?? args?['empresa_logo_url'],
-            companyCandidates: (args?['companyCandidates'] as List?)
-                ?.whereType<Map>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList() ??
-              const [],
-          ),
-          settings: settings,
+            builder: (_) => SearchingDriverScreen(
+              solicitudId: solicitudId,
+              clienteId: clienteId,
+              latitudOrigen: latitudOrigen,
+              longitudOrigen: longitudOrigen,
+              direccionOrigen: direccionOrigen,
+              latitudDestino: latitudDestino,
+              longitudDestino: longitudDestino,
+              direccionDestino: direccionDestino,
+              tipoVehiculo:
+                  args?['tipoVehiculo'] ?? args?['tipo_vehiculo'] ?? 'mototaxi',
+              initialEmpresaId:
+                  args?['initialEmpresaId'] ?? args?['empresa_id'],
+              initialCompanyName:
+                  args?['initialCompanyName'] ?? args?['empresa_nombre'],
+              initialCompanyLogoUrl:
+                  args?['initialCompanyLogoUrl'] ?? args?['empresa_logo_url'],
+              initialFlowState: initialFlowState,
+              estimatedPriceLabel: estimatedPriceLabel,
+              paymentLabel:
+                  args?['paymentLabel'] ??
+                  args?['metodo_pago'] ??
+                  'Efectivo o tarjeta',
+              serviceFeatures:
+                  (args?['serviceFeatures'] as List?)
+                      ?.map((item) => item.toString())
+                      .toList() ??
+                  const [
+                    'Seguimiento en tiempo real',
+                    'Asignacion continua',
+                    'Cobertura ampliada',
+                  ],
+              companyCandidates:
+                  (args?['companyCandidates'] as List?)
+                      ?.whereType<Map>()
+                      .map((item) => Map<String, dynamic>.from(item))
+                      .toList() ??
+                  const [],
+            ),
+            settings: settings,
           );
-
         }
       case '/user/active_trip':
         {
@@ -321,7 +426,7 @@ class AppRouter {
             settings: settings,
           );
         }
-      
+
       // Ruta alternativa para navegación desde FAB flotante (cliente)
       case '/user/active-trip':
         {
@@ -350,21 +455,28 @@ class AppRouter {
             builder: (_) => UserTripAcceptedScreen(
               solicitudId: args?['solicitudId'] ?? args?['solicitud_id'] ?? 0,
               clienteId: args?['clienteId'] ?? args?['cliente_id'] ?? 0,
-              latitudOrigen: (args?['latitudOrigen'] as num?)?.toDouble() ??
+              latitudOrigen:
+                  (args?['latitudOrigen'] as num?)?.toDouble() ??
                   (args?['latitud_origen'] as num?)?.toDouble() ??
                   0,
-              longitudOrigen: (args?['longitudOrigen'] as num?)?.toDouble() ??
+              longitudOrigen:
+                  (args?['longitudOrigen'] as num?)?.toDouble() ??
                   (args?['longitud_origen'] as num?)?.toDouble() ??
                   0,
               direccionOrigen:
-                  args?['direccionOrigen'] ?? args?['direccion_origen'] ?? 'Origen',
-              latitudDestino: (args?['latitudDestino'] as num?)?.toDouble() ??
+                  args?['direccionOrigen'] ??
+                  args?['direccion_origen'] ??
+                  'Origen',
+              latitudDestino:
+                  (args?['latitudDestino'] as num?)?.toDouble() ??
                   (args?['latitud_destino'] as num?)?.toDouble() ??
                   0,
-              longitudDestino: (args?['longitudDestino'] as num?)?.toDouble() ??
+              longitudDestino:
+                  (args?['longitudDestino'] as num?)?.toDouble() ??
                   (args?['longitud_destino'] as num?)?.toDouble() ??
                   0,
-              direccionDestino: args?['direccionDestino'] ??
+              direccionDestino:
+                  args?['direccionDestino'] ??
                   args?['direccion_destino'] ??
                   'Destino',
               conductorInfo: args?['conductorInfo'] ?? args?['conductor'],
@@ -372,7 +484,7 @@ class AppRouter {
             settings: settings,
           );
         }
-      
+
       // Ruta para navegación desde FAB flotante (conductor)
       case '/conductor/active-trip':
         {
@@ -390,13 +502,14 @@ class AppRouter {
               direccionDestino: args?['direccionDestino'] ?? 'Destino',
               clienteNombre: args?['clienteNombre'],
               clienteFoto: args?['clienteFoto'],
-              clienteCalificacion: (args?['clienteCalificacion'] as num?)?.toDouble(),
+              clienteCalificacion: (args?['clienteCalificacion'] as num?)
+                  ?.toDouble(),
               initialTripStatus: args?['initialTripStatus'],
             ),
             settings: settings,
           );
         }
-      
+
       case RouteNames.userProfile:
         return MaterialPageRoute(builder: (_) => const UserProfileScreen());
       case RouteNames.tripHistory:
@@ -410,8 +523,11 @@ class AppRouter {
       case RouteNames.settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case RouteNames.editProfile:
-        return FadeSlidePageRoute(page: const EditProfileScreen(), settings: settings);
-      
+        return FadeSlidePageRoute(
+          page: const EditProfileScreen(),
+          settings: settings,
+        );
+
       case RouteNames.notifications:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -423,7 +539,7 @@ class AppRouter {
             ),
           );
         }
-      
+
       case RouteNames.help:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -450,7 +566,7 @@ class AppRouter {
             settings: settings,
           );
         }
-      
+
       case RouteNames.favoritePlaces:
       case RouteNames.promotions:
       case RouteNames.about:
@@ -462,7 +578,10 @@ class AppRouter {
             backgroundColor: Colors.black,
             appBar: AppBar(
               backgroundColor: Colors.black,
-              title: const Text('Próximamente', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Próximamente',
+                style: TextStyle(color: Colors.white),
+              ),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
@@ -476,16 +595,15 @@ class AppRouter {
             ),
           ),
         );
-      
+
       // Rutas de administrador
       case RouteNames.adminHome:
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => LegalGuard(
-              child: AdminHomeScreen(
-                adminUser: args?['admin_user'] ?? {},
-              ),
+            builder: (_) => _buildHomeWithAnnouncements(
+              role: AppAnnouncementRole.admin,
+              child: AdminHomeScreen(adminUser: args?['admin_user'] ?? {}),
             ),
           );
         }
@@ -494,8 +612,12 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => SupportTechHomeScreen(
-              supportUser: args?['support_user'] ?? args?['admin_user'] ?? {},
+            builder: (_) => _buildHomeWithAnnouncements(
+              role: AppAnnouncementRole.support,
+              requiresLegalGuard: false,
+              child: SupportTechHomeScreen(
+                supportUser: args?['support_user'] ?? args?['admin_user'] ?? {},
+              ),
             ),
           );
         }
@@ -514,18 +636,14 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => StatisticsScreen(
-              adminId: args?['admin_id'] ?? 0,
-            ),
+            builder: (_) => StatisticsScreen(adminId: args?['admin_id'] ?? 0),
           );
         }
       case RouteNames.adminAuditLogs:
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => AuditLogsScreen(
-              adminId: args?['admin_id'] ?? 0,
-            ),
+            builder: (_) => AuditLogsScreen(adminId: args?['admin_id'] ?? 0),
           );
         }
       // Conductores y Docs removido del admin - lo gestiona cada empresa
@@ -534,9 +652,8 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => EmpresasManagementScreen(
-              adminUser: args?['admin_user'] ?? {},
-            ),
+            builder: (_) =>
+                EmpresasManagementScreen(adminUser: args?['admin_user'] ?? {}),
           );
         }
 
@@ -544,9 +661,8 @@ class AppRouter {
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => PlatformEarningsScreen(
-              adminId: args?['admin_id'] ?? 0,
-            ),
+            builder: (_) =>
+                PlatformEarningsScreen(adminId: args?['admin_id'] ?? 0),
           );
         }
 
@@ -564,40 +680,44 @@ class AppRouter {
       case RouteNames.adminSupport:
         {
           final args = settings.arguments as Map<String, dynamic>?;
+          final adminId =
+              (args?['admin_id'] as int?) ??
+              (args?['admin_user']?['id'] as int?) ??
+              0;
           return MaterialPageRoute(
-            builder: (_) => HelpScreen(
-              userType: HelpUserType.admin,
-              userId: args?['admin_id'] ?? 0,
-            ),
+            builder: (_) => SupportAgentDeskScreen(agentId: adminId),
           );
         }
-      
+
       // Rutas de empresa
       case RouteNames.companyHome:
         {
           final args = settings.arguments as Map<String, dynamic>?;
           final user = args?['user'] ?? {};
           final empresaId = user['empresa_id'];
-          debugPrint('AppRouter: Navigating to companyHome. User: ${user['nombre']}, EmpresaId: $empresaId');
-          
+          debugPrint(
+            'AppRouter: Navigating to companyHome. User: ${user['nombre']}, EmpresaId: $empresaId',
+          );
+
           return MaterialPageRoute(
             builder: (_) => ChangeNotifierProvider(
               create: (_) => CompanyProvider(empresaId: empresaId),
-              child: LegalGuard(
-                child: CompanyHomeScreen(
-                  user: user,
-                ),
+              child: _buildHomeWithAnnouncements(
+                role: AppAnnouncementRole.company,
+                companyId: int.tryParse(empresaId?.toString() ?? ''),
+                child: CompanyHomeScreen(user: user),
               ),
             ),
           );
         }
-      
+
       // Rutas de conductor
       case RouteNames.conductorHome:
         {
           final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (_) => LegalGuard(
+            builder: (_) => _buildHomeWithAnnouncements(
+              role: AppAnnouncementRole.conductor,
               child: ConductorHomeScreen(
                 conductorUser: args?['conductor_user'] ?? {},
               ),
@@ -612,7 +732,7 @@ class AppRouter {
           return FadeSlidePageRoute(
             page: ConductorProfileScreen(
               conductorId: conductorId,
-              conductorUser: conductorUser, // Pass the full map
+              conductorUser: conductorUser, // Pasa el mapa completo
               showBackButton: true,
             ),
             settings: settings,
@@ -709,7 +829,7 @@ class AppRouter {
             settings: settings,
           );
         }
-      
+
       case RouteNames.sharedLocationView:
         {
           final args = settings.arguments as Map<String, dynamic>?;
@@ -730,9 +850,7 @@ class AppRouter {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No existe la ruta: ${settings.name}'),
-            ),
+            body: Center(child: Text('No existe la ruta: ${settings.name}')),
           ),
         );
     }

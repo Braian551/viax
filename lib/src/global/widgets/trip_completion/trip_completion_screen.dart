@@ -1357,17 +1357,9 @@ class _TripCompletionScreenState extends State<TripCompletionScreen>
     );
   }
 
-  /// Calcula el precio final aplicando redondeo si es efectivo
+  /// Retorna el precio final tal como llega desde la liquidación canónica.
   double _getFinalPrice() {
-    if (_isEfectivo) {
-      return _roundPrice(widget.tripData.precio);
-    }
     return widget.tripData.precio;
-  }
-
-  /// Redondea el precio al múltiplo de 100 más cercano
-  double _roundPrice(double price) {
-    return (price / 100).round() * 100.0;
   }
 
   /// Formatea la moneda con separadores de miles

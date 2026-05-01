@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../global/services/user_block_service.dart';
+import 'global_overlay_message.dart';
 
 class UserBlockActionButton extends StatefulWidget {
   final int actorId;
@@ -99,19 +100,17 @@ class _UserBlockActionButtonState extends State<UserBlockActionButton> {
       if (!mounted) return;
       setState(() => _blockState = nextState);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isBlockedByMe
-                ? '${widget.targetLabel[0].toUpperCase()}${widget.targetLabel.substring(1)} desbloqueado correctamente.'
-                : '${widget.targetLabel[0].toUpperCase()}${widget.targetLabel.substring(1)} bloqueado correctamente.',
-          ),
-        ),
+      GlobalOverlayMessage.showSuccess(
+        context,
+        isBlockedByMe
+            ? '${widget.targetLabel[0].toUpperCase()}${widget.targetLabel.substring(1)} desbloqueado correctamente.'
+            : '${widget.targetLabel[0].toUpperCase()}${widget.targetLabel.substring(1)} bloqueado correctamente.',
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserBlockService.friendlyFromError(e))),
+      GlobalOverlayMessage.showError(
+        context,
+        UserBlockService.friendlyFromError(e),
       );
     } finally {
       if (mounted) {

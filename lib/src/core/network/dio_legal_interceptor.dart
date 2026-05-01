@@ -111,10 +111,18 @@ class DioSecurityInterceptor extends Interceptor {
 
   void _forceRedirectToLegal() {
     if (ActiveTripNavigationService.navigatorKey.currentState != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final session = await UserService.getSavedSession();
+        final role = (session?['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
+        final userId = int.tryParse((session?['id'] ?? 0).toString()) ?? 0;
+
         ActiveTripNavigationService.navigatorKey.currentState!.pushNamedAndRemoveUntil(
           RouteNames.legalAcceptance,
           (route) => false,
+          arguments: {
+            'role': role,
+            if (userId > 0) 'userId': userId,
+          },
         );
       });
     }

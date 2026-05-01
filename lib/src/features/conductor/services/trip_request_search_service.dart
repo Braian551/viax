@@ -138,6 +138,14 @@ class TripRequestSearchService {
       return;
     }
 
+    // Mantiene heartbeat/location en backend aunque el conductor esté quieto.
+    await updateLocation(
+      conductorId: conductorId,
+      latitude: currentLat,
+      longitude: currentLng,
+      timestampMsUtc: DateTime.now().toUtc().millisecondsSinceEpoch,
+    );
+
     await _searchRequests(
       conductorId: conductorId,
       currentLat: currentLat,
@@ -151,19 +159,29 @@ class TripRequestSearchService {
     required int conductorId,
     required double latitude,
     required double longitude,
+    double? heading,
+    int? timestampMsUtc,
   }) async {
     try {
+      final payload = <String, dynamic>{
+        'conductor_id': conductorId,
+        'latitud': latitude,
+        'longitud': longitude,
+      };
+      if (heading != null && heading.isFinite) {
+        payload['heading'] = heading;
+      }
+      if (timestampMsUtc != null && timestampMsUtc > 0) {
+        payload['timestamp_ms'] = timestampMsUtc;
+      }
+
       await _postWithFallback(
-        path: '/conductor/update_location.php',
-        body: {
-          'conductor_id': conductorId,
-          'latitud': latitude,
-          'longitud': longitude,
-        },
+        path: '/conductor/actualizar_ubicacion.php',
+        body: payload,
         timeout: const Duration(seconds: 5),
       );
     } catch (e) {
-      print('Error actualizando ubicacion: ');
+      print('Error actualizando ubicacion: $e');
     }
   }
 

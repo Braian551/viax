@@ -77,7 +77,7 @@ Navigator.pushNamed(context, '/map-example');
 
 **Ya está configurado:**
 ```
-pk.eyJ1IjoiYnJhaW5waW5nbzIiLCJhIjoiY21neHYzYnF3MWprMTJ3cHU4M3kzeHM1aiJ9.ICn4bFPZVRHcf2fyW7qBEA
+${MAPBOX_ACCESS_TOKEN}
 ```
 
 **Ubicación:**

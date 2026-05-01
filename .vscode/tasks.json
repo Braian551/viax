@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "flutter analyze",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "viax_flutter_analyze_once",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "viax_flutter_analyze_now",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "deploy_backend_create_trip_request_prod",
+			"type": "shell",
+			"command": "cd backend && scp -o StrictHostKeyChecking=accept-new user/create_trip_request.php root@76.13.114.194:/var/www/viax/backend/user/create_trip_request.php && ssh -o StrictHostKeyChecking=accept-new root@76.13.114.194 \"cd /var/www/viax/backend && php scripts/check_pending_migrations.php | tee /tmp/viax_check_pending_migrations.out && if grep -q PENDING_MIGRATIONS_FOUND /tmp/viax_check_pending_migrations.out; then php scripts/run_migrations.php; fi && export DEPLOY_CHANGED_FILES='user/create_trip_request.php' && chmod +x deploy.sh && ./deploy.sh && redis-cli ping && supervisorctl status && echo SMOKE1_CODE=$(curl -s -o /tmp/viax_smoke1.txt -w '%{http_code}' -X POST http://127.0.0.1/user/create_trip_request.php -H 'Content-Type: application/json' -d '{}') && cat /tmp/viax_smoke1.txt && echo SMOKE2_CODE=$(curl -s -o /tmp/viax_smoke2.txt -w '%{http_code}' -X POST http://127.0.0.1/conductor/update_trip_status.php -H 'Content-Type: application/json' -d '{}') && cat /tmp/viax_smoke2.txt && echo SMOKE3_CODE=$(curl -s -o /tmp/viax_smoke3.txt -w '%{http_code}' -X POST http://127.0.0.1/user/trip_preview.php -H 'Content-Type: application/json' -d '{}') && cat /tmp/viax_smoke3.txt && echo HEALTH_CODE=$(curl -s -o /tmp/viax_health.txt -w '%{http_code}' http://127.0.0.1/health.php) && cat /tmp/viax_health.txt\"",
+			"isBackground": false
+		}
+	]
+}

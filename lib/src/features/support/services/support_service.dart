@@ -174,9 +174,69 @@ class TicketLogEntry {
   }
 }
 
+class UserModerationReport {
+  final int id;
+  final int reporterUserId;
+  final int reportedUserId;
+  final int? solicitudId;
+  final String motivo;
+  final String? descripcion;
+  final String estado;
+  final String prioridad;
+  final String? reporterNombre;
+  final String? reporterApellido;
+  final String? reportedNombre;
+  final String? reportedApellido;
+  final String? reviewerNombre;
+  final String? reviewerApellido;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  UserModerationReport({
+    required this.id,
+    required this.reporterUserId,
+    required this.reportedUserId,
+    this.solicitudId,
+    required this.motivo,
+    this.descripcion,
+    required this.estado,
+    required this.prioridad,
+    this.reporterNombre,
+    this.reporterApellido,
+    this.reportedNombre,
+    this.reportedApellido,
+    this.reviewerNombre,
+    this.reviewerApellido,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory UserModerationReport.fromJson(Map<String, dynamic> json) {
+    return UserModerationReport(
+      id: json['id'] ?? 0,
+      reporterUserId: json['reporter_user_id'] ?? 0,
+      reportedUserId: json['reported_user_id'] ?? 0,
+      solicitudId: json['solicitud_id'],
+      motivo: json['motivo']?.toString() ?? 'otro',
+      descripcion: json['descripcion']?.toString(),
+      estado: json['estado']?.toString() ?? 'pendiente',
+      prioridad: json['prioridad']?.toString() ?? 'media',
+      reporterNombre: json['reporter_nombre']?.toString(),
+      reporterApellido: json['reporter_apellido']?.toString(),
+      reportedNombre: json['reported_nombre']?.toString(),
+      reportedApellido: json['reported_apellido']?.toString(),
+      reviewerNombre: json['reviewer_nombre']?.toString(),
+      reviewerApellido: json['reviewer_apellido']?.toString(),
+      createdAt: _parseSupportDate(json['created_at']),
+      updatedAt: _parseSupportDate(json['updated_at']),
+    );
+  }
+}
+
 /// Servicio de soporte
 class SupportService {
   static final String _baseUrl = '${AppConfig.baseUrl}/support';
+  static final String _adminBaseUrl = AppConfig.adminServiceUrl;
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
 
   /// Obtener categorías de soporte
@@ -543,6 +603,108 @@ class SupportService {
       return data['success'] == true;
     } catch (e) {
       print('Error solicitando callback: $e');
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getUserReports({
+    required int actorId,
+    String? estado,
+    String? prioridad,
+    String? search,
+    int limit = 50,
+  }) async {
+    try {
+      final queryParams = {
+        'actor_id': actorId.toString(),
+        'limit': limit.toString(),
+      };
+      if (estado != null && estado.isNotEmpty) {
+        queryParams['estado'] = estado;
+      }
+      if (prioridad != null && prioridad.isNotEmpty) {
+        queryParams['prioridad'] = prioridad;
+      }
+      if (search != null && search.trim().isNotEmpty) {
+        queryParams['search'] = search.trim();
+      }
+
+      final uri = Uri.parse('$_adminBaseUrl/user_reports.php')
+          .replace(queryParameters: queryParams);
+
+      final result = await _network.getJson(
+        url: uri,
+        headers: {'Accept': 'application/json'},
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return {
+          'success': false,
+          'reportes': <UserModerationReport>[],
+          'resumen': <String, dynamic>{},
+        };
+      }
+
+      final data = result.json!;
+      if (data['success'] == true) {
+        final rawData = (data['data'] as Map?)?.cast<String, dynamic>() ??
+            <String, dynamic>{};
+        final List<dynamic> rows = rawData['reportes'] ?? [];
+        return {
+          'success': true,
+          'reportes': rows
+              .map((item) => UserModerationReport.fromJson(item))
+              .toList(),
+          'resumen': rawData['resumen'] ?? <String, dynamic>{},
+        };
+      }
+
+      return {
+        'success': false,
+        'reportes': <UserModerationReport>[],
+        'resumen': <String, dynamic>{},
+      };
+    } catch (e) {
+      print('Error obteniendo reportes de usuarios: $e');
+      return {
+        'success': false,
+        'reportes': <UserModerationReport>[],
+        'resumen': <String, dynamic>{},
+      };
+    }
+  }
+
+  static Future<bool> updateUserReport({
+    required int actorId,
+    required int reportId,
+    required String action,
+    String? resolutionNote,
+  }) async {
+    try {
+      final result = await _network.postJson(
+        url: Uri.parse('$_adminBaseUrl/user_reports.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'actor_id': actorId,
+          'report_id': reportId,
+          'action': action,
+          if (resolutionNote != null && resolutionNote.trim().isNotEmpty)
+            'resolution_note': resolutionNote.trim(),
+        }),
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return false;
+      }
+
+      return result.json!['success'] == true;
+    } catch (e) {
+      print('Error actualizando reporte de usuario: $e');
       return false;
     }
   }

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:viax/src/core/config/app_config.dart';
 import 'package:viax/src/core/network/network_request_executor.dart';
+import 'package:viax/src/core/realtime/realtime_service.dart';
 
 class UserService {
   static const NetworkRequestExecutor _network = NetworkRequestExecutor();
@@ -365,6 +366,11 @@ class UserService {
   }
 
   static Future<void> clearSession() async {
+    // Desconectar WebSocket al cerrar sesión.
+    try {
+      RealtimeService.instance.shutdown();
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kUserEmail);
     await prefs.remove(_kUserId);
@@ -524,19 +530,37 @@ class UserService {
 
   static Future<Map<String, dynamic>> reactivateAccount({
     required String email,
-    required String password,
+    String? password,
+    String? idToken,
+    String? accessToken,
   }) async {
     try {
+      final body = <String, dynamic>{
+        'email': email,
+      };
+
+      final trimmedPassword = password?.trim() ?? '';
+      if (trimmedPassword.isNotEmpty) {
+        body['password'] = trimmedPassword;
+      }
+
+      final trimmedIdToken = idToken?.trim() ?? '';
+      if (trimmedIdToken.isNotEmpty) {
+        body['id_token'] = trimmedIdToken;
+      }
+
+      final trimmedAccessToken = accessToken?.trim() ?? '';
+      if (trimmedAccessToken.isNotEmpty) {
+        body['access_token'] = trimmedAccessToken;
+      }
+
       final response = await http.post(
         Uri.parse('${AppConfig.accountServiceUrl}/reactivate.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode(body),
       );
 
       return jsonDecode(response.body) as Map<String, dynamic>;

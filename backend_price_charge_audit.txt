@@ -1,0 +1,881 @@
+﻿AUDITORIA_BACKEND_PHP_PRECIOS_COBROS
+PatronRegex: precio_final\s*=|price_final\s*=|precio_final_aplicado|price_final_canonical|precio_en_tracking|precio_estimado|ganancia_conductor|comision_plataforma_valor|total_cobrado|charge|total
+Archivos con coincidencias: 85
+
+FILE: backend/admin/audit_logs.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L78: // Contar total
+  L79: $countQuery = "SELECT COUNT(*) as total FROM logs_auditoria l $whereClause";
+  L82: $total = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
+  L129: 'total' => $total,
+  L132: 'total_pages' => ceil($total / $perPage)
+
+FILE: backend/admin/dashboard_stats.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L63: COUNT(*) as total_usuarios,
+  L64: SUM(CASE WHEN tipo_usuario = 'cliente' THEN 1 ELSE 0 END) as total_clientes,
+  L65: SUM(CASE WHEN tipo_usuario = 'conductor' THEN 1 ELSE 0 END) as total_conductores,
+  L66: SUM(CASE WHEN tipo_usuario = 'administrador' THEN 1 ELSE 0 END) as total_administradores,
+  L78: COUNT(*) as total_solicitudes,
+
+FILE: backend/admin/empresa_payment_reports.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L335: subtotal, porcentaje_comision, valor_comision, total, moneda,
+  L341: :subtotal, :pct_comision, :val_comision, :total, 'COP',
+  L348: $subtotalBase = $comisionPct > 0
+  L365: ':subtotal' => $subtotalBase,
+  L368: ':total' => $valorComision,
+
+FILE: backend/admin/empresas.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L151: // Contar total
+  L152: $countQuery = "SELECT COUNT(*) as total FROM empresas_transporte $whereClause";
+  L155: $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+  L199: 'total' => intval($total),
+  L200: 'total_pages' => ceil($total / $limit)
+
+FILE: backend/admin/empresas_deudoras.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L46: et.total_viajes_completados,
+  L49: ) AS total_cargos,
+  L52: ) AS total_pagado,
+  L64: $deudaTotal = 0;
+  L65: $totalPagadoGlobal = 0;
+
+FILE: backend/admin/facturas.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L80: // Contar total para paginaci├│n
+  L87: $total = intval($stmtCount->fetchColumn());
+  L110: $montoNormalizado = floatval($f['total'] ?? $f['subtotal'] ?? 0);
+  L123: COUNT(*) AS total_facturas,
+  L124: COALESCE(SUM(total), 0) AS total_facturado,
+
+FILE: backend/admin/generate_invoice_pdf.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L198: $subtotalRaw = floatval($factura['subtotal'] ?? 0);
+  L199: $totalRaw = floatval($factura['total'] ?? 0);
+  L204: // Si existe porcentaje y total, usar total como comisi├│n para mostrar correctamente.
+  L205: if ($comisionRaw <= 0 && $comisionPct > 0 && $totalRaw > 0) {
+  L206: $comisionRaw = $totalRaw;
+
+FILE: backend/admin/get_conductores_documentos.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L61: COUNT(*) as total,
+  L82: 'total_conductores' => intval($stats_result['total']),
+  L116: // Query para contar total filtrado (para paginaci├│n)
+  L117: $count_sql = "SELECT COUNT(*) as total
+  L127: $total_result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+FILE: backend/admin/get_documentos_historial.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L108: 'total' => count($historial)
+
+FILE: backend/admin/get_pricing_configs.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L94: COUNT(*) as total,
+  L108: 'total' => intval($stats['total']),
+
+FILE: backend/admin/platform_earnings.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L6: * Retorna las ganancias totales de la plataforma VIAX:
+  L7: * - Total que deben todas las empresas (saldo_pendiente)
+  L62: // 1. Total que deben TODAS las empresas (cuenta por cobrar)
+  L63: $stmt = $db->query("SELECT COALESCE(SUM(saldo_pendiente), 0) as total_por_cobrar FROM empresas_transporte WHERE estado IN ('activo', 'activa')");
+  L64: $total_por_cobrar = floatval($stmt->fetchColumn());
+
+FILE: backend/admin/user_management.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L128: // Contar total
+  L129: $countQuery = "SELECT COUNT(*) as total FROM usuarios u $whereClause";
+  L135: $total = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
+  L137: error_log("handleGetUsers - Total usuarios: $total");
+  L167: 'total' => $total,
+
+FILE: backend/admin/user_reports.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L138: COUNT(*) AS total,
+
+FILE: backend/chat/get_messages.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L131: 'total' => count($mensajesFormateados)
+
+FILE: backend/company/conductores_documentos.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L100: COUNT(DISTINCT u.id) as total,
+  L140: 'total_conductores' => intval($stats_result['total']),
+  L197: // Query para contar total
+  L198: $count_sql = "SELECT COUNT(DISTINCT u.id) as total
+  L208: $total_conductores = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+FILE: backend/company/dashboard_stats.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L7: * - Total de conductores activos
+  L76: COUNT(DISTINCT ss.id) as total_viajes,
+  L94: // 2. Total de conductores de la empresa (Solo conductores aprobados y vinculados)
+  L96: COUNT(DISTINCT u.id) as total,
+  L112: $precioBaseExpr = "COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(ss.precio_final, 0), ss.precio_estimado, 0)";
+
+FILE: backend/company/debt_payment_reports.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L301: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L303: COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado)
+  L307: ), 0) AS total_comision
+  L321: $totalComision = floatval($stmtComision->fetch(PDO::FETCH_ASSOC)['total_comision'] ?? 0);
+  L323: $queryPagos = "SELECT COALESCE(SUM(monto), 0) AS total_pagado
+
+FILE: backend/company/drivers.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L76: 'total' => count($conductores)
+
+FILE: backend/company/get_balance.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L40: total_viajes_completados
+  L65: SUM(CASE WHEN tipo = 'cargo' THEN monto ELSE 0 END) as total_cargos,
+  L66: SUM(CASE WHEN tipo = 'pago' THEN monto ELSE 0 END) as total_pagos
+  L82: 'total_viajes' => intval($empresa['total_viajes_completados'])
+  L85: 'total_cargos' => floatval($resumen['total_cargos'] ?? 0),
+
+FILE: backend/company/get_conductor_transactions.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L80: COALESCE(comisiones.total_comision, 0) AS total_comision,
+  L81: COALESCE(pagos.total_pagado, 0) AS total_pagado
+  L88: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L90: COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado)
+  L94: ) AS total_comision
+
+FILE: backend/company/get_debtors.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L7: * (comisi├│n total calculada, pagada y deuda actual).
+  L82: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L84: COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado)
+  L88: ), 0) AS total_comision
+  L97: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+
+FILE: backend/company/platform_debt_context.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L58: // Total pagado hist├│ricamente
+  L59: $stmtTotalPagado = $db->prepare("SELECT COALESCE(SUM(monto), 0) FROM pagos_empresas WHERE empresa_id = :id AND tipo = 'pago'");
+  L60: $stmtTotalPagado->execute([':id' => $empresaId]);
+  L61: $totalPagado = floatval($stmtTotalPagado->fetchColumn());
+  L63: // Total cargado hist├│ricamente
+
+FILE: backend/company/reports.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L190: COUNT(*) as total_viajes,
+  L195: COALESCE(SUM(s.distancia_estimada), 0) as distancia_total,
+  L207: $tasa_completados = $result['total_viajes'] > 0
+  L208: ? round(($result['completados'] / $result['total_viajes']) * 100, 1)
+  L212: 'total' => (int)$result['total_viajes'],
+
+FILE: backend/company/reports_pdf.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L99: COUNT(*) as total_viajes,
+  L111: $total = (int)$result['total_viajes'];
+  L113: $tasa = $total > 0 ? round(($completados / $total) * 100, 1) : 0;
+  L115: return ['total' => $total, 'tasa_completados' => $tasa];
+  L138: return ['ingresos_totales' => $ingresos, 'ganancia_neta' => $realized];
+
+FILE: backend/conductor/actualizar_ubicacion.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L9: * - Mantiene compatibilidad total del contrato JSON existente.
+
+FILE: backend/conductor/debt_payment_context.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L99: $queryComisionTotal = "SELECT
+  L102: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L104: COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado)
+  L116: $stmtTotal = $db->prepare($queryComisionTotal);
+  L117: $paramsTotal = [':conductor_id' => $conductorId];
+
+FILE: backend/conductor/get_demand_zones.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L227: 'total_zones' => count($zones),
+  L228: 'total_requests' => count($activeRequests),
+  L229: 'total_drivers' => count($availableDrivers),
+
+FILE: backend/conductor/get_estadisticas.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L99: $precioBaseExpr = "COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado, 0)";
+  L103: ELSE COALESCE(vrt.ganancia_conductor, 0) * (($trackingPctExpr) / NULLIF(100 - ($trackingPctExpr), 0))
+  L106: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L107: WHEN vrt.solicitud_id IS NOT NULL AND COALESCE(vrt.ganancia_conductor, 0) > 0 THEN $comisionDesdeGananciaExpr
+  L112: WHEN COALESCE(vrt.ganancia_conductor, 0) > 0 THEN vrt.ganancia_conductor
+
+FILE: backend/conductor/get_ganancias.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L7: * - Ganancias totales usando la comisi├│n real configurada por la empresa
+  L9: * - Comisi├│n total adeudada a la empresa
+  L110: $precioBaseExpr = "COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado, 0)";
+  L113: WHEN vrt.comision_plataforma_valor > 0 AND ($precioBaseExpr) > 0 THEN (vrt.comision_plataforma_valor * 100.0) / NULLIF(($precioBaseExpr), 0)
+  L127: ELSE COALESCE(vrt.ganancia_conductor, 0) * (($porcentajeComisionEfectivoExpr) / NULLIF(100 - ($porcentajeComisionEfectivoExpr), 0))
+
+FILE: backend/conductor/get_historial.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L71: // Contar total de viajes
+  L72: $query_count = "SELECT COUNT(*) as total
+  L81: $total = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
+  L112: s.precio_estimado,
+  L126: vrt.precio_final_aplicado as tracking_precio,
+
+FILE: backend/conductor/get_info.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L69: dc.total_viajes,
+  L98: $conductor['total_viajes'] = 0;
+
+FILE: backend/conductor/get_pendientes_empresa.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L43: COUNT(*) as total_pendientes,
+  L53: 'total_pendientes' => intval($stats['total_pendientes']),
+  L55: 'sin_solicitud' => intval($stats['total_pendientes']) - intval($stats['con_solicitud'])
+
+FILE: backend/conductor/get_pending_requests.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L81: ? 'COALESCE(s.precio_fijo, s.precio_estimado, 0)'
+  L82: : 'COALESCE(s.precio_estimado, 0)';
+  L130: s.precio_estimado,
+  L196: 'precio_estimado' => $precioCanonico,
+  L210: 'total' => count($solicitudesFormateadas),
+
+FILE: backend/conductor/get_profile.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L68: dc.total_viajes,
+  L105: 'total_viajes' => (int)($conductor['total_viajes'] ?? 0),
+  L168: $total_items = 2; // license and vehicle (with documents)
+  L204: $profile['completion_percentage'] = $total_items > 0 ? round($completed_items / $total_items, 2) : 0;
+
+FILE: backend/conductor/get_solicitudes_pendientes.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L82: ? 'COALESCE(s.precio_fijo, s.precio_estimado, 0)'
+  L83: : 'COALESCE(s.precio_estimado, 0)';
+  L139: s.precio_estimado,
+  L169: (COALESCE(hc.score_confianza, 0) + CASE WHEN cf.es_favorito = true THEN 100 ELSE 0 END) as score_total";
+  L213: score_total DESC,
+
+FILE: backend/conductor/get_viajes_activos.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L35: s.precio_estimado,
+  L71: 'total' => count($viajesFormateados),
+
+FILE: backend/conductor/report_debt_payment.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L114: WHEN vrt.comision_plataforma_valor > 0 THEN vrt.comision_plataforma_valor
+  L116: COALESCE(NULLIF(vrt.precio_final_aplicado, 0), NULLIF(s.precio_final, 0), s.precio_estimado)
+  L120: ), 0) AS total_comision
+  L133: $totalComision = floatval(($stmtComision->fetch(PDO::FETCH_ASSOC) ?: [])['total_comision'] ?? 0);
+  L135: $queryPagos = "SELECT COALESCE(SUM(monto), 0) AS total_pagado
+
+FILE: backend/conductor/tracking/finalize.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L268: 'total_cop' => (float)$row['precio_final'],
+  L317: 'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0,
+  L524: s.precio_estimado,
+  L529: vrt.precio_final_aplicado,
+  L542: positiveFloatOrNull($row['precio_final_aplicado'] ?? null),
+
+FILE: backend/conductor/tracking/get_tracking.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L110: 'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0,
+  L278: $priceFinalCanonical = nullOrFloat($resumen['precio_final_aplicado'] ?? null)
+  L297: . ' price_final=' . $precioActual);
+  L348: precio_final_aplicado,
+  L351: total_puntos_gps,
+
+FILE: backend/conductor/tracking/register_point.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L15: * - distancia_acumulada_km: Distancia total recorrida hasta ahora (calculada en app)
+  L245: // NOTA: precio_ajustado_por_tracking es un boolean, precio_en_tracking guarda el precio parcial
+  L250: precio_en_tracking = :precio
+
+FILE: backend/conductor/tracking/tracking_ingest_service.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L179: precio_en_tracking = :precio
+
+FILE: backend/conductor/update_profile.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L206: dc.total_viajes,
+
+FILE: backend/conductor/update_trip_status.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L126: $precio_final = isset($input['precio_final']) ? floatval($input['precio_final']) : null;
+  L324: $update_fields[] = "precio_final = :precio";
+  L327: $update_fields[] = "price_final = :price_final_en";
+  L387: total_viajes = COALESCE(total_viajes, 0) + 1
+  L404: $precioViaje = $precio_final ?? floatval($solicitud['precio_estimado'] ?? 0);
+
+FILE: backend/confianza/calculate_score.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L66: hc.total_viajes,
+  L70: dc.total_viajes as total_viajes_conductor
+  L87: 'total_viajes_conductor' => (int)($detalles['total_viajes_conductor'] ?? 0),
+
+FILE: backend/confianza/ConfianzaService.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L146: if (!$historial || !$historial['total_calificaciones']) return 0;
+  L148: $promedioCalif = $historial['suma_calificaciones_conductor'] / $historial['total_calificaciones'];
+  L312: SELECT id, total_viajes, viajes_completados, viajes_cancelados,
+  L322: $totalViajes = $historial['total_viajes'] + 1;
+  L333: $n = $historial['total_viajes'];
+
+FILE: backend/config/concurrency_service.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L441: SET disponible = 1, total_viajes = COALESCE(total_viajes, 0) + 1
+
+FILE: backend/driver/tracking/update.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L198: 'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0.0,
+  L335: $distanceTotalKm = isset($existing['distance_km']) ? floatval($existing['distance_km']) : 0.0;
+  L377: ? 'COALESCE(precio_fijo, precio_estimado) AS precio_minimo'
+  L378: : 'precio_estimado AS precio_minimo';
+  L386: precio_estimado,
+
+FILE: backend/middleware/SecurityMiddleware.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L30: * Valores: "monitor" (solo logs), "partial" (bloquea nuevos), "enforce" (bloqueo total).
+  L252: * En modo "enforce": bloqueo total.
+
+FILE: backend/notifications/get_notifications.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L66: // Contar total
+  L68: SELECT COUNT(*) as total
+  L78: $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+  L79: $totalPages = ceil($totalRecords / $limit);
+  L133: 'total_pages' => $totalPages,
+
+FILE: backend/payment/report_payment_status.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L173: $stmtPrecio = $db->prepare("SELECT precio_final, precio_estimado FROM solicitudes_servicio WHERE id = ?");
+  L176: $montoTotal = $precioData['precio_final'] > 0 ? $precioData['precio_final'] : $precioData['precio_estimado'];
+  L182: $montoConductor = $montoTotal * 0.90; // 90% para el conductor
+  L183: $comisionPlataforma = $montoTotal * 0.10; // 10% comisi├│n
+  L188: monto_total, monto_conductor, comision_plataforma,
+
+FILE: backend/pricing/calculate_quote.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L126: $subtotal = $tarifa_base + $precio_distancia + $precio_tiempo;
+  L135: $descuento_distancia = $subtotal * ($porcentaje_descuento / 100);
+  L138: $subtotal_con_descuento = $subtotal - $descuento_distancia;
+  L176: $recargo_precio = $subtotal_con_descuento * ($recargo_porcentaje / 100);
+  L179: $total = $subtotal_con_descuento + $recargo_precio;
+
+FILE: backend/rating/confirm_cash_payment.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L47: SELECT s.id, s.estado, s.precio_final, s.precio_estimado, s.cliente_id, ac.conductor_id
+  L60: $montoTotal = $monto ?? $solicitud['precio_final'] ?? $solicitud['precio_estimado'] ?? 0;
+  L61: $montoConductor = $montoTotal * 0.90; // 90% para el conductor
+  L62: $comisionPlataforma = $montoTotal * 0.10; // 10% comisi├│n
+  L70: precio_final = CASE WHEN precio_final IS NULL OR precio_final = 0 THEN ? ELSE precio_final END,
+
+FILE: backend/rating/get_ratings.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L43: // Obtener total de calificaciones
+  L45: SELECT COUNT(*) as total
+  L50: $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+  L81: COUNT(*) as total,
+  L117: 'total' => (int)$stats['total'],
+
+FILE: backend/rating/get_trip_summary.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L47: s.precio_estimado,
+  L103: : floatval($viaje['precio_estimado']);
+  L145: 'precio_estimado' => floatval($viaje['precio_estimado']),
+
+FILE: backend/rating/submit_rating.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L165: total_calificaciones = (
+  L184: COUNT(c.id) as total
+  L194: $totalCalificacionesEmpresa = $statsEmpresa['total'] ?? 0;
+  L198: INSERT INTO empresas_metricas (empresa_id, calificacion_promedio, total_calificaciones, ultima_actualizacion)
+  L202: total_calificaciones = ?,
+
+FILE: backend/repositories/TripRepository.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L33: s.precio_estimado,
+  L35: s.precio_en_tracking,
+  L52: vrt.precio_final_aplicado AS tracking_precio,
+
+FILE: backend/routes/api.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L6: * compatibilidad total. Este archivo prepara la transici├│n modular.
+
+FILE: backend/scripts/backfill_canonical_trip_metrics.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L91: $stmt = $db->prepare("\n            SELECT\n                id,\n                distancia_estimada,\n                tiempo_estimado,\n                precio_estimado,\n                distancia_recorrida,\n                tiempo_transcurrido,\n                precio_final\n            FROM solicitudes_servicio\n            WHERE estado IN ('completada', 'entregado')\n              AND COALESCE(metrics_locked, FALSE) = FALSE\n            ORDER BY id ASC\n            LIMIT :limit\n        ");
+  L118: ?? toFloatOrNull($row['precio_estimado'])
+  L121: $upd = $db->prepare("\n                UPDATE solicitudes_servicio\n                SET\n                    distance_final = :distance_final,\n                    duration_final = :duration_final,\n                    price_final = :price_final,\n                    metrics_locked = TRUE,\n                    finalized_at = COALESCE(finalized_at, NOW())\n                WHERE id = :id\n            ");
+
+FILE: backend/scripts/migrate_financial_accounts_encryption.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L49: $total = 0;
+  L50: $total += migrateColumn($db, 'admin_configuracion_banco', 'id', 'numero_cuenta');
+  L51: $total += migrateColumn($db, 'empresas_configuracion', 'empresa_id', 'numero_cuenta');
+  L52: $total += migrateColumn($db, 'pagos_comision_reportes', 'id', 'numero_cuenta_destino');
+  L53: $total += migrateColumn($db, 'pagos_empresa_reportes', 'id', 'numero_cuenta_destino');
+
+FILE: backend/scripts/test_hardening_smoke.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L34: $decisionMargin = UpfrontPricingService::resolveFinalCharge(
+  L48: $decisionNormal = UpfrontPricingService::resolveFinalCharge(
+
+FILE: backend/scripts/test_upfront_pricing_hybrid.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L63: $result = UpfrontPricingService::resolveFinalCharge(
+  L82: $result = UpfrontPricingService::resolveFinalCharge(
+  L102: $result = UpfrontPricingService::resolveFinalCharge(
+  L132: $result = UpfrontPricingService::resolveFinalCharge(
+
+FILE: backend/services/EmailService.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L117: $totalCop = number_format((float)($summary['total_cop'] ?? 0), 0, ',', '.');
+  L160: "  <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:#1976D2; margin-bottom:6px;'>Total pagado</div>\n" .
+  L161: "  <div style='font-size:30px; line-height:1; font-weight:800; color:#0f172a;'>{$totalCop} <span style='font-size:14px; font-weight:700; color:#1976D2;'>COP</span></div>\n" .
+  L178: "Total pagado: {$totalCop} COP\n" .
+
+FILE: backend/services/matching_service.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L74: $query = "\n            SELECT\n                u.id,\n                u.nombre,\n                u.apellido,\n                u.telefono,\n                u.foto_perfil,\n                u.empresa_id,\n                dc.vehiculo_tipo,\n                dc.calificacion_promedio,\n                COALESCE(dc.calificacion_promedio, 4.5) AS rating,\n                COALESCE(dc.total_viajes, 0) AS total_viajes,\n                COALESCE(dc.viajes_aceptados, 0) AS viajes_aceptados\n            FROM usuarios u\n            INNER JOIN detalles_conductor dc ON dc.usuario_id = u.id\n            WHERE u.id IN ($placeholders)\n              AND u.es_activo = 1\n              AND dc.disponible = 1\n        ";
+  L107: $total = max(1, (int)$r['total_viajes']);
+  L109: $acceptance = min(1.0, $accepted / $total);
+
+FILE: backend/services/places_search_service.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L11: * - Limita a 10 resultados totales.
+  L132: COUNT(*) AS total_viajes,
+  L156: $totalTrips = max(0, (int)($row['total_viajes'] ?? 0));
+  L157: if ($totalTrips <= 0) {
+  L165: $frequency = min(1.0, $totalTrips / 10.0);
+
+FILE: backend/services/traffic_pricing.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L60: function calculateTrafficSurcharge(float $ratio): float
+  L87: $raw = strtolower(trim((string) env_value('APPLY_SUNDAY_AS_HOLIDAY_SURCHARGE', '1')));
+
+FILE: backend/services/upfront_pricing_service.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L39: public static function resolveFinalCharge(
+
+FILE: backend/support/get_tickets.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L99: // Contar total
+  L100: $countQuery = "\n        SELECT COUNT(*) as total\n        FROM tickets_soporte t\n        INNER JOIN usuarios u ON t.usuario_id = u.id\n        $whereClause\n    ";
+  L106: $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+  L107: $totalPages = ceil($totalRecords / $limit);
+  L174: 'total_pages' => $totalPages,
+
+FILE: backend/trip/summary.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L177: s.precio_estimado,
+  L179: s.precio_en_tracking,
+  L190: vrt.precio_final_aplicado,
+  L200: vrt.subtotal_sin_recargos,
+  L201: vrt.total_recargos,
+
+FILE: backend/user/create_trip_request.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L174: $precioEstimadoPayload = isset($data['precio_estimado']) ? (float)$data['precio_estimado'] : (float)($data['precio'] ?? 0);
+  L211: ? 'COALESCE(s.precio_fijo, s.precio_estimado, 0) AS precio_fijo'
+  L212: : 'COALESCE(s.precio_estimado, 0) AS precio_fijo';
+  L220: COALESCE(s.precio_estimado, 0) AS precio_estimado,
+  L237: (float)($existing['precio_fijo'] ?? $existing['precio_estimado'] ?? 0),
+
+FILE: backend/user/find_nearby_drivers.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L110: dc.total_viajes,
+  L163: 'total_viajes' => (int) ($r['total_viajes'] ?? 0),
+  L215: dc.total_viajes,
+  L266: 'total_viajes' => (int) ($c['total_viajes'] ?? 0),
+  L348: 'total' => count($conductoresFormateados),
+
+FILE: backend/user/get_company_details.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L55: ) as total_conductores,
+  L70: ) as total_viajes_completados,
+  L82: ) as total_calificaciones
+  L152: 'total_conductores' => intval($empresa['total_conductores'] ?? 0),
+  L153: 'viajes_completados' => intval($empresa['total_viajes_completados'] ?? 0),
+
+FILE: backend/user/get_favorite_drivers.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L61: 'total_viajes' => (int)$fav['total_viajes'],
+  L70: 'total' => count($favoritosFormateados),
+
+FILE: backend/user/get_payment_summary.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L55: // Query para obtener totales
+  L58: COALESCE(SUM(COALESCE(precio_final, precio_estimado, 0)), 0) as total_pagado,
+  L59: COUNT(*) as total_viajes,
+  L60: COALESCE(AVG(COALESCE(precio_final, precio_estimado, 0)), 0) as promedio_por_viaje
+  L95: 'total_pagado' => (float)$result['total_pagado'],
+
+FILE: backend/user/get_recent_searches.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L44: 'total' => count($items),
+
+FILE: backend/user/get_trip_history.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L90: // Obtener total de registros
+  L91: $countQuery = "SELECT COUNT(*) as total FROM solicitudes_servicio ss $whereClause";
+  L97: $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+  L98: $totalPages = ceil($totalRecords / $limit);
+  L114: COALESCE(ss.precio_estimado, 0) as precio_estimado,
+
+FILE: backend/user/get_trip_status.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L329: s.precio_estimado,
+  L336: s.precio_en_tracking,
+  L364: vrt.precio_final_aplicado AS tracking_precio,
+  L584: s.precio_en_tracking,
+  L699: 'precio_tracking'     => isset($trip['precio_en_tracking'])  ? round((float) $trip['precio_en_tracking'], 2)  : 0,
+
+FILE: backend/user/rate_trip.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L117: SELECT AVG(c.calificacion) as promedio, COUNT(c.id) as total
+  L144: total_calificaciones = ?
+  L149: intval($promedioData['total']),
+  L154: error_log("Empresa $empresaId: Calificaci├│n actualizada a " . round($promedioData['promedio'], 2) . " (basado en " . intval($promedioData['total']) . " calificaciones)");
+
+FILE: backend/user/search_places.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L9: * Dedupe por place_id y l├¡mite total de 10.
+  L47: 'total' => count($results),
+
+FILE: backend/user/services/CompanyService.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: SI
+  L477: COUNT(*) as total_conductores,
+  L569: $totalConductoresEmpresa = 0;
+  L594: $numConductores = $hasConductor ? intval($conductorData['total_conductores']) : 0;
+  L597: $totalConductoresEmpresa += $numConductores;
+  L619: 'tarifa_total' => $precio['total'],
+
+FILE: backend/user/stream_trip_updates.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L88: 'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0,
+
+FILE: backend/utils/Mailer.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L309: <span style='color: #6c757d; font-size: 13px; line-height: 1.4; display: block;'>Recibir├ís un email confirmando tu acceso total a la plataforma.</span>
+
+FILE: backend/utils/NotificationHelper.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L142: "Tu viaje ha finalizado exitosamente. Total: $" . number_format($precio, 0, ',', '.'),
+
+FILE: backend/utils/PdfGenerator.php
+TIPO: CALCULO/ESCRITURA
+LEGACY_FALLBACK: NO
+  L330: 'all' => 'Hist├│rico total'
+  L360: ['title' => 'Viajes Totales', 'value' => number_format((int)($tripStats['total'] ?? 0), 0, ',', '.'), 'accent' => [13, 110, 253]],
+  L362: ['title' => 'GMV', 'value' => $this->formatMoney($earningsStats['ingresos_totales'] ?? 0), 'accent' => [33, 150, 243]],
+  L371: $this->renderDetailRow('Distancia Total', number_format((float)($tripStats['distancia_total'] ?? 0), 2, ',', '.') . ' km');
+  L384: (string)($d['total_viajes'] ?? 0),
+
+FILE: backend/workers/account_deletion_worker.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: NO
+  L114: $redis->incrBy('workers:account_deletion:processed_total', $processedCount);
+
+FILE: backend/workers/surge_pricing_worker.php
+TIPO: LECTURA/USO
+LEGACY_FALLBACK: SI
+  L156: COUNT(*) AS total
+  L176: $map[$gridId] = (int)($row['total'] ?? 0);
+
+ARCHIVOS_DE_CALCULO (heuristico):
+  - backend/admin/empresas_deudoras.php
+  - backend/company/get_debtors.php
+  - backend/conductor/get_historial.php
+  - backend/conductor/tracking/finalize.php
+  - backend/conductor/tracking/get_tracking.php
+  - backend/conductor/tracking/register_point.php
+  - backend/conductor/tracking/tracking_ingest_service.php
+  - backend/conductor/update_trip_status.php
+  - backend/driver/tracking/update.php
+  - backend/pricing/calculate_quote.php
+  - backend/rating/confirm_cash_payment.php
+  - backend/scripts/backfill_canonical_trip_metrics.php
+  - backend/scripts/migrate_financial_accounts_encryption.php
+  - backend/user/get_trip_status.php
+  - backend/user/services/CompanyService.php
+  - backend/utils/PdfGenerator.php
+
+POSIBLES_RUTAS_LEGACY_FALLBACK:
+  backend/get_api_keys.php:68:        // No fallback - keys MUST be set via environment variables
+  backend/company/vehicles.php:136:            // Fallback: usar configuracion_precios (compatibilidad)
+  backend/company/vehicles.php:190:            // Fallback: usar configuracion_precios
+  backend/company/vehicles.php:191:            toggleVehicleLegacy($db, $empresaId, $tipoVehiculo, $activo);
+  backend/company/vehicles.php:283: * Toggle usando la tabla legacy (configuracion_precios)
+  backend/company/vehicles.php:285:function toggleVehicleLegacy($db, $empresaId, $tipoVehiculo, $activo) {
+  backend/company/pricing.php:72:        // Normalizamos para evitar desalineaci├│n entre cat├ílogos legacy y nuevos.
+  backend/company/pricing.php:76:        // Si no tiene registros, asumimos modo legacy o nuevo sin config
+  backend/company/pricing.php:123:                    $merged[$activeType] = buildFallbackPricingForActiveVehicle($merged, $activeType);
+  backend/company/pricing.php:140:                // Modo fallback (legacy): solo si el precio est├í activo.
+  backend/company/pricing.php:207:            // Buscar coincidencias tambi├⌐n por alias para actualizar datos legacy.
+  backend/company/pricing.php:358:function buildFallbackPricingForActiveVehicle($mergedPricing, $activeType) {
+  backend/legal/accept.php:46:        $contentHash = hash('sha256', "fallback_legal|{$role}|{$version}");
+  backend/migrations/run_migrations.php:3: * Compatibilidad legacy.
+  backend/middleware/SecurityMiddleware.php:38:     * Obtiene el secreto HMAC fallback desde variables de entorno.
+  backend/middleware/SecurityMiddleware.php:118:     * Valida la firma HMAC usando session_key din├ímica o secreto est├ítico como fallback.
+  backend/middleware/SecurityMiddleware.php:149:        // Determinar la clave de firma: session_key din├ímica o fallback est├ítico
+  backend/empresa/settings.php:40:    // Fallback for $_REQUEST/$_POST
+  backend/middleware/LegalMiddleware.php:52:        error_log("[LegalMiddleware] current_version obtenida desde POSTGRESQL (Fallback)");
+  backend/middleware/LegalMiddleware.php:89:        error_log("[LegalMiddleware] accepted_version obtenida desde POSTGRESQL (Fallback)");
+  backend/admin/platform_earnings.php:85:    // Fallback para historicos que solo tengan tracking.
+  backend/admin/generate_invoice_pdf.php:179:    $safe = static function ($value, $fallback = '-') {
+  backend/admin/generate_invoice_pdf.php:182:            $txt = $fallback;
+  backend/company/colombia_banks.php:23:function fallbackBanks() {
+  backend/company/colombia_banks.php:101:    'data' => fallbackBanks(),
+  backend/company/colombia_banks.php:102:    'source' => 'fallback',
+  backend/empresa/services/EmpresaService.php:164:            $pdfData['created_at'] = date('d/m/Y'); // fallback
+  backend/empresa/services/EmpresaService.php:261:                'email' => $inputData['email'] ?? $normalizedEmail, // Fallback
+  backend/empresa/services/EmpresaService.php:408:        // If legacy single field provided, try to split if apellido is empty
+  backend/conductor/driver_auth.php:7: * - Mantener compatibilidad con clientes legacy (modo no estricto).
+  backend/conductor/driver_auth.php:54: * - strict=false: bootstrap para clientes legacy sin romper compatibilidad.
+  backend/conductor/driver_auth.php:72:        // Fallback defensivo: no bloquear operaci├│n por indisponibilidad temporal de Redis.
+  backend/core/Cache.php:3: * Cache de aplicaci├│n con fallback seguro.
+  backend/core/Auth.php:51:        // Compatibilidad: sesiones legacy sin expires_at siguen vigentes por TTL de Redis.
+  backend/conductor/get_solicitudes_pendientes.php:8: * - Mantiene fallback por distancia si no hay historial de confianza
+  backend/conductor/get_solicitudes_pendientes.php:261:        // Priorizar precio fijo can├│nico; fallback a f├│rmula base si no hay dato.
+  backend/core/RateLimiter.php:12:    private static array $fallbackCounters = [];
+  backend/core/RateLimiter.php:23:            return self::allowWithLocalFallback($key, $maxRequests, $windowSeconds);
+  backend/core/RateLimiter.php:34:            return self::allowWithLocalFallback($key, $maxRequests, $windowSeconds);
+  backend/core/RateLimiter.php:54:    private static function allowWithLocalFallback(string $key, int $maxRequests, int $windowSeconds): bool
+  backend/core/RateLimiter.php:60:        if (!isset(self::$fallbackCounters[$key]) || self::$fallbackCounters[$key]['expires_at'] <= $now) {
+  backend/core/RateLimiter.php:61:            self::$fallbackCounters[$key] = [
+  backend/core/RateLimiter.php:68:        self::$fallbackCounters[$key]['count']++;
+  backend/core/RateLimiter.php:69:        return self::$fallbackCounters[$key]['count'] <= $safeMax;
+  backend/core/RateLimiter.php:84:            'fallback' => 'local_memory',
+  backend/conductor/get_pending_requests.php:32:function conductorPendingLegacyColumnExists(PDO $db, string $tableName, string $columnName): bool
+  backend/conductor/get_pending_requests.php:76:    $hasPrecioFijoColumn = conductorPendingLegacyColumnExists($db, 'solicitudes_servicio', 'precio_fijo');
+  backend/empresa/repositories/EmpresaRepository.php:286:                     // Intento de fallback
+  backend/conductor/actualizar_ubicacion.php:53: * - driver_location:{id} (legacy)
+  backend/conductor/actualizar_ubicacion.php:353:    // Validaci├│n de sesi├│n (modo compatible para no romper clientes legacy).
+  backend/conductor/actualizar_ubicacion.php:431:        // /driver/tracking/update y en finalize para evitar inflado por payloads legacy.
+  backend/conductor/verify_biometrics.php:140:        if (!$python) $python = 'python'; // Fallback
+  backend/conductor/verify_biometrics.php:234:            // Fallback para MySQL
+  backend/driver/tracking/update.php:116:function trackingPricingFallbackConfig(): array {
+  backend/driver/tracking/update.php:179:    return trackingPricingFallbackConfig();
+  backend/driver/tracking/update.php:195:        $legacy = $redis->hGetAll($metricsKey);
+  backend/driver/tracking/update.php:196:        if (is_array($legacy) && !empty($legacy)) {
+  backend/driver/tracking/update.php:198:                'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0.0,
+  backend/driver/tracking/update.php:199:                'elapsed_time_sec' => isset($legacy['elapsed_time_sec']) ? intval($legacy['elapsed_time_sec']) : 0,
+  backend/driver/tracking/update.php:200:                'avg_speed_kmh' => isset($legacy['avg_speed_kmh']) ? floatval($legacy['avg_speed_kmh']) : 0.0,
+  backend/driver/tracking/update.php:201:                'last_timestamp' => isset($legacy['last_ts']) ? gmdate('c', intval($legacy['last_ts'])) : null,
+  backend/driver/tracking/update.php:202:                'last_ts' => isset($legacy['last_ts']) ? intval($legacy['last_ts']) : 0,
+  backend/driver/tracking/update.php:203:                'last_lat' => isset($legacy['last_lat']) ? floatval($legacy['last_lat']) : null,
+  backend/driver/tracking/update.php:204:                'last_lng' => isset($legacy['last_lng']) ? floatval($legacy['last_lng']) : null,
+  backend/driver/tracking/update.php:205:                'planned_route_km' => isset($legacy['planned_route_km']) ? floatval($legacy['planned_route_km']) : 0.0,
+  backend/driver/tracking/update.php:587:            // Fallback legacy si falla lectura de configuraci├│n.
+  backend/conductor/accept_trip_request.php:182:    // Si el servicio de concurrencia falla, intentar m├⌐todo legacy como fallback
+  backend/conductor/accept_trip_request.php:308:                error_log('accept_trip_request.php legacy notification error: ' . $notificationError->getMessage());
+  backend/conductor/tracking/finalize.php:86:function configPreciosFallbackFinalize() {
+  backend/conductor/tracking/finalize.php:108:        '__fallback' => true,
+  backend/conductor/tracking/finalize.php:112:function normalizeTimeValueFinalize($value, string $fallback): string {
+  backend/conductor/tracking/finalize.php:115:        return $fallback;
+  backend/conductor/tracking/finalize.php:119:        return $fallback;
+  backend/conductor/tracking/finalize.php:127:        return $fallback;
+  backend/conductor/tracking/finalize.php:228:                COALESCE(s.distance_final, s.distancia_recorrida, :distancia_fallback) AS distancia_final,
+  backend/conductor/tracking/finalize.php:229:                COALESCE(s.duration_final, s.tiempo_transcurrido, :tiempo_fallback) AS tiempo_final_seg,
+  backend/conductor/tracking/finalize.php:230:                COALESCE(s.price_final, s.precio_final, :precio_fallback) AS precio_final,
+  backend/conductor/tracking/finalize.php:241:            ':distancia_fallback' => $distanciaKm,
+  backend/conductor/tracking/finalize.php:242:            ':tiempo_fallback' => $tiempoSeg,
+  backend/conductor/tracking/finalize.php:243:            ':precio_fallback' => $precioFinal,
+  backend/conductor/tracking/finalize.php:314:        $legacy = $redis->hGetAll('trip:' . $solicitudId . ':metrics');
+  backend/conductor/tracking/finalize.php:315:        if (is_array($legacy) && !empty($legacy)) {
+  backend/conductor/tracking/finalize.php:317:                'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0,
+  backend/conductor/tracking/finalize.php:318:                'elapsed_time_sec' => isset($legacy['elapsed_time_sec']) ? intval($legacy['elapsed_time_sec']) : 0,
+  backend/conductor/tracking/finalize.php:371:function reconcileDistanceKmFromGps(PDO $db, int $solicitudId, float $fallbackKm): array {
+  backend/conductor/tracking/finalize.php:375:            'distance_km' => max(0.0, $fallbackKm),
+  backend/conductor/tracking/finalize.php:462:        'distance_km' => max($distanceKm, $fallbackKm, 0.0),
+  backend/conductor/tracking/finalize.php:468:function resolveDurationSegFromServer(PDO $db, int $solicitudId, int $fallbackSeg): int {
+  backend/conductor/tracking/finalize.php:482:            return max($fallbackSeg, $fin - $ini, 0);
+  backend/conductor/tracking/finalize.php:499:        return max($fallbackSeg, $fin - $ini, 0);
+  backend/conductor/tracking/finalize.php:502:    return max(0, $fallbackSeg);
+  backend/conductor/tracking/finalize.php:619:                $config['__fallback'] = false;
+  backend/conductor/tracking/finalize.php:653:            $config['__fallback'] = false;
+  backend/conductor/tracking/finalize.php:658:    return configPreciosFallbackFinalize();
+  backend/conductor/tracking/finalize.php:848:    // Si no hay trazas, usar fallback pero con candado de plausibilidad temporal.
+  backend/conductor/tracking/finalize.php:881:    // Fallback cr├¡tico: algunos viajes llegan sin empresa_id en la solicitud,
+  backend/conductor/tracking/finalize.php:917:    if (!empty($config['__fallback'])) {
+  backend/conductor/tracking/finalize.php:918:        error_log('[tracking_finalize] Sin configuraci├│n de precios para solicitud ' . $solicitud_id . ', tipo=' . $tipoVehiculoSeleccionado . '. Se aplic├│ fallback seguro.');
+  backend/conductor/tracking/finalize.php:975:    // Fallback operativo: si no hay dato real de Routes (por ejemplo, API key faltante)
+  backend/conductor/tracking/finalize.php:1001:        $trafico['source'] = 'fallback_config_schedule';
+  backend/conductor/tracking/finalize.php:1149:        $recalculo_reasons[] = 'tracking_invalid_fallback_to_estimate';
+  backend/conductor/update_trip_status.php:166:    // Fallback legacy: si no hay fila en asignaciones, validar contra conductor_id de solicitud (si existe).
+  backend/conductor/update_trip_status.php:409:                $stmtEmpresaFallback = $db->prepare("SELECT empresa_id FROM usuarios WHERE id = :conductor_id LIMIT 1");
+  backend/conductor/update_trip_status.php:410:                $stmtEmpresaFallback->execute([':conductor_id' => $conductor_id]);
+  backend/conductor/update_trip_status.php:411:                $empresaIdConductor = $stmtEmpresaFallback->fetchColumn();
+  backend/conductor/update_trip_status.php:459:            // Valores por defecto si no hay config (fallback)
+  backend/conductor/tracking/get_tracking.php:107:        $legacy = $redis->hGetAll('trip:' . $solicitudId . ':metrics');
+  backend/conductor/tracking/get_tracking.php:108:        if (is_array($legacy) && !empty($legacy)) {
+  backend/conductor/tracking/get_tracking.php:110:                'distance_km' => isset($legacy['distance_total_km']) ? floatval($legacy['distance_total_km']) : 0,
+  backend/conductor/tracking/get_tracking.php:111:                'elapsed_time_sec' => isset($legacy['elapsed_time_sec']) ? intval($legacy['elapsed_time_sec']) : 0,
+  backend/conductor/tracking/get_tracking.php:112:                'price' => isset($legacy['price']) ? floatval($legacy['price']) : 0,
+  backend/admin/empresas.php:838:        // Fallbacks para email y representante si faltan en la tabla empresas pero est├ín en usuarios
+  backend/conductor/tracking/tracking_ingest_service.php:392:        error_log('[tracking_ingest] Sin configuraci├│n de precios para solicitud ' . ($viaje['id'] ?? 'N/A') . ', tipo=' . ($viaje['tipo_vehiculo'] ?? 'N/A') . '. Usando fallback seguro.');
+  backend/conductor/tracking/tracking_ingest_service.php:393:        return configTarifaFallback();
+  backend/conductor/tracking/tracking_ingest_service.php:436:function configTarifaFallback(): array
+  backend/account/delete-request.php:64:        // Normalizar estados legacy al nuevo flujo: pending_deletion -> inactive.
+  backend/rating/get_trip_summary.php:88:        // Fallback: calcular desde timestamps
+  backend/scripts/backfill_canonical_trip_metrics.php:107:            // Regla: priorizar tracking real; si no existe, fallback legacy/estimado.
+  backend/scripts/migrate_financial_accounts_encryption.php:7: * Migra datos legacy en texto plano a formato cifrado.
+  backend/scripts/check_pending_migrations.php:16:function isLegacyMySqlSql(string $sql): bool
+  backend/scripts/check_pending_migrations.php:107:    $legacyApplied = 0;
+  backend/scripts/check_pending_migrations.php:108:    $legacyIgnored = 0;
+  backend/scripts/check_pending_migrations.php:118:        $isLegacyMySql = $driver === 'pgsql' && isLegacyMySqlSql($sql);
+  backend/scripts/check_pending_migrations.php:120:        if ($isLegacyMySql) {
+  backend/scripts/check_pending_migrations.php:128:                    'ignored_legacy',
+  backend/scripts/check_pending_migrations.php:129:                    'Migraci├│n legacy MySQL ignorada en PostgreSQL por compatibilidad.'
+  backend/scripts/check_pending_migrations.php:131:                $legacyIgnored++;
+  backend/scripts/check_pending_migrations.php:141:                    'legacy_applied',
+  backend/scripts/check_pending_migrations.php:142:                    'Migraci├│n legacy detectada como aplicada hist├│ricamente.'
+  backend/scripts/check_pending_migrations.php:144:                $legacyApplied++;
+  backend/scripts/check_pending_migrations.php:145:            } elseif ($status === 'legacy_applied') {
+  backend/scripts/check_pending_migrations.php:146:                $legacyApplied++;
+  backend/scripts/check_pending_migrations.php:148:                $legacyIgnored++;
+  backend/scripts/check_pending_migrations.php:169:        echo "LEGACY_NORMALIZED applied=$legacyApplied ignored=$legacyIgnored/n";
+  backend/scripts/migrate_legal_users.php:23:    $contentHash = hash('sha256', 'Initial legacy terms Viax');
+  backend/scripts/check_legacy_code.php:3: * Detecta marcadores de codigo legacy/deprecado sin bloquear despliegue.
+  backend/scripts/check_legacy_code.php:6: *   php backend/scripts/check_legacy_code.php
+  backend/scripts/check_legacy_code.php:9:const LEGACY_MARKERS = [
+  backend/scripts/check_legacy_code.php:11:    'LEGACY_ENDPOINT',
+  backend/scripts/check_legacy_code.php:16:function scanLegacyMarkers(string $baseDir): array
+  backend/scripts/check_legacy_code.php:29:        if (basename($path) === 'check_legacy_code.php') {
+  backend/scripts/check_legacy_code.php:43:            foreach (LEGACY_MARKERS as $marker) {
+  backend/scripts/check_legacy_code.php:54:function runLegacyCheck(): int
+  backend/scripts/check_legacy_code.php:58:        echo "LEGACY SCAN ERROR: backend directory not found/n";
+  backend/scripts/check_legacy_code.php:62:    $matches = scanLegacyMarkers($baseDir);
+  backend/scripts/check_legacy_code.php:65:        echo "LEGACY CODE DETECTED/n";
+  backend/scripts/check_legacy_code.php:72:    echo "NO_LEGACY_CODE_MARKERS/n";
+  backend/scripts/check_legacy_code.php:77:    exit(runLegacyCheck());
+  backend/scripts/run_migrations.php:16:function isLegacyMySqlSql(string $sql): bool
+  backend/scripts/run_migrations.php:219:            $isLegacyMySql = $driver === 'pgsql' && isLegacyMySqlSql($sql);
+  backend/scripts/run_migrations.php:221:            if ($isLegacyMySql) {
+  backend/scripts/run_migrations.php:227:                        'ignored_legacy',
+  backend/scripts/run_migrations.php:228:                        'skipped legacy migration: SQL MySQL no compatible con PostgreSQL.'
+  backend/scripts/run_migrations.php:230:                    echo "[SKIP_LEGACY] $filename (ignored_legacy)/n";
+  backend/scripts/run_migrations.php:240:                        'legacy_applied',
+  backend/scripts/run_migrations.php:241:                        'Migraci├│n legacy detectada como aplicada hist├│ricamente.'
+  backend/scripts/run_migrations.php:243:                    echo "[LEGACY_APPLIED] $filename/n";
+  backend/scripts/run_migrations.php:245:                    echo "[SKIP_LEGACY] $filename ($status)/n";
+  backend/services/DriverService.php:3: * Servicio legacy de conductor.
+  backend/services/driver_service.php:113:        // Failsafe Redis GEO fallback.
+  backend/services/driver_service.php:171:                    $legacyMembers = $responses[$cursor + 1] ?? [];
+  backend/services/driver_service.php:175:                        : (is_array($legacyMembers) ? $legacyMembers : []);
+  backend/services/driver_service.php:374:            $legacyGrid = $redis->get(self::LAST_GRID_PREFIX . $driverId);
+  backend/services/driver_service.php:375:            if (is_string($legacyGrid) && $legacyGrid !== '') {
+  backend/services/driver_service.php:376:                $redis->sRem($legacyGrid, (string)$driverId);
+  backend/workers/dispatch_worker.php:13:const DISPATCH_QUEUE_FALLBACK = 'ride_requests_queue';
+  backend/workers/dispatch_worker.php:81:            // Fallback para claves previas sin ciudad.
+  backend/workers/dispatch_worker.php:336:    // Compatibilidad legacy para clientes que aun leen current_offer.
+  backend/workers/dispatch_worker.php:492:        $entry = $redis->brPop([DISPATCH_QUEUE_KEY, DISPATCH_QUEUE_FALLBACK], 3);
+  backend/workers/surge_pricing_worker.php:113:        $legacyGrid = $redis->get('drivers:last_grid:' . $driverId);
+  backend/workers/surge_pricing_worker.php:114:        if (is_string($legacyGrid) && $legacyGrid !== '') {
+  backend/workers/surge_pricing_worker.php:115:            $gridId = str_replace('drivers:grid:', '', $legacyGrid);
+  backend/services/eta_service.php:46:        $fallbackKmh = $historicalKmh ?? self::defaultSpeedByTraffic($trafficLevel ?? 'normal');
+  backend/services/eta_service.php:47:        $fallbackDurationSec = (int)round(($distanceKm / max(5.0, $fallbackKmh)) * 3600);
+  backend/services/eta_service.php:49:        $etaSec = $routeDurationSec > 0 ? $routeDurationSec : $fallbackDurationSec;
+  backend/services/eta_service.php:64:            'source' => $routeDurationSec > 0 ? 'google_routes' : 'fallback_speed',
+  backend/workers/zone_cache_worker.php:79:                // Compatibilidad con esquema legacy sin ciudad.
+  backend/workers/zone_cache_worker.php:111:        // Fallback clave legacy.
+  backend/workers/zone_cache_worker.php:170:    // Mantener copia corta legacy para consumidores antiguos que a├║n consulten por grid puro.
+  backend/workers/zone_cache_worker.php:171:    $legacyKey = ZONE_CACHE_PREFIX . $gridId;
+  backend/workers/zone_cache_worker.php:172:    $redis->del($legacyKey);
+  backend/workers/zone_cache_worker.php:176:            $redis->zAdd($legacyKey, (float)$score, (string)$member);
+  backend/workers/zone_cache_worker.php:178:        $redis->expire($legacyKey, ZONE_CACHE_TTL_SEC);
+  backend/user/create_trip_request.php:480:        'source' => 'fallback',
+  backend/user/create_trip_request.php:513:                // Fallback para esquema anterior sin ciudad.
+  backend/user/find_nearby_drivers.php:11: * - Fallback autom├ítico: SQL con Haversine si Redis no tiene datos.
+  backend/user/find_nearby_drivers.php:198:/** Fallback SQL tradicional si no hay data suficiente en Redis. */
+  backend/user/find_nearby_drivers.php:341:    // Fallback SQL si Redis no entrega resultados suficientes.
+  backend/user/get_trip_status.php:377:            -- Tiempo calculado desde timestamps (fallback) --
+  backend/user/get_trip_status.php:620: *    resoluci├│n de valores de tracking con cadena de fallbacks.
+  backend/user/get_trip_status.php:717: * Resuelve los mejores valores de tracking disponibles con cadena de fallbacks.
+  backend/user/get_trip_status.php:788:    // Modo no terminal: usar cadena legacy/tiempo real para UI en vivo.
+  backend/user/get_trip_status.php:794:        // En muchos registros legacy este campo viene en minutos; normalizar a segundos.
+  backend/user/get_trip_status.php:1008:            // Compatibilidad legacy: estos campos se rellenan con can├│nicos cuando aplica lock.
+  backend/utils/SensitiveDataCrypto.php:68: * Descifra un valor cifrado. Si llega en plano, lo devuelve tal cual para compatibilidad legacy.
+  backend/user/report_user.php:35:    // Hardening para entornos legacy donde `id` existe pero sin DEFAULT nextval(...).
+  backend/user/report_user.php:75:function mapLegacyTipoReporte(string $motivo): string
+  backend/user/report_user.php:131:    $legacyTipoReporte = mapLegacyTipoReporte($motivo);
+  backend/user/report_user.php:197:                :legacy_tipo_reporte,
+  backend/user/report_user.php:207:        ':legacy_tipo_reporte' => $legacyTipoReporte,

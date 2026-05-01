@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 import '../../services/chat_service.dart';
 import '../../services/user_block_service.dart';
+import '../../services/user_report_service.dart';
 import '../../../features/conductor/services/document_upload_service.dart';
+import '../../../shared/widgets/global_overlay_message.dart';
 import 'chat_bubble.dart';
 import 'chat_input_field.dart';
 import 'quick_messages.dart';
@@ -131,21 +133,124 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() => _blockState = next);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            currentlyBlockedByMe
-                ? 'Usuario desbloqueado correctamente.'
-                : 'Usuario bloqueado correctamente.',
-          ),
-        ),
+      GlobalOverlayMessage.showSuccess(
+        context,
+        currentlyBlockedByMe
+            ? 'Usuario desbloqueado correctamente.'
+            : 'Usuario bloqueado correctamente.',
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserBlockService.friendlyFromError(e))),
+      GlobalOverlayMessage.showError(
+        context,
+        UserBlockService.friendlyFromError(e),
       );
     } finally {
+      if (mounted) {
+        setState(() => _isActionLoading = false);
+      }
+    }
+  }
+
+  Future<void> _onReportActionSelected() async {
+    if (_isActionLoading) return;
+
+    final reasons = <String, String>{
+      'comportamiento_inapropiado': 'Comportamiento inapropiado',
+      'acoso_o_amenaza': 'Acoso o amenaza',
+      'fraude_o_estafa': 'Fraude o estafa',
+      'incumplimiento_servicio': 'Incumplimiento del servicio',
+      'contenido_inapropiado_chat': 'Contenido inapropiado en chat',
+      'otro': 'Otro',
+    };
+
+    String selectedReason = reasons.keys.first;
+    final detailsController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          title: const Text('Reportar usuario'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cuéntanos qué ocurrió. Este reporte será revisado por soporte.',
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedReason,
+                  decoration: const InputDecoration(labelText: 'Motivo'),
+                  items: reasons.entries
+                      .map(
+                        (entry) => DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => selectedReason = value);
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: detailsController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Detalles (opcional)',
+                    hintText: 'Describe brevemente la situación reportada.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Enviar reporte'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) {
+      detailsController.dispose();
+      return;
+    }
+
+    setState(() => _isActionLoading = true);
+    try {
+      await UserReportService.reportUser(
+        reporterUserId: widget.miUsuarioId,
+        reportedUserId: widget.otroUsuarioId,
+        solicitudId: widget.solicitudId,
+        motivo: selectedReason,
+        descripcion: detailsController.text,
+      );
+
+      if (!mounted) return;
+      GlobalOverlayMessage.showSuccess(
+        context,
+        'Reporte enviado. Gracias por ayudarte a mantener la comunidad segura.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      GlobalOverlayMessage.showError(
+        context,
+        UserReportService.friendlyFromError(e),
+      );
+    } finally {
+      detailsController.dispose();
       if (mounted) {
         setState(() => _isActionLoading = false);
       }
@@ -383,6 +488,9 @@ class _ChatScreenState extends State<ChatScreen> {
             if (value == 'block_toggle') {
               _onBlockActionSelected();
             }
+            if (value == 'report_user') {
+              _onReportActionSelected();
+            }
           },
           itemBuilder: (_) => [
             PopupMenuItem<String>(
@@ -397,6 +505,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(_blockState?.blockedByMe == true ? 'Desbloquear usuario' : 'Bloquear usuario'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'report_user',
+              child: Row(
+                children: [
+                  Icon(Icons.flag_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Text('Reportar usuario'),
                 ],
               ),
             ),

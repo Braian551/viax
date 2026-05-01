@@ -1,22 +1,35 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Location permissions required for device geolocation -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permisos de ubicación necesarios para la geolocalización del dispositivo -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Camera permissions required for taking photos -->
+    <!-- Permiso de cámara necesario para tomar fotos -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Quitar permisos multimedia no permitidos por Google Play; la app usa Photo Picker/SAF -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:node="remove" />
 
-    <!-- Audio permissions for notification sounds -->
+    <!-- Permisos de audio para sonidos de notificación -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- System Alert Window permission for floating overlay button -->
+    <!-- Permiso de ventana superpuesta para el botón flotante -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Foreground service for overlay -->
+    <!-- Servicio en primer plano para la superposición -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Quitar permisos multimedia que puedan inyectar dependencias y que Viax no usa -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"
+        tools:node="remove" />
+
     <application
         android:label="Viax"
         android:name="${applicationName}"
@@ -30,10 +43,9 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            <!-- Specifies an Android theme to apply to this Activity as soon as
-                 the Android process has started. This theme is visible to the user
-                 while the Flutter UI initializes. After that, this theme continues
-                 to determine the Window background behind the Flutter UI. -->
+              <!-- Define el tema de Android que se aplica apenas inicia el proceso.
+                  Este tema es visible mientras Flutter se inicializa y luego
+                  sigue determinando el fondo de la ventana detrás de la UI. -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
@@ -42,7 +54,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Deep link: viax://share/{token} — opens SharedLocationViewScreen -->
+            <!-- Enlace profundo: viax://share/{token}; abre SharedLocationViewScreen -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -50,19 +62,19 @@
                 <data android:scheme="viax" android:host="share" />
             </intent-filter>
         </activity>
-        <!-- Don't delete the meta-data below.
-             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <!-- No eliminar el meta-data siguiente.
+             Flutter lo usa para generar GeneratedPluginRegistrant.java -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Floating Overlay Service for active trip -->
+        <!-- Servicio de superposición flotante para un viaje activo -->
         <service
             android:name=".FloatingOverlayService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
 
-        <!-- Default Notification Icon -->
+        <!-- Ícono de notificación por defecto -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />
@@ -70,11 +82,12 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorPrimary" />
     </application>
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
+
+    <!-- Necesario para consultar actividades que puedan procesar texto. Ver:
+         https://developer.android.com/training/package-visibility y
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+         En particular, Flutter lo usa en io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
@@ -106,7 +119,7 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:host="waze.com" />
         </intent>
-        <!-- General HTTP/HTTPS URLs -->
+        <!-- URLs HTTP/HTTPS generales -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
@@ -115,10 +128,11 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="http" />
         </intent>
-        <!-- Phone calls -->
+        <!-- Llamadas telefónicas -->
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
     </queries>
+
 </manifest>

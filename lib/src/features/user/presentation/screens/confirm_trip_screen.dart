@@ -80,7 +80,10 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
           _route = route;
           _estimatedDistance = route.distanceKm;
           _estimatedTime = route.durationMinutes.toInt();
-          _estimatedPrice = _calculatePrice(_estimatedDistance, _selectedVehicleType);
+          _estimatedPrice = _calculatePrice(
+            _estimatedDistance,
+            _selectedVehicleType,
+          );
           _isLoadingRoute = false;
         });
       } else {
@@ -88,7 +91,10 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
         setState(() {
           _estimatedDistance = 5.2;
           _estimatedTime = 15;
-          _estimatedPrice = _calculatePrice(_estimatedDistance, _selectedVehicleType);
+          _estimatedPrice = _calculatePrice(
+            _estimatedDistance,
+            _selectedVehicleType,
+          );
           _isLoadingRoute = false;
         });
       }
@@ -97,7 +103,10 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
       setState(() {
         _estimatedDistance = 5.2;
         _estimatedTime = 15;
-        _estimatedPrice = _calculatePrice(_estimatedDistance, _selectedVehicleType);
+        _estimatedPrice = _calculatePrice(
+          _estimatedDistance,
+          _selectedVehicleType,
+        );
         _isLoadingRoute = false;
       });
     }
@@ -107,7 +116,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
     const basePrice = 5000.0; // COP
     const pricePerKm = 2500.0; // COP
     final multiplier = _vehicleTypes[vehicleType]!['multiplier'] as double;
-    
+
     return (basePrice + (distance * pricePerKm)) * multiplier;
   }
 
@@ -122,12 +131,13 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
     // Obtener argumentos de la ruta
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final pickupAddress = args?['pickupAddress'] as String? ?? 'Origen';
-    final destinationAddress = args?['destinationAddress'] as String? ?? 'Destino';
-    
+    final destinationAddress =
+        args?['destinationAddress'] as String? ?? 'Destino';
+
     // Obtener ID del usuario
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.currentUser?.id;
-    
+
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -188,7 +198,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
 
       if (result['success'] == true) {
         final solicitudId = result['solicitud_id'];
-        
+
         // Navegar a pantalla de espera
         final resultWaiting = await Navigator.pushNamed(
           context,
@@ -203,6 +213,7 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
             'longitudDestino': _destinationLocation!.longitude,
             'direccionDestino': destinationAddress,
             'tipoVehiculo': _selectedVehicleType,
+            'estimatedPrice': _estimatedPrice,
           },
         );
 
@@ -239,7 +250,8 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final pickupAddress = args?['pickupAddress'] as String? ?? 'Origen';
-    final destinationAddress = args?['destinationAddress'] as String? ?? 'Destino';
+    final destinationAddress =
+        args?['destinationAddress'] as String? ?? 'Destino';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -250,75 +262,88 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
             child: _isLoadingRoute
                 ? const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFF00)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFFFFF00),
+                      ),
                     ),
                   )
                 : MapRetryWrapper(
                     isDark: false,
-                    builder: ({required mapKey, required onMapReady, required onTileError}) => FlutterMap(
-                      key: mapKey,
-                      options: MapOptions(
-                        initialCenter: _pickupLocation ?? const LatLng(4.7110, -74.0721),
-                        initialZoom: 13,
-                        onMapReady: onMapReady,
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: MapboxService.getTileUrl(isDarkMode: false),
-                          userAgentPackageName: 'com.example.ping_go',
-                          additionalOptions: {
-                            'access_token': AppSecretsService.instance.mapboxToken,
-                          },
-                          errorTileCallback: (tile, error, stackTrace) => onTileError(error, stackTrace),
-                        ),
-                        if (_route != null)
-                          PolylineLayer(
-                            polylines: [
-                              Polyline(
-                                points: _route!.geometry,
-                                color: const Color(0xFFFFFF00),
-                                strokeWidth: 5.0,
-                              ),
-                            ],
+                    builder:
+                        ({
+                          required mapKey,
+                          required onMapReady,
+                          required onTileError,
+                        }) => FlutterMap(
+                          key: mapKey,
+                          options: MapOptions(
+                            initialCenter:
+                                _pickupLocation ??
+                                const LatLng(4.7110, -74.0721),
+                            initialZoom: 13,
+                            onMapReady: onMapReady,
                           ),
-                        MarkerLayer(
-                          markers: [
-                            if (_pickupLocation != null)
-                              Marker(
-                                point: _pickupLocation!,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.location_on,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: MapboxService.getTileUrl(
+                                isDarkMode: false,
                               ),
-                            if (_destinationLocation != null)
-                              Marker(
-                                point: _destinationLocation!,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
+                              userAgentPackageName: 'com.example.ping_go',
+                              additionalOptions: {
+                                'access_token':
+                                    AppSecretsService.instance.mapboxToken,
+                              },
+                              errorTileCallback: (tile, error, stackTrace) =>
+                                  onTileError(error, stackTrace),
+                            ),
+                            if (_route != null)
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: _route!.geometry,
+                                    color: const Color(0xFFFFFF00),
+                                    strokeWidth: 5.0,
                                   ),
-                                  child: const Icon(
-                                    Icons.location_on,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
+                                ],
                               ),
+                            MarkerLayer(
+                              markers: [
+                                if (_pickupLocation != null)
+                                  Marker(
+                                    point: _pickupLocation!,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                if (_destinationLocation != null)
+                                  Marker(
+                                    point: _destinationLocation!,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
                   ),
           ),
 
@@ -526,14 +551,14 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-                color: isSelected
+              color: isSelected
                   ? const Color(0xFFFFFF00).withValues(alpha: 0.2)
                   : const Color(0xFF1A1A1A).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                  ? const Color(0xFFFFFF00)
-                  : Colors.white.withValues(alpha: 0.1),
+                    ? const Color(0xFFFFFF00)
+                    : Colors.white.withValues(alpha: 0.1),
                 width: 2,
               ),
             ),
@@ -544,8 +569,8 @@ class _ConfirmTripScreenState extends State<ConfirmTripScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isSelected
-                      ? const Color(0xFFFFFF00)
-                      : Colors.white.withValues(alpha: 0.1),
+                        ? const Color(0xFFFFFF00)
+                        : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

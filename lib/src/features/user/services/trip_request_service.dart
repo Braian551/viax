@@ -166,6 +166,39 @@ class TripRequestService {
     }
   }
 
+  /// Actualizar el radio de búsqueda activo de una solicitud.
+  static Future<Map<String, dynamic>> updateTripSearchRadius({
+    required int solicitudId,
+    required int radiusKm,
+  }) async {
+    try {
+      final url = '$baseUrl/user/update_trip_radius.php';
+
+      final result = await _network.postJson(
+        url: Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'solicitud_id': solicitudId, 'radio_km': radiusKm}),
+        timeout: AppConfig.connectionTimeout,
+      );
+
+      if (!result.success || result.json == null) {
+        return _errorResponse(
+          result,
+          fallback: 'No pudimos actualizar el radio de búsqueda.',
+        );
+      }
+
+      return result.json!;
+    } catch (e) {
+      final mapped = AppNetworkException.fromError(e);
+      return {
+        'success': false,
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
+      };
+    }
+  }
+
   /// Cancelar solicitud de viaje
   static Future<bool> cancelTripRequest(int solicitudId) async {
     try {
@@ -297,6 +330,39 @@ class TripRequestService {
       if (identical(_inFlightStatusRequests[solicitudId], requestFuture)) {
         _inFlightStatusRequests.remove(solicitudId);
       }
+    }
+  }
+
+  /// Obtener estado ligero de búsqueda con lista de conductores en tiempo real
+  static Future<Map<String, dynamic>> getRideStatus({
+    required int solicitudId,
+  }) async {
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/conductor/ride_status.php',
+      ).replace(queryParameters: {'solicitud_id': '$solicitudId'});
+
+      final result = await _network.getJson(
+        url: uri,
+        headers: {'Accept': 'application/json'},
+        timeout: const Duration(seconds: 8),
+      );
+
+      if (!result.success || result.json == null) {
+        return _errorResponse(
+          result,
+          fallback: 'No pudimos consultar el estado de búsqueda.',
+        );
+      }
+
+      return result.json!;
+    } catch (e) {
+      final mapped = AppNetworkException.fromError(e);
+      return {
+        'success': false,
+        'message': mapped.userMessage,
+        'error_type': mapped.type.name,
+      };
     }
   }
 

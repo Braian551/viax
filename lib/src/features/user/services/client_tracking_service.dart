@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/network_request_executor.dart';
 import '../../../core/network/app_network_exception.dart';
+import '../../../core/realtime/realtime_service.dart';
 
 /// Datos de tracking del viaje para el cliente
 class ClientTrackingData {
@@ -281,6 +282,11 @@ class ClientTripTrackingService {
   DateTime? _lastSyncLogAt;
   DateTime? _lastForcedRefreshAt;
 
+  // WebSocket
+  RealtimeSubscription? _wsSub;
+  StreamSubscription<RealtimeEvent>? _wsStreamSub;
+  bool _wsActive = false;
+
   // Último tracking conocido
   ClientTrackingData? _lastData;
 
@@ -311,7 +317,10 @@ class ClientTripTrackingService {
       await _fetchTracking();
       _startInterpolationTimer();
 
-      // Modo push preferido: SSE. Si falla, degradar a polling resiliente.
+      // Intentar WebSocket como fuente push de máxima prioridad.
+      _tryWebSocketTracking(solicitudId);
+
+      // SSE/polling como respaldo (se desactiva si WS está activo).
       unawaited(_runSsePreferredLoop());
 
       return true;
@@ -319,6 +328,66 @@ class ClientTripTrackingService {
       debugPrint('❌ [ClientTracking] Error iniciando: $e');
       onError?.call('Error al iniciar seguimiento: $e');
       return false;
+    }
+  }
+
+  /// Suscribe al canal WS trip:{id} para recibir tracking en tiempo real.
+  void _tryWebSocketTracking(int solicitudId) {
+    final realtime = RealtimeService.instance;
+    if (!realtime.isRealtimeEnabled || !realtime.isWebSocketConnected) {
+      debugPrint('[ClientTracking] WS no conectado, solo SSE/polling');
+      return;
+    }
+
+    _wsSub = realtime.subscribeToTrip(solicitudId);
+    if (_wsSub == null || !_wsSub!.isWebSocketBacked) {
+      debugPrint('[ClientTracking] WS suscripción no disponible');
+      return;
+    }
+
+    _wsActive = true;
+    debugPrint('[ClientTracking] WS activo para trip:$solicitudId');
+
+    _wsStreamSub = _wsSub!.stream.listen((event) {
+      if (!_isWatching) return;
+      _handleWsTrackingEvent(event);
+    }, onError: (e) {
+      debugPrint('[ClientTracking] WS stream error: $e');
+      _wsActive = false;
+    }, onDone: () {
+      debugPrint('[ClientTracking] WS stream cerrado');
+      _wsActive = false;
+    });
+  }
+
+  /// Procesa eventos de tracking recibidos por WebSocket.
+  void _handleWsTrackingEvent(RealtimeEvent event) {
+    if (event.type == 'trip.location_updated' ||
+        event.type == 'trip_update' ||
+        event.type == 'trip.tracking') {
+      final payload = event.payload;
+      // Construir un ClientTrackingData desde el payload WS.
+      // El payload del gateway tiene la misma estructura que el SSE.
+      final trackingActual = payload['tracking_actual'] as Map<String, dynamic>?;
+      final wrappedPayload = trackingActual != null
+          ? payload
+          : {
+              'tracking_actual': {
+                'distancia_km': payload['distance_km'] ?? payload['distancia_km'] ?? 0,
+                'tiempo_segundos': payload['elapsed_time_sec'] ?? payload['tiempo_segundos'] ?? 0,
+                'precio_actual': payload['price'] ?? payload['precio_actual'] ?? 0,
+                'velocidad_kmh': payload['speed_kmh'] ?? payload['velocidad_kmh'] ?? 0,
+                'heading_deg': payload['heading_deg'] ?? 0,
+                'fase': payload['phase'] ?? payload['fase'],
+                'ubicacion': {
+                  'latitud': payload['lat'] ?? payload['latitud_conductor'],
+                  'longitud': payload['lng'] ?? payload['longitud_conductor'],
+                },
+                'ultima_actualizacion': DateTime.now().toIso8601String(),
+              },
+            };
+      final data = ClientTrackingData.fromSsePayload(wrappedPayload);
+      _ingestBackendData(data);
     }
   }
 
@@ -344,6 +413,12 @@ class ClientTripTrackingService {
     _sseBackoffSeconds = _sseReconnectDelay.inSeconds;
     _lastSyncLogAt = null;
     _lastForcedRefreshAt = null;
+    // Limpiar WebSocket
+    _wsStreamSub?.cancel();
+    _wsStreamSub = null;
+    _wsSub?.cancel();
+    _wsSub = null;
+    _wsActive = false;
     try {
       _sseClient?.close(force: true);
     } catch (_) {}
@@ -411,6 +486,19 @@ class ClientTripTrackingService {
     var sseHealthy = false;
 
     while (_isWatching && _solicitudId != null) {
+      // Si WS está activo, solo hacer polling de seguridad a baja frecuencia.
+      if (_wsActive) {
+        await Future.delayed(const Duration(seconds: 15));
+        if (!_isWatching) break;
+        // Verificar que WS siga activo; si no, continuar con SSE.
+        if (_wsActive) {
+          // Safety-net: refrescar por HTTP una vez para detectar desincronización.
+          await _fetchTracking(withLongPoll: false);
+          continue;
+        }
+        debugPrint('[ClientTracking] WS caído, retomando SSE');
+      }
+
       try {
         await _connectSseAndConsume(_solicitudId!);
         sseHealthy = true;

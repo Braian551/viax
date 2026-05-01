@@ -51,6 +51,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
   CommissionPeriod _period = CommissionPeriod.month;
   CommissionsTrendMetric _trendMetric = CommissionsTrendMetric.commission;
   Timer? _autoRefreshTimer;
+  bool _pendingReload = false;
 
   @override
   void initState() {
@@ -111,7 +112,10 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
   }
 
   Future<void> _loadData({bool silent = false}) async {
-    if (_isLoading) return;
+    if (_isLoading) {
+      _pendingReload = true;
+      return;
+    }
     _isLoading = true;
 
     if (!silent) {
@@ -171,6 +175,11 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+
+      if (_pendingReload && mounted) {
+        _pendingReload = false;
+        unawaited(_loadData(silent: true));
       }
     }
   }
@@ -287,7 +296,7 @@ class _ConductorCommissionsScreenState extends State<ConductorCommissionsScreen>
     );
 
     if (refreshed == true) {
-      _loadData();
+      await _loadData(silent: true);
     }
   }
 

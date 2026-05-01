@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import 'user_block_action_button.dart';
+import 'user_report_action_button.dart';
 
 class TripUserProfileSheet {
   const TripUserProfileSheet._();
@@ -104,11 +105,23 @@ class TripUserProfileSheet {
                   targetLabel != null &&
                   targetLabel.trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
-                UserBlockActionButton(
-                  actorId: actorId,
-                  otherUserId: otherUserId,
-                  solicitudId: solicitudId,
-                  targetLabel: targetLabel,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    UserBlockActionButton(
+                      actorId: actorId,
+                      otherUserId: otherUserId,
+                      solicitudId: solicitudId,
+                      targetLabel: targetLabel,
+                    ),
+                    UserReportActionButton(
+                      reporterUserId: actorId,
+                      reportedUserId: otherUserId,
+                      solicitudId: solicitudId,
+                      targetLabel: targetLabel,
+                    ),
+                  ],
                 ),
               ],
             ],
