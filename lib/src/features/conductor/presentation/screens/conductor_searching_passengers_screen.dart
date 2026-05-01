@@ -131,6 +131,8 @@ class _ConductorSearchingPassengersScreenState
           conductorId: widget.conductorId,
           latitude: position.latitude,
           longitude: position.longitude,
+          heading: position.heading,
+          timestampMsUtc: DateTime.now().toUtc().millisecondsSinceEpoch,
         );
       });
     } catch (e) {

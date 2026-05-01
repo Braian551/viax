@@ -85,6 +85,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
   // Ruta del conductor al punto de encuentro
   List<LatLng> _conductorRoute = [];
   List<LatLng> _animatedRoute = []; // Para animación de la ruta
+  int _currentRouteSegmentIndex = 0;
   bool _isLoadingRoute = false;
 
   // Polling para actualizar estado
@@ -102,6 +103,12 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     null,
   );
   final ValueNotifier<double> _driverMarkerHeading = ValueNotifier<double>(0);
+  final List<LatLng> _driverSmoothingPoints = <LatLng>[];
+  Timer? _driverInterpolationTimer;
+  LatLng? _driverInterpolationFrom;
+  LatLng? _driverInterpolationTo;
+  DateTime? _driverInterpolationStartedAt;
+  Duration _driverInterpolationDuration = const Duration(milliseconds: 600);
   LatLng? _lastAcceptedDriverLocation;
   DateTime? _lastAcceptedDriverAt;
   DateTime? _lastDriverRealtimeAt;
@@ -538,6 +545,7 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
 
         setState(() {
           _conductorRoute = route.geometry;
+          _currentRouteSegmentIndex = 0;
         });
 
         // Si es la primera vez que obtenemos la ruta, animar
@@ -832,6 +840,8 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       return;
     }
 
+    final processedPoint = _processDriverPointForUi(incoming);
+
     var targetBearing = bearingDeg;
     if ((targetBearing == null || !targetBearing.isFinite) &&
         previous != null) {
@@ -843,6 +853,21 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       );
       if (dKm > 0.005) {
         targetBearing = _calculateBearing(previous, incoming);
+      }
+    }
+
+    final bearingAnchor = _driverMarkerPosition.value ?? _conductorLocation;
+    if ((targetBearing == null || !targetBearing.isFinite) &&
+        bearingAnchor != null) {
+      final movementMeters = DriverMarkerController.distanceMeters(
+        bearingAnchor,
+        processedPoint,
+      );
+      if (movementMeters > 2.0) {
+        targetBearing = DriverMarkerController.bearingBetween(
+          bearingAnchor,
+          processedPoint,
+        );
       }
     }
 
@@ -859,9 +884,9 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       _lastDriverSpeedKmh = speedKmh;
     }
 
-    _conductorLocation = incoming;
+    _conductorLocation = processedPoint;
     _conductorHeading = nextHeading;
-    _driverMarkerPosition.value = incoming;
+    _animateDriverMarkerTo(processedPoint);
     _driverMarkerHeading.value = nextHeading;
 
     final shouldRefreshRoute =
@@ -877,6 +902,87 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     if (shouldRefreshRoute) {
       _updateConductorRoute(incoming);
     }
+  }
+
+  LatLng _processDriverPointForUi(LatLng incoming) {
+    _driverSmoothingPoints.add(incoming);
+    if (_driverSmoothingPoints.length > 5) {
+      _driverSmoothingPoints.removeAt(0);
+    }
+
+    final smoothed = DriverMarkerController.movingAverage(
+      _driverSmoothingPoints,
+      windowSize: 5,
+    );
+
+    if (_conductorRoute.length > 1) {
+      final snapped = DriverMarkerController.snapToPolylineWithProgress(
+        point: smoothed,
+        polyline: _conductorRoute,
+        currentSegmentIndex: _currentRouteSegmentIndex,
+        lookAheadSegments: 5,
+        maxJumpAheadSegments: 24,
+        forceForwardJumpDistanceMeters: 28,
+      );
+      _currentRouteSegmentIndex = math.max(
+        _currentRouteSegmentIndex,
+        snapped.segmentIndex,
+      );
+      return snapped.point;
+    }
+
+    return smoothed;
+  }
+
+  void _animateDriverMarkerTo(LatLng target, {Duration? duration}) {
+    final from = _driverMarkerPosition.value ?? target;
+    final distanceMeters = DriverMarkerController.distanceMeters(from, target);
+
+    if (distanceMeters < 0.8) {
+      _driverMarkerPosition.value = target;
+      return;
+    }
+
+    final defaultDurationMs =
+        (DriverMarkerController.durationSecondsFromDistanceMeters(
+              distanceMeters,
+            ) *
+            1000)
+            .round()
+            .clamp(280, 1500);
+
+    _driverInterpolationFrom = from;
+    _driverInterpolationTo = target;
+    _driverInterpolationDuration =
+        duration ?? Duration(milliseconds: defaultDurationMs);
+    _driverInterpolationStartedAt = DateTime.now();
+
+    _driverInterpolationTimer?.cancel();
+    _driverInterpolationTimer = Timer.periodic(
+      const Duration(milliseconds: 16),
+      (timer) {
+        final start = _driverInterpolationFrom;
+        final end = _driverInterpolationTo;
+        final startedAt = _driverInterpolationStartedAt;
+
+        if (!mounted || start == null || end == null || startedAt == null) {
+          timer.cancel();
+          return;
+        }
+
+        final elapsedMs = DateTime.now().difference(startedAt).inMilliseconds;
+        final totalMs = _driverInterpolationDuration.inMilliseconds;
+
+        if (totalMs <= 0 || elapsedMs >= totalMs) {
+          _driverMarkerPosition.value = end;
+          timer.cancel();
+          return;
+        }
+
+        final t = elapsedMs / totalMs;
+        _driverMarkerPosition.value = DriverMarkerController.lerp(start, end, t);
+      },
+    );
   }
 
   void _tickDriverPrediction() {
@@ -901,7 +1007,12 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
       delta: stale,
     );
 
-    _driverMarkerPosition.value = predicted;
+    final predictedProcessed = _processDriverPointForUi(predicted);
+    _conductorLocation = predictedProcessed;
+    _animateDriverMarkerTo(
+      predictedProcessed,
+      duration: const Duration(milliseconds: 280),
+    );
   }
 
   String? _normalizeTripState(String? raw) {
@@ -1343,9 +1454,11 @@ class _UserTripAcceptedScreenState extends State<UserTripAcceptedScreen>
     _statusTimer?.cancel();
     _sseReconnectTimer?.cancel();
     _predictiveTimer?.cancel();
+    _driverInterpolationTimer?.cancel();
     _driverTrackingStreamService.close();
     _driverMarkerPosition.dispose();
     _driverMarkerHeading.dispose();
+    _driverSmoothingPoints.clear();
 
     // Dispose de animaciones
     _pulseController.dispose();

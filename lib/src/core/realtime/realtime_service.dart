@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'websocket_manager.dart';
+export 'websocket_manager.dart' show RealtimeEvent, WsConnectionState;
 
 /// Servicio de conveniencia que combina WebSocket con fallback a polling.
 ///

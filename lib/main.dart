@@ -7,6 +7,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:viax/firebase_options.dart';
+import 'package:flutter/services.dart';
 import 'package:viax/src/routes/app_router.dart';
 import 'package:viax/src/providers/database_provider.dart';
 import 'package:viax/src/features/conductor/providers/conductor_provider.dart';
@@ -39,6 +40,11 @@ void main() async {
     () async {
       // Configure robust global error handling as early as possible
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Bloquear la app en orientación vertical para evitar rotación automática.
+      await SystemChrome.setPreferredOrientations(
+        const <DeviceOrientation>[DeviceOrientation.portraitUp],
+      );
 
       // NOTE: UI Color Scheme Update (November 2025)
       // - Primary buttons changed from yellow (0xFFFFFF00) to blue (AppColors.primary)

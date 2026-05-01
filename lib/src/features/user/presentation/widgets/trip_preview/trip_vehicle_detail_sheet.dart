@@ -11,6 +11,27 @@ Future<void> showTripVehicleDetailSheet({
   required TripQuote quote,
   required bool isDark,
 }) {
+  final subtotalBase = quote.basePrice + quote.distancePrice + quote.timePrice;
+  final subtotalConRecargos = subtotalBase + quote.surchargePrice;
+  final multiplicadorDemanda = quote.surgeMultiplier > 1.0
+      ? quote.surgeMultiplier
+      : 1.0;
+  final totalVariable = subtotalConRecargos * multiplicadorDemanda;
+  final ajusteDemandaRaw = totalVariable - subtotalConRecargos;
+  final ajusteDemanda = ajusteDemandaRaw > 100 ? ajusteDemandaRaw : 0.0;
+  final ajusteMinimoEstimadoRaw = quote.totalPrice - totalVariable;
+  final ajusteMinimoEstimado = ajusteMinimoEstimadoRaw > 250
+      ? ajusteMinimoEstimadoRaw
+      : 0.0;
+  final mensajeDemanda = _demandMessageForMultiplier(quote.surgeMultiplier);
+  final recargoLabel = _resolveSurchargeLabel(quote.periodType);
+  final explicacionPrecio = _buildPricingReasonText(
+    mensajeDemanda: mensajeDemanda,
+    tieneRecargo: quote.surchargePrice > 0,
+    recargoLabel: recargoLabel,
+    ajusteMinimoEstimado: ajusteMinimoEstimado,
+  );
+
   return showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -244,18 +265,77 @@ Future<void> showTripVehicleDetailSheet({
                   if (quote.surchargePrice > 0) ...[
                     const SizedBox(height: 8),
                     _DetailRow(
-                      label: quote.periodType == 'nocturno'
-                          ? 'Recargo nocturno'
-                          : 'Recargo hora pico',
+                      label: recargoLabel,
                       amount: quote.surchargePrice,
                       isDark: isDark,
                       isHighlight: true,
                     ),
                   ],
+                  if (quote.surgeMultiplier > 1.0) ...[
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      label: 'Subtotal antes de demanda',
+                      amount: subtotalConRecargos,
+                      isDark: isDark,
+                    ),
+                    if (ajusteDemanda > 0) ...[
+                      const SizedBox(height: 8),
+                      _DetailRow(
+                        label: 'Ajuste por demanda',
+                        amount: ajusteDemanda,
+                        isDark: isDark,
+                        isHighlight: true,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      label: 'Total variable',
+                      amount: totalVariable,
+                      isDark: isDark,
+                    ),
+                  ],
+                  if (ajusteMinimoEstimado > 0) ...[
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      label: 'Ajuste por tarifa mínima',
+                      amount: ajusteMinimoEstimado,
+                      isDark: isDark,
+                      isHighlight: true,
+                    ),
+                  ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(
+                      color: isDark
+                          ? Colors.white12
+                          : Colors.black.withValues(alpha: 0.06),
+                      height: 1,
+                    ),
+                  ),
+                  _DetailRow(
+                    label: 'Total final estimado',
+                    amount: quote.totalPrice,
+                    isDark: isDark,
+                    isHighlight: true,
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
+            if (explicacionPrecio.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  explicacionPrecio,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            if (explicacionPrecio.isNotEmpty) const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
@@ -345,4 +425,81 @@ class _DetailRow extends StatelessWidget {
       ],
     );
   }
+}
+
+String _resolveSurchargeLabel(String periodType) {
+  final normalized = periodType.trim().toLowerCase();
+  if (normalized.isEmpty || normalized == 'normal') {
+    return 'Recargos';
+  }
+
+  final tokens = normalized
+      .split('+')
+      .map((value) => value.trim())
+      .where((value) => value.isNotEmpty);
+
+  final labels = <String>{};
+  for (final token in tokens) {
+    switch (token) {
+      case 'nocturno':
+      case 'nocturna':
+        labels.add('nocturno');
+        break;
+      case 'hora_pico':
+      case 'pico':
+        labels.add('hora pico');
+        break;
+      case 'festivo':
+        labels.add('festivo');
+        break;
+      case 'dominical':
+        labels.add('dominical');
+        break;
+      case 'espera':
+        labels.add('espera');
+        break;
+      default:
+        labels.add(token.replaceAll('_', ' '));
+        break;
+    }
+  }
+
+  if (labels.isEmpty) {
+    return 'Recargos';
+  }
+  return 'Recargo (${labels.join(' + ')})';
+}
+
+String _buildPricingReasonText({
+  required String mensajeDemanda,
+  required bool tieneRecargo,
+  required String recargoLabel,
+  required double ajusteMinimoEstimado,
+}) {
+  final motivos = <String>[];
+
+  if (mensajeDemanda.isNotEmpty) {
+    motivos.add(mensajeDemanda + '.');
+  }
+  if (tieneRecargo) {
+    motivos.add('Incluye ${recargoLabel.toLowerCase()}.');
+  }
+  if (ajusteMinimoEstimado > 0) {
+    motivos.add('También se aplicó ajuste por tarifa mínima.');
+  }
+
+  return motivos.join(' ');
+}
+
+String _demandMessageForMultiplier(double surgeMultiplier) {
+  if (surgeMultiplier >= 1.6) {
+    return 'Alta demanda, pocos conductores disponibles';
+  }
+  if (surgeMultiplier >= 1.3) {
+    return 'Alta demanda en la zona';
+  }
+  if (surgeMultiplier > 1.0) {
+    return 'Demanda ligeramente alta';
+  }
+  return '';
 }

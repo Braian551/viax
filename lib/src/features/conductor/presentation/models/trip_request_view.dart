@@ -42,6 +42,9 @@ class TripRequestView {
   LatLng get destino => LatLng(latitudDestino, longitudDestino);
 
   factory TripRequestView.fromMap(Map<String, dynamic> raw) {
+    final dynamic precioCanonicoRaw =
+        raw['precio_canonico'] ?? raw['precio_fijo'] ?? raw['precio_estimado'];
+
     double toDouble(dynamic value) {
       return double.tryParse(value?.toString() ?? '') ?? 0;
     }
@@ -67,7 +70,7 @@ class TripRequestView {
       latitudDestino: toDouble(raw['latitud_destino']),
       longitudDestino: toDouble(raw['longitud_destino']),
       distanciaKm: toDouble(raw['distancia_km'] ?? raw['distancia_estimada']),
-      precioEstimado: toDouble(raw['precio_estimado']),
+      precioEstimado: toDouble(precioCanonicoRaw),
       duracionMinutos: toInt(raw['duracion_minutos'] ?? raw['tiempo_estimado']),
       direccionOrigen: (raw['direccion_origen'] ?? raw['direccion_recogida'])?.toString() ?? 'Sin dirección',
       direccionDestino: raw['direccion_destino']?.toString() ?? 'Sin dirección',

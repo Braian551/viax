@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -260,39 +259,6 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
     }
   }
 
-  /// Convertir posición de pantalla a coordenadas geográficas
-  LatLng _screenToLatLng(Offset screenPosition) {
-    final camera = _mapController.camera;
-    final screenSize = MediaQuery.of(context).size;
-
-    // Centro de la pantalla
-    final centerX = screenSize.width / 2;
-    final centerY = screenSize.height / 2;
-
-    // Offset desde el centro
-    final offsetX = screenPosition.dx - centerX;
-    final offsetY = screenPosition.dy - centerY;
-
-    // Convertir píxeles a coordenadas basado en el zoom
-    final zoom = camera.zoom;
-    final metersPerPixel =
-        156543.03392 *
-        math.cos(camera.center.latitude * math.pi / 180) /
-        math.pow(2, zoom);
-
-    // Calcular delta en grados
-    final deltaLat = -offsetY * metersPerPixel / 111320;
-    final deltaLng =
-        offsetX *
-        metersPerPixel /
-        (111320 * math.cos(camera.center.latitude * math.pi / 180));
-
-    return LatLng(
-      camera.center.latitude + deltaLat,
-      camera.center.longitude + deltaLng,
-    );
-  }
-
   /// Ajustar el punto a la calle y actualizar dirección
   Future<void> _snapAndUpdateAddress() async {
     if (_pickupLocation == null) return;
@@ -415,6 +381,8 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
               initialEmpresaId: widget.empresaId,
               initialCompanyName: widget.selectedCompanyName,
               initialCompanyLogoUrl: widget.selectedCompanyLogoUrl,
+              estimatedPriceLabel:
+                  '\$${widget.quote.totalPrice.toStringAsFixed(0)}',
               companyCandidates: widget.companyCandidates,
             ),
           ),
@@ -495,7 +463,9 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           // Mapa interactivo
           PickupMap(
             mapController: _mapController,
-            initialCenter: _pickupLocation ?? LatLng(widget.origin.latitude, widget.origin.longitude),
+            initialCenter:
+                _pickupLocation ??
+                LatLng(widget.origin.latitude, widget.origin.longitude),
             clientLocation: _clientLocation,
             clientHeading: _clientHeading,
             isDark: isDark,
@@ -524,10 +494,7 @@ class _PickupSelectionScreenState extends State<PickupSelectionScreen>
           ),
 
           // Botón para centrar en cliente
-          PickupCenterButton(
-            isDark: isDark,
-            onTap: _centerOnClient,
-          ),
+          PickupCenterButton(isDark: isDark, onTap: _centerOnClient),
 
           // Panel inferior con dirección y botón solicitar
           Positioned(

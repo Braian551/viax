@@ -173,14 +173,15 @@ class TripCommandQueue {
 
     final startedAt = DateTime.now();
 
-    // Guardia de seguridad: evitar duplicar finalización para el mismo viaje.
-    if (type == TripCommandType.finishTrip) {
-      final existing = await _findExistingPendingFinish(tripId);
+    // Guardia de seguridad: evitar duplicar comandos críticos para el mismo viaje.
+    if (type == TripCommandType.finishTrip ||
+        type == TripCommandType.cancelTrip) {
+      final existing = await _findExistingPendingCommand(tripId, type);
       if (existing != null) {
         _log(
           tag: '[TripCommandQueue]',
           tripId: tripId,
-          result: 'duplicate_finish_ignored',
+          result: 'duplicate_${type.wireValue}_ignored',
           latencyMs: DateTime.now().difference(startedAt).inMilliseconds,
         );
         return existing;
@@ -253,11 +254,14 @@ class TripCommandQueue {
     await _db!.delete(_table);
   }
 
-  Future<TripCommand?> _findExistingPendingFinish(int tripId) async {
+  Future<TripCommand?> _findExistingPendingCommand(
+    int tripId,
+    TripCommandType type,
+  ) async {
     final rows = await _db!.query(
       _table,
       where: 'trip_id = ? AND command_type = ?',
-      whereArgs: <Object>[tripId, TripCommandType.finishTrip.wireValue],
+      whereArgs: <Object>[tripId, type.wireValue],
       orderBy: 'created_at ASC',
       limit: 1,
     );

@@ -132,7 +132,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       debugPrint('Error setting up animations: $e');
     }
 
-    // Defer listener setup and route loading to after first frame
+    // Posponer el registro del listener y la carga de ruta hasta despues del primer frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -175,15 +175,15 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(ctx); // Close dialog
-                  Navigator.pop(context); // Go back to request screen
+                  Navigator.pop(ctx); // Cerrar dialogo
+                  Navigator.pop(context); // Volver a la pantalla de solicitud
                 },
                 child: const Text('Volver'),
               ),
             ],
           ),
         );
-        return; // Don't load route
+        return; // No cargar ruta
       }
 
       final waypoints = _buildWaypoints();
@@ -831,15 +831,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     bool isRandomEstimate = false,
     int randomCompanyCount = 0,
   }) {
-    // Usar datos de la ruta si está disponible, con safety checks
+    // Usar datos de la ruta si está disponible, con validaciones de seguridad.
     double distKm = _route?.distanceKm ?? 0;
     double durMinRaw = _route?.durationMinutes ?? 0;
 
-    // Safety check: ensure values are finite before using
+    // Validación de seguridad: asegurar valores finitos antes de usar.
     if (!distKm.isFinite) distKm = 0;
     if (!durMinRaw.isFinite) durMinRaw = 0;
 
     final durMin = durMinRaw.ceil();
+    final totalPriceCopApprox = _normalizeCopApprox(option.tarifaTotal);
 
     _vehicleQuotes[type] = TripQuote(
       distanceKm: distKm,
@@ -848,7 +849,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       distancePrice: option.costoDistancia,
       timePrice: option.costoTiempo,
       surchargePrice: option.recargoPrecio,
-      totalPrice: option.tarifaTotal,
+      totalPrice: totalPriceCopApprox,
       periodType: option.periodo,
       surchargePercentage: option.recargoPorcentaje,
       surgeMultiplier: option.surgeMultiplier,
@@ -903,7 +904,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     final dist = avgCostoDistancia / count;
     final time = avgCostoTiempo / count;
     final surcharge = avgRecargo / count;
-    final total = avgTarifaTotal / count;
+    final total = _normalizeCopApprox(avgTarifaTotal / count);
     final surge = avgSurge / count;
 
     final first = companies.first;
@@ -983,16 +984,21 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     });
   }
 
+  double _normalizeCopApprox(double amount) {
+    if (!amount.isFinite || amount <= 0) return 0;
+    return (amount / 100).round() * 100.0;
+  }
+
   /// Cambia el vehículo seleccionado con animación
   void _selectVehicle(String vehicleType) {
     if (vehicleType == _selectedVehicleType) return;
 
-    // Check if the current price is valid before setting it as start
+    // Verificar que el precio actual sea válido antes de usarlo como inicio.
     if (_quote != null) {
       _startPrice = _animatedPrice;
     }
 
-    // _vehicleChangeController.forward(from: 0); // Commented out to debug freeze
+    // _vehicleChangeController.forward(from: 0); // Comentado temporalmente para depurar congelamientos.
 
     setState(() {
       _selectedVehicleType = vehicleType;
@@ -1000,18 +1006,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       if (_quote != null) {
         _targetPrice = _quote!.totalPrice;
 
-        // Removed aggressive map manipulation here if any
+        // Se evitó manipulación agresiva del mapa en este punto.
       }
 
-      // Reset selected company for this type if necessary (cleaner logic)
-      // _selectedCompanyPerVehicle.remove(vehicleType); // Is this needed?
+      // Restablecer la empresa seleccionada para este tipo si hace falta (logica mas limpia).
+      // _selectedCompanyPerVehicle.remove(vehicleType); // ?Hace falta?
     });
 
     // Animar el precio
     _animatePriceChange();
   }
 
-  /// Muestra el selector de empresas en un bottom sheet
+  /// Muestra el selector de empresas en una hoja inferior.
   void _showCompanyPicker(
     BuildContext context,
     String vehicleType,
@@ -1098,7 +1104,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    // Debounce log to avoid spamming console on every frame
+    // Debounce de logs para evitar saturar la consola en cada frame.
     // debugPrint('🔍 TripPreviewScreen: build called');
 
     return Scaffold(
@@ -1145,7 +1151,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
                   ignoring: _isSheetHidden,
                   child: Builder(
                     builder: (context) {
-                      // Attach listener once the sheet is built and controller is ready
+                      // Adjuntar el listener cuando la hoja este construida y el controlador listo.
                       if (_draggableController.isAttached &&
                           !_sheetListenerAttached) {
                         _draggableController.addListener(
@@ -1196,7 +1202,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           // Mensaje de error
           if (_errorMessage != null) _buildErrorOverlay(isDark),
 
-          // Floating handle that appears when sheet is hidden
+          // Tirador flotante que aparece cuando la hoja esta oculta.
           if (_isSheetHidden)
             Positioned(
               bottom: 16 + MediaQuery.of(context).padding.bottom,
@@ -1673,7 +1679,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   void _handleSheetSizeChange() {
     if (!mounted || !_draggableController.isAttached) return;
 
-    // Debounce to avoid excessive rebuilds during drag
+    // Debounce para evitar reconstrucciones excesivas durante el arrastre.
     _sheetSizeDebounceTimer?.cancel();
     _sheetSizeDebounceTimer = Timer(const Duration(milliseconds: 50), () {
       if (!mounted || !_draggableController.isAttached) return;
@@ -1682,7 +1688,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         final currentSize = _draggableController.size;
         final shouldBeHidden = currentSize <= 0.24;
 
-        // Only update when crossing the visibility threshold
+        // Actualizar solo al cruzar el umbral de visibilidad.
         if (shouldBeHidden != _isSheetHidden) {
           if (mounted) {
             setState(() {
@@ -1691,7 +1697,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           }
         }
       } catch (e) {
-        // Ignore errors if controller is not ready
+        // Ignorar errores si el controlador aun no esta listo.
         debugPrint('Sheet size change error: $e');
       }
     });
@@ -1753,7 +1759,7 @@ class _HiddenSheetHandle extends StatelessWidget {
           final newSize = (controller.size + delta).clamp(0.2, 0.65);
           controller.jumpTo(newSize);
         } catch (e) {
-          // Ignore if controller not ready
+          // Ignorar si el controlador no esta listo.
         }
       },
       onVerticalDragEnd: (details) {
@@ -1775,7 +1781,7 @@ class _HiddenSheetHandle extends StatelessWidget {
             curve: Curves.easeOut,
           );
         } catch (e) {
-          // Ignore if controller not ready
+          // Ignorar si el controlador no esta listo.
         }
       },
       child: Container(
@@ -1926,7 +1932,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                         },
                       ),
 
-                      // Car Icon with float/bounce
+                      // Icono de carro con efecto flotante/rebote.
                       AnimatedBuilder(
                         animation: _carController,
                         builder: (context, child) {
@@ -1961,7 +1967,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                 ),
                 const SizedBox(height: 32),
 
-                // Titles
+                // Titulos
                 Text(
                   'Preparando viaje...',
                   style: TextStyle(
@@ -1983,7 +1989,7 @@ class _RouteLoaderState extends State<_RouteLoader>
                   ),
                 ),
 
-                // Optional: Loading bar or dots (keeping it clean for now)
+                // Opcional: barra o puntos de carga (se mantiene limpio por ahora).
               ],
             ),
           ),

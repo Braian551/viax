@@ -22,6 +22,7 @@ import '../../../../global/widgets/trip_completion/trip_completion_widgets.dart'
 import '../../../../theme/app_colors.dart';
 import '../../services/trip_request_service.dart';
 import '../../services/client_tracking_service.dart';
+import '../../services/driver_marker_controller.dart';
 import 'package:viax/src/global/services/trip_persistence_service.dart';
 import 'package:viax/src/features/location_sharing/services/location_sharing_service.dart';
 import '../widgets/user_active_trip/user_active_trip_widgets.dart';
@@ -101,6 +102,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   // Ruta y progreso
   List<LatLng> _routePoints = [];
   List<LatLng> _animatedRoute = [];
+  int _currentRouteSegmentIndex = 0;
   double _distanceKm = 0; // Distancia RESTANTE
   double? _plannedRouteDistanceKm; // Distancia total estimada de la ruta
   double? _distanceTraveled; // Distancia RECORRIDA (real)
@@ -111,6 +113,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   double _precioActual = 0;
   double _precioFijoMostrado = 0;
   double? _precioCongelado;
+  double? _precioFinalCanonico;
   int _tiempoTranscurridoSeg = 0;
   int _lastServerTrackingSeconds = 0;
   double _lastServerDistanceKm = 0.0;
@@ -140,6 +143,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
   DateTime? _lastConductorGpsAt;
   LatLng? _lastConductorGpsPoint;
   double _lastConductorSpeedKmh = 0.0;
+  final List<LatLng> _driverSmoothingPoints = <LatLng>[];
 
   // Compartir ubicación
   LocationShareSession? _shareSession;
@@ -167,8 +171,6 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _startClientTracking();
     _registerActiveTripNavigation();
   }
-
-
 
   /// Registra este viaje en el servicio de navegación global
   void _registerActiveTripNavigation() {
@@ -216,6 +218,7 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     _unreadSubscription?.cancel();
     _unreadSyncTimer?.cancel();
     _compassStream?.cancel();
+    _driverSmoothingPoints.clear();
     _pulseController.dispose();
     _conductorMoveController.dispose();
     _stopClientTracking();
@@ -331,15 +334,20 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
         // Actualizar ubicación del conductor desde tracking
         if (data.latitudConductor != null && data.longitudConductor != null) {
-          final target = LatLng(
+          final targetRaw = LatLng(
             data.latitudConductor!,
             data.longitudConductor!,
           );
+          final target = _processDriverPointForUi(targetRaw);
           _lastConductorGpsAt = data.ultimaActualizacion ?? DateTime.now();
           _lastConductorGpsPoint = target;
           _lastConductorSpeedKmh = data.velocidadConductor;
           if (data.headingConductor.isFinite && data.headingConductor >= 0) {
-            _conductorHeading = _normalizeHeading(data.headingConductor);
+            _conductorHeading = DriverMarkerController.smoothBearing(
+              current: _conductorHeading,
+              target: _normalizeHeading(data.headingConductor),
+              maxDelta: 45,
+            );
           }
           _animateConductorMarker(target);
         }
@@ -391,9 +399,44 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       anchor.latitude + latDelta,
       anchor.longitude + lonDelta,
     );
+    final snappedPredicted = _snapDriverToRoute(predicted);
     setState(() {
-      _conductorLocation = predicted;
+      _conductorLocation = snappedPredicted;
     });
+  }
+
+  LatLng _processDriverPointForUi(LatLng rawPoint) {
+    _driverSmoothingPoints.add(rawPoint);
+    if (_driverSmoothingPoints.length > 5) {
+      _driverSmoothingPoints.removeAt(0);
+    }
+
+    final smoothed = DriverMarkerController.movingAverage(
+      _driverSmoothingPoints,
+      windowSize: 5,
+    );
+
+    return _snapDriverToRoute(smoothed);
+  }
+
+  LatLng _snapDriverToRoute(LatLng point) {
+    if (_routePoints.length < 2) {
+      return point;
+    }
+
+    final snapped = DriverMarkerController.snapToPolylineWithProgress(
+      point: point,
+      polyline: _routePoints,
+      currentSegmentIndex: _currentRouteSegmentIndex,
+      lookAheadSegments: 5,
+      maxJumpAheadSegments: _routePoints.length,
+      forceForwardJumpDistanceMeters: 30,
+    );
+    _currentRouteSegmentIndex = Math.max(
+      _currentRouteSegmentIndex,
+      snapped.segmentIndex,
+    );
+    return snapped.point;
   }
 
   double _clampRealtimeDistanceByTimeAndRoute({
@@ -505,7 +548,25 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       return;
     }
 
-    final durationMs = distanceMeters > 60 ? 1800 : 1200;
+    if (distanceMeters >= 2.0) {
+      final targetBearing = DriverMarkerController.bearingBetween(
+        current,
+        nextPoint,
+      );
+      _conductorHeading = DriverMarkerController.smoothBearing(
+        current: _conductorHeading,
+        target: targetBearing,
+        maxDelta: 45,
+      );
+    }
+
+    final durationMs =
+        (DriverMarkerController.durationSecondsFromDistanceMeters(
+                  distanceMeters,
+                ) *
+                1000)
+            .round()
+            .clamp(300, 1600);
     _conductorMoveController.duration = Duration(milliseconds: durationMs);
     _conductorMoveController.stop();
 
@@ -563,7 +624,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     final realtime = RealtimeService.instance;
     if (realtime.isRealtimeEnabled && realtime.isWebSocketConnected) {
       _wsActive = true;
-      debugPrint('[ActiveTrip] WS conectado, suscribiendo trip:${widget.solicitudId}');
+      debugPrint(
+        '[ActiveTrip] WS conectado, suscribiendo trip:${widget.solicitudId}',
+      );
 
       // Suscripción a eventos de estado del viaje
       _tripWsSub = RealtimeService.instance.subscribeToTrip(widget.solicitudId);
@@ -1002,11 +1065,15 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           final canonicalPrice = toDouble(trip['price_final_canonical']);
           final backendFinalPrice = toDouble(trip['precio_final']);
           final fixedPrice = toDouble(trip['precio_fijo']);
+          final breakdownFinalPrice = _desglosePrecioFinal != null
+              ? toDouble(_desglosePrecioFinal!['precio_final'])
+              : null;
 
           final hasAuthoritativeSettlement =
               (fixedPrice != null && fixedPrice > 0) ||
               (canonicalPrice != null && canonicalPrice > 0) ||
               (backendFinalPrice != null && backendFinalPrice > 0) ||
+              (breakdownFinalPrice != null && breakdownFinalPrice > 0) ||
               _finalMetricsLocked;
 
           if (!hasAuthoritativeSettlement) {
@@ -1082,16 +1149,31 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           // Precio visible: mantener upfront congelado, nunca derivar de precio final real.
           _freezeVisiblePrice(Map<String, dynamic>.from(trip));
 
+          // Guardar el precio final canónico para el resumen de viaje completado.
+          _precioFinalCanonico = (canonicalPrice != null && canonicalPrice > 0)
+              ? canonicalPrice
+              : (backendFinalPrice != null && backendFinalPrice > 0)
+              ? backendFinalPrice
+              : (breakdownFinalPrice != null && breakdownFinalPrice > 0)
+              ? breakdownFinalPrice
+              : _precioFinalCanonico;
+
           debugPrint('📊 [Cliente] Viaje completado - Datos finales:');
           debugPrint('   - Distancia: $_distanceTraveled km');
           debugPrint(
             '   - Tiempo: $_tiempoTranscurridoSeg s (${_tiempoTranscurridoSeg / 60} min)',
           );
           debugPrint('   - Precio: $_precioActual');
+          debugPrint('   - Precio final canónico: $_precioFinalCanonico');
           _onTripCompleted();
           return;
         } else if (estado == 'cancelada') {
           _onTripCancelled();
+          return;
+        } else if (estadoNorm == 'sin_conductores' ||
+            estadoNorm == 'timeout' ||
+            estadoNorm == 'exhausted') {
+          _onNoDriverAvailable();
           return;
         }
 
@@ -1101,7 +1183,18 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           final lat = (conductor['latitud'] as num?)?.toDouble();
           final lng = (conductor['longitud'] as num?)?.toDouble();
           if (lat != null && lng != null) {
-            newConductorLocation = LatLng(lat, lng);
+            newConductorLocation = _processDriverPointForUi(LatLng(lat, lng));
+          }
+
+          final backendHeading = (conductor['heading_deg'] as num?)?.toDouble();
+          if (backendHeading != null &&
+              backendHeading.isFinite &&
+              backendHeading >= 0) {
+            _conductorHeading = DriverMarkerController.smoothBearing(
+              current: _conductorHeading,
+              target: _normalizeHeading(backendHeading),
+              maxDelta: 45,
+            );
           }
         }
 
@@ -1240,10 +1333,26 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         setState(() {
           _routePoints = route.geometry;
           _animatedRoute = [];
+          _currentRouteSegmentIndex = _routePoints.length > 1
+              ? _currentRouteSegmentIndex.clamp(0, _routePoints.length - 2)
+              : 0;
           _distanceKm = route.distanceKm;
           _plannedRouteDistanceKm = route.distanceKm;
           _etaMinutes = route.durationMinutes.ceil();
           _routeLoadError = null;
+
+          if (_conductorLocation != null && _routePoints.length > 1) {
+            final seeded = DriverMarkerController.snapToPolylineWithProgress(
+              point: _conductorLocation!,
+              polyline: _routePoints,
+              currentSegmentIndex: _currentRouteSegmentIndex,
+              lookAheadSegments: 5,
+              maxJumpAheadSegments: _routePoints.length,
+              forceForwardJumpDistanceMeters: 30,
+            );
+            _currentRouteSegmentIndex = seeded.segmentIndex;
+            _conductorLocation = seeded.point;
+          }
         });
         _animateRoute();
         _fitMapToRoute();
@@ -1316,7 +1425,9 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
           debugPrint('✅ [Cliente] Datos finales del tracking obtenidos:');
           debugPrint('   - Tiempo: $_tiempoTranscurridoSeg s');
           debugPrint('   - Distancia: $_distanceTraveled km');
-          debugPrint('   - Precio fijo: ${_precioFijoMostrado > 0 ? _precioFijoMostrado : _precioActual}');
+          debugPrint(
+            '   - Precio fijo: ${_precioFijoMostrado > 0 ? _precioFijoMostrado : _precioActual}',
+          );
         }
       } catch (e) {
         debugPrint('⚠️ [Cliente] Error obteniendo tracking final: $e');
@@ -1361,6 +1472,52 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
               foregroundColor: Colors.white,
             ),
             child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onNoDriverAvailable() {
+    if (_tripCompleted) return;
+
+    _tripCompleted = true;
+    _statusTimer?.cancel();
+    ChatService.stopPolling();
+    unawaited(_stopLocationSharingSession());
+    _stopClientTracking();
+
+    TripPersistenceService().clearActiveTrip();
+    ActiveTripNavigationService().clearActiveTrip();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.warning, size: 28),
+            SizedBox(width: 12),
+            Expanded(child: Text('Sin conductores disponibles')),
+          ],
+        ),
+        content: const Text(
+          'Esta solicitud finalizó sin conductores asignados. Puedes volver al inicio e intentarlo de nuevo.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(RouteNames.home, (route) => false);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Volver al inicio'),
           ),
         ],
       ),
@@ -1536,23 +1693,33 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
 
   /// Cancela el viaje por iniciativa del cliente
   Future<void> _cancelTripByClient() async {
-    // Obtener el ID del conductor del viaje activo
-    final conductorId = _conductor?['id'] as int?;
-    if (conductorId == null) {
-      if (mounted) {
+    final conductorRawId = _conductor?['id'];
+    final conductorId = conductorRawId is int
+        ? conductorRawId
+        : int.tryParse(conductorRawId?.toString() ?? '');
+
+    setState(() => _isLoading = true);
+
+    if (conductorId == null || conductorId <= 0) {
+      final success = await TripRequestService.cancelTripRequest(
+        widget.solicitudId,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (success) {
+        _onTripCancelled();
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'No se puede cancelar: información del conductor no disponible',
-            ),
+            content: Text('No se pudo cancelar la solicitud en este momento'),
             backgroundColor: AppColors.error,
           ),
         );
       }
       return;
     }
-
-    setState(() => _isLoading = true);
 
     final result = await TripRequestService.cancelTripRequestWithReason(
       solicitudId: widget.solicitudId,
@@ -1561,19 +1728,18 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
       canceladoPor: 'cliente',
     );
 
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
     if (result['success'] == true) {
-      setState(() => _isLoading = false);
       _onTripCancelled();
     } else {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Error al cancelar'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Error al cancelar'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -1655,11 +1821,30 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
     TripPersistenceService().clearActiveTrip();
     ActiveTripNavigationService().clearActiveTrip();
 
-    final precioFinal = (_precioCongelado != null && _precioCongelado! > 0)
-        ? _precioCongelado!
-        : (_precioFijoMostrado > 0
-              ? _precioFijoMostrado
-              : (_precioActual > 0 ? _precioActual : 5000.0));
+    double toPositiveDouble(dynamic value) {
+      if (value == null) return 0;
+      if (value is num) {
+        return value > 0 ? value.toDouble() : 0;
+      }
+      final parsed = double.tryParse(value.toString());
+      if (parsed == null || parsed <= 0) return 0;
+      return parsed;
+    }
+
+    final precioDesdeDesglose = toPositiveDouble(
+      _desglosePrecioFinal?['precio_final'],
+    );
+
+    final precioFinal =
+        (_precioFinalCanonico != null && _precioFinalCanonico! > 0)
+        ? _precioFinalCanonico!
+        : (precioDesdeDesglose > 0
+              ? precioDesdeDesglose
+              : (_precioCongelado != null && _precioCongelado! > 0)
+              ? _precioCongelado!
+              : (_precioFijoMostrado > 0
+                    ? _precioFijoMostrado
+                    : (_precioActual > 0 ? _precioActual : 5000.0)));
 
     final distanciaReal = _distanceTraveled ?? 0.0;
     final duracionRealSeg = _tiempoTranscurridoSeg > 0
@@ -1681,14 +1866,16 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
         : (_elapsedMinutes > 0 ? _elapsedMinutes * 60 : duracionRealSeg);
 
     final distanciaFinal = trackingValido ? distanciaReal : distanciaEstimada;
-    final duracionSegundos = trackingValido ? duracionRealSeg : tiempoEstimadoSeg;
+    final duracionSegundos = trackingValido
+        ? duracionRealSeg
+        : tiempoEstimadoSeg;
 
     final resumenCalculo = trackingValido
-        ? 'Precio fijo confirmado. Métricas reales validadas para el cierre del viaje.'
-        : 'Precio fijo confirmado. Se muestran métricas estimadas porque el tracking real fue insuficiente.';
+        ? 'Precio final confirmado. Métricas reales validadas para el cierre del viaje.'
+        : 'Precio final confirmado. Se muestran métricas estimadas porque el tracking real fue insuficiente.';
 
     debugPrint('📊 [ClientTracking] Finalizando viaje:');
-    debugPrint('   - Precio fijo: $precioFinal');
+    debugPrint('   - Precio final mostrado: $precioFinal');
     debugPrint('   - Tracking válido: $trackingValido');
     debugPrint('   - Distancia mostrada: $distanciaFinal km');
     debugPrint(
@@ -2105,11 +2292,12 @@ class _UserActiveTripScreenState extends State<UserActiveTripScreen>
                       distanceKm: _distanceKm,
                       etaMinutes: _etaMinutes,
                       isDark: isDark,
-                      precioActual: (_precioCongelado != null && _precioCongelado! > 0)
+                      precioActual:
+                          (_precioCongelado != null && _precioCongelado! > 0)
                           ? _precioCongelado!
                           : (_precioFijoMostrado > 0
-                              ? _precioFijoMostrado
-                              : _precioActual),
+                                ? _precioFijoMostrado
+                                : _precioActual),
                       distanciaRecorrida: _distanceTraveled,
                       tiempoTranscurrido: _tiempoTranscurridoSeg,
                       onDriverTap: _showDriverDetails,

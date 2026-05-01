@@ -696,6 +696,16 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
         onError: _onSearchError,
       );
 
+      unawaited(
+        TripRequestSearchService.updateLocation(
+          conductorId: conductorId,
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          heading: _currentPosition!.heading,
+          timestampMsUtc: DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
+      );
+
       _safeSetState(() {
         _isSearchingRequests = true;
         _searchStatus = 'Buscando solicitudes cercanas...';
@@ -746,6 +756,19 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
                 latitude: position.latitude,
                 longitude: position.longitude,
               );
+
+              final conductorId = _conductorUserId;
+              if (conductorId != null) {
+                unawaited(
+                  TripRequestSearchService.updateLocation(
+                    conductorId: conductorId,
+                    latitude: position.latitude,
+                    longitude: position.longitude,
+                    heading: position.heading,
+                    timestampMsUtc: DateTime.now().toUtc().millisecondsSinceEpoch,
+                  ),
+                );
+              }
             }
 
             DemandZoneService.updateLocation(
@@ -992,6 +1015,20 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
     }
     
     if (!_isOnline) {
+      if (_currentPosition == null) {
+        await _getCurrentLocation();
+      }
+      if (_isOnline) {
+        return;
+      }
+      if (_currentPosition == null) {
+        _showStatusSnackbar(
+          'Necesitamos tu ubicación para conectarte.',
+          Colors.red,
+        );
+        return;
+      }
+
       await _promptBackgroundModeIfNeeded();
 
       // Verificar si hay viaje activo antes de conectar
@@ -1038,6 +1075,17 @@ class _ConductorHomeScreenState extends State<ConductorHomeScreen>
 
         // Iniciar búsqueda continua de solicitudes
         _startSearchingRequests();
+
+        // Publicar ubicación inicial inmediatamente para entrar al matching.
+        unawaited(
+          TripRequestSearchService.updateLocation(
+            conductorId: conductorId,
+            latitude: _currentPosition!.latitude,
+            longitude: _currentPosition!.longitude,
+            heading: _currentPosition!.heading,
+            timestampMsUtc: DateTime.now().toUtc().millisecondsSinceEpoch,
+          ),
+        );
 
         // Refrescar zonas de demanda al conectarse
         _startDemandZonesUpdates();

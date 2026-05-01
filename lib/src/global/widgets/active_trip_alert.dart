@@ -80,42 +80,42 @@ class _ActiveTripAlertDialogState extends State<_ActiveTripAlertDialog> {
         final tripData = result['trip'];
         if (tripData != null) {
           debugPrint('✅ [ActiveTripAlert] Navigating to active trip: $tripData');
-          
-          Navigator.pop(context);
 
-          final navigator = ActiveTripNavigationService.navigatorKey.currentState;
-          if (navigator == null) {
+          final tripMap = Map<String, dynamic>.from(tripData as Map);
+          final decision = widget.isConductor
+              ? TripStatusNavigationService.resolveConductorNavigation(
+                  trip: tripMap,
+                  fallbackConductorId: widget.userId ?? 0,
+                )
+              : TripStatusNavigationService.resolveUserNavigation(
+                  trip: tripMap,
+                  fallbackClienteId: widget.userId ?? 0,
+                );
+
+          if (decision == null) {
+            debugPrint(
+              '⚠️ [ActiveTripAlert] No se pudo resolver la navegación. estado=${tripMap['estado']}',
+            );
             if (mounted) {
-              Navigator.pop(context);
+              setState(() => _isLoading = false);
+              ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+                const SnackBar(
+                  content: Text('No pudimos abrir el viaje activo. Intenta de nuevo.'),
+                ),
+              );
             }
             return;
           }
 
-          if (widget.isConductor) {
-            final decision = TripStatusNavigationService.resolveConductorNavigation(
-              trip: Map<String, dynamic>.from(tripData as Map),
-              fallbackConductorId: widget.userId ?? 0,
-            );
+          Navigator.pop(context);
 
-            if (decision != null) {
-              await navigator.pushNamed(
-                decision.routeName,
-                arguments: decision.arguments,
-              );
-            }
-          } else {
-            final decision = TripStatusNavigationService.resolveUserNavigation(
-              trip: Map<String, dynamic>.from(tripData as Map),
-              fallbackClienteId: widget.userId ?? 0,
-            );
+          final navigator = ActiveTripNavigationService.navigatorKey.currentState;
+          if (navigator == null) return;
 
-            if (decision != null) {
-              await navigator.pushNamed(
-                decision.routeName,
-                arguments: decision.arguments,
-              );
-            }
-          }
+          await navigator.pushNamed(
+            decision.routeName,
+            arguments: decision.arguments,
+          );
           return;
         }
       }

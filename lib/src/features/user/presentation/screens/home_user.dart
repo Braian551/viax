@@ -18,7 +18,7 @@ import 'package:viax/src/features/user/presentation/screens/trip_history_screen.
 import 'package:viax/src/features/notifications/notifications.dart';
 import 'package:viax/src/features/user/presentation/widgets/home/map_loading_shimmer.dart';
 import 'package:viax/src/global/widgets/active_trip_alert.dart';
-import 'package:viax/src/features/user/services/user_trips_service.dart';
+import 'package:viax/src/features/user/services/trip_request_service.dart';
 import 'package:viax/src/global/models/simple_location.dart';
 import 'package:viax/src/global/services/location_suggestion_service.dart';
 import 'package:viax/src/global/services/route_preview_cache.dart';
@@ -299,10 +299,13 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   Future<bool> _hasRemoteActiveTrip() async {
     if (_userId == null) return false;
     try {
-      final result = await UserTripsService.getHistorial(userId: _userId!, limit: 5);
+      final result = await TripRequestService.checkActiveTrip(
+        userId: _userId!,
+        role: 'cliente',
+      );
+
       if (result['success'] == true) {
-        final trips = result['viajes'] as List<UserTripModel>;
-        return trips.any((t) => !t.isCompletado && !t.isCancelado);
+        return result['has_active'] == true || result['trip'] != null;
       }
     } catch (_) {}
     return false;
