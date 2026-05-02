@@ -53,6 +53,59 @@ Los ignora completamente. No los toca. No los comenta como accion pendiente a ej
 
 ---
 
+# REGLA DE ORGANIZACION DE ARCHIVOS (OBLIGATORIA)
+
+El agente NUNCA debe crear archivos fuera de su ubicacion correcta segun el tipo.
+Esta regla aplica a todos los archivos generados durante troubleshooting, implementacion o pruebas.
+
+## Ubicaciones obligatorias por tipo de archivo
+
+| Tipo de archivo | Ubicacion correcta | Ejemplos |
+|---|---|---|
+| Scripts de prueba PHP | `backend/scripts/` | `test_*.php`, `verify_*.php`, `check_*.php` |
+| Scripts de utilidad PHP | `backend/scripts/` | `backup_*.php`, `repair_*.php`, `migrate_*.php` |
+| Logs de backend | `backend/logs/` | `deploy.log`, `dispatch_worker.log` |
+| Logs de debug de modulos | `backend/logs/` | `settings_debug.log`, `debug_path.log` |
+| Configs de Supervisor | `infra/supervisor/` | `*.conf` |
+| Configs de Nginx | `infra/nginx/` | `*.conf` |
+| Configs de Docker | `infra/docker/` | `docker-compose.yml`, `Dockerfile.*` |
+| Microservicios Node | `services/{nombre}/` | `dispatch/`, `pricing/`, `tracking/` |
+| Documentacion tecnica | `docs/architecture/` | `*.md` de decisiones y reglas |
+| Archivos temporales de trabajo | `tmp/` | Solo durante la sesion, limpiar al final |
+| Scripts de PowerShell de utilidad | `scripts/` | `*.ps1`, `*.sh` de la raiz |
+
+## Reglas especificas
+
+**Backend PHP — raiz de `backend/` solo acepta:**
+- Archivos de entrada HTTP: `index.php`, `health.php`, `get_api_keys.php`, `r2_proxy.php`
+- Configuracion: `composer.json`, `composer.lock`, `.env*`, `.htaccess`, `deploy.sh`
+- Documentacion: `README.md`
+- Nada mas. Cualquier otro archivo va en su subcarpeta correspondiente.
+
+**Raiz del proyecto `viax/` solo acepta:**
+- Archivos de Flutter: `pubspec.yaml`, `pubspec.lock`, `analysis_options.yaml`, `README.md`, `LICENSE`
+- Configs de herramientas: `.gitignore`, `.metadata`, `firebase.json`, `devtools_options.yaml`
+- Nada mas. Logs, outputs de analisis, archivos temporales van en `tmp/` o se eliminan.
+
+**Archivos temporales de diagnostico:**
+- Si el agente crea un archivo temporal para diagnostico (probe, test, check), DEBE eliminarlo al final de la tarea.
+- Si no puede eliminarlo, debe listarlo explicitamente en el reporte como "pendiente de limpieza manual".
+
+**Archivos de log generados automaticamente:**
+- Si un script o proceso genera un log, debe configurarse para escribir en `backend/logs/` o en `services/{nombre}/logs/`.
+- Nunca en la raiz del modulo ni en la raiz del proyecto.
+
+## Verificacion antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, el agente DEBE verificar:
+1. ¿Deje algun archivo temporal sin limpiar?
+2. ¿Algun archivo nuevo quedo fuera de su ubicacion correcta?
+3. ¿Algun log o output quedo en la raiz de `backend/` o del proyecto?
+
+Si la respuesta a cualquiera es SI, limpiar antes de reportar.
+
+---
+
 # AGENT SKILL — SAFE PRODUCTION DEPLOY
 
 You are working on the Viax production backend.
@@ -729,7 +782,7 @@ viax/
 | Componente | Ruta local | Ruta produccion | Metodo |
 | --- | --- | --- | --- |
 | backend PHP | `backend/` | `/var/www/viax/backend/` | `scp + deploy.sh` |
-| dispatch-service | `services/dispatch/` | `/var/www/viax/services/dispatch/` | `scp + supervisorctl restart` |
+| dispatch-service | `services/dispatch/` | `/var/www/viax/services/dispatch/` | `scp + docker build + docker compose` |
 | supervisor conf | `infra/supervisor/` | `/etc/supervisor/conf.d/` | `scp + supervisorctl reread` |
 | nginx conf | `infra/nginx/` | `/etc/nginx/sites-available/` o `conf.d/` | `scp + nginx -s reload` |
 
@@ -737,7 +790,7 @@ viax/
 
 | Servicio | Ruta local | Supervisor name | Modo actual |
 | --- | --- | --- | --- |
-| dispatch-service | `services/dispatch/` | `viax_dispatch_service` | `hybrid` |
+| dispatch-service | `services/dispatch/` | `viax_dispatch_service` | `hybrid, dockerizado` |
 | realtime-gateway | `backend/realtime-gateway` | `viax_ws_gateway` o similar | activo |
 
 ## Microservicios pendientes (proximas fases)
@@ -747,16 +800,28 @@ viax/
 
 ---
 
-# REGLA DE DEPLOY DE MICROSERVICIOS (OBLIGATORIA)
+# REGLA DE DEPLOY DE MICROSERVICIOS CON DOCKER (OBLIGATORIA)
 
-Si cualquier archivo bajo `services/` es modificado, el agente DEBE:
+Si cualquier archivo bajo `services/` es modificado, el agente DEBE seguir
+este flujo exacto:
 
-1. Validar sintaxis: `node --check services/{nombre}/src/*.js`
-2. Subir solo archivos modificados: `scp services/{nombre}/src/archivo.js root@76.13.114.194:/var/www/viax/services/{nombre}/src/`
-3. Reiniciar solo ese servicio: `supervisorctl restart {supervisor_name}`
-4. Verificar RUNNING: `supervisorctl status {supervisor_name}`
-5. Verificar subscriber activo si aplica: `redis-cli PUBSUB NUMSUB {canal}`
-6. Revisar logs: `tail -n 20 /var/www/viax/services/{nombre}/logs/worker.log`
+1. Validar sintaxis:
+	`node --check services/{nombre}/src/*.js`
+
+2. Subir solo archivos modificados:
+	`scp services/{nombre}/src/{archivo}.js root@76.13.114.194:/var/www/viax/services/{nombre}/src/`
+
+3. Rebuild de imagen en servidor:
+	`ssh root@76.13.114.194 'cd /var/www/viax/services/{nombre} && docker build -t viax-{nombre}:latest .'`
+
+4. Reiniciar contenedor:
+	`ssh root@76.13.114.194 'cd /var/www/viax/services/{nombre} && docker compose down && docker compose up -d'`
+
+5. Verificar subscriber y logs:
+	`ssh root@76.13.114.194 'redis-cli PUBSUB NUMSUB dispatch:trip_queue && docker logs viax_{nombre}_service --tail 10'`
 
 NO ejecutar `deploy.sh` para cambios en microservicios Node.
 `deploy.sh` es exclusivo del backend PHP.
+
+Si algo falla y hay que revertir:
+	`bash scripts/rollback_dispatch_docker.sh`

@@ -232,6 +232,9 @@ class UserService {
   static const String _kUserPhoto = 'viax_user_photo';
   static const String _kUserRegistrationDate = 'viax_user_registration_date';
   static const String _kUserEmpresaId = 'viax_user_empresa_id';
+  static const String _kAccessToken = 'viax_access_token';
+  static const String _kRefreshToken = 'viax_refresh_token';
+  static const String _kAccessTokenExpiresIn = 'viax_access_token_expires_in';
 
   static Future<void> saveSession(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
@@ -285,6 +288,18 @@ class UserService {
         await prefs.setInt(_kUserEmpresaId, empresaId);
       }
     }
+    if (user.containsKey('access_token') && user['access_token'] != null) {
+      await prefs.setString(_kAccessToken, user['access_token'].toString());
+    }
+    if (user.containsKey('refresh_token') && user['refresh_token'] != null) {
+      await prefs.setString(_kRefreshToken, user['refresh_token'].toString());
+    }
+    if (user.containsKey('expires_in') && user['expires_in'] != null) {
+      final expiresIn = int.tryParse(user['expires_in'].toString());
+      if (expiresIn != null) {
+        await prefs.setInt(_kAccessTokenExpiresIn, expiresIn);
+      }
+    }
   }
 
   static Future<Map<String, dynamic>?> getSavedSession() async {
@@ -298,6 +313,9 @@ class UserService {
     String? fotoPerfil = prefs.getString(_kUserPhoto);
     String? fechaRegistro = prefs.getString(_kUserRegistrationDate);
     int? empresaId = prefs.getInt(_kUserEmpresaId);
+    String? accessToken = prefs.getString(_kAccessToken);
+    String? refreshToken = prefs.getString(_kRefreshToken);
+    int? expiresIn = prefs.getInt(_kAccessTokenExpiresIn);
 
     // Migración automática desde claves legacy (viax_*) si no existen las nuevas
     if (email == null && id == null &&
@@ -352,6 +370,9 @@ class UserService {
       if (fotoPerfil != null) 'foto_perfil': fotoPerfil,
       if (fechaRegistro != null) 'fecha_registro': fechaRegistro,
       if (empresaId != null) 'empresa_id': empresaId,
+      if (accessToken != null && accessToken.isNotEmpty) 'access_token': accessToken,
+      if (refreshToken != null && refreshToken.isNotEmpty) 'refresh_token': refreshToken,
+      if (expiresIn != null) 'expires_in': expiresIn,
     };
     
     // Debug: verificar qué estamos recuperando
@@ -363,6 +384,14 @@ class UserService {
   static Future<int?> getCurrentEmpresaId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kUserEmpresaId);
+  }
+
+  static void _mergeAuthTokens(Map<String, dynamic> target, Map<String, dynamic> source) {
+    for (final key in ['access_token', 'refresh_token', 'expires_in']) {
+      if (source[key] != null) {
+        target[key] = source[key];
+      }
+    }
   }
 
   static Future<void> clearSession() async {
@@ -381,6 +410,9 @@ class UserService {
     await prefs.remove(_kUserPhoto);    // Added missing clear
     await prefs.remove(_kUserRegistrationDate); // Added missing clear
     await prefs.remove(_kUserEmpresaId);
+    await prefs.remove(_kAccessToken);
+    await prefs.remove(_kRefreshToken);
+    await prefs.remove(_kAccessTokenExpiresIn);
     // También eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
     await prefs.remove(_legacyUserId);
@@ -443,10 +475,14 @@ class UserService {
         try {
           if (data['data']?['admin'] != null) {
             print('UserService.login: admin data = ${data['data']['admin']}');
-            await saveSession(Map<String, dynamic>.from(data['data']['admin']));
+            final sessionData = Map<String, dynamic>.from(data['data']['admin']);
+            _mergeAuthTokens(sessionData, data['data']);
+            await saveSession(sessionData);
           } else if (data['data']?['user'] != null) {
             print('UserService.login: user data = ${data['data']['user']}');
-            await saveSession(Map<String, dynamic>.from(data['data']['user']));
+            final sessionData = Map<String, dynamic>.from(data['data']['user']);
+            _mergeAuthTokens(sessionData, data['data']);
+            await saveSession(sessionData);
           }
         } catch (_) {}
         return data;

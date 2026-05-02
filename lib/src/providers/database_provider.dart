@@ -15,7 +15,7 @@ class DatabaseProvider with ChangeNotifier {
     try {
       // Verificar conexión con el backend de producción
       final result = await _network.getJson(
-        url: Uri.parse('${ApiConfig.baseUrl}/verify_system_json.php'),
+        url: Uri.parse('${ApiConfig.baseUrl}/scripts/verify_system_json.php'),
         headers: {'Content-Type': 'application/json'},
         timeout: const Duration(seconds: 10),
       );
