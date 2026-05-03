@@ -1,0 +1,22 @@
+services:
+  pricing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: viax-pricing:latest
+    container_name: viax_pricing_service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - PRICING_SERVICE_MODE=active
+      - CONFIG_CACHE_TTL=300
+    volumes:
+      - ./logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

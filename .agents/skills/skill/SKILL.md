@@ -791,11 +791,11 @@ viax/
 | Servicio | Ruta local | Supervisor name | Modo actual |
 | --- | --- | --- | --- |
 | dispatch-service | `services/dispatch/` | `viax_dispatch_service` | `hybrid, dockerizado` |
+| pricing-service | `services/pricing/` | `viax_pricing_service` | `activo, fuente de verdad pre-viaje` |
 | realtime-gateway | `backend/realtime-gateway` | `viax_ws_gateway` o similar | activo |
 
 ## Microservicios pendientes (proximas fases)
 
-* pricing-service -> `services/pricing/` (Fase 2)
 * tracking-service -> `services/tracking/` (Fase 3)
 
 ---
@@ -841,3 +841,11 @@ redis-cli --scan --pattern "dispatch:metrics:*" | sort
 ```
 
 Las metricas se auto-eliminan a los 30 dias por TTL en Redis.
+
+## Consultar metricas operativas del pricing-service
+
+```bash
+# Forma rapida desde local:
+bash scripts/check_pricing_metrics.sh
+bash scripts/check_pricing_metrics.sh 2026-05-02
+```
