@@ -183,6 +183,13 @@ El script esta en `scripts/rollback_dispatch_docker.sh` (local) y en
 # Subscriber activo (debe ser 1)
 redis-cli PUBSUB NUMSUB dispatch:trip_queue
 
+# Metricas operativas diarias desde local
+bash scripts/check_dispatch_metrics.sh
+bash scripts/check_dispatch_metrics.sh 2026-05-01
+
+# Ver claves activas de metricas
+redis-cli --scan --pattern "dispatch:metrics:*" | sort
+
 # Seguir logs en tiempo real
 ssh root@76.13.114.194 'docker logs viax_dispatch_service -f'
 
@@ -204,6 +211,7 @@ curl -s -w "%{http_code}" -o /dev/null http://76.13.114.194/health.php
 | 2026-05-01 | Modo hybrid activado, tres conexiones Redis separadas |
 | 2026-05-01 | Estructura reorganizada: `services/`, `infra/`, `docs/` |
 | 2026-05-02 | Migracion a Docker, Supervisor gestiona contenedor |
+| 2026-05-02 | Metricas Redis diarias agregadas para offers, no_driver, duplicates, legacy, invalid y total |
 
 ---
 
@@ -212,4 +220,3 @@ curl -s -w "%{http_code}" -o /dev/null http://76.13.114.194/health.php
 - [ ] Validar `DISPATCH_OFFER` real con conductor activo en WebSocket
 - [ ] Fase 2: pricing-service en `services/pricing/`
 - [ ] Fase 3: tracking-service en `services/tracking/`
-- [ ] Metricas Redis: conteo de viajes procesados, ofertas emitidas, duplicados bloqueados

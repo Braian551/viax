@@ -13,6 +13,18 @@ const {
 } = require('./redis');
 const { chooseDriver } = require('./matching');
 
+// Metricas operativas: incrementa contadores diarios en Redis sin afectar el flujo principal.
+async function incrementMetric(metricName) {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `dispatch:metrics:${metricName}:${today}`;
+    await commands.incr(key);
+    await commands.expire(key, 60 * 60 * 24 * 30);
+  } catch (error) {
+    console.warn('[METRICS_WARN] Error incrementando metrica:', metricName, error.message);
+  }
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -99,21 +111,25 @@ async function handleTripRequested(rawMessage) {
   // Compatibilidad con LPUSH legacy: el worker PHP deja el trip_id crudo en la cola.
   if (parsed === null) {
     if (legacyTripId !== null) {
+      await incrementMetric('legacy');
       console.log('[DISPATCH_LEGACY] trip_id crudo recibido del worker PHP:', legacyTripId, '- ignorado por dispatch-service (procesado por flujo legacy)');
       return;
     }
 
+    await incrementMetric('invalid');
     console.warn('[DISPATCH_WARN] Mensaje no parseable como JSON:', preview);
     return;
   }
 
   if (legacyTripId !== null && typeof parsed !== 'object') {
+    await incrementMetric('legacy');
     console.log('[DISPATCH_LEGACY] trip_id crudo recibido del worker PHP:', legacyTripId, '- ignorado por dispatch-service (procesado por flujo legacy)');
     return;
   }
 
   const event = parsed;
   if (typeof event !== 'object') {
+    await incrementMetric('invalid');
     console.warn('[DISPATCH_WARN] Mensaje parseado sin objeto valido:', preview);
     return;
   }
@@ -128,6 +144,7 @@ async function handleTripRequested(rawMessage) {
 
   const lockAcquired = await tryAcquireProcessingLock(tripId, config.matching.processingLockTtlSec);
   if (!lockAcquired) {
+    await incrementMetric('duplicates');
     console.log(`[dispatch-service] Trip ${tripId} omitido por lock existente`);
     return;
   }
@@ -142,6 +159,8 @@ async function handleTripRequested(rawMessage) {
     };
     await publishAudit(noDriverPayload);
     await rememberDecision(tripId, noDriverPayload);
+    await incrementMetric('no_driver');
+    await incrementMetric('total');
     console.log(`[dispatch-service] Trip ${tripId} sin conductor elegible`);
     return;
   }
@@ -171,6 +190,7 @@ async function handleTripRequested(rawMessage) {
       };
       await publishAudit(duplicatePayload);
       await rememberDecision(tripId, duplicatePayload);
+      await incrementMetric('duplicates');
       console.log(`[dispatch-service] Trip ${tripId} omitido: oferta ya emitida recientemente`);
       return;
     }
@@ -179,6 +199,8 @@ async function handleTripRequested(rawMessage) {
   await publishAudit(auditPayload);
 
   if (publishDriverOffer) {
+    await incrementMetric('offers');
+    await incrementMetric('total');
     console.log('[DISPATCH_OFFER]', {
       tripId,
       driverId: selection.driverId,

@@ -825,3 +825,19 @@ NO ejecutar `deploy.sh` para cambios en microservicios Node.
 
 Si algo falla y hay que revertir:
 	`bash scripts/rollback_dispatch_docker.sh`
+
+## Consultar metricas operativas del dispatch-service
+
+```bash
+# Forma rapida desde local:
+bash scripts/check_dispatch_metrics.sh
+bash scripts/check_dispatch_metrics.sh 2026-05-01
+
+# Desde servidor:
+TODAY=$(date +%Y-%m-%d)
+redis-cli GET dispatch:metrics:total:$TODAY
+redis-cli GET dispatch:metrics:offers:$TODAY
+redis-cli --scan --pattern "dispatch:metrics:*" | sort
+```
+
+Las metricas se auto-eliminan a los 30 dias por TTL en Redis.
