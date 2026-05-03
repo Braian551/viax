@@ -51,7 +51,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   String? _errorMessage;
 
   // Estado de carga y datos
-  final bool _isLoading = true;
+  bool _companyVehiclesLoaded = false;
+  bool _isLoadingCompanyVehicles = false;
   CompanyVehicleResponse? _companyResponse;
 
   // Estado para indicar que no hay vehículos disponibles
@@ -503,6 +504,17 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Future<void> _loadCompanyVehicles(MapboxRoute route) async {
+    // Guard para evitar llamadas duplicadas al backend en el mismo ciclo de vida.
+    if (_companyVehiclesLoaded || _isLoadingCompanyVehicles) {
+      debugPrint(
+        '🔍 TripPreviewScreen: se omitió _loadCompanyVehicles duplicado',
+      );
+      return;
+    }
+
+    _companyVehiclesLoaded = true;
+    _isLoadingCompanyVehicles = true;
+
     final start = widget.origin;
 
     // Calor estimado
@@ -772,6 +784,8 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         _noVehiclesMessage = 'Error al buscar vehículos disponibles';
         _vehicles = [];
       });
+    } finally {
+      _isLoadingCompanyVehicles = false;
     }
   }
 

@@ -792,11 +792,12 @@ viax/
 | --- | --- | --- | --- |
 | dispatch-service | `services/dispatch/` | `viax_dispatch_service` | `hybrid, dockerizado` |
 | pricing-service | `services/pricing/` | `viax_pricing_service` | `activo, fuente de verdad pre-viaje` |
+| tracking-service | `services/tracking/` | `viax_tracking_service` | `puente Redis Stream a realtime-gateway` |
 | realtime-gateway | `backend/realtime-gateway` | `viax_ws_gateway` o similar | activo |
 
 ## Microservicios pendientes (proximas fases)
 
-* tracking-service -> `services/tracking/` (Fase 3)
+* Ninguno inmediato en este bloque.
 
 ---
 
