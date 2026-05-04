@@ -79,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
           await Future.delayed(const Duration(milliseconds: 500));
           
           // El backend siempre devuelve 'user', independientemente del tipo
+          final authData = resp['data'];
           final user = resp['data']?['user'];
           final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
           
@@ -87,8 +88,17 @@ class _LoginScreenState extends State<LoginScreen> {
           
           try {
             // Guardar sesión con los datos del usuario
-            if (user != null) {
-              await UserService.saveSession(user);
+            if (user is Map<String, dynamic>) {
+              final sessionData = Map<String, dynamic>.from(user);
+              if (authData is Map<String, dynamic>) {
+                for (final key in ['access_token', 'refresh_token', 'expires_in']) {
+                  final value = authData[key];
+                  if (value != null && value.toString().trim().isNotEmpty) {
+                    sessionData[key] = value;
+                  }
+                }
+              }
+              await UserService.saveSession(sessionData);
             } else {
               await UserService.saveSession({'email': emailToUse});
             }

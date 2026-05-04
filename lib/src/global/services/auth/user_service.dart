@@ -232,57 +232,113 @@ class UserService {
   static const String _kUserPhoto = 'viax_user_photo';
   static const String _kUserRegistrationDate = 'viax_user_registration_date';
   static const String _kUserEmpresaId = 'viax_user_empresa_id';
+  static const String _kAccessToken = 'viax_access_token';
+  static const String _kRefreshToken = 'viax_refresh_token';
+  static const String _kAccessTokenExpiresIn = 'viax_access_token_expires_in';
+
+  static String? _normalizarToken(dynamic value) {
+    final token = value?.toString().trim();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    return token;
+  }
+
+  static void _preservarTokensGuardados(
+    Map<String, dynamic> sessionData,
+    SharedPreferences prefs,
+  ) {
+    final accessTokenActual = _normalizarToken(sessionData['access_token']);
+    final refreshTokenActual = _normalizarToken(sessionData['refresh_token']);
+    final expiresInActual = int.tryParse(sessionData['expires_in']?.toString() ?? '');
+
+    final accessTokenGuardado = _normalizarToken(prefs.getString(_kAccessToken));
+    final refreshTokenGuardado = _normalizarToken(prefs.getString(_kRefreshToken));
+    final expiresInGuardado = prefs.getInt(_kAccessTokenExpiresIn);
+
+    if (accessTokenActual != null) {
+      sessionData['access_token'] = accessTokenActual;
+    } else if (accessTokenGuardado != null) {
+      sessionData['access_token'] = accessTokenGuardado;
+    }
+
+    if (refreshTokenActual != null) {
+      sessionData['refresh_token'] = refreshTokenActual;
+    } else if (refreshTokenGuardado != null) {
+      sessionData['refresh_token'] = refreshTokenGuardado;
+    }
+
+    if (expiresInActual != null) {
+      sessionData['expires_in'] = expiresInActual;
+    } else if (expiresInGuardado != null) {
+      sessionData['expires_in'] = expiresInGuardado;
+    }
+  }
 
   static Future<void> saveSession(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
+    final sessionData = Map<String, dynamic>.from(user);
+    _preservarTokensGuardados(sessionData, prefs);
     
-    // Debug: verificar qué estamos guardando
-    print('UserService.saveSession: Guardando usuario: $user');
+    // Depuración: verificar qué estamos guardando
+    print('UserService.saveSession: Guardando usuario: $sessionData');
     
-    if (user.containsKey('email') && user['email'] != null) {
-      await prefs.setString(_kUserEmail, user['email'].toString());
+    if (sessionData.containsKey('email') && sessionData['email'] != null) {
+      await prefs.setString(_kUserEmail, sessionData['email'].toString());
     }
-    if (user.containsKey('id') && user['id'] != null) {
-      final userId = int.tryParse(user['id'].toString()) ?? 0;
+    if (sessionData.containsKey('id') && sessionData['id'] != null) {
+      final userId = int.tryParse(sessionData['id'].toString()) ?? 0;
       print('UserService.saveSession: Guardando ID: $userId');
       await prefs.setInt(_kUserId, userId);
     }
-    if (user.containsKey('tipo_usuario') && user['tipo_usuario'] != null) {
-      await prefs.setString(_kUserType, user['tipo_usuario'].toString());
+    if (sessionData.containsKey('tipo_usuario') && sessionData['tipo_usuario'] != null) {
+      await prefs.setString(_kUserType, sessionData['tipo_usuario'].toString());
     }
     // Guardar nombre
-    if (user.containsKey('nombre')) {
-      if (user['nombre'] != null) {
-        await prefs.setString(_kUserName, user['nombre'].toString());
+    if (sessionData.containsKey('nombre')) {
+      if (sessionData['nombre'] != null) {
+        await prefs.setString(_kUserName, sessionData['nombre'].toString());
       }
     }
     // Guardar apellido
-    if (user.containsKey('apellido')) {
-      if (user['apellido'] != null) {
-        await prefs.setString(_kUserLastName, user['apellido'].toString());
+    if (sessionData.containsKey('apellido')) {
+      if (sessionData['apellido'] != null) {
+        await prefs.setString(_kUserLastName, sessionData['apellido'].toString());
       }
     }
     // Guardar teléfono
-    if (user.containsKey('telefono') && user['telefono'] != null) {
-      await prefs.setString(_kUserPhone, user['telefono'].toString());
+    if (sessionData.containsKey('telefono') && sessionData['telefono'] != null) {
+      await prefs.setString(_kUserPhone, sessionData['telefono'].toString());
     }
     // Guardar foto perfil
-    if (user.containsKey('foto_perfil')) {
-      if (user['foto_perfil'] != null && user['foto_perfil'].toString().isNotEmpty) {
-        await prefs.setString(_kUserPhoto, user['foto_perfil'].toString());
+    if (sessionData.containsKey('foto_perfil')) {
+      if (sessionData['foto_perfil'] != null && sessionData['foto_perfil'].toString().isNotEmpty) {
+        await prefs.setString(_kUserPhoto, sessionData['foto_perfil'].toString());
       } else {
         await prefs.remove(_kUserPhoto);
       }
     }
     // Guardar fecha registro
-    if (user.containsKey('fecha_registro') && user['fecha_registro'] != null) {
-      await prefs.setString(_kUserRegistrationDate, user['fecha_registro'].toString());
+    if (sessionData.containsKey('fecha_registro') && sessionData['fecha_registro'] != null) {
+      await prefs.setString(_kUserRegistrationDate, sessionData['fecha_registro'].toString());
     }
     // Guardar empresa_id
-    if (user.containsKey('empresa_id') && user['empresa_id'] != null) {
-      final empresaId = int.tryParse(user['empresa_id'].toString());
+    if (sessionData.containsKey('empresa_id') && sessionData['empresa_id'] != null) {
+      final empresaId = int.tryParse(sessionData['empresa_id'].toString());
       if (empresaId != null) {
         await prefs.setInt(_kUserEmpresaId, empresaId);
+      }
+    }
+    if (sessionData.containsKey('access_token') && sessionData['access_token'] != null) {
+      await prefs.setString(_kAccessToken, sessionData['access_token'].toString());
+    }
+    if (sessionData.containsKey('refresh_token') && sessionData['refresh_token'] != null) {
+      await prefs.setString(_kRefreshToken, sessionData['refresh_token'].toString());
+    }
+    if (sessionData.containsKey('expires_in') && sessionData['expires_in'] != null) {
+      final expiresIn = int.tryParse(sessionData['expires_in'].toString());
+      if (expiresIn != null) {
+        await prefs.setInt(_kAccessTokenExpiresIn, expiresIn);
       }
     }
   }
@@ -298,6 +354,9 @@ class UserService {
     String? fotoPerfil = prefs.getString(_kUserPhoto);
     String? fechaRegistro = prefs.getString(_kUserRegistrationDate);
     int? empresaId = prefs.getInt(_kUserEmpresaId);
+    String? accessToken = prefs.getString(_kAccessToken);
+    String? refreshToken = prefs.getString(_kRefreshToken);
+    int? expiresIn = prefs.getInt(_kAccessTokenExpiresIn);
 
     // Migración automática desde claves legacy (viax_*) si no existen las nuevas
     if (email == null && id == null &&
@@ -352,6 +411,9 @@ class UserService {
       if (fotoPerfil != null) 'foto_perfil': fotoPerfil,
       if (fechaRegistro != null) 'fecha_registro': fechaRegistro,
       if (empresaId != null) 'empresa_id': empresaId,
+      if (accessToken != null && accessToken.isNotEmpty) 'access_token': accessToken,
+      if (refreshToken != null && refreshToken.isNotEmpty) 'refresh_token': refreshToken,
+      if (expiresIn != null) 'expires_in': expiresIn,
     };
     
     // Debug: verificar qué estamos recuperando
@@ -363,6 +425,14 @@ class UserService {
   static Future<int?> getCurrentEmpresaId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kUserEmpresaId);
+  }
+
+  static void _mergeAuthTokens(Map<String, dynamic> target, Map<String, dynamic> source) {
+    for (final key in ['access_token', 'refresh_token', 'expires_in']) {
+      if (source[key] != null) {
+        target[key] = source[key];
+      }
+    }
   }
 
   static Future<void> clearSession() async {
@@ -381,6 +451,9 @@ class UserService {
     await prefs.remove(_kUserPhoto);    // Added missing clear
     await prefs.remove(_kUserRegistrationDate); // Added missing clear
     await prefs.remove(_kUserEmpresaId);
+    await prefs.remove(_kAccessToken);
+    await prefs.remove(_kRefreshToken);
+    await prefs.remove(_kAccessTokenExpiresIn);
     // También eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
     await prefs.remove(_legacyUserId);
@@ -443,10 +516,14 @@ class UserService {
         try {
           if (data['data']?['admin'] != null) {
             print('UserService.login: admin data = ${data['data']['admin']}');
-            await saveSession(Map<String, dynamic>.from(data['data']['admin']));
+            final sessionData = Map<String, dynamic>.from(data['data']['admin']);
+            _mergeAuthTokens(sessionData, data['data']);
+            await saveSession(sessionData);
           } else if (data['data']?['user'] != null) {
             print('UserService.login: user data = ${data['data']['user']}');
-            await saveSession(Map<String, dynamic>.from(data['data']['user']));
+            final sessionData = Map<String, dynamic>.from(data['data']['user']);
+            _mergeAuthTokens(sessionData, data['data']);
+            await saveSession(sessionData);
           }
         } catch (_) {}
         return data;

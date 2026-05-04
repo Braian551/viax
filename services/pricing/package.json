@@ -1,0 +1,12 @@
+{
+  "name": "viax-pricing-service",
+  "version": "1.0.0",
+  "description": "Microservicio de cotizacion pre-viaje para Viax",
+  "main": "src/worker.js",
+  "scripts": {
+    "start": "node src/worker.js"
+  },
+  "dependencies": {
+    "ioredis": "^5.3.2"
+  }
+}

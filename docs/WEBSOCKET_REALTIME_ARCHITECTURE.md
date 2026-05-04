@@ -132,7 +132,7 @@ pm2 startup   # para auto-arranque
 
 ### Iniciar con Supervisor
 ```bash
-cp deploy/supervisor/viax-ws-gateway.conf /etc/supervisor/conf.d/
+cp infra/supervisor/viax-ws-gateway.conf /etc/supervisor/conf.d/
 supervisorctl reread
 supervisorctl update
 supervisorctl start viax-ws-gateway
@@ -140,7 +140,7 @@ supervisorctl start viax-ws-gateway
 
 ### Configurar Nginx (opcional, para proxy público)
 ```bash
-cp deploy/nginx/ws-gateway.conf /etc/nginx/conf.d/viax-ws.conf
+cp infra/nginx/ws-gateway.conf /etc/nginx/conf.d/viax-ws.conf
 nginx -t && systemctl reload nginx
 ```
 

@@ -35,7 +35,9 @@ migrate_working_dir/
 /coverage/
 .gradle/
 .tmp_appdata/
+.tmp_localappdata/
 tmp/
+.tmp_*
 
 # Symbolication related
 app.*.symbols
@@ -116,3 +118,12 @@ cotizacion_proyecto_viax.html
 deps.txt
 deps_compact.txt
 deps_tree.txt
+deps*.txt
+analyze_full.txt
+backend_price_charge_audit.txt
+build_verbose*.log
+
+# ============================================
+# Microservicios locales
+# ============================================
+services/*/node_modules/
