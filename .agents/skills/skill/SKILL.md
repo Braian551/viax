@@ -5,6 +5,107 @@ description: descripcion de viax skill de despliegue seguro en produccion
 
 
 
+---
+
+# REGLA ABSOLUTA — GIT COMPLETAMENTE PROHIBIDO EN ESTA TAREA
+
+El agente que trabaja en Viax NUNCA puede ejecutar comandos Git de ningun tipo.
+
+## Comandos Git COMPLETAMENTE PROHIBIDOS (sin excepciones):
+
+- git commit
+- git add
+- git status
+- git push
+- git pull
+- git checkout
+- git reset
+- git clean
+- git merge
+- git rebase
+- git stash
+- git log
+- git diff
+- git branch
+- Cualquier otro subcomando de git
+
+## Aplica a:
+
+- El repositorio principal (viax/)
+- El repositorio del backend (backend/)
+- Cualquier otro repositorio dentro del proyecto
+- En local y en produccion
+
+## Por que:
+
+- Los commits son decisiones del desarrollador, no del agente
+- Los commits mal hechos en produccion pueden introducir codigo incorrecto
+- El agente no tiene contexto completo del estado del repo para hacer commits seguros
+- Git en produccion esta explicitamente prohibido por politica de seguridad
+
+## Si el agente necesita registrar cambios:
+
+El agente documenta que archivos modifico en el reporte final. El desarrollador hace el commit manualmente cuando considere que los cambios estan listos.
+
+## Si el agente ve staged changes o uncommitted changes:
+
+Los ignora completamente. No los toca. No los comenta como accion pendiente a ejecutar.
+
+---
+
+# REGLA DE ORGANIZACION DE ARCHIVOS (OBLIGATORIA)
+
+El agente NUNCA debe crear archivos fuera de su ubicacion correcta segun el tipo.
+Esta regla aplica a todos los archivos generados durante troubleshooting, implementacion o pruebas.
+
+## Ubicaciones obligatorias por tipo de archivo
+
+| Tipo de archivo | Ubicacion correcta | Ejemplos |
+|---|---|---|
+| Scripts de prueba PHP | `backend/scripts/` | `test_*.php`, `verify_*.php`, `check_*.php` |
+| Scripts de utilidad PHP | `backend/scripts/` | `backup_*.php`, `repair_*.php`, `migrate_*.php` |
+| Logs de backend | `backend/logs/` | `deploy.log`, `dispatch_worker.log` |
+| Logs de debug de modulos | `backend/logs/` | `settings_debug.log`, `debug_path.log` |
+| Configs de Supervisor | `infra/supervisor/` | `*.conf` |
+| Configs de Nginx | `infra/nginx/` | `*.conf` |
+| Configs de Docker | `infra/docker/` | `docker-compose.yml`, `Dockerfile.*` |
+| Microservicios Node | `services/{nombre}/` | `dispatch/`, `pricing/`, `tracking/` |
+| Documentacion tecnica | `docs/architecture/` | `*.md` de decisiones y reglas |
+| Archivos temporales de trabajo | `tmp/` | Solo durante la sesion, limpiar al final |
+| Scripts de PowerShell de utilidad | `scripts/` | `*.ps1`, `*.sh` de la raiz |
+
+## Reglas especificas
+
+**Backend PHP — raiz de `backend/` solo acepta:**
+- Archivos de entrada HTTP: `index.php`, `health.php`, `get_api_keys.php`, `r2_proxy.php`
+- Configuracion: `composer.json`, `composer.lock`, `.env*`, `.htaccess`, `deploy.sh`
+- Documentacion: `README.md`
+- Nada mas. Cualquier otro archivo va en su subcarpeta correspondiente.
+
+**Raiz del proyecto `viax/` solo acepta:**
+- Archivos de Flutter: `pubspec.yaml`, `pubspec.lock`, `analysis_options.yaml`, `README.md`, `LICENSE`
+- Configs de herramientas: `.gitignore`, `.metadata`, `firebase.json`, `devtools_options.yaml`
+- Nada mas. Logs, outputs de analisis, archivos temporales van en `tmp/` o se eliminan.
+
+**Archivos temporales de diagnostico:**
+- Si el agente crea un archivo temporal para diagnostico (probe, test, check), DEBE eliminarlo al final de la tarea.
+- Si no puede eliminarlo, debe listarlo explicitamente en el reporte como "pendiente de limpieza manual".
+
+**Archivos de log generados automaticamente:**
+- Si un script o proceso genera un log, debe configurarse para escribir en `backend/logs/` o en `services/{nombre}/logs/`.
+- Nunca en la raiz del modulo ni en la raiz del proyecto.
+
+## Verificacion antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, el agente DEBE verificar:
+1. ¿Deje algun archivo temporal sin limpiar?
+2. ¿Algun archivo nuevo quedo fuera de su ubicacion correcta?
+3. ¿Algun log o output quedo en la raiz de `backend/` o del proyecto?
+
+Si la respuesta a cualquiera es SI, limpiar antes de reportar.
+
+---
+
 # AGENT SKILL — SAFE PRODUCTION DEPLOY
 
 You are working on the Viax production backend.
@@ -257,6 +358,73 @@ Si el agente crea o modifica el sistema de anuncios, avisos, promociones, manten
 If the agent creates temporary support files during troubleshooting or implementation (for example: files for fix, test, debug, or query), it MUST remove them at the end of the turn if they are not required by the system.
 
 The repository must be left clean of unnecessary helper artifacts.
+
+---
+
+# BACKUP SAFETY RULE (MANDATORY)
+
+Cuando el agente cree, mueva o valide backups en producción, DEBE seguir estas reglas sin excepción:
+
+1. NUNCA crear archivos `.tar.gz` sin validar que el contenido comprimido sea real.
+2. NUNCA usar redirecciones con `>` dentro de comandos `ssh` si el quoting no está totalmente controlado y verificado.
+3. SIEMPRE crear archivos temporales seguros con `mktemp` antes de mover el artefacto a su destino final.
+4. SIEMPRE validar el artefacto antes de moverlo con `gzip -t` y `file`.
+5. SIEMPRE registrar el tamaño final con `du -h` o `ls -lh` antes de considerar el backup válido.
+6. SIEMPRE preferir este patrón:
+
+```bash
+TMP_FILE=$(mktemp)
+tar -czf "$TMP_FILE" carpeta/
+gzip -t "$TMP_FILE"
+file "$TMP_FILE"
+du -h "$TMP_FILE"
+mv "$TMP_FILE" destino.tar.gz
+```
+
+7. NUNCA usar patrones prohibidos como este:
+
+```bash
+tar -czf archivo.tar.gz carpeta/ > archivo.tar.gz
+```
+
+8. Si la validación falla, el agente DEBE borrar el artefacto temporal inválido y detener la operación antes de tocar backups existentes.
+
+---
+
+### BACKUP RULES (CRÍTICAS)
+
+1. NUNCA usar redirecciones tipo `> archivo.tar.gz` cuando se esté ejecutando un comando remoto por SSH.
+2. SIEMPRE validar archivos comprimidos:
+
+```bash
+gzip -t archivo.tar.gz
+file archivo.tar.gz
+```
+
+3. SIEMPRE verificar contenido:
+
+```bash
+tar -tzf archivo.tar.gz | head
+```
+
+4. SI falla validación:
+
+* eliminar archivo inmediatamente
+* NO asumir backup válido
+
+5. Para backups remotos usar formato seguro:
+
+```bash
+tar -czf backup.tar.gz carpeta/
+```
+
+Nunca mezclar con `echo` o logs en la misma línea.
+
+6. Nunca confiar en comandos ejecutados desde PowerShell sin aislar comillas.
+7. Siempre separar:
+
+* comandos de creación de archivo
+* comandos de logging
 
 ---
 
@@ -576,3 +744,109 @@ Al documentar o comentar código en este proyecto, el agente DEBE escribir en es
 Si en archivos modificados encuentra comentarios en inglés, DEBE traducirlos al español en el mismo cambio.
 
 No se deben introducir comentarios nuevos en inglés.
+
+---
+
+# ESTRUCTURA DEL PROYECTO (OBLIGATORIA PARA EL AGENTE)
+
+El proyecto Viax tiene arquitectura hibrida PHP + microservicios Node.js.
+La estructura de carpetas refleja esa separacion:
+
+## Estructura de carpetas
+
+```text
+viax/
+├── backend/          -> Core API PHP. Deploy con deploy.sh + scp. NO usar Git en produccion.
+├── services/         -> Microservicios Node.js independientes.
+│   └── dispatch/     -> Primer microservicio. Activo en produccion como viax_dispatch_service.
+├── infra/            -> Configuracion de infraestructura.
+│   ├── supervisor/   -> Archivos .conf de Supervisor para todos los procesos.
+│   ├── nginx/        -> Configuracion de Nginx.
+│   └── docker/       -> Docker Compose y Dockerfiles de infraestructura compartida.
+├── lib/              -> Codigo Flutter (app movil).
+├── docs/             -> Documentacion tecnica y notas de arquitectura.
+│   └── architecture/ -> Decisiones de arquitectura, reglas de backups, notas de servicios.
+└── scripts/          -> Scripts de utilidad del proyecto.
+```
+
+## Rutas en produccion (VPS 76.13.114.194)
+
+```text
+/var/www/viax/backend/           -> Core PHP desplegado
+/var/www/viax/services/dispatch/ -> dispatch-service Node.js
+/var/www/viax/infra/             -> NO existe aun; configs estan en /etc/supervisor/conf.d/
+```
+
+## Regla de deploy por componente
+
+| Componente | Ruta local | Ruta produccion | Metodo |
+| --- | --- | --- | --- |
+| backend PHP | `backend/` | `/var/www/viax/backend/` | `scp + deploy.sh` |
+| dispatch-service | `services/dispatch/` | `/var/www/viax/services/dispatch/` | `scp + docker build + docker compose` |
+| supervisor conf | `infra/supervisor/` | `/etc/supervisor/conf.d/` | `scp + supervisorctl reread` |
+| nginx conf | `infra/nginx/` | `/etc/nginx/sites-available/` o `conf.d/` | `scp + nginx -s reload` |
+
+## Microservicios activos
+
+| Servicio | Ruta local | Supervisor name | Modo actual |
+| --- | --- | --- | --- |
+| dispatch-service | `services/dispatch/` | `viax_dispatch_service` | `hybrid, dockerizado` |
+| pricing-service | `services/pricing/` | `viax_pricing_service` | `activo, fuente de verdad pre-viaje` |
+| tracking-service | `services/tracking/` | `viax_tracking_service` | `puente Redis Stream a realtime-gateway` |
+| realtime-gateway | `backend/realtime-gateway` | `viax_ws_gateway` o similar | activo |
+
+## Microservicios pendientes (proximas fases)
+
+* Ninguno inmediato en este bloque.
+
+---
+
+# REGLA DE DEPLOY DE MICROSERVICIOS CON DOCKER (OBLIGATORIA)
+
+Si cualquier archivo bajo `services/` es modificado, el agente DEBE seguir
+este flujo exacto:
+
+1. Validar sintaxis:
+	`node --check services/{nombre}/src/*.js`
+
+2. Subir solo archivos modificados:
+	`scp services/{nombre}/src/{archivo}.js root@76.13.114.194:/var/www/viax/services/{nombre}/src/`
+
+3. Rebuild de imagen en servidor:
+	`ssh root@76.13.114.194 'cd /var/www/viax/services/{nombre} && docker build -t viax-{nombre}:latest .'`
+
+4. Reiniciar contenedor:
+	`ssh root@76.13.114.194 'cd /var/www/viax/services/{nombre} && docker compose down && docker compose up -d'`
+
+5. Verificar subscriber y logs:
+	`ssh root@76.13.114.194 'redis-cli PUBSUB NUMSUB dispatch:trip_queue && docker logs viax_{nombre}_service --tail 10'`
+
+NO ejecutar `deploy.sh` para cambios en microservicios Node.
+`deploy.sh` es exclusivo del backend PHP.
+
+Si algo falla y hay que revertir:
+	`bash scripts/rollback_dispatch_docker.sh`
+
+## Consultar metricas operativas del dispatch-service
+
+```bash
+# Forma rapida desde local:
+bash scripts/check_dispatch_metrics.sh
+bash scripts/check_dispatch_metrics.sh 2026-05-01
+
+# Desde servidor:
+TODAY=$(date +%Y-%m-%d)
+redis-cli GET dispatch:metrics:total:$TODAY
+redis-cli GET dispatch:metrics:offers:$TODAY
+redis-cli --scan --pattern "dispatch:metrics:*" | sort
+```
+
+Las metricas se auto-eliminan a los 30 dias por TTL en Redis.
+
+## Consultar metricas operativas del pricing-service
+
+```bash
+# Forma rapida desde local:
+bash scripts/check_pricing_metrics.sh
+bash scripts/check_pricing_metrics.sh 2026-05-02
+```

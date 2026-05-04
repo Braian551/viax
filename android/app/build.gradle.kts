@@ -39,6 +39,7 @@ android {
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue("string", "mapbox_access_token", System.getenv("MAPBOX_ACCESS_TOKEN") ?: "")
     }
 
     signingConfigs {

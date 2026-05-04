@@ -115,7 +115,19 @@ class NetworkRequestExecutor {
 
       Map<String, dynamic>? json;
       if (response.body.trim().isNotEmpty) {
-        final decoded = jsonDecode(response.body);
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } on FormatException catch (e) {
+          return NetworkRequestResult.fail(
+            AppNetworkException(
+              type: AppNetworkErrorType.invalidResponse,
+              technicalMessage: 'Response is not valid JSON: ${e.message}',
+              statusCode: response.statusCode,
+            ),
+            statusCode: response.statusCode,
+          );
+        }
         if (decoded is Map<String, dynamic>) {
           json = decoded;
         } else {

@@ -170,7 +170,13 @@ class GoogleAuthService {
           final user = userData['user'];
 
           if (user != null) {
-            await UserService.saveSession(user);
+            final sessionData = Map<String, dynamic>.from(user);
+            for (final key in ['access_token', 'refresh_token', 'expires_in']) {
+              if (userData[key] != null) {
+                sessionData[key] = userData[key];
+              }
+            }
+            await UserService.saveSession(sessionData);
           }
 
           return {
@@ -263,7 +269,13 @@ class GoogleAuthService {
         final user = data['data']['user'];
 
         if (user != null) {
-          await UserService.saveSession(user);
+          final sessionData = Map<String, dynamic>.from(user);
+          for (final key in ['access_token', 'refresh_token', 'expires_in']) {
+            if (data['data'][key] != null) {
+              sessionData[key] = data['data'][key];
+            }
+          }
+          await UserService.saveSession(sessionData);
         }
 
         return {

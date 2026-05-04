@@ -1,0 +1,21 @@
+services:
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: viax-dispatch:latest
+    container_name: viax_dispatch_service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - DISPATCH_SERVICE_MODE=hybrid
+    volumes:
+      - ./logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
