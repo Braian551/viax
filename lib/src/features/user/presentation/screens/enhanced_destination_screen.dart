@@ -10,6 +10,9 @@ import '../../../../global/models/simple_location.dart';
 import '../../../../global/services/google_places_service.dart';
 import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../global/services/route_preview_cache.dart';
+import '../../../../routes/route_names.dart';
+import '../../data/models/saved_user_place.dart';
+import '../../services/saved_places_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';
 import '../widgets/destination/enhanced/confirm_button.dart';
@@ -19,9 +22,11 @@ import '../widgets/destination/enhanced/saved_locations_row.dart';
 import '../widgets/destination/enhanced/waypoints_list.dart';
 import '../widgets/destination/enhanced/waypoints_panel.dart';
 import '../widgets/map_location_picker_sheet.dart';
+import 'saved_place_name_screen.dart';
 import 'trip_preview_screen.dart';
 
 enum _WaypointFocusTarget { origin, destination }
+enum _FavoriteShortcutAction { add, manage }
 
 /// Pantalla de selección de destino - Diseño moderno y minimalista
 /// - Origen y destino: sugerencias inline debajo del input
@@ -59,7 +64,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   bool _isGettingLocation = false;
   bool _hasOriginSelected = false;
   bool _hasDestinationSelected = false;
+  bool _isLoadingSavedPlaces = true;
   late _WaypointFocusTarget _preferredFocusTarget;
+  SavedPlacesCollection _savedPlaces = const SavedPlacesCollection.empty();
 
   // Servicio de sugerencias
   late LocationSuggestionService _suggestionService;
@@ -80,7 +87,273 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     _destinationFocusNode.addListener(_handleDestinationFocusChange);
     _setupAnimations();
     _initializeLocation();
+    _loadSavedPlaces();
     _scheduleInitialFieldSelection();
+  }
+
+  Future<void> _loadSavedPlaces({bool forceRefresh = false}) async {
+    try {
+      final places = await SavedPlacesService.loadForCurrentUser(
+        forceRefresh: forceRefresh,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _savedPlaces = places;
+        _isLoadingSavedPlaces = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading saved places: $e');
+      if (!mounted) return;
+
+      setState(() => _isLoadingSavedPlaces = false);
+    }
+  }
+
+  IconData _iconForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return Icons.home_rounded;
+      case SavedPlaceType.work:
+        return Icons.work_rounded;
+      case SavedPlaceType.favorite:
+        return Icons.star_rounded;
+    }
+  }
+
+  String _titleForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return 'Casa';
+      case SavedPlaceType.work:
+        return 'Trabajo';
+      case SavedPlaceType.favorite:
+        return 'Favorito';
+    }
+  }
+
+  Color _accentColorForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return AppColors.primary;
+      case SavedPlaceType.work:
+        return AppColors.primaryDark;
+      case SavedPlaceType.favorite:
+        return AppColors.accent;
+    }
+  }
+
+  Future<String?> _requestFavoriteName({
+    required SimpleLocation location,
+    SavedUserPlace? existing,
+  }) {
+    return Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => SavedPlaceNameScreen(
+          address: location.address,
+          initialName: existing?.name ?? location.displayName,
+          title: 'Cual es su nombre?',
+        ),
+      ),
+    );
+  }
+
+  Future<SavedUserPlace?> _openSavedPlaceEditor(
+    SavedPlaceType type, {
+    SavedUserPlace? existing,
+  }) async {
+    final location = await showLocationSearchSheet(
+      context: context,
+      title: _titleForSavedPlaceType(type),
+      icon: _iconForSavedPlaceType(type),
+      accentColor: _accentColorForSavedPlaceType(type),
+      currentValue: existing?.location,
+      userLocation: _userLocation,
+      suggestionService: _suggestionService,
+      isOrigin: false,
+      otherLocation: _selectedOrigin,
+    );
+
+    if (location == null || !mounted) return null;
+
+    String? savedName;
+    if (type == SavedPlaceType.favorite) {
+      savedName = await _requestFavoriteName(location: location, existing: existing);
+      if (savedName == null || savedName.trim().isEmpty) {
+        return null;
+      }
+    }
+
+    try {
+      final savedPlace = await SavedPlacesService.savePlace(
+        type: type,
+        location: location,
+        placeId: existing?.id,
+        savedName: savedName,
+      );
+      await _loadSavedPlaces(forceRefresh: true);
+      return savedPlace;
+    } catch (e) {
+      debugPrint('Error saving saved place: $e');
+      if (mounted) {
+        _showError(
+          type == SavedPlaceType.favorite
+              ? 'No pudimos guardar el favorito'
+              : 'No pudimos guardar la direccion',
+        );
+      }
+      return null;
+    }
+  }
+
+  Future<void> _applySavedDestination(SavedUserPlace place) async {
+    if (_selectedOrigin == null) {
+      await _useCurrentLocationForOrigin();
+    }
+
+    if (!mounted || _selectedOrigin == null) return;
+
+    _onDestinationSelected(place.selectionLocation);
+  }
+
+  Future<SavedUserPlace?> _openFavoriteShortcutSheet() async {
+    if (_savedPlaces.favorites.isEmpty) {
+      return _openSavedPlaceEditor(SavedPlaceType.favorite);
+    }
+
+    final selection = await showModalBottomSheet<Object>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        final textTheme = theme.textTheme;
+
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Favoritos',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context, _FavoriteShortcutAction.add);
+                      },
+                      icon: const Icon(Icons.add_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _savedPlaces.favorites.length,
+                    separatorBuilder: (context, index) => Divider(
+                      color: colorScheme.outlineVariant,
+                      height: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final place = _savedPlaces.favorites[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.place_rounded,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        title: Text(place.name),
+                        subtitle: Text(
+                          place.location.address,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () => Navigator.pop(context, place),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, _FavoriteShortcutAction.manage);
+                  },
+                  child: const Text('Administrar mis lugares'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selection is SavedUserPlace) {
+      return selection;
+    }
+
+    if (selection == _FavoriteShortcutAction.add) {
+      return _openSavedPlaceEditor(SavedPlaceType.favorite);
+    }
+
+    if (selection == _FavoriteShortcutAction.manage) {
+      if (!mounted) return null;
+      await Navigator.pushNamed(context, RouteNames.favoritePlaces);
+      await _loadSavedPlaces(forceRefresh: true);
+    }
+
+    return null;
+  }
+
+  Future<void> _handleSavedLocationTap(SavedPlaceType type) async {
+    if (_isLoadingSavedPlaces) return;
+
+    if (type == SavedPlaceType.favorite) {
+      final selectedFavorite = await _openFavoriteShortcutSheet();
+      if (selectedFavorite != null) {
+        await _applySavedDestination(selectedFavorite);
+      }
+      return;
+    }
+
+    final existing = _savedPlaces.byType(type);
+    if (existing != null) {
+      await _applySavedDestination(existing);
+      return;
+    }
+
+    final created = await _openSavedPlaceEditor(type);
+    if (created != null) {
+      await _applySavedDestination(created);
+    }
   }
 
   FocusNode _focusNodeForTarget(_WaypointFocusTarget target) {
@@ -611,8 +884,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                 : _buildInlineWaypoints(isDark),
           ),
           const SizedBox(height: 16),
-          if (!useDragMode && widget.initialSelection == null)
-            SavedLocationsRow(isDark: isDark),
+          if (!useDragMode)
+            SavedLocationsRow(
+              isDark: isDark,
+              savedPlaces: _savedPlaces,
+              isLoading: _isLoadingSavedPlaces,
+              onTap: _handleSavedLocationTap,
+            ),
         ],
       ),
     );

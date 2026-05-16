@@ -9,7 +9,6 @@ import 'package:viax/src/global/services/app_user_settings_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/biometric_auth_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
-import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/theme/theme_provider.dart';
 
@@ -304,6 +303,24 @@ class _SettingsScreenState extends State<SettingsScreen>
                               _saveSettings();
                             },
                           ),
+                        ),
+                      ],
+                    ),
+                    SettingsSection(
+                      title: 'Viajes',
+                      children: [
+                        if (_matchesSettingsQuery('Direcciones guardadas', 'Casa, trabajo y favoritos'))
+                        SettingsItem(
+                          icon: Icons.place_rounded,
+                          title: 'Direcciones guardadas',
+                          subtitle: 'Casa, trabajo y favoritos',
+                          animationIndex: 10,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              RouteNames.favoritePlaces,
+                            );
+                          },
                         ),
                       ],
                     ),
