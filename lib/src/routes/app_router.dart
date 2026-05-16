@@ -6,7 +6,7 @@ import 'package:viax/src/features/user/presentation/screens/enhanced_destination
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
-import 'package:viax/src/features/user/presentation/screens/saved_places_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/saved_addresses_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver_screen.dart';
@@ -569,7 +569,7 @@ class AppRouter {
         }
 
       case RouteNames.favoritePlaces:
-        return MaterialPageRoute(builder: (_) => const SavedPlacesScreen());
+        return MaterialPageRoute(builder: (_) => const SavedAddressesScreen());
       case RouteNames.promotions:
       case RouteNames.about:
       case RouteNames.terms:

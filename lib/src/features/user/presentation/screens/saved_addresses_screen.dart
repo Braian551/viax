@@ -6,15 +6,16 @@ import 'package:viax/src/features/user/services/saved_places_service.dart';
 import 'package:viax/src/global/models/simple_location.dart';
 import 'package:viax/src/global/services/location_suggestion_service.dart';
 
-class SavedPlacesScreen extends StatefulWidget {
-  const SavedPlacesScreen({super.key});
+class SavedAddressesScreen extends StatefulWidget {
+  const SavedAddressesScreen({super.key});
 
   @override
-  State<SavedPlacesScreen> createState() => _SavedPlacesScreenState();
+  State<SavedAddressesScreen> createState() => _SavedAddressesScreenState();
 }
 
-class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
-  final LocationSuggestionService _suggestionService = LocationSuggestionService();
+class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
+  final LocationSuggestionService _suggestionService =
+      LocationSuggestionService();
 
   SavedPlacesCollection _savedPlaces = const SavedPlacesCollection.empty();
   bool _isLoading = true;
@@ -219,6 +220,8 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+        centerTitle: true,
         title: const Text('Mis direcciones'),
       ),
       floatingActionButton: FloatingActionButton(
@@ -230,54 +233,65 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
           : RefreshIndicator(
               onRefresh: () => _loadSavedPlaces(forceRefresh: true),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 120),
                 children: [
-                  Text(
-                    'Accesos rapidos',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  _SectionLabel(text: 'Accesos rapidos', textTheme: textTheme),
+                  const SizedBox(height: 10),
+                  _AddressSection(
+                    children: [
+                      _buildShortcutTile(
+                        context,
+                        type: SavedPlaceType.home,
+                        place: _savedPlaces.home,
+                        emptyLabel: 'Agrega tu direccion de casa',
+                        onTap: () => _handleHomeOrWorkTap(SavedPlaceType.home),
+                      ),
+                      _SectionDivider(colorScheme: colorScheme),
+                      _buildShortcutTile(
+                        context,
+                        type: SavedPlaceType.work,
+                        place: _savedPlaces.work,
+                        emptyLabel: 'Agrega tu direccion de trabajo',
+                        onTap: () => _handleHomeOrWorkTap(SavedPlaceType.work),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildShortcutCard(
-                    context,
-                    type: SavedPlaceType.home,
-                    place: _savedPlaces.home,
-                    emptyLabel: 'Agrega tu direccion de casa',
-                    onTap: () => _handleHomeOrWorkTap(SavedPlaceType.home),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildShortcutCard(
-                    context,
-                    type: SavedPlaceType.work,
-                    place: _savedPlaces.work,
-                    emptyLabel: 'Agrega tu direccion de trabajo',
-                    onTap: () => _handleHomeOrWorkTap(SavedPlaceType.work),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'Favoritos',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 26),
+                  _SectionLabel(text: 'Favoritos', textTheme: textTheme),
+                  const SizedBox(height: 10),
                   if (_savedPlaces.favorites.isEmpty)
                     _buildEmptyFavorites(context)
-                  else
-                    ..._savedPlaces.favorites.map(
-                      (place) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildFavoriteCard(context, place),
+                  else ...[
+                    _AddressSection(
+                      children: List.generate(
+                        _savedPlaces.favorites.length * 2 - 1,
+                        (index) {
+                          if (index.isOdd) {
+                            return _SectionDivider(colorScheme: colorScheme);
+                          }
+
+                          final place = _savedPlaces.favorites[index ~/ 2];
+                          return _buildFavoriteTile(context, place);
+                        },
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _isBusy ? null : () => _handleFavoriteTap(),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Agregar favorito'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildShortcutCard(
+  Widget _buildShortcutTile(
     BuildContext context, {
     required SavedPlaceType type,
     required SavedUserPlace? place,
@@ -297,27 +311,14 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colorScheme.outlineVariant),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: colorScheme.primary),
-              ),
-              const SizedBox(width: 14),
+              _SavedAddressIcon(icon: icon),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,14 +336,14 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
                         color: place == null
                             ? colorScheme.onSurfaceVariant
                             : colorScheme.onSurface,
+                        height: 1.2,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
               if (place != null)
                 IconButton(
                   tooltip: 'Eliminar',
@@ -350,6 +351,7 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
                   icon: Icon(
                     Icons.delete_outline_rounded,
                     color: colorScheme.error,
+                    size: 20,
                   ),
                 ),
               Icon(
@@ -369,11 +371,15 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
     final textTheme = theme.textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _savedAddressBorderColor(colorScheme),
+          width: 0.8,
+        ),
+        boxShadow: _savedAddressSectionShadow(colorScheme),
       ),
       child: Column(
         children: [
@@ -385,16 +391,15 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
           const SizedBox(height: 12),
           Text(
             'Todavia no tienes favoritos',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'Agrega tus lugares frecuentes para elegirlos mas rapido al pedir un viaje.',
-            style: textTheme.bodyMedium?.copyWith(
+            style: textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
+              height: 1.35,
             ),
             textAlign: TextAlign.center,
           ),
@@ -409,7 +414,7 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
     );
   }
 
-  Widget _buildFavoriteCard(BuildContext context, SavedUserPlace place) {
+  Widget _buildFavoriteTile(BuildContext context, SavedUserPlace place) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -417,27 +422,14 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => _handleFavoriteTap(place),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colorScheme.outlineVariant),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.place_rounded, color: colorScheme.primary),
-              ),
-              const SizedBox(width: 14),
+              const _SavedAddressIcon(icon: Icons.star_rounded),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,21 +445,26 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
                       place.location.address,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        height: 1.2,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Eliminar',
                 onPressed: _isBusy ? null : () => _deletePlace(place),
                 icon: Icon(
                   Icons.delete_outline_rounded,
                   color: colorScheme.error,
+                  size: 20,
                 ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -475,4 +472,109 @@ class _SavedPlacesScreenState extends State<SavedPlacesScreen> {
       ),
     );
   }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final TextTheme textTheme;
+
+  const _SectionLabel({required this.text, required this.textTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Text(
+      text,
+      style: textTheme.titleSmall?.copyWith(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+  }
+}
+
+class _AddressSection extends StatelessWidget {
+  final List<Widget> children;
+
+  const _AddressSection({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _savedAddressBorderColor(colorScheme),
+          width: 0.8,
+        ),
+        boxShadow: _savedAddressSectionShadow(colorScheme),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: children),
+    );
+  }
+}
+
+class _SectionDivider extends StatelessWidget {
+  final ColorScheme colorScheme;
+
+  const _SectionDivider({required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      indent: 68,
+      color: colorScheme.brightness == Brightness.dark
+          ? colorScheme.outlineVariant.withValues(alpha: 0.30)
+          : colorScheme.primary.withValues(alpha: 0.08),
+    );
+  }
+}
+
+class _SavedAddressIcon extends StatelessWidget {
+  final IconData icon;
+
+  const _SavedAddressIcon({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: colorScheme.primary, size: 21),
+    );
+  }
+}
+
+Color _savedAddressBorderColor(ColorScheme colorScheme) {
+  if (colorScheme.brightness == Brightness.dark) {
+    return colorScheme.outlineVariant.withValues(alpha: 0.32);
+  }
+
+  return colorScheme.primary.withValues(alpha: 0.14);
+}
+
+List<BoxShadow> _savedAddressSectionShadow(ColorScheme colorScheme) {
+  if (colorScheme.brightness == Brightness.dark) {
+    return const [];
+  }
+
+  return [
+    BoxShadow(
+      color: colorScheme.shadow.withValues(alpha: 0.04),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ];
 }

@@ -1,8 +1,7 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:viax/src/features/user/data/models/saved_user_place.dart';
+import 'package:viax/src/theme/app_colors.dart';
 
 class SavedLocationsRow extends StatelessWidget {
   final bool isDark;
@@ -20,6 +19,8 @@ class SavedLocationsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gap = MediaQuery.sizeOf(context).width < 360 ? 6.0 : 8.0;
+
     return Row(
       children: [
         _SavedLocationChip(
@@ -28,18 +29,20 @@ class SavedLocationsRow extends StatelessWidget {
           isDark: isDark,
           isLoading: isLoading,
           hasValue: savedPlaces.home != null,
+          color: AppColors.primary,
           onTap: () => onTap(SavedPlaceType.home),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: gap),
         _SavedLocationChip(
           icon: Icons.work_rounded,
           label: 'Trabajo',
           isDark: isDark,
           isLoading: isLoading,
           hasValue: savedPlaces.work != null,
+          color: AppColors.primaryDark,
           onTap: () => onTap(SavedPlaceType.work),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: gap),
         _SavedLocationChip(
           icon: Icons.star_rounded,
           label: 'Favoritos',
@@ -47,6 +50,7 @@ class SavedLocationsRow extends StatelessWidget {
           isLoading: isLoading,
           hasValue: savedPlaces.favorites.isNotEmpty,
           badgeCount: savedPlaces.favorites.length,
+          color: AppColors.accent,
           onTap: () => onTap(SavedPlaceType.favorite),
         ),
       ],
@@ -60,6 +64,7 @@ class _SavedLocationChip extends StatelessWidget {
   final bool isDark;
   final bool isLoading;
   final bool hasValue;
+  final Color color;
   final int badgeCount;
   final VoidCallback onTap;
 
@@ -69,6 +74,7 @@ class _SavedLocationChip extends StatelessWidget {
     required this.isDark,
     required this.isLoading,
     required this.hasValue,
+    required this.color,
     required this.onTap,
     this.badgeCount = 0,
   });
@@ -77,91 +83,105 @@ class _SavedLocationChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textColor = colorScheme.onSurface;
+    final backgroundColor = hasValue
+        ? color.withValues(alpha: isDark ? 0.16 : 0.10)
+        : colorScheme.surfaceContainerHighest.withValues(
+            alpha: isDark ? 0.28 : 0.56,
+          );
+    final borderColor = hasValue
+        ? color.withValues(alpha: isDark ? 0.42 : 0.24)
+        : isDark
+        ? colorScheme.outlineVariant.withValues(alpha: 0.28)
+        : colorScheme.primary.withValues(alpha: 0.12);
 
-    final Widget trailing;
+    Widget? trailing;
     if (isLoading) {
       trailing = SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: colorScheme.primary,
-        ),
+        width: 13,
+        height: 13,
+        child: CircularProgressIndicator(strokeWidth: 1.8, color: color),
       );
     } else if (badgeCount > 0) {
       trailing = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 5),
         decoration: BoxDecoration(
-          color: colorScheme.primary.withValues(alpha: 0.14),
+          color: color.withValues(alpha: isDark ? 0.22 : 0.14),
           borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(
-          '$badgeCount',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colorScheme.primary,
-            fontWeight: FontWeight.w700,
+        child: Center(
+          child: Text(
+            '$badgeCount',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+              fontSize: 10,
+              height: 1,
+            ),
           ),
         ),
       );
-    } else {
-      trailing = Icon(
-        hasValue ? Icons.check_circle_rounded : Icons.add_rounded,
-        size: 16,
-        color: hasValue ? colorScheme.primary : colorScheme.onSurfaceVariant,
+    } else if (hasValue) {
+      trailing = Container(
+        width: 17,
+        height: 17,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.22 : 0.13),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.check_rounded, color: color, size: 12),
       );
     }
 
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? colorScheme.surface.withValues(alpha: 0.78)
-                    : colorScheme.surface.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: hasValue
-                      ? colorScheme.primary.withValues(alpha: 0.24)
-                      : colorScheme.outlineVariant.withValues(alpha: 0.7),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: hasValue
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: isDark ? 0.20 : 0.12),
+                    borderRadius: BorderRadius.circular(9),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: hasValue
-                            ? colorScheme.onSurface
-                            : colorScheme.onSurfaceVariant,
+                  child: Icon(icon, color: color, size: 17),
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: textColor.withValues(
+                        alpha: hasValue ? 0.92 : 0.78,
                       ),
+                      height: 1,
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  trailing,
-                ],
-              ),
+                ),
+                if (trailing != null) ...[const SizedBox(width: 4), trailing],
+              ],
             ),
           ),
         ),

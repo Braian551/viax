@@ -35,6 +35,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _vibrationEnabled = true;
   bool _biometricEnabled = false;
   bool _darkMode = false;
+  final TextEditingController _settingsSearchController =
+      TextEditingController();
   String _settingsQuery = '';
 
   @override
@@ -219,8 +221,25 @@ class _SettingsScreenState extends State<SettingsScreen>
         subtitle.toLowerCase().contains(normalized);
   }
 
+  Widget _buildSettingsSection({
+    required String title,
+    required List<Widget> children,
+  }) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SettingsSection(
+      title: title,
+      showTitle: _settingsQuery.trim().isEmpty,
+      padding: EdgeInsets.only(bottom: _settingsQuery.trim().isEmpty ? 24 : 12),
+      children: children,
+    );
+  }
+
   @override
   void dispose() {
+    _settingsSearchController.dispose();
     _headerController.dispose();
     super.dispose();
   }
@@ -250,9 +269,36 @@ class _SettingsScreenState extends State<SettingsScreen>
                     )
                   else ...[
                     TextField(
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.search_rounded),
+                      controller: _settingsSearchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search_rounded),
                         hintText: 'Buscar configuración...',
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: isDark ? 0.28 : 0.75),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                        suffixIcon: _settingsQuery.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Limpiar busqueda',
+                                icon: const Icon(Icons.close_rounded),
+                                onPressed: () {
+                                  _settingsSearchController.clear();
+                                  setState(() => _settingsQuery = '');
+                                },
+                              ),
                       ),
                       onChanged: (value) {
                         setState(() => _settingsQuery = value);
@@ -262,158 +308,192 @@ class _SettingsScreenState extends State<SettingsScreen>
                       },
                     ),
                     const SizedBox(height: 16),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Notificaciones',
                       children: [
-                        if (_matchesSettingsQuery('Notificaciones', 'Recibir alertas de viajes'))
-                        SettingsItem(
-                          icon: Icons.notifications_rounded,
-                          title: 'Notificaciones',
-                          subtitle: 'Recibir alertas de viajes',
-                          animationIndex: 0,
-                          trailing: SettingsToggle(
-                            value: _notificationsEnabled,
-                            onChanged: _toggleNotifications,
+                        if (_matchesSettingsQuery(
+                          'Notificaciones',
+                          'Recibir alertas de viajes',
+                        ))
+                          SettingsItem(
+                            icon: Icons.notifications_rounded,
+                            title: 'Notificaciones',
+                            subtitle: 'Recibir alertas de viajes',
+                            animationIndex: 0,
+                            trailing: SettingsToggle(
+                              value: _notificationsEnabled,
+                              onChanged: _toggleNotifications,
+                            ),
                           ),
-                        ),
-                        if (_matchesSettingsQuery('Sonidos', 'Sonidos de notificacion'))
-                        SettingsItem(
-                          icon: Icons.volume_up_rounded,
-                          title: 'Sonidos',
-                          subtitle: 'Sonidos de notificacion',
-                          animationIndex: 1,
-                          trailing: SettingsToggle(
-                            value: _soundEnabled,
-                            onChanged: (value) {
-                              setState(() => _soundEnabled = value);
-                              _saveSettings();
-                            },
+                        if (_matchesSettingsQuery(
+                          'Sonidos',
+                          'Sonidos de notificacion',
+                        ))
+                          SettingsItem(
+                            icon: Icons.volume_up_rounded,
+                            title: 'Sonidos',
+                            subtitle: 'Sonidos de notificacion',
+                            animationIndex: 1,
+                            trailing: SettingsToggle(
+                              value: _soundEnabled,
+                              onChanged: (value) {
+                                setState(() => _soundEnabled = value);
+                                _saveSettings();
+                              },
+                            ),
                           ),
-                        ),
-                        if (_matchesSettingsQuery('Vibracion', 'Vibrar al recibir notificaciones'))
-                        SettingsItem(
-                          icon: Icons.vibration_rounded,
-                          title: 'Vibracion',
-                          subtitle: 'Vibrar al recibir notificaciones',
-                          animationIndex: 2,
-                          trailing: SettingsToggle(
-                            value: _vibrationEnabled,
-                            onChanged: (value) {
-                              setState(() => _vibrationEnabled = value);
-                              _saveSettings();
-                            },
+                        if (_matchesSettingsQuery(
+                          'Vibracion',
+                          'Vibrar al recibir notificaciones',
+                        ))
+                          SettingsItem(
+                            icon: Icons.vibration_rounded,
+                            title: 'Vibracion',
+                            subtitle: 'Vibrar al recibir notificaciones',
+                            animationIndex: 2,
+                            trailing: SettingsToggle(
+                              value: _vibrationEnabled,
+                              onChanged: (value) {
+                                setState(() => _vibrationEnabled = value);
+                                _saveSettings();
+                              },
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Viajes',
                       children: [
-                        if (_matchesSettingsQuery('Direcciones guardadas', 'Casa, trabajo y favoritos'))
-                        SettingsItem(
-                          icon: Icons.place_rounded,
-                          title: 'Direcciones guardadas',
-                          subtitle: 'Casa, trabajo y favoritos',
-                          animationIndex: 10,
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              RouteNames.favoritePlaces,
-                            );
-                          },
-                        ),
+                        if (_matchesSettingsQuery(
+                          'Direcciones guardadas',
+                          'Casa, trabajo y favoritos',
+                        ))
+                          SettingsItem(
+                            icon: Icons.place_rounded,
+                            title: 'Direcciones guardadas',
+                            subtitle: 'Casa, trabajo y favoritos',
+                            animationIndex: 10,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.favoritePlaces,
+                              );
+                            },
+                          ),
                       ],
                     ),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Privacidad y Seguridad',
                       children: [
-                        if (_matchesSettingsQuery('Cambiar Contrasena', 'Actualiza tu contrasena'))
-                        SettingsItem(
-                          icon: Icons.lock_rounded,
-                          title: 'Cambiar Contrasena',
-                          subtitle: 'Actualiza tu contrasena',
-                          animationIndex: 3,
-                          onTap: _openChangePasswordScreen,
-                        ),
-                        if (_matchesSettingsQuery('Autenticacion Biometrica', 'Usar huella o Face ID'))
-                        SettingsItem(
-                          icon: Icons.fingerprint_rounded,
-                          title: 'Autenticacion Biometrica',
-                          subtitle: 'Usar huella o Face ID',
-                          animationIndex: 4,
-                          trailing: SettingsToggle(
-                            value: _biometricEnabled,
-                            onChanged: _toggleBiometric,
+                        if (_matchesSettingsQuery(
+                          'Cambiar Contrasena',
+                          'Actualiza tu contrasena',
+                        ))
+                          SettingsItem(
+                            icon: Icons.lock_rounded,
+                            title: 'Cambiar Contrasena',
+                            subtitle: 'Actualiza tu contrasena',
+                            animationIndex: 3,
+                            onTap: _openChangePasswordScreen,
                           ),
-                        ),
+                        if (_matchesSettingsQuery(
+                          'Autenticacion Biometrica',
+                          'Usar huella o Face ID',
+                        ))
+                          SettingsItem(
+                            icon: Icons.fingerprint_rounded,
+                            title: 'Autenticacion Biometrica',
+                            subtitle: 'Usar huella o Face ID',
+                            animationIndex: 4,
+                            trailing: SettingsToggle(
+                              value: _biometricEnabled,
+                              onChanged: _toggleBiometric,
+                            ),
+                          ),
                       ],
                     ),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Apariencia',
                       children: [
-                        if (_matchesSettingsQuery('Modo Oscuro', 'Cambiar tema de la aplicacion'))
-                        SettingsItem(
-                          icon: Icons.dark_mode_rounded,
-                          title: 'Modo Oscuro',
-                          subtitle: 'Cambiar tema de la aplicacion',
-                          animationIndex: 5,
-                          trailing: SettingsToggle(
-                            value: _darkMode,
-                            onChanged: _toggleDarkMode,
+                        if (_matchesSettingsQuery(
+                          'Modo Oscuro',
+                          'Cambiar tema de la aplicacion',
+                        ))
+                          SettingsItem(
+                            icon: Icons.dark_mode_rounded,
+                            title: 'Modo Oscuro',
+                            subtitle: 'Cambiar tema de la aplicacion',
+                            animationIndex: 5,
+                            trailing: SettingsToggle(
+                              value: _darkMode,
+                              onChanged: _toggleDarkMode,
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Cuenta',
                       children: [
-                        if (_matchesSettingsQuery('Eliminar cuenta', 'Programar eliminación segura de la cuenta'))
-                        SettingsItem(
-                          icon: Icons.delete_forever_rounded,
-                          title: 'Eliminar cuenta',
-                          subtitle: 'Programar eliminación segura de la cuenta',
-                          animationIndex: 6,
-                          iconColor: AppColors.error,
-                          onTap: _handleDeleteAccount,
-                        ),
+                        if (_matchesSettingsQuery(
+                          'Eliminar cuenta',
+                          'Programar eliminación segura de la cuenta',
+                        ))
+                          SettingsItem(
+                            icon: Icons.delete_forever_rounded,
+                            title: 'Eliminar cuenta',
+                            subtitle:
+                                'Programar eliminación segura de la cuenta',
+                            animationIndex: 6,
+                            iconColor: AppColors.error,
+                            onTap: _handleDeleteAccount,
+                          ),
                       ],
                     ),
-                    SettingsSection(
+                    _buildSettingsSection(
                       title: 'Acerca de',
                       children: [
-                        if (_matchesSettingsQuery('Ayuda y Soporte', 'Centro de ayuda y tickets'))
-                        SettingsItem(
-                          icon: Icons.support_agent_rounded,
-                          title: 'Ayuda y Soporte',
-                          subtitle: 'Centro de ayuda y tickets',
-                          animationIndex: 7,
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              RouteNames.help,
-                              arguments: {
-                                'userType': 'user',
-                                'userId': _userId,
-                              },
-                            );
-                          },
-                        ),
-                        if (_matchesSettingsQuery('Términos y Condiciones', 'Condiciones de uso para clientes'))
-                        SettingsItem(
-                          icon: Icons.description_rounded,
-                          title: 'Términos y Condiciones',
-                          subtitle: 'Condiciones de uso para clientes',
-                          animationIndex: 8,
-                          onTap: _openTerms,
-                        ),
-                        if (_matchesSettingsQuery('Política de Privacidad', 'Tratamiento de datos personales'))
-                        SettingsItem(
-                          icon: Icons.privacy_tip_rounded,
-                          title: 'Política de Privacidad',
-                          subtitle: 'Tratamiento de datos personales',
-                          animationIndex: 9,
-                          onTap: _openPrivacy,
-                        ),
+                        if (_matchesSettingsQuery(
+                          'Ayuda y Soporte',
+                          'Centro de ayuda y tickets',
+                        ))
+                          SettingsItem(
+                            icon: Icons.support_agent_rounded,
+                            title: 'Ayuda y Soporte',
+                            subtitle: 'Centro de ayuda y tickets',
+                            animationIndex: 7,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.help,
+                                arguments: {
+                                  'userType': 'user',
+                                  'userId': _userId,
+                                },
+                              );
+                            },
+                          ),
+                        if (_matchesSettingsQuery(
+                          'Términos y Condiciones',
+                          'Condiciones de uso para clientes',
+                        ))
+                          SettingsItem(
+                            icon: Icons.description_rounded,
+                            title: 'Términos y Condiciones',
+                            subtitle: 'Condiciones de uso para clientes',
+                            animationIndex: 8,
+                            onTap: _openTerms,
+                          ),
+                        if (_matchesSettingsQuery(
+                          'Política de Privacidad',
+                          'Tratamiento de datos personales',
+                        ))
+                          SettingsItem(
+                            icon: Icons.privacy_tip_rounded,
+                            title: 'Política de Privacidad',
+                            subtitle: 'Tratamiento de datos personales',
+                            animationIndex: 9,
+                            onTap: _openPrivacy,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 40),
