@@ -60,7 +60,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   bool _hasOriginSelected = false;
   bool _hasDestinationSelected = false;
   late _WaypointFocusTarget _preferredFocusTarget;
-  bool _keyboardDismissedByUser = false;
 
   // Servicio de sugerencias
   late LocationSuggestionService _suggestionService;
@@ -93,42 +92,55 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   void _handleOriginFocusChange() {
     if (!_originFocusNode.hasFocus) return;
     _preferredFocusTarget = _WaypointFocusTarget.origin;
-    _keyboardDismissedByUser = false;
   }
 
   void _handleDestinationFocusChange() {
     if (!_destinationFocusNode.hasFocus) return;
     _preferredFocusTarget = _WaypointFocusTarget.destination;
-    _keyboardDismissedByUser = false;
   }
 
-  void _showKeyboardForPreferredField() {
-    if (_keyboardDismissedByUser || !mounted) return;
-    SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+  void _requestPreferredFocus({bool onlyIfNotFocused = true}) {
+    if (!mounted) return;
+
+    final preferredFocusNode = _focusNodeForTarget(_preferredFocusTarget);
+    if (onlyIfNotFocused && preferredFocusNode.hasFocus) {
+      return;
+    }
+
+    preferredFocusNode.requestFocus();
   }
 
-  void _restorePreferredFocus({Duration delay = const Duration(milliseconds: 40)}) {
+  void _schedulePreferredFocusAfterTransition({bool onlyIfNotFocused = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(delay, () {
-        if (!mounted || _keyboardDismissedByUser) return;
+      if (!mounted) return;
 
-        final preferredFocusNode = _focusNodeForTarget(_preferredFocusTarget);
-        preferredFocusNode.requestFocus();
-        _showKeyboardForPreferredField();
-      });
+      final route = ModalRoute.of(context);
+      final animation = route?.animation;
+
+      if (animation == null || animation.status == AnimationStatus.completed) {
+        _requestPreferredFocus(onlyIfNotFocused: onlyIfNotFocused);
+        return;
+      }
+
+      late AnimationStatusListener statusListener;
+      statusListener = (status) {
+        if (status != AnimationStatus.completed) return;
+
+        animation.removeStatusListener(statusListener);
+        _requestPreferredFocus(onlyIfNotFocused: onlyIfNotFocused);
+      };
+
+      animation.addStatusListener(statusListener);
     });
   }
 
   void _handleFieldTap(_WaypointFocusTarget target) {
     _preferredFocusTarget = target;
-    _keyboardDismissedByUser = false;
 
     final preferredFocusNode = _focusNodeForTarget(target);
     if (!preferredFocusNode.hasFocus) {
       preferredFocusNode.requestFocus();
     }
-
-    _showKeyboardForPreferredField();
   }
 
   void _applyResolvedOrigin(SimpleLocation originLocation) {
@@ -140,25 +152,19 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _hasOriginSelected = true;
     });
 
-    _restorePreferredFocus();
+    _schedulePreferredFocusAfterTransition();
   }
 
   void _scheduleInitialFieldSelection() {
-    _keyboardDismissedByUser = false;
-    _restorePreferredFocus(delay: const Duration(milliseconds: 80));
+    _schedulePreferredFocusAfterTransition(onlyIfNotFocused: false);
   }
 
-  void _hideKeyboardKeepingSelection() {
-    if (_mainAnimationController.isAnimating) {
-      return;
-    }
-
-    if (!_originFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
-      return;
-    }
-
-    _keyboardDismissedByUser = true;
-    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  void _focusDestinationAfterOriginSelection() {
+    _preferredFocusTarget = _WaypointFocusTarget.destination;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _destinationFocusNode.requestFocus();
+    });
   }
 
   void _setupAnimations() {
@@ -218,7 +224,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   Future<void> _getCurrentLocation() async {
     if (_isGettingLocation) return;
     if (!mounted) return;
-    
+
     setState(() => _isGettingLocation = true);
 
     try {
@@ -252,17 +258,19 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       }
 
       // Agregar tiempo máximo de espera al obtener la ubicación
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium, // Reduce precisión para ganar estabilidad
-        ),
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          throw TimeoutException('Timeout getting location');
-        },
-      );
-      
+      final position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy
+                  .medium, // Reduce precisión para ganar estabilidad
+            ),
+          ).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('Timeout getting location');
+            },
+          );
+
       if (!mounted) return;
 
       _userLocation = LatLng(position.latitude, position.longitude);
@@ -274,7 +282,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       debugPrint('Error getting location: $e');
       // Permite mostrar un error si la ubicación tarda demasiado
       if (mounted && e is TimeoutException) {
-         // _showError('Tiempo de espera agotado al obtener ubicación');
+        // _showError('Tiempo de espera agotado al obtener ubicación');
       }
     } finally {
       if (mounted) setState(() => _isGettingLocation = false);
@@ -352,24 +360,23 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
   void _onOriginSelected(SimpleLocation location) {
-    _keyboardDismissedByUser = true;
     setState(() {
       _selectedOrigin = location;
       _originController.text = location.address;
       _hasOriginSelected = true;
     });
-    _originFocusNode.unfocus();
+    if (!_hasDestinationSelected) {
+      _focusDestinationAfterOriginSelection();
+    }
     _checkAutoNavigate();
   }
 
   void _onDestinationSelected(SimpleLocation location) {
-    _keyboardDismissedByUser = true;
     setState(() {
       _selectedDestination = location;
       _destinationController.text = location.address;
       _hasDestinationSelected = true;
     });
-    _destinationFocusNode.unfocus();
     _checkAutoNavigate();
   }
 
@@ -515,9 +522,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _originController.text = _selectedOrigin?.address ?? '';
       _destinationController.text = _selectedDestination?.address ?? '';
     });
-
   }
-
 
   Future<void> _goToTripPreview() async {
     if (_selectedOrigin == null || _selectedDestination == null) return;
@@ -668,29 +673,25 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Fondo interactivo para ocultar el teclado sin tocar los inputs
+          // Fondo visual sin interacción para no forzar el cierre del teclado.
           Positioned.fill(
-            child: GestureDetector(
-              onTap: _hideKeyboardKeepingSelection,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [
-                            AppColors.darkBackground,
-                            AppColors.darkSurface,
-                            AppColors.primary.withValues(alpha: 0.05),
-                          ]
-                        : [
-                            AppColors.lightBackground,
-                            Colors.white,
-                            AppColors.primary.withValues(alpha: 0.03),
-                          ],
-                    stops: const [0.0, 0.6, 1.0],
-                  ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          AppColors.darkBackground,
+                          AppColors.darkSurface,
+                          AppColors.primary.withValues(alpha: 0.05),
+                        ]
+                      : [
+                          AppColors.lightBackground,
+                          Colors.white,
+                          AppColors.primary.withValues(alpha: 0.03),
+                        ],
+                  stops: const [0.0, 0.6, 1.0],
                 ),
               ),
             ),

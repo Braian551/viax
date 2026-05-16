@@ -32,7 +32,8 @@ class HomeUserScreen extends StatefulWidget {
   State<HomeUserScreen> createState() => _HomeUserScreenState();
 }
 
-class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStateMixin {
+class _HomeUserScreenState extends State<HomeUserScreen>
+    with TickerProviderStateMixin {
   // Temporary reviewer override: disable country lock while QA/review is active.
   static const bool _allowOutsideColombiaForReviewers = true;
 
@@ -68,6 +69,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   bool _loadingHomeRecents = false;
   bool _countryRestricted = false;
   String? _detectedCountry;
+  bool _startupActiveTripCheckScheduled = false;
 
   @override
   void initState() {
@@ -88,15 +90,16 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
   }
 
   Future<void> _requestLocationPermission() async {
     try {
-      geo.LocationPermission permission = await geo.Geolocator.checkPermission();
+      geo.LocationPermission permission =
+          await geo.Geolocator.checkPermission();
       if (permission == geo.LocationPermission.denied) {
         permission = await geo.Geolocator.requestPermission();
       }
@@ -116,7 +119,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
   Future<void> _getCurrentLocation() async {
     try {
       final position = await geo.Geolocator.getCurrentPosition(
-        desiredAccuracy: geo.LocationAccuracy.high,
+        locationSettings: const geo.LocationSettings(
+          accuracy: geo.LocationAccuracy.high,
+        ),
       );
 
       if (_allowOutsideColombiaForReviewers) {
@@ -137,8 +142,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
       final countryValidation =
           await CountryAvailabilityService.validateColombiaOnly(
-        position: LatLng(position.latitude, position.longitude),
-      );
+            position: LatLng(position.latitude, position.longitude),
+          );
 
       if (mounted) {
         setState(() {
@@ -213,45 +218,39 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   void _centerMapOnLocation(geo.Position position) {
     try {
-      _mapController.move(
-        LatLng(position.latitude, position.longitude),
-        16.0,
-      );
+      _mapController.move(LatLng(position.latitude, position.longitude), 16.0);
     } catch (_) {}
   }
 
   Future<void> _loadUserData() async {
-    await Future.delayed(const Duration(milliseconds: 500));
     try {
       final sess = await UserService.getSavedSession();
       if (sess != null) {
         final id = sess['id'] as int?;
         final email = sess['email'] as String?;
-        
+
         // Verificar si el usuario necesita ingresar teléfono
         final requiresPhone = await GoogleAuthService.checkRequiresPhone();
         if (requiresPhone && mounted) {
-          Navigator.of(context).pushReplacementNamed(
-            RouteNames.phoneRequired,
-            arguments: sess,
-          );
+          Navigator.of(
+            context,
+          ).pushReplacementNamed(RouteNames.phoneRequired, arguments: sess);
           return;
         }
-        
+
         final profile = await UserService.getProfile(userId: id, email: email);
         if (profile != null && profile['success'] == true) {
           final user = profile['user'];
-          
+
           // Doble verificación del teléfono desde el servidor
           final telefono = user?['telefono'];
           if ((telefono == null || telefono.toString().isEmpty) && mounted) {
-            Navigator.of(context).pushReplacementNamed(
-              RouteNames.phoneRequired,
-              arguments: user,
-            );
+            Navigator.of(
+              context,
+            ).pushReplacementNamed(RouteNames.phoneRequired, arguments: user);
             return;
           }
-          
+
           if (mounted) {
             setState(() {
               _userName = user?['nombre'] ?? 'Usuario';
@@ -259,29 +258,69 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               _loadingUser = false;
             });
             _animationController.forward();
-            
+
             // Cargar notificaciones después de obtener el usuario
             if (_userId != null) {
               _loadUnreadNotifications();
               _startNotificationPolling();
               _loadHomeRecentDestinations();
+              _scheduleStartupActiveTripCheck();
             }
           }
         }
       }
     } catch (_) {}
-    
+
     if (_loadingUser && mounted) {
       setState(() => _loadingUser = false);
       _animationController.forward();
     }
   }
 
+  void _scheduleStartupActiveTripCheck() {
+    if (_startupActiveTripCheckScheduled || _userId == null) {
+      return;
+    }
+
+    _startupActiveTripCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _userId == null) {
+        return;
+      }
+
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return;
+      }
+
+      if (ActiveTripNavigationService().hasActiveTrip) {
+        _showStartupActiveTripAlert();
+        return;
+      }
+
+      final hasRemoteActive = await _hasRemoteActiveTrip();
+      if (!mounted || _userId == null || !hasRemoteActive) {
+        return;
+      }
+
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return;
+      }
+
+      _showStartupActiveTripAlert();
+    });
+  }
+
+  void _showStartupActiveTripAlert() {
+    showActiveTripAlert(context, isConductor: false, userId: _userId);
+  }
+
   Future<void> _loadHomeRecentDestinations() async {
     if (_loadingHomeRecents) return;
     setState(() => _loadingHomeRecents = true);
     try {
-      final recents = await _locationSuggestionService.getRecentSuggestions(limit: 2);
+      final recents = await _locationSuggestionService.getRecentSuggestions(
+        limit: 2,
+      );
       if (!mounted) return;
       setState(() {
         _homeRecentDestinations = recents.take(2).toList();
@@ -362,12 +401,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       return;
     }
 
+    final navigator = Navigator.of(context);
     final hasBlocked = await _guardActiveTripBeforeNavigate();
     if (hasBlocked || !mounted) return;
 
     await _animationController.reverse();
-    await Navigator.pushNamed(
-      context,
+    await navigator.pushNamed(
       RouteNames.requestTrip,
       arguments: {
         'selecting': 'destination',
@@ -399,9 +438,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     }
 
     final preloadedRoute = await RoutePreviewCache.instance
-        .getOrFetchRoute(
-          waypoints: [origin.toLatLng(), destination.toLatLng()],
-        )
+        .getOrFetchRoute(waypoints: [origin.toLatLng(), destination.toLatLng()])
         .timeout(const Duration(milliseconds: 500), onTimeout: () => null);
 
     if (!mounted) return;
@@ -409,22 +446,27 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     await Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => TripPreviewScreen(
-          origin: origin,
-          destination: destination,
-          vehicleType: 'auto',
-          preloadedRoute: preloadedRoute,
-        ),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            TripPreviewScreen(
+              origin: origin,
+              destination: destination,
+              vehicleType: 'auto',
+              preloadedRoute: preloadedRoute,
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.05),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              ),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.05),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             ),
           );
@@ -478,14 +520,15 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       extendBodyBehindAppBar: true,
       extendBody: true, // Para que el bottom nav flote sobre el mapa
       appBar: _buildAppBar(isDark),
@@ -495,15 +538,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           _buildMap(isDark),
 
           // 2. Contenido Principal (Search Box, etc)
-          if (_selectedIndex == 0)
-            _buildHomeOverlay(isDark),
+          if (_selectedIndex == 0) _buildHomeOverlay(isDark),
 
           // 3. Otras Pestañas (Historial, Perfil, etc)
-          if (_selectedIndex != 0)
-            _buildTabContent(isDark),
+          if (_selectedIndex != 0) _buildTabContent(isDark),
 
-          if (_countryRestricted)
-            _buildCountryRestrictionOverlay(isDark),
+          if (_countryRestricted) _buildCountryRestrictionOverlay(isDark),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
@@ -556,7 +596,11 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.public_off_rounded, size: 34, color: AppColors.error),
+              const Icon(
+                Icons.public_off_rounded,
+                size: 34,
+                color: AppColors.error,
+              ),
               const SizedBox(height: 10),
               const Text(
                 'App disponible solo en Colombia',
@@ -600,16 +644,19 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: (isDark 
-                            ? Colors.white.withValues(alpha: 0.1) 
-                            : Colors.white.withValues(alpha: 0.3)),
+                          color: (isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(50),
                           border: Border.all(
-                            color: (isDark 
-                              ? Colors.white.withValues(alpha: 0.2) 
-                              : Colors.white.withValues(alpha: 0.4)),
+                            color: (isDark
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.4)),
                             width: 1,
                           ),
                         ),
@@ -619,9 +666,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: (isDark 
-                                  ? Colors.white.withValues(alpha: 0.15) 
-                                  : Colors.white.withValues(alpha: 0.4)),
+                                color: (isDark
+                                    ? Colors.white.withValues(alpha: 0.15)
+                                    : Colors.white.withValues(alpha: 0.4)),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isDark
@@ -632,12 +679,16 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                 boxShadow: isDark
                                     ? [
                                         BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.22),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.22,
+                                          ),
                                           blurRadius: 14,
                                           spreadRadius: 1,
                                         ),
                                         BoxShadow(
-                                          color: AppColors.primary.withValues(alpha: 0.28),
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.28,
+                                          ),
                                           blurRadius: 12,
                                           spreadRadius: 1,
                                         ),
@@ -654,32 +705,37 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                             // Saludo
                             if (!_loadingUser)
                               Expanded(
-                                  child: FadeTransition(
-                                    opacity: _fadeAnimation,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Hola,',
-                                          style: TextStyle(
-                                            color: isDark ? Colors.white70 : Colors.black54,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                child: FadeTransition(
+                                  opacity: _fadeAnimation,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Hola,',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black54,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                        Text(
-                                          _userName ?? 'Usuario',
-                                          style: TextStyle(
-                                            color: isDark ? Colors.white : Colors.black87,
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        _userName ?? 'Usuario',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
+                                ),
                               ),
                           ],
                         ),
@@ -845,7 +901,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -853,7 +912,6 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       ),
     );
   }
-
 
   Widget _buildHomeOverlay(bool isDark) {
     return Positioned(
@@ -871,14 +929,14 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: (isDark 
-                    ? Colors.black.withValues(alpha: 0.4) 
-                    : Colors.white.withValues(alpha: 0.7)),
+                  color: (isDark
+                      ? Colors.black.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.7)),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: (isDark 
-                      ? Colors.white.withValues(alpha: 0.1) 
-                      : Colors.white.withValues(alpha: 0.4)),
+                    color: (isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.4)),
                     width: 1,
                   ),
                   boxShadow: [
@@ -903,21 +961,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 16),
                     // Input simulado
-                    Hero(
-                      tag: 'search_destination_box',
-                      child: Material(
-                        color: Colors.transparent,
-                        child: LocationInput(
-                          icon: Icons.search_rounded,
-                          iconColor: AppColors.primary,
-                          label: 'Destino',
-                          value: null,
-                          placeholder: 'Buscar destino',
-                          isDark: isDark,
-                          isDestination: true,
-                          onTap: _openDestinationSearch,
-                          onClear: null,
-                        ),
+                    Material(
+                      color: Colors.transparent,
+                      child: LocationInput(
+                        icon: Icons.search_rounded,
+                        iconColor: AppColors.primary,
+                        label: 'Destino',
+                        value: null,
+                        placeholder: 'Buscar destino',
+                        isDark: isDark,
+                        isDestination: true,
+                        onTap: _openDestinationSearch,
+                        onClear: null,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -930,7 +985,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                               borderRadius: BorderRadius.circular(10),
                               onTap: () => _openQuickTripFromRecent(recent),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? Colors.white.withValues(alpha: 0.05)
@@ -952,14 +1010,17 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             recent.displayName,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              color: isDark ? Colors.white : Colors.black87,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : Colors.black87,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -970,7 +1031,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                color: isDark ? Colors.white54 : Colors.black45,
+                                                color: isDark
+                                                    ? Colors.white54
+                                                    : Colors.black45,
                                                 fontSize: 10,
                                               ),
                                             ),
@@ -1004,14 +1067,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
 
   // Quick actions replaced by QuickAction widget (widgets/quick_action.dart)
 
-
-
   Widget _buildTabContent(bool isDark) {
     // Perfil
     if (_selectedIndex == 2) {
       return const UserProfileScreen();
     }
-    
+
     // Historial de Viajes
     if (_selectedIndex == 1) {
       if (_userId == null) {
@@ -1022,12 +1083,10 @@ class _HomeUserScreenState extends State<HomeUserScreen> with TickerProviderStat
       }
       return TripHistoryScreen(userId: _userId!);
     }
-    
+
     // No debería llegar aquí
     return Container(
       color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
     );
   }
-
-
 }

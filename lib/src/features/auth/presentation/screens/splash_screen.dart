@@ -97,6 +97,13 @@ class _MinimalLoadingIndicatorState extends State<MinimalLoadingIndicator>
   }
 }
 
+class _StartupRouteDecision {
+  final String routeName;
+  final Object? arguments;
+
+  const _StartupRouteDecision(this.routeName, {this.arguments});
+}
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -199,6 +206,72 @@ class _SplashScreenState extends State<SplashScreen>
     _configureStartupFlow();
   }
 
+  Future<_StartupRouteDecision> _resolveStartupRouteDecision() async {
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+
+    if (!onboardingCompleted) {
+      return const _StartupRouteDecision(RouteNames.onboarding);
+    }
+
+    final session = await UserService.getSavedSession();
+    if (session == null || session['email'] == null) {
+      return const _StartupRouteDecision(RouteNames.welcome);
+    }
+
+    final tipoUsuario = session['tipo_usuario'];
+    if (tipoUsuario == 'soporte_tecnico') {
+      return _StartupRouteDecision(
+        RouteNames.supportHome,
+        arguments: {'support_user': session},
+      );
+    }
+
+    if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
+      return _StartupRouteDecision(
+        RouteNames.adminHome,
+        arguments: {'admin_user': session},
+      );
+    }
+
+    if (tipoUsuario == 'conductor') {
+      return _StartupRouteDecision(
+        RouteNames.conductorHome,
+        arguments: {'conductor_user': session},
+      );
+    }
+
+    if (tipoUsuario == 'empresa') {
+      return _StartupRouteDecision(
+        RouteNames.companyHome,
+        arguments: {'user': session},
+      );
+    }
+
+    if (tipoUsuario == null) {
+      return const _StartupRouteDecision(RouteNames.authWrapper);
+    }
+
+    return _StartupRouteDecision(
+      RouteNames.home,
+      arguments: {'email': session['email'], 'user': session},
+    );
+  }
+
+  bool _canUseImmediateStartupRoute(_StartupRouteDecision decision) {
+    return decision.routeName == RouteNames.home ||
+        decision.routeName == RouteNames.welcome ||
+        decision.routeName == RouteNames.onboarding;
+  }
+
+  void _navigateToStartupDecision(_StartupRouteDecision decision) {
+    if (!mounted || !_isCurrentRoute) return;
+
+    Navigator.of(
+      context,
+    ).pushReplacementNamed(decision.routeName, arguments: decision.arguments);
+  }
+
   Future<void> _configureStartupFlow() async {
     final prefs = await SharedPreferences.getInstance();
     final startupSplashSeen = prefs.getBool(_startupSplashSeenKey) ?? false;
@@ -237,6 +310,18 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
     if (!_isCurrentRoute) return;
+
+    if (skipAnimationDelay) {
+      final startupDecision = await _resolveStartupRouteDecision();
+      final savedTrip = await TripPersistenceService().getActiveTrip();
+
+      if (!mounted || !_isCurrentRoute) return;
+
+      if (savedTrip == null && _canUseImmediateStartupRoute(startupDecision)) {
+        _navigateToStartupDecision(startupDecision);
+        return;
+      }
+    }
 
     // 1. Obtener sesión actual (para fallback de IDs)
     final session = await UserService.getSavedSession();
@@ -287,9 +372,7 @@ class _SplashScreenState extends State<SplashScreen>
             activeCheck['trip_data'];
 
         if (activeCheck['success'] == true && maybeTrip is Map) {
-          final tripMap = Map<String, dynamic>.from(
-            maybeTrip,
-          );
+          final tripMap = Map<String, dynamic>.from(maybeTrip);
           debugPrint(
             '🌐 Viaje activo encontrado en backend: ${tripMap['id'] ?? 'sin_id'}',
           );
@@ -297,9 +380,7 @@ class _SplashScreenState extends State<SplashScreen>
 
           final dynamic maybeConductor = tripMap['conductor'];
           conductorInfo = maybeConductor is Map
-              ? Map<String, dynamic>.from(
-                  maybeConductor,
-                )
+              ? Map<String, dynamic>.from(maybeConductor)
               : null;
         }
       }
@@ -469,9 +550,10 @@ class _SplashScreenState extends State<SplashScreen>
       debugPrint('⚠️ Error en recuperación de viaje: $e');
     }
 
-    if (mounted && _isCurrentRoute) {
-      Navigator.of(context).pushReplacementNamed(RouteNames.authWrapper);
-    }
+    if (!mounted || !_isCurrentRoute) return;
+
+    final startupDecision = await _resolveStartupRouteDecision();
+    _navigateToStartupDecision(startupDecision);
   }
 
   @override
@@ -493,7 +575,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (_showAnimatedSplash == false) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: const Center(child: MinimalLoadingIndicator()),
+        body: const SizedBox.expand(),
       );
     }
 

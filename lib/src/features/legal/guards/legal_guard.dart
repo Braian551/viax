@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
-import 'package:viax/src/theme/app_colors.dart';
 
-/// Un Guard que envuelve pantallas protegidas. 
-/// Evita la navegación si el estado legal no es 'accepted' o 'errorFallback'.
+/// Guard que valida el estado legal sin pintar un loader bloqueante.
 class LegalGuard extends StatefulWidget {
   final Widget child;
-  const LegalGuard({Key? key, required this.child}) : super(key: key);
+
+  const LegalGuard({super.key, required this.child});
 
   @override
   State<LegalGuard> createState() => _LegalGuardState();
@@ -23,10 +22,16 @@ class _LegalGuardState extends State<LegalGuard> {
   void initState() {
     super.initState();
     // Ejecutamos la validación después del primer frame para evitar conflictos de BuildContext
-    WidgetsBinding.instance.addPostFrameCallback((_) => _validateLegalRequirement());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _validateLegalRequirement(),
+    );
   }
 
   Future<void> _validateLegalRequirement() async {
+    String role = 'cliente';
+    int userId = 0;
+    bool hasCachedAcceptance = false;
+
     try {
       final legalProv = context.read<LegalProvider>();
 
@@ -36,24 +41,40 @@ class _LegalGuardState extends State<LegalGuard> {
         return;
       }
 
-      // 2. Verificar si hay sesión
+      // 2. Verificar si hay sesión.
       final session = await UserService.getSavedSession();
       if (session == null || session['id'] == null) {
         if (mounted) setState(() => _gateOpen = true);
         return;
       }
 
-      // 3. Consultar al backend. Si no está aceptado, bloquear acceso y redirigir.
-      final role = (session['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
-      final userId = int.tryParse(session['id'].toString()) ?? 0;
+      // 3. Abrir de inmediato si existe aceptación local y validar en segundo plano.
+      role = (session['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
+      userId = int.tryParse(session['id'].toString()) ?? 0;
+      hasCachedAcceptance = await legalProv.hasCachedAcceptance(
+        role: role,
+        userId: userId,
+      );
+
+      if (hasCachedAcceptance && mounted && !_gateOpen) {
+        setState(() => _gateOpen = true);
+      }
+
       final status = await legalProv
           .checkLegalStatus(role: role, userId: userId)
-          .timeout(const Duration(seconds: 8), onTimeout: () => LegalStatus.notAccepted);
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => hasCachedAcceptance
+                ? LegalStatus.accepted
+                : LegalStatus.notAccepted,
+          );
 
       if (!mounted) return;
 
       if (status == LegalStatus.accepted) {
-        setState(() => _gateOpen = true);
+        if (!_gateOpen) {
+          setState(() => _gateOpen = true);
+        }
         return;
       }
 
@@ -66,15 +87,25 @@ class _LegalGuardState extends State<LegalGuard> {
       debugPrint('[LegalGuard] Error validando estado legal: $e');
       if (!mounted) return;
 
-      final session = await UserService.getSavedSession();
-      final role = (session?['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
-      final userId = int.tryParse((session?['id'] ?? 0).toString()) ?? 0;
+      if (hasCachedAcceptance) {
+        if (!_gateOpen) {
+          setState(() => _gateOpen = true);
+        }
+        return;
+      }
 
-      _redirectToLegalAcceptance(
-        role: role,
-        userId: userId,
-        version: 'v1.0',
-      );
+      if (userId == 0) {
+        final session = await UserService.getSavedSession();
+        if (session == null || session['id'] == null) {
+          if (mounted) setState(() => _gateOpen = true);
+          return;
+        }
+
+        role = (session['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
+        userId = int.tryParse(session['id'].toString()) ?? 0;
+      }
+
+      _redirectToLegalAcceptance(role: role, userId: userId, version: 'v1.0');
     }
   }
 
@@ -89,30 +120,16 @@ class _LegalGuardState extends State<LegalGuard> {
     Navigator.of(context).pushNamedAndRemoveUntil(
       RouteNames.legalAcceptance,
       (route) => false,
-      arguments: {
-        'role': role,
-        'userId': userId,
-        'version': version,
-      },
+      arguments: {'role': role, 'userId': userId, 'version': version},
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_gateOpen) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return Scaffold(
-        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(color: AppColors.primary),
-            ],
-          ),
-        ),
-      );
+      return IgnorePointer(ignoring: true, child: widget.child);
     }
+
     return widget.child;
   }
 }
