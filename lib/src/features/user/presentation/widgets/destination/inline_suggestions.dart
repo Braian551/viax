@@ -22,6 +22,7 @@ class InlineSuggestions extends StatefulWidget {
   final bool hasLocationSelected;
   final Function(SimpleLocation) onLocationSelected;
   final VoidCallback onTextChanged;
+  final VoidCallback? onFieldTap;
   final VoidCallback? onUseCurrentLocation;
   final VoidCallback? onOpenMap;
   final String? heroTag;
@@ -39,6 +40,7 @@ class InlineSuggestions extends StatefulWidget {
     required this.hasLocationSelected,
     required this.onLocationSelected,
     required this.onTextChanged,
+    this.onFieldTap,
     this.onUseCurrentLocation,
     this.onOpenMap,
     this.heroTag,
@@ -69,7 +71,14 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
   }
 
   void _onFocusChanged() {
+    _debounce?.cancel();
+
+    if (mounted) {
+      setState(() {});
+    }
+
     if (!widget.focusNode.hasFocus) return;
+
     final query = widget.controller.text.trim();
     if (query.length < 2) {
       _loadRecentSuggestions();
@@ -77,7 +86,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
   }
 
   void _onTextChanged() {
-    // Strict focus check: Don't search/update if user isn't focused
+    // Validar el foco de forma estricta para no buscar mientras el campo no está activo
     if (!widget.focusNode.hasFocus) return;
 
     // Notificar que el texto cambió (marca como no seleccionado)
@@ -157,7 +166,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Campo de búsqueda con diseño glass
+        // Campo de búsqueda con diseño translúcido
         heroWrapper(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -190,6 +199,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
               child: TextField(
                 controller: widget.controller,
                 focusNode: widget.focusNode,
+                onTap: widget.onFieldTap,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -200,7 +210,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                   filled: true,
                   fillColor: widget.isDark
                       ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFF5F7FA), // Subtle fill for contrast
+                      : const Color(0xFFF5F7FA), // Relleno sutil para mejorar el contraste
                   hintText: widget.placeholder,
                   hintStyle: TextStyle(
                     color: widget.isDark ? Colors.white38 : Colors.grey[400],
@@ -213,7 +223,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                       decoration: ShapeDecoration(
                         color: widget.accentColor.withValues(alpha: 0.12),
                         shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(20), // Squircle
+                          borderRadius: BorderRadius.circular(20), // Borde suavizado
                         ),
                       ),
                       child: Icon(
@@ -258,7 +268,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
                       : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none, // Remove inner border
+                    borderSide: BorderSide.none, // Quitar el borde interior
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -269,57 +279,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
         ),
-
-
-
-        // Lugares guardados (solo cuando no hay texto escrito y tiene focus)
-        if (false && widget.focusNode.hasFocus && // Temporarily disabled
-            widget.controller.text.isEmpty &&
-            !widget.hasLocationSelected)
-          Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SavedPlaceChip(
-                    icon: Icons.home_rounded,
-                    label: 'Casa',
-                    isDark: widget.isDark,
-                    onTap: () {
-                      // TODO: Cargar ubicación casa
-                      HapticFeedback.lightImpact();
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _SavedPlaceChip(
-                    icon: Icons.work_rounded,
-                    label: 'Trabajo',
-                    isDark: widget.isDark,
-                    onTap: () {
-                      // TODO: Cargar ubicación trabajo
-                      HapticFeedback.lightImpact();
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _SavedPlaceChip(
-                    icon: Icons.star_rounded,
-                    label: 'Favoritos',
-                    isDark: widget.isDark,
-                    onTap: () {
-                      // TODO: Mostrar favoritos
-                      HapticFeedback.lightImpact();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // Loading Shimmer
+        // Estado de carga con shimmer
         if (_isLoading && widget.focusNode.hasFocus)
           Container(
             margin: const EdgeInsets.only(top: 10),
@@ -453,7 +413,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
 
-        // Opción de ubicación actual (solo para origen y cuando tiene focus)
+        // Opción de ubicación actual (solo para origen y cuando tiene foco)
         if (widget.focusNode.hasFocus &&
             widget.isOrigin &&
             widget.onUseCurrentLocation != null &&
@@ -470,7 +430,7 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
             ),
           ),
 
-        // Opción de seleccionar en el mapa (SIEMPRE visible cuando tiene focus)
+        // Opción de seleccionar en el mapa (siempre visible cuando tiene foco)
         if (widget.focusNode.hasFocus && 
             widget.onOpenMap != null &&
             !widget.hasLocationSelected)
@@ -504,81 +464,6 @@ class _InlineSuggestionsState extends State<InlineSuggestions> {
       );
     }
     return child;
-  }
-}
-
-class _SavedPlaceChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  const _SavedPlaceChip({
-    required this.icon,
-    required this.label,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.white.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-              ),
-              boxShadow: isDark
-                  ? null
-                  : [
-                      BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(icon, size: 14, color: AppColors.primary),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey[800],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

@@ -1,6 +1,7 @@
 ﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/theme/app_colors.dart';
 import 'package:viax/src/features/auth/presentation/widgets/logo_transition.dart';
@@ -105,6 +106,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
+  static const String _startupSplashSeenKey = 'startup_splash_seen_v1';
+
   late final AnimationController _controller;
   late final AnimationController _pulseController;
   late final AnimationController _rotationController;
@@ -117,6 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
   _subtitleSlideAnim; // Ahora es opacidad del subtítulo
   late final Animation<double> _textScaleAnim;
   late final Animation<double> _rotationAnim;
+  bool? _showAnimatedSplash;
 
   bool get _isCurrentRoute => ModalRoute.of(context)?.isCurrent ?? true;
 
@@ -134,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+    );
 
     // Animación de rotación sutil
     _rotationController = AnimationController(
@@ -192,21 +196,44 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
     );
 
-    _controller.forward();
-    _rotationController.forward();
-
-    // Delay navigation to ensure animation is visible
-    _navigateAfterDelay();
+    _configureStartupFlow();
   }
 
-  Future<void> _navigateAfterDelay() async {
+  Future<void> _configureStartupFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    final startupSplashSeen = prefs.getBool(_startupSplashSeenKey) ?? false;
+
+    if (!mounted) return;
+
+    if (startupSplashSeen) {
+      setState(() => _showAnimatedSplash = false);
+      _controller.value = 1.0;
+      _rotationController.value = 0.0;
+      await _navigateAfterDelay(skipAnimationDelay: true);
+      return;
+    }
+
+    await prefs.setBool(_startupSplashSeenKey, true);
+
+    if (!mounted) return;
+
+    setState(() => _showAnimatedSplash = true);
+    _pulseController.repeat(reverse: true);
+    _controller.forward();
+    _rotationController.forward();
+    await _navigateAfterDelay(skipAnimationDelay: false);
+  }
+
+  Future<void> _navigateAfterDelay({required bool skipAnimationDelay}) async {
     final recoveryStartedAt = DateTime.now();
     debugPrint(
       '[TripRecovery] ts=${recoveryStartedAt.toIso8601String()} tripId=0 latency_ms=0 result=start',
     );
 
-    // Wait for animation to complete
-    await Future.delayed(const Duration(milliseconds: 3000));
+    // Esperar la animación completa solo en el primer arranque.
+    if (!skipAnimationDelay) {
+      await Future.delayed(const Duration(milliseconds: 3000));
+    }
 
     if (!mounted) return;
     if (!_isCurrentRoute) return;
@@ -245,7 +272,7 @@ class _SplashScreenState extends State<SplashScreen>
               tripStatus['trip']?['conductor'] as Map<String, dynamic>?;
         }
       }
-      // 3. Si no hay local, consultar backend (Fallback)
+      // 3. Si no hay local, consultar backend como respaldo
       else if (sessionUserId != null && sessionUserRole != null) {
         userRole = sessionUserRole;
 
@@ -261,7 +288,7 @@ class _SplashScreenState extends State<SplashScreen>
 
         if (activeCheck['success'] == true && maybeTrip is Map) {
           final tripMap = Map<String, dynamic>.from(
-            maybeTrip as Map<dynamic, dynamic>,
+            maybeTrip,
           );
           debugPrint(
             '🌐 Viaje activo encontrado en backend: ${tripMap['id'] ?? 'sin_id'}',
@@ -271,13 +298,13 @@ class _SplashScreenState extends State<SplashScreen>
           final dynamic maybeConductor = tripMap['conductor'];
           conductorInfo = maybeConductor is Map
               ? Map<String, dynamic>.from(
-                  maybeConductor as Map<dynamic, dynamic>,
+                  maybeConductor,
                 )
               : null;
         }
       }
 
-      // 4. Procesar redirección si se encontró un viaje
+      // 4. Procesar la redirección si se encontró un viaje
       if (tripToRecover != null && userRole != null) {
         final trip = Map<String, dynamic>.from(tripToRecover);
         final recoveredTripId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
@@ -299,6 +326,8 @@ class _SplashScreenState extends State<SplashScreen>
           if (showSummary && mounted && _isCurrentRoute) {
             // Evita bucle de resumen al reabrir app: limpiar persistencia antes de navegar.
             await TripPersistenceService().clearActiveTrip();
+
+            if (!mounted || !_isCurrentRoute) return;
 
             final solicitudId = int.tryParse(trip['id']?.toString() ?? '') ?? 0;
             final origen =
@@ -455,6 +484,19 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_showAnimatedSplash == null) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      );
+    }
+
+    if (_showAnimatedSplash == false) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: const Center(child: MinimalLoadingIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: AnimatedBuilder(
@@ -470,7 +512,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Glowing circular logo con animaciones - HERO ANIMATION
+                  // Logo circular con brillo animado y transición hero.
                   LogoHeroTransition(
                     child: Transform.scale(
                       scale: _scaleAnim.value,
@@ -492,7 +534,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                   const SizedBox(height: 2),
 
-                  // App name con animación de escala y fade in
+                  // Nombre de la app con escala y aparición progresiva.
                   Transform.translate(
                     offset: const Offset(0, -15),
                     child: Transform.scale(
@@ -532,7 +574,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                   const SizedBox(height: 0),
 
-                  // Subtítulo con fade in independiente
+                  // Subtítulo con aparición progresiva independiente.
                   Transform.translate(
                     offset: const Offset(0, -10),
                     child: Opacity(

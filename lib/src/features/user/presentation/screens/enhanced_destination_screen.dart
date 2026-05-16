@@ -21,9 +21,11 @@ import '../widgets/destination/enhanced/waypoints_panel.dart';
 import '../widgets/map_location_picker_sheet.dart';
 import 'trip_preview_screen.dart';
 
+enum _WaypointFocusTarget { origin, destination }
+
 /// Pantalla de selección de destino - Diseño moderno y minimalista
 /// - Origen y destino: sugerencias inline debajo del input
-/// - Paradas: bottom sheet con drag
+/// - Paradas: hoja inferior con arrastre
 class EnhancedDestinationScreen extends StatefulWidget {
   final String? initialSelection;
   final Position? preloadedPosition; // Posición precargada desde home
@@ -41,28 +43,29 @@ class EnhancedDestinationScreen extends StatefulWidget {
 
 class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     with TickerProviderStateMixin {
-  // Controllers
-  // Controllers
+  // Controladores
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _originFocusNode = FocusNode();
   final FocusNode _destinationFocusNode = FocusNode();
 
-  // Locations
+  // Ubicaciones
   SimpleLocation? _selectedOrigin;
   SimpleLocation? _selectedDestination;
   final List<SimpleLocation?> _stops = [];
 
-  // State
+  // Estado
   LatLng? _userLocation;
   bool _isGettingLocation = false;
   bool _hasOriginSelected = false;
   bool _hasDestinationSelected = false;
+  late _WaypointFocusTarget _preferredFocusTarget;
+  bool _keyboardDismissedByUser = false;
 
-  // Suggestion service
+  // Servicio de sugerencias
   late LocationSuggestionService _suggestionService;
 
-  // Animations
+  // Animaciones
   late AnimationController _mainAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -71,8 +74,91 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   void initState() {
     super.initState();
     _suggestionService = LocationSuggestionService();
+    _preferredFocusTarget = widget.initialSelection == 'origin'
+        ? _WaypointFocusTarget.origin
+        : _WaypointFocusTarget.destination;
+    _originFocusNode.addListener(_handleOriginFocusChange);
+    _destinationFocusNode.addListener(_handleDestinationFocusChange);
     _setupAnimations();
     _initializeLocation();
+    _scheduleInitialFieldSelection();
+  }
+
+  FocusNode _focusNodeForTarget(_WaypointFocusTarget target) {
+    return target == _WaypointFocusTarget.origin
+        ? _originFocusNode
+        : _destinationFocusNode;
+  }
+
+  void _handleOriginFocusChange() {
+    if (!_originFocusNode.hasFocus) return;
+    _preferredFocusTarget = _WaypointFocusTarget.origin;
+    _keyboardDismissedByUser = false;
+  }
+
+  void _handleDestinationFocusChange() {
+    if (!_destinationFocusNode.hasFocus) return;
+    _preferredFocusTarget = _WaypointFocusTarget.destination;
+    _keyboardDismissedByUser = false;
+  }
+
+  void _showKeyboardForPreferredField() {
+    if (_keyboardDismissedByUser || !mounted) return;
+    SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+  }
+
+  void _restorePreferredFocus({Duration delay = const Duration(milliseconds: 40)}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(delay, () {
+        if (!mounted || _keyboardDismissedByUser) return;
+
+        final preferredFocusNode = _focusNodeForTarget(_preferredFocusTarget);
+        preferredFocusNode.requestFocus();
+        _showKeyboardForPreferredField();
+      });
+    });
+  }
+
+  void _handleFieldTap(_WaypointFocusTarget target) {
+    _preferredFocusTarget = target;
+    _keyboardDismissedByUser = false;
+
+    final preferredFocusNode = _focusNodeForTarget(target);
+    if (!preferredFocusNode.hasFocus) {
+      preferredFocusNode.requestFocus();
+    }
+
+    _showKeyboardForPreferredField();
+  }
+
+  void _applyResolvedOrigin(SimpleLocation originLocation) {
+    if (!mounted) return;
+
+    setState(() {
+      _selectedOrigin = originLocation;
+      _originController.text = originLocation.address;
+      _hasOriginSelected = true;
+    });
+
+    _restorePreferredFocus();
+  }
+
+  void _scheduleInitialFieldSelection() {
+    _keyboardDismissedByUser = false;
+    _restorePreferredFocus(delay: const Duration(milliseconds: 80));
+  }
+
+  void _hideKeyboardKeepingSelection() {
+    if (_mainAnimationController.isAnimating) {
+      return;
+    }
+
+    if (!_originFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
+      return;
+    }
+
+    _keyboardDismissedByUser = true;
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
   }
 
   void _setupAnimations() {
@@ -92,7 +178,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             curve: Curves.easeOutCubic,
           ),
         );
-
 
     _mainAnimationController.forward();
   }
@@ -124,15 +209,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
     try {
       final originLocation = await _buildNormalizedLocation(_userLocation!);
-
-      if (mounted) {
-        setState(() {
-          _selectedOrigin = originLocation;
-          _originController.text = _selectedOrigin!.address;
-          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
-          _hasOriginSelected = true;
-        });
-      }
+      _applyResolvedOrigin(originLocation);
     } catch (e) {
       debugPrint('Error reverse geocoding origin: $e');
     }
@@ -174,10 +251,10 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         return;
       }
 
-      // Add timeout to position fetch
+      // Agregar tiempo máximo de espera al obtener la ubicación
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium, // Reduce accuracy for speed/stability
+          accuracy: LocationAccuracy.medium, // Reduce precisión para ganar estabilidad
         ),
       ).timeout(
         const Duration(seconds: 5),
@@ -192,18 +269,10 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _suggestionService.setUserContext(location: _userLocation);
 
       final originLocation = await _buildNormalizedLocation(_userLocation!);
-
-      if (mounted) {
-        setState(() {
-          _selectedOrigin = originLocation;
-          _originController.text = _selectedOrigin!.address;
-          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
-          _hasOriginSelected = true;
-        });
-      }
+      _applyResolvedOrigin(originLocation);
     } catch (e) {
       debugPrint('Error getting location: $e');
-      // Optionally show error for timeout
+      // Permite mostrar un error si la ubicación tarda demasiado
       if (mounted && e is TimeoutException) {
          // _showError('Tiempo de espera agotado al obtener ubicación');
       }
@@ -283,6 +352,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
   void _onOriginSelected(SimpleLocation location) {
+    _keyboardDismissedByUser = true;
     setState(() {
       _selectedOrigin = location;
       _originController.text = location.address;
@@ -293,6 +363,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   }
 
   void _onDestinationSelected(SimpleLocation location) {
+    _keyboardDismissedByUser = true;
     setState(() {
       _selectedDestination = location;
       _destinationController.text = location.address;
@@ -351,7 +422,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: true,
-      otherLocation: _selectedDestination, // Para validación de duplicados
+      otherLocation: _selectedDestination, // Para validar duplicados
     );
 
     if (result != null && mounted) {
@@ -369,7 +440,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: false,
-      otherLocation: _selectedOrigin, // Para validación de duplicados
+      otherLocation: _selectedOrigin, // Para validar duplicados
     );
 
     if (result != null && mounted) {
@@ -387,7 +458,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     HapticFeedback.mediumImpact();
     setState(() => _stops.add(null));
 
-    // Abrir sheet para la nueva parada
+    // Abrir la hoja para la nueva parada
     Future.delayed(const Duration(milliseconds: 100), () {
       _openStopSheet(_stops.length - 1);
     });
@@ -508,6 +579,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     _mainAnimationController.dispose();
     _originController.dispose();
     _destinationController.dispose();
+    _originFocusNode.removeListener(_handleOriginFocusChange);
+    _destinationFocusNode.removeListener(_handleDestinationFocusChange);
     _originFocusNode.dispose();
     _destinationFocusNode.dispose();
     super.dispose();
@@ -557,6 +630,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       onOriginChanged: () => setState(() => _hasOriginSelected = false),
       onDestinationChanged: () =>
           setState(() => _hasDestinationSelected = false),
+      onOriginFieldTap: () => _handleFieldTap(_WaypointFocusTarget.origin),
+      onDestinationFieldTap: () =>
+          _handleFieldTap(_WaypointFocusTarget.destination),
       openOriginMap: _openMapForOrigin,
       openDestinationMap: _openMapForDestination,
     );
@@ -590,16 +666,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           ? AppColors.darkBackground
           : AppColors.lightBackground,
       resizeToAvoidBottomInset: true,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: Stack(
-          children: [
-            // Mapa de fondo (interactivo)
-
-            // Gradiente superior (no bloquea gestos)
-            // Fondo con gradiente premium
-            Positioned.fill(
+      body: Stack(
+        children: [
+          // Fondo interactivo para ocultar el teclado sin tocar los inputs
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _hideKeyboardKeepingSelection,
+              behavior: HitTestBehavior.opaque,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -621,11 +694,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                 ),
               ),
             ),
+          ),
 
-            // Elementos decorativos de fondo (Círculos sutiles)
-            Positioned(
-              top: -100,
-              right: -100,
+          // Elementos decorativos de fondo (Círculos sutiles)
+          Positioned(
+            top: -100,
+            right: -100,
+            child: IgnorePointer(
               child: Container(
                 width: 300,
                 height: 300,
@@ -640,53 +715,56 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                 ),
               ),
             ),
+          ),
 
-            // Contenido superior
-            Positioned(
-              top: MediaQuery.of(context).padding.top,
-              left: 0,
-              right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DestinationHeader(
-                    isDark: isDark,
-                    stopsCount: _stops.length,
-                    onBack: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.pop(context);
-                    },
-                    onAddStop: _addStop,
-                  ),
-                  const SizedBox(height: 12),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
+          // Contenido superior
+          Positioned(
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DestinationHeader(
+                  isDark: isDark,
+                  stopsCount: _stops.length,
+                  onBack: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(context);
+                  },
+                  onAddStop: _addStop,
+                ),
+                const SizedBox(height: 12),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
                     child: _buildWaypointsSection(
                       isDark: isDark,
                       useDragMode: useDragMode,
                       maxSuggestionsHeight: maxSuggestionsHeight,
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+
+          // Botón confirmar (solo si hay paradas)
+          if (_isValid && _stops.isNotEmpty)
+            Positioned(
+              bottom: bottomPadding + 24,
+              left: 24,
+              right: 24,
+              child: ConfirmButton(
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  _goToTripPreview();
+                },
               ),
             ),
-
-            // Botón confirmar (solo si hay paradas)
-            if (_isValid && _stops.isNotEmpty)
-              Positioned(
-                bottom: bottomPadding + 24,
-                left: 24,
-                right: 24,
-                child: ConfirmButton(
-                  isDark: isDark,
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    _goToTripPreview();
-                  },
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
