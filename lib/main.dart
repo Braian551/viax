@@ -221,9 +221,16 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
     final sw = Stopwatch()..start();
     try {
       await LocalNotificationService.initialize();
-      await LocalNotificationService.requestPermission();
+      unawaited(
+        LocalNotificationService.requestPermission().catchError((Object error) {
+          debugPrint(
+            '⚠️ Error solicitando permisos notificaciones: $error',
+          );
+          return false;
+        }),
+      );
       debugPrint(
-        '✅ Notificaciones locales inicializadas y permisos solicitados',
+        '✅ Notificaciones locales inicializadas y permisos en segundo plano',
       );
     } catch (e) {
       debugPrint('⚠️ Error inicializando notificaciones locales: $e');

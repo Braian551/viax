@@ -532,18 +532,18 @@ class _HomeUserScreenState extends State<HomeUserScreen>
       extendBodyBehindAppBar: true,
       extendBody: true, // Para que el bottom nav flote sobre el mapa
       appBar: _buildAppBar(isDark),
-      body: Stack(
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          // 1. Mapa de fondo
-          _buildMap(isDark),
-
-          // 2. Contenido principal (buscador, etc.)
-          if (_selectedIndex == 0) _buildHomeOverlay(isDark),
-
-          // 3. Otras pestañas (historial, perfil, etc.)
-          if (_selectedIndex != 0) _buildTabContent(isDark),
-
-          if (_countryRestricted) _buildCountryRestrictionOverlay(isDark),
+          Stack(
+            children: [
+              _buildMap(isDark),
+              _buildHomeOverlay(isDark),
+              if (_countryRestricted) _buildCountryRestrictionOverlay(isDark),
+            ],
+          ),
+          _buildTripHistoryTab(isDark),
+          _buildProfileTab(isDark),
         ],
       ),
       bottomNavigationBar: DraggableNavBar(
@@ -1067,26 +1067,17 @@ class _HomeUserScreenState extends State<HomeUserScreen>
 
   // Acciones rápidas reemplazadas por QuickAction widget (widgets/quick_action.dart)
 
-  Widget _buildTabContent(bool isDark) {
-    // Perfil
-    if (_selectedIndex == 2) {
-      return const UserProfileScreen();
+  Widget _buildTripHistoryTab(bool isDark) {
+    if (_userId == null) {
+      return Container(
+        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        child: const Center(child: CircularProgressIndicator()),
+      );
     }
+    return TripHistoryScreen(userId: _userId!);
+  }
 
-    // Historial de Viajes
-    if (_selectedIndex == 1) {
-      if (_userId == null) {
-        return Container(
-          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          child: const Center(child: CircularProgressIndicator()),
-        );
-      }
-      return TripHistoryScreen(userId: _userId!);
-    }
-
-    // No debería llegar aquí
-    return Container(
-      color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-    );
+  Widget _buildProfileTab(bool isDark) {
+    return const UserProfileScreen();
   }
 }

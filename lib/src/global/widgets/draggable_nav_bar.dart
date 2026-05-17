@@ -41,12 +41,15 @@ class _DraggableNavBarState extends State<DraggableNavBar>
   bool _isDragging = false;
   double _dragOffsetX = 0.0;
   late int _draggingIndex;
+  int _dragStartIndex = 0;
+  Rect? _dragStartRect;
   double _dragStartX = 0.0;
 
   @override
   void initState() {
     super.initState();
     _draggingIndex = widget.currentIndex;
+    _dragStartIndex = widget.currentIndex;
     _itemKeys = List.generate(widget.items.length, (_) => GlobalKey());
     _selectorAnimationController = AnimationController.unbounded(vsync: this)
       ..addListener(() {
@@ -73,6 +76,8 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     }
     if (!_isDragging) {
       _draggingIndex = widget.currentIndex;
+      _dragStartIndex = widget.currentIndex;
+      _dragStartRect = null;
     }
     _scheduleMeasurement();
   }
@@ -162,8 +167,7 @@ class _DraggableNavBarState extends State<DraggableNavBar>
       return widget.currentIndex;
     }
 
-    final center =
-        (widget.currentIndex * tabWidth) + (tabWidth / 2) + offset;
+    final center = (_dragStartIndex * tabWidth) + (tabWidth / 2) + offset;
     final clampedCenter = center
         .clamp(tabWidth / 2, _gestureAreaWidth - (tabWidth / 2))
         .toDouble();
@@ -182,7 +186,7 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     if (tabWidth == null) {
       return 0.0;
     }
-    return (index - widget.currentIndex) * tabWidth;
+    return (index - _dragStartIndex) * tabWidth;
   }
 
   void _onDragStart(LongPressStartDetails details) {
@@ -198,6 +202,8 @@ class _DraggableNavBarState extends State<DraggableNavBar>
       _isDragging = true;
       _dragOffsetX = 0.0;
       _draggingIndex = widget.currentIndex;
+      _dragStartIndex = widget.currentIndex;
+      _dragStartRect = activeRect;
       _dragStartX = details.localPosition.dx;
     });
   }
@@ -213,10 +219,11 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     }
 
     final delta = details.localPosition.dx - _dragStartX;
-    final minOffset = -(widget.currentIndex * tabWidth);
+    final minOffset = -(_dragStartIndex * tabWidth);
     final maxOffset =
-        (widget.items.length - 1 - widget.currentIndex) * tabWidth;
-    final nextOffset = delta.clamp(minOffset, maxOffset).toDouble();
+      (widget.items.length - 1 - _dragStartIndex) * tabWidth;
+    final boundedOffset = delta.clamp(minOffset, maxOffset).toDouble();
+    final nextOffset = boundedOffset;
     final nextIndex = _indexForOffset(nextOffset);
 
     if ((_selectorAnimationController.value - nextOffset).abs() > 0.01) {
@@ -228,6 +235,7 @@ class _DraggableNavBarState extends State<DraggableNavBar>
       setState(() {
         _draggingIndex = nextIndex;
       });
+      _scheduleMeasurement();
     }
   }
 
@@ -242,8 +250,8 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     try {
       await _selectorAnimationController.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
       );
     } on TickerCanceled {
       return;
@@ -262,12 +270,25 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     setState(() {
       _isDragging = false;
       _dragOffsetX = 0.0;
+      _dragStartRect = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeRect = _rectForIndex(widget.currentIndex);
+    final selectorRect = _rectForIndex(
+      _isDragging ? _draggingIndex : widget.currentIndex,
+    );
+    final dragAnchorRect = _dragStartRect ?? _rectForIndex(widget.currentIndex);
+    final selectorWidth = selectorRect?.width ?? 0.0;
+    final selectorHeight = selectorRect?.height ?? 0.0;
+    final selectorTop = selectorRect?.top ?? 0.0;
+    final selectorLeft = !_isDragging
+        ? (selectorRect?.left ?? 0.0)
+        : ((dragAnchorRect?.left ?? 0.0) + _dragOffsetX).clamp(
+            0.0,
+            (_gestureAreaWidth - selectorWidth).clamp(0.0, double.infinity),
+          );
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
@@ -303,55 +324,54 @@ class _DraggableNavBarState extends State<DraggableNavBar>
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            child: RawGestureDetector(
-              behavior: HitTestBehavior.opaque,
-              gestures: {
-                LongPressGestureRecognizer:
-                    GestureRecognizerFactoryWithHandlers<
-                      LongPressGestureRecognizer
-                    >(
-                      () => _longPressRecognizer,
-                      (LongPressGestureRecognizer instance) {
-                        instance.onLongPressStart = _onDragStart;
-                        instance.onLongPressMoveUpdate = _onDragUpdate;
-                        instance.onLongPressEnd = _onDragEnd;
-                      },
-                    ),
-              },
-              child: SizedBox(
-                key: _gestureAreaKey,
-                child: Stack(
-                  children: [
-                    if (activeRect != null)
-                      Positioned(
-                        left: activeRect.left,
-                        top: activeRect.top,
-                        width: activeRect.width,
-                        height: activeRect.height,
-                        child: IgnorePointer(
-                          child: AnimatedBuilder(
-                            animation: _selectorAnimationController,
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(
-                                  _isDragging ? _dragOffsetX : 0,
-                                  0,
-                                ),
-                                child: child,
-                              );
-                            },
-                            child: _buildSelector(),
-                          ),
-                        ),
+            child: SizedBox(
+              key: _gestureAreaKey,
+              child: Stack(
+                children: [
+                  if (selectorRect != null && selectorWidth > 0 && selectorHeight > 0)
+                    Positioned(
+                      left: selectorLeft,
+                      top: selectorTop,
+                      width: selectorWidth,
+                      height: selectorHeight,
+                      child: IgnorePointer(
+                        child: _buildSelector(),
                       ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(widget.items.length, (index) {
-                        return _buildNavItem(index, widget.items[index]);
-                      }),
                     ),
-                  ],
-                ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(widget.items.length, (index) {
+                      return Listener(
+                        onPointerUp: (_) {
+                          if (!_isDragging) {
+                            widget.onTabChanged(index);
+                            HapticFeedback.selectionClick();
+                          }
+                        },
+                        child: _buildNavItem(index, widget.items[index]),
+                      );
+                    }),
+                  ),
+                  Positioned.fill(
+                    child: RawGestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      gestures: {
+                        LongPressGestureRecognizer:
+                            GestureRecognizerFactoryWithHandlers<
+                              LongPressGestureRecognizer
+                            >(
+                              () => _longPressRecognizer,
+                              (LongPressGestureRecognizer instance) {
+                                instance.onLongPressStart = _onDragStart;
+                                instance.onLongPressMoveUpdate = _onDragUpdate;
+                                instance.onLongPressEnd = _onDragEnd;
+                              },
+                            ),
+                      },
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -368,7 +388,10 @@ class _DraggableNavBarState extends State<DraggableNavBar>
             : AppColors.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(25),
         border: widget.isDark
-            ? Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1)
+            ? Border.all(
+                color: Colors.white.withValues(alpha: 0.18),
+                width: 1,
+              )
             : null,
         boxShadow: widget.isDark
             ? [
@@ -387,65 +410,61 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     final selectedIndex = _isDragging ? _draggingIndex : widget.currentIndex;
     final isSelected = selectedIndex == index;
 
-    return GestureDetector(
-      onTap: () => widget.onTabChanged(index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        key: _itemKeys[index],
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
-          vertical: 12,
-        ),
-        decoration: const BoxDecoration(color: Colors.transparent),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: isSelected ? 1.0 : 0.0),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutBack,
-              builder: (context, value, child) {
-                return Transform.scale(
-                  scale: 1.0 + (value * 0.15),
-                  child: Icon(
-                    item.icon,
-                    color: isSelected
-                        ? (widget.isDark ? Colors.white : AppColors.primary)
-                        : (widget.isDark ? Colors.white70 : Colors.grey[400]),
-                    size: 26,
-                  ),
-                );
-              },
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 10),
-              Flexible(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: widget.isDark
-                              ? Colors.white
-                              : AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    );
-                  },
+    return Container(
+      key: _itemKeys[index],
+      padding: EdgeInsets.symmetric(
+        horizontal: isSelected ? 20 : 12,
+        vertical: 12,
+      ),
+      decoration: const BoxDecoration(color: Colors.transparent),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: isSelected ? 1.0 : 0.0),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: 1.0 + (value * 0.15),
+                child: Icon(
+                  item.icon,
+                  color: isSelected
+                      ? (widget.isDark ? Colors.white : AppColors.primary)
+                      : (widget.isDark ? Colors.white70 : Colors.grey[400]),
+                  size: 26,
                 ),
+              );
+            },
+          ),
+          if (isSelected) ...[
+            const SizedBox(width: 10),
+            Flexible(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: widget.isDark
+                            ? Colors.white
+                            : AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
