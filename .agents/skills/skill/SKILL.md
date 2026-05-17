@@ -340,6 +340,56 @@ If a new or modified view/widget ignores the active theme or introduces non-resp
 
 ---
 
+# MANDATORY PERFORMANCE RULE
+
+Si el agente crea o modifica cualquier pantalla, widget, servicio 
+o archivo de inicialización, DEBE aplicar estas reglas:
+
+## Arranque de la app (main.dart)
+
+1. Solo Firebase y orientación van antes de runApp().
+2. Todo lo demás se inicializa DESPUÉS de runApp() usando Future.wait() 
+   para paralelizar.
+3. Servicios que dependen de otros (Mapbox depende de AppSecrets) 
+   van en una fase separada posterior.
+4. Nunca hacer llamadas HTTP al backend antes de runApp().
+
+## Widgets y pantallas
+
+1. Usar const constructors en todos los widgets que no cambien.
+2. Separar widgets grandes en subwidgets pequeños para evitar 
+   rebuilds innecesarios.
+3. Usar ListView.builder en lugar de ListView con hijos estáticos 
+   cuando la lista tenga más de 5 elementos.
+4. Evitar lógica pesada dentro del método build(). 
+   Moverla a initState() o a un provider.
+5. Cancelar todos los StreamSubscription y Timer en dispose().
+
+## Providers
+
+1. No inicializar datos pesados en el constructor del provider.
+2. Usar notifyListeners() solo cuando el dato realmente cambió.
+3. Evitar providers que escuchan a otros providers si puede 
+   resolverse con un selector.
+
+## Imágenes y assets
+
+1. Usar CachedNetworkImage para toda imagen remota.
+2. Especificar width y height en imágenes para evitar reflow.
+3. Comprimir assets locales antes de incluirlos en el proyecto.
+
+## Verificación antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, verificar:
+1. ¿Agregué const donde era posible?
+2. ¿Hay llamadas HTTP o awaits pesados dentro de build()?
+3. ¿Cancelé todas las suscripciones en dispose()?
+4. ¿Usé Future.wait() donde había awaits en serie innecesarios?
+
+Si la respuesta a 2 es SÍ, corregir antes de reportar.
+
+---
+
 # REGLA DE AVISOS EN APP (OBLIGATORIA)
 
 Si el agente crea o modifica el sistema de anuncios, avisos, promociones, mantenimiento o novedades dentro de la app, DEBE:
@@ -713,6 +763,56 @@ If the agent creates or modifies any screen, view, or widget, it MUST:
 5. Ensure layouts are responsive on narrow mobile widths and do not rely on fixed sizes that can cause overflow.
 
 If a new or modified view/widget ignores the active theme or introduces non-responsive fixed sizing that breaks the UI, the work is incomplete.
+
+---
+
+# MANDATORY PERFORMANCE RULE
+
+Si el agente crea o modifica cualquier pantalla, widget, servicio 
+o archivo de inicialización, DEBE aplicar estas reglas:
+
+## Arranque de la app (main.dart)
+
+1. Solo Firebase y orientación van antes de runApp().
+2. Todo lo demás se inicializa DESPUÉS de runApp() usando Future.wait() 
+   para paralelizar.
+3. Servicios que dependen de otros (Mapbox depende de AppSecrets) 
+   van en una fase separada posterior.
+4. Nunca hacer llamadas HTTP al backend antes de runApp().
+
+## Widgets y pantallas
+
+1. Usar const constructors en todos los widgets que no cambien.
+2. Separar widgets grandes en subwidgets pequeños para evitar 
+   rebuilds innecesarios.
+3. Usar ListView.builder en lugar de ListView con hijos estáticos 
+   cuando la lista tenga más de 5 elementos.
+4. Evitar lógica pesada dentro del método build(). 
+   Moverla a initState() o a un provider.
+5. Cancelar todos los StreamSubscription y Timer en dispose().
+
+## Providers
+
+1. No inicializar datos pesados en el constructor del provider.
+2. Usar notifyListeners() solo cuando el dato realmente cambió.
+3. Evitar providers que escuchan a otros providers si puede 
+   resolverse con un selector.
+
+## Imágenes y assets
+
+1. Usar CachedNetworkImage para toda imagen remota.
+2. Especificar width y height en imágenes para evitar reflow.
+3. Comprimir assets locales antes de incluirlos en el proyecto.
+
+## Verificación antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, verificar:
+1. ¿Agregué const donde era posible?
+2. ¿Hay llamadas HTTP o awaits pesados dentro de build()?
+3. ¿Cancelé todas las suscripciones en dispose()?
+4. ¿Usé Future.wait() donde había awaits en serie innecesarios?
+
+Si la respuesta a 2 es SÍ, corregir antes de reportar.
 
 ---
 
