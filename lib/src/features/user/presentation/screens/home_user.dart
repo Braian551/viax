@@ -8,9 +8,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/auth/google_auth_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
+import 'package:viax/src/global/widgets/draggable_nav_bar.dart';
 import 'package:viax/src/features/user/presentation/widgets/location_input.dart';
 import 'package:viax/src/global/services/mapbox_service.dart';
-import 'package:viax/src/features/user/presentation/widgets/custom_bottom_nav_bar.dart';
 import 'package:viax/src/global/services/active_trip_navigation_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
@@ -34,7 +34,7 @@ class HomeUserScreen extends StatefulWidget {
 
 class _HomeUserScreenState extends State<HomeUserScreen>
     with TickerProviderStateMixin {
-  // Temporary reviewer override: disable country lock while QA/review is active.
+  // Anulación temporal para revisión: desactiva el bloqueo por país mientras QA/review está activo.
   static const bool _allowOutsideColombiaForReviewers = true;
 
   // Mapa y Ubicación
@@ -537,23 +537,23 @@ class _HomeUserScreenState extends State<HomeUserScreen>
           // 1. Mapa de fondo
           _buildMap(isDark),
 
-          // 2. Contenido Principal (Search Box, etc)
+          // 2. Contenido principal (buscador, etc.)
           if (_selectedIndex == 0) _buildHomeOverlay(isDark),
 
-          // 3. Otras Pestañas (Historial, Perfil, etc)
+          // 3. Otras pestañas (historial, perfil, etc.)
           if (_selectedIndex != 0) _buildTabContent(isDark),
 
           if (_countryRestricted) _buildCountryRestrictionOverlay(isDark),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onIndexChanged: (index) => setState(() => _selectedIndex = index),
+      bottomNavigationBar: DraggableNavBar(
+        currentIndex: _selectedIndex,
+        onTabChanged: (index) => setState(() => _selectedIndex = index),
         isDark: isDark,
         items: [
-          CustomNavBarItem(icon: Icons.home_rounded, label: 'Inicio'),
-          CustomNavBarItem(icon: Icons.history_rounded, label: 'Viajes'),
-          CustomNavBarItem(icon: Icons.person_rounded, label: 'Perfil'),
+          const DraggableNavItem(icon: Icons.home_rounded, label: 'Inicio'),
+          const DraggableNavItem(icon: Icons.history_rounded, label: 'Viajes'),
+          const DraggableNavItem(icon: Icons.person_rounded, label: 'Perfil'),
         ],
       ),
     );
@@ -637,7 +637,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
-                // Contenedor principal con efecto glass (más ancho)
+                // Contenedor principal con efecto vidrio (más ancho)
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(50),
@@ -744,7 +744,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Botón de Notificaciones con badge
+                // Botón de notificaciones con indicador
                 NotificationBadge(
                   count: _unreadNotifications,
                   isDark: isDark,
@@ -807,7 +807,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
             _handleMapTileError(error, stackTrace);
           },
         ),
-        // Marcador de usuario (Halo effect)
+        // Marcador de usuario (efecto halo)
         MarkerLayer(
           markers: [
             Marker(
@@ -820,7 +820,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Halo animado (simulado estático por ahora)
+                  // Halo animado (simulado como estático por ahora)
                   Container(
                     width: 60,
                     height: 60,
@@ -1065,7 +1065,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
     );
   }
 
-  // Quick actions replaced by QuickAction widget (widgets/quick_action.dart)
+  // Acciones rápidas reemplazadas por QuickAction widget (widgets/quick_action.dart)
 
   Widget _buildTabContent(bool isDark) {
     // Perfil
