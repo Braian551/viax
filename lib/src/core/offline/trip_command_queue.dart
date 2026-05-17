@@ -129,6 +129,7 @@ class TripCommandQueue {
   static const String _table = 'trip_commands';
 
   Database? _db;
+  bool? _hasPendingCommands;
 
   Future<void> initialize() async {
     if (_db != null) {
@@ -162,6 +163,13 @@ class TripCommandQueue {
         );
       },
     );
+
+    final pendingCount = await _getPendingCount();
+    _hasPendingCommands = pendingCount > 0;
+
+    if (!_hasPendingCommands!) {
+      debugPrint('[TripCommandQueue] Cola vacía, omitiendo flush inicial');
+    }
   }
 
   Future<TripCommand?> enqueue({
@@ -200,6 +208,7 @@ class TripCommandQueue {
 
     final id = await _db!.insert(_table, command.toMap());
     final inserted = command.copyWith(id: id);
+    _hasPendingCommands = true;
 
     _log(
       tag: '[TripCommandQueue]',
@@ -214,11 +223,21 @@ class TripCommandQueue {
   Future<List<TripCommand>> getPendingCommands({int limit = 200}) async {
     await initialize();
 
+    // Evita consultar SQLite si ya sabemos que no hay comandos pendientes.
+    if (_hasPendingCommands == false) {
+      return const <TripCommand>[];
+    }
+
     final rows = await _db!.query(
       _table,
       orderBy: 'created_at ASC',
       limit: limit,
     );
+
+    if (rows.isEmpty) {
+      _hasPendingCommands = false;
+      return const <TripCommand>[];
+    }
 
     return rows.map(TripCommand.fromMap).toList();
   }
@@ -247,11 +266,22 @@ class TripCommandQueue {
       where: 'id = ?',
       whereArgs: <Object>[commandId],
     );
+
+    _hasPendingCommands = await _getPendingCount() > 0;
   }
 
   Future<void> clearAll() async {
     await initialize();
     await _db!.delete(_table);
+    _hasPendingCommands = false;
+  }
+
+  Future<int> _getPendingCount() async {
+    final rows = await _db!.rawQuery(
+      'SELECT COUNT(*) AS total FROM $_table',
+    );
+    final rawTotal = rows.first['total'];
+    return (rawTotal as int?) ?? 0;
   }
 
   Future<TripCommand?> _findExistingPendingCommand(

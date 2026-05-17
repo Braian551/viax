@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui' as ui;
@@ -38,11 +38,11 @@ import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/map_preload_service.dart';
 
 void main() async {
-  final binding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: binding);
-
   runZonedGuarded(
     () async {
+      final binding = WidgetsFlutterBinding.ensureInitialized();
+      FlutterNativeSplash.preserve(widgetsBinding: binding);
+
       // Configurar el manejo global de errores lo antes posible.
 
       // Bloquear la app en orientación vertical para evitar rotación automática.
@@ -158,6 +158,8 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
   }
 
   Future<void> _initializeBackgroundServices() async {
+    final sw = Stopwatch()..start();
+    debugPrint('⏱️ [Startup] INICIO inicialización background');
     // FASE 2: inicializaciones independientes después de pintar la primera UI.
     await Future.wait<void>([
       _initializeAppSecrets(),
@@ -177,9 +179,12 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
 
     // FASE 3: servicios que dependen de resultados de la fase 2.
     await _initializeDependentServices();
+
+    debugPrint('⏱️ [Startup] FIN total: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeAppSecrets() async {
+    final sw = Stopwatch()..start();
     try {
       final secretsLoaded = await AppSecretsService.instance.initialize();
       if (secretsLoaded) {
@@ -196,18 +201,24 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
     } catch (e) {
       debugPrint('⚠️ Error cargando API Keys: $e');
     }
+
+    debugPrint('⏱️ [Startup] AppSecretsService: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeDateFormatters() async {
+    final sw = Stopwatch()..start();
     try {
       await initializeDateFormatting('es_CO', null);
       debugPrint('✅ Formatos de fecha inicializados');
     } catch (e) {
       debugPrint('⚠️ Error inicializando formatos de fecha: $e');
     }
+
+    debugPrint('⏱️ [Startup] DateFormatters: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeLocalNotifications() async {
+    final sw = Stopwatch()..start();
     try {
       await LocalNotificationService.initialize();
       await LocalNotificationService.requestPermission();
@@ -217,36 +228,52 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
     } catch (e) {
       debugPrint('⚠️ Error inicializando notificaciones locales: $e');
     }
+
+    debugPrint(
+      '⏱️ [Startup] LocalNotificationService: ${sw.elapsedMilliseconds}ms',
+    );
   }
 
   Future<void> _initializeConnectivity() async {
+    final sw = Stopwatch()..start();
     try {
       await ConnectivityService().initialize();
       debugPrint('✅ ConnectivityService inicializado');
     } catch (e) {
       debugPrint('⚠️ Error inicializando ConnectivityService: $e');
     }
+
+    debugPrint('⏱️ [Startup] ConnectivityService: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeTripCommandQueue() async {
+    final sw = Stopwatch()..start();
     try {
       await TripCommandQueue.instance.initialize();
       debugPrint('✅ TripCommandQueue inicializado');
     } catch (e) {
       debugPrint('⚠️ Error inicializando TripCommandQueue: $e');
     }
+
+    debugPrint('⏱️ [Startup] TripCommandQueue: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeNetworkStatus() async {
+    final sw = Stopwatch()..start();
     try {
       await NetworkStatusService.instance.initialize();
       debugPrint('✅ NetworkStatusService inicializado');
     } catch (e) {
       debugPrint('⚠️ Error inicializando NetworkStatusService: $e');
     }
+
+    debugPrint(
+      '⏱️ [Startup] NetworkStatusService: ${sw.elapsedMilliseconds}ms',
+    );
   }
 
   Future<void> _initializeServiceLocator() async {
+    final sw = Stopwatch()..start();
     try {
       await widget.serviceLocator.init();
       debugPrint('✅ ServiceLocator inicializado');
@@ -258,18 +285,26 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
         stackTrace: stack,
       );
     }
+
+    debugPrint('⏱️ [Startup] ServiceLocator: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeDependentServices() async {
+    final sw = Stopwatch()..start();
     _initializeMapboxToken();
 
     await Future.wait<void>([
       _initializeMapPreload(),
       _initializePushNotifications(),
     ]);
+
+    debugPrint(
+      '⏱️ [Startup] Servicios dependientes: ${sw.elapsedMilliseconds}ms',
+    );
   }
 
   void _initializeMapboxToken() {
+    final sw = Stopwatch()..start();
     try {
       final mapboxToken = AppSecretsService.instance.mapboxToken;
       if (mapboxToken.isNotEmpty) {
@@ -281,25 +316,39 @@ class _ViaxAppRootState extends State<ViaxAppRoot> {
     } catch (e) {
       debugPrint('⚠️ Error inicializando Mapbox: $e');
     }
+
+    debugPrint('⏱️ [Startup] MapboxToken: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializeMapPreload() async {
+    final sw = Stopwatch()..start();
     try {
       await MapPreloadService.preload();
       debugPrint('✅ Map preload listo');
     } catch (e) {
       debugPrint('⚠️ Error en map preload: $e');
     }
+
+    debugPrint('⏱️ [Startup] MapPreload: ${sw.elapsedMilliseconds}ms');
   }
 
   Future<void> _initializePushNotifications() async {
+    final sw = Stopwatch()..start();
     try {
       await PushNotificationService.initialize();
-      await PushNotificationService.syncForCurrentSession();
+      unawaited(
+        PushNotificationService.syncForCurrentSession().catchError((Object e) {
+          debugPrint('⚠️ Error sincronizando push: $e');
+        }),
+      );
       debugPrint('✅ Push notifications (FCM) inicializadas');
     } catch (e) {
       debugPrint('⚠️ Error inicializando push notifications: $e');
     }
+
+    debugPrint(
+      '⏱️ [Startup] PushNotificationService: ${sw.elapsedMilliseconds}ms',
+    );
   }
 
   @override
