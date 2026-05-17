@@ -11,13 +11,21 @@ import 'package:viax/src/features/user/data/models/user_model.dart';
 import 'package:viax/src/global/services/rating_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  const UserProfileScreen({super.key});
+  final bool embedded;
+
+  const UserProfileScreen({
+    super.key,
+    this.embedded = false,
+  });
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
+  static const double _embeddedTopPadding = 124;
+  static const double _embeddedBottomPadding = 140;
+
   String? _userName;
   String? _userEmail;
   int? _userId;
@@ -196,12 +204,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final contentTopPadding = widget.embedded ? _embeddedTopPadding : 24.0;
+    final contentBottomPadding = widget.embedded ? _embeddedBottomPadding : 24.0;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Fondo decorativo (opcional, similar a HomeUser)
+    final body = Stack(
+      children: [
+        if (!widget.embedded)
           Positioned(
             top: -100,
             right: -100,
@@ -217,20 +225,34 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               ),
             ),
           ),
-
-          SafeArea(
-            child: _isLoading
-                ? const UserProfileShimmer()
-                : FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Título
+        SafeArea(
+          top: !widget.embedded,
+          bottom: false,
+          child: _isLoading
+              ? Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    contentTopPadding,
+                    20,
+                    contentBottomPadding,
+                  ),
+                  child: const UserProfileShimmer(),
+                )
+              : FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        contentTopPadding,
+                        20,
+                        contentBottomPadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!widget.embedded) ...[
                             Text(
                               'Mi Perfil',
                               style: TextStyle(
@@ -240,140 +262,125 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                               ),
                             ),
                             const SizedBox(height: 24),
-
-                            // Tarjeta de Usuario
-                            _buildUserCard(isDark),
-                            
-                            const SizedBox(height: 24),
-
-                            // Calificación (Mocked)
-                            _buildRatingSection(isDark),
-
-                            const SizedBox(height: 24),
-
-                            // Opción para ser conductor (Novedad)
-                            _buildBecomeDriverCard(isDark),
-
-                            const SizedBox(height: 32),
-
-                            // Opciones
-                            Text(
-                              'Configuración',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white70 : Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            
-                            _buildOptionTile(
-                              icon: Icons.person_outline_rounded,
-                              title: 'Editar Perfil',
-                              subtitle: 'Nombre, teléfono, foto',
-                              isDark: isDark,
-                              onTap: () async {
-                                final result = await Navigator.pushNamed(
-                                  context,
-                                  RouteNames.editProfile,
-                                  arguments: {
-                                    'userId': _userId,
-                                    'nombre': _firstName,
-                                    'apellido': _lastName,
-                                    'email': _userEmail,
-                                    'foto_perfil': _photoKey,
-                                    'telefono': _phone,
-                                  },
-                                );
-                                
-                                if (result == true) {
-                                  setState(() => _isLoading = true);
-                                  _loadUserData();
-                                }
-                              },
-                            ),
-                            /* _buildOptionTile(
-                              icon: Icons.location_on_outlined,
-                              title: 'Mis Direcciones',
-                              subtitle: 'Casa, trabajo y favoritos',
-                              isDark: isDark,
-                              onTap: () {},
-                            ), */
-                            _buildInfoTile(
-                              icon: Icons.payments_rounded,
-                              title: 'Método de Pago',
-                              subtitle: 'Solo efectivo',
-                              isDark: isDark,
-                            ),
-                              _buildOptionTile(
-                              icon: Icons.notifications_none_rounded,
-                                title: 'Configuración',
-                                subtitle: 'Notificaciones, seguridad, tema',
-                              isDark: isDark,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                    RouteNames.settings,
-                                );
-                              },
-                            ),
-                            _buildOptionTile(
-                              icon: Icons.help_outline_rounded,
-                              title: 'Ayuda y Soporte',
-                              subtitle: 'Centro de ayuda, contactar',
-                              isDark: isDark,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  RouteNames.help,
-                                  arguments: {
-                                    'userType': 'user',
-                                    'userId': _userId,
-                                  },
-                                );
-                              },
-                            ),
-                            
-                            const SizedBox(height: 20),
-                            
-                            // Botón Cerrar Sesión
-                            Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(bottom: 20),
-                              child: TextButton(
-                                onPressed: _confirmLogout,
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
-                                ),
-                                child: _isLoggingOut
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2))
-                                    : Text(
-                                        'Cerrar Sesión',
-                                        style: TextStyle(
-                                          color: AppColors.error,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            // Espacio extra para el bottom nav
-                            const SizedBox(height: 80),
                           ],
-                        ),
+                          _buildUserCard(isDark),
+                          const SizedBox(height: 24),
+                          _buildRatingSection(isDark),
+                          const SizedBox(height: 24),
+                          _buildBecomeDriverCard(isDark),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Configuración',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildOptionTile(
+                            icon: Icons.person_outline_rounded,
+                            title: 'Editar Perfil',
+                            subtitle: 'Nombre, teléfono, foto',
+                            isDark: isDark,
+                            onTap: () async {
+                              final result = await Navigator.pushNamed(
+                                context,
+                                RouteNames.editProfile,
+                                arguments: {
+                                  'userId': _userId,
+                                  'nombre': _firstName,
+                                  'apellido': _lastName,
+                                  'email': _userEmail,
+                                  'foto_perfil': _photoKey,
+                                  'telefono': _phone,
+                                },
+                              );
+
+                              if (result == true) {
+                                setState(() => _isLoading = true);
+                                _loadUserData();
+                              }
+                            },
+                          ),
+                          _buildInfoTile(
+                            icon: Icons.payments_rounded,
+                            title: 'Método de Pago',
+                            subtitle: 'Solo efectivo',
+                            isDark: isDark,
+                          ),
+                          _buildOptionTile(
+                            icon: Icons.notifications_none_rounded,
+                            title: 'Configuración',
+                            subtitle: 'Notificaciones, seguridad, tema',
+                            isDark: isDark,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.settings,
+                              );
+                            },
+                          ),
+                          _buildOptionTile(
+                            icon: Icons.help_outline_rounded,
+                            title: 'Ayuda y Soporte',
+                            subtitle: 'Centro de ayuda, contactar',
+                            isDark: isDark,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.help,
+                                arguments: {
+                                  'userType': 'user',
+                                  'userId': _userId,
+                                },
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: _confirmLogout,
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                              ),
+                              child: _isLoggingOut
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Text(
+                                      'Cerrar Sesión',
+                                      style: TextStyle(
+                                        color: AppColors.error,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-          ),
-        ],
-      ),
+                ),
+        ),
+      ],
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: body,
     );
   }
 

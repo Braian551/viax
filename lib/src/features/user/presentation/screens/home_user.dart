@@ -1074,10 +1074,10 @@ class _HomeUserScreenState extends State<HomeUserScreen>
         child: const Center(child: CircularProgressIndicator()),
       );
     }
-    return TripHistoryScreen(userId: _userId!);
+    return TripHistoryScreen(userId: _userId!, embedded: true);
   }
 
   Widget _buildProfileTab(bool isDark) {
-    return const UserProfileScreen();
+    return const UserProfileScreen(embedded: true);
   }
 }

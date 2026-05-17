@@ -154,6 +154,14 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     return _itemRects[index];
   }
 
+  double? _leftForIndex(int index) {
+    return _rectForIndex(index)?.left;
+  }
+
+  double? _centerForIndex(int index) {
+    return _rectForIndex(index)?.center.dx;
+  }
+
   double? _tabWidth() {
     if (_gestureAreaWidth <= 0 || widget.items.isEmpty) {
       return null;
@@ -162,6 +170,28 @@ class _DraggableNavBarState extends State<DraggableNavBar>
   }
 
   int _indexForOffset(double offset) {
+    final startRect = _dragStartRect ?? _rectForIndex(_dragStartIndex);
+    if (startRect != null && _itemRects.length == widget.items.length) {
+      final targetCenter = startRect.center.dx + offset;
+      var closestIndex = widget.currentIndex;
+      var closestDistance = double.infinity;
+
+      for (var index = 0; index < _itemRects.length; index++) {
+        final center = _centerForIndex(index);
+        if (center == null) {
+          continue;
+        }
+
+        final distance = (center - targetCenter).abs();
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      }
+
+      return closestIndex;
+    }
+
     final tabWidth = _tabWidth();
     if (tabWidth == null) {
       return widget.currentIndex;
@@ -182,11 +212,33 @@ class _DraggableNavBarState extends State<DraggableNavBar>
   }
 
   double _targetOffsetForIndex(int index) {
+    final startRect = _dragStartRect ?? _rectForIndex(_dragStartIndex);
+    final targetRect = _rectForIndex(index);
+    if (startRect != null && targetRect != null) {
+      return targetRect.left - startRect.left;
+    }
+
     final tabWidth = _tabWidth();
     if (tabWidth == null) {
       return 0.0;
     }
     return (index - _dragStartIndex) * tabWidth;
+  }
+
+  Duration _settleDurationForOffset(double targetOffset) {
+    if (_gestureAreaWidth <= 0) {
+      return const Duration(milliseconds: 320);
+    }
+
+    final distance =
+        (targetOffset - _selectorAnimationController.value).abs() /
+        _gestureAreaWidth;
+    final durationMs = lerpDouble(
+      220,
+      360,
+      distance.clamp(0.0, 1.0),
+    )!;
+    return Duration(milliseconds: durationMs.round());
   }
 
   void _onDragStart(LongPressStartDetails details) {
@@ -213,15 +265,21 @@ class _DraggableNavBarState extends State<DraggableNavBar>
       return;
     }
 
+    final startRect = _dragStartRect ?? _rectForIndex(_dragStartIndex);
+    final firstLeft = _leftForIndex(0);
+    final lastLeft = _leftForIndex(widget.items.length - 1);
     final tabWidth = _tabWidth();
-    if (tabWidth == null) {
+    if (tabWidth == null && startRect == null) {
       return;
     }
 
     final delta = details.localPosition.dx - _dragStartX;
-    final minOffset = -(_dragStartIndex * tabWidth);
-    final maxOffset =
-      (widget.items.length - 1 - _dragStartIndex) * tabWidth;
+    final minOffset = startRect != null && firstLeft != null
+        ? firstLeft - startRect.left
+        : -(_dragStartIndex * tabWidth!);
+    final maxOffset = startRect != null && lastLeft != null
+        ? lastLeft - startRect.left
+        : (widget.items.length - 1 - _dragStartIndex) * tabWidth!;
     final boundedOffset = delta.clamp(minOffset, maxOffset).toDouble();
     final nextOffset = boundedOffset;
     final nextIndex = _indexForOffset(nextOffset);
@@ -250,8 +308,8 @@ class _DraggableNavBarState extends State<DraggableNavBar>
     try {
       await _selectorAnimationController.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: _settleDurationForOffset(targetOffset),
+        curve: Curves.easeOutQuart,
       );
     } on TickerCanceled {
       return;
@@ -328,8 +386,26 @@ class _DraggableNavBarState extends State<DraggableNavBar>
               key: _gestureAreaKey,
               child: Stack(
                 children: [
-                  if (selectorRect != null && selectorWidth > 0 && selectorHeight > 0)
+                  if (_isDragging &&
+                      selectorRect != null &&
+                      selectorWidth > 0 &&
+                      selectorHeight > 0)
                     Positioned(
+                      left: selectorLeft,
+                      top: selectorTop,
+                      width: selectorWidth,
+                      height: selectorHeight,
+                      child: IgnorePointer(
+                        child: _buildSelector(),
+                      ),
+                    ),
+                  if (!_isDragging &&
+                      selectorRect != null &&
+                      selectorWidth > 0 &&
+                      selectorHeight > 0)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeOutQuart,
                       left: selectorLeft,
                       top: selectorTop,
                       width: selectorWidth,
@@ -343,7 +419,7 @@ class _DraggableNavBarState extends State<DraggableNavBar>
                     children: List.generate(widget.items.length, (index) {
                       return Listener(
                         onPointerUp: (_) {
-                          if (!_isDragging) {
+                          if (!_isDragging && index != widget.currentIndex) {
                             widget.onTabChanged(index);
                             HapticFeedback.selectionClick();
                           }
