@@ -477,11 +477,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     Map<String, dynamic>? data,
     String? payload,
   }) async {
-    final session = await UserService.getSavedSession();
+    final session = await UserService.getActiveSession();
     final userId = int.tryParse(session?['id']?.toString() ?? '') ?? 0;
     if (userId <= 0) return;
 
-    final userType = (session?['tipo_usuario'] ?? '').toString().toLowerCase();
+    final userType = UserService.normalizeUserRole(session?['tipo_usuario']) ?? '';
 
     // Si viene referencia explícita de pagos empresa/admin, redirigir a su módulo.
     final referenceType =

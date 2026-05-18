@@ -183,7 +183,7 @@ class PushNotificationService {
   }
 
   static Future<void> syncForCurrentSession() async {
-    final session = await UserService.getSavedSession();
+    final session = await UserService.getActiveSession();
     final rawUserId = session?['id'];
     final userId = rawUserId is int
         ? rawUserId

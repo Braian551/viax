@@ -235,6 +235,19 @@ class UserService {
   static const String _kAccessToken = 'viax_access_token';
   static const String _kRefreshToken = 'viax_refresh_token';
   static const String _kAccessTokenExpiresIn = 'viax_access_token_expires_in';
+  static const String _kSessionState = 'viax_session_state';
+
+  static const String _sessionStateActive = 'active';
+  static const String _sessionStatePending = 'pending';
+
+  static const Set<String> _validUserRoles = <String>{
+    'cliente',
+    'conductor',
+    'empresa',
+    'administrador',
+    'admin',
+    'soporte_tecnico',
+  };
 
   static String? _normalizarToken(dynamic value) {
     final token = value?.toString().trim();
@@ -242,6 +255,47 @@ class UserService {
       return null;
     }
     return token;
+  }
+
+  static String? normalizeUserRole(dynamic value) {
+    final role = value?.toString().trim().toLowerCase();
+    if (role == null || role.isEmpty) {
+      return null;
+    }
+    return _validUserRoles.contains(role) ? role : null;
+  }
+
+  static bool _hasSessionIdentity(Map<String, dynamic> sessionData) {
+    final email = sessionData['email']?.toString().trim() ?? '';
+    final userId = int.tryParse(sessionData['id']?.toString() ?? '');
+    return email.isNotEmpty && (userId ?? 0) > 0;
+  }
+
+  static String _inferSessionState(
+    Map<String, dynamic> sessionData,
+    SharedPreferences prefs,
+  ) {
+    final savedState = prefs.getString(_kSessionState);
+    final hasTokens = _normalizarToken(sessionData['access_token']) != null ||
+        _normalizarToken(sessionData['refresh_token']) != null;
+    if (hasTokens && _hasSessionIdentity(sessionData)) {
+      return _sessionStateActive;
+    }
+    if (savedState == _sessionStateActive && _hasSessionIdentity(sessionData)) {
+      return _sessionStateActive;
+    }
+    return _sessionStatePending;
+  }
+
+  static bool _isActiveSessionState(String? value) {
+    return value == _sessionStateActive;
+  }
+
+  static Future<void> _persistSessionState(
+    SharedPreferences prefs,
+    String sessionState,
+  ) async {
+    await prefs.setString(_kSessionState, sessionState);
   }
 
   static void _preservarTokensGuardados(
@@ -275,10 +329,19 @@ class UserService {
     }
   }
 
-  static Future<void> saveSession(Map<String, dynamic> user) async {
+  static Future<void> saveSession(
+    Map<String, dynamic> user, {
+    String? sessionState,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final sessionData = Map<String, dynamic>.from(user);
     _preservarTokensGuardados(sessionData, prefs);
+    final resolvedRole = normalizeUserRole(sessionData['tipo_usuario']);
+    if (resolvedRole != null) {
+      sessionData['tipo_usuario'] = resolvedRole;
+    }
+    final resolvedSessionState = sessionState ??
+        _inferSessionState(sessionData, prefs);
     
     // Depuración: verificar qué estamos guardando
     print('UserService.saveSession: Guardando usuario: $sessionData');
@@ -341,6 +404,15 @@ class UserService {
         await prefs.setInt(_kAccessTokenExpiresIn, expiresIn);
       }
     }
+    await _persistSessionState(prefs, resolvedSessionState);
+  }
+
+  static Future<void> saveActiveSession(Map<String, dynamic> user) {
+    return saveSession(user, sessionState: _sessionStateActive);
+  }
+
+  static Future<void> savePendingSession(Map<String, dynamic> user) {
+    return saveSession(user, sessionState: _sessionStatePending);
   }
 
   static Future<Map<String, dynamic>?> getSavedSession() async {
@@ -379,7 +451,7 @@ class UserService {
         }
         if (legacyTipo != null) {
           await prefs.setString(_kUserType, legacyTipo);
-          tipoUsuario = legacyTipo;
+          tipoUsuario = normalizeUserRole(legacyTipo);
         }
         if (legacyNombre != null) {
           await prefs.setString(_kUserName, legacyNombre);
@@ -404,7 +476,8 @@ class UserService {
     final session = {
       if (id != null) 'id': id,
       if (email != null) 'email': email,
-      if (tipoUsuario != null) 'tipo_usuario': tipoUsuario,
+      if (normalizeUserRole(tipoUsuario) != null)
+        'tipo_usuario': normalizeUserRole(tipoUsuario),
       if (nombre != null) 'nombre': nombre,
       if (apellido != null) 'apellido': apellido,
       if (telefono != null) 'telefono': telefono,
@@ -420,6 +493,28 @@ class UserService {
     print('UserService.getSavedSession: Sesión recuperada: $session');
     
     return session;
+  }
+
+  static Future<Map<String, dynamic>?> getActiveSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final session = await getSavedSession();
+    if (session == null || !_hasSessionIdentity(session)) {
+      return null;
+    }
+
+    final savedState = prefs.getString(_kSessionState);
+    if (_isActiveSessionState(savedState)) {
+      return session;
+    }
+
+    final hasLegacyTokens = _normalizarToken(session['access_token']) != null ||
+        _normalizarToken(session['refresh_token']) != null;
+    if (savedState == null && hasLegacyTokens) {
+      await _persistSessionState(prefs, _sessionStateActive);
+      return session;
+    }
+
+    return null;
   }
 
   static Future<int?> getCurrentEmpresaId() async {
@@ -454,6 +549,7 @@ class UserService {
     await prefs.remove(_kAccessToken);
     await prefs.remove(_kRefreshToken);
     await prefs.remove(_kAccessTokenExpiresIn);
+    await prefs.remove(_kSessionState);
     // También eliminar claves legacy
     await prefs.remove(_legacyUserEmail);
     await prefs.remove(_legacyUserId);

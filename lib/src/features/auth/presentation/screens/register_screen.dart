@@ -90,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           final data = response['data'] as Map<String, dynamic>?;
           if (data != null && data['user'] != null) {
             final user = Map<String, dynamic>.from(data['user']);
-            await UserService.saveSession(user);
+            await UserService.savePendingSession(user);
 
             final userId = int.tryParse(user['id']?.toString() ?? '0') ?? 0;
             if (userId > 0 && _acceptedLegalVersion != null) {
@@ -103,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               );
             }
           } else {
-            await UserService.saveSession({'email': widget.email});
+            await UserService.savePendingSession({'email': widget.email});
           }
         } catch (_) {}
 

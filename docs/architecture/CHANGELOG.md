@@ -1,5 +1,14 @@
 # CHANGELOG - Refactorización Clean Architecture
 
+## [2026-05-18] - Sesión robusta y arranque seguro
+
+### Flutter App
+
+- El arranque ya no trata cualquier rastro local como sesión iniciada: `UserService` ahora distingue entre sesión `active` y sesión `pending`, y solo permite autoentrada por rol cuando hay identidad completa y estado autenticado válido.
+- Los flujos de login, Google Sign-In, reactivación de cuenta, registro y recuperación de teléfono ahora persisten el estado de sesión con intención explícita, evitando que registros parciales o correos aislados disparen navegación directa a home.
+- `SplashScreen`, `WelcomeScreen`, `AuthWrapper`, la sincronización de push, la apertura por notificaciones y el WebSocket dejaron de arrancar servicios o navegar por rol con sesiones provisionales o restauradas de forma incompleta.
+- La app Android deshabilitó `allowBackup` y `fullBackupContent` en el manifest principal para impedir que `SharedPreferences` restaure sesiones antiguas tras desinstalar e instalar desde Play Store.
+
 ## [2026-05-17] - Favoritos y eliminación segura
 
 ### Flutter App
