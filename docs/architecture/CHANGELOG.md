@@ -1,5 +1,37 @@
 # CHANGELOG - Refactorización Clean Architecture
 
+## [2026-05-17] - Favoritos y eliminación segura
+
+### Flutter App
+
+- La eliminación de cuenta dejó el segundo `AlertDialog` embebido y ahora navega a un flujo compartido de verificación por correo, reutilizable entre cliente, conductor y empresa desde `AccountDeletionFlow`.
+- Se extrajo una vista reutilizable para pantallas introductorias de verificación, usada por cambio de contraseña y por la nueva entrada del flujo de eliminación de cuenta.
+- El guardado local de direcciones favoritas ahora actualiza el estado de la UI antes de la recarga remota, evitando dejar la vista stale si la sincronización posterior falla.
+- El chip de `Favoritos` en la búsqueda rápida dejó de estirar el contador en altura completa y ahora muestra un badge circular fijo, consistente en tamaños angostos.
+- El preview del viaje ahora espera a que el mapa termine de estar listo antes de ajustar la cámara a la ruta y usa padding dinámico, evitando el lienzo en blanco inicial y el zoom excesivamente alejado en trayectos como Terminal del Norte.
+- Los mapas raster del flujo de cliente ahora reutilizan un `TileProvider` compartido con caché integrado de `flutter_map`, para reaprovechar tiles entre el mapa inicial y los previews en vez de reconstruir un cliente nuevo en cada ruta.
+- El preview del viaje ahora difiere unos milisegundos el montaje del mapa completo y lo activa de inmediato cuando el usuario destapa más mapa, priorizando que la ruta y la cotización aparezcan antes.
+- El preview del viaje dejó de mostrar el aviso visual `Preparando mapa...`; durante la carga diferida ahora conserva un fondo neutro para no introducir ruido innecesario al cliente.
+
+### Backend PHP
+
+- Los endpoints de direcciones guardadas (`get`, `save`, `delete`) ahora validan y autocorrigen las columnas `tipo_guardado` y `nombre_guardado` en `ubicaciones_usuario` antes de operar, para que favoritos siga funcionando incluso si la migración llegó incompleta a un entorno.
+- El guardado de lugares favoritos ahora deriva `ciudad`, `departamento` y `pais` desde la dirección cuando el buscador no envía esos campos explícitamente, evitando fallos por restricciones `NOT NULL` en producción.
+
+## [2026-05-17] - Ajustes de apariencia y scroll
+
+### Flutter App
+
+- Se eliminó el `overscroll glow` azul de toda la app desde `MaterialApp`, para evitar el tinte azul al arrastrar en perfil, viajes y ajustes.
+- Se agregó una pantalla compartida de `Apariencia` con selección explícita de `Claro`, `Oscuro` y `Seguir al dispositivo`.
+- La preferencia por defecto permanece en `ThemeMode.system`, y al salir de ese modo se conserva el tema efectivo actual para evitar saltos visuales.
+- Los ajustes de cliente y conductor ahora abren la misma sección de apariencia en vez de usar un switch aislado, dejando el comportamiento del tema consistente entre roles.
+- La vista de `Apariencia` dejó el mock genérico y ahora usa previews inspiradas en el header, tarjetas y navegación de Viax, corrigiendo además el overflow en pantallas angostas.
+- La preview de `Apariencia` ajustó sus bordes claros al estilo de tarjetas usadas en la app y redujo el ancho del selector del navbar mock para alinearlo con el componente real.
+- En perfil y viajes embebidos se dejó de extender el body detrás del header compartido, eliminando el bloque oscuro al hacer scroll y manteniendo una separación limpia sin superposiciones artificiales.
+- El header compartido dejó de usar el `AppBar` material por defecto y ahora se dibuja como una capa transparente propia, para evitar el bloque azul detrás del saludo en claro sin reintroducir interferencia con el contenido.
+- La preview de `Apariencia` recolocó los iconos de viajes y perfil dentro del navbar mock y sustituyó contornos grises/negros por bordes azulados sutiles, en línea con pantallas como `Mis direcciones`.
+
 ## [1.0.0] - Octubre 2025
 
 ### 🎉 Refactorización Mayor: Implementación de Clean Architecture

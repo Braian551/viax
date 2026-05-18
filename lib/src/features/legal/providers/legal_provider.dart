@@ -8,7 +8,7 @@ enum LegalStatus { idle, checking, accepted, notAccepted, errorFallback }
 
 class LegalProvider extends ChangeNotifier {
   static const String _cacheKeyPrefix = 'accepted_legal_version';
-  
+
   LegalStatus _status = LegalStatus.idle;
   String? _currentRequiredVersion;
   String? _lastError;
@@ -25,6 +25,17 @@ class LegalProvider extends ChangeNotifier {
     return '$_cacheKeyPrefix-${role.toLowerCase()}-$userId';
   }
 
+  Future<bool> hasCachedAcceptance({
+    required String role,
+    required int userId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final localVersion = prefs.getString(
+      _cacheKeyFor(role: role, userId: userId),
+    );
+    return localVersion != null && localVersion.isNotEmpty;
+  }
+
   /// Inicializa el estado desde cache local para evitar parpadeos (flickers)
   Future<void> init() async {
     if (_initialized) return;
@@ -35,23 +46,32 @@ class LegalProvider extends ChangeNotifier {
   }
 
   /// Verifica la versión contra el backend
-  Future<LegalStatus> checkLegalStatus({required String role, required int userId}) async {
+  Future<LegalStatus> checkLegalStatus({
+    required String role,
+    required int userId,
+  }) async {
     _status = LegalStatus.checking;
     _lastError = null;
     notifyListeners();
 
     try {
       final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/legal/current_version.php?role=$role'))
+          .get(
+            Uri.parse(
+              '${AppConfig.baseUrl}/legal/current_version.php?role=$role',
+            ),
+          )
           .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           _currentRequiredVersion = data['current_version'];
-          
+
           final prefs = await SharedPreferences.getInstance();
-          final localVersion = prefs.getString(_cacheKeyFor(role: role, userId: userId));
+          final localVersion = prefs.getString(
+            _cacheKeyFor(role: role, userId: userId),
+          );
 
           if (localVersion == _currentRequiredVersion && localVersion != null) {
             _status = LegalStatus.accepted;
@@ -64,7 +84,8 @@ class LegalProvider extends ChangeNotifier {
         }
       } else {
         _status = LegalStatus.notAccepted;
-        _lastError = 'No se pudo validar el estado legal (HTTP ${response.statusCode}).';
+        _lastError =
+            'No se pudo validar el estado legal (HTTP ${response.statusCode}).';
       }
     } catch (e) {
       debugPrint('[LegalProvider] Network Error: $e');
@@ -80,7 +101,11 @@ class LegalProvider extends ChangeNotifier {
   Future<String?> fetchCurrentVersion({required String role}) async {
     try {
       final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/legal/current_version.php?role=$role'))
+          .get(
+            Uri.parse(
+              '${AppConfig.baseUrl}/legal/current_version.php?role=$role',
+            ),
+          )
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) return null;
@@ -112,34 +137,42 @@ class LegalProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/legal/accept.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'user_id': userId,
-          'role': role,
-          'version': version,
-          'device_id': deviceId,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/legal/accept.php'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'user_id': userId,
+              'role': role,
+              'version': version,
+              'device_id': deviceId,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_cacheKeyFor(role: role, userId: userId), version);
-          
+          await prefs.setString(
+            _cacheKeyFor(role: role, userId: userId),
+            version,
+          );
+
           _status = LegalStatus.accepted;
           notifyListeners();
           return true;
         }
-        _lastError = data['message']?.toString() ?? 'No se pudo registrar la aceptación.';
+        _lastError =
+            data['message']?.toString() ??
+            'No se pudo registrar la aceptación.';
       } else {
         try {
           final data = jsonDecode(response.body);
           _lastError = data['message']?.toString();
         } catch (_) {
-          _lastError = 'No se pudo registrar la aceptación (HTTP ${response.statusCode}).';
+          _lastError =
+              'No se pudo registrar la aceptación (HTTP ${response.statusCode}).';
         }
       }
     } catch (e) {
@@ -151,7 +184,7 @@ class LegalProvider extends ChangeNotifier {
     notifyListeners();
     return false;
   }
-  
+
   /// Permite resetear el estado (ej: logout)
   void reset() {
     _status = LegalStatus.idle;

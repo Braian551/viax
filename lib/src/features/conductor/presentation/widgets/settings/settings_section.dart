@@ -6,12 +6,14 @@ class SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
   final EdgeInsetsGeometry? padding;
+  final bool showTitle;
 
   const SettingsSection({
     super.key,
     required this.title,
     required this.children,
     this.padding,
+    this.showTitle = true,
   });
 
   @override
@@ -24,20 +26,19 @@ class SettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 12),
-            child: Text(
-              title.toUpperCase(),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-                color: isDark
-                    ? Colors.white54
-                    : AppColors.lightTextSecondary,
+          if (showTitle)
+            Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 12),
+              child: Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.lightTextSecondary,
+                ),
               ),
             ),
-          ),
           Container(
             decoration: BoxDecoration(
               color: isDark

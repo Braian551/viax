@@ -90,6 +90,8 @@ Esta regla aplica a todos los archivos generados durante troubleshooting, implem
 **Archivos temporales de diagnostico:**
 - Si el agente crea un archivo temporal para diagnostico (probe, test, check), DEBE eliminarlo al final de la tarea.
 - Si no puede eliminarlo, debe listarlo explicitamente en el reporte como "pendiente de limpieza manual".
+- Si necesita capturar salida de herramientas, DEBE preferir `tmp/` y eliminar el archivo al terminar la validacion.
+- Outputs efimeros del agente como `analysis_output*.txt`, `*.out`, `*.tmp` o similares NO pueden quedar en la raiz del proyecto al cerrar la tarea.
 
 **Archivos de log generados automaticamente:**
 - Si un script o proceso genera un log, debe configurarse para escribir en `backend/logs/` o en `services/{nombre}/logs/`.
@@ -103,6 +105,62 @@ Antes de reportar tarea completada, el agente DEBE verificar:
 3. ¿Algun log o output quedo en la raiz de `backend/` o del proyecto?
 
 Si la respuesta a cualquiera es SI, limpiar antes de reportar.
+
+---
+
+# REGLA OBLIGATORIA DE DOCUMENTACION Y TRAZABILIDAD
+
+Si el agente modifica comportamiento, flujos, UI, integraciones, permisos, configuraciones o reglas de negocio, DEBE actualizar la documentacion Markdown correspondiente en el mismo turno.
+
+## Reglas minimas
+
+1. Siempre actualizar al menos un `.md` relevante cuando el cambio altere algo funcional, visual, operativo o de arquitectura.
+2. Preferir la documentacion mas cercana al modulo afectado. Si no existe una adecuada, actualizar `docs/architecture/CHANGELOG.md` y crear documentacion tecnica solo si realmente hace falta.
+3. La documentacion debe indicar, de forma concreta, que se agrego, que se elimino, que se corrigio y cualquier implicacion operativa o visual relevante.
+4. No cerrar una tarea con cambios funcionales sin dejar trazabilidad documental, salvo que el cambio sea estrictamente interno y sin impacto observable; en ese caso el agente debe decirlo explicitamente en el reporte final.
+
+## Legal y permisos
+
+Si el agente modifica permisos, capacidades o declaracion de uso en archivos como:
+
+- `pubspec.yaml`
+- `android/app/src/main/AndroidManifest.xml`
+- `ios/Runner/Info.plist`
+- cualquier archivo YAML, plist, manifest o configuracion equivalente que agregue permisos o acceso a datos del usuario
+
+entonces DEBE revisar si corresponde actualizar:
+
+- `assets/legal/legal_content.json`
+- terminos y condiciones aplicables
+- politicas de privacidad aplicables
+- cualquier documentacion tecnica o legal relacionada en `docs/`
+
+Si hace esa actualizacion legal, DEBE ajustar tambien la fecha de ultima actualizacion del contenido legal correspondiente.
+
+## Nuevas funcionalidades con impacto legal
+
+Si el agente incorpora o cambia funcionalidades que puedan requerir disclosure legal o contractual, por ejemplo:
+
+- geolocalizacion
+- biometria
+- notificaciones
+- grabacion o uso de camara/microfono
+- procesamiento de datos personales
+- pagos, comisiones o cobros
+- comparticion de datos con terceros
+- nuevas automatizaciones, monitoreo, tracking o background services
+
+entonces DEBE evaluar si los terminos y condiciones o la politica de privacidad deben actualizarse segun el alcance del cambio. Si aplica, debe actualizarlos y cambiar la fecha.
+
+## Regla de cierre
+
+Antes de reportar tarea completada, el agente DEBE verificar:
+
+1. ¿Actualice la documentacion Markdown del cambio realizado?
+2. ¿El cambio toca permisos o tratamiento de datos y requiere ajuste legal?
+3. ¿Si hubo ajuste legal, actualice tambien la fecha correspondiente?
+
+Si la respuesta a 1 es NO en un cambio funcional, la tarea esta incompleta.
 
 ---
 
@@ -340,6 +398,56 @@ If a new or modified view/widget ignores the active theme or introduces non-resp
 
 ---
 
+# MANDATORY PERFORMANCE RULE
+
+Si el agente crea o modifica cualquier pantalla, widget, servicio 
+o archivo de inicialización, DEBE aplicar estas reglas:
+
+## Arranque de la app (main.dart)
+
+1. Solo Firebase y orientación van antes de runApp().
+2. Todo lo demás se inicializa DESPUÉS de runApp() usando Future.wait() 
+   para paralelizar.
+3. Servicios que dependen de otros (Mapbox depende de AppSecrets) 
+   van en una fase separada posterior.
+4. Nunca hacer llamadas HTTP al backend antes de runApp().
+
+## Widgets y pantallas
+
+1. Usar const constructors en todos los widgets que no cambien.
+2. Separar widgets grandes en subwidgets pequeños para evitar 
+   rebuilds innecesarios.
+3. Usar ListView.builder en lugar de ListView con hijos estáticos 
+   cuando la lista tenga más de 5 elementos.
+4. Evitar lógica pesada dentro del método build(). 
+   Moverla a initState() o a un provider.
+5. Cancelar todos los StreamSubscription y Timer en dispose().
+
+## Providers
+
+1. No inicializar datos pesados en el constructor del provider.
+2. Usar notifyListeners() solo cuando el dato realmente cambió.
+3. Evitar providers que escuchan a otros providers si puede 
+   resolverse con un selector.
+
+## Imágenes y assets
+
+1. Usar CachedNetworkImage para toda imagen remota.
+2. Especificar width y height en imágenes para evitar reflow.
+3. Comprimir assets locales antes de incluirlos en el proyecto.
+
+## Verificación antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, verificar:
+1. ¿Agregué const donde era posible?
+2. ¿Hay llamadas HTTP o awaits pesados dentro de build()?
+3. ¿Cancelé todas las suscripciones en dispose()?
+4. ¿Usé Future.wait() donde había awaits en serie innecesarios?
+
+Si la respuesta a 2 es SÍ, corregir antes de reportar.
+
+---
+
 # REGLA DE AVISOS EN APP (OBLIGATORIA)
 
 Si el agente crea o modifica el sistema de anuncios, avisos, promociones, mantenimiento o novedades dentro de la app, DEBE:
@@ -356,6 +464,8 @@ Si el agente crea o modifica el sistema de anuncios, avisos, promociones, manten
 # HOUSEKEEPING RULE (MANDATORY)
 
 If the agent creates temporary support files during troubleshooting or implementation (for example: files for fix, test, debug, or query), it MUST remove them at the end of the turn if they are not required by the system.
+
+If the agent generates validation outputs only for its own use (for example `analysis_output.txt`, `analysis_output_agent.txt`, temporary reports, or redirected command output), it MUST delete them before finishing and MUST NOT leave them in the project root.
 
 The repository must be left clean of unnecessary helper artifacts.
 
@@ -435,6 +545,32 @@ Al documentar o comentar código en este proyecto, el agente DEBE escribir en es
 Si en archivos modificados encuentra comentarios en inglés, DEBE traducirlos al español en el mismo cambio.
 
 No se deben introducir comentarios nuevos en inglés.
+
+---
+
+# REGLA OBLIGATORIA DE COMENTARIOS POR BLOQUE EN VISTAS
+
+Si el agente agrega o modifica lógica en archivos de UI como pantallas, vistas o widgets
+(`screens/`, `views/`, `widgets/`), DEBE dejar comentarios breves por bloque en español
+cuando el bloque no sea trivial a primera vista.
+
+## Alcance mínimo
+
+1. Comentar bloques nuevos o cambiados que controlen flujo, estado, animaciones,
+   carga diferida, integración con mapas, caché, navegación o transformaciones de datos.
+2. No comentar línea por línea ni repetir lo obvio; el comentario debe explicar intención
+   o motivo del bloque.
+3. Mantener los comentarios cortos, concretos y ubicados justo encima del bloque relevante.
+4. Si el archivo de vista ya tiene comentarios en inglés, traducirlos al español en el mismo cambio.
+
+## Ejemplo esperado
+
+```dart
+// Retrasar el montaje del mapa evita competir con la carga inicial del resumen.
+if (!_shouldRenderMap) {
+  _scheduleMapActivation();
+}
+```
 # AGENT SKILL — SAFE PRODUCTION DEPLOY
 
 You are working on the Viax production backend.
@@ -716,6 +852,56 @@ If a new or modified view/widget ignores the active theme or introduces non-resp
 
 ---
 
+# MANDATORY PERFORMANCE RULE
+
+Si el agente crea o modifica cualquier pantalla, widget, servicio 
+o archivo de inicialización, DEBE aplicar estas reglas:
+
+## Arranque de la app (main.dart)
+
+1. Solo Firebase y orientación van antes de runApp().
+2. Todo lo demás se inicializa DESPUÉS de runApp() usando Future.wait() 
+   para paralelizar.
+3. Servicios que dependen de otros (Mapbox depende de AppSecrets) 
+   van en una fase separada posterior.
+4. Nunca hacer llamadas HTTP al backend antes de runApp().
+
+## Widgets y pantallas
+
+1. Usar const constructors en todos los widgets que no cambien.
+2. Separar widgets grandes en subwidgets pequeños para evitar 
+   rebuilds innecesarios.
+3. Usar ListView.builder en lugar de ListView con hijos estáticos 
+   cuando la lista tenga más de 5 elementos.
+4. Evitar lógica pesada dentro del método build(). 
+   Moverla a initState() o a un provider.
+5. Cancelar todos los StreamSubscription y Timer en dispose().
+
+## Providers
+
+1. No inicializar datos pesados en el constructor del provider.
+2. Usar notifyListeners() solo cuando el dato realmente cambió.
+3. Evitar providers que escuchan a otros providers si puede 
+   resolverse con un selector.
+
+## Imágenes y assets
+
+1. Usar CachedNetworkImage para toda imagen remota.
+2. Especificar width y height en imágenes para evitar reflow.
+3. Comprimir assets locales antes de incluirlos en el proyecto.
+
+## Verificación antes de cerrar cualquier tarea
+
+Antes de reportar tarea completada, verificar:
+1. ¿Agregué const donde era posible?
+2. ¿Hay llamadas HTTP o awaits pesados dentro de build()?
+3. ¿Cancelé todas las suscripciones en dispose()?
+4. ¿Usé Future.wait() donde había awaits en serie innecesarios?
+
+Si la respuesta a 2 es SÍ, corregir antes de reportar.
+
+---
+
 # REGLA DE AVISOS EN APP (OBLIGATORIA)
 
 Si el agente crea o modifica el sistema de anuncios, avisos, promociones, mantenimiento o novedades dentro de la app, DEBE:
@@ -732,6 +918,8 @@ Si el agente crea o modifica el sistema de anuncios, avisos, promociones, manten
 # HOUSEKEEPING RULE (MANDATORY)
 
 If the agent creates temporary support files during troubleshooting or implementation (for example: files for fix, test, debug, or query), it MUST remove them at the end of the turn if they are not required by the system.
+
+If the agent generates validation outputs only for its own use (for example `analysis_output.txt`, `analysis_output_agent.txt`, temporary reports, or redirected command output), it MUST delete them before finishing and MUST NOT leave them in the project root.
 
 The repository must be left clean of unnecessary helper artifacts.
 
