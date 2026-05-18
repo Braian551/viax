@@ -255,15 +255,29 @@ class AppRouter {
           final userId = rawUserId is int
               ? rawUserId
               : int.tryParse(rawUserId?.toString() ?? '');
-          return MaterialPageRoute(
-            builder: (_) => LegalAcceptanceScreen(
-              role: args?['role'] ?? 'cliente',
-              version: args?['version'] ?? 'v1.0',
-              userId: userId,
-              returnResultOnAccept: args?['returnResultOnAccept'] == true,
-              isBlocking: args?['isBlocking'] != false,
-            ),
+          return PageRouteBuilder(
             settings: settings,
+            opaque: false,
+            barrierColor: Colors.transparent,
+            transitionDuration: const Duration(milliseconds: 220),
+            reverseTransitionDuration: const Duration(milliseconds: 180),
+            pageBuilder: (_, animation, secondaryAnimation) =>
+                LegalAcceptanceScreen(
+                  role: args?['role'] ?? 'cliente',
+                  version: args?['version'] ?? 'v1.0',
+                  userId: userId,
+                  returnResultOnAccept: args?['returnResultOnAccept'] == true,
+                  isBlocking: args?['isBlocking'] != false,
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              final fade = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+                reverseCurve: Curves.easeInCubic,
+              );
+
+              return FadeTransition(opacity: fade, child: child);
+            },
           );
         }
       case RouteNames.backgroundLocationDisclosure:

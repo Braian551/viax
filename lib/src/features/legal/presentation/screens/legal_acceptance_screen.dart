@@ -436,267 +436,268 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
             if (!widget.isBlocking)
               Positioned.fill(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => Navigator.of(context).pop(false),
-                  child: const ColoredBox(color: Colors.transparent),
+                  child: const SizedBox.expand(),
                 ),
               ),
             SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
                   if (!widget.isBlocking)
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        child: IconButton.filledTonal(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
+                    Positioned(
+                      top: 12,
+                      right: 16,
+                      child: IconButton.filledTonal(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        icon: const Icon(Icons.close_rounded),
                       ),
                     ),
-                  const Spacer(),
-                  DraggableScrollableSheet(
-                    expand: false,
-                    initialChildSize: 0.82,
-                    minChildSize: 0.74,
-                    maxChildSize: 0.95,
-                    builder: (context, scrollController) {
-                      // El sheet resume la aceptación y deja el documento completo en una vista aparte para no saturar el primer contacto.
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(34),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.24),
-                              blurRadius: 24,
-                              offset: const Offset(0, -6),
+                  // Anclar el sheet al fondo evita que desaparezca cuando la ruta se monta como overlay.
+                  Positioned.fill(
+                    child: DraggableScrollableSheet(
+                      expand: false,
+                      initialChildSize: 0.82,
+                      minChildSize: 0.74,
+                      maxChildSize: 0.95,
+                      builder: (context, scrollController) {
+                        // El sheet resume la aceptación y deja el documento completo en una vista aparte para no saturar el primer contacto.
+                        return DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.scaffoldBackgroundColor,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(34),
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 12),
-                            Container(
-                              width: 52,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: colorScheme.outlineVariant,
-                                borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.24),
+                                blurRadius: 24,
+                                offset: const Offset(0, -6),
                               ),
-                            ),
-                            const SizedBox(height: 14),
-                            Expanded(
-                              child: CustomScrollView(
-                                controller: scrollController,
-                                slivers: [
-                                  SliverPadding(
-                                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                                    sliver: SliverToBoxAdapter(
-                                      child: _isLoadingDocuments
-                                          ? const Padding(
-                                              padding: EdgeInsets.symmetric(vertical: 80),
-                                              child: Center(
-                                                child: CircularProgressIndicator(
-                                                  color: AppColors.primary,
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 12),
+                              Container(
+                                width: 52,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.outlineVariant,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Expanded(
+                                child: CustomScrollView(
+                                  controller: scrollController,
+                                  slivers: [
+                                    SliverPadding(
+                                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                                      sliver: SliverToBoxAdapter(
+                                        child: _isLoadingDocuments
+                                            ? const Padding(
+                                                padding: EdgeInsets.symmetric(vertical: 80),
+                                                child: Center(
+                                                  child: CircularProgressIndicator(
+                                                    color: AppColors.primary,
+                                                  ),
                                                 ),
-                                              ),
-                                            )
-                                          : _loadError != null
-                                          ? Padding(
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 36,
-                                              ),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
+                                              )
+                                            : _loadError != null
+                                            ? Padding(
+                                                padding: const EdgeInsets.symmetric(
+                                                  vertical: 36,
+                                                ),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      _loadError!,
+                                                      textAlign: TextAlign.center,
+                                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                                        color: colorScheme.onSurfaceVariant,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    FilledButton(
+                                                      onPressed: _bootstrapLegalView,
+                                                      child: const Text('Reintentar'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            : Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    _loadError!,
-                                                    textAlign: TextAlign.center,
-                                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                                      color: colorScheme.onSurfaceVariant,
+                                                    _sheetTitle(),
+                                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                                      fontWeight: FontWeight.w900,
+                                                      color: colorScheme.onSurface,
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 16),
-                                                  FilledButton(
-                                                    onPressed: _bootstrapLegalView,
-                                                    child: const Text('Reintentar'),
+                                                  const SizedBox(height: 10),
+                                                  Text(
+                                                    _sheetSubtitle(),
+                                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                                      color: colorScheme.onSurfaceVariant,
+                                                      height: 1.45,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 18),
+                                                  Wrap(
+                                                    spacing: 10,
+                                                    runSpacing: 10,
+                                                    children: [
+                                                      _LegalMetaChip(
+                                                        label: 'Rol ${_roleLabel()}',
+                                                        icon: Icons.shield_rounded,
+                                                      ),
+                                                      if (_resolvedVersion.trim().isNotEmpty)
+                                                        _LegalMetaChip(
+                                                          label: 'Versión $_resolvedVersion',
+                                                          icon: Icons.verified_rounded,
+                                                        ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 22),
+                                                  if (_termsDocument != null)
+                                                    _buildSummaryCard(
+                                                      context: context,
+                                                      document: _termsDocument!,
+                                                      icon: Icons.gavel_rounded,
+                                                      onOpen: () => _openDocument(
+                                                        LegalDocType.terms,
+                                                      ),
+                                                    ),
+                                                  if (_termsDocument != null)
+                                                    const SizedBox(height: 14),
+                                                  if (_privacyDocument != null)
+                                                    _buildSummaryCard(
+                                                      context: context,
+                                                      document: _privacyDocument!,
+                                                      icon: Icons.privacy_tip_rounded,
+                                                      onOpen: () => _openDocument(
+                                                        LegalDocType.privacy,
+                                                      ),
+                                                    ),
+                                                  const SizedBox(height: 18),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(16),
+                                                    decoration: BoxDecoration(
+                                                      color: colorScheme.surface,
+                                                      borderRadius: BorderRadius.circular(22),
+                                                      border: Border.all(
+                                                        color: isDark
+                                                            ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                                                            : AppColors.blue100.withValues(alpha: 0.95),
+                                                      ),
+                                                    ),
+                                                    child: Column(
+                                                      children: [
+                                                        _buildAcceptanceRow(
+                                                          context: context,
+                                                          value: _acceptedTerms,
+                                                          onChanged: (value) => setState(
+                                                            () => _acceptedTerms = value,
+                                                          ),
+                                                          prefix: 'Acepto los ',
+                                                          linkText:
+                                                              'Términos y Condiciones',
+                                                          onOpen: () => _openDocument(
+                                                            LegalDocType.terms,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        _buildAcceptanceRow(
+                                                          context: context,
+                                                          value: _acceptedPrivacy,
+                                                          onChanged: (value) => setState(
+                                                            () => _acceptedPrivacy = value,
+                                                          ),
+                                                          prefix:
+                                                              'Acepto la ',
+                                                          linkText:
+                                                              'Política de Privacidad y tratamiento de datos',
+                                                          onOpen: () => _openDocument(
+                                                            LegalDocType.privacy,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-                                            )
-                                          : Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  _sheetTitle(),
-                                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                                    fontWeight: FontWeight.w900,
-                                                    color: colorScheme.onSurface,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Text(
-                                                  _sheetSubtitle(),
-                                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                                    color: colorScheme.onSurfaceVariant,
-                                                    height: 1.45,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 18),
-                                                Wrap(
-                                                  spacing: 10,
-                                                  runSpacing: 10,
-                                                  children: [
-                                                    _LegalMetaChip(
-                                                      label: 'Rol ${_roleLabel()}',
-                                                      icon: Icons.shield_rounded,
-                                                    ),
-                                                    if (_resolvedVersion.trim().isNotEmpty)
-                                                      _LegalMetaChip(
-                                                        label: 'Versión $_resolvedVersion',
-                                                        icon: Icons.verified_rounded,
-                                                      ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 22),
-                                                if (_termsDocument != null)
-                                                  _buildSummaryCard(
-                                                    context: context,
-                                                    document: _termsDocument!,
-                                                    icon: Icons.gavel_rounded,
-                                                    onOpen: () => _openDocument(
-                                                      LegalDocType.terms,
-                                                    ),
-                                                  ),
-                                                if (_termsDocument != null)
-                                                  const SizedBox(height: 14),
-                                                if (_privacyDocument != null)
-                                                  _buildSummaryCard(
-                                                    context: context,
-                                                    document: _privacyDocument!,
-                                                    icon: Icons.privacy_tip_rounded,
-                                                    onOpen: () => _openDocument(
-                                                      LegalDocType.privacy,
-                                                    ),
-                                                  ),
-                                                const SizedBox(height: 18),
-                                                Container(
-                                                  padding: const EdgeInsets.all(16),
-                                                  decoration: BoxDecoration(
-                                                    color: colorScheme.surface,
-                                                    borderRadius: BorderRadius.circular(22),
-                                                    border: Border.all(
-                                                      color: isDark
-                                                          ? colorScheme.outlineVariant.withValues(alpha: 0.7)
-                                                          : AppColors.blue100.withValues(alpha: 0.95),
-                                                    ),
-                                                  ),
-                                                  child: Column(
-                                                    children: [
-                                                      _buildAcceptanceRow(
-                                                        context: context,
-                                                        value: _acceptedTerms,
-                                                        onChanged: (value) => setState(
-                                                          () => _acceptedTerms = value,
-                                                        ),
-                                                        prefix: 'Acepto los ',
-                                                        linkText:
-                                                            'Términos y Condiciones',
-                                                        onOpen: () => _openDocument(
-                                                          LegalDocType.terms,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 4),
-                                                      _buildAcceptanceRow(
-                                                        context: context,
-                                                        value: _acceptedPrivacy,
-                                                        onChanged: (value) => setState(
-                                                          () => _acceptedPrivacy = value,
-                                                        ),
-                                                        prefix:
-                                                            'Acepto la ',
-                                                        linkText:
-                                                            'Política de Privacidad y tratamiento de datos',
-                                                        onOpen: () => _openDocument(
-                                                          LegalDocType.privacy,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                              decoration: BoxDecoration(
-                                color: theme.scaffoldBackgroundColor,
-                                border: Border(
-                                  top: BorderSide(
-                                    color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 54,
-                                    child: FilledButton(
-                                      onPressed: (_isLoadingDocuments ||
-                                              _loadError != null ||
-                                              !_acceptedTerms ||
-                                              !_acceptedPrivacy ||
-                                              _isSubmitting)
-                                          ? null
-                                          : _handleAcceptance,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                        ),
                                       ),
-                                      child: _isSubmitting
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.4,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Text(
-                                              _isUpdateFlow
-                                                  ? 'Aceptar actualización'
-                                                  : 'Aceptar y continuar',
-                                            ),
-                                    ),
-                                  ),
-                                  if (!widget.isBlocking) ...[
-                                    const SizedBox(height: 10),
-                                    TextButton(
-                                      onPressed: _isSubmitting
-                                          ? null
-                                          : () => Navigator.of(context).pop(false),
-                                      child: const Text('Ahora no'),
                                     ),
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                              Container(
+                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                                decoration: BoxDecoration(
+                                  color: theme.scaffoldBackgroundColor,
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 54,
+                                      child: FilledButton(
+                                        onPressed: (_isLoadingDocuments ||
+                                                _loadError != null ||
+                                                !_acceptedTerms ||
+                                                !_acceptedPrivacy ||
+                                                _isSubmitting)
+                                            ? null
+                                            : _handleAcceptance,
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(18),
+                                          ),
+                                        ),
+                                        child: _isSubmitting
+                                            ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2.4,
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                            : Text(
+                                                _isUpdateFlow
+                                                    ? 'Aceptar actualización'
+                                                    : 'Aceptar y continuar',
+                                              ),
+                                      ),
+                                    ),
+                                    if (!widget.isBlocking) ...[
+                                      const SizedBox(height: 10),
+                                      TextButton(
+                                        onPressed: _isSubmitting
+                                            ? null
+                                            : () => Navigator.of(context).pop(false),
+                                        child: const Text('Ahora no'),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),

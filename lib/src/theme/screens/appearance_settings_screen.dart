@@ -49,7 +49,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          // Reducir el margen lateral en móviles deja más ancho útil para sostener la fila fija.
+          // Reducir el margen lateral en móviles deja más ancho útil para decidir entre fila o columna sin apretar las previews.
           padding: EdgeInsets.fromLTRB(shellPadding, 16, shellPadding, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,40 +103,51 @@ class AppearanceSettingsScreen extends StatelessWidget {
                       builder: (context, constraints) {
                         final optionSpacing =
                             constraints.maxWidth < 300 ? 8.0 : 10.0;
+                        final shouldStackOptions = constraints.maxWidth < 340;
 
-                        // Mantener la fila fija con bloques de texto reservados deja ambas tarjetas parejas sin usar intrínsecos.
+                        final lightOption = _ThemePreviewOption(
+                          label: 'Claro',
+                          subtitle: 'Más luz y contraste suave para el día.',
+                          isSelected:
+                              themeProvider.themeMode == ThemeMode.light,
+                          onTap: () => themeProvider.setLightMode(),
+                          child: _ThemePreviewCard(
+                            isDarkPreview: false,
+                            isActive:
+                                themeProvider.themeMode == ThemeMode.light,
+                          ),
+                        );
+                        final darkOption = _ThemePreviewOption(
+                          label: 'Oscuro',
+                          subtitle: 'Reduce brillo y mantiene el estilo nocturno de Viax.',
+                          isSelected:
+                              themeProvider.themeMode == ThemeMode.dark,
+                          onTap: () => themeProvider.setDarkMode(),
+                          child: _ThemePreviewCard(
+                            isDarkPreview: true,
+                            isActive:
+                                themeProvider.themeMode == ThemeMode.dark,
+                          ),
+                        );
+
+                        // En anchos compactos conviene apilar las tarjetas para evitar el overflow del mock interno.
+                        if (shouldStackOptions) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              lightOption,
+                              SizedBox(height: optionSpacing),
+                              darkOption,
+                            ],
+                          );
+                        }
+
                         return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Expanded(
-                              child: _ThemePreviewOption(
-                                label: 'Claro',
-                                subtitle: 'Más luz y contraste suave para el día.',
-                                isSelected:
-                                    themeProvider.themeMode == ThemeMode.light,
-                                onTap: () => themeProvider.setLightMode(),
-                                child: _ThemePreviewCard(
-                                  isDarkPreview: false,
-                                  isActive:
-                                      themeProvider.themeMode == ThemeMode.light,
-                                ),
-                              ),
-                            ),
+                            Expanded(child: lightOption),
                             SizedBox(width: optionSpacing),
-                            Expanded(
-                              child: _ThemePreviewOption(
-                                label: 'Oscuro',
-                                subtitle: 'Reduce brillo y mantiene el estilo nocturno de Viax.',
-                                isSelected:
-                                    themeProvider.themeMode == ThemeMode.dark,
-                                onTap: () => themeProvider.setDarkMode(),
-                                child: _ThemePreviewCard(
-                                  isDarkPreview: true,
-                                  isActive:
-                                      themeProvider.themeMode == ThemeMode.dark,
-                                ),
-                              ),
-                            ),
+                            Expanded(child: darkOption),
                           ],
                         );
                       },

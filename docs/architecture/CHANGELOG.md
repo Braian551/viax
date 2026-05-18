@@ -10,8 +10,10 @@
 - La app Android deshabilitó `allowBackup` y `fullBackupContent` en el manifest principal para impedir que `SharedPreferences` restaure sesiones antiguas tras desinstalar e instalar desde Play Store.
 - La aceptación legal dejó de depender solo del caché local: el backend ahora informa si el usuario ya aceptó la versión vigente por rol, evitando que una reinstalación vuelva a exigir términos ya aceptados.
 - La pantalla de aceptación legal pasó a un sheet resumido tipo drag con checkboxes y enlaces internos a `Términos` y `Privacidad`, en lugar de obligar a leer un scroll completo dentro del mismo flujo.
+- El gate de aceptación legal ya no se monta como una ruta opaca sobre fondo negro: ahora conserva visible la pantalla actual y ancla correctamente el sheet arrastrable al borde inferior, tanto desde `Welcome` como desde los homes por rol.
 - Los documentos legales ahora se pueden abrir dentro de la app con un visor estructurado por secciones, y el guard legal también se aplica a `soporte` para mostrar actualizaciones por rol desde su home.
 - Si un alta nueva con Google rechaza términos o privacidad, `WelcomeScreen` revierte ese registro efímero antes de cerrar la sesión para que la cuenta no quede creada a medias.
+- La pantalla compartida de `Apariencia` ahora cambia de fila a columna cuando el panel queda demasiado angosto, eliminando el overflow del mock de `Claro` y `Oscuro` en móviles compactos sin romper la versión amplia.
 
 ### Backend PHP
 
