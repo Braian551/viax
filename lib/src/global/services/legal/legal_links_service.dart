@@ -39,14 +39,25 @@ class LegalLinksService {
     }
   }
 
+  static Uri _legalUri({
+    required LegalRole role,
+    required String doc,
+  }) {
+    return Uri.parse(_websiteBaseUrl).replace(
+      path: '/legal',
+      queryParameters: {
+        'role': _roleParam(role),
+        'doc': doc,
+      },
+    );
+  }
+
   static Uri termsUri({required LegalRole role}) {
-    final roleParam = _roleParam(role);
-    return Uri.parse('$_websiteBaseUrl/legal/?doc=terms&role=$roleParam');
+    return _legalUri(role: role, doc: 'terms');
   }
 
   static Uri privacyUri({required LegalRole role}) {
-    final roleParam = _roleParam(role);
-    return Uri.parse('$_websiteBaseUrl/legal/?doc=privacy&role=$roleParam');
+    return _legalUri(role: role, doc: 'privacy');
   }
 
   static Uri contentJsonUri() {
@@ -55,13 +66,21 @@ class LegalLinksService {
 
   static Future<bool> openTerms({required LegalRole role}) async {
     final uri = termsUri(role: role);
-    if (!await canLaunchUrl(uri)) return false;
-    return launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      // Intentar apertura directa; canLaunchUrl puede fallar en algunos dispositivos
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<bool> openPrivacy({required LegalRole role}) async {
+    // Navega a la sección de privacidad del sitio web según el rol del usuario
     final uri = privacyUri(role: role);
-    if (!await canLaunchUrl(uri)) return false;
-    return launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
   }
 }

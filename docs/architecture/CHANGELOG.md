@@ -6,6 +6,7 @@
 
 - El sheet de aceptación legal ahora se ancla al borde inferior en rutas transparentes y difiere su validación hasta después del primer frame, evitando que aparezca arriba de los formularios y que `LegalProvider` notifique durante el build inicial.
 - El sheet de aceptación legal recuperó un título grande `Términos y condiciones` con color derivado del tema y aumentó sus alturas iniciales/minimas para que los checkboxes y el botón no queden compactados en formularios y roles.
+- Los enlaces legales compartidos ahora generan la ruta canónica `https://viaxcol.online/legal?role=...&doc=...` sin slash final en `/legal/`, corrigiendo aperturas externas de privacidad/términos y el fallback remoto del visor legal en bienvenida, ajustes, perfiles y aceptación por rol.
 - El arranque ya no trata cualquier rastro local como sesión iniciada: `UserService` ahora distingue entre sesión `active` y sesión `pending`, y solo permite autoentrada por rol cuando hay identidad completa y estado autenticado válido.
 - Los flujos de login, Google Sign-In, reactivación de cuenta, registro y recuperación de teléfono ahora persisten el estado de sesión con intención explícita, evitando que registros parciales o correos aislados disparen navegación directa a home.
 - `SplashScreen`, `WelcomeScreen`, `AuthWrapper`, la sincronización de push, la apertura por notificaciones y el WebSocket dejaron de arrancar servicios o navegar por rol con sesiones provisionales o restauradas de forma incompleta.
@@ -23,6 +24,7 @@
 
 - `legal/current_version.php` ahora puede responder el último estado de aceptación del usuario por rol junto con la versión vigente, para que Flutter decida el gate legal usando la fuente de verdad remota.
 - Se agregó `auth/google/cancel_new_user.php` para revertir altas nuevas de Google todavía sin aceptación legal, validando dispositivo reciente y ausencia de logs de aceptación antes de borrar la cuenta creada en ese intento.
+- `auth/google/cancel_new_user.php` ahora limpia artefactos efímeros del alta rechazada y re-sincroniza `usuarios_id_seq` con `MAX(id) + 1`, evitando que los rechazos del gate legal disparen el autoincrement de `usuarios`; además, la migración `061_sync_usuarios_sequence_after_google_cancel.sql` corrige el valor actual de la secuencia en entornos ya afectados.
 
 ## [2026-05-17] - Favoritos y eliminación segura
 

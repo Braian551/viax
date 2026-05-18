@@ -293,11 +293,12 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // Centrar verticalmente el checkbox respecto al texto
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Transform.scale(
               scale: 1.18,
-              alignment: Alignment.topLeft,
+              alignment: Alignment.center,
               child: Checkbox(
                 value: value,
                 onChanged: (checked) => onChanged(checked ?? false),
@@ -308,29 +309,26 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: RichText(
-                  text: TextSpan(
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      height: 1.4,
-                    ),
-                    children: [
-                      TextSpan(text: prefix),
-                      TextSpan(
-                        text: linkText,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.primary,
-                        ),
-                        recognizer: TapGestureRecognizer()..onTap = onOpen,
-                      ),
-                      TextSpan(text: suffix),
-                    ],
+              child: RichText(
+                text: TextSpan(
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                    height: 1.4,
                   ),
+                  children: [
+                    TextSpan(text: prefix),
+                    TextSpan(
+                      text: linkText,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.primary,
+                      ),
+                      recognizer: TapGestureRecognizer()..onTap = onOpen,
+                    ),
+                    TextSpan(text: suffix),
+                  ],
                 ),
               ),
             ),
@@ -540,13 +538,8 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
                                 24,
                               ),
                               decoration: BoxDecoration(
+                                // Sin borde superior para un look más limpio
                                 color: theme.scaffoldBackgroundColor,
-                                border: Border(
-                                  top: BorderSide(
-                                    color: colorScheme.outlineVariant
-                                        .withValues(alpha: 0.6),
-                                  ),
-                                ),
                               ),
                               child: SizedBox(
                                 width: double.infinity,
