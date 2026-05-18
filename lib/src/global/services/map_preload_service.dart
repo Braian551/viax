@@ -1,5 +1,7 @@
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
+import 'flutter_map_tile_provider_service.dart';
+
 class MapPreloadService {
   MapPreloadService._();
 
@@ -21,8 +23,10 @@ class MapPreloadService {
   static Future<void> _runWarmup() async {
     if (_isReady) return;
 
-    // Pequeña ventana para adelantar inicialización interna del renderer.
+    // Adelantar la inicialización del renderer y del proveedor compartido de
+    // tiles reduce el costo de la primera apertura del mapa y del preview.
     await Future.delayed(const Duration(milliseconds: 100));
+    FlutterMapTileProviderService.warmUp();
     _isReady = true;
   }
 }

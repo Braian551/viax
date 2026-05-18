@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui' as ui;
+// ignore: depend_on_referenced_packages
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,52 +40,44 @@ import 'package:viax/src/global/services/map_preload_service.dart';
 void main() async {
   runZonedGuarded(
     () async {
-      // Configure robust global error handling as early as possible
-      WidgetsFlutterBinding.ensureInitialized();
+      final binding = WidgetsFlutterBinding.ensureInitialized();
+      FlutterNativeSplash.preserve(widgetsBinding: binding);
+
+      // Configurar el manejo global de errores lo antes posible.
 
       // Bloquear la app en orientación vertical para evitar rotación automática.
-      await SystemChrome.setPreferredOrientations(
-        const <DeviceOrientation>[DeviceOrientation.portraitUp],
-      );
+      await SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
+        DeviceOrientation.portraitUp,
+      ]);
 
-      // NOTE: UI Color Scheme Update (November 2025)
-      // - Primary buttons changed from yellow (0xFFFFFF00) to blue (AppColors.primary)
-      // - Email auth screens now use consistent blue theming
-      // - All buttons maintain white text on blue background for accessibility
-
-      // Forward Flutter framework errors to zone handler (and keep red-screen in debug)
+      // Enviar errores del framework Flutter al manejador de la zona.
       FlutterError.onError = (FlutterErrorDetails details) {
-        // Print to console
         try {
           developer.log(
             'FlutterError: \n${details.exceptionAsString()}\n${details.stack}',
             name: 'GlobalError',
           );
         } catch (_) {}
-        // Also forward to the current zone so runZonedGuarded can capture
         Zone.current.handleUncaughtError(
           details.exception,
           details.stack ?? StackTrace.current,
         );
       };
 
-      // Catch uncaught async and platform channel errors
-      ui
-          .PlatformDispatcher
-          .instance
-          .onError = (Object error, StackTrace stack) {
-        try {
-          developer.log(
-            'PlatformDispatcher error: $error',
-            name: 'GlobalError',
-            stackTrace: stack,
-          );
-        } catch (_) {}
-        // Return true to indicate the error was handled to avoid process kill
-        return true;
-      };
+      // Capturar errores asíncronos y de canales de plataforma.
+      ui.PlatformDispatcher.instance.onError =
+          (Object error, StackTrace stack) {
+            try {
+              developer.log(
+                'PlatformDispatcher error: $error',
+                name: 'GlobalError',
+                stackTrace: stack,
+              );
+            } catch (_) {}
+            return true;
+          };
 
-      // Friendly error widget in release to avoid hard crash during build failures
+      // Mostrar un error amable si falla la construcción de la interfaz.
       ErrorWidget.builder = (FlutterErrorDetails details) {
         return Material(
           color: Colors.black,
@@ -119,11 +113,7 @@ void main() async {
         );
       };
 
-      await initializeDateFormatting('es_CO', null);
-
-      // ============================================
-      // INICIALIZAR FIREBASE
-      // ============================================
+      // FASE 1: solo inicialización crítica antes de runApp().
       try {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
@@ -133,157 +123,7 @@ void main() async {
         debugPrint('⚠️ Error inicializando Firebase: $e');
       }
 
-      // ============================================
-      // INICIALIZAR API KEYS DESDE BACKEND
-      // ============================================
-      try {
-        final secretsLoaded = await AppSecretsService.instance.initialize();
-        if (secretsLoaded) {
-          debugPrint('✅ API Keys disponibles');
-        } else {
-          debugPrint('⚠️ API Keys no disponibles en este arranque');
-        }
-        debugPrint(
-          '   - Mapbox Token: ${AppSecretsService.instance.mapboxToken.isNotEmpty ? "✓" : "✗"}',
-        );
-        debugPrint(
-          '   - Google Places API: ${AppSecretsService.instance.googlePlacesApiKey.isNotEmpty ? "✓" : "✗"}',
-        );
-      } catch (e) {
-        debugPrint('⚠️ Error cargando API Keys: $e');
-      }
-
-      // ============================================
-      // INICIALIZAR MAPBOX CON ACCESS TOKEN
-      // ============================================
-      try {
-        final mapboxToken = AppSecretsService.instance.mapboxToken;
-        if (mapboxToken.isNotEmpty) {
-          MapboxOptions.setAccessToken(mapboxToken);
-          debugPrint('✅ Mapbox inicializado correctamente');
-        } else {
-          debugPrint('⚠️ Mapbox token no disponible');
-        }
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando Mapbox: $e');
-      }
-
-      try {
-        await MapPreloadService.preload();
-        debugPrint('✅ Map preload listo');
-      } catch (e) {
-        debugPrint('⚠️ Error en map preload: $e');
-      }
-
-      // ============================================
-      // INICIALIZAR NOTIFICACIONES LOCALES
-      // ============================================
-      try {
-        await LocalNotificationService.initialize();
-        // Solicitar permisos explícitamente al iniciar
-        await LocalNotificationService.requestPermission();
-        debugPrint(
-          '✅ Notificaciones locales inicializadas y permisos solicitados',
-        );
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando notificaciones: $e');
-      }
-
-      // ============================================
-      // INICIALIZAR PUSH (FCM)
-      // ============================================
-      try {
-        await PushNotificationService.initialize();
-        await PushNotificationService.syncForCurrentSession();
-        debugPrint('✅ Push notifications (FCM) inicializadas');
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando push notifications: $e');
-      }
-
-      // Inicializar Service Locator (Inyección de Dependencias)
-      // Esto configura todos los datasources, repositories y use cases
-      final serviceLocator = ServiceLocator();
-      try {
-        await serviceLocator.init();
-      } catch (e) {
-        print('Error initializing service locator: $e');
-        // Continue without service locator for now
-      }
-
-      // Inicializar monitoreo global de conectividad
-      try {
-        await ConnectivityService().initialize();
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando ConnectivityService: $e');
-      }
-
-      // Inicializar cola offline de comandos críticos del viaje
-      try {
-        await TripCommandQueue.instance.initialize();
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando TripCommandQueue: $e');
-      }
-
-      // Inicializar escucha de red para flush automático al reconectar
-      try {
-        await NetworkStatusService.instance.initialize();
-      } catch (e) {
-        debugPrint('⚠️ Error inicializando NetworkStatusService: $e');
-      }
-
-      runApp(
-        MultiProvider(
-          providers: [
-            // Theme Provider (debe estar primero)
-            ChangeNotifierProvider(create: (_) => ThemeProvider()),
-
-            // Legal Provider (Anti-Bypass)
-            ChangeNotifierProvider(create: (_) => LegalProvider()..init()),
-
-            // Database Provider (legacy)
-            ChangeNotifierProvider(create: (_) => DatabaseProvider()),
-
-            // User Microservice Provider
-            if (serviceLocator.isInitialized)
-              ChangeNotifierProvider(
-                create: (_) => serviceLocator.createUserProvider(),
-              ),
-
-            // Conductor Microservice Provider
-            if (serviceLocator.isInitialized)
-              ChangeNotifierProvider(
-                create: (_) => serviceLocator.createConductorProfileProvider(),
-              ),
-
-            // Trip Microservice Provider
-            if (serviceLocator.isInitialized)
-              ChangeNotifierProvider(
-                create: (_) => serviceLocator.createTripProvider(),
-              ),
-
-            // Map Microservice Provider
-            if (serviceLocator.isInitialized)
-              ChangeNotifierProvider(
-                create: (_) => serviceLocator.createMapProvider(),
-              ),
-
-            // Admin Microservice Provider
-            if (serviceLocator.isInitialized)
-              ChangeNotifierProvider(
-                create: (_) => serviceLocator.createAdminProvider(),
-              ),
-
-            // ========== LEGACY PROVIDERS (por deprecar gradualmente) ==========
-
-            // Conductor Providers (legacy - funcionalidad migrada a Conductor Microservice)
-            ChangeNotifierProvider(create: (_) => ConductorProvider()),
-            ChangeNotifierProvider(create: (_) => ConductorProfileProvider()),
-            ChangeNotifierProvider(create: (_) => ConductorTripsProvider()),
-            ChangeNotifierProvider(create: (_) => ConductorEarningsProvider()),
-          ],
-          child: const MyApp(),
-        ),
-      );
+      runApp(ViaxAppRoot(serviceLocator: ServiceLocator()));
     },
     (Object error, StackTrace stack) {
       try {
@@ -295,6 +135,285 @@ void main() async {
       } catch (_) {}
     },
   );
+}
+
+class ViaxAppRoot extends StatefulWidget {
+  final ServiceLocator serviceLocator;
+
+  const ViaxAppRoot({super.key, required this.serviceLocator});
+
+  @override
+  State<ViaxAppRoot> createState() => _ViaxAppRootState();
+}
+
+class _ViaxAppRootState extends State<ViaxAppRoot> {
+  bool _microserviceProvidersReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeBackgroundServices();
+    });
+  }
+
+  Future<void> _initializeBackgroundServices() async {
+    final sw = Stopwatch()..start();
+    debugPrint('⏱️ [Startup] INICIO inicialización background');
+    // FASE 2: inicializaciones independientes después de pintar la primera UI.
+    await Future.wait<void>([
+      _initializeAppSecrets(),
+      _initializeDateFormatters(),
+      _initializeLocalNotifications(),
+      _initializeConnectivity(),
+      _initializeTripCommandQueue(),
+      _initializeNetworkStatus(),
+      _initializeServiceLocator(),
+    ]);
+
+    if (mounted && widget.serviceLocator.isInitialized) {
+      setState(() => _microserviceProvidersReady = true);
+    }
+
+    FlutterNativeSplash.remove();
+
+    // FASE 3: servicios que dependen de resultados de la fase 2.
+    await _initializeDependentServices();
+
+    debugPrint('⏱️ [Startup] FIN total: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeAppSecrets() async {
+    final sw = Stopwatch()..start();
+    try {
+      final secretsLoaded = await AppSecretsService.instance.initialize();
+      if (secretsLoaded) {
+        debugPrint('✅ API Keys disponibles');
+      } else {
+        debugPrint('⚠️ API Keys no disponibles en este arranque');
+      }
+      debugPrint(
+        '   - Mapbox Token: ${AppSecretsService.instance.mapboxToken.isNotEmpty ? "✓" : "✗"}',
+      );
+      debugPrint(
+        '   - Google Places API: ${AppSecretsService.instance.googlePlacesApiKey.isNotEmpty ? "✓" : "✗"}',
+      );
+    } catch (e) {
+      debugPrint('⚠️ Error cargando API Keys: $e');
+    }
+
+    debugPrint('⏱️ [Startup] AppSecretsService: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeDateFormatters() async {
+    final sw = Stopwatch()..start();
+    try {
+      await initializeDateFormatting('es_CO', null);
+      debugPrint('✅ Formatos de fecha inicializados');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando formatos de fecha: $e');
+    }
+
+    debugPrint('⏱️ [Startup] DateFormatters: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeLocalNotifications() async {
+    final sw = Stopwatch()..start();
+    try {
+      await LocalNotificationService.initialize();
+      unawaited(
+        LocalNotificationService.requestPermission().catchError((Object error) {
+          debugPrint(
+            '⚠️ Error solicitando permisos notificaciones: $error',
+          );
+          return false;
+        }),
+      );
+      debugPrint(
+        '✅ Notificaciones locales inicializadas y permisos en segundo plano',
+      );
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando notificaciones locales: $e');
+    }
+
+    debugPrint(
+      '⏱️ [Startup] LocalNotificationService: ${sw.elapsedMilliseconds}ms',
+    );
+  }
+
+  Future<void> _initializeConnectivity() async {
+    final sw = Stopwatch()..start();
+    try {
+      await ConnectivityService().initialize();
+      debugPrint('✅ ConnectivityService inicializado');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando ConnectivityService: $e');
+    }
+
+    debugPrint('⏱️ [Startup] ConnectivityService: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeTripCommandQueue() async {
+    final sw = Stopwatch()..start();
+    try {
+      await TripCommandQueue.instance.initialize();
+      debugPrint('✅ TripCommandQueue inicializado');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando TripCommandQueue: $e');
+    }
+
+    debugPrint('⏱️ [Startup] TripCommandQueue: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeNetworkStatus() async {
+    final sw = Stopwatch()..start();
+    try {
+      await NetworkStatusService.instance.initialize();
+      debugPrint('✅ NetworkStatusService inicializado');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando NetworkStatusService: $e');
+    }
+
+    debugPrint(
+      '⏱️ [Startup] NetworkStatusService: ${sw.elapsedMilliseconds}ms',
+    );
+  }
+
+  Future<void> _initializeServiceLocator() async {
+    final sw = Stopwatch()..start();
+    try {
+      await widget.serviceLocator.init();
+      debugPrint('✅ ServiceLocator inicializado');
+    } catch (e, stack) {
+      developer.log(
+        'Error inicializando ServiceLocator',
+        name: 'Startup',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+
+    debugPrint('⏱️ [Startup] ServiceLocator: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeDependentServices() async {
+    final sw = Stopwatch()..start();
+    _initializeMapboxToken();
+
+    await Future.wait<void>([
+      _initializeMapPreload(),
+      _initializePushNotifications(),
+    ]);
+
+    debugPrint(
+      '⏱️ [Startup] Servicios dependientes: ${sw.elapsedMilliseconds}ms',
+    );
+  }
+
+  void _initializeMapboxToken() {
+    final sw = Stopwatch()..start();
+    try {
+      final mapboxToken = AppSecretsService.instance.mapboxToken;
+      if (mapboxToken.isNotEmpty) {
+        MapboxOptions.setAccessToken(mapboxToken);
+        debugPrint('✅ Mapbox inicializado correctamente');
+      } else {
+        debugPrint('⚠️ Mapbox token no disponible');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando Mapbox: $e');
+    }
+
+    debugPrint('⏱️ [Startup] MapboxToken: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializeMapPreload() async {
+    final sw = Stopwatch()..start();
+    try {
+      await MapPreloadService.preload();
+      debugPrint('✅ Map preload listo');
+    } catch (e) {
+      debugPrint('⚠️ Error en map preload: $e');
+    }
+
+    debugPrint('⏱️ [Startup] MapPreload: ${sw.elapsedMilliseconds}ms');
+  }
+
+  Future<void> _initializePushNotifications() async {
+    final sw = Stopwatch()..start();
+    try {
+      await PushNotificationService.initialize();
+      unawaited(
+        PushNotificationService.syncForCurrentSession().catchError((Object e) {
+          debugPrint('⚠️ Error sincronizando push: $e');
+        }),
+      );
+      debugPrint('✅ Push notifications (FCM) inicializadas');
+    } catch (e) {
+      debugPrint('⚠️ Error inicializando push notifications: $e');
+    }
+
+    debugPrint(
+      '⏱️ [Startup] PushNotificationService: ${sw.elapsedMilliseconds}ms',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final serviceLocatorReady =
+        _microserviceProvidersReady && widget.serviceLocator.isInitialized;
+
+    return MultiProvider(
+      providers: [
+        // Provider de tema (debe estar primero).
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+
+        // Provider legal (anti-bypass).
+        ChangeNotifierProvider(create: (_) => LegalProvider()..init()),
+
+        // Provider de base de datos (legacy).
+        ChangeNotifierProvider(create: (_) => DatabaseProvider()),
+
+        // Providers legacy de conductor.
+        ChangeNotifierProvider(create: (_) => ConductorProvider()),
+        ChangeNotifierProvider(create: (_) => ConductorProfileProvider()),
+        ChangeNotifierProvider(create: (_) => ConductorTripsProvider()),
+        ChangeNotifierProvider(create: (_) => ConductorEarningsProvider()),
+
+        // Provider del microservicio de usuario.
+        if (serviceLocatorReady)
+          ChangeNotifierProvider(
+            create: (_) => widget.serviceLocator.createUserProvider(),
+          ),
+
+        // Provider del microservicio de conductor.
+        if (serviceLocatorReady)
+          ChangeNotifierProvider(
+            create: (_) =>
+                widget.serviceLocator.createConductorProfileProvider(),
+          ),
+
+        // Provider del microservicio de viajes.
+        if (serviceLocatorReady)
+          ChangeNotifierProvider(
+            create: (_) => widget.serviceLocator.createTripProvider(),
+          ),
+
+        // Provider del microservicio de mapas.
+        if (serviceLocatorReady)
+          ChangeNotifierProvider(
+            create: (_) => widget.serviceLocator.createMapProvider(),
+          ),
+
+        // Provider del microservicio de administración.
+        if (serviceLocatorReady)
+          ChangeNotifierProvider(
+            create: (_) => widget.serviceLocator.createAdminProvider(),
+          ),
+      ],
+      child: const MyApp(),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -319,10 +438,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _initDeepLinks();
     _initNotificationRedirects();
     _initDatabaseInBackgroundOnce();
-
-    Future.microtask(() async {
-      await PushNotificationService.syncForCurrentSession();
-    });
   }
 
   void _initDatabaseInBackgroundOnce() {
@@ -339,8 +454,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         try {
           await databaseProvider.initializeDatabase();
         } catch (e) {
-          print('Error initializing database: $e');
-          // Continue without crashing the app
+          debugPrint('⚠️ Error inicializando base de datos: $e');
         }
       });
     });
@@ -400,11 +514,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
   }
 
-  /// Initializes deep link handling for `viax://share/{token}` URIs.
+  /// Inicializa el manejo de deep links `viax://share/{token}`.
   void _initDeepLinks() {
     final appLinks = AppLinks();
 
-    // Handle link that launched the app from a cold start
+    // Manejar el enlace que abrió la app desde un arranque en frío.
     appLinks
         .getInitialLink()
         .then((uri) {
@@ -412,16 +526,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         })
         .catchError((_) {});
 
-    // Handle links while app is running
+    // Manejar enlaces mientras la app está en ejecución.
     _deepLinkSub = appLinks.uriLinkStream.listen(
-      _handleDeepLink, 
+      _handleDeepLink,
       onError: (e) => debugPrint('[DeepLink] Error: $e'),
     );
   }
 
   Future<void> _handleDeepLink(Uri uri) async {
     debugPrint('[DeepLink] Received: $uri');
-    // viax://share/{token}
+    // Formato esperado: viax://share/{token}.
     if (uri.scheme == 'viax' && uri.host == 'share') {
       final token = uri.pathSegments.isNotEmpty
           ? uri.pathSegments.first
@@ -468,14 +582,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
-        // App va a segundo plano - mostrar overlay del sistema si hay viaje
+        // App va a segundo plano: mostrar overlay del sistema si hay viaje.
         if (tripNavService.hasActiveTrip) {
           tripNavService.showSystemOverlay();
           debugPrint('📱 [App] Pasando a segundo plano - mostrando overlay');
         }
         break;
       case AppLifecycleState.resumed:
-        // App vuelve a primer plano - ocultar overlay del sistema SIEMPRE
+        // App vuelve a primer plano: ocultar overlay del sistema siempre.
         tripNavService.hideSystemOverlay();
         Future.microtask(() async {
           await PushNotificationService.syncForCurrentSession();
@@ -489,16 +603,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener el theme provider
+    // Obtener el provider de tema.
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
-      navigatorKey: ActiveTripNavigationService
-          .navigatorKey, // KEY GLOBAL PARA NAVEGACIÓN
+      // Llave global para navegación fuera del contexto de widgets.
+      navigatorKey: ActiveTripNavigationService.navigatorKey,
       scaffoldMessengerKey: AppConfig.scaffoldMessengerKey,
       title: 'Viax',
       debugShowCheckedModeBanner: false,
-      // Usar los temas del ThemeProvider
+      scrollBehavior: const ViaxScrollBehavior(),
+      // Usar los temas del ThemeProvider.
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
       themeMode: themeProvider.themeMode,
@@ -510,11 +625,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('es', 'ES'), // Spanish
-        Locale('en', 'US'), // English
-      ],
-      // Agregar el overlay del FAB flotante usando builder
+      supportedLocales: const [Locale('es', 'ES'), Locale('en', 'US')],
+      // Agregar el overlay del FAB flotante usando builder.
       builder: (context, child) {
         return GlobalConnectivityBanner(
           child: ActiveTripOverlay(child: child ?? const SizedBox.shrink()),
@@ -524,14 +636,28 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 }
 
-// Simple NavigatorObserver para loggear cambios de ruta en debug
+class ViaxScrollBehavior extends MaterialScrollBehavior {
+  const ViaxScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
+// NavigatorObserver simple para registrar cambios de ruta en debug.
 class RouteLogger extends NavigatorObserver {
   @override
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
     try {
-      print(
+      developer.log(
         'Route pushed: ${route.settings.name} <- from ${previousRoute?.settings.name}',
+        name: 'RouteLogger',
       );
     } catch (_) {}
   }
@@ -540,8 +666,9 @@ class RouteLogger extends NavigatorObserver {
   void didPop(Route route, Route? previousRoute) {
     super.didPop(route, previousRoute);
     try {
-      print(
+      developer.log(
         'Route popped: ${route.settings.name} -> back to ${previousRoute?.settings.name}',
+        name: 'RouteLogger',
       );
     } catch (_) {}
   }
@@ -550,8 +677,9 @@ class RouteLogger extends NavigatorObserver {
   void didReplace({Route? newRoute, Route? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     try {
-      print(
+      developer.log(
         'Route replaced: ${oldRoute?.settings.name} -> ${newRoute?.settings.name}',
+        name: 'RouteLogger',
       );
     } catch (_) {}
   }

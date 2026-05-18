@@ -35,6 +35,7 @@ class RouteNames {
   static const String favoritePlaces = '/favorite_places';
   static const String promotions = '/promotions';
   static const String settings = '/settings';
+  static const String appearanceSettings = '/settings/appearance';
   static const String help = '/help';
   static const String about = '/about';
   static const String terms = '/terms';

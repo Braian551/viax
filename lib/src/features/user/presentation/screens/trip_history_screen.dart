@@ -10,25 +10,31 @@ import '../widgets/trip_history/trip_history_widgets.dart';
 /// Soporta modo oscuro y claro
 class TripHistoryScreen extends StatelessWidget {
   final int userId;
+  final bool embedded;
 
   const TripHistoryScreen({
     super.key,
     required this.userId,
+    this.embedded = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => UserTripsProvider(),
-      child: _TripHistoryContent(userId: userId),
+      child: _TripHistoryContent(userId: userId, embedded: embedded),
     );
   }
 }
 
 class _TripHistoryContent extends StatefulWidget {
   final int userId;
+  final bool embedded;
 
-  const _TripHistoryContent({required this.userId});
+  const _TripHistoryContent({
+    required this.userId,
+    required this.embedded,
+  });
 
   @override
   State<_TripHistoryContent> createState() => _TripHistoryContentState();
@@ -36,6 +42,8 @@ class _TripHistoryContent extends StatefulWidget {
 
 class _TripHistoryContentState extends State<_TripHistoryContent>
     with TickerProviderStateMixin {
+  static const double _embeddedTopPadding = 12;
+
   late AnimationController _headerAnimationController;
   late Animation<double> _headerSlideAnimation;
   late Animation<double> _headerFadeAnimation;
@@ -100,72 +108,118 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
     final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final scrollView = Consumer<UserTripsProvider>(
+      builder: (context, provider, _) {
+        return RefreshIndicator(
+          onRefresh: () => provider.refresh(userId: widget.userId),
+          color: AppColors.primary,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              if (widget.embedded)
+                _buildEmbeddedHeader(isDark, textColor),
+              if (!widget.embedded)
+                _buildAnimatedAppBar(
+                  isDark,
+                  textColor,
+                  backgroundColor,
+                  surfaceColor,
+                ),
+
+              if (provider.paymentSummary != null)
+                SliverToBoxAdapter(
+                  child: TripHistoryHeader(
+                    totalPagado: provider.paymentSummary!.totalPagado,
+                    totalViajes: provider.paymentSummary!.totalViajes,
+                    promedioPorViaje:
+                        provider.paymentSummary!.promedioPorViaje,
+                  ),
+                ),
+
+              SliverToBoxAdapter(
+                child: TripHistorySummaryGrid(
+                  totalViajes: provider.totalTrips,
+                  completados: provider.completedTrips,
+                  cancelados: provider.cancelledTrips,
+                  isDark: isDark,
+                ),
+              ),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 20),
+              ),
+
+              SliverToBoxAdapter(
+                child: TripHistoryFilters(
+                  selectedFilter: provider.selectedFilter,
+                  onFilterChanged: (filter) {
+                    provider.setFilter(filter, userId: widget.userId);
+                  },
+                  isDark: isDark,
+                ),
+              ),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 8),
+              ),
+
+              _buildTripsList(provider, isDark),
+
+              SliverToBoxAdapter(
+                child: SizedBox(height: widget.embedded ? 140 : 24),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (widget.embedded) {
+      return ColoredBox(
+        color: backgroundColor,
+        child: SafeArea(
+          top: false,
+          bottom: false,
+          child: scrollView,
+        ),
+      );
+    }
     
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Consumer<UserTripsProvider>(
-          builder: (context, provider, _) {
-            return RefreshIndicator(
-              onRefresh: () => provider.refresh(userId: widget.userId),
-              color: AppColors.primary,
-              child: CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  // AppBar animado
-                  _buildAnimatedAppBar(isDark, textColor, backgroundColor, surfaceColor),
+        child: scrollView,
+      ),
+    );
+  }
 
-                  // Header con resumen de pagos
-                  if (provider.paymentSummary != null)
-                    SliverToBoxAdapter(
-                      child: TripHistoryHeader(
-                        totalPagado: provider.paymentSummary!.totalPagado,
-                        totalViajes: provider.paymentSummary!.totalViajes,
-                        promedioPorViaje:
-                            provider.paymentSummary!.promedioPorViaje,
-                      ),
-                    ),
-
-                  // Grid de estadísticas
-                  SliverToBoxAdapter(
-                    child: TripHistorySummaryGrid(
-                      totalViajes: provider.totalTrips,
-                      completados: provider.completedTrips,
-                      cancelados: provider.cancelledTrips,
-                      isDark: isDark,
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 20),
-                  ),
-
-                  // Filtros
-                  SliverToBoxAdapter(
-                    child: TripHistoryFilters(
-                      selectedFilter: provider.selectedFilter,
-                      onFilterChanged: (filter) {
-                        provider.setFilter(filter, userId: widget.userId);
-                      },
-                      isDark: isDark,
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 8),
-                  ),
-
-                  // Lista de viajes
-                  _buildTripsList(provider, isDark),
-
-                  // Espacio inferior
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 24),
-                  ),
-                ],
+  Widget _buildEmbeddedHeader(bool isDark, Color textColor) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, _embeddedTopPadding, 20, 28),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Mis Viajes',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
-            );
-          },
+            ),
+            IconButton(
+              onPressed: () => _showDateFilter(context, isDark),
+              tooltip: 'Filtrar por fecha',
+              icon: Icon(
+                Icons.calendar_month_rounded,
+                color: isDark ? Colors.white : Colors.black87,
+                size: 24,
+              ),
+            ),
+          ],
         ),
       ),
     );

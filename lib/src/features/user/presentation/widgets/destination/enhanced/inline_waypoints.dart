@@ -21,6 +21,8 @@ class InlineWaypoints extends StatelessWidget {
   final Future<void> Function() onUseCurrentLocation;
   final VoidCallback onOriginChanged;
   final VoidCallback onDestinationChanged;
+  final VoidCallback onOriginFieldTap;
+  final VoidCallback onDestinationFieldTap;
   final VoidCallback openOriginMap;
   final VoidCallback openDestinationMap;
 
@@ -40,6 +42,8 @@ class InlineWaypoints extends StatelessWidget {
     required this.onUseCurrentLocation,
     required this.onOriginChanged,
     required this.onDestinationChanged,
+    required this.onOriginFieldTap,
+    required this.onDestinationFieldTap,
     required this.openOriginMap,
     required this.openDestinationMap,
   });
@@ -63,6 +67,7 @@ class InlineWaypoints extends StatelessWidget {
             hasLocationSelected: hasOriginSelected,
             onLocationSelected: onOriginSelected,
             onTextChanged: onOriginChanged,
+            onFieldTap: onOriginFieldTap,
             onUseCurrentLocation: () async {
               await onUseCurrentLocation();
             },
@@ -84,8 +89,8 @@ class InlineWaypoints extends StatelessWidget {
             hasLocationSelected: hasDestinationSelected,
             onLocationSelected: onDestinationSelected,
             onTextChanged: onDestinationChanged,
+            onFieldTap: onDestinationFieldTap,
             onOpenMap: openDestinationMap,
-            heroTag: 'search_destination_box',
           ),
         ),
       ],
@@ -106,8 +111,8 @@ class _WaypointDivider extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.grey.withValues(alpha: 0.15),
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.grey.withValues(alpha: 0.15),
             Colors.transparent,
           ],
         ),

@@ -6,10 +6,12 @@ import 'package:viax/src/features/user/presentation/screens/enhanced_destination
 import 'package:viax/src/features/user/presentation/screens/user_profile_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_history_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/settings_screen.dart';
+import 'package:viax/src/features/user/presentation/screens/saved_addresses_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_active_trip_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver/searching_driver_state.dart';
+import 'package:viax/src/theme/screens/appearance_settings_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -522,6 +524,10 @@ class AppRouter {
         }
       case RouteNames.settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case RouteNames.appearanceSettings:
+        return MaterialPageRoute(
+          builder: (_) => const AppearanceSettingsScreen(),
+        );
       case RouteNames.editProfile:
         return FadeSlidePageRoute(
           page: const EditProfileScreen(),
@@ -568,6 +574,7 @@ class AppRouter {
         }
 
       case RouteNames.favoritePlaces:
+        return MaterialPageRoute(builder: (_) => const SavedAddressesScreen());
       case RouteNames.promotions:
       case RouteNames.about:
       case RouteNames.terms:

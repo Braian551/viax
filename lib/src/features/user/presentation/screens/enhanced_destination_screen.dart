@@ -10,6 +10,9 @@ import '../../../../global/models/simple_location.dart';
 import '../../../../global/services/google_places_service.dart';
 import '../../../../global/services/location_suggestion_service.dart';
 import '../../../../global/services/route_preview_cache.dart';
+import '../../../../routes/route_names.dart';
+import '../../data/models/saved_user_place.dart';
+import '../../services/saved_places_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/destination/destination_widgets.dart';
 import '../widgets/destination/enhanced/confirm_button.dart';
@@ -19,11 +22,15 @@ import '../widgets/destination/enhanced/saved_locations_row.dart';
 import '../widgets/destination/enhanced/waypoints_list.dart';
 import '../widgets/destination/enhanced/waypoints_panel.dart';
 import '../widgets/map_location_picker_sheet.dart';
+import 'saved_place_name_screen.dart';
 import 'trip_preview_screen.dart';
+
+enum _WaypointFocusTarget { origin, destination }
+enum _FavoriteShortcutAction { add, manage }
 
 /// Pantalla de selección de destino - Diseño moderno y minimalista
 /// - Origen y destino: sugerencias inline debajo del input
-/// - Paradas: bottom sheet con drag
+/// - Paradas: hoja inferior con arrastre
 class EnhancedDestinationScreen extends StatefulWidget {
   final String? initialSelection;
   final Position? preloadedPosition; // Posición precargada desde home
@@ -41,28 +48,30 @@ class EnhancedDestinationScreen extends StatefulWidget {
 
 class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     with TickerProviderStateMixin {
-  // Controllers
-  // Controllers
+  // Controladores
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _originFocusNode = FocusNode();
   final FocusNode _destinationFocusNode = FocusNode();
 
-  // Locations
+  // Ubicaciones
   SimpleLocation? _selectedOrigin;
   SimpleLocation? _selectedDestination;
   final List<SimpleLocation?> _stops = [];
 
-  // State
+  // Estado
   LatLng? _userLocation;
   bool _isGettingLocation = false;
   bool _hasOriginSelected = false;
   bool _hasDestinationSelected = false;
+  bool _isLoadingSavedPlaces = true;
+  late _WaypointFocusTarget _preferredFocusTarget;
+  SavedPlacesCollection _savedPlaces = const SavedPlacesCollection.empty();
 
-  // Suggestion service
+  // Servicio de sugerencias
   late LocationSuggestionService _suggestionService;
 
-  // Animations
+  // Animaciones
   late AnimationController _mainAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -71,8 +80,369 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   void initState() {
     super.initState();
     _suggestionService = LocationSuggestionService();
+    _preferredFocusTarget = widget.initialSelection == 'origin'
+        ? _WaypointFocusTarget.origin
+        : _WaypointFocusTarget.destination;
+    _originFocusNode.addListener(_handleOriginFocusChange);
+    _destinationFocusNode.addListener(_handleDestinationFocusChange);
     _setupAnimations();
     _initializeLocation();
+    _loadSavedPlaces();
+    _scheduleInitialFieldSelection();
+  }
+
+  Future<void> _loadSavedPlaces({bool forceRefresh = false}) async {
+    try {
+      final places = await SavedPlacesService.loadForCurrentUser(
+        forceRefresh: forceRefresh,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _savedPlaces = places;
+        _isLoadingSavedPlaces = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading saved places: $e');
+      if (!mounted) return;
+
+      setState(() => _isLoadingSavedPlaces = false);
+    }
+  }
+
+  IconData _iconForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return Icons.home_rounded;
+      case SavedPlaceType.work:
+        return Icons.work_rounded;
+      case SavedPlaceType.favorite:
+        return Icons.star_rounded;
+    }
+  }
+
+  String _titleForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return 'Casa';
+      case SavedPlaceType.work:
+        return 'Trabajo';
+      case SavedPlaceType.favorite:
+        return 'Favorito';
+    }
+  }
+
+  Color _accentColorForSavedPlaceType(SavedPlaceType type) {
+    switch (type) {
+      case SavedPlaceType.home:
+        return AppColors.primary;
+      case SavedPlaceType.work:
+        return AppColors.primaryDark;
+      case SavedPlaceType.favorite:
+        return AppColors.accent;
+    }
+  }
+
+  Future<String?> _requestFavoriteName({
+    required SimpleLocation location,
+    SavedUserPlace? existing,
+  }) {
+    return Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => SavedPlaceNameScreen(
+          address: location.address,
+          initialName: existing?.name ?? location.displayName,
+          title: 'Cual es su nombre?',
+        ),
+      ),
+    );
+  }
+
+  Future<SavedUserPlace?> _openSavedPlaceEditor(
+    SavedPlaceType type, {
+    SavedUserPlace? existing,
+  }) async {
+    final location = await showLocationSearchSheet(
+      context: context,
+      title: _titleForSavedPlaceType(type),
+      icon: _iconForSavedPlaceType(type),
+      accentColor: _accentColorForSavedPlaceType(type),
+      currentValue: existing?.location,
+      userLocation: _userLocation,
+      suggestionService: _suggestionService,
+      isOrigin: false,
+      otherLocation: _selectedOrigin,
+    );
+
+    if (location == null || !mounted) return null;
+
+    String? savedName;
+    if (type == SavedPlaceType.favorite) {
+      savedName = await _requestFavoriteName(location: location, existing: existing);
+      if (savedName == null || savedName.trim().isEmpty) {
+        return null;
+      }
+    }
+
+    try {
+      final savedPlace = await SavedPlacesService.savePlace(
+        type: type,
+        location: location,
+        placeId: existing?.id,
+        savedName: savedName,
+      );
+      if (mounted) {
+        setState(() {
+          _savedPlaces = _savedPlaces.upsertPlace(savedPlace);
+        });
+      }
+      await _loadSavedPlaces(forceRefresh: true);
+      return savedPlace;
+    } catch (e) {
+      debugPrint('Error saving saved place: $e');
+      if (mounted) {
+        _showError(
+          type == SavedPlaceType.favorite
+              ? 'No pudimos guardar el favorito'
+              : 'No pudimos guardar la direccion',
+        );
+      }
+      return null;
+    }
+  }
+
+  Future<void> _applySavedDestination(SavedUserPlace place) async {
+    if (_selectedOrigin == null) {
+      await _useCurrentLocationForOrigin();
+    }
+
+    if (!mounted || _selectedOrigin == null) return;
+
+    _onDestinationSelected(place.selectionLocation);
+  }
+
+  Future<SavedUserPlace?> _openFavoriteShortcutSheet() async {
+    if (_savedPlaces.favorites.isEmpty) {
+      return _openSavedPlaceEditor(SavedPlaceType.favorite);
+    }
+
+    final selection = await showModalBottomSheet<Object>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        final textTheme = theme.textTheme;
+
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Favoritos',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context, _FavoriteShortcutAction.add);
+                      },
+                      icon: const Icon(Icons.add_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _savedPlaces.favorites.length,
+                    separatorBuilder: (context, index) => Divider(
+                      color: colorScheme.outlineVariant,
+                      height: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final place = _savedPlaces.favorites[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.place_rounded,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        title: Text(place.name),
+                        subtitle: Text(
+                          place.location.address,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () => Navigator.pop(context, place),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, _FavoriteShortcutAction.manage);
+                  },
+                  child: const Text('Administrar mis lugares'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selection is SavedUserPlace) {
+      return selection;
+    }
+
+    if (selection == _FavoriteShortcutAction.add) {
+      return _openSavedPlaceEditor(SavedPlaceType.favorite);
+    }
+
+    if (selection == _FavoriteShortcutAction.manage) {
+      if (!mounted) return null;
+      await Navigator.pushNamed(context, RouteNames.favoritePlaces);
+      await _loadSavedPlaces(forceRefresh: true);
+    }
+
+    return null;
+  }
+
+  Future<void> _handleSavedLocationTap(SavedPlaceType type) async {
+    if (_isLoadingSavedPlaces) return;
+
+    if (type == SavedPlaceType.favorite) {
+      final selectedFavorite = await _openFavoriteShortcutSheet();
+      if (selectedFavorite != null) {
+        await _applySavedDestination(selectedFavorite);
+      }
+      return;
+    }
+
+    final existing = _savedPlaces.byType(type);
+    if (existing != null) {
+      await _applySavedDestination(existing);
+      return;
+    }
+
+    final created = await _openSavedPlaceEditor(type);
+    if (created != null) {
+      await _applySavedDestination(created);
+    }
+  }
+
+  FocusNode _focusNodeForTarget(_WaypointFocusTarget target) {
+    return target == _WaypointFocusTarget.origin
+        ? _originFocusNode
+        : _destinationFocusNode;
+  }
+
+  void _handleOriginFocusChange() {
+    if (!_originFocusNode.hasFocus) return;
+    _preferredFocusTarget = _WaypointFocusTarget.origin;
+  }
+
+  void _handleDestinationFocusChange() {
+    if (!_destinationFocusNode.hasFocus) return;
+    _preferredFocusTarget = _WaypointFocusTarget.destination;
+  }
+
+  void _requestPreferredFocus({bool onlyIfNotFocused = true}) {
+    if (!mounted) return;
+
+    final preferredFocusNode = _focusNodeForTarget(_preferredFocusTarget);
+    if (onlyIfNotFocused && preferredFocusNode.hasFocus) {
+      return;
+    }
+
+    preferredFocusNode.requestFocus();
+  }
+
+  void _schedulePreferredFocusAfterTransition({bool onlyIfNotFocused = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final route = ModalRoute.of(context);
+      final animation = route?.animation;
+
+      if (animation == null || animation.status == AnimationStatus.completed) {
+        _requestPreferredFocus(onlyIfNotFocused: onlyIfNotFocused);
+        return;
+      }
+
+      late AnimationStatusListener statusListener;
+      statusListener = (status) {
+        if (status != AnimationStatus.completed) return;
+
+        animation.removeStatusListener(statusListener);
+        _requestPreferredFocus(onlyIfNotFocused: onlyIfNotFocused);
+      };
+
+      animation.addStatusListener(statusListener);
+    });
+  }
+
+  void _handleFieldTap(_WaypointFocusTarget target) {
+    _preferredFocusTarget = target;
+
+    final preferredFocusNode = _focusNodeForTarget(target);
+    if (!preferredFocusNode.hasFocus) {
+      preferredFocusNode.requestFocus();
+    }
+  }
+
+  void _applyResolvedOrigin(SimpleLocation originLocation) {
+    if (!mounted) return;
+
+    setState(() {
+      _selectedOrigin = originLocation;
+      _originController.text = originLocation.address;
+      _hasOriginSelected = true;
+    });
+
+    _schedulePreferredFocusAfterTransition();
+  }
+
+  void _scheduleInitialFieldSelection() {
+    _schedulePreferredFocusAfterTransition(onlyIfNotFocused: false);
+  }
+
+  void _focusDestinationAfterOriginSelection() {
+    _preferredFocusTarget = _WaypointFocusTarget.destination;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _destinationFocusNode.requestFocus();
+    });
   }
 
   void _setupAnimations() {
@@ -92,7 +462,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
             curve: Curves.easeOutCubic,
           ),
         );
-
 
     _mainAnimationController.forward();
   }
@@ -124,15 +493,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
 
     try {
       final originLocation = await _buildNormalizedLocation(_userLocation!);
-
-      if (mounted) {
-        setState(() {
-          _selectedOrigin = originLocation;
-          _originController.text = _selectedOrigin!.address;
-          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
-          _hasOriginSelected = true;
-        });
-      }
+      _applyResolvedOrigin(originLocation);
     } catch (e) {
       debugPrint('Error reverse geocoding origin: $e');
     }
@@ -141,7 +502,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
   Future<void> _getCurrentLocation() async {
     if (_isGettingLocation) return;
     if (!mounted) return;
-    
+
     setState(() => _isGettingLocation = true);
 
     try {
@@ -174,38 +535,32 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         return;
       }
 
-      // Add timeout to position fetch
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium, // Reduce accuracy for speed/stability
-        ),
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          throw TimeoutException('Timeout getting location');
-        },
-      );
-      
+      // Agregar tiempo máximo de espera al obtener la ubicación
+      final position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy
+                  .medium, // Reduce precisión para ganar estabilidad
+            ),
+          ).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('Timeout getting location');
+            },
+          );
+
       if (!mounted) return;
 
       _userLocation = LatLng(position.latitude, position.longitude);
       _suggestionService.setUserContext(location: _userLocation);
 
       final originLocation = await _buildNormalizedLocation(_userLocation!);
-
-      if (mounted) {
-        setState(() {
-          _selectedOrigin = originLocation;
-          _originController.text = _selectedOrigin!.address;
-          // Marcar el origen como seleccionado para ocultar sugerencias automáticas
-          _hasOriginSelected = true;
-        });
-      }
+      _applyResolvedOrigin(originLocation);
     } catch (e) {
       debugPrint('Error getting location: $e');
-      // Optionally show error for timeout
+      // Permite mostrar un error si la ubicación tarda demasiado
       if (mounted && e is TimeoutException) {
-         // _showError('Tiempo de espera agotado al obtener ubicación');
+        // _showError('Tiempo de espera agotado al obtener ubicación');
       }
     } finally {
       if (mounted) setState(() => _isGettingLocation = false);
@@ -288,7 +643,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _originController.text = location.address;
       _hasOriginSelected = true;
     });
-    _originFocusNode.unfocus();
+    if (!_hasDestinationSelected) {
+      _focusDestinationAfterOriginSelection();
+    }
     _checkAutoNavigate();
   }
 
@@ -298,7 +655,6 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _destinationController.text = location.address;
       _hasDestinationSelected = true;
     });
-    _destinationFocusNode.unfocus();
     _checkAutoNavigate();
   }
 
@@ -351,7 +707,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: true,
-      otherLocation: _selectedDestination, // Para validación de duplicados
+      otherLocation: _selectedDestination, // Para validar duplicados
     );
 
     if (result != null && mounted) {
@@ -369,7 +725,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       userLocation: _userLocation,
       suggestionService: _suggestionService,
       isOrigin: false,
-      otherLocation: _selectedOrigin, // Para validación de duplicados
+      otherLocation: _selectedOrigin, // Para validar duplicados
     );
 
     if (result != null && mounted) {
@@ -387,7 +743,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     HapticFeedback.mediumImpact();
     setState(() => _stops.add(null));
 
-    // Abrir sheet para la nueva parada
+    // Abrir la hoja para la nueva parada
     Future.delayed(const Duration(milliseconds: 100), () {
       _openStopSheet(_stops.length - 1);
     });
@@ -444,9 +800,7 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       _originController.text = _selectedOrigin?.address ?? '';
       _destinationController.text = _selectedDestination?.address ?? '';
     });
-
   }
-
 
   Future<void> _goToTripPreview() async {
     if (_selectedOrigin == null || _selectedDestination == null) return;
@@ -508,6 +862,8 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
     _mainAnimationController.dispose();
     _originController.dispose();
     _destinationController.dispose();
+    _originFocusNode.removeListener(_handleOriginFocusChange);
+    _destinationFocusNode.removeListener(_handleDestinationFocusChange);
     _originFocusNode.dispose();
     _destinationFocusNode.dispose();
     super.dispose();
@@ -533,8 +889,13 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                 : _buildInlineWaypoints(isDark),
           ),
           const SizedBox(height: 16),
-          if (!useDragMode && widget.initialSelection == null)
-            SavedLocationsRow(isDark: isDark),
+          if (!useDragMode)
+            SavedLocationsRow(
+              isDark: isDark,
+              savedPlaces: _savedPlaces,
+              isLoading: _isLoadingSavedPlaces,
+              onTap: _handleSavedLocationTap,
+            ),
         ],
       ),
     );
@@ -557,6 +918,9 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
       onOriginChanged: () => setState(() => _hasOriginSelected = false),
       onDestinationChanged: () =>
           setState(() => _hasDestinationSelected = false),
+      onOriginFieldTap: () => _handleFieldTap(_WaypointFocusTarget.origin),
+      onDestinationFieldTap: () =>
+          _handleFieldTap(_WaypointFocusTarget.destination),
       openOriginMap: _openMapForOrigin,
       openDestinationMap: _openMapForDestination,
     );
@@ -590,103 +954,80 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
           ? AppColors.darkBackground
           : AppColors.lightBackground,
       resizeToAvoidBottomInset: true,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: Stack(
-          children: [
-            // Mapa de fondo (interactivo)
-
-            // Gradiente superior (no bloquea gestos)
-            // Fondo con gradiente premium
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [
-                            AppColors.darkBackground,
-                            AppColors.darkSurface,
-                            AppColors.primary.withValues(alpha: 0.05),
-                          ]
-                        : [
-                            AppColors.lightBackground,
-                            Colors.white,
-                            AppColors.primary.withValues(alpha: 0.03),
-                          ],
-                    stops: const [0.0, 0.6, 1.0],
-                  ),
+      body: Stack(
+        children: [
+          // Fondo visual sin interacción para no forzar el cierre del teclado.
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          AppColors.darkBackground,
+                          AppColors.darkSurface,
+                          AppColors.darkSurface,
+                        ]
+                      : [
+                          AppColors.lightBackground,
+                          Colors.white,
+                          AppColors.lightSurface,
+                        ],
+                  stops: const [0.0, 0.6, 1.0],
                 ),
               ),
             ),
+          ),
 
-            // Elementos decorativos de fondo (Círculos sutiles)
-            Positioned(
-              top: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.05),
-                      Colors.transparent,
-                    ],
-                  ),
+          // Contenido superior
+          Positioned(
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DestinationHeader(
+                  isDark: isDark,
+                  stopsCount: _stops.length,
+                  onBack: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(context);
+                  },
+                  onAddStop: _addStop,
                 ),
-              ),
-            ),
-
-            // Contenido superior
-            Positioned(
-              top: MediaQuery.of(context).padding.top,
-              left: 0,
-              right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DestinationHeader(
-                    isDark: isDark,
-                    stopsCount: _stops.length,
-                    onBack: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.pop(context);
-                    },
-                    onAddStop: _addStop,
-                  ),
-                  const SizedBox(height: 12),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
+                const SizedBox(height: 12),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
                     child: _buildWaypointsSection(
                       isDark: isDark,
                       useDragMode: useDragMode,
                       maxSuggestionsHeight: maxSuggestionsHeight,
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+
+          // Botón confirmar (solo si hay paradas)
+          if (_isValid && _stops.isNotEmpty)
+            Positioned(
+              bottom: bottomPadding + 24,
+              left: 24,
+              right: 24,
+              child: ConfirmButton(
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  _goToTripPreview();
+                },
               ),
             ),
-
-            // Botón confirmar (solo si hay paradas)
-            if (_isValid && _stops.isNotEmpty)
-              Positioned(
-                bottom: bottomPadding + 24,
-                left: 24,
-                right: 24,
-                child: ConfirmButton(
-                  isDark: isDark,
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    _goToTripPreview();
-                  },
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
