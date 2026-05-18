@@ -36,6 +36,9 @@
 - La preferencia por defecto permanece en `ThemeMode.system`, y al salir de ese modo se conserva el tema efectivo actual para evitar saltos visuales.
 - Los ajustes de cliente y conductor ahora abren la misma sección de apariencia en vez de usar un switch aislado, dejando el comportamiento del tema consistente entre roles.
 - La vista de `Apariencia` dejó el mock genérico y ahora usa previews inspiradas en el header, tarjetas y navegación de Viax, corrigiendo además el overflow en pantallas angostas.
+- La pantalla de `Apariencia` mantiene siempre las opciones `Claro` y `Oscuro` en una sola fila, compactando paddings, proporciones y elementos internos de la maqueta para que siga viéndose estable en anchos móviles reducidos.
+- Las dos tarjetas de tema ahora reservan la misma altura de contenido y la preview interna recuperó una proporción más vertical, con iconos, paddings y bloques más pequeños para evitar que la fila se vea apretada o desbalanceada entre `Claro` y `Oscuro`.
+- La fila de selección de tema dejó de depender de mediciones intrínsecas incompatibles con `LayoutBuilder`, corrigiendo el render en blanco que podía tumbar toda la pantalla de `Apariencia` en runtime.
 - La preview de `Apariencia` ajustó sus bordes claros al estilo de tarjetas usadas en la app y redujo el ancho del selector del navbar mock para alinearlo con el componente real.
 - En perfil y viajes embebidos se dejó de extender el body detrás del header compartido, eliminando el bloque oscuro al hacer scroll y manteniendo una separación limpia sin superposiciones artificiales.
 - El header compartido dejó de usar el `AppBar` material por defecto y ahora se dibuja como una capa transparente propia, para evitar el bloque azul detrás del saludo en claro sin reintroducir interferencia con el contenido.

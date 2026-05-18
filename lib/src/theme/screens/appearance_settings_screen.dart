@@ -30,6 +30,9 @@ class AppearanceSettingsScreen extends StatelessWidget {
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
     final themeProvider = context.watch<ThemeProvider>();
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final shellPadding = screenWidth < 360 ? 16.0 : 20.0;
+    final panelPadding = screenWidth < 360 ? 16.0 : 20.0;
 
     return Scaffold(
       backgroundColor: isDark
@@ -46,7 +49,8 @@ class AppearanceSettingsScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          // Reducir el margen lateral en móviles deja más ancho útil para sostener la fila fija.
+          padding: EdgeInsets.fromLTRB(shellPadding, 16, shellPadding, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,7 +63,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(panelPadding),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(28),
@@ -97,17 +101,14 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     const SizedBox(height: 18),
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final isStacked = constraints.maxWidth < 340;
-                        final optionWidth = isStacked
-                            ? constraints.maxWidth
-                            : (constraints.maxWidth - 16) / 2;
+                        final optionSpacing =
+                            constraints.maxWidth < 300 ? 8.0 : 10.0;
 
-                        return Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
+                        // Mantener la fila fija con bloques de texto reservados deja ambas tarjetas parejas sin usar intrínsecos.
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: optionWidth,
+                            Expanded(
                               child: _ThemePreviewOption(
                                 label: 'Claro',
                                 subtitle: 'Más luz y contraste suave para el día.',
@@ -121,8 +122,8 @@ class AppearanceSettingsScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              width: optionWidth,
+                            SizedBox(width: optionSpacing),
+                            Expanded(
                               child: _ThemePreviewOption(
                                 label: 'Oscuro',
                                 subtitle: 'Reduce brillo y mantiene el estilo nocturno de Viax.',
@@ -181,82 +182,107 @@ class _ThemePreviewOption extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primary.withValues(alpha: isDark ? 0.14 : 0.08)
-                : colorScheme.surface.withValues(alpha: isDark ? 0.78 : 0.96),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isSelected
-                  ? colorScheme.primary
-                  : (isDark
-                        ? colorScheme.outlineVariant.withValues(alpha: 0.7)
-                        : AppColors.blue100.withValues(alpha: 0.95)),
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              child,
-              const SizedBox(height: 14),
-              Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 150;
+        final isDense = constraints.maxWidth < 132;
+        final optionPadding = isDense ? 9.0 : (isCompact ? 10.0 : 12.0);
+        final optionRadius = isDense ? 18.0 : 22.0;
+        final childSpacing = isDense ? 8.0 : 10.0;
+        final labelSpacing = isDense ? 4.0 : 6.0;
+        final selectorSize = isDense ? 20.0 : (isCompact ? 22.0 : 24.0);
+        final selectorIconSize = isDense ? 11.0 : 13.0;
+        final subtitleHeight = isDense ? 60.0 : 52.0;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(optionRadius),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: EdgeInsets.all(optionPadding),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? colorScheme.primary.withValues(alpha: isDark ? 0.14 : 0.08)
+                    : colorScheme.surface.withValues(alpha: isDark ? 0.78 : 0.96),
+                borderRadius: BorderRadius.circular(optionRadius),
+                border: Border.all(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : (isDark
+                            ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                            : AppColors.blue100.withValues(alpha: 0.95)),
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: colorScheme.onSurface,
+                  child,
+                  SizedBox(height: childSpacing),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: (isCompact
+                                  ? theme.textTheme.titleSmall
+                                  : theme.textTheme.titleMedium)
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onSurface,
+                              ),
+                        ),
                       ),
-                    ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: selectorSize,
+                        height: selectorSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.outline,
+                            width: 2,
+                          ),
+                          color: isSelected
+                              ? colorScheme.primary
+                              : Colors.transparent,
+                        ),
+                        child: isSelected
+                            ? Icon(
+                                Icons.check_rounded,
+                                size: selectorIconSize,
+                                color: colorScheme.onPrimary,
+                              )
+                            : null,
+                      ),
+                    ],
                   ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.outline,
-                        width: 2,
+                  SizedBox(height: labelSpacing),
+                  // Reservar el mismo bloque de texto mantiene alineadas ambas tarjetas aunque cambie el copy.
+                  SizedBox(
+                    height: subtitleHeight,
+                    child: Text(
+                      subtitle,
+                      maxLines: isDense ? 4 : 3,
+                      overflow: TextOverflow.fade,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: isDense ? 1.2 : 1.3,
+                        fontSize: isDense ? 11.2 : 11.8,
                       ),
-                      color: isSelected
-                          ? colorScheme.primary
-                          : Colors.transparent,
                     ),
-                    child: isSelected
-                        ? Icon(
-                            Icons.check_rounded,
-                            size: 14,
-                            color: colorScheme.onPrimary,
-                          )
-                        : null,
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -294,283 +320,317 @@ class _ThemePreviewCard extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.65)
         : AppColors.lightTextSecondary;
 
-    return AspectRatio(
-      aspectRatio: 0.78,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              previewBackground,
-              Color.lerp(previewBackground, previewAccent, 0.35)!,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: borderColor,
-            width: isActive ? 1.6 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDarkPreview ? 0.22 : 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: DecoratedBox(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final previewWidth = constraints.maxWidth;
+        final isCompact = previewWidth < 150;
+        final isDense = previewWidth < 132;
+        final outerRadius = isDense ? 16.0 : (isCompact ? 18.0 : 20.0);
+        final innerRadius = isDense ? 12.0 : (isCompact ? 14.0 : 16.0);
+        final framePadding = isDense ? 7.0 : (isCompact ? 8.0 : 10.0);
+        final surfacePadding = isDense ? 7.0 : (isCompact ? 8.0 : 10.0);
+        final navSpacing = isDense ? 6.0 : 8.0;
+        final smallGap = isDense ? 2.0 : 3.0;
+        final mediumGap = isDense ? 6.0 : 8.0;
+        final largeGap = isDense ? 7.0 : 9.0;
+        final topBarHorizontal = isDense ? 7.0 : 8.0;
+        final topBarVertical = isDense ? 5.0 : 6.0;
+        final navBubbleSize = isDense ? 18.0 : (isCompact ? 20.0 : 22.0);
+        final topIconSize = isDense ? 11.0 : 12.0;
+        final navIconSize = isDense ? 13.0 : 15.0;
+        final statMargin = isDense ? 4.0 : 5.0;
+        final statRadius = isDense ? 10.0 : 12.0;
+        final statIconSize = isDense ? 13.0 : 14.0;
+        final bottomPadding = isDense ? 5.0 : 6.0;
+        final bottomHorizontal = isDense ? 8.0 : 10.0;
+        final bottomVertical = isDense ? 5.0 : 6.0;
+        final activeIndicatorWidth = isDense ? 10.0 : 12.0;
+        final aspectRatio = isDense ? 0.72 : (isCompact ? 0.7 : 0.68);
+
+        // Mantener una proporción más vertical hace que la preview respire mejor sin romper la fila.
+        return AspectRatio(
+          aspectRatio: aspectRatio,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
             decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0, -0.7),
-                radius: 1.1,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  previewAccent,
-                  Colors.transparent,
+                  previewBackground,
+                  Color.lerp(previewBackground, previewAccent, 0.35)!,
                 ],
               ),
+              borderRadius: BorderRadius.circular(outerRadius),
+              border: Border.all(
+                color: borderColor,
+                width: isActive ? 1.6 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: isDarkPreview ? 0.22 : 0.08,
+                  ),
+                  blurRadius: isDense ? 14 : 20,
+                  offset: Offset(0, isDense ? 8 : 12),
+                ),
+              ],
             ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: surfaceColor,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: surfaceBorder),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(
-                                      alpha: isDarkPreview ? 0.22 : 0.12,
-                                    ),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.navigation_rounded,
-                                    color: AppColors.primary,
-                                    size: 16,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        height: 4,
-                                        width: 34,
-                                        decoration: BoxDecoration(
-                                          color: secondaryText,
-                                          borderRadius:
-                                              BorderRadius.circular(999),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        height: 6,
-                                        width: 62,
-                                        decoration: BoxDecoration(
-                                          color: primaryText,
-                                          borderRadius:
-                                              BorderRadius.circular(999),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.notifications_none_rounded,
-                                  size: 16,
-                                  color: primaryText,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: surfaceColor,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: surfaceBorder),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                height: 6,
-                                width: 84,
-                                decoration: BoxDecoration(
-                                  color: primaryText,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                height: 4,
-                                width: 112,
-                                decoration: BoxDecoration(
-                                  color: secondaryText,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: isDarkPreview
-                                          ? [
-                                              AppColors.primary.withValues(
-                                                alpha: 0.56,
-                                              ),
-                                              AppColors.primaryDark.withValues(
-                                                alpha: 0.46,
-                                              ),
-                                            ]
-                                          : [
-                                              AppColors.primary.withValues(
-                                                alpha: 0.24,
-                                              ),
-                                              Colors.white,
-                                            ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _PreviewStatBlock(
-                                          icon: Icons.location_on_rounded,
-                                          color: isDarkPreview
-                                              ? Colors.white
-                                              : AppColors.primary,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _PreviewStatBlock(
-                                          icon: Icons.route_rounded,
-                                          color: isDarkPreview
-                                              ? Colors.white70
-                                              : AppColors.lightTextSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: surfaceBorder),
-                        ),
-                        child: Row(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(outerRadius),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.7),
+                    radius: 1.1,
+                    colors: [
+                      previewAccent,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Padding(
+                        padding: EdgeInsets.all(framePadding),
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: topBarHorizontal,
+                                    vertical: topBarVertical,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(
-                                      alpha: isDarkPreview ? 0.32 : 0.16,
-                                    ),
+                                    color: surfaceColor,
                                     borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(color: surfaceBorder),
                                   ),
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        Icons.home_rounded,
-                                        size: 18,
-                                        color: isDarkPreview
-                                            ? Colors.white
-                                            : AppColors.primary,
-                                      ),
-                                      const SizedBox(width: 6),
                                       Container(
-                                        width: 16,
-                                        height: 4,
+                                        width: navBubbleSize,
+                                        height: navBubbleSize,
                                         decoration: BoxDecoration(
-                                          color: isDarkPreview
-                                              ? Colors.white.withValues(alpha: 0.85)
-                                              : AppColors.primary.withValues(alpha: 0.55),
+                                          color: AppColors.primary.withValues(
+                                            alpha: isDarkPreview ? 0.22 : 0.12,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.navigation_rounded,
+                                          color: AppColors.primary,
+                                          size: topIconSize,
+                                        ),
+                                      ),
+                                      SizedBox(width: isDense ? 6 : 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _PreviewLine(
+                                              widthFactor: isDense ? 0.38 : 0.34,
+                                              height: isDense ? 3.5 : 4,
+                                              color: secondaryText,
+                                            ),
+                                            SizedBox(height: smallGap),
+                                            _PreviewLine(
+                                              widthFactor: isDense ? 0.72 : 0.68,
+                                              height: isDense ? 5 : 6,
+                                              color: primaryText,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.notifications_none_rounded,
+                                        size: topIconSize,
+                                        color: primaryText,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: largeGap),
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(surfacePadding),
+                                decoration: BoxDecoration(
+                                  color: surfaceColor,
+                                  borderRadius: BorderRadius.circular(innerRadius),
+                                  border: Border.all(color: surfaceBorder),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _PreviewLine(
+                                      widthFactor: isDense ? 0.48 : 0.44,
+                                      height: isDense ? 5 : 6,
+                                      color: primaryText,
+                                    ),
+                                    SizedBox(height: isDense ? 5 : 6),
+                                    _PreviewLine(
+                                      widthFactor: isDense ? 0.72 : 0.66,
+                                      height: isDense ? 3.5 : 4,
+                                      color: secondaryText,
+                                    ),
+                                    SizedBox(height: mediumGap),
+                                    Expanded(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: isDarkPreview
+                                                ? [
+                                                    AppColors.primary.withValues(
+                                                      alpha: 0.56,
+                                                    ),
+                                                    AppColors.primaryDark.withValues(
+                                                      alpha: 0.46,
+                                                    ),
+                                                  ]
+                                                : [
+                                                    AppColors.primary.withValues(
+                                                      alpha: 0.24,
+                                                    ),
+                                                    Colors.white,
+                                                  ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            isDense ? 14 : 18,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: _PreviewStatBlock(
+                                                icon: Icons.location_on_rounded,
+                                                color: isDarkPreview
+                                                    ? Colors.white
+                                                    : AppColors.primary,
+                                                margin: statMargin,
+                                                borderRadius: statRadius,
+                                                iconSize: statIconSize,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _PreviewStatBlock(
+                                                icon: Icons.route_rounded,
+                                                color: isDarkPreview
+                                                    ? Colors.white70
+                                                    : AppColors.lightTextSecondary,
+                                                margin: statMargin,
+                                                borderRadius: statRadius,
+                                                iconSize: statIconSize,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: largeGap),
+                            Container(
+                              padding: EdgeInsets.all(bottomPadding),
+                              decoration: BoxDecoration(
+                                color: surfaceColor,
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(color: surfaceBorder),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: bottomHorizontal,
+                                          vertical: bottomVertical,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(
+                                            alpha: isDarkPreview ? 0.32 : 0.16,
+                                          ),
                                           borderRadius: BorderRadius.circular(999),
                                         ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.home_rounded,
+                                              size: navIconSize,
+                                              color: isDarkPreview
+                                                  ? Colors.white
+                                                  : AppColors.primary,
+                                            ),
+                                            SizedBox(width: isDense ? 4 : 6),
+                                            Container(
+                                              width: activeIndicatorWidth,
+                                              height: isDense ? 3.5 : 4,
+                                              decoration: BoxDecoration(
+                                                color: isDarkPreview
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.85,
+                                                      )
+                                                    : AppColors.primary.withValues(
+                                                        alpha: 0.55,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Center(
-                                child: Icon(
-                                  Icons.history_rounded,
-                                  size: 18,
-                                  color: secondaryText,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Icon(
-                                  Icons.person_rounded,
-                                  size: 18,
-                                  color: secondaryText,
-                                ),
+                                  SizedBox(width: navSpacing),
+                                  Expanded(
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.history_rounded,
+                                        size: navIconSize,
+                                        color: secondaryText,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: navSpacing),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Icon(
+                                        Icons.person_rounded,
+                                        size: navIconSize,
+                                        color: secondaryText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -578,22 +638,55 @@ class _ThemePreviewCard extends StatelessWidget {
 class _PreviewStatBlock extends StatelessWidget {
   final IconData icon;
   final Color color;
+  final double margin;
+  final double borderRadius;
+  final double iconSize;
 
   const _PreviewStatBlock({
     required this.icon,
     required this.color,
+    required this.margin,
+    required this.borderRadius,
+    required this.iconSize,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(8),
+      margin: EdgeInsets.all(margin),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
-        child: Icon(icon, size: 18, color: color),
+        child: Icon(icon, size: iconSize, color: color),
+      ),
+    );
+  }
+}
+
+class _PreviewLine extends StatelessWidget {
+  final double widthFactor;
+  final double height;
+  final Color color;
+
+  const _PreviewLine({
+    required this.widthFactor,
+    required this.height,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      alignment: Alignment.centerLeft,
+      widthFactor: widthFactor,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(999),
+        ),
       ),
     );
   }
