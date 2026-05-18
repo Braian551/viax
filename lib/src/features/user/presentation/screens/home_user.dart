@@ -529,7 +529,7 @@ class _HomeUserScreenState extends State<HomeUserScreen>
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: _selectedIndex == 0,
       extendBody: true, // Para que el bottom nav flote sobre el mapa
       appBar: _buildAppBar(isDark),
       body: IndexedStack(

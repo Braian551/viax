@@ -42,6 +42,8 @@ class _TripHistoryContent extends StatefulWidget {
 
 class _TripHistoryContentState extends State<_TripHistoryContent>
     with TickerProviderStateMixin {
+  static const double _embeddedTopPadding = 12;
+
   late AnimationController _headerAnimationController;
   late Animation<double> _headerSlideAnimation;
   late Animation<double> _headerFadeAnimation;
@@ -194,7 +196,7 @@ class _TripHistoryContentState extends State<_TripHistoryContent>
   Widget _buildEmbeddedHeader(bool isDark, Color textColor) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 124, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, _embeddedTopPadding, 20, 28),
         child: Row(
           children: [
             Expanded(

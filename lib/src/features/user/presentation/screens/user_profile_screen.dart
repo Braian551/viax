@@ -23,7 +23,7 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
-  static const double _embeddedTopPadding = 124;
+  static const double _embeddedTopPadding = 12;
   static const double _embeddedBottomPadding = 140;
 
   String? _userName;
@@ -33,15 +33,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   String? _lastName;
   String? _photoKey;
   String? _phone;
-  double _rating = 5.0; // Default rating
+  double _rating = 5.0; // Calificacion por defecto
   bool _isLoading = true;
   bool _isLoggingOut = false;
   
-  // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
-  // Driver registration status: null = not checked, 'none' = not registered, 'pendiente' = pending, 'activo' = approved
+  // Estado de registro como conductor: null = sin revisar, 'none' = no registrado, 'pendiente' = pendiente, 'activo' = aprobado
+  // Estado de registro como conductor: null = sin revisar, 'none' = no registrado, 'pendiente' = pendiente, 'activo' = aprobado
   String? _driverStatus;
   String? _rejectionReason;
-  Map<String, dynamic>? _driverProfileData; // Full driver profile for correction flow
+  Map<String, dynamic>? _driverProfileData; // Perfil completo del conductor para el flujo de correccion
   
   // Animaciones
   late AnimationController _animationController;
@@ -79,35 +79,35 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         _userId = userId is int ? userId : int.tryParse(userId.toString());
         
         if (_userId != null) {
-          // 1. Check driver status
+          // 1. Revisar el estado como conductor
           final driverProfile = await UserService.getDriverProfile(userId: _userId!);
           if (driverProfile != null && driverProfile['success'] == true) {
             final profile = driverProfile['profile'];
             if (profile != null) {
               _driverStatus = profile['estado_aprobacion'] ?? 'pendiente';
               _rejectionReason = profile['razon_rechazo'];
-              _driverProfileData = profile; // Store full profile for correction flow
+              _driverProfileData = profile; // Guardar el perfil completo para el flujo de correccion
             }
           }
           
-          // 2. Fetch full user profile for editing (nombre, apellido, foto)
+          // 2. Cargar el perfil completo para edicion (nombre, apellido, foto)
            final userProfile = await UserService.getProfile(userId: _userId!);
            if (userProfile != null && userProfile['success'] == true) {
-             final userData = userProfile['user'] ?? userProfile['data']; // Adapt to backend response structure
+             final userData = userProfile['user'] ?? userProfile['data']; // Adaptar a la estructura de respuesta del backend
              if (userData != null) {
                 _firstName = userData['nombre'];
                 _lastName = userData['apellido'];
                 _photoKey = userData['foto_perfil'];
                 _phone = userData['telefono'];
                 
-                // Use UserModel to robustly parse the rating
+                // Usar UserModel para interpretar la calificacion de forma robusta
                 try {
-                  // We wrap/ensure it's a Map<String, dynamic>
+                  // Asegurar que sea un Map<String, dynamic>
                   final userModel = UserModel.fromJson(Map<String, dynamic>.from(userData));
                   _rating = userModel.calificacion ?? 5.0;
                 } catch (e) {
                   debugPrint('Error parsing user rating: $e');
-                  // Fallback to manual check if model parsing fails for some reason
+                  // Respaldo manual si el parseo del modelo falla
                   final rawRating = userData['calificacion'] ?? 
                                    userData['calificacion_promedio'] ?? 
                                    userData['rating'];
@@ -120,21 +120,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 _userEmail = userData['email'] ?? sess['email'];
               }
            } else {
-             // Fallback to session data
+             // Respaldo con datos de sesion
              _userName = sess['nombre'] ?? 'Usuario';
              _userEmail = sess['email'] ?? 'usuario@viax.com';
            }
            
-           // 3. Fetch real average rating from RatingService (since profile might be cached or missing it)
+           // 3. Cargar el promedio real desde RatingService
            try {
              final ratingsData = await RatingService.obtenerCalificaciones(
                usuarioId: _userId!,
-               tipoUsuario: 'cliente', // We are viewing the client profile
-               limit: 100, // Fetch enough to calculate a decent average if needed
+               tipoUsuario: 'cliente', // Estamos viendo el perfil del cliente
+               limit: 100, // Traer suficiente historial para calcular un promedio util si hace falta
              );
              
              if (ratingsData['promedio'] != null) {
-               // If backend returns average specifically
+               // Si el backend devuelve el promedio directamente
                _rating = double.tryParse(ratingsData['promedio'].toString()) ?? _rating;
              } else if (ratingsData['calificaciones'] != null) {
                final List list = ratingsData['calificaciones'];
@@ -403,7 +403,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
       ),
       child: Row(
         children: [
-          // Avatar
+          // Foto de perfil
           Container(
             width: 70,
             height: 70,
@@ -556,17 +556,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
   }
 
   Widget _buildBecomeDriverCard(bool isDark) {
-    // Check if user has pending/approved driver registration
+    // Revisar si el usuario tiene un registro de conductor pendiente o aprobado
     final bool hasPendingRequest = _driverStatus == 'pendiente';
     final bool isRejected = _driverStatus == 'rechazado';
     final bool isApproved = _driverStatus == 'aprobado' || _driverStatus == 'activo';
     
-    // If approved, show switch to driver mode
+    // Si esta aprobado, mostrar acceso para cambiar a modo conductor
     if (isApproved) {
       return _buildSwitchToDriverCard(isDark);
     }
     
-    // Helper to configure card appearance
+    // Funcion auxiliar para configurar la apariencia de la tarjeta
     Color getStartColor() {
       if (isRejected) return AppColors.error;
       if (hasPendingRequest) return Colors.orange;
@@ -581,7 +581,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     
     final startColor = getStartColor();
     final endColor = getEndColor();
-    // Pending or new registration or rejected
+    // Pendiente, nuevo registro o rechazado
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -604,7 +604,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
         child: InkWell(
             onTap: isRejected ? () => _showRejectionDetails() : (hasPendingRequest ? null : () async {
             await Navigator.pushNamed(context, RouteNames.driverRegistration);
-            _loadUserData(); // Refresh profile after return
+            _loadUserData(); // Recargar el perfil al regresar
           }),
           borderRadius: BorderRadius.circular(24),
           child: Padding(

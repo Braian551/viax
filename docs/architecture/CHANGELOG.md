@@ -8,6 +8,9 @@
 - Se agregó una pantalla compartida de `Apariencia` con selección explícita de `Claro`, `Oscuro` y `Seguir al dispositivo`.
 - La preferencia por defecto permanece en `ThemeMode.system`, y al salir de ese modo se conserva el tema efectivo actual para evitar saltos visuales.
 - Los ajustes de cliente y conductor ahora abren la misma sección de apariencia en vez de usar un switch aislado, dejando el comportamiento del tema consistente entre roles.
+- La vista de `Apariencia` dejó el mock genérico y ahora usa previews inspiradas en el header, tarjetas y navegación de Viax, corrigiendo además el overflow en pantallas angostas.
+- La preview de `Apariencia` ajustó sus bordes claros al estilo de tarjetas usadas en la app y redujo el ancho del selector del navbar mock para alinearlo con el componente real.
+- En perfil y viajes embebidos se dejó de extender el body detrás del header compartido, eliminando el bloque oscuro al hacer scroll y manteniendo una separación limpia sin superposiciones artificiales.
 
 ## [1.0.0] - Octubre 2025
 
