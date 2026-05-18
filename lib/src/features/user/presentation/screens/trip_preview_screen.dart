@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import 'dart:ui';
 import '../../../../global/services/mapbox_service.dart';
+import '../../../../global/services/flutter_map_tile_provider_service.dart';
 import '../../../../global/services/route_preview_cache.dart';
 import '../../../../global/models/simple_location.dart';
 import '../../../../global/widgets/map_retry_wrapper.dart';
@@ -15,7 +16,6 @@ import '../widgets/trip_preview/trip_preview_top_overlay.dart';
 import '../widgets/trip_preview/trip_vehicle_bottom_sheet.dart';
 import '../widgets/trip_preview/company_picker_sheet.dart';
 import '../widgets/trip_preview/trip_vehicle_detail_sheet.dart';
-import '../widgets/trip_preview/company_selector_widget.dart';
 import 'pickup_selection_screen.dart';
 
 /// Segunda pantalla - Preview del viaje con mapa y cotización
@@ -75,6 +75,13 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   // Cotizaciones calculadas por tipo para mostrar precios.
   final Map<String, TripQuote> _vehicleQuotes = {};
   bool _mapReady = false;
+  bool _shouldRenderMap = false;
+  bool _mapActivationQueued = false;
+
+  static const Duration _deferredMapActivationDelay = Duration(
+    milliseconds: 140,
+  );
+  static const double _mapRevealActivationThreshold = 0.34;
 
   late AnimationController _slideAnimationController;
   late Animation<Offset> _slideAnimation;
@@ -237,6 +244,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     });
 
     debugPrint('[RoutePreview] route_rendered points=${route.geometry.length}');
+
+    // Priorizar la ruta y la cotización antes de montar el mapa completo hace
+    // que la entrada al preview se sienta inmediata incluso con rutas nuevas.
+    _scheduleMapActivation();
 
     if (_mapReady) {
       await _fitMapToRouteAnimated();
@@ -1125,6 +1136,59 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     await Future.delayed(const Duration(milliseconds: 280));
   }
 
+  void _scheduleMapActivation({bool immediate = false}) {
+    if (_shouldRenderMap) {
+      return;
+    }
+
+    if (immediate) {
+      _mapActivationQueued = false;
+      _setStateSafe(() {
+        _shouldRenderMap = true;
+      });
+      return;
+    }
+
+    if (_mapActivationQueued) {
+      return;
+    }
+
+    _mapActivationQueued = true;
+    Future<void>.delayed(_deferredMapActivationDelay, () {
+      _mapActivationQueued = false;
+      if (!mounted || _shouldRenderMap) {
+        return;
+      }
+      _setStateSafe(() {
+        _shouldRenderMap = true;
+      });
+    });
+  }
+
+  Widget _buildDeferredMapPlaceholder(bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Mientras el mapa termina de montarse mantenemos un fondo neutro, sin
+    // añadir mensajes extra que interrumpan la experiencia del cliente.
+    return Container(
+      key: const ValueKey<String>('trip-preview-map-placeholder'),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            isDark
+                ? colorScheme.surfaceContainerHighest
+                : colorScheme.surfaceContainerLow,
+            isDark ? colorScheme.surface : colorScheme.surfaceContainerLowest,
+          ],
+        ),
+      ),
+      child: const SizedBox.expand(),
+    );
+  }
+
   String _getVehicleName(String type) {
     if (_vehicles.isEmpty) return '';
 
@@ -1148,8 +1212,14 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
           : AppColors.lightBackground,
       body: Stack(
         children: [
-          // Mapa
-          _buildMap(isDark),
+          // Montar el mapa unos milisegundos después permite mostrar la ruta y
+          // la cotización primero, y reutilizar mejor el caché de tiles.
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: _shouldRenderMap
+                ? _buildMap(isDark)
+                : _buildDeferredMapPlaceholder(isDark),
+          ),
 
           // Overlay superior con información compacta
           TripPreviewTopOverlay(
@@ -1271,6 +1341,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
   Widget _buildMap(bool isDark) {
     return MapRetryWrapper(
+      key: const ValueKey<String>('trip-preview-live-map'),
       isDark: isDark,
       builder: ({required mapKey, required onMapReady, required onTileError}) =>
           FlutterMap(
@@ -1299,7 +1370,9 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
               // Tiles de Mapbox con estilo según el tema
               TileLayer(
                 urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-                userAgentPackageName: 'com.example.ping_go',
+                userAgentPackageName:
+                    FlutterMapTileProviderService.userAgentPackageName,
+                tileProvider: FlutterMapTileProviderService.provider,
                 errorTileCallback: (tile, error, stackTrace) =>
                     onTileError(error, stackTrace),
               ),
@@ -1733,6 +1806,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       try {
         final currentSize = _draggableController.size;
         final shouldBeHidden = currentSize <= 0.24;
+
+        if (currentSize <= _mapRevealActivationThreshold) {
+          _scheduleMapActivation(immediate: true);
+        }
 
         // Actualizar solo al cruzar el umbral de visibilidad.
         if (shouldBeHidden != _isSheetHidden) {

@@ -90,6 +90,8 @@ Esta regla aplica a todos los archivos generados durante troubleshooting, implem
 **Archivos temporales de diagnostico:**
 - Si el agente crea un archivo temporal para diagnostico (probe, test, check), DEBE eliminarlo al final de la tarea.
 - Si no puede eliminarlo, debe listarlo explicitamente en el reporte como "pendiente de limpieza manual".
+- Si necesita capturar salida de herramientas, DEBE preferir `tmp/` y eliminar el archivo al terminar la validacion.
+- Outputs efimeros del agente como `analysis_output*.txt`, `*.out`, `*.tmp` o similares NO pueden quedar en la raiz del proyecto al cerrar la tarea.
 
 **Archivos de log generados automaticamente:**
 - Si un script o proceso genera un log, debe configurarse para escribir en `backend/logs/` o en `services/{nombre}/logs/`.
@@ -463,6 +465,8 @@ Si el agente crea o modifica el sistema de anuncios, avisos, promociones, manten
 
 If the agent creates temporary support files during troubleshooting or implementation (for example: files for fix, test, debug, or query), it MUST remove them at the end of the turn if they are not required by the system.
 
+If the agent generates validation outputs only for its own use (for example `analysis_output.txt`, `analysis_output_agent.txt`, temporary reports, or redirected command output), it MUST delete them before finishing and MUST NOT leave them in the project root.
+
 The repository must be left clean of unnecessary helper artifacts.
 
 ---
@@ -541,6 +545,32 @@ Al documentar o comentar código en este proyecto, el agente DEBE escribir en es
 Si en archivos modificados encuentra comentarios en inglés, DEBE traducirlos al español en el mismo cambio.
 
 No se deben introducir comentarios nuevos en inglés.
+
+---
+
+# REGLA OBLIGATORIA DE COMENTARIOS POR BLOQUE EN VISTAS
+
+Si el agente agrega o modifica lógica en archivos de UI como pantallas, vistas o widgets
+(`screens/`, `views/`, `widgets/`), DEBE dejar comentarios breves por bloque en español
+cuando el bloque no sea trivial a primera vista.
+
+## Alcance mínimo
+
+1. Comentar bloques nuevos o cambiados que controlen flujo, estado, animaciones,
+   carga diferida, integración con mapas, caché, navegación o transformaciones de datos.
+2. No comentar línea por línea ni repetir lo obvio; el comentario debe explicar intención
+   o motivo del bloque.
+3. Mantener los comentarios cortos, concretos y ubicados justo encima del bloque relevante.
+4. Si el archivo de vista ya tiene comentarios en inglés, traducirlos al español en el mismo cambio.
+
+## Ejemplo esperado
+
+```dart
+// Retrasar el montaje del mapa evita competir con la carga inicial del resumen.
+if (!_shouldRenderMap) {
+  _scheduleMapActivation();
+}
+```
 # AGENT SKILL — SAFE PRODUCTION DEPLOY
 
 You are working on the Viax production backend.
@@ -888,6 +918,8 @@ Si el agente crea o modifica el sistema de anuncios, avisos, promociones, manten
 # HOUSEKEEPING RULE (MANDATORY)
 
 If the agent creates temporary support files during troubleshooting or implementation (for example: files for fix, test, debug, or query), it MUST remove them at the end of the turn if they are not required by the system.
+
+If the agent generates validation outputs only for its own use (for example `analysis_output.txt`, `analysis_output_agent.txt`, temporary reports, or redirected command output), it MUST delete them before finishing and MUST NOT leave them in the project root.
 
 The repository must be left clean of unnecessary helper artifacts.
 

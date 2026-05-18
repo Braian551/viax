@@ -24,6 +24,7 @@ import 'package:viax/src/global/services/location_suggestion_service.dart';
 import 'package:viax/src/global/services/route_preview_cache.dart';
 import 'package:viax/src/features/user/presentation/screens/trip_preview_screen.dart';
 import 'package:viax/src/global/services/country_availability_service.dart';
+import 'package:viax/src/global/services/flutter_map_tile_provider_service.dart';
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -799,9 +800,13 @@ class _HomeUserScreenState extends State<HomeUserScreen>
         },
       ),
       children: [
+        // Reutilizar el mismo proveedor compartido hace que los tiles que ya
+        // se vieron en el home se reaprovechen en previews posteriores.
         TileLayer(
           urlTemplate: MapboxService.getTileUrl(isDarkMode: isDark),
-          userAgentPackageName: 'com.viax.app',
+          userAgentPackageName:
+              FlutterMapTileProviderService.userAgentPackageName,
+          tileProvider: FlutterMapTileProviderService.provider,
           errorTileCallback: (tile, error, stackTrace) {
             _handleMapTileError(error, stackTrace);
           },

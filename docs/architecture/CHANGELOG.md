@@ -9,6 +9,9 @@
 - El guardado local de direcciones favoritas ahora actualiza el estado de la UI antes de la recarga remota, evitando dejar la vista stale si la sincronización posterior falla.
 - El chip de `Favoritos` en la búsqueda rápida dejó de estirar el contador en altura completa y ahora muestra un badge circular fijo, consistente en tamaños angostos.
 - El preview del viaje ahora espera a que el mapa termine de estar listo antes de ajustar la cámara a la ruta y usa padding dinámico, evitando el lienzo en blanco inicial y el zoom excesivamente alejado en trayectos como Terminal del Norte.
+- Los mapas raster del flujo de cliente ahora reutilizan un `TileProvider` compartido con caché integrado de `flutter_map`, para reaprovechar tiles entre el mapa inicial y los previews en vez de reconstruir un cliente nuevo en cada ruta.
+- El preview del viaje ahora difiere unos milisegundos el montaje del mapa completo y lo activa de inmediato cuando el usuario destapa más mapa, priorizando que la ruta y la cotización aparezcan antes.
+- El preview del viaje dejó de mostrar el aviso visual `Preparando mapa...`; durante la carga diferida ahora conserva un fondo neutro para no introducir ruido innecesario al cliente.
 
 ### Backend PHP
 
