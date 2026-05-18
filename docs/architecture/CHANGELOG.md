@@ -9,11 +9,13 @@
 - `SplashScreen`, `WelcomeScreen`, `AuthWrapper`, la sincronización de push, la apertura por notificaciones y el WebSocket dejaron de arrancar servicios o navegar por rol con sesiones provisionales o restauradas de forma incompleta.
 - La app Android deshabilitó `allowBackup` y `fullBackupContent` en el manifest principal para impedir que `SharedPreferences` restaure sesiones antiguas tras desinstalar e instalar desde Play Store.
 - La aceptación legal dejó de depender solo del caché local: el backend ahora informa si el usuario ya aceptó la versión vigente por rol, evitando que una reinstalación vuelva a exigir términos ya aceptados.
-- La pantalla de aceptación legal pasó a un sheet resumido tipo drag con checkboxes y enlaces internos a `Términos` y `Privacidad`, en lugar de obligar a leer un scroll completo dentro del mismo flujo.
-- El gate de aceptación legal ya no se monta como una ruta opaca sobre fondo negro: ahora conserva visible la pantalla actual y ancla correctamente el sheet arrastrable al borde inferior, tanto desde `Welcome` como desde los homes por rol.
-- Los documentos legales ahora se pueden abrir dentro de la app con un visor estructurado por secciones, y el guard legal también se aplica a `soporte` para mostrar actualizaciones por rol desde su home.
+- La pantalla de aceptación legal pasó a un sheet drag más limpio, con checkboxes mínimos y enlaces externos a `Términos` y `Privacidad` según el rol, sin resumir documentos dentro del modal.
+- El gate de aceptación legal ya no se monta como una ruta opaca sobre fondo negro: ahora conserva visible la pantalla actual, permite cerrar por tap exterior o al bajar el sheet cuando el flujo es opcional, y se mantiene obligatorio en rutas bloqueantes como `admin` y `soporte`.
+- El sheet legal rebajó su altura inicial, ocultó el handle visual superior y amplió ligeramente los checkboxes para que el modal se vea más bajo y más cercano a la referencia compacta definida para bienvenida y home.
+- El login con Google dejó de persistir la sesión activa antes de aceptar los documentos legales, evitando saltos prematuros a `agregar teléfono` o a homes cuando el usuario todavía no ha aceptado.
 - Si un alta nueva con Google rechaza términos o privacidad, `WelcomeScreen` revierte ese registro efímero antes de cerrar la sesión para que la cuenta no quede creada a medias.
-- La pantalla compartida de `Apariencia` ahora cambia de fila a columna cuando el panel queda demasiado angosto, eliminando el overflow del mock de `Claro` y `Oscuro` en móviles compactos sin romper la versión amplia.
+- La pantalla compartida de `Apariencia` vuelve a mantener `Claro` y `Oscuro` siempre en una sola fila; para evitar el desborde en móviles compactos se redujo el tamaño interno de las previews en vez de pasar el selector a columna.
+- La fila de `Apariencia` dejó de estirarse en altura dentro del scroll y ahora usa constraints verticales mínimos, corrigiendo el render en blanco que podía dejar vacía la pantalla al abrir esa sección.
 
 ### Backend PHP
 

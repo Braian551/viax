@@ -49,7 +49,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          // Reducir el margen lateral en móviles deja más ancho útil para decidir entre fila o columna sin apretar las previews.
+          // Reducir el margen lateral en móviles deja más ancho útil sin sacrificar la fila fija de las previews.
           padding: EdgeInsets.fromLTRB(shellPadding, 16, shellPadding, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'La vista previa usa el mismo lenguaje visual de la app: header flotante, tarjetas y navegación inferior.',
+                      'Personaliza el aspecto de la app según tus preferencias.',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         height: 1.35,
@@ -102,8 +102,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final optionSpacing =
-                            constraints.maxWidth < 300 ? 8.0 : 10.0;
-                        final shouldStackOptions = constraints.maxWidth < 340;
+                            constraints.maxWidth < 300 ? 6.0 : 10.0;
 
                         final lightOption = _ThemePreviewOption(
                           label: 'Claro',
@@ -119,7 +118,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                         );
                         final darkOption = _ThemePreviewOption(
                           label: 'Oscuro',
-                          subtitle: 'Reduce brillo y mantiene el estilo nocturno de Viax.',
+                          subtitle: 'Reduce brillo y mantiene el estilo nocturno.',
                           isSelected:
                               themeProvider.themeMode == ThemeMode.dark,
                           onTap: () => themeProvider.setDarkMode(),
@@ -130,20 +129,9 @@ class AppearanceSettingsScreen extends StatelessWidget {
                           ),
                         );
 
-                        // En anchos compactos conviene apilar las tarjetas para evitar el overflow del mock interno.
-                        if (shouldStackOptions) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              lightOption,
-                              SizedBox(height: optionSpacing),
-                              darkOption,
-                            ],
-                          );
-                        }
-
+                        // La vista debe mantenerse en fila; en móvil compacto reducimos el mock interno en vez de romper el layout.
                         return Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(child: lightOption),
                             SizedBox(width: optionSpacing),
@@ -195,15 +183,15 @@ class _ThemePreviewOption extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 150;
-        final isDense = constraints.maxWidth < 132;
-        final optionPadding = isDense ? 9.0 : (isCompact ? 10.0 : 12.0);
-        final optionRadius = isDense ? 18.0 : 22.0;
-        final childSpacing = isDense ? 8.0 : 10.0;
-        final labelSpacing = isDense ? 4.0 : 6.0;
-        final selectorSize = isDense ? 20.0 : (isCompact ? 22.0 : 24.0);
-        final selectorIconSize = isDense ? 11.0 : 13.0;
-        final subtitleHeight = isDense ? 60.0 : 52.0;
+        final isCompact = constraints.maxWidth < 160;
+        final isDense = constraints.maxWidth < 148;
+        final optionPadding = isDense ? 8.0 : (isCompact ? 9.0 : 12.0);
+        final optionRadius = isDense ? 17.0 : (isCompact ? 19.0 : 22.0);
+        final childSpacing = isDense ? 7.0 : (isCompact ? 8.0 : 10.0);
+        final labelSpacing = isDense ? 3.0 : (isCompact ? 4.0 : 6.0);
+        final selectorSize = isDense ? 18.0 : (isCompact ? 20.0 : 24.0);
+        final selectorIconSize = isDense ? 10.0 : (isCompact ? 11.0 : 13.0);
+        final subtitleHeight = isDense ? 46.0 : (isCompact ? 50.0 : 52.0);
 
         return Material(
           color: Colors.transparent,
@@ -229,7 +217,7 @@ class _ThemePreviewOption extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   child,
                   SizedBox(height: childSpacing),
@@ -279,12 +267,12 @@ class _ThemePreviewOption extends StatelessWidget {
                     height: subtitleHeight,
                     child: Text(
                       subtitle,
-                      maxLines: isDense ? 4 : 3,
+                      maxLines: 3,
                       overflow: TextOverflow.fade,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        height: isDense ? 1.2 : 1.3,
-                        fontSize: isDense ? 11.2 : 11.8,
+                        height: isDense ? 1.15 : 1.24,
+                        fontSize: isDense ? 10.6 : (isCompact ? 11.1 : 11.8),
                       ),
                     ),
                   ),
@@ -334,33 +322,33 @@ class _ThemePreviewCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final previewWidth = constraints.maxWidth;
-        final isCompact = previewWidth < 150;
-        final isDense = previewWidth < 132;
-        final outerRadius = isDense ? 16.0 : (isCompact ? 18.0 : 20.0);
-        final innerRadius = isDense ? 12.0 : (isCompact ? 14.0 : 16.0);
-        final framePadding = isDense ? 7.0 : (isCompact ? 8.0 : 10.0);
-        final surfacePadding = isDense ? 7.0 : (isCompact ? 8.0 : 10.0);
-        final navSpacing = isDense ? 6.0 : 8.0;
+        final isCompact = previewWidth < 160;
+        final isDense = previewWidth < 148;
+        final outerRadius = isDense ? 14.0 : (isCompact ? 16.0 : 20.0);
+        final innerRadius = isDense ? 10.0 : (isCompact ? 12.0 : 16.0);
+        final framePadding = isDense ? 6.0 : (isCompact ? 7.0 : 10.0);
+        final surfacePadding = isDense ? 6.0 : (isCompact ? 7.0 : 10.0);
+        final navSpacing = isDense ? 4.0 : (isCompact ? 6.0 : 8.0);
         final smallGap = isDense ? 2.0 : 3.0;
-        final mediumGap = isDense ? 6.0 : 8.0;
-        final largeGap = isDense ? 7.0 : 9.0;
-        final topBarHorizontal = isDense ? 7.0 : 8.0;
-        final topBarVertical = isDense ? 5.0 : 6.0;
-        final navBubbleSize = isDense ? 18.0 : (isCompact ? 20.0 : 22.0);
-        final topIconSize = isDense ? 11.0 : 12.0;
-        final navIconSize = isDense ? 13.0 : 15.0;
-        final statMargin = isDense ? 4.0 : 5.0;
-        final statRadius = isDense ? 10.0 : 12.0;
-        final statIconSize = isDense ? 13.0 : 14.0;
-        final bottomPadding = isDense ? 5.0 : 6.0;
-        final bottomHorizontal = isDense ? 6.0 : 8.0;
-        final bottomVertical = isDense ? 4.0 : 5.0;
-        final activeIndicatorSize = isDense ? 5.0 : 6.0;
-        final selectedNavGap = isDense ? 3.0 : 4.0;
-        final trailingNavBox = isDense ? 22.0 : 24.0;
-        final aspectRatio = isDense ? 0.72 : (isCompact ? 0.7 : 0.68);
+        final mediumGap = isDense ? 4.0 : (isCompact ? 5.0 : 8.0);
+        final largeGap = isDense ? 5.0 : (isCompact ? 6.0 : 9.0);
+        final topBarHorizontal = isDense ? 6.0 : (isCompact ? 7.0 : 8.0);
+        final topBarVertical = isDense ? 4.0 : (isCompact ? 5.0 : 6.0);
+        final navBubbleSize = isDense ? 16.0 : (isCompact ? 18.0 : 22.0);
+        final topIconSize = isDense ? 9.0 : (isCompact ? 10.0 : 12.0);
+        final navIconSize = isDense ? 11.0 : (isCompact ? 12.0 : 15.0);
+        final statMargin = isDense ? 3.0 : (isCompact ? 4.0 : 5.0);
+        final statRadius = isDense ? 8.0 : (isCompact ? 9.0 : 12.0);
+        final statIconSize = isDense ? 10.0 : (isCompact ? 11.0 : 14.0);
+        final bottomPadding = isDense ? 4.0 : (isCompact ? 5.0 : 6.0);
+        final bottomHorizontal = isDense ? 5.0 : (isCompact ? 6.0 : 8.0);
+        final bottomVertical = isDense ? 3.0 : (isCompact ? 4.0 : 5.0);
+        final activeIndicatorSize = isDense ? 4.0 : (isCompact ? 5.0 : 6.0);
+        final selectedNavGap = isDense ? 2.0 : (isCompact ? 3.0 : 4.0);
+        final trailingNavBox = isDense ? 18.0 : (isCompact ? 20.0 : 24.0);
+        final aspectRatio = isDense ? 0.92 : (isCompact ? 0.84 : 0.68);
 
-        // Mantener una proporción más vertical hace que la preview respire mejor sin romper la fila.
+        // En la fila compacta conviene acortar la preview para ganar aire sin romper el row de opciones.
         return AspectRatio(
           aspectRatio: aspectRatio,
           child: AnimatedContainer(
@@ -384,8 +372,8 @@ class _ThemePreviewCard extends StatelessWidget {
                   color: Colors.black.withValues(
                     alpha: isDarkPreview ? 0.22 : 0.08,
                   ),
-                  blurRadius: isDense ? 14 : 20,
-                  offset: Offset(0, isDense ? 8 : 12),
+                  blurRadius: isDense ? 10 : (isCompact ? 12 : 20),
+                  offset: Offset(0, isDense ? 5 : (isCompact ? 7 : 12)),
                 ),
               ],
             ),
@@ -448,14 +436,14 @@ class _ThemePreviewCard extends StatelessWidget {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             _PreviewLine(
-                                              widthFactor: isDense ? 0.38 : 0.34,
-                                              height: isDense ? 3.5 : 4,
+                                              widthFactor: isDense ? 0.32 : 0.34,
+                                              height: isDense ? 3.0 : 4,
                                               color: secondaryText,
                                             ),
                                             SizedBox(height: smallGap),
                                             _PreviewLine(
-                                              widthFactor: isDense ? 0.72 : 0.68,
-                                              height: isDense ? 5 : 6,
+                                              widthFactor: isDense ? 0.62 : 0.68,
+                                              height: isDense ? 4.0 : 6,
                                               color: primaryText,
                                             ),
                                           ],
@@ -485,14 +473,14 @@ class _ThemePreviewCard extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _PreviewLine(
-                                      widthFactor: isDense ? 0.48 : 0.44,
-                                      height: isDense ? 5 : 6,
+                                      widthFactor: isDense ? 0.40 : 0.44,
+                                      height: isDense ? 4.0 : 6,
                                       color: primaryText,
                                     ),
                                     SizedBox(height: isDense ? 5 : 6),
                                     _PreviewLine(
-                                      widthFactor: isDense ? 0.72 : 0.66,
-                                      height: isDense ? 3.5 : 4,
+                                      widthFactor: isDense ? 0.60 : 0.66,
+                                      height: isDense ? 3.0 : 4,
                                       color: secondaryText,
                                     ),
                                     SizedBox(height: mediumGap),
@@ -519,7 +507,7 @@ class _ThemePreviewCard extends StatelessWidget {
                                                   ],
                                           ),
                                           borderRadius: BorderRadius.circular(
-                                            isDense ? 14 : 18,
+                                            isDense ? 10 : (isCompact ? 12 : 18),
                                           ),
                                         ),
                                         child: Row(
@@ -765,7 +753,7 @@ class _SystemModeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Sigue el tema activo del sistema y déjalo como valor predeterminado al instalar la app.',
+                  'Sigue el tema activo del sistema',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     height: 1.35,
@@ -774,7 +762,7 @@ class _SystemModeCard extends StatelessWidget {
                 if (isEnabled) ...[
                   const SizedBox(height: 10),
                   Text(
-                    'Ahora mismo se está aplicando: $resolvedLabel',
+                    'Ahora mismo : Modo $resolvedLabel',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w700,

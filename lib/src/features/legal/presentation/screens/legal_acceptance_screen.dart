@@ -1,9 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:viax/src/features/legal/models/legal_document_model.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
-import 'package:viax/src/features/legal/services/legal_content_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
@@ -20,7 +18,7 @@ class LegalAcceptanceScreen extends StatefulWidget {
 
   const LegalAcceptanceScreen({
     super.key,
-    required this.role, 
+    required this.role,
     required this.version,
     this.userId,
     this.returnResultOnAccept = false,
@@ -32,15 +30,17 @@ class LegalAcceptanceScreen extends StatefulWidget {
 }
 
 class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
+  static const double _initialSheetSize = 0.42;
+  static const double _minSheetSize = 0.30;
+  static const double _maxSheetSize = 0.56;
+
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _isSubmitting = false;
-  bool _isLoadingDocuments = true;
+  bool _isLoadingState = true;
 
   String _resolvedVersion = '';
   bool _isUpdateFlow = false;
-  LegalDocumentData? _termsDocument;
-  LegalDocumentData? _privacyDocument;
   String? _loadError;
 
   @override
@@ -51,7 +51,7 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
 
   Future<void> _bootstrapLegalView() async {
     setState(() {
-      _isLoadingDocuments = true;
+      _isLoadingState = true;
       _loadError = null;
     });
 
@@ -87,79 +87,31 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
             : resolvedVersion;
       }
 
-      final role = LegalLinksService.fromString(widget.role);
-      final docs = await Future.wait([
-        LegalContentService.fetchDocumentData(
-          role: role,
-          docType: LegalDocType.terms,
-        ),
-        LegalContentService.fetchDocumentData(
-          role: role,
-          docType: LegalDocType.privacy,
-        ),
-      ]);
-
       if (!mounted) return;
       setState(() {
-        _termsDocument = docs[0];
-        _privacyDocument = docs[1];
         _resolvedVersion = resolvedVersion.isEmpty ? widget.version : resolvedVersion;
         _isUpdateFlow = isUpdateFlow;
-        _isLoadingDocuments = false;
+        _isLoadingState = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _loadError =
-            'No se pudieron cargar los documentos legales. Revisa tu conexión e intenta de nuevo.';
-        _isLoadingDocuments = false;
+        _loadError = 'No se pudo validar la información legal. Intenta nuevamente.';
+        _isLoadingState = false;
       });
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  String _roleLabel() {
-    switch (widget.role.trim().toLowerCase()) {
-      case 'conductor':
-        return 'conductor';
-      case 'empresa':
-        return 'empresa';
-      case 'administrador':
-      case 'admin':
-        return 'administrador';
-      case 'soporte_tecnico':
-        return 'soporte';
-      default:
-        return 'cliente';
     }
   }
 
   String _sheetTitle() {
     if (_isUpdateFlow) {
-      return 'Actualizamos los términos de ${_roleLabel()}';
+      return 'Actualización legal';
     }
 
-    if (widget.userId == null || widget.userId == 0) {
-      return 'Antes de crear tu cuenta';
-    }
-
-    return 'Confirma tus documentos legales';
+    return 'Términos y condiciones';
   }
 
-  String _sheetSubtitle() {
-    if (_isUpdateFlow) {
-      return 'Revisa el resumen vigente y acepta esta versión para seguir usando Viax en tu rol.';
-    }
-
-    if (widget.userId == null || widget.userId == 0) {
-      return 'Necesitamos tu aceptación para terminar el alta y activar tu acceso sin volver a pedirlo en cada instalación.';
-    }
-
-    return 'Tu cuenta necesita esta aceptación para continuar con el flujo actual.';
+  String? _sheetSubtitle() {
+    return null;
   }
 
   Future<void> _navigateToRoleHome() async {
@@ -169,7 +121,6 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
     final routeRole = widget.role.trim().toLowerCase();
     final sessionRole = (session?['tipo_usuario']?.toString().toLowerCase() ?? '').trim();
 
-    // Si el rol de ruta viene por defecto como cliente, priorizar el rol real de sesión.
     String effectiveRole = routeRole;
     if (sessionRole.isNotEmpty && (effectiveRole.isEmpty || effectiveRole == 'cliente')) {
       effectiveRole = sessionRole;
@@ -218,7 +169,7 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
     setState(() => _isSubmitting = true);
 
     final userId = widget.userId ?? 0;
-    bool success = true;
+    var success = true;
 
     if (userId > 0) {
       final legalProv = context.read<LegalProvider>();
@@ -239,113 +190,71 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
       }
 
       await _navigateToRoleHome();
-    } else {
-      if (mounted) {
-        final legalProv = context.read<LegalProvider>();
-        final backendMessage = legalProv.lastError?.trim();
-        setState(() => _isSubmitting = false);
-        GlobalOverlayMessage.showError(
-          context,
-          (backendMessage != null && backendMessage.isNotEmpty)
+      return;
+    }
+
+    if (mounted) {
+      final legalProv = context.read<LegalProvider>();
+      final backendMessage = legalProv.lastError?.trim();
+      setState(() => _isSubmitting = false);
+      GlobalOverlayMessage.showError(
+        context,
+        (backendMessage != null && backendMessage.isNotEmpty)
             ? backendMessage
             : 'Error al procesar la aceptación. Intenta de nuevo.',
-        );
-      }
+      );
     }
   }
 
-  void _openDocument(LegalDocType docType) {
-    Navigator.of(context).pushNamed(
-      docType == LegalDocType.terms ? RouteNames.terms : RouteNames.privacy,
-      arguments: {'role': widget.role},
+  Future<void> _openTermsLink() async {
+    final opened = await LegalLinksService.openTerms(
+      role: LegalLinksService.fromString(widget.role),
     );
+
+    if (!opened && mounted) {
+      GlobalOverlayMessage.showError(
+        context,
+        'No se pudo abrir Términos y Condiciones.',
+      );
+    }
   }
 
-  Widget _buildSummaryCard({
-    required BuildContext context,
-    required LegalDocumentData document,
-    required IconData icon,
-    required VoidCallback onOpen,
-  }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final summarySections = document.buildSummarySections(maxItems: 2);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? colorScheme.outlineVariant.withValues(alpha: 0.7)
-              : AppColors.blue100.withValues(alpha: 0.95),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  document.docType.shortTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...summarySections.map(
-            (section) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    margin: const EdgeInsets.only(top: 7),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      section.summary,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: onOpen,
-            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-            child: const Text('Ver documento completo'),
-          ),
-        ],
-      ),
+  Future<void> _openPrivacyLink() async {
+    final opened = await LegalLinksService.openPrivacy(
+      role: LegalLinksService.fromString(widget.role),
     );
+
+    if (!opened && mounted) {
+      GlobalOverlayMessage.showError(
+        context,
+        'No se pudo abrir Política de Privacidad.',
+      );
+    }
+  }
+
+  void _dismissSheet() {
+    if (widget.isBlocking || _isSubmitting || !Navigator.of(context).canPop()) {
+      return;
+    }
+
+    Navigator.of(context).pop(false);
+  }
+
+  bool _handleSheetNotification(DraggableScrollableNotification notification) {
+    // Cuando el usuario baja el sheet hasta el mínimo, cerramos el flujo opcional sin registrar nada.
+    if (widget.isBlocking || _isSubmitting) {
+      return false;
+    }
+
+    if (notification.extent <= notification.minExtent + 0.01) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _dismissSheet();
+        }
+      });
+    }
+
+    return false;
   }
 
   Widget _buildAcceptanceRow({
@@ -354,6 +263,7 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
     required ValueChanged<bool> onChanged,
     required String prefix,
     required String linkText,
+    required String suffix,
     required VoidCallback onOpen,
   }) {
     final theme = Theme.of(context);
@@ -367,17 +277,21 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Checkbox(
-              value: value,
-              onChanged: (checked) => onChanged(checked ?? false),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+            Transform.scale(
+              scale: 1.18,
+              alignment: Alignment.topLeft,
+              child: Checkbox(
+                value: value,
+                onChanged: (checked) => onChanged(checked ?? false),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 10),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.only(top: 8),
                 child: RichText(
                   text: TextSpan(
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -396,6 +310,7 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
                         ),
                         recognizer: TapGestureRecognizer()..onTap = onOpen,
                       ),
+                      TextSpan(text: suffix),
                     ],
                   ),
                 ),
@@ -426,8 +341,8 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: isDark ? 0.72 : 0.50),
-                      Colors.black.withValues(alpha: isDark ? 0.58 : 0.38),
+                      Colors.black.withValues(alpha: isDark ? 0.70 : 0.46),
+                      Colors.black.withValues(alpha: isDark ? 0.56 : 0.32),
                     ],
                   ),
                 ),
@@ -437,308 +352,195 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
               Positioned.fill(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => Navigator.of(context).pop(false),
+                  onTap: _dismissSheet,
                   child: const SizedBox.expand(),
                 ),
               ),
             SafeArea(
-              child: Stack(
-                children: [
-                  if (!widget.isBlocking)
-                    Positioned(
-                      top: 12,
-                      right: 16,
-                      child: IconButton.filledTonal(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ),
-                  // Anclar el sheet al fondo evita que desaparezca cuando la ruta se monta como overlay.
-                  Positioned.fill(
-                    child: DraggableScrollableSheet(
-                      expand: false,
-                      initialChildSize: 0.82,
-                      minChildSize: 0.74,
-                      maxChildSize: 0.95,
-                      builder: (context, scrollController) {
-                        // El sheet resume la aceptación y deja el documento completo en una vista aparte para no saturar el primer contacto.
-                        return DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.scaffoldBackgroundColor,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(34),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.24),
-                                blurRadius: 24,
-                                offset: const Offset(0, -6),
-                              ),
-                            ],
+              top: true,
+              child: NotificationListener<DraggableScrollableNotification>(
+                onNotification: _handleSheetNotification,
+                child: DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: _initialSheetSize,
+                  minChildSize: _minSheetSize,
+                  maxChildSize: _maxSheetSize,
+                  builder: (context, scrollController) {
+                    // El sheet se mantiene ligero: solo pide aceptar y abre los enlaces externos por rol.
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(34),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.24),
+                            blurRadius: 24,
+                            offset: const Offset(0, -6),
                           ),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 12),
-                              Container(
-                                width: 52,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.outlineVariant,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Expanded(
-                                child: CustomScrollView(
-                                  controller: scrollController,
-                                  slivers: [
-                                    SliverPadding(
-                                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                                      sliver: SliverToBoxAdapter(
-                                        child: _isLoadingDocuments
-                                            ? const Padding(
-                                                padding: EdgeInsets.symmetric(vertical: 80),
-                                                child: Center(
-                                                  child: CircularProgressIndicator(
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
-                                              )
-                                            : _loadError != null
-                                            ? Padding(
-                                                padding: const EdgeInsets.symmetric(
-                                                  vertical: 36,
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Text(
-                                                      _loadError!,
-                                                      textAlign: TextAlign.center,
-                                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                                        color: colorScheme.onSurfaceVariant,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 16),
-                                                    FilledButton(
-                                                      onPressed: _bootstrapLegalView,
-                                                      child: const Text('Reintentar'),
-                                                    ),
-                                                  ],
-                                                ),
-                                              )
-                                            : Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    _sheetTitle(),
-                                                    style: theme.textTheme.headlineSmall?.copyWith(
-                                                      fontWeight: FontWeight.w900,
-                                                      color: colorScheme.onSurface,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 10),
-                                                  Text(
-                                                    _sheetSubtitle(),
-                                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                                      color: colorScheme.onSurfaceVariant,
-                                                      height: 1.45,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 18),
-                                                  Wrap(
-                                                    spacing: 10,
-                                                    runSpacing: 10,
-                                                    children: [
-                                                      _LegalMetaChip(
-                                                        label: 'Rol ${_roleLabel()}',
-                                                        icon: Icons.shield_rounded,
-                                                      ),
-                                                      if (_resolvedVersion.trim().isNotEmpty)
-                                                        _LegalMetaChip(
-                                                          label: 'Versión $_resolvedVersion',
-                                                          icon: Icons.verified_rounded,
-                                                        ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 22),
-                                                  if (_termsDocument != null)
-                                                    _buildSummaryCard(
-                                                      context: context,
-                                                      document: _termsDocument!,
-                                                      icon: Icons.gavel_rounded,
-                                                      onOpen: () => _openDocument(
-                                                        LegalDocType.terms,
-                                                      ),
-                                                    ),
-                                                  if (_termsDocument != null)
-                                                    const SizedBox(height: 14),
-                                                  if (_privacyDocument != null)
-                                                    _buildSummaryCard(
-                                                      context: context,
-                                                      document: _privacyDocument!,
-                                                      icon: Icons.privacy_tip_rounded,
-                                                      onOpen: () => _openDocument(
-                                                        LegalDocType.privacy,
-                                                      ),
-                                                    ),
-                                                  const SizedBox(height: 18),
-                                                  Container(
-                                                    padding: const EdgeInsets.all(16),
-                                                    decoration: BoxDecoration(
-                                                      color: colorScheme.surface,
-                                                      borderRadius: BorderRadius.circular(22),
-                                                      border: Border.all(
-                                                        color: isDark
-                                                            ? colorScheme.outlineVariant.withValues(alpha: 0.7)
-                                                            : AppColors.blue100.withValues(alpha: 0.95),
-                                                      ),
-                                                    ),
-                                                    child: Column(
-                                                      children: [
-                                                        _buildAcceptanceRow(
-                                                          context: context,
-                                                          value: _acceptedTerms,
-                                                          onChanged: (value) => setState(
-                                                            () => _acceptedTerms = value,
-                                                          ),
-                                                          prefix: 'Acepto los ',
-                                                          linkText:
-                                                              'Términos y Condiciones',
-                                                          onOpen: () => _openDocument(
-                                                            LegalDocType.terms,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(height: 4),
-                                                        _buildAcceptanceRow(
-                                                          context: context,
-                                                          value: _acceptedPrivacy,
-                                                          onChanged: (value) => setState(
-                                                            () => _acceptedPrivacy = value,
-                                                          ),
-                                                          prefix:
-                                                              'Acepto la ',
-                                                          linkText:
-                                                              'Política de Privacidad y tratamiento de datos',
-                                                          onOpen: () => _openDocument(
-                                                            LegalDocType.privacy,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                                decoration: BoxDecoration(
-                                  color: theme.scaffoldBackgroundColor,
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-                                    ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              controller: scrollController,
+                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                              children: [
+                                Text(
+                                  _sheetTitle(),
+                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 54,
-                                      child: FilledButton(
-                                        onPressed: (_isLoadingDocuments ||
-                                                _loadError != null ||
-                                                !_acceptedTerms ||
-                                                !_acceptedPrivacy ||
-                                                _isSubmitting)
-                                            ? null
-                                            : _handleAcceptance,
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: AppColors.primary,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(18),
-                                          ),
-                                        ),
-                                        child: _isSubmitting
-                                            ? const SizedBox(
-                                                width: 22,
-                                                height: 22,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2.4,
-                                                  color: Colors.white,
-                                                ),
-                                              )
-                                            : Text(
-                                                _isUpdateFlow
-                                                    ? 'Aceptar actualización'
-                                                    : 'Aceptar y continuar',
-                                              ),
+                                if (_sheetSubtitle() != null) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _sheetSubtitle()!,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                                if (_resolvedVersion.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Versión $_resolvedVersion',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
+                                Divider(
+                                  height: 1,
+                                  color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(height: 20),
+                                if (_isLoadingState)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 48),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.primary,
                                       ),
                                     ),
-                                    if (!widget.isBlocking) ...[
-                                      const SizedBox(height: 10),
-                                      TextButton(
-                                        onPressed: _isSubmitting
-                                            ? null
-                                            : () => Navigator.of(context).pop(false),
-                                        child: const Text('Ahora no'),
+                                  )
+                                else if (_loadError != null)
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _loadError!,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      FilledButton(
+                                        onPressed: _bootstrapLegalView,
+                                        child: const Text('Reintentar'),
                                       ),
                                     ],
-                                  ],
+                                  )
+                                else
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.surface,
+                                      borderRadius: BorderRadius.circular(30),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                                            : AppColors.blue100.withValues(alpha: 0.95),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _buildAcceptanceRow(
+                                          context: context,
+                                          value: _acceptedTerms,
+                                          onChanged: (value) => setState(
+                                            () => _acceptedTerms = value,
+                                          ),
+                                          prefix: 'Acepto los ',
+                                          linkText: 'Términos y condiciones',
+                                          suffix: '.',
+                                          onOpen: _openTermsLink,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        _buildAcceptanceRow(
+                                          context: context,
+                                          value: _acceptedPrivacy,
+                                          onChanged: (value) => setState(
+                                            () => _acceptedPrivacy = value,
+                                          ),
+                                          prefix: 'Acepto la ',
+                                          linkText: 'Política de privacidad',
+                                          suffix: ' y el tratamiento de datos personales.',
+                                          onOpen: _openPrivacyLink,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                            decoration: BoxDecoration(
+                              color: theme.scaffoldBackgroundColor,
+                              border: Border(
+                                top: BorderSide(
+                                  color: colorScheme.outlineVariant.withValues(alpha: 0.6),
                                 ),
                               ),
-                            ],
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: FilledButton(
+                                onPressed: (_isLoadingState ||
+                                        _loadError != null ||
+                                        !_acceptedTerms ||
+                                        !_acceptedPrivacy ||
+                                        _isSubmitting)
+                                    ? null
+                                    : _handleAcceptance,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: _isSubmitting
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Aceptar'),
+                              ),
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _LegalMetaChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _LegalMetaChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }

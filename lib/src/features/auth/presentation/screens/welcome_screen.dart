@@ -96,6 +96,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
       if (result['success'] == true) {
         final user = (result['user'] as Map?)?.cast<String, dynamic>();
+        final sessionData =
+            (result['session_data'] as Map?)?.cast<String, dynamic>();
         final isNewUser = result['is_new_user'] == true;
 
         if (isNewUser && user != null) {
@@ -110,9 +112,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             await GoogleAuthService.signOut();
             await UserService.clearSession();
             if (!mounted) return;
-            _showErrorSnackBar('Debes aceptar terminos y privacidad para continuar.');
             return;
           }
+        }
+
+        // Persistir la sesión solo después de aceptar evita saltos prematuros a teléfono o home.
+        if (sessionData != null) {
+          await UserService.saveActiveSession(sessionData);
         }
 
         // Verificar si necesita teléfono

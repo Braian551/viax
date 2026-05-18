@@ -154,7 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return true;
     }
 
-    _showSnackBar('Debes aceptar terminos y privacidad para completar el registro.', isError: true);
     return false;
   }
 

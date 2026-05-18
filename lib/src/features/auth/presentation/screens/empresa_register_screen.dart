@@ -339,7 +339,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       return true;
     }
 
-    _showError('Debes aceptar terminos y privacidad para registrar la empresa.');
     return false;
   }
 
