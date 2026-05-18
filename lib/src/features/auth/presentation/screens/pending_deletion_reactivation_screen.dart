@@ -117,7 +117,7 @@ class _PendingDeletionReactivationScreenState extends State<PendingDeletionReact
       return;
     }
 
-    await UserService.saveSession(user);
+    await UserService.saveActiveSession(user);
 
     if (!mounted) {
       return;

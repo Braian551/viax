@@ -28,7 +28,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Future<void> _checkSession() async {
-    final session = await UserService.getSavedSession();
+    // Solo una sesión activa y completa puede saltarse la bienvenida.
+    final session = await UserService.getActiveSession();
     if (session != null && mounted) {
       // Verificar si necesita ingresar teléfono
       final requiresPhone = await GoogleAuthService.checkRequiresPhone();
@@ -37,7 +38,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           context,
         ).pushReplacementNamed(RouteNames.phoneRequired, arguments: session);
       } else if (mounted) {
-          final tipoUsuario = (session['tipo_usuario'] ?? 'cliente').toString();
+          final tipoUsuario = UserService.normalizeUserRole(session['tipo_usuario']) ?? 'cliente';
           if (tipoUsuario == 'soporte_tecnico') {
             Navigator.of(context).pushReplacementNamed(
               RouteNames.supportHome,

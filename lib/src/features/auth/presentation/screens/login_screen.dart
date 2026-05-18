@@ -98,9 +98,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 }
               }
-              await UserService.saveSession(sessionData);
+              await UserService.saveActiveSession(sessionData);
             } else {
-              await UserService.saveSession({'email': emailToUse});
+              await UserService.savePendingSession({'email': emailToUse});
             }
           } catch (e) {
             print('Error guardando sesión: $e');

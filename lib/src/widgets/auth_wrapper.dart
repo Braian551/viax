@@ -65,17 +65,19 @@ class _AuthWrapperState extends State<AuthWrapper>
         return;
       }
 
-      // Verificar si hay una sesión guardada
-      final session = await UserService.getSavedSession();
+      // Solo continuar cuando la sesión restaurada sigue siendo válida.
+      final session = await UserService.getActiveSession();
 
       if (!mounted) return;
 
-      if (session != null && session['email'] != null) {
+      if (session != null) {
         // Inicializar conexión WebSocket para recibir eventos en tiempo real.
         RealtimeService.instance.initialize();
 
         // Verificar si tenemos el tipo de usuario guardado
-        final tipoUsuarioGuardado = session['tipo_usuario'];
+        final tipoUsuarioGuardado = UserService.normalizeUserRole(
+          session['tipo_usuario'],
+        );
 
         if (tipoUsuarioGuardado != null) {
           // Usar el tipo guardado directamente para navegación más rápida
@@ -86,7 +88,7 @@ class _AuthWrapperState extends State<AuthWrapper>
             );
           } else if (tipoUsuarioGuardado == 'administrador' || tipoUsuarioGuardado == 'admin') {
             // Debug: verificar ID del administrador
-            print('AuthWrapper: Admin ID desde sesiÃ³n: ${session['id']}');
+            debugPrint('AuthWrapper: Admin ID desde sesión: ${session['id']}');
 
             // Para administradores, siempre usar los datos de la sesión que ya incluyen el ID
             Navigator.of(context).pushReplacementNamed(
@@ -119,12 +121,15 @@ class _AuthWrapperState extends State<AuthWrapper>
 
           if (!mounted) return;
 
-          if (profile != null && profile['success'] == true) {
-            final user = profile['user'];
-            final tipoUsuario = user?['tipo_usuario'] ?? 'cliente';
+          if (profile != null && profile['success'] == true && profile['user'] is Map) {
+            final user = Map<String, dynamic>.from(profile['user'] as Map);
+            final tipoUsuario =
+                UserService.normalizeUserRole(user['tipo_usuario']) ?? 'cliente';
 
             // Actualizar la sesión con el tipo obtenido
-            await UserService.saveSession(user);
+            await UserService.saveActiveSession(user);
+
+            if (!mounted) return;
 
             // Redirigir según el tipo de usuario
             if (tipoUsuario == 'soporte_tecnico') {
@@ -134,7 +139,7 @@ class _AuthWrapperState extends State<AuthWrapper>
               );
             } else if (tipoUsuario == 'administrador' || tipoUsuario == 'admin') {
               // Debug: verificar ID del administrador
-              print('AuthWrapper: Admin ID desde perfil: ${user?['id']}');
+              debugPrint('AuthWrapper: Admin ID desde perfil: ${user['id']}');
 
               Navigator.of(context).pushReplacementNamed(
                 RouteNames.adminHome,
@@ -160,6 +165,7 @@ class _AuthWrapperState extends State<AuthWrapper>
           } else {
             // Si no se pudo obtener el perfil, limpiar sesión y mostrar welcome
             await UserService.clearSession();
+            if (!mounted) return;
             Navigator.of(context).pushReplacementNamed(RouteNames.welcome);
           }
         }
@@ -169,7 +175,7 @@ class _AuthWrapperState extends State<AuthWrapper>
       }
     } catch (e) {
       // En caso de error, mostrar welcome por defecto
-      print('Error en _checkSession: $e');
+      debugPrint('Error en _checkSession: $e');
       if (mounted) {
         Navigator.of(context).pushReplacementNamed(RouteNames.welcome);
       }
