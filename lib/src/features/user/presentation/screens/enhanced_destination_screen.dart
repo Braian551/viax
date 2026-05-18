@@ -962,35 +962,14 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
                       ? [
                           AppColors.darkBackground,
                           AppColors.darkSurface,
-                          AppColors.primary.withValues(alpha: 0.05),
+                          AppColors.darkSurface,
                         ]
                       : [
                           AppColors.lightBackground,
                           Colors.white,
-                          AppColors.primary.withValues(alpha: 0.03),
+                          AppColors.lightSurface,
                         ],
                   stops: const [0.0, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Elementos decorativos de fondo (Círculos sutiles)
-          Positioned(
-            top: -100,
-            right: -100,
-            child: IgnorePointer(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.05),
-                      Colors.transparent,
-                    ],
-                  ),
                 ),
               ),
             ),

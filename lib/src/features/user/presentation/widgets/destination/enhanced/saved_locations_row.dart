@@ -26,6 +26,7 @@ class SavedLocationsRow extends StatelessWidget {
         _SavedLocationChip(
           icon: Icons.home_rounded,
           label: 'Casa',
+          subtitle: savedPlaces.home?.location.address,
           isDark: isDark,
           isLoading: isLoading,
           hasValue: savedPlaces.home != null,
@@ -36,6 +37,7 @@ class SavedLocationsRow extends StatelessWidget {
         _SavedLocationChip(
           icon: Icons.work_rounded,
           label: 'Trabajo',
+          subtitle: savedPlaces.work?.location.address,
           isDark: isDark,
           isLoading: isLoading,
           hasValue: savedPlaces.work != null,
@@ -61,6 +63,7 @@ class SavedLocationsRow extends StatelessWidget {
 class _SavedLocationChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final bool isDark;
   final bool isLoading;
   final bool hasValue;
@@ -71,6 +74,7 @@ class _SavedLocationChip extends StatelessWidget {
   const _SavedLocationChip({
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.isDark,
     required this.isLoading,
     required this.hasValue,
@@ -84,6 +88,7 @@ class _SavedLocationChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textColor = colorScheme.onSurface;
+    final hasSubtitle = hasValue && (subtitle?.trim().isNotEmpty ?? false);
     final backgroundColor = hasValue
         ? color.withValues(alpha: isDark ? 0.16 : 0.10)
         : colorScheme.surfaceContainerHighest.withValues(
@@ -166,18 +171,41 @@ class _SavedLocationChip extends StatelessWidget {
                 ),
                 const SizedBox(width: 7),
                 Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: textColor.withValues(
-                        alpha: hasValue ? 0.92 : 0.78,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: textColor.withValues(
+                            alpha: hasValue ? 0.92 : 0.78,
+                          ),
+                          height: 1,
+                        ),
                       ),
-                      height: 1,
-                    ),
+                      if (hasSubtitle) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: textColor.withValues(
+                              alpha: isDark ? 0.62 : 0.58,
+                            ),
+                            height: 1,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 if (trailing != null) ...[const SizedBox(width: 4), trailing],
