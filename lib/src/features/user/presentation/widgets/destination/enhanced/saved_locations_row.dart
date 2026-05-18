@@ -108,21 +108,30 @@ class _SavedLocationChip extends StatelessWidget {
         child: CircularProgressIndicator(strokeWidth: 1.8, color: color),
       );
     } else if (badgeCount > 0) {
-      trailing = Container(
-        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.22 : 0.14),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Center(
-          child: Text(
-            '$badgeCount',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 10,
-              height: 1,
+      final badgeLabel = badgeCount > 9 ? '9+' : '$badgeCount';
+      trailing = SizedBox(
+        width: 22,
+        height: 22,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: isDark ? 0.24 : 0.16),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  badgeLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 9,
+                    height: 1,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

@@ -27,7 +27,10 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
     _loadSavedPlaces();
   }
 
-  Future<void> _loadSavedPlaces({bool forceRefresh = false}) async {
+  Future<void> _loadSavedPlaces({
+    bool forceRefresh = false,
+    bool showError = true,
+  }) async {
     try {
       final places = await SavedPlacesService.loadForCurrentUser(
         forceRefresh: forceRefresh,
@@ -42,7 +45,9 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
       if (!mounted) return;
 
       setState(() => _isLoading = false);
-      _showMessage('No pudimos cargar tus direcciones', isError: true);
+      if (showError) {
+        _showMessage('No pudimos cargar tus direcciones', isError: true);
+      }
     }
   }
 
@@ -125,20 +130,23 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
   }) async {
     setState(() => _isBusy = true);
     try {
-      await SavedPlacesService.savePlace(
+      final savedPlace = await SavedPlacesService.savePlace(
         type: type,
         location: location,
         placeId: existing?.id,
         savedName: savedName,
       );
-      await _loadSavedPlaces(forceRefresh: true);
       if (!mounted) return;
 
+      setState(() {
+        _savedPlaces = _savedPlaces.upsertPlace(savedPlace);
+      });
       _showMessage(
         type == SavedPlaceType.favorite
             ? 'Favorito guardado correctamente'
             : 'Direccion guardada correctamente',
       );
+      await _loadSavedPlaces(forceRefresh: true, showError: false);
     } catch (e) {
       if (!mounted) return;
       _showMessage('No pudimos guardar la direccion', isError: true);

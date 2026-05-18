@@ -146,6 +146,28 @@ class SavedPlacesCollection {
     );
   }
 
+  SavedPlacesCollection upsertPlace(SavedUserPlace place) {
+    switch (place.type) {
+      case SavedPlaceType.home:
+        return copyWith(home: place);
+      case SavedPlaceType.work:
+        return copyWith(work: place);
+      case SavedPlaceType.favorite:
+        final nextFavorites = List<SavedUserPlace>.from(favorites);
+        final existingIndex = nextFavorites.indexWhere(
+          (item) => item.id == place.id,
+        );
+
+        if (existingIndex >= 0) {
+          nextFavorites[existingIndex] = place;
+        } else {
+          nextFavorites.insert(0, place);
+        }
+
+        return copyWith(favorites: nextFavorites.toList(growable: false));
+    }
+  }
+
   factory SavedPlacesCollection.fromResponse(Map<String, dynamic> response) {
     final data = response['data'] is Map<String, dynamic>
         ? Map<String, dynamic>.from(response['data'] as Map<String, dynamic>)

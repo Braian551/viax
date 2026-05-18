@@ -65,15 +65,16 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   // Lista de vehículos disponibles (cargada del backend)
   List<VehicleInfo> _vehicles = [];
 
-  // Mapa para rastrear empresa seleccionada por tipo de vehículo
-  // Key: vehicleType, Value: empresaId
+  // Mapa para rastrear la empresa seleccionada por tipo de vehículo.
+  // Clave: vehicleType, valor: empresaId.
   final Map<String, int> _selectedCompanyPerVehicle = {};
 
   // Mapa de empresas disponibles por tipo de vehículo
   Map<String, List<CompanyVehicleOption>> _companiesPerVehicle = {};
 
-  // Quotes calculados por tipo (para mostrar precios)
+  // Cotizaciones calculadas por tipo para mostrar precios.
   final Map<String, TripQuote> _vehicleQuotes = {};
+  bool _mapReady = false;
 
   late AnimationController _slideAnimationController;
   late Animation<Offset> _slideAnimation;
@@ -152,7 +153,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
         debugPrint('Error adding sheet listener: $e');
       }
 
-      // FAILSAFE: Validar que origen y destino no sean el mismo lugar
+      // Validación de seguridad: origen y destino no pueden ser prácticamente iguales.
       final distanceBetween = const Distance().as(
         LengthUnit.Meter,
         LatLng(widget.origin.latitude, widget.origin.longitude),
@@ -164,7 +165,7 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
       );
 
       if (distanceBetween < 50) {
-        debugPrint('🚨 FAILSAFE: Origen y destino son el mismo lugar!');
+        debugPrint('🚨 Seguridad: origen y destino son prácticamente el mismo lugar');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -237,7 +238,11 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
 
     debugPrint('[RoutePreview] route_rendered points=${route.geometry.length}');
 
-    await _fitMapToRouteAnimated();
+    if (_mapReady) {
+      await _fitMapToRouteAnimated();
+    } else {
+      debugPrint('[RoutePreview] fit_deferred map_ready=false');
+    }
     if (!mounted) return;
 
     _topPanelAnimationController.forward();
@@ -1069,7 +1074,10 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
   }
 
   Future<void> _fitMapToRouteAnimated() async {
-    if (_route == null) return;
+    if (_route == null || !_mapReady) return;
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || _route == null || !_mapReady) return;
 
     // Encontrar los límites de la ruta
     double minLat = double.infinity;
@@ -1085,23 +1093,36 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
     }
 
     final bounds = LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng));
+    final mediaQuery = MediaQuery.of(context);
+    final screenSize = mediaQuery.size;
+    final safePadding = mediaQuery.padding;
+    final horizontalPadding = (screenSize.width * 0.07).clamp(20.0, 28.0).toDouble();
+    final topPadding =
+        (screenSize.height * 0.12).clamp(88.0, 132.0).toDouble() +
+        safePadding.top;
+    final bottomPadding =
+        (screenSize.height * 0.24).clamp(160.0, 240.0).toDouble() +
+        safePadding.bottom;
 
-    // Ajustar el mapa con padding generoso para mostrar toda la ruta
+    // Ajustar el mapa con padding dinámico para que la ruta quede visible
+    // sin alejarse demasiado cuando el trayecto es corto.
     final camera = CameraFit.bounds(
       bounds: bounds,
-      padding: const EdgeInsets.only(
-        top: 220, // Espacio para el panel superior
-        bottom: 380, // Espacio para el panel inferior
-        left: 70,
-        right: 70,
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        topPadding,
+        horizontalPadding,
+        bottomPadding,
       ),
     );
 
-    // Usar animación de cámara suave
+    _mapController.fitCamera(camera);
+    await Future.delayed(const Duration(milliseconds: 120));
+    if (!mounted || !_mapReady) return;
     _mapController.fitCamera(camera);
 
     // Pausa para que la cámara se ajuste antes de animar elementos
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 280));
   }
 
   String _getVehicleName(String type) {
@@ -1258,7 +1279,18 @@ class _TripPreviewScreenState extends State<TripPreviewScreen>
             options: MapOptions(
               initialCenter: widget.origin.toLatLng(),
               initialZoom: 14,
-              onMapReady: onMapReady,
+              minZoom: 4,
+              maxZoom: 18,
+              onMapReady: () {
+                _mapReady = true;
+                onMapReady();
+                if (_route != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    unawaited(_fitMapToRouteAnimated());
+                  });
+                }
+              },
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
               ),

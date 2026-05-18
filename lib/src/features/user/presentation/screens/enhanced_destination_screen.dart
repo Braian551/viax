@@ -191,6 +191,11 @@ class _EnhancedDestinationScreenState extends State<EnhancedDestinationScreen>
         placeId: existing?.id,
         savedName: savedName,
       );
+      if (mounted) {
+        setState(() {
+          _savedPlaces = _savedPlaces.upsertPlace(savedPlace);
+        });
+      }
       await _loadSavedPlaces(forceRefresh: true);
       return savedPlace;
     } catch (e) {

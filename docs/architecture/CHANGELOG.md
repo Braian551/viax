@@ -1,5 +1,20 @@
 # CHANGELOG - Refactorización Clean Architecture
 
+## [2026-05-17] - Favoritos y eliminación segura
+
+### Flutter App
+
+- La eliminación de cuenta dejó el segundo `AlertDialog` embebido y ahora navega a un flujo compartido de verificación por correo, reutilizable entre cliente, conductor y empresa desde `AccountDeletionFlow`.
+- Se extrajo una vista reutilizable para pantallas introductorias de verificación, usada por cambio de contraseña y por la nueva entrada del flujo de eliminación de cuenta.
+- El guardado local de direcciones favoritas ahora actualiza el estado de la UI antes de la recarga remota, evitando dejar la vista stale si la sincronización posterior falla.
+- El chip de `Favoritos` en la búsqueda rápida dejó de estirar el contador en altura completa y ahora muestra un badge circular fijo, consistente en tamaños angostos.
+- El preview del viaje ahora espera a que el mapa termine de estar listo antes de ajustar la cámara a la ruta y usa padding dinámico, evitando el lienzo en blanco inicial y el zoom excesivamente alejado en trayectos como Terminal del Norte.
+
+### Backend PHP
+
+- Los endpoints de direcciones guardadas (`get`, `save`, `delete`) ahora validan y autocorrigen las columnas `tipo_guardado` y `nombre_guardado` en `ubicaciones_usuario` antes de operar, para que favoritos siga funcionando incluso si la migración llegó incompleta a un entorno.
+- El guardado de lugares favoritos ahora deriva `ciudad`, `departamento` y `pais` desde la dirección cuando el buscador no envía esos campos explícitamente, evitando fallos por restricciones `NOT NULL` en producción.
+
 ## [2026-05-17] - Ajustes de apariencia y scroll
 
 ### Flutter App
