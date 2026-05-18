@@ -4,6 +4,8 @@
 
 ### Flutter App
 
+- El sheet de aceptación legal ahora se ancla al borde inferior en rutas transparentes y difiere su validación hasta después del primer frame, evitando que aparezca arriba de los formularios y que `LegalProvider` notifique durante el build inicial.
+- El sheet de aceptación legal recuperó un título grande `Términos y condiciones` con color derivado del tema y aumentó sus alturas iniciales/minimas para que los checkboxes y el botón no queden compactados en formularios y roles.
 - El arranque ya no trata cualquier rastro local como sesión iniciada: `UserService` ahora distingue entre sesión `active` y sesión `pending`, y solo permite autoentrada por rol cuando hay identidad completa y estado autenticado válido.
 - Los flujos de login, Google Sign-In, reactivación de cuenta, registro y recuperación de teléfono ahora persisten el estado de sesión con intención explícita, evitando que registros parciales o correos aislados disparen navegación directa a home.
 - `SplashScreen`, `WelcomeScreen`, `AuthWrapper`, la sincronización de push, la apertura por notificaciones y el WebSocket dejaron de arrancar servicios o navegar por rol con sesiones provisionales o restauradas de forma incompleta.
@@ -11,7 +13,7 @@
 - La aceptación legal dejó de depender solo del caché local: el backend ahora informa si el usuario ya aceptó la versión vigente por rol, evitando que una reinstalación vuelva a exigir términos ya aceptados.
 - La pantalla de aceptación legal pasó a un sheet drag más limpio, con checkboxes mínimos y enlaces externos a `Términos` y `Privacidad` según el rol, sin resumir documentos dentro del modal.
 - El gate de aceptación legal ya no se monta como una ruta opaca sobre fondo negro: ahora conserva visible la pantalla actual, permite cerrar por tap exterior o al bajar el sheet cuando el flujo es opcional, y se mantiene obligatorio en rutas bloqueantes como `admin` y `soporte`.
-- El sheet legal rebajó su altura inicial, ocultó el handle visual superior y amplió ligeramente los checkboxes para que el modal se vea más bajo y más cercano a la referencia compacta definida para bienvenida y home.
+- El sheet legal rebajó su altura inicial, ocultó el handle visual superior y amplió ligeramente los checkboxes; además, en flujos opcionales como bienvenida ya no dibuja el encabezado de `Términos y condiciones` arriba del bloque de aceptación para que el modal se vea más compacto y pegado a la acción.
 - El login con Google dejó de persistir la sesión activa antes de aceptar los documentos legales, evitando saltos prematuros a `agregar teléfono` o a homes cuando el usuario todavía no ha aceptado.
 - Si un alta nueva con Google rechaza términos o privacidad, `WelcomeScreen` revierte ese registro efímero antes de cerrar la sesión para que la cuenta no quede creada a medias.
 - La pantalla compartida de `Apariencia` vuelve a mantener `Claro` y `Oscuro` siempre en una sola fila; para evitar el desborde en móviles compactos se redujo el tamaño interno de las previews en vez de pasar el selector a columna.
