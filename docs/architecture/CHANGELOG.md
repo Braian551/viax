@@ -11,6 +11,8 @@
 - La vista de `Apariencia` dejó el mock genérico y ahora usa previews inspiradas en el header, tarjetas y navegación de Viax, corrigiendo además el overflow en pantallas angostas.
 - La preview de `Apariencia` ajustó sus bordes claros al estilo de tarjetas usadas en la app y redujo el ancho del selector del navbar mock para alinearlo con el componente real.
 - En perfil y viajes embebidos se dejó de extender el body detrás del header compartido, eliminando el bloque oscuro al hacer scroll y manteniendo una separación limpia sin superposiciones artificiales.
+- El header compartido dejó de usar el `AppBar` material por defecto y ahora se dibuja como una capa transparente propia, para evitar el bloque azul detrás del saludo en claro sin reintroducir interferencia con el contenido.
+- La preview de `Apariencia` recolocó los iconos de viajes y perfil dentro del navbar mock y sustituyó contornos grises/negros por bordes azulados sutiles, en línea con pantallas como `Mis direcciones`.
 
 ## [1.0.0] - Octubre 2025
 

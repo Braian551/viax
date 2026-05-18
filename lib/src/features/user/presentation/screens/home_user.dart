@@ -624,17 +624,16 @@ class _HomeUserScreenState extends State<HomeUserScreen>
 
   PreferredSizeWidget _buildAppBar(bool isDark) {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(110),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle(
+      preferredSize: const Size.fromHeight(94),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         ),
-        flexibleSpace: SafeArea(
+        child: SafeArea(
+          bottom: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
             child: Row(
               children: [
                 // Contenedor principal con efecto vidrio (más ancho)

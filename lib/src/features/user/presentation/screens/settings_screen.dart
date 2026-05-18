@@ -381,23 +381,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                       title: 'Privacidad y Seguridad',
                       children: [
                         if (_matchesSettingsQuery(
-                          'Cambiar Contrasena',
-                          'Actualiza tu contrasena',
+                          'Cambiar Contraseña',
+                          'Actualiza tu contraseña',
                         ))
                           SettingsItem(
                             icon: Icons.lock_rounded,
-                            title: 'Cambiar Contrasena',
-                            subtitle: 'Actualiza tu contrasena',
+                            title: 'Cambiar Contraseña',
+                            subtitle: 'Actualiza tu contraseña',
                             animationIndex: 3,
                             onTap: _openChangePasswordScreen,
                           ),
                         if (_matchesSettingsQuery(
-                          'Autenticacion Biometrica',
+                          'Autenticación Biométrica',
                           'Usar huella o Face ID',
                         ))
                           SettingsItem(
                             icon: Icons.fingerprint_rounded,
-                            title: 'Autenticacion Biometrica',
+                            title: 'Autenticación Biométrica',
                             subtitle: 'Usar huella o Face ID',
                             animationIndex: 4,
                             trailing: SettingsToggle(

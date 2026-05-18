@@ -64,9 +64,9 @@ class AppearanceSettingsScreen extends StatelessWidget {
                   color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(
-                      alpha: isDark ? 0.28 : 0.72,
-                    ),
+                    color: isDark
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.28)
+                        : AppColors.blue100.withValues(alpha: 0.95),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -197,7 +197,9 @@ class _ThemePreviewOption extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? colorScheme.primary
-                  : colorScheme.outlineVariant.withValues(alpha: 0.7),
+                  : (isDark
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                        : AppColors.blue100.withValues(alpha: 0.95)),
               width: isSelected ? 1.5 : 1,
             ),
           ),
@@ -270,12 +272,11 @@ class _ThemePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final borderColor = isActive
         ? AppColors.primary.withValues(alpha: isDarkPreview ? 0.75 : 0.45)
         : (isDarkPreview
               ? Colors.white.withValues(alpha: 0.08)
-              : colorScheme.outlineVariant.withValues(alpha: 0.72));
+          : AppColors.blue100.withValues(alpha: 0.95));
     final previewBackground = isDarkPreview
         ? const Color(0xFF15181E)
         : const Color(0xFFF3F5F8);
@@ -287,7 +288,7 @@ class _ThemePreviewCard extends StatelessWidget {
         : Colors.white.withValues(alpha: 0.94);
     final surfaceBorder = isDarkPreview
         ? Colors.white.withValues(alpha: 0.10)
-      : colorScheme.outlineVariant.withValues(alpha: 0.78);
+      : AppColors.blue100.withValues(alpha: 0.88);
     final primaryText = isDarkPreview ? Colors.white : AppColors.lightTextPrimary;
     final secondaryText = isDarkPreview
         ? Colors.white.withValues(alpha: 0.65)
@@ -499,52 +500,64 @@ class _ThemePreviewCard extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: isDarkPreview ? 0.32 : 0.16,
-                                ),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.home_rounded,
-                                    size: 18,
-                                    color: isDarkPreview
-                                        ? Colors.white
-                                        : AppColors.primary,
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    width: 20,
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: isDarkPreview
-                                          ? Colors.white.withValues(alpha: 0.85)
-                                          : AppColors.primary.withValues(alpha: 0.55),
-                                      borderRadius: BorderRadius.circular(999),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(
+                                      alpha: isDarkPreview ? 0.32 : 0.16,
                                     ),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
-                                ],
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.home_rounded,
+                                        size: 18,
+                                        color: isDarkPreview
+                                            ? Colors.white
+                                            : AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        width: 16,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: isDarkPreview
+                                              ? Colors.white.withValues(alpha: 0.85)
+                                              : AppColors.primary.withValues(alpha: 0.55),
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            const Spacer(),
-                            Icon(
-                              Icons.history_rounded,
-                              size: 18,
-                              color: secondaryText,
+                            Expanded(
+                              child: Center(
+                                child: Icon(
+                                  Icons.history_rounded,
+                                  size: 18,
+                                  color: secondaryText,
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 14),
-                            Icon(
-                              Icons.person_rounded,
-                              size: 18,
-                              color: secondaryText,
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Icon(
+                                  Icons.person_rounded,
+                                  size: 18,
+                                  color: secondaryText,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -615,7 +628,9 @@ class _SystemModeCard extends StatelessWidget {
         border: Border.all(
           color: isEnabled
               ? colorScheme.primary.withValues(alpha: isDark ? 0.55 : 0.38)
-              : colorScheme.outlineVariant.withValues(alpha: 0.7),
+              : (isDark
+                    ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                    : AppColors.blue100.withValues(alpha: 0.95)),
         ),
       ),
       child: Row(
