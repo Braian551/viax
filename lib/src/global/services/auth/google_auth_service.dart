@@ -176,7 +176,7 @@ class GoogleAuthService {
                 sessionData[key] = userData[key];
               }
             }
-            await UserService.saveSession(sessionData);
+            await UserService.saveActiveSession(sessionData);
           }
 
           return {

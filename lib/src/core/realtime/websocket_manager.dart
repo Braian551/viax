@@ -429,7 +429,7 @@ class WebSocketManager {
 
   Future<String?> _getAccessToken() async {
     try {
-      final session = await UserService.getSavedSession();
+      final session = await UserService.getActiveSession();
       return session?['access_token'] as String?;
     } catch (_) {
       return null;

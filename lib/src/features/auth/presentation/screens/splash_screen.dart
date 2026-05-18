@@ -214,12 +214,12 @@ class _SplashScreenState extends State<SplashScreen>
       return const _StartupRouteDecision(RouteNames.onboarding);
     }
 
-    final session = await UserService.getSavedSession();
-    if (session == null || session['email'] == null) {
+    final session = await UserService.getActiveSession();
+    if (session == null) {
       return const _StartupRouteDecision(RouteNames.welcome);
     }
 
-    final tipoUsuario = session['tipo_usuario'];
+    final tipoUsuario = UserService.normalizeUserRole(session['tipo_usuario']);
     if (tipoUsuario == 'soporte_tecnico') {
       return _StartupRouteDecision(
         RouteNames.supportHome,
@@ -324,13 +324,13 @@ class _SplashScreenState extends State<SplashScreen>
     }
 
     // 1. Obtener sesión actual (para fallback de IDs)
-    final session = await UserService.getSavedSession();
+    final session = await UserService.getActiveSession();
     int? sessionUserId;
     String? sessionUserRole;
 
     if (session != null) {
       sessionUserId = session['id'];
-      sessionUserRole = session['tipo_usuario'];
+      sessionUserRole = UserService.normalizeUserRole(session['tipo_usuario']);
     }
 
     Map<String, dynamic>? tripToRecover;
@@ -341,7 +341,7 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       final savedTrip = await TripPersistenceService().getActiveTrip();
 
-      if (savedTrip != null) {
+      if (savedTrip != null && sessionUserId != null && sessionUserRole != null) {
         debugPrint(
           '♻️ Intentando recuperar viaje local ${savedTrip.tripId}...',
         );
