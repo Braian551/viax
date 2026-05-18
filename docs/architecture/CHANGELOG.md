@@ -8,6 +8,15 @@
 - Los flujos de login, Google Sign-In, reactivación de cuenta, registro y recuperación de teléfono ahora persisten el estado de sesión con intención explícita, evitando que registros parciales o correos aislados disparen navegación directa a home.
 - `SplashScreen`, `WelcomeScreen`, `AuthWrapper`, la sincronización de push, la apertura por notificaciones y el WebSocket dejaron de arrancar servicios o navegar por rol con sesiones provisionales o restauradas de forma incompleta.
 - La app Android deshabilitó `allowBackup` y `fullBackupContent` en el manifest principal para impedir que `SharedPreferences` restaure sesiones antiguas tras desinstalar e instalar desde Play Store.
+- La aceptación legal dejó de depender solo del caché local: el backend ahora informa si el usuario ya aceptó la versión vigente por rol, evitando que una reinstalación vuelva a exigir términos ya aceptados.
+- La pantalla de aceptación legal pasó a un sheet resumido tipo drag con checkboxes y enlaces internos a `Términos` y `Privacidad`, en lugar de obligar a leer un scroll completo dentro del mismo flujo.
+- Los documentos legales ahora se pueden abrir dentro de la app con un visor estructurado por secciones, y el guard legal también se aplica a `soporte` para mostrar actualizaciones por rol desde su home.
+- Si un alta nueva con Google rechaza términos o privacidad, `WelcomeScreen` revierte ese registro efímero antes de cerrar la sesión para que la cuenta no quede creada a medias.
+
+### Backend PHP
+
+- `legal/current_version.php` ahora puede responder el último estado de aceptación del usuario por rol junto con la versión vigente, para que Flutter decida el gate legal usando la fuente de verdad remota.
+- Se agregó `auth/google/cancel_new_user.php` para revertir altas nuevas de Google todavía sin aceptación legal, validando dispositivo reciente y ausencia de logs de aceptación antes de borrar la cuenta creada en ese intento.
 
 ## [2026-05-17] - Favoritos y eliminación segura
 

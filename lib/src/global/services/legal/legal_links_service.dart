@@ -14,6 +14,8 @@ class LegalLinksService {
       case 'administrador':
       case 'admin':
         return LegalRole.administrador;
+      case 'soporte_tecnico':
+      case 'soporte':
       case 'servidor':
         return LegalRole.servidor;
       case 'cliente':

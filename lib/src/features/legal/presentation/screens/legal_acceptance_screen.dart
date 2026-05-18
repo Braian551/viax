@@ -1,13 +1,14 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:viax/src/features/legal/models/legal_document_model.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
 import 'package:viax/src/features/legal/services/legal_content_service.dart';
-import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
+import 'package:viax/src/global/services/device_id_service.dart';
+import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/shared/widgets/global_overlay_message.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'dart:io';
 import 'package:viax/src/theme/app_colors.dart';
 
 class LegalAcceptanceScreen extends StatefulWidget {
@@ -31,82 +32,134 @@ class LegalAcceptanceScreen extends StatefulWidget {
 }
 
 class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
-  final ScrollController _scrollController = ScrollController();
-  bool _hasReadToBottom = false;
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _isSubmitting = false;
   bool _isLoadingDocuments = true;
 
-  String _termsText = '';
-  String _privacyText = '';
+  String _resolvedVersion = '';
+  bool _isUpdateFlow = false;
+  LegalDocumentData? _termsDocument;
+  LegalDocumentData? _privacyDocument;
   String? _loadError;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_scrollListener);
-    _loadLegalDocuments();
+    _bootstrapLegalView();
   }
 
-  Future<void> _loadLegalDocuments() async {
+  Future<void> _bootstrapLegalView() async {
     setState(() {
       _isLoadingDocuments = true;
       _loadError = null;
     });
 
     try {
+      final legalProvider = context.read<LegalProvider>();
+      var resolvedVersion = widget.version.trim();
+      var isUpdateFlow = false;
+
+      if (widget.userId != null && widget.userId! > 0) {
+        final status = await legalProvider.checkLegalStatus(
+          role: widget.role,
+          userId: widget.userId!,
+        );
+
+        if (!mounted) return;
+
+        if (status == LegalStatus.accepted) {
+          Navigator.of(context).pop(true);
+          return;
+        }
+
+        resolvedVersion =
+            legalProvider.currentRequiredVersion?.trim().isNotEmpty == true
+                ? legalProvider.currentRequiredVersion!.trim()
+                : resolvedVersion;
+        isUpdateFlow = legalProvider.hasAcceptedAnyVersion;
+      } else if (resolvedVersion.isEmpty || resolvedVersion == 'v1.0') {
+        final fetchedVersion = await legalProvider.fetchCurrentVersion(
+          role: widget.role,
+        );
+        resolvedVersion = fetchedVersion?.trim().isNotEmpty == true
+            ? fetchedVersion!.trim()
+            : resolvedVersion;
+      }
+
       final role = LegalLinksService.fromString(widget.role);
-      final terms = await LegalContentService.fetchTerms(role: role);
-      final privacy = await LegalContentService.fetchPrivacy(role: role);
+      final docs = await Future.wait([
+        LegalContentService.fetchDocumentData(
+          role: role,
+          docType: LegalDocType.terms,
+        ),
+        LegalContentService.fetchDocumentData(
+          role: role,
+          docType: LegalDocType.privacy,
+        ),
+      ]);
 
       if (!mounted) return;
       setState(() {
-        _termsText = terms;
-        _privacyText = privacy;
+        _termsDocument = docs[0];
+        _privacyDocument = docs[1];
+        _resolvedVersion = resolvedVersion.isEmpty ? widget.version : resolvedVersion;
+        _isUpdateFlow = isUpdateFlow;
         _isLoadingDocuments = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _loadError = 'No se pudieron cargar los documentos legales. Revisa tu conexion e intenta de nuevo.';
+        _loadError =
+            'No se pudieron cargar los documentos legales. Revisa tu conexión e intenta de nuevo.';
         _isLoadingDocuments = false;
       });
     }
-  }
-
-  void _scrollListener() {
-    if (!_scrollController.hasClients) return;
-
-    final maxExtent = _scrollController.position.maxScrollExtent;
-    if (maxExtent <= 0 && !_hasReadToBottom) {
-      setState(() {
-        _hasReadToBottom = true;
-      });
-      return;
-    }
-
-    if (_scrollController.offset >= (maxExtent - 12) && !_hasReadToBottom) {
-      setState(() {
-        _hasReadToBottom = true;
-      });
-    }
-  }
-
-  Future<void> _scrollToBottom() async {
-    if (!_scrollController.hasClients) return;
-
-    await _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 550),
-      curve: Curves.easeOutCubic,
-    );
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
+  }
+
+  String _roleLabel() {
+    switch (widget.role.trim().toLowerCase()) {
+      case 'conductor':
+        return 'conductor';
+      case 'empresa':
+        return 'empresa';
+      case 'administrador':
+      case 'admin':
+        return 'administrador';
+      case 'soporte_tecnico':
+        return 'soporte';
+      default:
+        return 'cliente';
+    }
+  }
+
+  String _sheetTitle() {
+    if (_isUpdateFlow) {
+      return 'Actualizamos los términos de ${_roleLabel()}';
+    }
+
+    if (widget.userId == null || widget.userId == 0) {
+      return 'Antes de crear tu cuenta';
+    }
+
+    return 'Confirma tus documentos legales';
+  }
+
+  String _sheetSubtitle() {
+    if (_isUpdateFlow) {
+      return 'Revisa el resumen vigente y acepta esta versión para seguir usando Viax en tu rol.';
+    }
+
+    if (widget.userId == null || widget.userId == 0) {
+      return 'Necesitamos tu aceptación para terminar el alta y activar tu acceso sin volver a pedirlo en cada instalación.';
+    }
+
+    return 'Tu cuenta necesita esta aceptación para continuar con el flujo actual.';
   }
 
   Future<void> _navigateToRoleHome() async {
@@ -169,29 +222,18 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
 
     if (userId > 0) {
       final legalProv = context.read<LegalProvider>();
-      String deviceId = 'unknown_flutter_device';
-
-      try {
-        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-        if (Platform.isAndroid) {
-          AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-          deviceId = androidInfo.id;
-        } else if (Platform.isIOS) {
-          IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-          deviceId = iosInfo.identifierForVendor ?? 'ios_unknown';
-        }
-      } catch (_) {}
+      final deviceId = await DeviceIdService.getOrCreateDeviceUuid();
 
       success = await legalProv.acceptTerms(
         userId: userId,
         role: widget.role,
         deviceId: deviceId,
-        version: widget.version,
+        version: _resolvedVersion.isEmpty ? widget.version : _resolvedVersion,
       );
     }
 
     if (success && mounted) {
-      if (widget.returnResultOnAccept) {
+      if (widget.returnResultOnAccept || Navigator.of(context).canPop()) {
         Navigator.of(context).pop(true);
         return;
       }
@@ -212,327 +254,487 @@ class _LegalAcceptanceScreenState extends State<LegalAcceptanceScreen> {
     }
   }
 
-  Widget _buildDocumentBlock({
-    required String title,
-    required String content,
-    required Color textColor,
-    required Color subtitleColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-            letterSpacing: 0.2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildStructuredContent(
-          content,
-          textColor: textColor,
-          subtitleColor: subtitleColor,
-        ),
-      ],
+  void _openDocument(LegalDocType docType) {
+    Navigator.of(context).pushNamed(
+      docType == LegalDocType.terms ? RouteNames.terms : RouteNames.privacy,
+      arguments: {'role': widget.role},
     );
   }
 
-  Widget _buildStructuredContent(
-    String content, {
-    required Color textColor,
-    required Color subtitleColor,
+  Widget _buildSummaryCard({
+    required BuildContext context,
+    required LegalDocumentData document,
+    required IconData icon,
+    required VoidCallback onOpen,
   }) {
-    final lines = content
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final summarySections = document.buildSummarySections(maxItems: 2);
 
-    final widgets = <Widget>[];
-
-    for (final line in lines) {
-      final isNumberedHeading = RegExp(r'^\d+\.\s+').hasMatch(line);
-      final isBullet = line.startsWith('* ');
-      final isDateLine = line.toLowerCase().startsWith('ultima actualizacion') ||
-          line.toLowerCase().startsWith('última actualización');
-
-      if (isNumberedHeading) {
-        widgets.add(const SizedBox(height: 14));
-        widgets.add(
-          Text(
-            line,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-              height: 1.35,
-            ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+              : AppColors.blue100.withValues(alpha: 0.95),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: AppColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  document.docType.shortTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-        widgets.add(const SizedBox(height: 6));
-        continue;
-      }
-
-      if (isBullet) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: textColor.withValues(alpha: 0.75),
+          const SizedBox(height: 12),
+          ...summarySections.map(
+            (section) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(top: 7),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    line.substring(2).trim(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: textColor,
-                      height: 1.5,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      section.summary,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onOpen,
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+            child: const Text('Ver documento completo'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAcceptanceRow({
+    required BuildContext context,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required String prefix,
+    required String linkText,
+    required VoidCallback onOpen,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: value,
+              onChanged: (checked) => onChanged(checked ?? false),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: RichText(
+                  text: TextSpan(
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      height: 1.4,
+                    ),
+                    children: [
+                      TextSpan(text: prefix),
+                      TextSpan(
+                        text: linkText,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                        recognizer: TapGestureRecognizer()..onTap = onOpen,
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        );
-        continue;
-      }
-
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            line,
-            style: TextStyle(
-              fontSize: isDateLine ? 13 : 14,
-              color: isDateLine ? subtitleColor : textColor,
-              fontStyle: isDateLine ? FontStyle.italic : FontStyle.normal,
-              height: 1.5,
-            ),
-          ),
+          ],
         ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final surfaceColor = isDark ? AppColors.darkCard : Colors.white;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtitleColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        title: Text('Términos y Condiciones (${widget.version})'),
-        automaticallyImplyLeading: !widget.isBlocking,
-        centerTitle: true,
-        backgroundColor: surfaceColor,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                border: Border(bottom: BorderSide(color: subtitleColor.withValues(alpha: 0.2))),
+    return PopScope(
+      canPop: !widget.isBlocking,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: isDark ? 0.72 : 0.50),
+                      Colors.black.withValues(alpha: isDark ? 0.58 : 0.38),
+                    ],
+                  ),
+                ),
               ),
-              child: _isLoadingDocuments
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    )
-                  : _loadError != null
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _loadError!,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: subtitleColor),
-                              ),
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: _loadLegalDocuments,
-                                child: const Text('Reintentar'),
-                              ),
-                            ],
+            ),
+            if (!widget.isBlocking)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(false),
+                  child: const ColoredBox(color: Colors.transparent),
+                ),
+              ),
+            SafeArea(
+              child: Column(
+                children: [
+                  if (!widget.isBlocking)
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: IconButton.filledTonal(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ),
+                    ),
+                  const Spacer(),
+                  DraggableScrollableSheet(
+                    expand: false,
+                    initialChildSize: 0.82,
+                    minChildSize: 0.74,
+                    maxChildSize: 0.95,
+                    builder: (context, scrollController) {
+                      // El sheet resume la aceptación y deja el documento completo en una vista aparte para no saturar el primer contacto.
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(34),
                           ),
-                        )
-                      : Stack(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.24),
+                              blurRadius: 24,
+                              offset: const Offset(0, -6),
+                            ),
+                          ],
+                        ),
+                        child: Column(
                           children: [
-                            Scrollbar(
-                              controller: _scrollController,
-                              thumbVisibility: true,
-                              child: SingleChildScrollView(
-                                controller: _scrollController,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Actualizamos nuestras pol\u00edticas',
-                                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Para continuar en Viax debes revisar y aceptar los documentos legales vigentes para tu rol: ${widget.role}.',
-                                      style: TextStyle(fontSize: 14, color: subtitleColor),
-                                    ),
-                                    const Divider(height: 32),
-                                    _buildDocumentBlock(
-                                      title: 'T\u00c9RMINOS Y CONDICIONES',
-                                      content: _termsText,
-                                      textColor: textColor,
-                                      subtitleColor: subtitleColor,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    _buildDocumentBlock(
-                                      title: 'POL\u00cdTICA DE PRIVACIDAD',
-                                      content: _privacyText,
-                                      textColor: textColor,
-                                      subtitleColor: subtitleColor,
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                ),
+                            const SizedBox(height: 12),
+                            Container(
+                              width: 52,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: colorScheme.outlineVariant,
+                                borderRadius: BorderRadius.circular(999),
                               ),
                             ),
-                            Positioned(
-                              right: 12,
-                              bottom: 12,
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 180),
-                                opacity: _hasReadToBottom ? 0 : 1,
-                                child: IgnorePointer(
-                                  ignoring: _hasReadToBottom,
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: _scrollToBottom,
-                                      borderRadius: BorderRadius.circular(28),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(alpha: isDark ? 0.95 : 0.92),
-                                          borderRadius: BorderRadius.circular(28),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.16),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              'Ir al final',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
+                            const SizedBox(height: 14),
+                            Expanded(
+                              child: CustomScrollView(
+                                controller: scrollController,
+                                slivers: [
+                                  SliverPadding(
+                                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                                    sliver: SliverToBoxAdapter(
+                                      child: _isLoadingDocuments
+                                          ? const Padding(
+                                              padding: EdgeInsets.symmetric(vertical: 80),
+                                              child: Center(
+                                                child: CircularProgressIndicator(
+                                                  color: AppColors.primary,
+                                                ),
                                               ),
+                                            )
+                                          : _loadError != null
+                                          ? Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                vertical: 36,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    _loadError!,
+                                                    textAlign: TextAlign.center,
+                                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                                      color: colorScheme.onSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  FilledButton(
+                                                    onPressed: _bootstrapLegalView,
+                                                    child: const Text('Reintentar'),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          : Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _sheetTitle(),
+                                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                                    fontWeight: FontWeight.w900,
+                                                    color: colorScheme.onSurface,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  _sheetSubtitle(),
+                                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                                    color: colorScheme.onSurfaceVariant,
+                                                    height: 1.45,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 18),
+                                                Wrap(
+                                                  spacing: 10,
+                                                  runSpacing: 10,
+                                                  children: [
+                                                    _LegalMetaChip(
+                                                      label: 'Rol ${_roleLabel()}',
+                                                      icon: Icons.shield_rounded,
+                                                    ),
+                                                    if (_resolvedVersion.trim().isNotEmpty)
+                                                      _LegalMetaChip(
+                                                        label: 'Versión $_resolvedVersion',
+                                                        icon: Icons.verified_rounded,
+                                                      ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 22),
+                                                if (_termsDocument != null)
+                                                  _buildSummaryCard(
+                                                    context: context,
+                                                    document: _termsDocument!,
+                                                    icon: Icons.gavel_rounded,
+                                                    onOpen: () => _openDocument(
+                                                      LegalDocType.terms,
+                                                    ),
+                                                  ),
+                                                if (_termsDocument != null)
+                                                  const SizedBox(height: 14),
+                                                if (_privacyDocument != null)
+                                                  _buildSummaryCard(
+                                                    context: context,
+                                                    document: _privacyDocument!,
+                                                    icon: Icons.privacy_tip_rounded,
+                                                    onOpen: () => _openDocument(
+                                                      LegalDocType.privacy,
+                                                    ),
+                                                  ),
+                                                const SizedBox(height: 18),
+                                                Container(
+                                                  padding: const EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                    color: colorScheme.surface,
+                                                    borderRadius: BorderRadius.circular(22),
+                                                    border: Border.all(
+                                                      color: isDark
+                                                          ? colorScheme.outlineVariant.withValues(alpha: 0.7)
+                                                          : AppColors.blue100.withValues(alpha: 0.95),
+                                                    ),
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      _buildAcceptanceRow(
+                                                        context: context,
+                                                        value: _acceptedTerms,
+                                                        onChanged: (value) => setState(
+                                                          () => _acceptedTerms = value,
+                                                        ),
+                                                        prefix: 'Acepto los ',
+                                                        linkText:
+                                                            'Términos y Condiciones',
+                                                        onOpen: () => _openDocument(
+                                                          LegalDocType.terms,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      _buildAcceptanceRow(
+                                                        context: context,
+                                                        value: _acceptedPrivacy,
+                                                        onChanged: (value) => setState(
+                                                          () => _acceptedPrivacy = value,
+                                                        ),
+                                                        prefix:
+                                                            'Acepto la ',
+                                                        linkText:
+                                                            'Política de Privacidad y tratamiento de datos',
+                                                        onOpen: () => _openDocument(
+                                                          LegalDocType.privacy,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            SizedBox(width: 6),
-                                            Icon(
-                                              Icons.keyboard_double_arrow_down_rounded,
-                                              size: 20,
-                                              color: Colors.white,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                              decoration: BoxDecoration(
+                                color: theme.scaffoldBackgroundColor,
+                                border: Border(
+                                  top: BorderSide(
+                                    color: colorScheme.outlineVariant.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 54,
+                                    child: FilledButton(
+                                      onPressed: (_isLoadingDocuments ||
+                                              _loadError != null ||
+                                              !_acceptedTerms ||
+                                              !_acceptedPrivacy ||
+                                              _isSubmitting)
+                                          ? null
+                                          : _handleAcceptance,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                      ),
+                                      child: _isSubmitting
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.4,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Text(
+                                              _isUpdateFlow
+                                                  ? 'Aceptar actualización'
+                                                  : 'Aceptar y continuar',
+                                            ),
+                                    ),
+                                  ),
+                                  if (!widget.isBlocking) ...[
+                                    const SizedBox(height: 10),
+                                    TextButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : () => Navigator.of(context).pop(false),
+                                      child: const Text('Ahora no'),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
                           ],
-                        )
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!_hasReadToBottom)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      'Por favor, desplázate hasta el final para habilitar la aceptación.',
-                      style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                CheckboxListTile(
-                  title: Text(
-                    'He leído y acepto los Términos y Condiciones',
-                    style: TextStyle(fontSize: 13, color: textColor),
-                  ),
-                  value: _acceptedTerms,
-                  onChanged: _hasReadToBottom ? (val) => setState(() => _acceptedTerms = val ?? false) : null,
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-                CheckboxListTile(
-                  title: Text(
-                    'Acepto la Política de Tratamiento de Datos',
-                    style: TextStyle(fontSize: 13, color: textColor),
-                  ),
-                  value: _acceptedPrivacy,
-                  onChanged: _hasReadToBottom ? (val) => setState(() => _acceptedPrivacy = val ?? false) : null,
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      disabledBackgroundColor: Colors.grey[300],
-                    ),
-                    onPressed: (_isLoadingDocuments || _loadError != null || !_acceptedTerms || !_acceptedPrivacy || _isSubmitting) 
-                      ? null 
-                      : _handleAcceptance,
-                    child: _isSubmitting 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('ACEPTAR Y CONTINUAR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LegalMetaChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _LegalMetaChip({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

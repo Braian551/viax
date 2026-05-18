@@ -63,6 +63,8 @@ import 'package:viax/src/widgets/help/help_screen.dart';
 import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
 import 'package:viax/src/features/thali/presentation/screens/thali_love_screen.dart';
 import 'package:viax/src/features/legal/presentation/screens/legal_acceptance_screen.dart';
+import 'package:viax/src/features/legal/presentation/screens/legal_document_screen.dart';
+import 'package:viax/src/features/legal/models/legal_document_model.dart';
 import 'package:viax/src/features/legal/presentation/screens/background_location_disclosure_screen.dart';
 import 'package:viax/src/features/legal/guards/legal_guard.dart';
 import 'package:viax/src/global/announcements/announcement_gate.dart';
@@ -577,8 +579,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SavedAddressesScreen());
       case RouteNames.promotions:
       case RouteNames.about:
-      case RouteNames.terms:
-      case RouteNames.privacy:
       case RouteNames.trackingTrip:
         return MaterialPageRoute(
           builder: (context) => Scaffold(
@@ -603,6 +603,21 @@ class AppRouter {
           ),
         );
 
+      case RouteNames.terms:
+      case RouteNames.privacy:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => LegalDocumentScreen(
+              role: args?['role']?.toString() ?? 'cliente',
+              docType: settings.name == RouteNames.privacy
+                  ? LegalDocType.privacy
+                  : LegalDocType.terms,
+            ),
+            settings: settings,
+          );
+        }
+
       // Rutas de administrador
       case RouteNames.adminHome:
         {
@@ -621,7 +636,6 @@ class AppRouter {
           return MaterialPageRoute(
             builder: (_) => _buildHomeWithAnnouncements(
               role: AppAnnouncementRole.support,
-              requiresLegalGuard: false,
               child: SupportTechHomeScreen(
                 supportUser: args?['support_user'] ?? args?['admin_user'] ?? {},
               ),

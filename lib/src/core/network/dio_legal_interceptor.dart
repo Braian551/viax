@@ -116,12 +116,12 @@ class DioSecurityInterceptor extends Interceptor {
         final role = (session?['tipo_usuario'] ?? 'cliente').toString().toLowerCase();
         final userId = int.tryParse((session?['id'] ?? 0).toString()) ?? 0;
 
-        ActiveTripNavigationService.navigatorKey.currentState!.pushNamedAndRemoveUntil(
+        ActiveTripNavigationService.navigatorKey.currentState!.pushNamed(
           RouteNames.legalAcceptance,
-          (route) => false,
           arguments: {
             'role': role,
             if (userId > 0) 'userId': userId,
+            'returnResultOnAccept': true,
           },
         );
       });
