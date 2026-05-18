@@ -342,9 +342,11 @@ class _ThemePreviewCard extends StatelessWidget {
         final statRadius = isDense ? 10.0 : 12.0;
         final statIconSize = isDense ? 13.0 : 14.0;
         final bottomPadding = isDense ? 5.0 : 6.0;
-        final bottomHorizontal = isDense ? 8.0 : 10.0;
-        final bottomVertical = isDense ? 5.0 : 6.0;
-        final activeIndicatorWidth = isDense ? 10.0 : 12.0;
+        final bottomHorizontal = isDense ? 6.0 : 8.0;
+        final bottomVertical = isDense ? 4.0 : 5.0;
+        final activeIndicatorSize = isDense ? 5.0 : 6.0;
+        final selectedNavGap = isDense ? 3.0 : 4.0;
+        final trailingNavBox = isDense ? 22.0 : 24.0;
         final aspectRatio = isDense ? 0.72 : (isCompact ? 0.7 : 0.68);
 
         // Mantener una proporción más vertical hace que la preview respire mejor sin romper la fila.
@@ -550,54 +552,51 @@ class _ThemePreviewCard extends StatelessWidget {
                                 border: Border.all(color: surfaceBorder),
                               ),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: bottomHorizontal,
-                                          vertical: bottomVertical,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(
-                                            alpha: isDarkPreview ? 0.32 : 0.16,
-                                          ),
-                                          borderRadius: BorderRadius.circular(999),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.home_rounded,
-                                              size: navIconSize,
-                                              color: isDarkPreview
-                                                  ? Colors.white
-                                                  : AppColors.primary,
-                                            ),
-                                            SizedBox(width: isDense ? 4 : 6),
-                                            Container(
-                                              width: activeIndicatorWidth,
-                                              height: isDense ? 3.5 : 4,
-                                              decoration: BoxDecoration(
-                                                color: isDarkPreview
-                                                    ? Colors.white.withValues(
-                                                        alpha: 0.85,
-                                                      )
-                                                    : AppColors.primary.withValues(
-                                                        alpha: 0.55,
-                                                      ),
-                                                borderRadius:
-                                                    BorderRadius.circular(999),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                  // El item activo usa un pill compacto para que el icono de inicio nunca se quede sin ancho.
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: bottomHorizontal,
+                                      vertical: bottomVertical,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(
+                                        alpha: isDarkPreview ? 0.32 : 0.16,
                                       ),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.home_rounded,
+                                          size: navIconSize,
+                                          color: isDarkPreview
+                                              ? Colors.white
+                                              : AppColors.primary,
+                                        ),
+                                        SizedBox(width: selectedNavGap),
+                                        Container(
+                                          width: activeIndicatorSize,
+                                          height: activeIndicatorSize,
+                                          decoration: BoxDecoration(
+                                            color: isDarkPreview
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.88,
+                                                  )
+                                                : AppColors.primary.withValues(
+                                                    alpha: 0.62,
+                                                  ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   SizedBox(width: navSpacing),
-                                  Expanded(
+                                  SizedBox(
+                                    width: trailingNavBox,
                                     child: Center(
                                       child: Icon(
                                         Icons.history_rounded,
@@ -607,9 +606,9 @@ class _ThemePreviewCard extends StatelessWidget {
                                     ),
                                   ),
                                   SizedBox(width: navSpacing),
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
+                                  SizedBox(
+                                    width: trailingNavBox,
+                                    child: Center(
                                       child: Icon(
                                         Icons.person_rounded,
                                         size: navIconSize,
