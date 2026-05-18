@@ -106,6 +106,62 @@ Si la respuesta a cualquiera es SI, limpiar antes de reportar.
 
 ---
 
+# REGLA OBLIGATORIA DE DOCUMENTACION Y TRAZABILIDAD
+
+Si el agente modifica comportamiento, flujos, UI, integraciones, permisos, configuraciones o reglas de negocio, DEBE actualizar la documentacion Markdown correspondiente en el mismo turno.
+
+## Reglas minimas
+
+1. Siempre actualizar al menos un `.md` relevante cuando el cambio altere algo funcional, visual, operativo o de arquitectura.
+2. Preferir la documentacion mas cercana al modulo afectado. Si no existe una adecuada, actualizar `docs/architecture/CHANGELOG.md` y crear documentacion tecnica solo si realmente hace falta.
+3. La documentacion debe indicar, de forma concreta, que se agrego, que se elimino, que se corrigio y cualquier implicacion operativa o visual relevante.
+4. No cerrar una tarea con cambios funcionales sin dejar trazabilidad documental, salvo que el cambio sea estrictamente interno y sin impacto observable; en ese caso el agente debe decirlo explicitamente en el reporte final.
+
+## Legal y permisos
+
+Si el agente modifica permisos, capacidades o declaracion de uso en archivos como:
+
+- `pubspec.yaml`
+- `android/app/src/main/AndroidManifest.xml`
+- `ios/Runner/Info.plist`
+- cualquier archivo YAML, plist, manifest o configuracion equivalente que agregue permisos o acceso a datos del usuario
+
+entonces DEBE revisar si corresponde actualizar:
+
+- `assets/legal/legal_content.json`
+- terminos y condiciones aplicables
+- politicas de privacidad aplicables
+- cualquier documentacion tecnica o legal relacionada en `docs/`
+
+Si hace esa actualizacion legal, DEBE ajustar tambien la fecha de ultima actualizacion del contenido legal correspondiente.
+
+## Nuevas funcionalidades con impacto legal
+
+Si el agente incorpora o cambia funcionalidades que puedan requerir disclosure legal o contractual, por ejemplo:
+
+- geolocalizacion
+- biometria
+- notificaciones
+- grabacion o uso de camara/microfono
+- procesamiento de datos personales
+- pagos, comisiones o cobros
+- comparticion de datos con terceros
+- nuevas automatizaciones, monitoreo, tracking o background services
+
+entonces DEBE evaluar si los terminos y condiciones o la politica de privacidad deben actualizarse segun el alcance del cambio. Si aplica, debe actualizarlos y cambiar la fecha.
+
+## Regla de cierre
+
+Antes de reportar tarea completada, el agente DEBE verificar:
+
+1. ¿Actualice la documentacion Markdown del cambio realizado?
+2. ¿El cambio toca permisos o tratamiento de datos y requiere ajuste legal?
+3. ¿Si hubo ajuste legal, actualice tambien la fecha correspondiente?
+
+Si la respuesta a 1 es NO en un cambio funcional, la tarea esta incompleta.
+
+---
+
 # AGENT SKILL — SAFE PRODUCTION DEPLOY
 
 You are working on the Viax production backend.

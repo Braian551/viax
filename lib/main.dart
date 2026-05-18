@@ -612,6 +612,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       scaffoldMessengerKey: AppConfig.scaffoldMessengerKey,
       title: 'Viax',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const ViaxScrollBehavior(),
       // Usar los temas del ThemeProvider.
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
@@ -632,6 +633,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
     );
+  }
+}
+
+class ViaxScrollBehavior extends MaterialScrollBehavior {
+  const ViaxScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
   }
 }
 

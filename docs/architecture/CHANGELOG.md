@@ -1,5 +1,14 @@
 # CHANGELOG - Refactorización Clean Architecture
 
+## [2026-05-17] - Ajustes de apariencia y scroll
+
+### Flutter App
+
+- Se eliminó el `overscroll glow` azul de toda la app desde `MaterialApp`, para evitar el tinte azul al arrastrar en perfil, viajes y ajustes.
+- Se agregó una pantalla compartida de `Apariencia` con selección explícita de `Claro`, `Oscuro` y `Seguir al dispositivo`.
+- La preferencia por defecto permanece en `ThemeMode.system`, y al salir de ese modo se conserva el tema efectivo actual para evitar saltos visuales.
+- Los ajustes de cliente y conductor ahora abren la misma sección de apariencia en vez de usar un switch aislado, dejando el comportamiento del tema consistente entre roles.
+
 ## [1.0.0] - Octubre 2025
 
 ### 🎉 Refactorización Mayor: Implementación de Clean Architecture

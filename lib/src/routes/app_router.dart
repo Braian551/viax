@@ -11,6 +11,7 @@ import 'package:viax/src/features/user/presentation/screens/user_active_trip_scr
 import 'package:viax/src/features/user/presentation/screens/user_trip_accepted_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver_screen.dart';
 import 'package:viax/src/features/user/presentation/screens/searching_driver/searching_driver_state.dart';
+import 'package:viax/src/theme/screens/appearance_settings_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/register_screen.dart';
 import 'package:viax/src/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -523,6 +524,10 @@ class AppRouter {
         }
       case RouteNames.settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case RouteNames.appearanceSettings:
+        return MaterialPageRoute(
+          builder: (_) => const AppearanceSettingsScreen(),
+        );
       case RouteNames.editProfile:
         return FadeSlidePageRoute(
           page: const EditProfileScreen(),

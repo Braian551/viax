@@ -34,7 +34,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   bool _biometricEnabled = false;
-  bool _darkMode = false;
   final TextEditingController _settingsSearchController =
       TextEditingController();
   String _settingsQuery = '';
@@ -71,7 +70,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Future<void> _loadSettings() async {
-    final themeProvider = context.read<ThemeProvider>();
     final session = await UserService.getSavedSession();
     final settings = await AppUserSettingsService.loadForCurrentUser();
 
@@ -94,7 +92,6 @@ class _SettingsScreenState extends State<SettingsScreen>
       _soundEnabled = settings.soundEnabled;
       _vibrationEnabled = settings.vibrationEnabled;
       _biometricEnabled = settings.biometricEnabled;
-      _darkMode = themeProvider.isDarkMode;
       _isLoadingSettings = false;
     });
   }
@@ -124,18 +121,15 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  Future<void> _toggleDarkMode(bool value) async {
-    final themeProvider = context.read<ThemeProvider>();
-
-    if (value) {
-      await themeProvider.setDarkMode();
-    } else {
-      await themeProvider.setLightMode();
+  String _appearanceSubtitle(ThemeProvider themeProvider) {
+    switch (themeProvider.themeMode) {
+      case ThemeMode.light:
+        return 'Tema claro';
+      case ThemeMode.dark:
+        return 'Tema oscuro';
+      case ThemeMode.system:
+        return 'Seguir al dispositivo';
     }
-
-    if (!mounted) return;
-
-    setState(() => _darkMode = value);
   }
 
   Future<void> _toggleBiometric(bool value) async {
@@ -248,6 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Scaffold(
       backgroundColor: isDark
@@ -416,18 +411,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                       title: 'Apariencia',
                       children: [
                         if (_matchesSettingsQuery(
-                          'Modo Oscuro',
-                          'Cambiar tema de la aplicacion',
+                          'Apariencia',
+                          'Tema claro, oscuro o del sistema',
                         ))
                           SettingsItem(
                             icon: Icons.dark_mode_rounded,
-                            title: 'Modo Oscuro',
-                            subtitle: 'Cambiar tema de la aplicacion',
+                            title: 'Apariencia',
+                            subtitle: _appearanceSubtitle(themeProvider),
                             animationIndex: 5,
-                            trailing: SettingsToggle(
-                              value: _darkMode,
-                              onChanged: _toggleDarkMode,
-                            ),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.appearanceSettings,
+                              );
+                            },
                           ),
                       ],
                     ),
