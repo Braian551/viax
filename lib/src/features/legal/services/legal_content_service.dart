@@ -2,10 +2,22 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:viax/src/features/legal/models/legal_document_model.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 
 class LegalContentService {
   static const String _localAssetPath = 'assets/legal/legal_content.json';
+
+  static Future<LegalDocumentData> fetchDocumentData({
+    required LegalRole role,
+    required LegalDocType docType,
+  }) async {
+    try {
+      return _loadStructuredDocumentFromRemoteJson(role: role, docType: docType);
+    } catch (_) {
+      return _loadStructuredDocumentFromLocalAsset(role: role, docType: docType);
+    }
+  }
 
   static Future<String> fetchTerms({required LegalRole role}) async {
     try {
@@ -55,7 +67,7 @@ class LegalContentService {
     }
 
     final raw = utf8.decode(response.bodyBytes);
-    return _renderDocumentFromJson(raw, role: role, docType: docType);
+    return _parseDocumentFromJson(raw, role: role, docType: docType).toPlainText();
   }
 
   static Future<String> _fetchAndNormalize(
@@ -117,10 +129,35 @@ class LegalContentService {
     required String docType,
   }) async {
     final raw = await rootBundle.loadString(_localAssetPath);
-    return _renderDocumentFromJson(raw, role: role, docType: docType);
+    return _parseDocumentFromJson(raw, role: role, docType: docType).toPlainText();
   }
 
-  static String _renderDocumentFromJson(
+  static Future<LegalDocumentData> _loadStructuredDocumentFromRemoteJson({
+    required LegalRole role,
+    required LegalDocType docType,
+  }) async {
+    final response = await http.get(
+      LegalLinksService.contentJsonUri(),
+      headers: const {'Accept': 'application/json'},
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+      throw Exception('No se pudo cargar JSON legal remoto.');
+    }
+
+    final raw = utf8.decode(response.bodyBytes);
+    return _parseDocumentFromJson(raw, role: role, docType: docType.key);
+  }
+
+  static Future<LegalDocumentData> _loadStructuredDocumentFromLocalAsset({
+    required LegalRole role,
+    required LegalDocType docType,
+  }) async {
+    final raw = await rootBundle.loadString(_localAssetPath);
+    return _parseDocumentFromJson(raw, role: role, docType: docType.key);
+  }
+
+  static LegalDocumentData _parseDocumentFromJson(
     String raw, {
     required LegalRole role,
     required String docType,
@@ -159,58 +196,55 @@ class LegalContentService {
       throw Exception('No hay documento legal local: $docType para rol $roleKey');
     }
 
-    final buffer = StringBuffer();
-    final title = doc['title']?.toString().trim();
-    final intro = doc['intro']?.toString().trim();
-    final meta = doc['meta']?.toString().trim();
-
-    if (title != null && title.isNotEmpty) {
-      buffer.writeln(title);
-      buffer.writeln();
-    }
-    if (intro != null && intro.isNotEmpty) {
-      buffer.writeln(intro);
-      buffer.writeln();
-    }
-    if (meta != null && meta.isNotEmpty) {
-      buffer.writeln(meta);
-      buffer.writeln();
-    }
-
+    final title = doc['title']?.toString().trim() ?? '';
+    final intro = doc['intro']?.toString().trim() ?? '';
+    final meta = doc['meta']?.toString().trim() ?? '';
     final sections = doc['sections'];
+    final parsedSections = <LegalDocumentSection>[];
+
     if (sections is List) {
-      for (var i = 0; i < sections.length; i++) {
-        final section = sections[i];
+      for (final section in sections) {
         if (section is! Map<String, dynamic>) continue;
 
-        final heading = section['heading']?.toString().trim();
-        final summary = section['summary']?.toString().trim();
-        final bullets = section['bullets'];
-
-        if (heading != null && heading.isNotEmpty) {
-          buffer.writeln('${i + 1}. $heading');
-        }
-        if (summary != null && summary.isNotEmpty) {
-          buffer.writeln(summary);
-        }
-        if (bullets is List) {
-          for (final bullet in bullets) {
+        final bullets = <String>[];
+        final rawBullets = section['bullets'];
+        if (rawBullets is List) {
+          for (final bullet in rawBullets) {
             final text = bullet?.toString().trim();
             if (text != null && text.isNotEmpty) {
-              buffer.writeln('* $text');
+              bullets.add(text);
             }
           }
         }
-        buffer.writeln();
+
+        parsedSections.add(
+          LegalDocumentSection(
+            id: section['id']?.toString().trim() ?? '',
+            heading: section['heading']?.toString().trim() ?? '',
+            summary: section['summary']?.toString().trim() ?? '',
+            bullets: bullets,
+          ),
+        );
       }
     }
 
-    final result = buffer.toString().trim();
+    final documentData = LegalDocumentData(
+      roleKey: roleKey,
+      docType: docType == LegalDocType.privacy.key
+          ? LegalDocType.privacy
+          : LegalDocType.terms,
+      title: title,
+      intro: intro,
+      meta: meta,
+      sections: parsedSections,
+    );
+
+    final result = documentData.toPlainText();
     if (result.isEmpty) {
       throw Exception('El contenido legal local esta vacio.');
     }
 
-    return result;
+    return documentData;
   }
 
   static String _extractMainLegalText(String text, {required String mainTitle}) {

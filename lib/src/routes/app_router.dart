@@ -63,6 +63,8 @@ import 'package:viax/src/widgets/help/help_screen.dart';
 import 'package:viax/src/features/location_sharing/presentation/screens/shared_location_view_screen.dart';
 import 'package:viax/src/features/thali/presentation/screens/thali_love_screen.dart';
 import 'package:viax/src/features/legal/presentation/screens/legal_acceptance_screen.dart';
+import 'package:viax/src/features/legal/presentation/screens/legal_document_screen.dart';
+import 'package:viax/src/features/legal/models/legal_document_model.dart';
 import 'package:viax/src/features/legal/presentation/screens/background_location_disclosure_screen.dart';
 import 'package:viax/src/features/legal/guards/legal_guard.dart';
 import 'package:viax/src/global/announcements/announcement_gate.dart';
@@ -253,15 +255,29 @@ class AppRouter {
           final userId = rawUserId is int
               ? rawUserId
               : int.tryParse(rawUserId?.toString() ?? '');
-          return MaterialPageRoute(
-            builder: (_) => LegalAcceptanceScreen(
-              role: args?['role'] ?? 'cliente',
-              version: args?['version'] ?? 'v1.0',
-              userId: userId,
-              returnResultOnAccept: args?['returnResultOnAccept'] == true,
-              isBlocking: args?['isBlocking'] != false,
-            ),
+          return PageRouteBuilder(
             settings: settings,
+            opaque: false,
+            barrierColor: Colors.transparent,
+            transitionDuration: const Duration(milliseconds: 220),
+            reverseTransitionDuration: const Duration(milliseconds: 180),
+            pageBuilder: (_, animation, secondaryAnimation) =>
+                LegalAcceptanceScreen(
+                  role: args?['role'] ?? 'cliente',
+                  version: args?['version'] ?? 'v1.0',
+                  userId: userId,
+                  returnResultOnAccept: args?['returnResultOnAccept'] == true,
+                  isBlocking: args?['isBlocking'] != false,
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              final fade = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+                reverseCurve: Curves.easeInCubic,
+              );
+
+              return FadeTransition(opacity: fade, child: child);
+            },
           );
         }
       case RouteNames.backgroundLocationDisclosure:
@@ -577,8 +593,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SavedAddressesScreen());
       case RouteNames.promotions:
       case RouteNames.about:
-      case RouteNames.terms:
-      case RouteNames.privacy:
       case RouteNames.trackingTrip:
         return MaterialPageRoute(
           builder: (context) => Scaffold(
@@ -603,6 +617,21 @@ class AppRouter {
           ),
         );
 
+      case RouteNames.terms:
+      case RouteNames.privacy:
+        {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => LegalDocumentScreen(
+              role: args?['role']?.toString() ?? 'cliente',
+              docType: settings.name == RouteNames.privacy
+                  ? LegalDocType.privacy
+                  : LegalDocType.terms,
+            ),
+            settings: settings,
+          );
+        }
+
       // Rutas de administrador
       case RouteNames.adminHome:
         {
@@ -621,7 +650,6 @@ class AppRouter {
           return MaterialPageRoute(
             builder: (_) => _buildHomeWithAnnouncements(
               role: AppAnnouncementRole.support,
-              requiresLegalGuard: false,
               child: SupportTechHomeScreen(
                 supportUser: args?['support_user'] ?? args?['admin_user'] ?? {},
               ),

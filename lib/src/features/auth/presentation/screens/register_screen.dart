@@ -1,7 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
+import 'package:viax/src/features/auth/presentation/widgets/country_phone_field.dart';
 import 'package:viax/src/global/services/device_id_service.dart';
+import 'package:viax/src/global/services/phone_country_service.dart';
+import 'package:viax/src/global/utils/phone_number_formatter.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/global/services/auth/user_service.dart';
 import 'package:viax/src/theme/app_colors.dart';
@@ -36,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  PhoneCountry _selectedPhoneCountry = PhoneCountryService.colombia;
 
   int _currentStep = 0;
   final int _totalSteps = 3;
@@ -80,7 +84,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
           name: _nameController.text,
           lastName: _lastNameController.text,
-          phone: _phoneController.text,
+          phone: PhoneNumberFormatter.normalizeInternational(
+            dialCode: _selectedPhoneCountry.dialCode,
+            rawPhone: _phoneController.text,
+          ),
           role: 'cliente',
         );
 
@@ -154,7 +161,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return true;
     }
 
-    _showSnackBar('Debes aceptar terminos y privacidad para completar el registro.', isError: true);
     return false;
   }
 
@@ -515,12 +521,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                ),
              ),
              const SizedBox(height: 24),
-             AuthTextField(
+             CountryPhoneField(
               controller: _phoneController,
-              label: 'Teléfono Móvil',
-              icon: Icons.phone_android_rounded,
-              keyboardType: TextInputType.phone,
-              validator: (v) => v!.isEmpty ? 'Requerido' : null,
+              selectedCountry: _selectedPhoneCountry,
+              onCountryChanged: (country) {
+                setState(() => _selectedPhoneCountry = country);
+              },
+              label: 'Teléfono móvil',
+              isRequired: true,
             ),
           ],
         );

@@ -11,12 +11,16 @@ class LegalProvider extends ChangeNotifier {
 
   LegalStatus _status = LegalStatus.idle;
   String? _currentRequiredVersion;
+  String? _lastAcceptedVersion;
   String? _lastError;
   bool _initialized = false;
+  bool _hasAcceptedAnyVersion = false;
 
   LegalStatus get status => _status;
   String? get currentRequiredVersion => _currentRequiredVersion;
+  String? get lastAcceptedVersion => _lastAcceptedVersion;
   String? get lastError => _lastError;
+  bool get hasAcceptedAnyVersion => _hasAcceptedAnyVersion;
   bool get isAccepted => _status == LegalStatus.accepted;
   bool get isChecking => _status == LegalStatus.checking;
   bool get initialized => _initialized;
@@ -58,7 +62,7 @@ class LegalProvider extends ChangeNotifier {
       final response = await http
           .get(
             Uri.parse(
-              '${AppConfig.baseUrl}/legal/current_version.php?role=$role',
+              '${AppConfig.baseUrl}/legal/current_version.php?role=$role&user_id=$userId',
             ),
           )
           .timeout(const Duration(seconds: 4));
@@ -67,13 +71,33 @@ class LegalProvider extends ChangeNotifier {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           _currentRequiredVersion = data['current_version'];
+          _lastAcceptedVersion = data['last_accepted_version']?.toString();
+          _hasAcceptedAnyVersion =
+              data['has_any_acceptance'] == true ||
+              (_lastAcceptedVersion != null && _lastAcceptedVersion!.isNotEmpty);
+          final hasRemoteAcceptanceFlag =
+              data.containsKey('accepted_current_version');
+          final acceptedCurrentVersion = data['accepted_current_version'] == true;
 
           final prefs = await SharedPreferences.getInstance();
           final localVersion = prefs.getString(
             _cacheKeyFor(role: role, userId: userId),
           );
 
-          if (localVersion == _currentRequiredVersion && localVersion != null) {
+          if (acceptedCurrentVersion) {
+            if (_currentRequiredVersion != null &&
+                _currentRequiredVersion!.isNotEmpty &&
+                localVersion != _currentRequiredVersion) {
+              await prefs.setString(
+                _cacheKeyFor(role: role, userId: userId),
+                _currentRequiredVersion!,
+              );
+            }
+            _status = LegalStatus.accepted;
+          } else if (!hasRemoteAcceptanceFlag &&
+              localVersion == _currentRequiredVersion &&
+              localVersion != null) {
+            // Compatibilidad temporal si el backend aún no expone el estado remoto.
             _status = LegalStatus.accepted;
           } else {
             _status = LegalStatus.notAccepted;
@@ -188,7 +212,10 @@ class LegalProvider extends ChangeNotifier {
   /// Permite resetear el estado (ej: logout)
   void reset() {
     _status = LegalStatus.idle;
+    _currentRequiredVersion = null;
+    _lastAcceptedVersion = null;
     _lastError = null;
+    _hasAcceptedAnyVersion = false;
     _initialized = false;
     notifyListeners();
   }

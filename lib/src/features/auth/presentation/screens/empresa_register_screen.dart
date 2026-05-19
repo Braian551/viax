@@ -15,7 +15,10 @@ import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/features/auth/data/services/empresa_register_service.dart';
 import 'package:viax/src/features/auth/presentation/widgets/register_step_indicator.dart';
 import 'package:viax/src/features/auth/data/services/colombia_location_service.dart';
+import 'package:viax/src/features/auth/presentation/widgets/country_phone_field.dart';
 import 'package:viax/src/features/auth/presentation/widgets/searchable_dropdown_sheet.dart';
+import 'package:viax/src/global/services/phone_country_service.dart';
+import 'package:viax/src/global/utils/phone_number_formatter.dart';
 
 /// Pantalla de registro de empresas de transporte
 /// UI optimizada para coincidir con el registro de usuarios
@@ -36,6 +39,9 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   File? _logoFile;
+  PhoneCountry _selectedMainPhoneCountry = PhoneCountryService.colombia;
+  PhoneCountry _selectedSecondaryPhoneCountry = PhoneCountryService.colombia;
+  PhoneCountry _selectedRepresentativePhoneCountry = PhoneCountryService.colombia;
   
   // Location Service
   final _locationService = ColombiaLocationService();
@@ -266,14 +272,23 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
         nit: _nitController.text.trim(),
         razonSocial: _razonSocialController.text.trim(),
         email: _emailController.text.trim(),
-        telefono: _telefonoController.text.trim(),
-        telefonoSecundario: _telefonoSecundarioController.text.trim(),
+        telefono: _normalizedPhone(
+          _telefonoController,
+          _selectedMainPhoneCountry,
+        ),
+        telefonoSecundario: _normalizedPhone(
+          _telefonoSecundarioController,
+          _selectedSecondaryPhoneCountry,
+        ),
         direccion: _direccionController.text.trim(),
         municipio: _selectedCity?.name ?? '', // Use selected city name
         departamento: _selectedDepartment?.name ?? '', // Use selected department name
         representanteNombre: _representanteNombreController.text.trim(),
         representanteApellido: _representanteApellidoController.text.trim(),
-        representanteTelefono: _representanteTelefonoController.text.trim(),
+        representanteTelefono: _normalizedPhone(
+          _representanteTelefonoController,
+          _selectedRepresentativePhoneCountry,
+        ),
         representanteEmail: _representanteEmailController.text.trim(),
         descripcion: _descripcionController.text.trim(),
         tiposVehiculo: _tiposVehiculoSeleccionados,
@@ -339,7 +354,6 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
       return true;
     }
 
-    _showError('Debes aceptar terminos y privacidad para registrar la empresa.');
     return false;
   }
 
@@ -437,6 +451,16 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
 
   void _showError(String message) {
     CustomSnackbar.showError(context, message: message);
+  }
+
+  String _normalizedPhone(
+    TextEditingController controller,
+    PhoneCountry country,
+  ) {
+    return PhoneNumberFormatter.normalizeInternational(
+      dialCode: country.dialCode,
+      rawPhone: controller.text,
+    );
   }
 
   @override
@@ -901,25 +925,23 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           },
         ),
         const SizedBox(height: 16),
-        AuthTextField(
+        CountryPhoneField(
           controller: _telefonoController,
-          label: 'Teléfono Principal *',
-          icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) return 'Requerido';
-            if (v.length < 7) return 'Min 7 dígitos';
-            return null;
+          selectedCountry: _selectedMainPhoneCountry,
+          onCountryChanged: (country) {
+            setState(() => _selectedMainPhoneCountry = country);
           },
+          label: 'Teléfono principal',
+          isRequired: true,
         ),
         const SizedBox(height: 16),
-         AuthTextField(
+         CountryPhoneField(
           controller: _telefonoSecundarioController,
-          label: 'Teléfono Secundario',
-          icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          selectedCountry: _selectedSecondaryPhoneCountry,
+          onCountryChanged: (country) {
+            setState(() => _selectedSecondaryPhoneCountry = country);
+          },
+          label: 'Teléfono secundario',
         ),
         const SizedBox(height: 24),
          Text(
@@ -1022,12 +1044,13 @@ class _EmpresaRegisterScreenState extends State<EmpresaRegisterScreen> {
           },
         ),
         const SizedBox(height: 16),
-         AuthTextField(
+         CountryPhoneField(
           controller: _representanteTelefonoController,
-          label: 'Teléfono Directo',
-          icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          selectedCountry: _selectedRepresentativePhoneCountry,
+          onCountryChanged: (country) {
+            setState(() => _selectedRepresentativePhoneCountry = country);
+          },
+          label: 'Teléfono directo',
         ),
         const SizedBox(height: 16),
         AuthTextField(

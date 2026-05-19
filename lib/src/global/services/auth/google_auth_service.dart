@@ -168,21 +168,22 @@ class GoogleAuthService {
         if (data['success'] == true && data['data'] != null) {
           final userData = data['data'];
           final user = userData['user'];
+          Map<String, dynamic>? sessionData;
 
           if (user != null) {
-            final sessionData = Map<String, dynamic>.from(user);
+            sessionData = Map<String, dynamic>.from(user);
             for (final key in ['access_token', 'refresh_token', 'expires_in']) {
               if (userData[key] != null) {
                 sessionData[key] = userData[key];
               }
             }
-            await UserService.saveActiveSession(sessionData);
           }
 
           return {
             'success': true,
             'message': data['message'] ?? 'Autenticación exitosa',
             'user': user,
+            'session_data': sessionData,
             'is_new_user': userData['is_new_user'] ?? false,
             'requires_phone': userData['requires_phone'] ?? user?['requiere_telefono'] ?? false,
             'error_code': data['error_code']?.toString(),

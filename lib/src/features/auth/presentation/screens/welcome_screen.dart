@@ -1,8 +1,13 @@
 ﻿// lib/src/features/auth/presentation/screens/welcome_screen.dart
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:viax/src/features/legal/providers/legal_provider.dart';
+import 'package:viax/src/core/config/app_config.dart';
+import 'package:viax/src/global/services/device_id_service.dart';
 import 'package:viax/src/global/services/legal/legal_links_service.dart';
 import 'package:viax/src/routes/route_names.dart';
 import 'package:viax/src/widgets/entrance_fader.dart';
@@ -75,8 +80,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
 
     try {
+      final deviceUuid = await DeviceIdService.getOrCreateDeviceUuid();
+
       // Usar el SDK de Google Sign-In directamente
-      final result = await GoogleAuthService.signInWithGoogle();
+      final result = await GoogleAuthService.signInWithGoogle(
+        deviceUuid: deviceUuid,
+      );
 
       if (!mounted) return;
 
@@ -87,18 +96,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
       if (result['success'] == true) {
         final user = (result['user'] as Map?)?.cast<String, dynamic>();
+        final sessionData =
+            (result['session_data'] as Map?)?.cast<String, dynamic>();
         final isNewUser = result['is_new_user'] == true;
 
         if (isNewUser && user != null) {
           final allowed = await _ensureLegalAcceptedForUser(user);
           if (!mounted) return;
           if (!allowed) {
+            // Si el alta por Google era nueva y el usuario rechaza el flujo legal, revertimos ese registro efímero.
+            await _rollbackRejectedGoogleUser(
+              user: user,
+              deviceUuid: deviceUuid,
+            );
             await GoogleAuthService.signOut();
             await UserService.clearSession();
             if (!mounted) return;
-            _showErrorSnackBar('Debes aceptar terminos y privacidad para continuar.');
             return;
           }
+        }
+
+        // Persistir la sesión solo después de aceptar evita saltos prematuros a teléfono o home.
+        if (sessionData != null) {
+          await UserService.saveActiveSession(sessionData);
         }
 
         // Verificar si necesita teléfono
@@ -255,6 +275,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       message: message,
       duration: const Duration(seconds: 4),
     );
+  }
+
+  Future<void> _rollbackRejectedGoogleUser({
+    required Map<String, dynamic> user,
+    required String deviceUuid,
+  }) async {
+    final userId = int.tryParse(user['id']?.toString() ?? '') ?? 0;
+    if (userId <= 0 || deviceUuid.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.authServiceUrl}/google/cancel_new_user.php'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'user_id': userId,
+          'device_uuid': deviceUuid,
+        }),
+      );
+    } catch (error) {
+      debugPrint('No se pudo revertir el alta nueva de Google: $error');
+    }
   }
 
   @override

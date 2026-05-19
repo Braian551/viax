@@ -78,7 +78,7 @@ class _LegalGuardState extends State<LegalGuard> {
         return;
       }
 
-      _redirectToLegalAcceptance(
+      await _redirectToLegalAcceptance(
         role: role,
         userId: userId,
         version: legalProv.currentRequiredVersion ?? 'v1.0',
@@ -105,23 +105,34 @@ class _LegalGuardState extends State<LegalGuard> {
         userId = int.tryParse(session['id'].toString()) ?? 0;
       }
 
-      _redirectToLegalAcceptance(role: role, userId: userId, version: 'v1.0');
+      await _redirectToLegalAcceptance(
+        role: role,
+        userId: userId,
+        version: 'v1.0',
+      );
     }
   }
 
-  void _redirectToLegalAcceptance({
+  Future<void> _redirectToLegalAcceptance({
     required String role,
     required int userId,
     required String version,
-  }) {
+  }) async {
     if (!mounted || _isRedirecting) return;
     _isRedirecting = true;
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
+    final accepted = await Navigator.of(context).pushNamed(
       RouteNames.legalAcceptance,
-      (route) => false,
       arguments: {'role': role, 'userId': userId, 'version': version},
     );
+
+    if (!mounted) return;
+
+    if (accepted == true) {
+      setState(() => _gateOpen = true);
+    }
+
+    _isRedirecting = false;
   }
 
   @override
