@@ -402,7 +402,6 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
       return true;
     }
 
-    CustomSnackbar.showError(context, message: 'Debes aceptar terminos y privacidad para continuar.');
     return false;
   }
 
