@@ -7,10 +7,12 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.util.Locale
 
 /**
  * MainActivity principal de Viax.
@@ -21,10 +23,12 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val OVERLAY_CHANNEL = "com.viax.app/floating_overlay"
+        private const val DEVICE_COUNTRY_CHANNEL = "com.viax.app/device_country"
         private const val REQUEST_OVERLAY_PERMISSION = 1001
     }
 
     private var methodChannel: MethodChannel? = null
+    private var deviceCountryChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     
     // Datos del viaje para navegar cuando se abre desde overlay
@@ -84,6 +88,17 @@ class MainActivity : FlutterActivity() {
                     result.success(isOverlayServiceRunning())
                 }
                 
+                else -> result.notImplemented()
+            }
+        }
+
+        deviceCountryChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            DEVICE_COUNTRY_CHANNEL
+        )
+        deviceCountryChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getPreferredCountryIso" -> result.success(getPreferredCountryIso())
                 else -> result.notImplemented()
             }
         }
@@ -180,8 +195,44 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun isOverlayServiceRunning(): Boolean {
-        // Simple check - en producción podría ser más robusto
+        // Verificación simple; en producción podría endurecerse más.
         return false // El servicio maneja su propio estado
+    }
+
+    // Priorizar la red móvil evita caer en locales del sistema que no reflejan el país real.
+    private fun getPreferredCountryIso(): String? {
+        val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val networkCountry = normalizeCountryIso(telephonyManager?.networkCountryIso)
+        if (networkCountry != null) {
+            return networkCountry
+        }
+
+        val simCountry = normalizeCountryIso(telephonyManager?.simCountryIso)
+        if (simCountry != null) {
+            return simCountry
+        }
+
+        return getLocaleCountryIso()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getLocaleCountryIso(): String? {
+        val configuration = resources.configuration
+        val rawCountry = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !configuration.locales.isEmpty) {
+            configuration.locales[0]?.country
+        } else {
+            configuration.locale?.country
+        }
+
+        return normalizeCountryIso(rawCountry)
+    }
+
+    private fun normalizeCountryIso(rawCountry: String?): String? {
+        val country = rawCountry
+            ?.trim()
+            ?.uppercase(Locale.US)
+
+        return if (country.isNullOrEmpty()) null else country
     }
 
     override fun onDestroy() {
@@ -189,7 +240,7 @@ class MainActivity : FlutterActivity() {
         try {
             unregisterReceiver(overlayReceiver)
         } catch (e: Exception) {
-            // Receiver not registered
+            // El receiver ya no estaba registrado.
         }
     }
 }

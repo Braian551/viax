@@ -6,6 +6,8 @@
 
 - Los formularios de teléfono de Google, registro de cliente y registro de empresa ahora comparten un selector de país con carga desde API y fallback local, y normalizan el valor enviado a formato internacional (`+57...` por defecto para Colombia).
 - El selector compartido de teléfono ahora abre un sheet con buscador por nombre/ISO/prefijo y, cuando ya existe permiso de ubicación, sugiere automáticamente el código del país actual; si no hay permiso, usa el país del locale del dispositivo como fallback.
+- La detección automática del prefijo en Android ahora consulta primero el país de la red móvil y luego el de la SIM antes de caer al locale, reduciendo falsos `+1` en equipos físicamente en Colombia pero configurados con región distinta.
+- El catálogo de países dejó de construir prefijos inválidos como `+1201` para numeración compartida: los países bajo `+1` y `+7` ahora muestran su código internacional canónico.
 - El sheet de aceptación legal ahora se ancla al borde inferior en rutas transparentes y difiere su validación hasta después del primer frame, evitando que aparezca arriba de los formularios y que `LegalProvider` notifique durante el build inicial.
 - El sheet de aceptación legal recuperó un título grande `Términos y condiciones` con color derivado del tema y aumentó sus alturas iniciales/minimas para que los checkboxes y el botón no queden compactados en formularios y roles.
 - Los enlaces legales compartidos ahora generan la ruta canónica `https://viaxcol.online/legal?role=...&doc=...` sin slash final en `/legal/`, corrigiendo aperturas externas de privacidad/términos y el fallback remoto del visor legal en bienvenida, ajustes, perfiles y aceptación por rol.
