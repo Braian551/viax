@@ -4,6 +4,8 @@
 
 ### Flutter App
 
+- Los formularios de teléfono de Google, registro de cliente y registro de empresa ahora comparten un selector de país con carga desde API y fallback local, y normalizan el valor enviado a formato internacional (`+57...` por defecto para Colombia).
+- El selector compartido de teléfono ahora abre un sheet con buscador por nombre/ISO/prefijo y, cuando ya existe permiso de ubicación, sugiere automáticamente el código del país actual; si no hay permiso, usa el país del locale del dispositivo como fallback.
 - El sheet de aceptación legal ahora se ancla al borde inferior en rutas transparentes y difiere su validación hasta después del primer frame, evitando que aparezca arriba de los formularios y que `LegalProvider` notifique durante el build inicial.
 - El sheet de aceptación legal recuperó un título grande `Términos y condiciones` con color derivado del tema y aumentó sus alturas iniciales/minimas para que los checkboxes y el botón no queden compactados en formularios y roles.
 - Los enlaces legales compartidos ahora generan la ruta canónica `https://viaxcol.online/legal?role=...&doc=...` sin slash final en `/legal/`, corrigiendo aperturas externas de privacidad/términos y el fallback remoto del visor legal en bienvenida, ajustes, perfiles y aceptación por rol.
@@ -22,6 +24,8 @@
 
 ### Backend PHP
 
+- Se agregó normalización central de teléfonos en registro de cliente, actualización de teléfono de Google y registro de empresa; además, la migración `068_normalize_colombia_phone_numbers.sql` actualiza teléfonos históricos sin prefijo agregando `+57` de forma idempotente.
+- La migración `068_normalize_colombia_phone_numbers.sql` ahora omite choques contra `usuarios.telefono` cuando varios registros históricos colapsan al mismo número internacional, permitiendo completar la limpieza sin violar la unicidad existente.
 - `legal/current_version.php` ahora puede responder el último estado de aceptación del usuario por rol junto con la versión vigente, para que Flutter decida el gate legal usando la fuente de verdad remota.
 - Se agregó `auth/google/cancel_new_user.php` para revertir altas nuevas de Google todavía sin aceptación legal, validando dispositivo reciente y ausencia de logs de aceptación antes de borrar la cuenta creada en ese intento.
 - `auth/google/cancel_new_user.php` ahora limpia artefactos efímeros del alta rechazada y re-sincroniza `usuarios_id_seq` con `MAX(id) + 1`, evitando que los rechazos del gate legal disparen el autoincrement de `usuarios`; además, la migración `061_sync_usuarios_sequence_after_google_cancel.sql` corrige el valor actual de la secuencia en entornos ya afectados.
