@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -22,6 +23,11 @@ class PhoneCountry {
 }
 
 class PhoneCountryService {
+  static const MethodChannel _deviceCountryChannel = MethodChannel(
+    'com.viax.app/device_country',
+  );
+  static const Set<String> _sharedCallingCodeRoots = {'+1', '+7'};
+
   static const PhoneCountry colombia = PhoneCountry(
     name: 'Colombia',
     isoCode: 'CO',
@@ -141,7 +147,32 @@ class PhoneCountryService {
       return locationCountry;
     }
 
+    final deviceCountry = await _detectCountryCodeFromDeviceRegion();
+    if (deviceCountry != null) {
+      return deviceCountry;
+    }
+
     return _detectCountryCodeFromLocale();
+  }
+
+  static Future<String?> _detectCountryCodeFromDeviceRegion() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return null;
+    }
+
+    try {
+      final countryCode = await _deviceCountryChannel.invokeMethod<String>(
+        'getPreferredCountryIso',
+      );
+      return _normalizeIsoCode(countryCode);
+    } on MissingPluginException {
+      return null;
+    } catch (e) {
+      debugPrint(
+        '[PhoneCountryService] No se pudo detectar país por red o SIM: $e',
+      );
+      return null;
+    }
   }
 
   static Future<String?> _detectCountryCodeFromLocation() async {
@@ -205,6 +236,7 @@ class PhoneCountryService {
     if (item is! Map<String, dynamic>) return null;
 
     final nameData = item['name'];
+    final isoCode = item['cca2']?.toString() ?? '';
     final iddData = item['idd'];
     final root = iddData is Map<String, dynamic>
         ? iddData['root']?.toString()
@@ -212,26 +244,52 @@ class PhoneCountryService {
     final suffixes = iddData is Map<String, dynamic>
         ? iddData['suffixes']
         : null;
-    if (root == null || root.isEmpty || suffixes is! List || suffixes.isEmpty) {
+    if (root == null || root.isEmpty || isoCode.isEmpty) {
       return null;
     }
 
     final commonName = nameData is Map<String, dynamic>
         ? nameData['common']?.toString()
         : null;
-    final suffixValue = suffixes.isEmpty ? null : suffixes.first;
-    final suffix = suffixValue?.toString() ?? '';
-    final dialCode = '$root$suffix';
+    final dialCode = _buildDialCode(root: root, suffixes: suffixes);
 
-    if (commonName == null || commonName.isEmpty || dialCode.length < 2) {
+    if (commonName == null || commonName.isEmpty || dialCode == null) {
       return null;
     }
 
     return PhoneCountry(
       name: commonName,
-      isoCode: item['cca2']?.toString() ?? '',
+      isoCode: isoCode,
       dialCode: dialCode,
       flag: item['flag']?.toString() ?? '',
     );
+  }
+
+  static String? _buildDialCode({
+    required String root,
+    required dynamic suffixes,
+  }) {
+    if (_sharedCallingCodeRoots.contains(root)) {
+      return root;
+    }
+
+    if (suffixes is! List || suffixes.isEmpty) {
+      return root;
+    }
+
+    final normalizedSuffixes = suffixes
+        .map((suffix) => suffix?.toString() ?? '')
+        .where((suffix) => suffix.isNotEmpty)
+        .toList();
+
+    if (normalizedSuffixes.isEmpty) {
+      return root;
+    }
+
+    final shortestSuffix = normalizedSuffixes.reduce(
+      (left, right) => left.length <= right.length ? left : right,
+    );
+
+    return '$root$shortestSuffix';
   }
 }
