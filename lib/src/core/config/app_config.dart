@@ -13,7 +13,7 @@
 /// flutter run --dart-define=API_BASE_URL=http://10.0.2.2/viax/backend
 /// 
 /// # Producción
-/// flutter run --dart-define=API_BASE_URL=http://76.13.114.194
+/// flutter run --dart-define=API_BASE_URL=https://viaxcol.online/api
 /// ```
 class AppConfig {
   // Permite recordar el host que ya funcionó para evitar probar todos cada vez
@@ -23,12 +23,12 @@ class AppConfig {
   // Configura esto al ejecutar: flutter run --dart-define=API_BASE_URL=http://tu-servidor.com
   // 
   // AMBIENTES DISPONIBLES:
-  // - Producción (VPS):     http://76.13.114.194  (root ya es /var/www/viax/backend)
+  // - Producción (VPS):     https://viaxcol.online/api  (API detrás de /api)
   // - Desarrollo local:     http://192.168.18.68/viax/backend
   // - Emulador Android:     http://10.0.2.2/viax/backend
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://76.13.114.194', // PRODUCCIÓN por defecto (sin /viax/backend)
+    defaultValue: 'https://viaxcol.online/api', // Producción detrás de /api
   );
 
   // Key global para manejo de SnackBars sin contexto
@@ -64,7 +64,7 @@ class AppConfig {
 
     // Para desarrollo, probar varios candidatos
     const candidates = [
-      'http://76.13.114.194',                 // Producción VPS (sin sufijo)
+      'https://viaxcol.online/api',                 // Producción VPS
       'http://192.168.18.68/viax/backend',    // Desarrollo local
       'http://10.0.2.2/viax/backend',         // Emulador Android
       'http://127.0.0.1/viax/backend',

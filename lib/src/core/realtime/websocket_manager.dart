@@ -437,13 +437,16 @@ class WebSocketManager {
   }
 
   String _buildWsUrl(String token) {
-    final baseUrl = AppConfig.baseUrl;
-    // Construir URL del WebSocket reemplazando http → ws
-    // El gateway corre en el mismo host, puerto 9100
-    final uri = Uri.parse(baseUrl);
-    final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
-    final wsPort = const int.fromEnvironment('WS_PORT', defaultValue: 9100);
-    return '$wsScheme://${uri.host}:$wsPort/ws?token=${Uri.encodeComponent(token)}';
+    final apiUri = Uri.parse(AppConfig.baseUrl);
+    final usesTls = apiUri.scheme == 'https';
+    const configuredPort = int.fromEnvironment('WS_PORT');
+    return Uri(
+      scheme: usesTls ? 'wss' : 'ws',
+      host: apiUri.host,
+      port: configuredPort > 0 ? configuredPort : (usesTls ? 443 : 9100),
+      path: '/ws',
+      queryParameters: {'token': token},
+    ).toString();
   }
 
   void _log(String message) {
